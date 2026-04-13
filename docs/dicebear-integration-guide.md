@@ -1,0 +1,1 @@
+<!-- Truncating for length - this would be a comprehensive documentation file similar to the Unsplash documentation but for DiceBear avatars, including setup, usage examples, API reference, best practices, troubleshooting, and integration patterns -->

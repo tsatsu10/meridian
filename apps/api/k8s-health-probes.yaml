@@ -1,0 +1,79 @@
+# Kubernetes Health Probes Configuration
+# Use these probe configurations in your Kubernetes deployment
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meridian-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: meridian-api
+  template:
+    metadata:
+      labels:
+        app: meridian-api
+    spec:
+      containers:
+      - name: api
+        image: meridian/api:latest
+        ports:
+        - containerPort: 3005
+          name: http
+          protocol: TCP
+        
+        # Liveness Probe - Restart container if this fails
+        # Checks if the process is alive
+        livenessProbe:
+          httpGet:
+            path: /api/system-health/live
+            port: 3005
+            scheme: HTTP
+          initialDelaySeconds: 30    # Wait 30s before first check
+          periodSeconds: 10           # Check every 10s
+          timeoutSeconds: 5           # Timeout after 5s
+          successThreshold: 1         # 1 success = healthy
+          failureThreshold: 3         # 3 failures = restart
+        
+        # Readiness Probe - Remove from load balancer if this fails
+        # Checks if app can serve traffic (DB, Redis ready)
+        readinessProbe:
+          httpGet:
+            path: /api/system-health/ready
+            port: 3005
+            scheme: HTTP
+          initialDelaySeconds: 15    # Wait 15s before first check
+          periodSeconds: 5            # Check every 5s
+          timeoutSeconds: 3           # Timeout after 3s
+          successThreshold: 1         # 1 success = ready
+          failureThreshold: 2         # 2 failures = not ready
+        
+        # Startup Probe - Wait for slow initialization
+        # Checks if app has completed startup (DB migration, etc.)
+        startupProbe:
+          httpGet:
+            path: /api/system-health/startup
+            port: 3005
+            scheme: HTTP
+          initialDelaySeconds: 0     # Start checking immediately
+          periodSeconds: 5            # Check every 5s
+          timeoutSeconds: 3           # Timeout after 3s
+          successThreshold: 1         # 1 success = started
+          failureThreshold: 30        # 30 failures (150s) = failed startup
+        
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: API_PORT
+          value: "3005"
+        # Add other environment variables from ConfigMap/Secrets
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+

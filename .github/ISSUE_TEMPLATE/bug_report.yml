@@ -1,0 +1,143 @@
+name: 🐛 Bug Report
+description: Report a bug or issue with Meridian
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the information below to help us resolve the issue quickly.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 🐛 Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behavior
+      description: What should have happened instead
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behavior
+      description: What actually happened
+      placeholder: Describe what actually happened
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 📍 Area Affected
+      description: Which part of the application is affected?
+      options:
+        - Dashboard
+        - Project Management
+        - Task Management
+        - Communication/Chat
+        - User Management
+        - Settings
+        - Authentication
+        - API
+        - Performance
+        - Mobile/Responsive
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 🚨 Severity
+      description: How severe is this bug?
+      options:
+        - Low - Minor issue, workaround exists
+        - Medium - Affects functionality but not critical
+        - High - Major functionality broken
+        - Critical - App unusable or data loss
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: 🌐 Browser
+      description: Which browser(s) are you using?
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Mobile Chrome
+        - Mobile Safari
+        - Other
+
+  - type: input
+    id: os
+    attributes:
+      label: 💻 Operating System
+      description: What operating system are you using?
+      placeholder: e.g., Windows 11, macOS 13, Ubuntu 22.04
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 📱 App Version
+      description: What version of Meridian are you using?
+      placeholder: e.g., v1.2.3 or commit hash
+
+  - type: textarea
+    id: console_logs
+    attributes:
+      label: 📝 Console Logs
+      description: If applicable, paste any console errors or logs
+      render: shell
+      placeholder: Paste console logs here
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 📋 Additional Context
+      description: Add any other context, screenshots, or information about the problem
+      placeholder: Any additional information that might help us resolve the issue
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: ✅ Confirmation
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to make sure this is not a duplicate
+          required: true
+        - label: I have provided all the requested information above
+          required: true
+        - label: This bug is reproducible and not a one-time occurrence
+          required: true

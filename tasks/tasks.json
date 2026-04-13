@@ -1,0 +1,151 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "API Connection Issues - Fixed",
+      "description": "Resolved API server dependency and connection issues preventing client-server communication",
+      "details": "Fixed the Cannot find module '@hono/node-server' error by ensuring proper pnpm install from monorepo root. API server now successfully starts on port 1337 and endpoints like /users/me and /workspace are responding correctly. Client can now connect to API without ERR_CONNECTION_REFUSED errors.",
+      "testStrategy": "",
+      "status": "done",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": []
+    },
+    {
+      "id": 2,
+      "title": "Phase 4: User Experience & Frontend Enhancement",
+      "description": "Transform Meridian into a modern, user-friendly platform with comprehensive UI/UX improvements",
+      "details": "Implement modern design system, visual workflow builder UI, enhanced dashboard analytics, and mobile-responsive experience with PWA features",
+      "testStrategy": "",
+      "status": "done",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Phase 4.1: Design System & Component Library",
+          "description": "Implement modern design tokens, theming system, reusable component library, accessibility-first approach, and Storybook documentation",
+          "details": "Create comprehensive design token system with dark/light theme support, implement 50+ reusable UI components (layout, form, feedback, navigation, data display, interactive), set up Storybook for component documentation, ensure WCAG 2.1 AA accessibility compliance",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 2
+        },
+        {
+          "id": 2,
+          "title": "Phase 4.2: Visual Workflow Builder UI",
+          "description": "Implement React Flow integration for drag-and-drop workflow creation with node configuration panels and real-time execution monitoring",
+          "details": "Integrate React Flow for visual workflow canvas, implement 25+ node types (trigger, action, logic, integration), create dynamic configuration panels with JSON schema validation, build real-time execution monitoring with animated flow visualization, connect to Phase 3.2.3 backend APIs",
+          "status": "done",
+          "dependencies": [
+            "2.1"
+          ],
+          "parentTaskId": 2
+        },
+        {
+          "id": 3,
+          "title": "Phase 4.3: Enhanced Dashboard & Analytics",
+          "description": "Build interactive chart components, real-time data visualization, customizable dashboard layouts, and advanced filtering/search capabilities",
+          "details": "Implement interactive chart library (line, bar, pie, area, scatter, heatmap, Gantt), create customizable drag-and-drop dashboard layouts, build advanced filtering and global search functionality, integrate real-time data updates with WebSocket connections, connect to Phase 2 analytics APIs",
+          "status": "done",
+          "dependencies": [
+            "2.1"
+          ],
+          "parentTaskId": 2
+        },
+        {
+          "id": 4,
+          "title": "Phase 4.4: Mobile Experience & Performance",
+          "description": "Implement mobile-first responsive design, Progressive Web App features, performance optimization, and smooth animations",
+          "details": "Create mobile-first responsive layouts with touch-friendly interfaces, implement PWA features (service worker, offline support, push notifications), optimize performance (code splitting, lazy loading, caching), add smooth animations with Framer Motion, ensure Lighthouse score >90 across all metrics",
+          "status": "done",
+          "dependencies": [
+            "2.1",
+            "2.2",
+            "2.3"
+          ],
+          "parentTaskId": 2
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Phase 2: Advanced Analytics & Reporting System",
+      "description": "Implement a comprehensive analytics and reporting system with custom report builder, scheduled reports, and interactive widgets to enhance data-driven decision making across all user personas.",
+      "details": "",
+      "testStrategy": "",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Phase 2.1: Custom Report Builder",
+          "description": "Implement a visual report builder with drag-and-drop interface, metric selection, and visualization configuration. Features include 20+ metrics, 6+ chart types, real-time preview, and RBAC integration.",
+          "details": "",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 2,
+          "title": "Phase 2.2: Scheduled Reports & Automation",
+          "description": "Implement a comprehensive scheduled reports system with flexible scheduling options, multi-method delivery (email, Slack, Teams), execution tracking, and template management.",
+          "details": "",
+          "status": "pending",
+          "dependencies": [
+            "3.1"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 3,
+          "title": "Phase 2.3: Interactive Widgets & Dashboards",
+          "description": "Implement real-time data visualization widgets, customizable dashboard layouts, cross-widget interactivity, and mobile-optimized views with export capabilities.",
+          "details": "",
+          "status": "pending",
+          "dependencies": [
+            "3.1",
+            "3.2"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 4,
+          "title": "Implement Visual Report Designer Interface",
+          "description": "Create the main report builder interface with drag-and-drop functionality, metric selection panels, and visualization configuration options. Implement responsive layout and real-time preview.",
+          "details": "",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 5,
+          "title": "Develop Metric Library System",
+          "description": "Implement the comprehensive metric library with 20+ metrics across 5 categories (Project, Task, Team, Time, Custom). Include metric definitions, calculations, and data source mappings.",
+          "details": "",
+          "status": "in-progress",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 6,
+          "title": "Create Visualization Components",
+          "description": "Develop 6+ chart types including metric cards, bar charts, line charts, pie charts, gauges, and heatmaps. Implement configuration options and real-time data binding.",
+          "details": "",
+          "status": "pending",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 7,
+          "title": "Implement RBAC Integration",
+          "description": "Integrate role-based access control for report creation and management. Implement permission checks, workspace scoping, and user role validation throughout the report builder.",
+          "details": "",
+          "status": "pending",
+          "dependencies": [],
+          "parentTaskId": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square70x70logo src="/meridian-logomark.png" />
+      <square150x150logo src="/meridian-logomark.png" />
+      <square310x310logo src="/meridian-logomark.png" />
+      <TileColor>#4F46E5</TileColor>
+    </tile>
+  </msapplication>
+</browserconfig>

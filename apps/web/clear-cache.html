@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Meridian Cache</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Meridian Cache Cleaner</h1>
+        <p>This tool helps clear cached service worker data that might be causing port conflicts.</p>
+        
+        <div id="status"></div>
+        
+        <h3>🔧 Available Actions:</h3>
+        <button onclick="clearAllCaches()">Clear All Caches</button>
+        <button onclick="unregisterServiceWorker()">Unregister Service Worker</button>
+        <button onclick="clearLocalStorage()">Clear Local Storage</button>
+        <button onclick="clearSessionStorage()">Clear Session Storage</button>
+        <button onclick="clearIndexedDB()">Clear IndexedDB</button>
+        <button onclick="clearEverything()">🧹 Clear Everything</button>
+        
+        <h3>📊 Current Status:</h3>
+        <button onclick="checkStatus()">Check Cache Status</button>
+        <div id="cacheStatus"></div>
+        
+        <h3>🚀 Quick Fix:</h3>
+        <ol>
+            <li>Click "Clear Everything" button above</li>
+            <li>Close all browser tabs for localhost</li>
+            <li>Restart your browser</li>
+            <li>Go to <a href="http://localhost:5174">http://localhost:5174</a></li>
+        </ol>
+    </div>
+
+    <script>
+        function logStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            statusDiv.innerHTML += `<div class="${className}">${message}</div>`;
+            console.log(message);
+        }
+
+        async function clearAllCaches() {
+            try {
+                const cacheNames = await caches.keys();
+                logStatus(`Found ${cacheNames.length} caches`, 'info');
+                
+                for (const cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    logStatus(`Deleted cache: ${cacheName}`, 'success');
+                }
+                
+                logStatus('All caches cleared successfully!', 'success');
+            } catch (error) {
+                logStatus(`Error clearing caches: ${error.message}`, 'error');
+            }
+        }
+
+        async function unregisterServiceWorker() {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                logStatus(`Found ${registrations.length} service workers`, 'info');
+                
+                for (const registration of registrations) {
+                    await registration.unregister();
+                    logStatus(`Unregistered service worker: ${registration.scope}`, 'success');
+                }
+                
+                logStatus('All service workers unregistered!', 'success');
+            } catch (error) {
+                logStatus(`Error unregistering service workers: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLocalStorage() {
+            try {
+                const itemCount = localStorage.length;
+                localStorage.clear();
+                logStatus(`Cleared ${itemCount} localStorage items`, 'success');
+            } catch (error) {
+                logStatus(`Error clearing localStorage: ${error.message}`, 'error');
+            }
+        }
+
+        function clearSessionStorage() {
+            try {
+                const itemCount = sessionStorage.length;
+                sessionStorage.clear();
+                logStatus(`Cleared ${itemCount} sessionStorage items`, 'success');
+            } catch (error) {
+                logStatus(`Error clearing sessionStorage: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearIndexedDB() {
+            try {
+                const databases = await indexedDB.databases();
+                for (const db of databases) {
+                    if (db.name) {
+                        const deleteReq = indexedDB.deleteDatabase(db.name);
+                        await new Promise((resolve, reject) => {
+                            deleteReq.onsuccess = () => resolve();
+                            deleteReq.onerror = () => reject(deleteReq.error);
+                        });
+                        logStatus(`Deleted IndexedDB: ${db.name}`, 'success');
+                    }
+                }
+                logStatus('IndexedDB cleared successfully!', 'success');
+            } catch (error) {
+                logStatus(`Error clearing IndexedDB: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearEverything() {
+            logStatus('🧹 Starting complete cache cleanup...', 'info');
+            document.getElementById('status').innerHTML = '';
+            
+            await clearAllCaches();
+            await unregisterServiceWorker();
+            clearLocalStorage();
+            clearSessionStorage();
+            await clearIndexedDB();
+            
+            logStatus('✅ Complete cleanup finished!', 'success');
+            logStatus('🔄 Please close all browser tabs and restart your browser', 'info');
+            logStatus('🚀 Then go to http://localhost:5174', 'info');
+        }
+
+        async function checkStatus() {
+            const statusDiv = document.getElementById('cacheStatus');
+            statusDiv.innerHTML = '<h4>📊 Cache Status:</h4>';
+            
+            try {
+                // Check caches
+                const cacheNames = await caches.keys();
+                statusDiv.innerHTML += `<p><strong>Caches:</strong> ${cacheNames.length} found</p>`;
+                cacheNames.forEach(name => {
+                    statusDiv.innerHTML += `<p>• ${name}</p>`;
+                });
+
+                // Check service workers
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                statusDiv.innerHTML += `<p><strong>Service Workers:</strong> ${registrations.length} registered</p>`;
+                registrations.forEach(reg => {
+                    statusDiv.innerHTML += `<p>• ${reg.scope}</p>`;
+                });
+
+                // Check storage
+                statusDiv.innerHTML += `<p><strong>LocalStorage:</strong> ${localStorage.length} items</p>`;
+                statusDiv.innerHTML += `<p><strong>SessionStorage:</strong> ${sessionStorage.length} items</p>`;
+                
+            } catch (error) {
+                statusDiv.innerHTML += `<p class="error">Error checking status: ${error.message}</p>`;
+            }
+        }
+
+        // Auto-check status on page load
+        document.addEventListener('DOMContentLoaded', checkStatus);
+    </script>
+</body>
+</html>

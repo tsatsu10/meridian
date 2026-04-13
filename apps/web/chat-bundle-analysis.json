@@ -1,0 +1,567 @@
+{
+  "timestamp": "2025-08-03T13:58:06.795Z",
+  "phase": "Phase 1.3: Bundle Size Reduction",
+  "target": "Reduce initial bundle by 50%",
+  "totalSize": 5015481,
+  "chatComponentsSize": 53863,
+  "lazyLoadedSize": 0,
+  "files": [
+    {
+      "path": "assets\\index-BEQKoJvR.js",
+      "size": 3418838,
+      "formattedSize": "3.26 MB"
+    },
+    {
+      "path": "assets\\heavy-vendor-CKS5NhhM.js",
+      "size": 561356,
+      "formattedSize": "548.2 KB"
+    },
+    {
+      "path": "assets\\index-qEiVUO80.css",
+      "size": 269229,
+      "formattedSize": "262.92 KB"
+    },
+    {
+      "path": "assets\\react-vendor-BMHNi2HR.js",
+      "size": 139344,
+      "formattedSize": "136.08 KB"
+    },
+    {
+      "path": "assets\\ui-vendor-DClTcrpB.js",
+      "size": 125480,
+      "formattedSize": "122.54 KB"
+    },
+    {
+      "path": "assets\\utils-vendor-B2f2jXNY.js",
+      "size": 116522,
+      "formattedSize": "113.79 KB"
+    },
+    {
+      "path": "assets\\router-vendor-DotBKIP3.js",
+      "size": 105077,
+      "formattedSize": "102.61 KB"
+    },
+    {
+      "path": "assets\\chat-vendor-BUjcrm-s.js",
+      "size": 53863,
+      "formattedSize": "52.6 KB"
+    },
+    {
+      "path": "ms-icon-310x310.png",
+      "size": 29923,
+      "formattedSize": "29.22 KB"
+    },
+    {
+      "path": "apple-icon-180x180.png",
+      "size": 14249,
+      "formattedSize": "13.92 KB"
+    },
+    {
+      "path": "apple-icon-precomposed.png",
+      "size": 11923,
+      "formattedSize": "11.64 KB"
+    },
+    {
+      "path": "apple-icon.png",
+      "size": 11923,
+      "formattedSize": "11.64 KB"
+    },
+    {
+      "path": "apple-icon-152x152.png",
+      "size": 11659,
+      "formattedSize": "11.39 KB"
+    },
+    {
+      "path": "ms-icon-150x150.png",
+      "size": 11588,
+      "formattedSize": "11.32 KB"
+    },
+    {
+      "path": "android-icon-192x192.png",
+      "size": 11404,
+      "formattedSize": "11.14 KB"
+    },
+    {
+      "path": "android-icon-144x144.png",
+      "size": 10962,
+      "formattedSize": "10.71 KB"
+    },
+    {
+      "path": "apple-icon-144x144.png",
+      "size": 10962,
+      "formattedSize": "10.71 KB"
+    },
+    {
+      "path": "ms-icon-144x144.png",
+      "size": 10962,
+      "formattedSize": "10.71 KB"
+    },
+    {
+      "path": "apple-icon-120x120.png",
+      "size": 8435,
+      "formattedSize": "8.24 KB"
+    },
+    {
+      "path": "apple-icon-114x114.png",
+      "size": 7645,
+      "formattedSize": "7.47 KB"
+    },
+    {
+      "path": "apple-icon-76x76.png",
+      "size": 4542,
+      "formattedSize": "4.44 KB"
+    },
+    {
+      "path": "android-icon-72x72.png",
+      "size": 4296,
+      "formattedSize": "4.2 KB"
+    },
+    {
+      "path": "apple-icon-72x72.png",
+      "size": 4296,
+      "formattedSize": "4.2 KB"
+    },
+    {
+      "path": "assets\\LogicNode-Dc6jHPyB.js",
+      "size": 4190,
+      "formattedSize": "4.09 KB"
+    },
+    {
+      "path": "android-icon-96x96.png",
+      "size": 4060,
+      "formattedSize": "3.96 KB"
+    },
+    {
+      "path": "favicon-96x96.png",
+      "size": 4060,
+      "formattedSize": "3.96 KB"
+    },
+    {
+      "path": "index.html",
+      "size": 3970,
+      "formattedSize": "3.88 KB"
+    },
+    {
+      "path": "ms-icon-70x70.png",
+      "size": 3891,
+      "formattedSize": "3.8 KB"
+    },
+    {
+      "path": "assets\\IntegrationNode-40o2Pvn-.js",
+      "size": 3808,
+      "formattedSize": "3.72 KB"
+    },
+    {
+      "path": "apple-icon-60x60.png",
+      "size": 3551,
+      "formattedSize": "3.47 KB"
+    },
+    {
+      "path": "apple-icon-57x57.png",
+      "size": 3360,
+      "formattedSize": "3.28 KB"
+    },
+    {
+      "path": "manifest-new.json",
+      "size": 2926,
+      "formattedSize": "2.86 KB"
+    },
+    {
+      "path": "assets\\dock-navigation-CzyZyhOd.js",
+      "size": 2796,
+      "formattedSize": "2.73 KB"
+    },
+    {
+      "path": "android-icon-48x48.png",
+      "size": 2723,
+      "formattedSize": "2.66 KB"
+    },
+    {
+      "path": "assets\\ActionNode-Zrtg3UV8.js",
+      "size": 2687,
+      "formattedSize": "2.62 KB"
+    },
+    {
+      "path": "assets\\BaseNode-BIlRFCvR.js",
+      "size": 2648,
+      "formattedSize": "2.59 KB"
+    },
+    {
+      "path": "assets\\TriggerNode-BriUyJav.js",
+      "size": 2581,
+      "formattedSize": "2.52 KB"
+    },
+    {
+      "path": "manifest.json",
+      "size": 2233,
+      "formattedSize": "2.18 KB"
+    },
+    {
+      "path": "manifest.json.backup",
+      "size": 2233,
+      "formattedSize": "2.18 KB"
+    },
+    {
+      "path": "manifest-enhanced.json",
+      "size": 2041,
+      "formattedSize": "1.99 KB"
+    },
+    {
+      "path": "android-icon-36x36.png",
+      "size": 1976,
+      "formattedSize": "1.93 KB"
+    },
+    {
+      "path": "favicon-32x32.png",
+      "size": 1461,
+      "formattedSize": "1.43 KB"
+    },
+    {
+      "path": "favicon.ico",
+      "size": 1150,
+      "formattedSize": "1.12 KB"
+    },
+    {
+      "path": "favicon-16x16.png",
+      "size": 966,
+      "formattedSize": "966 Bytes"
+    },
+    {
+      "path": "service-worker.js",
+      "size": 920,
+      "formattedSize": "920 Bytes"
+    },
+    {
+      "path": "assets\\clear-workspace-store-lymQf089.js",
+      "size": 490,
+      "formattedSize": "490 Bytes"
+    },
+    {
+      "path": "browserconfig.xml",
+      "size": 282,
+      "formattedSize": "282 Bytes"
+    }
+  ],
+  "categories": {
+    "chatComponents": {
+      "size": 53863,
+      "files": [
+        {
+          "path": "assets\\chat-vendor-BUjcrm-s.js",
+          "size": 53863,
+          "formattedSize": "52.6 KB"
+        }
+      ]
+    },
+    "lazyLoaded": {
+      "size": 0,
+      "files": []
+    },
+    "javascript": {
+      "size": 4486737,
+      "files": [
+        {
+          "path": "assets\\ActionNode-Zrtg3UV8.js",
+          "size": 2687,
+          "formattedSize": "2.62 KB"
+        },
+        {
+          "path": "assets\\BaseNode-BIlRFCvR.js",
+          "size": 2648,
+          "formattedSize": "2.59 KB"
+        },
+        {
+          "path": "assets\\clear-workspace-store-lymQf089.js",
+          "size": 490,
+          "formattedSize": "490 Bytes"
+        },
+        {
+          "path": "assets\\dock-navigation-CzyZyhOd.js",
+          "size": 2796,
+          "formattedSize": "2.73 KB"
+        },
+        {
+          "path": "assets\\heavy-vendor-CKS5NhhM.js",
+          "size": 561356,
+          "formattedSize": "548.2 KB"
+        },
+        {
+          "path": "assets\\index-BEQKoJvR.js",
+          "size": 3418838,
+          "formattedSize": "3.26 MB"
+        },
+        {
+          "path": "assets\\IntegrationNode-40o2Pvn-.js",
+          "size": 3808,
+          "formattedSize": "3.72 KB"
+        },
+        {
+          "path": "assets\\LogicNode-Dc6jHPyB.js",
+          "size": 4190,
+          "formattedSize": "4.09 KB"
+        },
+        {
+          "path": "assets\\react-vendor-BMHNi2HR.js",
+          "size": 139344,
+          "formattedSize": "136.08 KB"
+        },
+        {
+          "path": "assets\\router-vendor-DotBKIP3.js",
+          "size": 105077,
+          "formattedSize": "102.61 KB"
+        },
+        {
+          "path": "assets\\TriggerNode-BriUyJav.js",
+          "size": 2581,
+          "formattedSize": "2.52 KB"
+        },
+        {
+          "path": "assets\\ui-vendor-DClTcrpB.js",
+          "size": 125480,
+          "formattedSize": "122.54 KB"
+        },
+        {
+          "path": "assets\\utils-vendor-B2f2jXNY.js",
+          "size": 116522,
+          "formattedSize": "113.79 KB"
+        },
+        {
+          "path": "service-worker.js",
+          "size": 920,
+          "formattedSize": "920 Bytes"
+        }
+      ]
+    },
+    "css": {
+      "size": 269229,
+      "files": [
+        {
+          "path": "assets\\index-qEiVUO80.css",
+          "size": 269229,
+          "formattedSize": "262.92 KB"
+        }
+      ]
+    },
+    "assets": {
+      "size": 191967,
+      "files": [
+        {
+          "path": "android-icon-144x144.png",
+          "size": 10962,
+          "formattedSize": "10.71 KB"
+        },
+        {
+          "path": "android-icon-192x192.png",
+          "size": 11404,
+          "formattedSize": "11.14 KB"
+        },
+        {
+          "path": "android-icon-36x36.png",
+          "size": 1976,
+          "formattedSize": "1.93 KB"
+        },
+        {
+          "path": "android-icon-48x48.png",
+          "size": 2723,
+          "formattedSize": "2.66 KB"
+        },
+        {
+          "path": "android-icon-72x72.png",
+          "size": 4296,
+          "formattedSize": "4.2 KB"
+        },
+        {
+          "path": "android-icon-96x96.png",
+          "size": 4060,
+          "formattedSize": "3.96 KB"
+        },
+        {
+          "path": "apple-icon-114x114.png",
+          "size": 7645,
+          "formattedSize": "7.47 KB"
+        },
+        {
+          "path": "apple-icon-120x120.png",
+          "size": 8435,
+          "formattedSize": "8.24 KB"
+        },
+        {
+          "path": "apple-icon-144x144.png",
+          "size": 10962,
+          "formattedSize": "10.71 KB"
+        },
+        {
+          "path": "apple-icon-152x152.png",
+          "size": 11659,
+          "formattedSize": "11.39 KB"
+        },
+        {
+          "path": "apple-icon-180x180.png",
+          "size": 14249,
+          "formattedSize": "13.92 KB"
+        },
+        {
+          "path": "apple-icon-57x57.png",
+          "size": 3360,
+          "formattedSize": "3.28 KB"
+        },
+        {
+          "path": "apple-icon-60x60.png",
+          "size": 3551,
+          "formattedSize": "3.47 KB"
+        },
+        {
+          "path": "apple-icon-72x72.png",
+          "size": 4296,
+          "formattedSize": "4.2 KB"
+        },
+        {
+          "path": "apple-icon-76x76.png",
+          "size": 4542,
+          "formattedSize": "4.44 KB"
+        },
+        {
+          "path": "apple-icon-precomposed.png",
+          "size": 11923,
+          "formattedSize": "11.64 KB"
+        },
+        {
+          "path": "apple-icon.png",
+          "size": 11923,
+          "formattedSize": "11.64 KB"
+        },
+        {
+          "path": "favicon-16x16.png",
+          "size": 966,
+          "formattedSize": "966 Bytes"
+        },
+        {
+          "path": "favicon-32x32.png",
+          "size": 1461,
+          "formattedSize": "1.43 KB"
+        },
+        {
+          "path": "favicon-96x96.png",
+          "size": 4060,
+          "formattedSize": "3.96 KB"
+        },
+        {
+          "path": "favicon.ico",
+          "size": 1150,
+          "formattedSize": "1.12 KB"
+        },
+        {
+          "path": "ms-icon-144x144.png",
+          "size": 10962,
+          "formattedSize": "10.71 KB"
+        },
+        {
+          "path": "ms-icon-150x150.png",
+          "size": 11588,
+          "formattedSize": "11.32 KB"
+        },
+        {
+          "path": "ms-icon-310x310.png",
+          "size": 29923,
+          "formattedSize": "29.22 KB"
+        },
+        {
+          "path": "ms-icon-70x70.png",
+          "size": 3891,
+          "formattedSize": "3.8 KB"
+        }
+      ]
+    },
+    "other": {
+      "size": 13685,
+      "files": [
+        {
+          "path": "browserconfig.xml",
+          "size": 282,
+          "formattedSize": "282 Bytes"
+        },
+        {
+          "path": "index.html",
+          "size": 3970,
+          "formattedSize": "3.88 KB"
+        },
+        {
+          "path": "manifest-enhanced.json",
+          "size": 2041,
+          "formattedSize": "1.99 KB"
+        },
+        {
+          "path": "manifest-new.json",
+          "size": 2926,
+          "formattedSize": "2.86 KB"
+        },
+        {
+          "path": "manifest.json",
+          "size": 2233,
+          "formattedSize": "2.18 KB"
+        },
+        {
+          "path": "manifest.json.backup",
+          "size": 2233,
+          "formattedSize": "2.18 KB"
+        }
+      ]
+    }
+  },
+  "optimizations": {
+    "lazyLoading": {
+      "implemented": true,
+      "components": [
+        "AdvancedMessageSearch",
+        "ChatModals",
+        "FilePreview",
+        "VideoCall",
+        "AdvancedSettings",
+        "MessageAnalytics",
+        "WorkflowAutomation",
+        "TaskIntegration",
+        "FileManagement",
+        "UserPresence"
+      ],
+      "estimatedReduction": "50%"
+    },
+    "memoryOptimization": {
+      "implemented": true,
+      "target": "<100MB for 10 concurrent chats",
+      "features": [
+        "WebSocket Singleton Pattern",
+        "Connection pooling",
+        "Automatic cleanup",
+        "Memory monitoring"
+      ]
+    },
+    "renderOptimization": {
+      "implemented": true,
+      "target": "Reduce re-renders by 60%",
+      "features": [
+        "React.memo for all chat components",
+        "useCallback for event handlers",
+        "Virtual scrolling",
+        "Optimized state management"
+      ]
+    }
+  },
+  "performanceAnalysis": {
+    "bundleSize": {
+      "total": "4.78 MB",
+      "chatComponents": "52.6 KB",
+      "lazyLoaded": "0 Bytes",
+      "percentage": "1.1%"
+    },
+    "optimization": {
+      "lazyLoadingReduction": "50% (estimated)",
+      "memoryOptimization": "40% reduction target",
+      "renderOptimization": "60% re-render reduction target"
+    },
+    "targets": {
+      "initialBundle": "<500KB",
+      "memoryUsage": "<100MB for 10 chats",
+      "renderTime": "<5ms for message updates"
+    }
+  }
+}

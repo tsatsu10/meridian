@@ -1,0 +1,213 @@
+# Meridian Configuration Map
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: meridian-config
+  namespace: meridian
+  labels:
+    app: meridian
+data:
+  # Application Configuration
+  NODE_ENV: "production"
+  API_PORT: "3005"
+  HOST: "0.0.0.0"
+  DATABASE_TYPE: "postgresql"
+  
+  # Performance & Scalability Configuration
+  APM_ENABLED: "true"
+  APM_MONITORING_INTERVAL: "30000"
+  APM_COLLECT_SYSTEM_METRICS: "true"
+  APM_COLLECT_DATABASE_METRICS: "true"
+  APM_COLLECT_WEBSOCKET_METRICS: "true"
+  
+  # Database Pool Configuration
+  DB_MIN_CONNECTIONS: "10"
+  DB_MAX_CONNECTIONS: "100"
+  DB_CONNECTION_TIMEOUT: "10000"
+  DB_QUERY_TIMEOUT: "30000"
+  
+  # Cache Configuration
+  CACHE_TIMEOUT: "300000"
+  
+  # WebSocket Configuration
+  WS_MAX_CONNECTIONS: "10000"
+  WS_PING_INTERVAL: "30000"
+  WS_PONG_TIMEOUT: "5000"
+  
+  # Security Configuration
+  RATE_LIMIT_WINDOW: "900000"
+  RATE_LIMIT_MAX: "2000"
+  SESSION_TIMEOUT: "3600000"
+  
+  # File Upload Configuration
+  MAX_FILE_SIZE: "104857600"
+  UPLOAD_TIMEOUT: "60000"
+  
+  # Logging Configuration
+  LOG_LEVEL: "info"
+  ENABLE_FILE_LOGGING: "true"
+  LOG_DIRECTORY: "/app/logs"
+  
+  # Nginx Configuration
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+    
+    worker_rlimit_nofile 65535;
+    
+    events {
+        worker_connections 4096;
+        use epoll;
+        multi_accept on;
+    }
+    
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                       '$status $body_bytes_sent "$http_referer" '
+                       '"$http_user_agent" "$http_x_forwarded_for" '
+                       'rt=$request_time ut="$upstream_response_time"';
+        
+        access_log /var/log/nginx/access.log main;
+        
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        client_max_body_size 100M;
+        
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_types
+            application/atom+xml
+            application/geo+json
+            application/javascript
+            application/x-javascript
+            application/json
+            application/ld+json
+            application/manifest+json
+            application/rdf+xml
+            application/rss+xml
+            application/xhtml+xml
+            application/xml
+            font/eot
+            font/otf
+            font/ttf
+            image/svg+xml
+            text/css
+            text/javascript
+            text/plain
+            text/xml;
+        
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        
+        limit_req_zone $binary_remote_addr zone=api:10m rate=200r/m;
+        limit_req_zone $binary_remote_addr zone=auth:10m rate=20r/m;
+        
+        upstream meridian_api {
+            server meridian-api:3005 max_fails=3 fail_timeout=30s;
+            keepalive 32;
+        }
+        
+        proxy_cache_path /var/cache/nginx/meridian levels=1:2 keys_zone=meridian_cache:10m max_size=1g inactive=60m use_temp_path=off;
+        
+        server {
+            listen 80;
+            server_name _;
+            server_tokens off;
+            
+            location /health {
+                access_log off;
+                return 200 "healthy\n";
+                add_header Content-Type text/plain;
+            }
+            
+            location /api/ {
+                limit_req zone=api burst=50 nodelay;
+                
+                proxy_pass http://meridian_api;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+                
+                proxy_connect_timeout 30s;
+                proxy_send_timeout 30s;
+                proxy_read_timeout 30s;
+                
+                proxy_cache meridian_cache;
+                proxy_cache_methods GET HEAD;
+                proxy_cache_valid 200 302 5m;
+                proxy_cache_valid 404 1m;
+                proxy_cache_use_stale error timeout invalid_header updating http_500 http_502 http_503 http_504;
+                proxy_cache_background_update on;
+                proxy_cache_lock on;
+                
+                proxy_cache_bypass $http_authorization;
+                proxy_no_cache $http_authorization;
+                
+                add_header X-Cache-Status $upstream_cache_status;
+            }
+            
+            location /api/auth/ {
+                limit_req zone=auth burst=10 nodelay;
+                
+                proxy_pass http://meridian_api;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+                
+                proxy_no_cache 1;
+                proxy_cache_bypass 1;
+            }
+            
+            location /socket.io/ {
+                proxy_pass http://meridian_api;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                proxy_read_timeout 3600s;
+                proxy_send_timeout 3600s;
+                
+                proxy_no_cache 1;
+                proxy_cache_bypass 1;
+            }
+            
+            location / {
+                try_files $uri $uri/ @backend;
+            }
+            
+            location @backend {
+                proxy_pass http://meridian_api;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+        }
+    }

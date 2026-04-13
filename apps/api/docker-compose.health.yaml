@@ -1,0 +1,79 @@
+# Docker Compose with Health Checks
+# Example configuration showing how to use system health endpoints
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - API_PORT=3005
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    
+    # Health check configuration
+    healthcheck:
+      # Use readiness endpoint for Docker health checks
+      test: ["CMD", "curl", "-f", "http://localhost:3005/api/system-health/ready"]
+      interval: 10s         # Check every 10 seconds
+      timeout: 5s           # Timeout after 5 seconds
+      retries: 3            # 3 failures = unhealthy
+      start_period: 40s     # Grace period for startup
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    restart: unless-stopped
+  
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=meridian
+      - POSTGRES_USER=meridian
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meridian"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+# Example: Check service health
+# docker-compose ps  # Shows health status
+# docker-compose exec api curl http://localhost:3005/api/system-health
+# docker-compose exec api curl http://localhost:3005/api/system-health/live
+# docker-compose exec api curl http://localhost:3005/api/system-health/ready
+

@@ -1,0 +1,642 @@
+{
+  "project": {
+    "name": "Optional Department Integration for Meridian",
+    "description": "Integrate optional department functionality while maintaining current workspace → project → task simplicity",
+    "version": "1.0.0",
+    "epic": "Department Integration"
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Database Schema Enhancement for Departments",
+      "description": "Extend existing department table and create necessary relationships for optional department integration",
+      "category": "Backend",
+      "priority": "high",
+      "estimatedHours": 8,
+      "status": "pending",
+      "tags": ["database", "schema", "migration"],
+      "acceptanceCriteria": [
+        "Enhanced department table with optional features flag",
+        "User-department membership junction table",
+        "Project-department relationship table (optional)",
+        "Department settings and metadata table",
+        "Migration scripts for existing data"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/api/src/database/schema.ts",
+          "apps/api/drizzle/migrations/",
+          "supabase/migrations/"
+        ],
+        "dependencies": ["Existing RBAC system"],
+        "testStrategy": "Unit tests for schema validation and migration integrity"
+      }
+    },
+    {
+      "id": "2", 
+      "title": "Department Feature Toggle System",
+      "description": "Create workspace-level feature toggle to enable/disable department functionality",
+      "category": "Backend",
+      "priority": "high",
+      "estimatedHours": 6,
+      "status": "pending",
+      "tags": ["feature-toggle", "workspace", "configuration"],
+      "dependsOn": ["1"],
+      "acceptanceCriteria": [
+        "Workspace settings include department feature toggle",
+        "API endpoints respect department feature state",
+        "Default is disabled for new workspaces",
+        "Existing workspaces remain unaffected"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/api/src/workspace/",
+          "apps/web/src/types/workspace.ts"
+        ],
+        "implementation": "Add 'departmentsEnabled' boolean to workspace model"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Department CRUD API Endpoints",
+      "description": "Create comprehensive API endpoints for department management with proper RBAC integration",
+      "category": "Backend", 
+      "priority": "high",
+      "estimatedHours": 12,
+      "status": "pending",
+      "tags": ["api", "crud", "rbac"],
+      "dependsOn": ["1", "2"],
+      "acceptanceCriteria": [
+        "Create, read, update, delete departments",
+        "Department membership management",
+        "Department head assignment",
+        "Proper permission checks for all operations",
+        "Support for hierarchical departments"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/api/src/department/",
+          "apps/api/src/middlewares/rbac.ts"
+        ],
+        "endpoints": [
+          "GET /departments",
+          "POST /departments", 
+          "PUT /departments/:id",
+          "DELETE /departments/:id",
+          "POST /departments/:id/members",
+          "DELETE /departments/:id/members/:userId"
+        ]
+      }
+    },
+    {
+      "id": "4",
+      "title": "Department Management UI Components",
+      "description": "Create React components for department management interface following existing UI patterns",
+      "category": "Frontend",
+      "priority": "high", 
+      "estimatedHours": 16,
+      "status": "pending",
+      "tags": ["ui", "react", "components"],
+      "dependsOn": ["3"],
+      "acceptanceCriteria": [
+        "Department list view with create/edit/delete actions",
+        "Department form with validation",
+        "User assignment interface",
+        "Department head selection",
+        "Consistent with existing Card component patterns"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/department/",
+          "apps/web/src/routes/dashboard/settings/departments/"
+        ],
+        "patterns": "Follow apps/web/src/routes/dashboard/settings/appearance.tsx pattern"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Department Settings Integration",
+      "description": "Integrate department management into existing settings system following standardized patterns",
+      "category": "Frontend",
+      "priority": "medium",
+      "estimatedHours": 8,
+      "status": "pending", 
+      "tags": ["settings", "integration", "ui"],
+      "dependsOn": ["4"],
+      "acceptanceCriteria": [
+        "Department tab in settings navigation",
+        "Consistent with other settings pages",
+        "Feature toggle visible to workspace admins",
+        "Proper loading and error states"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/routes/dashboard/settings/departments.tsx",
+          "apps/web/src/components/common/sidebar/sections/workspace-settings.tsx"
+        ],
+        "uiPatterns": "Follow Card-based layout from appearance settings"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Project-Department Association",
+      "description": "Add optional department assignment to project creation and management",
+      "category": "Full Stack",
+      "priority": "medium",
+      "estimatedHours": 10,
+      "status": "pending",
+      "tags": ["project", "association", "optional"],
+      "dependsOn": ["3", "4"],
+      "acceptanceCriteria": [
+        "Optional department field in project forms",
+        "Multi-department project support",
+        "Backward compatibility with existing projects",
+        "Department filtering in project lists"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/project/project-form.tsx",
+          "apps/api/src/project/controllers/",
+          "apps/web/src/routes/dashboard/projects/"
+        ],
+        "implementation": "Add departmentIds array to project model"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Department-Aware Navigation",
+      "description": "Enhance sidebar navigation to optionally group projects by department",
+      "category": "Frontend",
+      "priority": "medium",
+      "estimatedHours": 12,
+      "status": "pending",
+      "tags": ["navigation", "sidebar", "ux"],
+      "dependsOn": ["6"],
+      "acceptanceCriteria": [
+        "Optional department grouping in sidebar",
+        "Department-based project filtering",
+        "Smooth transition when departments enabled/disabled",
+        "Maintains existing navigation patterns"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/common/sidebar/sidebar-content.tsx",
+          "apps/web/src/components/common/sidebar/sections/"
+        ],
+        "approach": "Conditional rendering based on workspace department setting"
+      }
+    },
+    {
+      "id": "8", 
+      "title": "Department-Scoped RBAC Enhancement",
+      "description": "Enhance existing RBAC system to properly handle department-scoped permissions",
+      "category": "Backend",
+      "priority": "high",
+      "estimatedHours": 14,
+      "status": "pending",
+      "tags": ["rbac", "permissions", "security"],
+      "dependsOn": ["3"],
+      "acceptanceCriteria": [
+        "Department-scoped permission checks",
+        "Department head role enforcement",
+        "Cross-department collaboration rules",
+        "Backward compatibility with project-scoped permissions"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/lib/permissions/",
+          "apps/api/src/middlewares/rbac.ts"
+        ],
+        "implementation": "Extend existing permission context with department scope"
+      }
+    },
+    {
+      "id": "9",
+      "title": "Department Analytics Dashboard",
+      "description": "Create department-specific analytics and metrics views for department heads and executives",
+      "category": "Frontend",
+      "priority": "medium",
+      "estimatedHours": 20,
+      "status": "pending",
+      "tags": ["analytics", "dashboard", "metrics"],
+      "dependsOn": ["6", "8"],
+      "acceptanceCriteria": [
+        "Department performance metrics",
+        "Resource utilization charts", 
+        "Cross-department collaboration stats",
+        "Department budget tracking",
+        "Exportable reports"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/routes/dashboard/analytics/departments/",
+          "apps/web/src/components/analytics/department/"
+        ],
+        "libraries": "Recharts for visualizations, existing analytics patterns"
+      }
+    },
+    {
+      "id": "10",
+      "title": "User Department Assignment Interface",
+      "description": "Create interface for assigning users to departments with proper role management",
+      "category": "Frontend",
+      "priority": "medium", 
+      "estimatedHours": 12,
+      "status": "pending",
+      "tags": ["user-management", "assignment", "ui"],
+      "dependsOn": ["4", "8"],
+      "acceptanceCriteria": [
+        "Bulk user assignment to departments",
+        "Multiple department membership support",
+        "Department-specific role assignment",
+        "User onboarding with department selection"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/user/department-assignment.tsx",
+          "apps/web/src/routes/dashboard/teams/departments/"
+        ],
+        "patterns": "Follow existing team management UI patterns"
+      }
+    },
+    {
+      "id": "11",
+      "title": "Department-Based Project Templates", 
+      "description": "Enable department-specific project templates and default settings",
+      "category": "Full Stack",
+      "priority": "low",
+      "estimatedHours": 10,
+      "status": "pending",
+      "tags": ["templates", "project", "department"],
+      "dependsOn": ["6"],
+      "acceptanceCriteria": [
+        "Department-specific project templates",
+        "Template inheritance from department settings",
+        "Default department assignment for new projects",
+        "Template sharing across departments"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/project/templates/",
+          "apps/api/src/project/templates/"
+        ],
+        "implementation": "Extend existing project template system"
+      }
+    },
+    {
+      "id": "12",
+      "title": "Department Migration Utilities",
+      "description": "Create utilities for migrating existing workspaces to department structure",
+      "category": "Backend",
+      "priority": "medium",
+      "estimatedHours": 8,
+      "status": "pending", 
+      "tags": ["migration", "utilities", "data"],
+      "dependsOn": ["1", "2"],
+      "acceptanceCriteria": [
+        "Safe migration of existing projects",
+        "User department assignment wizard", 
+        "Rollback capabilities",
+        "Data integrity validation"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/api/src/migration/department-migration.ts",
+          "scripts/migrate-to-departments.ts"
+        ],
+        "safety": "Non-destructive migration with backup validation"
+      }
+    },
+    {
+      "id": "13",
+      "title": "Department Search and Filtering",
+      "description": "Implement department-based search and filtering across the application",
+      "category": "Frontend", 
+      "priority": "medium",
+      "estimatedHours": 8,
+      "status": "pending",
+      "tags": ["search", "filtering", "ux"],
+      "dependsOn": ["7"],
+      "acceptanceCriteria": [
+        "Department filter in project lists",
+        "Department-scoped task search",
+        "User filtering by department",
+        "Multi-department selection support"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/search/",
+          "apps/web/src/hooks/use-department-filter.ts"
+        ],
+        "implementation": "Extend existing search/filter components"
+      }
+    },
+    {
+      "id": "14",
+      "title": "Department Notification Preferences",
+      "description": "Add department-based notification and communication preferences",
+      "category": "Full Stack",
+      "priority": "low",
+      "estimatedHours": 8,
+      "status": "pending",
+      "tags": ["notifications", "preferences", "communication"],
+      "dependsOn": ["5"],
+      "acceptanceCriteria": [
+        "Department-wide notification settings",
+        "Department announcement system",
+        "Cross-department notification rules",
+        "User opt-in/opt-out controls"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/routes/dashboard/settings/notifications.tsx",
+          "apps/api/src/notification/department-notifications.ts"
+        ],
+        "integration": "Extend existing notification system"
+      }
+    },
+    {
+      "id": "15",
+      "title": "Department Resource Allocation",
+      "description": "Implement department-level budget and resource tracking",
+      "category": "Full Stack",
+      "priority": "low", 
+      "estimatedHours": 16,
+      "status": "pending",
+      "tags": ["budget", "resources", "allocation"],
+      "dependsOn": ["9"],
+      "acceptanceCriteria": [
+        "Department budget assignment and tracking",
+        "Resource allocation across projects",
+        "Spending analytics and alerts",
+        "Budget approval workflows"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/department/budget/",
+          "apps/api/src/budget/department-budget.ts"
+        ],
+        "features": "Budget tracking, approval workflows, spending analytics"
+      }
+    },
+    {
+      "id": "16",
+      "title": "Hierarchical Department Support",
+      "description": "Add support for nested department structures (sub-departments)",
+      "category": "Full Stack",
+      "priority": "low",
+      "estimatedHours": 12,
+      "status": "pending",
+      "tags": ["hierarchy", "nested", "structure"],
+      "dependsOn": ["4"],
+      "acceptanceCriteria": [
+        "Parent-child department relationships",
+        "Recursive permission inheritance",
+        "Tree view for department hierarchy",
+        "Depth limit configuration"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/api/src/database/schema.ts",
+          "apps/web/src/components/department/department-tree.tsx"
+        ],
+        "implementation": "Self-referencing department table with parentId"
+      }
+    },
+    {
+      "id": "17",
+      "title": "Department API Documentation",
+      "description": "Create comprehensive API documentation for department endpoints",
+      "category": "Documentation",
+      "priority": "medium",
+      "estimatedHours": 6,
+      "status": "pending",
+      "tags": ["documentation", "api", "reference"],
+      "dependsOn": ["3"],
+      "acceptanceCriteria": [
+        "Complete endpoint documentation",
+        "Request/response examples", 
+        "Authentication requirements",
+        "Rate limiting information"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/docs/api/departments.md",
+          "apps/api/src/department/README.md"
+        ],
+        "format": "OpenAPI/Swagger documentation"
+      }
+    },
+    {
+      "id": "18",
+      "title": "Department Feature Testing Suite",
+      "description": "Comprehensive testing for department functionality across all layers",
+      "category": "Testing",
+      "priority": "high",
+      "estimatedHours": 16,
+      "status": "pending",
+      "tags": ["testing", "e2e", "unit", "integration"],
+      "dependsOn": ["5", "7", "8"],
+      "acceptanceCriteria": [
+        "Unit tests for all department components",
+        "Integration tests for API endpoints",
+        "E2E tests for department workflows",
+        "Performance tests for department queries"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/department/__tests__/",
+          "apps/api/src/department/__tests__/",
+          "apps/web/e2e/department.spec.ts"
+        ],
+        "frameworks": "Jest, React Testing Library, Playwright"
+      }
+    },
+    {
+      "id": "19",
+      "title": "Department Performance Optimization",
+      "description": "Optimize database queries and caching for department-related operations",
+      "category": "Backend",
+      "priority": "medium",
+      "estimatedHours": 10,
+      "status": "pending",
+      "tags": ["performance", "optimization", "caching"],
+      "dependsOn": ["3", "8"],
+      "acceptanceCriteria": [
+        "Efficient department-scoped queries",
+        "Department hierarchy caching",
+        "Optimized permission checks",
+        "Query performance benchmarks"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/api/src/database/queries/department-queries.ts",
+          "apps/api/src/cache/department-cache.ts"
+        ],
+        "optimizations": "Query optimization, Redis caching, permission caching"
+      }
+    },
+    {
+      "id": "20",
+      "title": "Department Backup and Export",
+      "description": "Implement department data backup and export functionality",
+      "category": "Backend",
+      "priority": "low",
+      "estimatedHours": 8,
+      "status": "pending",
+      "tags": ["backup", "export", "data"],
+      "dependsOn": ["3"],
+      "acceptanceCriteria": [
+        "Department structure export (JSON/CSV)",
+        "Member assignment export",
+        "Department analytics export",
+        "Automated backup scheduling"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/api/src/export/department-export.ts",
+          "apps/web/src/components/department/export/"
+        ],
+        "formats": "JSON, CSV, Excel export options"
+      }
+    },
+    {
+      "id": "21",
+      "title": "Department Integration with Teams",
+      "description": "Integrate department functionality with existing team management",
+      "category": "Full Stack",
+      "priority": "medium",
+      "estimatedHours": 10,
+      "status": "pending",
+      "tags": ["teams", "integration", "compatibility"],
+      "dependsOn": ["10"],
+      "acceptanceCriteria": [
+        "Teams can belong to departments",
+        "Department-team relationship management",
+        "Cross-department team collaboration",
+        "Team-department analytics"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/routes/dashboard/teams/",
+          "apps/api/src/team/department-integration.ts"
+        ],
+        "approach": "Optional department assignment for teams"
+      }
+    },
+    {
+      "id": "22",
+      "title": "Department Mobile Responsiveness",
+      "description": "Ensure all department features work properly on mobile devices",
+      "category": "Frontend",
+      "priority": "medium",
+      "estimatedHours": 8,
+      "status": "pending",
+      "tags": ["mobile", "responsive", "ui"],
+      "dependsOn": ["4", "7"],
+      "acceptanceCriteria": [
+        "Mobile-friendly department management",
+        "Responsive department navigation",
+        "Touch-optimized interactions",
+        "Mobile department analytics"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/web/src/components/department/mobile/",
+          "apps/web/src/styles/department-mobile.css"
+        ],
+        "patterns": "Follow existing mobile responsive patterns"
+      }
+    },
+    {
+      "id": "23",
+      "title": "Department Feature Rollout Strategy",
+      "description": "Plan and implement phased rollout of department features",
+      "category": "DevOps",
+      "priority": "high",
+      "estimatedHours": 6,
+      "status": "pending",
+      "tags": ["rollout", "deployment", "strategy"],
+      "dependsOn": ["18"],
+      "acceptanceCriteria": [
+        "Feature flag implementation",
+        "Gradual rollout plan",
+        "Rollback procedures",
+        "User adoption monitoring"
+      ],
+      "technicalDetails": {
+        "files": [
+          "deployment/department-rollout.md",
+          "apps/web/src/config/feature-flags.ts"
+        ],
+        "strategy": "Progressive rollout with ability to disable"
+      }
+    },
+    {
+      "id": "24",
+      "title": "Department User Training Materials",
+      "description": "Create user guides and training materials for department features",
+      "category": "Documentation",
+      "priority": "medium",
+      "estimatedHours": 8,
+      "status": "pending",
+      "tags": ["training", "documentation", "user-guide"],
+      "dependsOn": ["5", "7"],
+      "acceptanceCriteria": [
+        "Administrator setup guide",
+        "End-user department guide",
+        "Video tutorials",
+        "FAQ and troubleshooting"
+      ],
+      "technicalDetails": {
+        "files": [
+          "apps/docs/user-guides/departments/",
+          "apps/web/src/components/help/department-help.tsx"
+        ],
+        "content": "Setup guides, user tutorials, best practices"
+      }
+    },
+    {
+      "id": "25",
+      "title": "Department Integration Validation",
+      "description": "Final validation and testing of complete department integration",
+      "category": "Testing",
+      "priority": "high",
+      "estimatedHours": 12,
+      "status": "pending",
+      "tags": ["validation", "integration", "final-testing"],
+      "dependsOn": ["23", "24"],
+      "acceptanceCriteria": [
+        "End-to-end feature validation",
+        "Performance benchmarking",
+        "User acceptance testing",
+        "Production readiness checklist"
+      ],
+      "technicalDetails": {
+        "files": [
+          "tests/integration/department-full-suite.spec.ts",
+          "docs/department-validation-report.md"
+        ],
+        "validation": "Complete feature validation before production release"
+      }
+    }
+  ],
+  "metadata": {
+    "totalTasks": 25,
+    "estimatedTotalHours": 278,
+    "estimatedDuration": "10-12 weeks",
+    "complexityLevel": "High",
+    "dependencies": [
+      "Existing RBAC system",
+      "Settings page standardization", 
+      "Navigation system",
+      "Project management system"
+    ],
+    "riskFactors": [
+      "Database migration complexity",
+      "Performance impact on existing queries",
+      "User adoption and training",
+      "Backward compatibility maintenance"
+    ]
+  }
+} 

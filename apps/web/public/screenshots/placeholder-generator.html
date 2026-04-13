@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meridian Screenshot Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        .screenshot {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .desktop-wide {
+            width: 1280px;
+            height: 720px;
+        }
+        .desktop-narrow {
+            width: 750px;
+            height: 1334px;
+        }
+        .mobile-wide {
+            width: 1280px;
+            height: 720px;
+        }
+        .mobile-narrow {
+            width: 750px;
+            height: 1334px;
+        }
+        .header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .content {
+            padding: 30px;
+            color: #333;
+        }
+        .sidebar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #e9ecef;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .mobile-header {
+            background: #6366f1;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .mobile-content {
+            padding: 20px;
+        }
+        .mobile-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .download-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .download-btn:hover {
+            background: #5855eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Meridian Screenshot Generator</h1>
+    <p>Use this page to generate placeholder screenshots for the PWA manifest. Right-click on each screenshot and "Save image as..." to download.</p>
+    
+    <div class="screenshot desktop-wide" id="desktop-wide">
+        <div class="header">
+            <h2>Meridian - Project Management</h2>
+            <div>Dashboard</div>
+        </div>
+        <div style="display: flex; height: calc(100% - 80px);">
+            <div class="sidebar" style="width: 250px;">
+                <h3>Navigation</h3>
+                <div>📊 Dashboard</div>
+                <div>📋 Projects</div>
+                <div>✅ Tasks</div>
+                <div>👥 Team</div>
+                <div>📈 Analytics</div>
+            </div>
+            <div class="main-content" style="flex: 1;">
+                <h3>Project Overview</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Active Projects</h4>
+                        <div style="font-size: 2em; color: #6366f1;">12</div>
+                    </div>
+                    <div class="card">
+                        <h4>Tasks Completed</h4>
+                        <div style="font-size: 2em; color: #10b981;">89</div>
+                    </div>
+                    <div class="card">
+                        <h4>Team Members</h4>
+                        <div style="font-size: 2em; color: #f59e0b;">24</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="download-btn" onclick="downloadScreenshot('desktop-wide', 'desktop-wide.png')">Download Desktop Wide</button>
+
+    <div class="screenshot desktop-narrow" id="desktop-narrow">
+        <div class="header">
+            <h2>Meridian</h2>
+        </div>
+        <div class="content">
+            <h3>Mobile Dashboard</h3>
+            <div class="mobile-card">
+                <h4>📊 Overview</h4>
+                <p>12 Active Projects</p>
+                <p>89 Tasks Completed</p>
+            </div>
+            <div class="mobile-card">
+                <h4>📋 Recent Tasks</h4>
+                <p>✅ Design System Update</p>
+                <p>⏳ API Integration</p>
+                <p>📝 Documentation</p>
+            </div>
+        </div>
+    </div>
+    <button class="download-btn" onclick="downloadScreenshot('desktop-narrow', 'desktop-narrow.png')">Download Desktop Narrow</button>
+
+    <div class="screenshot mobile-wide" id="mobile-wide">
+        <div class="mobile-header">
+            <h2>Meridian Dashboard</h2>
+        </div>
+        <div class="mobile-content">
+            <div class="grid">
+                <div class="mobile-card">
+                    <h4>📊 Analytics</h4>
+                    <p>Project performance insights</p>
+                </div>
+                <div class="mobile-card">
+                    <h4>📋 Tasks</h4>
+                    <p>Manage your tasks efficiently</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="download-btn" onclick="downloadScreenshot('mobile-wide', 'mobile-wide.png')">Download Mobile Wide</button>
+
+    <div class="screenshot mobile-narrow" id="mobile-narrow">
+        <div class="mobile-header">
+            <h2>Meridian</h2>
+        </div>
+        <div class="mobile-content">
+            <div class="mobile-card">
+                <h4>📊 Dashboard</h4>
+                <p>Welcome back! Here's your project overview.</p>
+            </div>
+            <div class="mobile-card">
+                <h4>📋 Quick Actions</h4>
+                <p>➕ New Task</p>
+                <p>📊 View Analytics</p>
+                <p>👥 Team Chat</p>
+            </div>
+        </div>
+    </div>
+    <button class="download-btn" onclick="downloadScreenshot('mobile-narrow', 'mobile-narrow.png')">Download Mobile Narrow</button>
+
+    <script>
+        function downloadScreenshot(elementId, filename) {
+            const element = document.getElementById(elementId);
+            html2canvas(element).then(canvas => {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+    </script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</body>
+</html> 

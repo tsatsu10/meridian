@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>React Context Test</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/sonner@1.7.4/dist/index.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useContext, createContext } = React;
+        const { createRoot } = ReactDOM;
+        
+        // Test the minimal toast implementation
+        function MinimalToaster() {
+            const [toasts, setToasts] = React.useState([]);
+            
+            React.useEffect(() => {
+                window.toast = {
+                    success: (msg) => {
+                        console.log('Toast success:', msg);
+                        setToasts(prev => [...prev, { id: Date.now(), message: msg, type: 'success' }]);
+                    },
+                    error: (msg) => {
+                        console.log('Toast error:', msg);
+                        setToasts(prev => [...prev, { id: Date.now(), message: msg, type: 'error' }]);
+                    }
+                };
+            }, []);
+            
+            return React.createElement('div', { 
+                style: { position: 'fixed', top: '20px', right: '20px', zIndex: 9999 } 
+            }, toasts.map(toast => 
+                React.createElement('div', { 
+                    key: toast.id,
+                    style: { 
+                        background: toast.type === 'success' ? 'green' : 'red',
+                        color: 'white',
+                        padding: '10px',
+                        margin: '5px',
+                        borderRadius: '5px'
+                    }
+                }, toast.message)
+            ));
+        }
+        
+        function App() {
+            return React.createElement('div', null,
+                React.createElement('h1', null, 'Toast Test'),
+                React.createElement('button', { 
+                    onClick: () => window.toast?.success('Success message!') 
+                }, 'Test Success Toast'),
+                React.createElement('button', { 
+                    onClick: () => window.toast?.error('Error message!') 
+                }, 'Test Error Toast'),
+                React.createElement(MinimalToaster)
+            );
+        }
+        
+        const root = createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</body>
+</html>

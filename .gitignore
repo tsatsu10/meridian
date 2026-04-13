@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+apps/web/dist/
+apps/web/dev-dist/
+apps/api/dist/
+
+# Coverage and reports
+coverage/
+apps/**/coverage/
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup
+
+# Turbo local cache
+.turbo/
+
+# Local runtime logs
+*.log
+apps/api/logs/
+
+# Windows reserved names (accidental empty files break git on Windows)
+nul

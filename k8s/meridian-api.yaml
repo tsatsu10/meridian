@@ -1,0 +1,456 @@
+# Meridian API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meridian-api
+  namespace: meridian
+  labels:
+    app: meridian-api
+    component: backend
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: meridian-api
+  template:
+    metadata:
+      labels:
+        app: meridian-api
+        component: backend
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3005"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: meridian-api
+        image: meridianhq/api:latest  # Replace with your actual image
+        ports:
+        - containerPort: 3005
+          name: http
+        env:
+        # Configuration from ConfigMap
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: NODE_ENV
+        - name: API_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: API_PORT
+        - name: HOST
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: HOST
+        - name: DATABASE_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: DATABASE_TYPE
+        
+        # Performance Configuration
+        - name: APM_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: APM_ENABLED
+        - name: APM_MONITORING_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: APM_MONITORING_INTERVAL
+        - name: APM_COLLECT_SYSTEM_METRICS
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: APM_COLLECT_SYSTEM_METRICS
+        - name: APM_COLLECT_DATABASE_METRICS
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: APM_COLLECT_DATABASE_METRICS
+        - name: APM_COLLECT_WEBSOCKET_METRICS
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: APM_COLLECT_WEBSOCKET_METRICS
+        
+        # Database Configuration
+        - name: DB_MIN_CONNECTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: DB_MIN_CONNECTIONS
+        - name: DB_MAX_CONNECTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: DB_MAX_CONNECTIONS
+        - name: DB_CONNECTION_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: DB_CONNECTION_TIMEOUT
+        - name: DB_QUERY_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: DB_QUERY_TIMEOUT
+        
+        # WebSocket Configuration
+        - name: WS_MAX_CONNECTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: WS_MAX_CONNECTIONS
+        - name: WS_PING_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: WS_PING_INTERVAL
+        - name: WS_PONG_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: WS_PONG_TIMEOUT
+        
+        # Security Configuration
+        - name: RATE_LIMIT_WINDOW
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: RATE_LIMIT_WINDOW
+        - name: RATE_LIMIT_MAX
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: RATE_LIMIT_MAX
+        - name: SESSION_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: SESSION_TIMEOUT
+        
+        # File Upload Configuration
+        - name: MAX_FILE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: MAX_FILE_SIZE
+        - name: UPLOAD_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: UPLOAD_TIMEOUT
+        
+        # Logging Configuration
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: LOG_LEVEL
+        - name: ENABLE_FILE_LOGGING
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: ENABLE_FILE_LOGGING
+        - name: LOG_DIRECTORY
+          valueFrom:
+            configMapKeyRef:
+              name: meridian-config
+              key: LOG_DIRECTORY
+        
+        # Secrets from Secret resources
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: meridian-secrets
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: meridian-secrets
+              key: REDIS_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: meridian-secrets
+              key: JWT_SECRET
+        - name: CORS_ORIGINS
+          valueFrom:
+            secretKeyRef:
+              name: meridian-secrets
+              key: CORS_ORIGINS
+        - name: VAPID_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: meridian-secrets
+              key: VAPID_PUBLIC_KEY
+              optional: true
+        - name: VAPID_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: meridian-secrets
+              key: VAPID_PRIVATE_KEY
+              optional: true
+        - name: VAPID_SUBJECT
+          valueFrom:
+            secretKeyRef:
+              name: meridian-secrets
+              key: VAPID_SUBJECT
+              optional: true
+        
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+        - name: app-logs
+          mountPath: /app/logs
+        - name: app-uploads
+          mountPath: /app/uploads
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+      
+      volumes:
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: meridian-data-pvc
+      - name: app-logs
+        persistentVolumeClaim:
+          claimName: meridian-logs-pvc
+      - name: app-uploads
+        persistentVolumeClaim:
+          claimName: meridian-uploads-pvc
+      
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - meridian-api
+              topologyKey: kubernetes.io/hostname
+---
+# Meridian API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: meridian-api
+  namespace: meridian
+  labels:
+    app: meridian-api
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3005
+    targetPort: 3005
+    protocol: TCP
+    name: http
+  selector:
+    app: meridian-api
+---
+# Meridian API Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: meridian-api-hpa
+  namespace: meridian
+  labels:
+    app: meridian-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: meridian-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+      selectPolicy: Min
+---
+# Persistent Volume Claims for Meridian API
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: meridian-data-pvc
+  namespace: meridian
+  labels:
+    app: meridian-api
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: meridian-logs-pvc
+  namespace: meridian
+  labels:
+    app: meridian-api
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: meridian-uploads-pvc
+  namespace: meridian
+  labels:
+    app: meridian-api
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+---
+# Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: meridian-api-pdb
+  namespace: meridian
+  labels:
+    app: meridian-api
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: meridian-api
+---
+# Network Policy for Meridian API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: meridian-api-network-policy
+  namespace: meridian
+  labels:
+    app: meridian-api
+spec:
+  podSelector:
+    matchLabels:
+      app: meridian-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: nginx
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 3005
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []  # Allow all egress for external APIs
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53

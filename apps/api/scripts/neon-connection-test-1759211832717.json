@@ -1,0 +1,51 @@
+{
+  "timestamp": "2025-09-30T05:57:12.717Z",
+  "database_url": "SET",
+  "total_tests": 7,
+  "passed_tests": 6,
+  "success_rate": 86,
+  "results": [
+    {
+      "test": "Basic Connection",
+      "passed": true,
+      "details": "Connected to neondb",
+      "timestamp": "2025-09-30T05:56:58.285Z"
+    },
+    {
+      "test": "SSL Connection",
+      "passed": false,
+      "details": "SSL Disabled",
+      "timestamp": "2025-09-30T05:56:59.947Z"
+    },
+    {
+      "test": "Connection Pool",
+      "passed": true,
+      "details": "5 concurrent connections",
+      "timestamp": "2025-09-30T05:57:01.843Z"
+    },
+    {
+      "test": "Database Schema",
+      "passed": true,
+      "details": "6 tables, 2 extensions, 102 indexes",
+      "timestamp": "2025-09-30T05:57:04.226Z"
+    },
+    {
+      "test": "Performance",
+      "passed": true,
+      "details": "Total: 757ms",
+      "timestamp": "2025-09-30T05:57:06.611Z"
+    },
+    {
+      "test": "Connection Limits",
+      "passed": true,
+      "details": "Max: 901, Current: 15",
+      "timestamp": "2025-09-30T05:57:09.675Z"
+    },
+    {
+      "test": "Transactions",
+      "passed": true,
+      "details": "COMMIT and ROLLBACK working",
+      "timestamp": "2025-09-30T05:57:12.716Z"
+    }
+  ]
+}

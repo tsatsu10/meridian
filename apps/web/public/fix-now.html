@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Workspace - One Click</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        .emoji { font-size: 64px; margin-bottom: 20px; }
+        p { color: #666; line-height: 1.6; margin-bottom: 30px; font-size: 16px; }
+        .big-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .big-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+        .big-button:active { transform: translateY(0); }
+        .status {
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .error { background: #f8d7da; color: #721c24; }
+        .small { font-size: 14px; color: #999; margin-top: 20px; }
+        .workspace-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .workspace-info h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .workspace-item {
+            padding: 10px;
+            border-left: 3px solid #667eea;
+            margin: 8px 0;
+            background: white;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="emoji">🔧</div>
+        <h1>Workspace Fix</h1>
+        <p>Click the button below to automatically fix the "No Workspace Selected" issue.</p>
+        
+        <div id="status"></div>
+        
+        <button class="big-button" onclick="autoFix()">✨ Fix Now</button>
+        
+        <p class="small">This will clear old data and set up your workspace correctly</p>
+    </div>
+
+    <script>
+        async function autoFix() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                // Step 1: Clear old data
+                statusDiv.innerHTML = '<div class="info">🗑️ Clearing old data...</div>';
+                
+                localStorage.removeItem('user-preferences');  // Old incorrect key
+                localStorage.removeItem('meridian-workspace');    // Force refresh
+                localStorage.removeItem('meridian-user-preferences'); // Clear to start fresh
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Step 2: Fetch workspaces
+                statusDiv.innerHTML = '<div class="info">🌐 Fetching your workspaces...</div>';
+                
+                const response = await fetch('http://localhost:3005/api/workspaces', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const workspaces = await response.json();
+                
+                if (!Array.isArray(workspaces) || workspaces.length === 0) {
+                    throw new Error('No workspaces found');
+                }
+                
+                // Step 3: Set first workspace
+                const firstWorkspace = workspaces[0];
+                
+                // Set workspace store
+                localStorage.setItem('meridian-workspace', JSON.stringify({
+                    state: { workspace: firstWorkspace },
+                    version: 0
+                }));
+                
+                // Set user preferences with correct key
+                localStorage.setItem('meridian-user-preferences', JSON.stringify({
+                    state: {
+                        activeWorkspaceId: firstWorkspace.id,
+                        isSidebarOpened: true,
+                        viewMode: 'board'
+                    },
+                    version: 0
+                }));
+                
+                // Success!
+                let html = '<div class="success">✅ Fix Complete!</div>';
+                html += '<div class="workspace-info">';
+                html += '<h3>Active Workspace:</h3>';
+                html += `<div class="workspace-item">`;
+                html += `<strong>${firstWorkspace.name}</strong><br>`;
+                html += `<small>ID: ${firstWorkspace.id}</small><br>`;
+                html += `<small>Role: ${firstWorkspace.userRole}</small>`;
+                html += `</div>`;
+                html += '</div>';
+                
+                if (workspaces.length > 1) {
+                    html += '<div class="info">';
+                    html += `You have ${workspaces.length - 1} other workspace(s) available`;
+                    html += '</div>';
+                }
+                
+                statusDiv.innerHTML = html;
+                
+                // Auto-redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/dashboard/settings/workspace';
+                }, 2000);
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Error: ${error.message}<br><br>
+                        <small>Make sure the API server is running on port 3005</small>
+                    </div>
+                `;
+            }
+        }
+        
+        // Show current status on load
+        window.onload = () => {
+            const oldKey = localStorage.getItem('user-preferences');
+            const newKey = localStorage.getItem('meridian-user-preferences');
+            const workspace = localStorage.getItem('meridian-workspace');
+            
+            if (oldKey && !newKey) {
+                document.getElementById('status').innerHTML = 
+                    '<div class="info">⚠️ Old data detected - click Fix Now to update</div>';
+            } else if (workspace) {
+                try {
+                    const ws = JSON.parse(workspace);
+                    if (ws.state && ws.state.workspace) {
+                        document.getElementById('status').innerHTML = `
+                            <div class="success">
+                                ✅ Already configured<br>
+                                <small>Current: ${ws.state.workspace.name}</small>
+                            </div>
+                        `;
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+            }
+        };
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,662 @@
+# Product Requirements Document: Goal Setting & OKR System
+
+## Executive Summary
+
+### Product Vision
+Empower Meridian users to set, track, and achieve personal and team objectives through an integrated OKR (Objectives and Key Results) system with milestone tracking, success metrics, and reflection capabilities.
+
+### Business Objectives
+1. Increase user engagement by 40% through goal-oriented workflows
+2. Improve task completion rates by 30% via clear goal alignment
+3. Enhance team collaboration through shared objectives
+4. Provide executive visibility into organizational goal progress
+5. Differentiate Meridian from competitors with comprehensive goal management
+
+### Target Users
+- **Mike (Developer)**: Personal OKRs for career growth and project completion
+- **Sarah (Project Manager)**: Team goals alignment with project milestones
+- **David (Team Lead)**: Team performance tracking and goal setting
+- **Jennifer (Executive)**: Portfolio-level OKR visibility and strategic alignment
+
+---
+
+## Core Features
+
+### Feature 1: Personal OKRs
+**Priority**: P0 (Critical)  
+**User Story**: As a team member, I want to set and track personal objectives with measurable key results so I can align my work with organizational goals.
+
+**Requirements**:
+1. Create objectives with:
+   - Title (required, 100 char max)
+   - Description (optional, 500 char max)
+   - Time period (Quarter, Year, Custom)
+   - Privacy level (Private, Team, Organization)
+   - Owner (user)
+   - Aligned parent goal (optional)
+
+2. Add 3-5 key results per objective:
+   - Title (required)
+   - Target value (number or percentage)
+   - Current value
+   - Unit (%, count, currency, custom)
+   - Due date
+   - Status (Not Started, On Track, At Risk, Behind, Completed)
+
+3. Track progress:
+   - Manual updates to current values
+   - Auto-calculation of objective completion (average of KR completion)
+   - Progress history (time-series data)
+   - Visual progress indicators (circular charts, progress bars)
+
+4. Goal lifecycle:
+   - Draft → Active → Completed/Abandoned
+   - Ability to edit during active period
+   - Archive completed goals
+   - Clone goals for next period
+
+**Success Criteria**:
+- Users can create an OKR in <2 minutes
+- 70% of users create at least one OKR within first week
+- OKR completion rate >60%
+
+**Technical Requirements**:
+- Database tables: `goals`, `goal_key_results`, `goal_progress`
+- API endpoints: 8 endpoints for CRUD + progress tracking
+- Frontend: Goal creation modal, OKR dashboard widget
+- Performance: <200ms API response, <1s widget load
+
+---
+
+### Feature 2: Team Goals Widget
+**Priority**: P0 (Critical)  
+**User Story**: As a team lead, I want to see my team's goals progress at a glance so I can identify blockers and celebrate wins.
+
+**Requirements**:
+1. Display team goals overview:
+   - List of all team members with active goals
+   - Avatar + name + role
+   - Number of active goals per person
+   - Overall progress indicator
+   - Filter by: status, time period, goal type
+
+2. Goal cards showing:
+   - Objective title
+   - Owner avatar and name
+   - Progress bar with percentage
+   - Status badge (On Track, At Risk, Behind)
+   - Number of completed key results (e.g., "2/4 KRs")
+   - Last updated timestamp
+
+3. Interactions:
+   - Click to expand and see key results
+   - Click avatar to see person's full goal list
+   - Quick update via inline editing (for owners)
+   - Share goal link
+
+4. Real-time updates:
+   - WebSocket notifications when team members update goals
+   - Visual indicator for recent updates
+   - Celebration animation when goal completed
+
+**Success Criteria**:
+- Team leads check team goals widget daily
+- 80% of teams have at least one shared goal
+- Average 15 seconds to identify at-risk goals
+
+**Technical Requirements**:
+- API: Team goal aggregation endpoint
+- WebSocket: Goal update events
+- Frontend: Team goals widget component
+- Cache: Redis caching for team aggregations (5 min TTL)
+
+---
+
+### Feature 3: Milestone Countdown
+**Priority**: P1 (High)  
+**User Story**: As a project manager, I want to see countdown timers for upcoming milestones so I can prioritize work and manage deadlines.
+
+**Requirements**:
+1. Milestone creation:
+   - Title and description
+   - Due date (required)
+   - Linked goals (optional)
+   - Associated tasks (from projects)
+   - Priority (Low, Medium, High, Critical)
+   - Owner and stakeholders
+
+2. Countdown display:
+   - Large countdown number (days remaining)
+   - Progress bar (based on linked task completion)
+   - Visual urgency indicator:
+     - Green: >14 days
+     - Yellow: 7-14 days
+     - Orange: 3-7 days
+     - Red: <3 days
+     - Gray: Overdue
+   - Success criteria checklist
+
+3. Widget features:
+   - Show top 3 upcoming milestones
+   - Click to expand for details
+   - Quick actions: Mark complete, Edit, Reschedule
+   - Filter personal vs team milestones
+
+4. Notifications:
+   - 7 days before deadline
+   - 3 days before deadline
+   - 1 day before deadline
+   - On deadline day
+   - When milestone completed
+
+**Success Criteria**:
+- 90% of milestones are completed on time
+- Average 2 seconds to check upcoming milestones
+- Zero missed critical milestones
+
+**Technical Requirements**:
+- Database table: `goal_milestones`
+- API: Milestone CRUD + countdown calculation
+- Frontend: Milestone countdown widget
+- Scheduled job: Daily notification check
+
+---
+
+### Feature 4: Success Metrics (Personal KPIs)
+**Priority**: P1 (High)  
+**User Story**: As a developer, I want to track personal performance metrics so I can measure my productivity and growth.
+
+**Requirements**:
+1. Metric types:
+   - Tasks completed per week
+   - Average task completion time
+   - Code reviews completed
+   - Meetings attended
+   - Focus time hours
+   - Custom metrics (user-defined)
+
+2. Metric configuration:
+   - Metric name and description
+   - Data source (manual, auto-tracked, calculated)
+   - Target value
+   - Unit and format
+   - Time period (daily, weekly, monthly)
+   - Comparison baseline (last period, target, team average)
+
+3. Visualization:
+   - Metric cards with current value and trend
+   - Sparkline charts (last 7/30 days)
+   - Target progress indicator
+   - Comparison badges (Above/Below average)
+   - Color coding (green/yellow/red based on target)
+
+4. Auto-tracking:
+   - Task completion → Auto-update metrics
+   - Time entries → Focus time calculation
+   - Comments → Collaboration metric
+   - Integrations → GitHub commits, PR reviews
+
+**Success Criteria**:
+- 60% of users track at least 2 metrics
+- Metrics updated in real-time (<5 sec delay)
+- Users report 40% improvement in self-awareness
+
+**Technical Requirements**:
+- Database: Extend `goal_progress` or create `user_metrics`
+- API: Metrics CRUD + aggregation + calculations
+- Frontend: Success metrics dashboard widget
+- Background jobs: Auto-metric calculation (hourly)
+
+---
+
+### Feature 5: Reflection Prompts
+**Priority**: P2 (Medium)  
+**User Story**: As a team member, I want weekly reflection prompts so I can review my progress and plan improvements.
+
+**Requirements**:
+1. Prompt types:
+   - What went well this week?
+   - What could be improved?
+   - What did you learn?
+   - What are you grateful for?
+   - What's your top priority next week?
+
+2. Reflection interface:
+   - Modal or expandable card
+   - Text area for each prompt (500 char limit)
+   - Save as draft
+   - Submit and share (optional)
+   - Attach to specific goal (optional)
+
+3. Scheduling:
+   - Default: Friday afternoon (configurable)
+   - Browser/email notification
+   - Snooze until tomorrow
+   - Skip this week option
+
+4. Reflection history:
+   - View past reflections
+   - Filter by date range
+   - Search by keyword
+   - Export as PDF/Markdown
+   - AI-generated insights (future enhancement)
+
+5. Privacy controls:
+   - Private (only you)
+   - Team (your team lead can see)
+   - Public (workspace-wide)
+   - Anonymous option for team reflections
+
+**Success Criteria**:
+- 50% of users complete weekly reflections
+- Reflection submission rate >70%
+- Users report increased self-awareness
+
+**Technical Requirements**:
+- Database table: `goal_reflections`
+- API: Reflection CRUD + prompts generator
+- Frontend: Reflection modal + history view
+- Scheduler: Weekly reminder (configurable time)
+
+---
+
+## Technical Architecture
+
+### Database Schema
+
+```typescript
+// Table 1: goals
+export const goals = pgTable("goals", {
+  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  workspaceId: text("workspace_id").notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: text("type").notNull(), // 'objective', 'personal', 'team', 'milestone'
+  timeframe: text("timeframe").notNull(), // 'Q1 2025', '2025', 'custom'
+  startDate: timestamp("start_date", { withTimezone: true }),
+  endDate: timestamp("end_date", { withTimezone: true }),
+  status: text("status").notNull().default("active"), // 'draft', 'active', 'completed', 'abandoned'
+  privacy: text("privacy").notNull().default("private"), // 'private', 'team', 'organization'
+  parentGoalId: text("parent_goal_id").references(() => goals.id),
+  progress: integer("progress").default(0), // 0-100
+  priority: text("priority").default("medium"), // 'low', 'medium', 'high', 'critical'
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// Table 2: goal_key_results
+export const goalKeyResults = pgTable("goal_key_results", {
+  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  goalId: text("goal_id").notNull()
+    .references(() => goals.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  targetValue: numeric("target_value").notNull(),
+  currentValue: numeric("current_value").default(0),
+  unit: text("unit").notNull(), // '%', 'count', 'currency', 'custom'
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  status: text("status").notNull().default("not_started"),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// Table 3: goal_progress
+export const goalProgress = pgTable("goal_progress", {
+  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  goalId: text("goal_id").references(() => goals.id, { onDelete: "cascade" }),
+  keyResultId: text("key_result_id").references(() => goalKeyResults.id, { onDelete: "cascade" }),
+  value: numeric("value").notNull(),
+  note: text("note"),
+  recordedBy: text("recorded_by").notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  recordedAt: timestamp("recorded_at", { withTimezone: true }).defaultNow(),
+});
+
+// Table 4: goal_reflections
+export const goalReflections = pgTable("goal_reflections", {
+  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  workspaceId: text("workspace_id").notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  weekOf: timestamp("week_of", { withTimezone: true}).notNull(),
+  wentWell: text("went_well"),
+  couldImprove: text("could_improve"),
+  learned: text("learned"),
+  grateful: text("grateful"),
+  nextPriority: text("next_priority"),
+  privacy: text("privacy").notNull().default("private"),
+  goalId: text("goal_id").references(() => goals.id),
+  metadata: jsonb("metadata").default({}),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// Table 5: goal_milestones
+export const goalMilestones = pgTable("goal_milestones", {
+  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  workspaceId: text("workspace_id").notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  dueDate: timestamp("due_date", { withTimezone: true }).notNull(),
+  goalIds: jsonb("goal_ids").default([]), // Array of linked goal IDs
+  taskIds: jsonb("task_ids").default([]), // Array of linked task IDs
+  priority: text("priority").notNull().default("medium"),
+  status: text("status").notNull().default("pending"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  stakeholders: jsonb("stakeholders").default([]),
+  successCriteria: jsonb("success_criteria").default([]),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// Indexes for performance
+CREATE INDEX idx_goals_workspace_user ON goals(workspace_id, user_id);
+CREATE INDEX idx_goals_status ON goals(status);
+CREATE INDEX idx_goals_end_date ON goals(end_date);
+CREATE INDEX idx_key_results_goal ON goal_key_results(goal_id);
+CREATE INDEX idx_goal_progress_goal ON goal_progress(goal_id);
+CREATE INDEX idx_goal_progress_recorded_at ON goal_progress(recorded_at);
+CREATE INDEX idx_reflections_user_week ON goal_reflections(user_id, week_of);
+CREATE INDEX idx_milestones_due_date ON goal_milestones(due_date);
+CREATE INDEX idx_milestones_user_status ON goal_milestones(user_id, status);
+```
+
+### API Endpoints
+
+**Goals CRUD**:
+```
+POST   /api/goals                         - Create goal
+GET    /api/goals/:workspaceId            - List workspace goals (with filters)
+GET    /api/goals/user/:userId            - List user goals
+GET    /api/goals/:id                     - Get goal details
+PUT    /api/goals/:id                     - Update goal
+PATCH  /api/goals/:id/status              - Update goal status
+DELETE /api/goals/:id                     - Delete goal (soft delete)
+
+POST   /api/goals/:id/key-results         - Add key result
+PUT    /api/key-results/:id               - Update key result
+DELETE /api/key-results/:id               - Delete key result
+
+POST   /api/goals/:id/progress            - Log progress update
+GET    /api/goals/:id/progress            - Get progress history
+GET    /api/goals/:id/analytics           - Get goal analytics
+```
+
+**Team Goals**:
+```
+GET    /api/goals/team/:teamId            - Team goals
+GET    /api/goals/team/:teamId/progress   - Team progress summary
+```
+
+**Milestones**:
+```
+POST   /api/goal-milestones               - Create milestone
+GET    /api/goal-milestones/:userId       - User milestones
+GET    /api/goal-milestones/countdown     - Upcoming milestones (countdown)
+PUT    /api/goal-milestones/:id           - Update milestone
+DELETE /api/goal-milestones/:id           - Delete milestone
+```
+
+**Reflections**:
+```
+POST   /api/reflections                   - Create reflection
+GET    /api/reflections/:userId           - Get user reflections
+GET    /api/reflections/prompts           - Get weekly prompts
+PUT    /api/reflections/:id               - Update reflection (draft)
+```
+
+**Metrics**:
+```
+GET    /api/metrics/user/:userId          - Get user metrics
+POST   /api/metrics/calculate             - Trigger metric calculation
+GET    /api/metrics/trends                - Get metric trends
+```
+
+### Frontend Components
+
+```
+apps/web/src/components/goals/
+├── okr-widget.tsx                     # Personal OKRs dashboard widget
+├── team-goals-widget.tsx              # Team goals progress widget
+├── milestone-countdown.tsx            # Countdown timer widget
+├── success-metrics-card.tsx           # KPI tracking widget
+├── reflection-prompt.tsx              # Weekly reflection widget
+├── create-goal-modal.tsx              # Goal creation modal
+├── goal-detail-modal.tsx              # Goal detail view
+├── edit-goal-modal.tsx                # Goal editing modal
+├── key-result-form.tsx                # Key result add/edit form
+├── goal-progress-chart.tsx            # Progress visualization
+├── goal-list.tsx                      # Goal list view
+├── goal-card.tsx                      # Individual goal card
+├── milestone-card.tsx                 # Milestone card component
+├── reflection-history.tsx             # Past reflections view
+└── metric-sparkline.tsx               # Mini metric chart
+```
+
+### State Management
+
+**React Query Hooks**:
+```typescript
+// apps/web/src/hooks/queries/goals/
+use-goals.ts                  // Fetch goals
+use-goal-detail.ts            // Fetch single goal
+use-team-goals.ts             // Fetch team goals
+use-milestones.ts             // Fetch milestones
+use-reflections.ts            // Fetch reflections
+use-user-metrics.ts           // Fetch user metrics
+```
+
+**Mutations**:
+```typescript
+// apps/web/src/hooks/mutations/goals/
+use-create-goal.ts            // Create goal
+use-update-goal.ts            // Update goal
+use-delete-goal.ts            // Delete goal
+use-update-progress.ts        // Update progress
+use-create-reflection.ts      // Create reflection
+use-create-milestone.ts       // Create milestone
+```
+
+---
+
+## User Experience
+
+### User Flows
+
+**Flow 1: Create First OKR**
+1. User lands on dashboard
+2. Sees "Set Your First Goal" empty state
+3. Clicks "Create OKR" button
+4. Modal opens with guided form:
+   - Step 1: Set objective (title, timeframe)
+   - Step 2: Add 3-5 key results
+   - Step 3: Review and create
+5. OKR appears in Personal OKRs widget
+6. Celebration animation plays
+
+**Flow 2: Update Goal Progress**
+1. User completes task related to key result
+2. Clicks on goal in OKR widget
+3. Detail modal opens
+4. Clicks "Update Progress" on key result
+5. Enters new current value
+6. System auto-calculates goal completion %
+7. Progress bar animates to new value
+8. If goal completed → celebration modal
+
+**Flow 3: Weekly Reflection**
+1. Friday 4 PM: Browser notification appears
+2. User clicks notification
+3. Reflection modal opens with prompts
+4. User fills in 5 prompts (3 min average)
+5. Clicks "Submit" or "Save Draft"
+6. Thank you message with motivational quote
+7. Option to view past reflections
+
+### Accessibility
+
+- **Keyboard Navigation**: All widgets and modals fully keyboard accessible
+- **Screen Readers**: ARIA labels on all interactive elements
+- **Color Contrast**: WCAG AA compliance (4.5:1 minimum)
+- **Focus Indicators**: Clear focus states for keyboard users
+- **Text Alternatives**: Alt text for all icons and charts
+- **Responsive Design**: Mobile-friendly (<768px breakpoint)
+
+### Mobile Considerations
+
+- Touch-friendly tap targets (44px minimum)
+- Swipe gestures for navigation
+- Bottom sheet modals for mobile
+- Simplified widgets for small screens
+- Quick update via mobile app
+
+---
+
+## Success Metrics & KPIs
+
+### Product Metrics
+- **Adoption Rate**: % of users with at least 1 active goal (Target: 70%)
+- **Engagement Rate**: Daily active users viewing goals (Target: 50%)
+- **Completion Rate**: % of goals completed vs abandoned (Target: 60%)
+- **Reflection Rate**: % of users submitting weekly reflections (Target: 40%)
+- **Team Goal Rate**: % of teams with shared goals (Target: 80%)
+
+### Technical Metrics
+- **API Latency**: P95 <200ms
+- **Widget Load Time**: <1s
+- **Error Rate**: <0.1%
+- **Database Query Time**: <100ms
+- **Cache Hit Rate**: >80% for team goal aggregations
+
+### Business Metrics
+- **User Retention**: +15% (goals increase engagement)
+- **Task Completion**: +30% (goal-aligned tasks completed faster)
+- **Team Collaboration**: +25% (shared goals increase communication)
+- **NPS Score**: +10 points
+- **Revenue Impact**: +$50K ARR (premium feature)
+
+---
+
+## Release Plan
+
+### Phase 1: MVP (Week 1-2)
+- Personal OKRs (basic CRUD)
+- Goal progress tracking
+- Simple dashboard widget
+- **Outcome**: Users can set and track personal goals
+
+### Phase 2: Team Features (Week 3)
+- Team goals widget
+- Shared team objectives
+- Progress aggregations
+- **Outcome**: Teams collaborate on goals
+
+### Phase 3: Milestones (Week 4)
+- Milestone countdown widget
+- Notifications
+- Deadline tracking
+- **Outcome**: Better deadline management
+
+### Phase 4: Metrics & Reflections (Week 5)
+- Success metrics tracking
+- Weekly reflection prompts
+- Historical analytics
+- **Outcome**: Improved self-awareness
+
+### Phase 5: Polish (Week 6)
+- UI animations and polish
+- Advanced filtering
+- Export functionality
+- Mobile optimization
+- **Outcome**: Production-ready feature
+
+---
+
+## Open Questions
+
+1. **Premium Feature?** Should OKRs be gated behind premium tier?
+2. **AI Integration?** Should we add AI-suggested goals based on role?
+3. **Public Goals?** Allow users to share goals publicly for accountability?
+4. **Gamification?** Add badges/achievements for goal completion?
+5. **Integrations?** Connect to Jira, GitHub, Linear for auto-tracking?
+6. **Mobile App?** Dedicated mobile experience or web-only?
+7. **Templates?** Pre-built OKR templates by role (PM, Engineer, Designer)?
+8. **Notifications?** Email, Slack, or in-app only?
+
+---
+
+## Dependencies
+
+### Technical Dependencies
+- Database migration framework (Drizzle)
+- Chart library (Recharts or D3)
+- Date handling (date-fns)
+- Notification system (existing)
+- Analytics system (existing)
+
+### External Dependencies
+- None (fully internal feature)
+
+### Team Dependencies
+- Backend engineer (2 FTE)
+- Frontend engineer (2 FTE)
+- Designer (0.5 FTE)
+- QA engineer (0.5 FTE)
+- Product manager (0.25 FTE)
+
+---
+
+## Competitive Analysis
+
+### Linear
+- **Strengths**: Clean UI, fast updates, integrated with issues
+- **Weaknesses**: No team goals, limited reflections, no metrics
+- **Our Advantage**: Comprehensive OKR system with reflections
+
+### Asana Goals
+- **Strengths**: Portfolio-level goals, great visualizations
+- **Weaknesses**: Complex setup, expensive, enterprise-only
+- **Our Advantage**: Simpler, faster, affordable
+
+### Lattice
+- **Strengths**: Purpose-built for OKRs, great analytics
+- **Weaknesses**: Separate tool from work management, expensive
+- **Our Advantage**: Integrated with project management
+
+### 15Five
+- **Strengths**: Strong reflection and check-in features
+- **Weaknesses**: Limited goal tracking, focused on HR
+- **Our Advantage**: Better goal-task alignment
+
+---
+
+## Future Enhancements (v2)
+
+1. **AI-Powered Goal Suggestions**: ML model suggests goals based on role, past performance
+2. **Goal Recommendations Engine**: Suggest key results based on objective
+3. **Advanced Analytics**: Predictive completion dates, risk scoring
+4. **Social Features**: Public goal sharing, team celebrations, kudos integration
+5. **Integrations**: Jira, GitHub, Linear, Notion sync
+6. **Mobile App**: Native iOS/Android apps with push notifications
+7. **Templates Library**: 100+ pre-built OKR templates by industry/role
+8. **Custom Metrics Builder**: Visual metric builder with formulas
+9. **Goal Dependencies**: Link goals to show cascading objectives
+10. **Video Reflections**: Record video instead of text
+
+---
+
+**Document Status**: Final  
+**Last Updated**: October 30, 2025  
+**Author**: AI Development Team  
+**Approvers**: Product, Engineering, Design
+

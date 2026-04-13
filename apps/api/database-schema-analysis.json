@@ -1,0 +1,4209 @@
+{
+  "activities": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('act_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "entity_type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "entity_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "metadata",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "ip_address",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "user_agent",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "activity": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "task_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "entity_type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "entity_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "details",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "metadata",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "user_email",
+        "type": "character varying",
+        "maxLength": 255,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "character varying",
+        "maxLength": 255,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "user",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "project_id",
+        "referencesTable": "project",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "task_id",
+        "referencesTable": "task",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_email",
+        "referencesTable": "user",
+        "referencesColumn": "email"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "attachment": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "file_name",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "file_size",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "file_type",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "file_url",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "task_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "uploaded_by",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "audit_log": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "resource_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "actor_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "actor_email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "actor_type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'user'::text"
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "old_values",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "new_values",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "changes",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "ip_address",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "user_agent",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "session_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "request_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "severity",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'low'::text"
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'general'::text"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "metadata",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "retention_policy",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'standard'::text"
+      },
+      {
+        "name": "is_system_generated",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": false,
+        "default": "false"
+      },
+      {
+        "name": "timestamp",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "date",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "audit_logs": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('aud_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "resource",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "resource_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "old_values",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "new_values",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "ip_address",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "user_agent",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "session_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "severity",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'info'::text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "channel": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_private",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "created_by",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_archived",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "channel_members": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('cm_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "channel_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'member'::text"
+      },
+      {
+        "name": "joined_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "last_read_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "notification_settings",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "channel_id",
+        "referencesTable": "channels",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "channel_membership": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "channel_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'member'::text"
+      },
+      {
+        "name": "joined_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "user_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "channel_id",
+        "referencesTable": "channel",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_email",
+        "referencesTable": "user",
+        "referencesColumn": "email"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "channels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('ch_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'public'::channel_type"
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "topic",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_archived",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "is_read_only",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "settings",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "created_by",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "direct_message_conversations": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "participant1_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "participant2_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "last_message_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "is_archived",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": false,
+        "default": "false"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "label": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('lbl_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'#3b82f6'::text"
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "message": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "channel_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "user_email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "sender_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_email",
+        "referencesTable": "user",
+        "referencesColumn": "email"
+      },
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "message_delivery_status": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "message_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'sent'::text"
+      },
+      {
+        "name": "delivered_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "read_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "messages": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('msg_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'text'::message_type"
+      },
+      {
+        "name": "channel_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "thread_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "parent_message_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "mentions",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "attachments",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "reactions",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "is_pinned",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "is_edited",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "is_deleted",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "delivery_status",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'sent'::text"
+      },
+      {
+        "name": "delivered_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "edited_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "deleted_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "channel_id",
+        "referencesTable": "channels",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "thread_id",
+        "referencesTable": "messages",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "parent_message_id",
+        "referencesTable": "messages",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "milestone": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'upcoming'::text"
+      },
+      {
+        "name": "due_date",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "completed_date",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "progress",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": "0"
+      },
+      {
+        "name": "project_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "risk_level",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'low'::text"
+      },
+      {
+        "name": "risk_description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "dependency_task_ids",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "stakeholder_ids",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "project_id",
+        "referencesTable": "project",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "notification": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'info'::text"
+      },
+      {
+        "name": "read",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "priority",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'normal'::text"
+      },
+      {
+        "name": "data",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "user_email",
+        "type": "character varying",
+        "maxLength": 255,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "digested_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_read",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "is_pinned",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "resource_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "user",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_email",
+        "referencesTable": "user",
+        "referencesColumn": "email"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "notifications": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('ntf_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "data",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "is_read",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "priority",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'medium'::priority"
+      },
+      {
+        "name": "read_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "profile": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "bio",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "location",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "website",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "github_username",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "linkedin_url",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "twitter_handle",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "avatar_url",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "project": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'active'::text"
+      },
+      {
+        "name": "icon",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "priority",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'medium'::text"
+      },
+      {
+        "name": "visibility",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'private'::text"
+      },
+      {
+        "name": "allow_guest_access",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "require_approval_for_joining",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "time_tracking_enabled",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "require_time_entry",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "enable_subtasks",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "enable_dependencies",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "enable_budget_tracking",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "start_date",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "end_date",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "budget",
+        "type": "numeric",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "estimated_hours",
+        "type": "numeric",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "email_notifications",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "slack_notifications",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "slack_config",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "email_config",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "CURRENT_TIMESTAMP"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "projects": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "owner_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'#6366f1'::text"
+      },
+      {
+        "name": "icon",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'active'::text"
+      },
+      {
+        "name": "priority",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'medium'::priority"
+      },
+      {
+        "name": "start_date",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "due_date",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "completed_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "settings",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "is_archived",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "owner_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "role_assignment": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "assigned_by",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "assigned_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "project_ids",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "department_ids",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "reason",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "restrictions",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "user",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "schema_migrations": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": false,
+        "default": "nextval('schema_migrations_id_seq'::regclass)"
+      },
+      {
+        "name": "migration_name",
+        "type": "character varying",
+        "maxLength": 255,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "executed_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "checksum",
+        "type": "character varying",
+        "maxLength": 64,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "session": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "sessions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "settings": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('set_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "key",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "value",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'user'::text"
+      },
+      {
+        "name": "entity_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'general'::text"
+      },
+      {
+        "name": "is_public",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "status_column": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('col_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "project_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'#3b82f6'::text"
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": "0"
+      },
+      {
+        "name": "is_default",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "project_id",
+        "referencesTable": "project",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "task": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'todo'::text"
+      },
+      {
+        "name": "priority",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'medium'::text"
+      },
+      {
+        "name": "project_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "assigned_to",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "due_date",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "parent_id",
+        "type": "character varying",
+        "maxLength": 255,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "assigned_team_id",
+        "type": "character varying",
+        "maxLength": 255,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "number",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": "0"
+      },
+      {
+        "name": "assignee_email",
+        "type": "character varying",
+        "maxLength": 255,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "project_id",
+        "referencesTable": "project",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "assigned_to",
+        "referencesTable": "user",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "parent_id",
+        "referencesTable": "task",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "assignee_email",
+        "referencesTable": "user",
+        "referencesColumn": "email"
+      },
+      {
+        "column": "assigned_team_id",
+        "referencesTable": "team",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "task_label": {
+    "columns": [
+      {
+        "name": "task_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "label_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "task_id",
+        "referencesTable": "task",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "label_id",
+        "referencesTable": "label",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "task_id",
+      "label_id"
+    ]
+  },
+  "tasks": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'todo'::task_status"
+      },
+      {
+        "name": "project_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "assigned_to",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "priority",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'medium'::priority"
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": "0"
+      },
+      {
+        "name": "parent_task_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "start_date",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "due_date",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "completed_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "estimated_hours",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "actual_hours",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "tags",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "metadata",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "is_archived",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "project_id",
+        "referencesTable": "projects",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "assigned_to",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "created_by",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "parent_task_id",
+        "referencesTable": "tasks",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "team": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'general'::text"
+      },
+      {
+        "name": "project_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'#3B82F6'::text"
+      },
+      {
+        "name": "settings",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "member_count",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": "0"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "team_audit_log": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "team_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "user_email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "changes",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'{}'::text"
+      },
+      {
+        "name": "metadata",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'{}'::text"
+      },
+      {
+        "name": "timestamp",
+        "type": "bigint",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "ip_address",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "''::text"
+      },
+      {
+        "name": "user_agent",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "''::text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "'team'::text"
+      },
+      {
+        "name": "resource_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "old_value",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "new_value",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "team_members": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('tmu_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "team_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'member'::text"
+      },
+      {
+        "name": "joined_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "permissions",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "user_email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'active'::text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "invited_by",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "notification_preferences",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_email",
+        "referencesTable": "user",
+        "referencesColumn": "email"
+      },
+      {
+        "column": "invited_by",
+        "referencesTable": "user",
+        "referencesColumn": "email"
+      },
+      {
+        "column": "team_id",
+        "referencesTable": "team",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "teams": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('tm_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "leader_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'#6366f1'::text"
+      },
+      {
+        "name": "settings",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "leader_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "time_entry": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('te_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "task_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "start_time",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "end_time",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": "0"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "task_id",
+        "referencesTable": "task",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_id",
+        "referencesTable": "user",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "user": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "full_name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "avatar_url",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "password",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "hashed_password",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "user_connections": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "connected_user_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'pending'::character varying"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "user_education": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "institution",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "degree",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "field_of_study",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "grade",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "user_experience": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "company",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "position",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_current",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "user_presence": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('prs_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'offline'::presence_status"
+      },
+      {
+        "name": "custom_status_message",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "custom_status_emoji",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status_expires_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_status_visible",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "last_activity_type",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "last_activity_details",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "timezone",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'UTC'::text"
+      },
+      {
+        "name": "working_hours",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "do_not_disturb_until",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "last_seen_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "user_skills": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "skill_name",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "proficiency_level",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'beginner'::character varying"
+      },
+      {
+        "name": "years_of_experience",
+        "type": "integer",
+        "maxLength": null,
+        "nullable": true,
+        "default": "0"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "users": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "password",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "avatar",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "timezone",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'UTC'::text"
+      },
+      {
+        "name": "language",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'en'::text"
+      },
+      {
+        "name": "role",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'member'::user_role"
+      },
+      {
+        "name": "is_email_verified",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "false"
+      },
+      {
+        "name": "last_login_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "workflows": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('wf_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'draft'::workflow_status"
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "configuration",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "created_by",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "workspace": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "owner_email",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "workspace_members": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "concat('wm_', replace((gen_random_uuid())::text, '-'::text, ''::text))"
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "role",
+        "type": "USER-DEFINED",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'member'::user_role"
+      },
+      {
+        "name": "permissions",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "joined_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "invited_by",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspaces",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "invited_by",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "workspace_user": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": "(gen_random_uuid())::text"
+      },
+      {
+        "name": "workspace_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "user_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'member'::text"
+      },
+      {
+        "name": "invited_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "joined_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp without time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "user_email",
+        "type": "character varying",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "workspace_id",
+        "referencesTable": "workspace",
+        "referencesColumn": "id"
+      },
+      {
+        "column": "user_id",
+        "referencesTable": "user",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  },
+  "workspaces": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "owner_id",
+        "type": "text",
+        "maxLength": null,
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "logo",
+        "type": "text",
+        "maxLength": null,
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "settings",
+        "type": "jsonb",
+        "maxLength": null,
+        "nullable": true,
+        "default": "'{}'::jsonb"
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "maxLength": null,
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "maxLength": null,
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "owner_id",
+        "referencesTable": "users",
+        "referencesColumn": "id"
+      }
+    ],
+    "primaryKeys": [
+      "id"
+    ]
+  }
+}

@@ -1,0 +1,402 @@
+import { useCallback, useMemo } from 'react';
+import { useAppSelector, useAppDispatch } from './index';
+import {
+  signIn,
+  signOut,
+  refreshSession,
+  verifyMFA,
+  setupMFA,
+  updateProfile,
+  changePassword,
+  loadTrustedDevices,
+  removeTrustedDevice,
+  clearError,
+  setSessionWarning,
+  updateLastActivity,
+  setMFAStep,
+  clearMFA,
+  setLockout,
+  updateUserLocally,
+  resetAuth,
+  selectAuth,
+  selectUser,
+  selectIsAuthenticated,
+  selectAuthLoading,
+  selectAuthError,
+  selectIsSessionValid,
+  selectMFARequired,
+  selectMFAStep,
+  selectSessionWarning,
+  selectTrustedDevices,
+  selectIsSessionValid,
+  selectUserPermissions,
+  selectHasPermission,
+  selectSessionTimeRemaining,
+} from '../slices/authSlice';
+
+export interface UseAuthReturn {
+  // State
+  user: ReturnType<typeof selectUser>;
+  session: ReturnType<typeof selectSession>;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+  mfaRequired: boolean;
+  mfaStep: ReturnType<typeof selectMFAStep>;
+  sessionWarning: boolean;
+  trustedDevices: ReturnType<typeof selectTrustedDevices>;
+  isSessionValid: boolean;
+  permissions: string[];
+  sessionTimeRemaining: number;
+
+  // Actions
+  signIn: (credentials: { email: string; password: string; rememberMe?: boolean; deviceName?: string }) => Promise<any>;
+  signOut: (allDevices?: boolean) => Promise<any>;
+  refreshSession: () => Promise<any>;
+  verifyMFA: (params: { token: string; code: string; backupCode?: string }) => Promise<any>;
+  setupMFA: () => Promise<any>;
+  updateProfile: (profile: any) => Promise<any>;
+  changePassword: (passwords: { currentPassword: string; newPassword: string }) => Promise<any>;
+  loadDevices: () => Promise<any>;
+  removeDevice: (deviceId: string) => Promise<any>;
+  
+  // Utilities
+  clearError: () => void;
+  updateActivity: () => void;
+  hasPermission: (permission: string) => boolean;
+  checkSessionValidity: () => boolean;
+  getTimeUntilExpiry: () => number;
+  
+  // MFA utilities
+  clearMFA: () => void;
+  setMFAStep: (step: any) => void;
+  
+  // Local updates
+  updateUserLocally: (updates: any) => void;
+  
+  // Reset
+  resetAuth: () => void;
+}
+
+export function useAuth(): UseAuthReturn {
+  const dispatch = useAppDispatch();
+  
+  // Selectors
+  const auth = useAppSelector(selectAuth);
+  const user = useAppSelector(selectUser);
+  const session = useAppSelector(selectSession);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const loading = useAppSelector(selectAuthLoading);
+  const error = useAppSelector(selectAuthError);
+  const mfaRequired = useAppSelector(selectMFARequired);
+  const mfaStep = useAppSelector(selectMFAStep);
+  const sessionWarning = useAppSelector(selectSessionWarning);
+  const trustedDevices = useAppSelector(selectTrustedDevices);
+  const isSessionValid = useAppSelector(selectIsSessionValid);
+  const permissions = useAppSelector(selectUserPermissions);
+  const sessionTimeRemaining = useAppSelector(selectSessionTimeRemaining);
+
+  // Action creators
+  const handleSignIn = useCallback(async (credentials: { 
+    email: string; 
+    password: string; 
+    rememberMe?: boolean; 
+    deviceName?: string;
+  }) => {
+    try {
+      const result = await dispatch(signIn(credentials));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleSignOut = useCallback(async (allDevices: boolean = false) => {
+    try {
+      const result = await dispatch(signOut(allDevices));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleRefreshSession = useCallback(async () => {
+    try {
+      const result = await dispatch(refreshSession());
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleVerifyMFA = useCallback(async (params: { 
+    token: string; 
+    code: string; 
+    backupCode?: string;
+  }) => {
+    try {
+      const result = await dispatch(verifyMFA(params));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleSetupMFA = useCallback(async () => {
+    try {
+      const result = await dispatch(setupMFA());
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleUpdateProfile = useCallback(async (profile: any) => {
+    try {
+      const result = await dispatch(updateProfile(profile));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleChangePassword = useCallback(async (passwords: { 
+    currentPassword: string; 
+    newPassword: string;
+  }) => {
+    try {
+      const result = await dispatch(changePassword(passwords));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const loadDevices = useCallback(async () => {
+    try {
+      const result = await dispatch(loadTrustedDevices());
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const removeDevice = useCallback(async (deviceId: string) => {
+    try {
+      const result = await dispatch(removeTrustedDevice(deviceId));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  // Utility functions
+  const handleClearError = useCallback(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  const updateActivity = useCallback(() => {
+    dispatch(updateLastActivity());
+  }, [dispatch]);
+
+  const hasPermission = useCallback((permission: string) => {
+    const hasPermissionSelector = selectHasPermission(permission);
+    return hasPermissionSelector({ auth });
+  }, [auth]);
+
+  const checkSessionValidity = useCallback(() => {
+    return selectIsSessionValid({ auth });
+  }, [auth]);
+
+  const getTimeUntilExpiry = useCallback(() => {
+    return selectSessionTimeRemaining({ auth });
+  }, [auth]);
+
+  const handleClearMFA = useCallback(() => {
+    dispatch(clearMFA());
+  }, [dispatch]);
+
+  const handleSetMFAStep = useCallback((step: any) => {
+    dispatch(setMFAStep(step));
+  }, [dispatch]);
+
+  const handleUpdateUserLocally = useCallback((updates: any) => {
+    dispatch(updateUserLocally(updates));
+  }, [dispatch]);
+
+  const handleResetAuth = useCallback(() => {
+    dispatch(resetAuth());
+  }, [dispatch]);
+
+  // Auto-refresh session when it's about to expire
+  const autoRefreshThreshold = 5 * 60 * 1000; // 5 minutes
+  const shouldAutoRefresh = useMemo(() => {
+    return isSessionValid && sessionTimeRemaining > 0 && sessionTimeRemaining < autoRefreshThreshold;
+  }, [isSessionValid, sessionTimeRemaining]);
+
+  // Auto-refresh effect would be handled by a useEffect in a component or a middleware
+
+  return {
+    // State
+    user,
+    session,
+    isAuthenticated,
+    loading,
+    error,
+    mfaRequired,
+    mfaStep,
+    sessionWarning,
+    trustedDevices,
+    isSessionValid,
+    permissions,
+    sessionTimeRemaining,
+
+    // Actions
+    signIn: handleSignIn,
+    signOut: handleSignOut,
+    refreshSession: handleRefreshSession,
+    verifyMFA: handleVerifyMFA,
+    setupMFA: handleSetupMFA,
+    updateProfile: handleUpdateProfile,
+    changePassword: handleChangePassword,
+    loadDevices,
+    removeDevice,
+
+    // Utilities
+    clearError: handleClearError,
+    updateActivity,
+    hasPermission,
+    checkSessionValidity,
+    getTimeUntilExpiry,
+
+    // MFA utilities
+    clearMFA: handleClearMFA,
+    setMFAStep: handleSetMFAStep,
+
+    // Local updates
+    updateUserLocally: handleUpdateUserLocally,
+
+    // Reset
+    resetAuth: handleResetAuth,
+  };
+}
+
+// Enhanced hook with automatic session management
+export function useAuthWithAutoManagement(): UseAuthReturn & {
+  isAutoRefreshing: boolean;
+  timeUntilRefresh: number;
+} {
+  const auth = useAuth();
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+
+  // Auto-refresh logic
+  useEffect(() => {
+    if (!auth.isAuthenticated || !auth.isSessionValid) {
+      return;
+    }
+
+    const refreshThreshold = 5 * 60 * 1000; // 5 minutes
+    const timeRemaining = auth.sessionTimeRemaining;
+
+    if (timeRemaining > 0 && timeRemaining < refreshThreshold) {
+      const timeUntilRefresh = Math.max(0, timeRemaining - (2 * 60 * 1000)); // Refresh 2 minutes before expiry
+
+      const timeoutId = setTimeout(async () => {
+        try {
+          setIsAutoRefreshing(true);
+          await auth.refreshSession();
+        } catch (error) {
+          console.error('Auto-refresh failed:', error);
+          // Could trigger a re-login flow here
+        } finally {
+          setIsAutoRefreshing(false);
+        }
+      }, timeUntilRefresh);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [auth.isAuthenticated, auth.isSessionValid, auth.sessionTimeRemaining, auth.refreshSession]);
+
+  // Activity tracking
+  useEffect(() => {
+    const trackActivity = () => {
+      if (auth.isAuthenticated) {
+        auth.updateActivity();
+      }
+    };
+
+    // Track activity on various events
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    // Throttle activity updates to avoid excessive dispatches
+    let lastUpdate = 0;
+    const throttledTrackActivity = () => {
+      const now = Date.now();
+      if (now - lastUpdate > 60000) { // Update at most once per minute
+        trackActivity();
+        lastUpdate = now;
+      }
+    };
+
+    events.forEach(event => {
+      document.addEventListener(event, throttledTrackActivity, { passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, throttledTrackActivity);
+      });
+    };
+  }, [auth.isAuthenticated, auth.updateActivity]);
+
+  const timeUntilRefresh = useMemo(() => {
+    if (!auth.isAuthenticated || !auth.isSessionValid) {
+      return 0;
+    }
+
+    const refreshThreshold = 5 * 60 * 1000; // 5 minutes
+    const timeRemaining = auth.sessionTimeRemaining;
+    
+    if (timeRemaining <= refreshThreshold) {
+      return Math.max(0, timeRemaining - (2 * 60 * 1000));
+    }
+    
+    return timeRemaining - refreshThreshold;
+  }, [auth.isAuthenticated, auth.isSessionValid, auth.sessionTimeRemaining]);
+
+  return {
+    ...auth,
+    isAutoRefreshing,
+    timeUntilRefresh,
+  };
+}
+
+// Hook for checking specific permissions
+export function usePermissions(requiredPermissions: string | string[]) {
+  const auth = useAuth();
+  
+  const permissions = Array.isArray(requiredPermissions) 
+    ? requiredPermissions 
+    : [requiredPermissions];
+
+  const hasAllPermissions = useMemo(() => {
+    return permissions.every(permission => auth.hasPermission(permission));
+  }, [permissions, auth.hasPermission]);
+
+  const hasAnyPermission = useMemo(() => {
+    return permissions.some(permission => auth.hasPermission(permission));
+  }, [permissions, auth.hasPermission]);
+
+  const missingPermissions = useMemo(() => {
+    return permissions.filter(permission => !auth.hasPermission(permission));
+  }, [permissions, auth.hasPermission]);
+
+  return {
+    hasAllPermissions,
+    hasAnyPermission,
+    missingPermissions,
+    userPermissions: auth.permissions,
+  };
+}
+
+import { useEffect, useState, useMemo } from 'react';

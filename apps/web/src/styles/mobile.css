@@ -1,0 +1,274 @@
+/**
+ * Mobile-specific CSS utilities
+ * Safe area handling, touch optimization, and mobile-first design
+ */
+
+/* iOS Safe Area Support */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Safe Area Utility Classes */
+.safe-area-top {
+  padding-top: var(--safe-area-inset-top);
+}
+
+.safe-area-right {
+  padding-right: var(--safe-area-inset-right);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: var(--safe-area-inset-left);
+}
+
+.safe-area-x {
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+}
+
+.safe-area-y {
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+.safe-area-all {
+  padding-top: var(--safe-area-inset-top);
+  padding-right: var(--safe-area-inset-right);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+}
+
+/* Touch Optimization */
+.touch-optimized {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.touch-feedback {
+  transition: transform 0.1s ease-out, background-color 0.1s ease-out;
+}
+
+.touch-feedback:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Viewport Fixes */
+@media screen and (max-width: 768px) {
+  /* Prevent zoom on input focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Better touch targets */
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Mobile-first spacing */
+  .mobile-p-2 {
+    padding: 0.5rem;
+  }
+  
+  .mobile-p-3 {
+    padding: 0.75rem;
+  }
+  
+  .mobile-p-4 {
+    padding: 1rem;
+  }
+  
+  .mobile-m-2 {
+    margin: 0.5rem;
+  }
+  
+  .mobile-m-3 {
+    margin: 0.75rem;
+  }
+  
+  .mobile-m-4 {
+    margin: 1rem;
+  }
+}
+
+/* iOS Specific Styling */
+.ios-device {
+  /* Disable rubber band scrolling */
+  overscroll-behavior: none;
+  
+  /* Improve scrolling performance */
+  -webkit-overflow-scrolling: touch;
+}
+
+.ios-device.has-notch {
+  /* Additional styling for devices with notch */
+}
+
+/* Notch-aware positioning */
+.notch-aware-top {
+  top: var(--safe-area-inset-top);
+}
+
+.notch-aware-bottom {
+  bottom: var(--safe-area-inset-bottom);
+}
+
+/* Keyboard-aware layouts */
+.keyboard-aware {
+  height: var(--safe-viewport-height, 100vh);
+  transition: height 0.3s ease-out;
+}
+
+/* Mobile Context Menus */
+.mobile-context-menu {
+  @apply fixed bottom-0 left-0 right-0 bg-background border-t rounded-t-lg shadow-lg;
+  padding-bottom: var(--safe-area-inset-bottom);
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+}
+
+.mobile-context-menu.open {
+  transform: translateY(0);
+}
+
+.mobile-context-menu-backdrop {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+  z-index: 40;
+}
+
+.mobile-context-menu {
+  z-index: 50;
+}
+
+/* Mobile Drawer */
+.mobile-drawer {
+  @apply fixed inset-y-0 left-0 w-80 bg-background shadow-lg;
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-out;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-drawer-backdrop {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+  z-index: 30;
+}
+
+.mobile-drawer {
+  z-index: 40;
+}
+
+/* Swipe Indicators */
+.swipe-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-indicator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+  transform: translateY(-50%);
+  animation: swipe-hint 2s ease-in-out infinite;
+}
+
+@keyframes swipe-hint {
+  0%, 100% { left: -100%; }
+  50% { left: 100%; }
+}
+
+/* Mobile-specific animations */
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .mobile-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  .mobile-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Accessibility improvements for mobile */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover states on touch devices */
+  .hover\:bg-muted:hover {
+    background-color: inherit;
+  }
+  
+  /* Enhance focus states for touch navigation */
+  button:focus,
+  [role="button"]:focus,
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: 2px solid theme(colors.blue.500);
+    outline-offset: 2px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .mobile-context-menu,
+  .mobile-drawer {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-context-menu,
+  .mobile-drawer,
+  .touch-feedback {
+    transition: none;
+  }
+  
+  .swipe-indicator::before {
+    animation: none;
+  }
+}

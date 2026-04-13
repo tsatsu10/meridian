@@ -1,0 +1,78 @@
+{
+  "name": "Meridian - Project Management Platform",
+  "short_name": "Meridian",
+  "description": "Advanced project management and team collaboration platform with real-time analytics and workflow automation",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1a1a1a",
+  "background_color": "#ffffff",
+  "categories": ["productivity", "business", "collaboration"],
+  "lang": "en-US",
+  "icons": [
+    {
+      "src": "/meridian-logomark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/meridian-logomark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/meridian-logomark.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your project dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/meridian-logomark.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "short_name": "Tasks",
+      "description": "Manage your tasks",
+      "url": "/dashboard/all-tasks",
+      "icons": [
+        {
+          "src": "/meridian-logomark.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "short_name": "Analytics",
+      "description": "View project analytics",
+      "url": "/dashboard/analytics",
+      "icons": [
+        {
+          "src": "/meridian-logomark.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}

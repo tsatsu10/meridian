@@ -1,0 +1,967 @@
+
+> @meridian/web@0.1.0 build
+> tsc && vite build
+
+[36mvite v6.3.5 [32mbuilding for production...[36m[39m
+node.exe : Route file "import { lazy } from 'react';
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\elike\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Route file "imp...} from 'react';:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+import { createFileRoute } from '@tanstack/react-router';
+
+// Lazy load dashboard components
+const DashboardOverview = lazy(() => import('@/routes/dashboard/index').then(m => ({ default: m.DashboardOverviewPage })));
+const MilestoneDashboard = lazy(() => import('@/components/dashboard/milestone-dashboard'));
+const InteractiveChart = lazy(() => import('@/components/dashboard/interactive-chart'));
+
+// Lazy load analytics components
+const AnalyticsPage = lazy(() => import('@/routes/dashboard/analytics/index').then(m => ({ default: m.AnalyticsPage })));
+const ProductivityChart = lazy(() => import('@/components/dashboard/interactive-chart').then(m => ({ default: 
+m.ProductivityChart })));
+const TaskCompletionChart = lazy(() => import('@/components/dashboard/interactive-chart').then(m => ({ default: 
+m.TaskCompletionChart })));
+const ProjectHealthChart = lazy(() => import('@/components/dashboard/interactive-chart').then(m => ({ default: 
+m.ProjectHealthChart })));
+
+// Lazy load team management components
+const TeamsPage = lazy(() => import('@/routes/dashboard/teams/index').then(m => ({ default: m.TeamsPage })));
+const TeamManagement = lazy(() => import('@/components/team/team-management'));
+
+// Lazy load project components
+const ProjectsPage = lazy(() => import('@/routes/dashboard/projects/index').then(m => ({ default: m.ProjectsPage })));
+const ProjectManagement = lazy(() => import('@/components/projects/project-management'));
+
+// Lazy load task components
+const AllTasksPage = lazy(() => import('@/routes/dashboard/all-tasks/index').then(m => ({ default: m.AllTasksPage })));
+const KanbanBoard = lazy(() => import('@/components/kanban-board/kanban-board'));
+const TaskCard = lazy(() => import('@/components/kanban-board/task-card'));
+
+// Lazy load workflow components
+const WorkflowsPage = lazy(() => import('@/routes/workflows/index').then(m => ({ default: m.WorkflowsPage })));
+const WorkflowBuilder = lazy(() => import('@/components/workflow/workflow-builder'));
+
+// Lazy load executive components
+const ExecutivePage = lazy(() => import('@/routes/dashboard/executive/index').then(m => ({ default: m.ExecutivePage })));
+const ExecutiveDashboard = lazy(() => import('@/components/executive/executive-dashboard'));
+
+// Lazy load settings components
+const SettingsPage = lazy(() => import('@/routes/settings/index').then(m => ({ default: m.SettingsPage })));
+const UserSettings = lazy(() => import('@/components/settings/user-settings'));
+const WorkspaceSettings = lazy(() => import('@/components/settings/workspace-settings'));
+
+// Lazy load auth components
+const SignInPage = lazy(() => import('@/routes/auth/sign-in').then(m => ({ default: m.SignInPage })));
+const SignUpPage = lazy(() => import('@/routes/auth/sign-up').then(m => ({ default: m.SignUpPage })));
+const ForgotPasswordPage = lazy(() => import('@/routes/auth/forgot-password').then(m => ({ default: m.ForgotPasswordPage 
+})));
+
+// Lazy load utility components
+const NotFoundPage = lazy(() => import('@/routes/404').then(m => ({ default: m.NotFoundPage })));
+const MaintenancePage = lazy(() => import('@/routes/maintenance').then(m => ({ default: m.MaintenancePage })));
+
+// Export lazy components
+export {
+  DashboardOverview,
+  MilestoneDashboard,
+  InteractiveChart,
+  AnalyticsPage,
+  ProductivityChart,
+  TaskCompletionChart,
+  ProjectHealthChart,
+  TeamsPage,
+  TeamManagement,
+  ProjectsPage,
+  ProjectManagement,
+  AllTasksPage,
+  KanbanBoard,
+  TaskCard,
+  WorkflowsPage,
+  WorkflowBuilder,
+  ExecutivePage,
+  ExecutiveDashboard,
+  SettingsPage,
+  UserSettings,
+  WorkspaceSettings,
+  SignInPage,
+  SignUpPage,
+  ForgotPasswordPage,
+  NotFoundPage,
+  MaintenancePage,
+};
+
+// Route definitions with lazy loading
+export const dashboardRoute = createFileRoute('/dashboard')({
+  component: DashboardOverview,
+});
+
+export const analyticsRoute = createFileRoute('/dashboard/analytics')({
+  component: AnalyticsPage,
+});
+
+export const teamsRoute = createFileRoute('/dashboard/teams')({
+  component: TeamsPage,
+});
+
+export const projectsRoute = createFileRoute('/dashboard/projects')({
+  component: ProjectsPage,
+});
+
+export const allTasksRoute = createFileRoute('/dashboard/all-tasks')({
+  component: AllTasksPage,
+});
+
+export const workflowsRoute = createFileRoute('/workflows')({
+  component: WorkflowsPage,
+});
+
+export const executiveRoute = createFileRoute('/dashboard/executive')({
+  component: ExecutivePage,
+});
+
+export const settingsRoute = createFileRoute('/settings')({
+  component: SettingsPage,
+});
+
+export const signInRoute = createFileRoute('/auth/sign-in')({
+  component: SignInPage,
+});
+
+export const signUpRoute = createFileRoute('/auth/sign-up')({
+  component: SignUpPage,
+});
+
+export const forgotPasswordRoute = createFileRoute('/auth/forgot-password')({
+  component: ForgotPasswordPage,
+});
+
+export const notFoundRoute = createFileRoute('/404')({
+  component: NotFoundPage,
+});
+
+export const maintenanceRoute = createFileRoute('/maintenance')({
+  component: MaintenancePage,
+});" does not export any route piece. This is likely a mistake.
+Route file "/**
+ * ≡ƒ¢í∩╕Å Unified Roles & Permissions Page
+ * 
+ * Main page for managing both system and custom roles.
+ * Replaces old team-management.tsx and role-permissions.tsx.
+ * 
+ * @phase Phase-3-Week-7
+ */
+
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_URL } from '@/constants/urls';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { 
+  Plus, 
+  Search, 
+  Filter,
+  Users,
+  Shield,
+  Crown,
+  Eye,
+} from 'lucide-react';
+import { RoleCard } from '@/components/rbac/role-card';
+import { RoleModal } from '@/components/rbac/role-modal';
+import { toast } from 'sonner';
+
+// ==========================================
+// TYPES
+// ==========================================
+
+interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+  type: 'system' | 'custom';
+  color: string;
+  usersCount: number;
+  lastUsedAt: Date | null;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+interface RoleFilters {
+  type: 'all' | 'system' | 'custom';
+  search: string;
+  status: 'all' | 'active' | 'inactive';
+}
+
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
+
+export default function UnifiedRolesPage() {
+  const queryClient = useQueryClient();
+  
+  // State
+  const [filters, setFilters] = useState<RoleFilters>({
+    type: 'all',
+    search: '',
+    status: 'active',
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  
+  // Fetch roles
+  const { data: rolesData, isLoading } = useQuery({
+    queryKey: ['roles', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters.type !== 'all') params.append('type', filters.type);
+      if (filters.status === 'active') params.append('isActive', 'true');
+      if (filters.status === 'inactive') params.append('isActive', 'false');
+      
+      const response = await fetch(
+        `${API_URL}/api/roles?${params.toString()}`,
+        { credentials: 'include' }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch roles');
+      }
+      
+      const data = await response.json();
+      return data.roles as Role[];
+    },
+  });
+  
+  // Filter roles client-side for search
+  const filteredRoles = rolesData?.filter(role =>
+    filters.search === '' ||
+    role.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+    role.description?.toLowerCase().includes(filters.search.toLowerCase())
+  ) || [];
+  
+  // Separate system and custom roles
+  const systemRoles = filteredRoles.filter(r => r.type === 'system');
+  const customRoles = filteredRoles.filter(r => r.type === 'custom');
+  
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      const response = await fetch(`${API_URL}/api/roles/${roleId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete role');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+      toast.success('Role deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+  
+  // Clone role mutation
+  const cloneRoleMutation = useMutation({
+    mutationFn: async ({ roleId, newName }: { roleId: string; newName: string }) => {
+      const response = await fetch(`${API_URL}/api/roles/${roleId}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ newName }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to clone role');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+      toast.success('Role cloned successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+  
+  // Handlers
+  const handleCreateRole = () => {
+    setSelectedRole(null);
+    setIsModalOpen(true);
+  };
+  
+  const handleEditRole = (role: Role) => {
+    setSelectedRole(role);
+    setIsModalOpen(true);
+  };
+  
+  const handleDeleteRole = (roleId: string) => {
+    if (confirm('Are you sure you want to delete this role?')) {
+      deleteRoleMutation.mutate(roleId);
+    }
+  };
+  
+  const handleCloneRole = (role: Role) => {
+    const newName = prompt(`Clone "${role.name}" as:`, `${role.name} (Copy)`);
+    if (newName) {
+      cloneRoleMutation.mutate({ roleId: role.id, newName });
+    }
+  };
+  
+  const handleViewDetails = (roleId: string) => {
+    window.location.href = `/dashboard/settings/roles/${roleId}`;
+  };
+  
+  // Stats
+  const stats = {
+    total: filteredRoles.length,
+    system: systemRoles.length,
+    custom: customRoles.length,
+    totalUsers: filteredRoles.reduce((sum, role) => sum + role.usersCount, 0),
+  };
+  
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Shield className="h-8 w-8 text-primary" />
+            Roles & Permissions
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage system roles and create custom roles for your organization
+          </p>
+        </div>
+        
+        <Button onClick={handleCreateRole} size="lg">
+          <Plus className="h-4 w-4 mr-2" />
+          Create Role
+        </Button>
+      </div>
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Shield className="h-4 w-4" />
+            <span className="text-sm">Total Roles</span>
+          </div>
+          <div className="text-2xl font-bold">{stats.total}</div>
+        </div>
+        
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Crown className="h-4 w-4" />
+            <span className="text-sm">System Roles</span>
+          </div>
+          <div className="text-2xl font-bold">{stats.system}</div>
+        </div>
+        
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Eye className="h-4 w-4" />
+            <span className="text-sm">Custom Roles</span>
+          </div>
+          <div className="text-2xl font-bold">{stats.custom}</div>
+        </div>
+        
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Users className="h-4 w-4" />
+            <span className="text-sm">Total Assignments</span>
+          </div>
+          <div className="text-2xl font-bold">{stats.totalUsers}</div>
+        </div>
+      </div>
+      
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search roles..."
+            value={filters.search}
+            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select
+          value={filters.type}
+          onValueChange={(value) => setFilters(prev => ({ ...prev, type: value as any }))}
+        >
+          <SelectTrigger className="w-[180px]">
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="system">System Roles</SelectItem>
+            <SelectItem value="custom">Custom Roles</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select
+          value={filters.status}
+          onValueChange={(value) => setFilters(prev => ({ ...prev, status: value as any }))}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-12">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current 
+border-r-transparent"></div>
+          <p className="mt-2 text-muted-foreground">Loading roles...</p>
+        </div>
+      )}
+      
+      {/* System Roles Section */}
+      {!isLoading && systemRoles.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-purple-500" />
+            <h2 className="text-xl font-semibold">System Roles</h2>
+            <span className="text-sm text-muted-foreground">
+              ({systemRoles.length} roles)
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {systemRoles.map((role) => (
+              <RoleCard
+                key={role.id}
+                role={role}
+                onEdit={handleEditRole}
+                onDelete={handleDeleteRole}
+                onClone={handleCloneRole}
+                onViewDetails={handleViewDetails}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Custom Roles Section */}
+      {!isLoading && customRoles.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-blue-500" />
+            <h2 className="text-xl font-semibold">Custom Roles</h2>
+            <span className="text-sm text-muted-foreground">
+              ({customRoles.length} roles)
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {customRoles.map((role) => (
+              <RoleCard
+                key={role.id}
+                role={role}
+                onEdit={handleEditRole}
+                onDelete={handleDeleteRole}
+                onClone={handleCloneRole}
+                onViewDetails={handleViewDetails}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Empty State */}
+      {!isLoading && filteredRoles.length === 0 && (
+        <div className="text-center py-12">
+          <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No roles found</h3>
+          <p className="text-muted-foreground mb-4">
+            {filters.search ? 'Try adjusting your search criteria' : 'Get started by creating your first custom role'}
+          </p>
+          {!filters.search && (
+            <Button onClick={handleCreateRole}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Role
+            </Button>
+          )}
+        </div>
+      )}
+      
+      {/* Role Modal */}
+      <RoleModal
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedRole(null);
+        }}
+        role={selectedRole}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['roles'] });
+          setIsModalOpen(false);
+          setSelectedRole(null);
+        }}
+      />
+    </div>
+  );
+}
+" does not export any route piece. This is likely a mistake.
+Route file "/**
+ * ≡ƒôä Role Details Page
+ * 
+ * Detailed view of a role with assigned users and permissions.
+ * Supports user assignment and history viewing.
+ * 
+ * @phase Phase-3-Week-9
+ */
+
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams, useNavigate } from '@tanstack/react-router';
+import { API_URL } from '@/constants/urls';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  ArrowLeft,
+  Users,
+  Shield,
+  Edit,
+  Copy,
+  Trash2,
+  UserPlus,
+  Crown,
+  Clock,
+  Activity,
+} from 'lucide-react';
+import { AssignUsersModal } from '@/components/rbac/assign-users-modal';
+import { AssignedUsersList } from '@/components/rbac/assigned-users-list';
+import { PermissionsList } from '@/components/rbac/permissions-list';
+import { RoleHistory } from '@/components/rbac/role-history';
+import { toast } from 'sonner';
+
+// ==========================================
+// TYPES
+// ==========================================
+
+interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+  type: 'system' | 'custom';
+  color: string;
+  permissions: string[] | null;
+  usersCount: number;
+  lastUsedAt: Date | null;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
+
+export default function RoleDetailsPage() {
+  const { roleId } = useParams({ from: '/dashboard/settings/roles-unified/$roleId' });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('users');
+  
+  // Fetch role details
+  const { data: role, isLoading } = useQuery({
+    queryKey: ['role', roleId],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/api/roles/${roleId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch role');
+      const data = await response.json();
+      return data.role as Role;
+    },
+  });
+  
+  // Fetch role usage stats
+  const { data: usageStats } = useQuery({
+    queryKey: ['role-usage', roleId],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/api/roles/${roleId}/usage`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch usage');
+      const data = await response.json();
+      return data.usage;
+    },
+  });
+  
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`${API_URL}/api/roles/${roleId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete role');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success('Role deleted successfully');
+      navigate({ to: '/dashboard/settings/roles-unified' });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+  
+  // Clone role mutation
+  const cloneRoleMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      const response = await fetch(`${API_URL}/api/roles/${roleId}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ newName }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to clone role');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+      toast.success('Role cloned successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+  
+  const handleEdit = () => {
+    // TODO: Open edit modal
+    toast.info('Edit functionality coming soon');
+  };
+  
+  const handleDelete = () => {
+    if (confirm(`Are you sure you want to delete "${role?.name}"? This cannot be undone.`)) {
+      deleteRoleMutation.mutate();
+    }
+  };
+  
+  const handleClone = () => {
+    const newName = prompt(`Clone "${role?.name}" as:`, `${role?.name} (Copy)`);
+    if (newName) {
+      cloneRoleMutation.mutate(newName);
+    }
+  };
+  
+  const handleAssignUsers = () => {
+    setIsAssignModalOpen(true);
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current 
+border-r-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!role) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-12">
+          <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Role not found</h3>
+          <Button onClick={() => navigate({ to: '/dashboard/settings/roles-unified' })}>
+            Back to Roles
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  const isSystem = role.type === 'system';
+  
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <Button
+          variant="ghost"
+          className="mb-4"
+          onClick={() => navigate({ to: '/dashboard/settings/roles-unified' })}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Roles
+        </Button>
+        
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4">
+            <div
+              className="h-12 w-12 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: role.color }}
+            >
+              {isSystem ? (
+                <Crown className="h-6 w-6 text-white" />
+              ) : (
+                <Shield className="h-6 w-6 text-white" />
+              )}
+            </div>
+            
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-3xl font-bold">{role.name}</h1>
+                <Badge variant={isSystem ? 'secondary' : 'default'}>
+                  {isSystem ? 'System' : 'Custom'}
+                </Badge>
+                {!role.isActive && (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    Inactive
+                  </Badge>
+                )}
+              </div>
+              <p className="text-muted-foreground">
+                {role.description || 'No description'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button onClick={handleAssignUsers}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Assign Users
+            </Button>
+            
+            {!isSystem && (
+              <>
+                <Button variant="outline" onClick={handleEdit}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </>
+            )}
+            
+            <Button variant="outline" onClick={handleClone}>
+              <Copy className="h-4 w-4 mr-2" />
+              Clone
+            </Button>
+            
+            {!isSystem && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteRoleMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Assigned Users
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-2xl font-bold">{role.usersCount}</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Permissions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-muted-foreground" />
+              <span className="text-2xl font-bold">
+                {role.permissions?.length || 0}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Last Used
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {role.lastUsedAt
+                  ? new Date(role.lastUsedAt).toLocaleDateString()
+                  : 'Never'}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Created
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {new Date(role.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Assigned Users ({role.usersCount})
+          </TabsTrigger>
+          <TabsTrigger value="permissions" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Permissions ({role.permissions?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            History
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="users" className="mt-6">
+          <AssignedUsersList
+            roleId={roleId}
+            onAssignMore={handleAssignUsers}
+          />
+        </TabsContent>
+        
+        <TabsContent value="permissions" className="mt-6">
+          <PermissionsList
+            permissions={role.permissions || []}
+            isSystem={isSystem}
+          />
+        </TabsContent>
+        
+        <TabsContent value="history" className="mt-6">
+          <RoleHistory roleId={roleId} />
+        </TabsContent>
+      </Tabs>
+      
+      {/* Assign Users Modal */}
+      <AssignUsersModal
+        open={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        roleId={roleId}
+        roleName={role.name}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['role', roleId] });
+          queryClient.invalidateQueries({ queryKey: ['role-users', roleId] });
+          setIsAssignModalOpen(false);
+        }}
+      />
+    </div>
+  );
+}
+" does not export any route piece. This is likely a mistake.
+Generated route tree in 6475ms
+transforming...
+[32mΓ£ô[39m 1886 modules transformed.
+
+PWA v1.0.1
+mode      generateSW
+precache  48 entries (225.86 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9f9223cf.js
+[31mΓ£ù[39m Build failed in 31.66s
+[31merror during build:
+[31m[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/components/dashboard/security/tfa-status-widget.tsx (23:7): 
+There was an error during the build:
+  Transform failed with 1 error:
+C:/Users/elike/OneDrive/Desktop/project 
+management/kaneo/apps/web/src/components/dashboard/security/tfa-status-widget.tsx:23:7: ERROR: Expected "as" but found "{"
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  Transform failed with 1 error:
+C:/Users/elike/OneDrive/Desktop/project 
+management/kaneo/apps/web/src/components/dashboard/security/tfa-status-widget.tsx:23:7: ERROR: Expected "as" but found 
+"{"[31m
+file: [36mC:/Users/elike/OneDrive/Desktop/project 
+management/kaneo/apps/web/src/components/dashboard/security/tfa-status-widget.tsx:23:7[31m
+[33m
+[33mExpected "as" but found "{"[33m
+21 |  import { cn } from "@/lib/cn";
+22 |  import {
+23 |  import { logger } from "@/lib/logger";
+   |         ^
+24 |    Dialog,
+25 |    DialogContent,
+[31m
+    at getRollupError (file:///C:/Users/elike/OneDrive/Desktop/project%20management/kaneo/node_modules/.pnpm/rollup@4.44.2/no
+de_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at file:///C:/Users/elike/OneDrive/Desktop/project%20management/kaneo/node_modules/.pnpm/rollup@4.44.2/node_modules/rollu
+p/dist/es/shared/node-entry.js:23169:39
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async catchUnfinishedHookActions (file:///C:/Users/elike/OneDrive/Desktop/project%20management/kaneo/node_modules/.pnp
+m/rollup@4.44.2/node_modules/rollup/dist/es/shared/node-entry.js:22628:16)
+    at async rollupInternal (file:///C:/Users/elike/OneDrive/Desktop/project%20management/kaneo/node_modules/.pnpm/rollup@4.4
+4.2/node_modules/rollup/dist/es/shared/node-entry.js:23152:5)
+    at async buildEnvironment (file:///C:/Users/elike/OneDrive/Desktop/project%20management/kaneo/node_modules/.pnpm/vite@6.3
+.5_@types+node@22.16.4/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:46206:14)
+    at async Object.defaultBuildApp [as buildApp] (file:///C:/Users/elike/OneDrive/Desktop/project%20management/kaneo/node_mo
+dules/.pnpm/vite@6.3.5_@types+node@22.16.4/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:46684:5)
+    at async CAC.<anonymous> (file:///C:/Users/elike/OneDrive/Desktop/project%20management/kaneo/node_modules/.pnpm/vite@6.3.
+5_@types+node@22.16.4/node_modules/vite/dist/node/cli.js:863:7)[39m

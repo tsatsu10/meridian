@@ -1,0 +1,868 @@
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import {
+  Mail,
+  Server,
+  MessageSquare,
+  FileText,
+  Bell,
+  ArrowLeft,
+  Save,
+  RotateCcw,
+  Plus,
+  Edit,
+  Trash2,
+  TestTube,
+  Send,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
+import { useWorkspaceStore } from '@/store/workspace';
+import { API_BASE_URL } from '@/constants/urls';
+import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
+
+export const Route = createFileRoute('/dashboard/settings/email')({
+  component: withErrorBoundary(EmailSettings, "Email Settings"),
+});
+
+interface EmailSettingsData {
+  smtpEnabled: boolean;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUsername: string;
+  smtpPassword: string;
+  smtpFromEmail: string;
+  smtpFromName: string;
+  enableEmailNotifications: boolean;
+  emailSignature: string;
+  autoReplyEnabled: boolean;
+  autoReplyMessage: string;
+  forwardingEnabled: boolean;
+  forwardingEmail: string;
+  dailyDigestEnabled: boolean;
+  dailyDigestTime: string;
+  weeklyDigestEnabled: boolean;
+  weeklyDigestDay: string;
+  weeklyDigestTime: string;
+  digestIncludeProjects: boolean;
+  digestIncludeTasks: boolean;
+  digestIncludeMessages: boolean;
+  digestIncludeActivities: boolean;
+  allowDirectMessages: boolean;
+  allowChannelCreation: boolean;
+  requireMessageApproval: boolean;
+  messageRetentionDays: number | null;
+  allowFileSharing: boolean;
+  maxFileSize: number;
+  allowedFileTypes: string[];
+  notificationQuietHoursEnabled: boolean;
+  notificationQuietHoursStart: string;
+  notificationQuietHoursEnd: string;
+  notificationDaysEnabled: string[];
+}
+
+function EmailSettings() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  // Fix: Use workspace directly instead of broken currentWorkspace getter
+  const workspace = useWorkspaceStore((state) => state.workspace);
+  const currentWorkspace = workspace;
+  
+  const [hasChanges, setHasChanges] = useState(false);
+  const [formData, setFormData] = useState<Partial<EmailSettingsData>>({});
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
+
+  // Fetch email settings
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['email-settings', currentWorkspace?.id],
+    queryFn: async () => {
+      if (!currentWorkspace) throw new Error('No workspace selected');
+      
+      const response = await fetch(`${API_BASE_URL}/settings/email/${currentWorkspace.id}`, {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch email settings');
+      }
+      
+      const result = await response.json();
+      return result.data as EmailSettingsData;
+    },
+    enabled: !!currentWorkspace,
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings);
+    }
+  }, [settings]);
+
+  // Update settings mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (updates: Partial<EmailSettingsData>) => {
+      if (!currentWorkspace) throw new Error('No workspace selected');
+      
+      const response = await fetch(`${API_BASE_URL}/settings/email/${currentWorkspace.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updates),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update settings');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-settings', currentWorkspace?.id] });
+      toast.success('Email settings updated successfully');
+      setHasChanges(false);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update settings: ${error.message}`);
+    },
+  });
+
+  const handleChange = (field: keyof EmailSettingsData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
+  const handleSave = () => {
+    updateSettingsMutation.mutate(formData);
+  };
+
+  const handleReset = () => {
+    if (settings) {
+      setFormData(settings);
+      setHasChanges(false);
+      toast.info('Changes reset');
+    }
+  };
+
+  const handleTestConnection = async () => {
+    if (!formData.smtpHost || !formData.smtpPort || !formData.smtpUsername || !formData.smtpPassword) {
+      toast.error('Please fill in all SMTP configuration fields');
+      return;
+    }
+
+    setTestingConnection(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/settings/email/test-connection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          host: formData.smtpHost,
+          port: formData.smtpPort,
+          secure: formData.smtpSecure,
+          username: formData.smtpUsername,
+          password: formData.smtpPassword,
+          fromEmail: formData.smtpFromEmail,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.data.success) {
+        toast.success(result.data.message);
+      } else {
+        toast.error(result.data.message);
+      }
+    } catch (error: any) {
+      toast.error(`Connection test failed: ${error.message}`);
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmail) {
+      toast.error('Please enter an email address');
+      return;
+    }
+
+    setSendingTestEmail(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/settings/email/send-test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          host: formData.smtpHost,
+          port: formData.smtpPort,
+          secure: formData.smtpSecure,
+          username: formData.smtpUsername,
+          password: formData.smtpPassword,
+          fromEmail: formData.smtpFromEmail,
+          fromName: formData.smtpFromName,
+          toEmail: testEmail,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.data.success) {
+        toast.success(result.data.message);
+        setTestEmail('');
+      } else {
+        toast.error(result.data.message);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to send test email: ${error.message}`);
+    } finally {
+      setSendingTestEmail(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <LazyDashboardLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading email settings...</p>
+          </div>
+        </div>
+      </LazyDashboardLayout>
+    );
+  }
+
+  return (
+    <LazyDashboardLayout>
+      <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button onClick={() => navigate({ to: '/dashboard/settings' })} variant='ghost' size='sm'>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
+            </Button>
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+                <Mail className="h-8 w-8" /> Email & Communication Settings
+              </h1>
+              <p className="text-muted-foreground">Configure email, messaging, and notification preferences</p>
+            </div>
+          </div>
+          {hasChanges && (
+            <div className="flex gap-2">
+              <Button onClick={handleReset} variant="outline" size="sm">
+                <RotateCcw className="h-4 w-4 mr-2" /> Reset
+              </Button>
+              <Button onClick={handleSave} size="sm" disabled={updateSettingsMutation.isPending}>
+                <Save className="h-4 w-4 mr-2" />
+                {updateSettingsMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <Tabs defaultValue="smtp" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="smtp">
+              <Server className="h-4 w-4 mr-2" />
+              SMTP Configuration
+            </TabsTrigger>
+            <TabsTrigger value="digest">
+              <Bell className="h-4 w-4 mr-2" />
+              Email Digests
+            </TabsTrigger>
+            <TabsTrigger value="communication">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Communication
+            </TabsTrigger>
+          </TabsList>
+
+          {/* SMTP Configuration Tab */}
+          <TabsContent value="smtp" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Server className="h-5 w-5" />
+                  SMTP Server Configuration
+                </CardTitle>
+                <CardDescription>Configure your SMTP server for sending emails</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Enable SMTP</Label>
+                    <p className="text-sm text-muted-foreground">Use custom SMTP server for sending emails</p>
+                  </div>
+                  <Switch
+                    checked={formData.smtpEnabled ?? false}
+                    onCheckedChange={(checked) => handleChange('smtpEnabled', checked)}
+                  />
+                </div>
+
+                {formData.smtpEnabled && (
+                  <>
+                    <Separator />
+                    
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpHost">SMTP Host *</Label>
+                        <Input
+                          id="smtpHost"
+                          value={formData.smtpHost || ''}
+                          onChange={(e) => handleChange('smtpHost', e.target.value)}
+                          placeholder="smtp.gmail.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpPort">SMTP Port *</Label>
+                        <Input
+                          id="smtpPort"
+                          type="number"
+                          value={formData.smtpPort || 587}
+                          onChange={(e) => handleChange('smtpPort', parseInt(e.target.value))}
+                          placeholder="587"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Use SSL/TLS</Label>
+                        <p className="text-sm text-muted-foreground">Enable secure connection</p>
+                      </div>
+                      <Switch
+                        checked={formData.smtpSecure ?? true}
+                        onCheckedChange={(checked) => handleChange('smtpSecure', checked)}
+                      />
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpUsername">SMTP Username *</Label>
+                        <Input
+                          id="smtpUsername"
+                          value={formData.smtpUsername || ''}
+                          onChange={(e) => handleChange('smtpUsername', e.target.value)}
+                          placeholder="your-email@example.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpPassword">SMTP Password *</Label>
+                        <Input
+                          id="smtpPassword"
+                          type="password"
+                          value={formData.smtpPassword || ''}
+                          onChange={(e) => handleChange('smtpPassword', e.target.value)}
+                          placeholder="••••••••"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpFromEmail">From Email *</Label>
+                        <Input
+                          id="smtpFromEmail"
+                          type="email"
+                          value={formData.smtpFromEmail || ''}
+                          onChange={(e) => handleChange('smtpFromEmail', e.target.value)}
+                          placeholder="noreply@example.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpFromName">From Name</Label>
+                        <Input
+                          id="smtpFromName"
+                          value={formData.smtpFromName || ''}
+                          onChange={(e) => handleChange('smtpFromName', e.target.value)}
+                          placeholder="Meridian Notifications"
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleTestConnection}
+                        variant="outline"
+                        disabled={testingConnection}
+                      >
+                        <TestTube className="h-4 w-4 mr-2" />
+                        {testingConnection ? 'Testing...' : 'Test Connection'}
+                      </Button>
+
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline">
+                            <Send className="h-4 w-4 mr-2" />
+                            Send Test Email
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Send Test Email</DialogTitle>
+                            <DialogDescription>
+                              Enter an email address to send a test message
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="testEmail">Email Address</Label>
+                              <Input
+                                id="testEmail"
+                                type="email"
+                                value={testEmail}
+                                onChange={(e) => setTestEmail(e.target.value)}
+                                placeholder="test@example.com"
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button
+                              onClick={handleSendTestEmail}
+                              disabled={sendingTestEmail}
+                            >
+                              {sendingTestEmail ? 'Sending...' : 'Send Test Email'}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Email Preferences</CardTitle>
+                <CardDescription>Configure general email settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Enable Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">Send email notifications to users</p>
+                  </div>
+                  <Switch
+                    checked={formData.enableEmailNotifications ?? true}
+                    onCheckedChange={(checked) => handleChange('enableEmailNotifications', checked)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="emailSignature">Email Signature</Label>
+                  <Textarea
+                    id="emailSignature"
+                    value={formData.emailSignature || ''}
+                    onChange={(e) => handleChange('emailSignature', e.target.value)}
+                    placeholder="Best regards,\nThe Meridian Team"
+                    rows={4}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Auto-Reply</Label>
+                    <p className="text-sm text-muted-foreground">Automatically reply to incoming emails</p>
+                  </div>
+                  <Switch
+                    checked={formData.autoReplyEnabled ?? false}
+                    onCheckedChange={(checked) => handleChange('autoReplyEnabled', checked)}
+                  />
+                </div>
+
+                {formData.autoReplyEnabled && (
+                  <div className="space-y-2 pl-6">
+                    <Label htmlFor="autoReplyMessage">Auto-Reply Message</Label>
+                    <Textarea
+                      id="autoReplyMessage"
+                      value={formData.autoReplyMessage || ''}
+                      onChange={(e) => handleChange('autoReplyMessage', e.target.value)}
+                      placeholder="Thank you for your email. We'll get back to you soon."
+                      rows={3}
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Email Forwarding</Label>
+                    <p className="text-sm text-muted-foreground">Forward emails to another address</p>
+                  </div>
+                  <Switch
+                    checked={formData.forwardingEnabled ?? false}
+                    onCheckedChange={(checked) => handleChange('forwardingEnabled', checked)}
+                  />
+                </div>
+
+                {formData.forwardingEnabled && (
+                  <div className="space-y-2 pl-6">
+                    <Label htmlFor="forwardingEmail">Forwarding Email</Label>
+                    <Input
+                      id="forwardingEmail"
+                      type="email"
+                      value={formData.forwardingEmail || ''}
+                      onChange={(e) => handleChange('forwardingEmail', e.target.value)}
+                      placeholder="forward@example.com"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Email Digests Tab */}
+          <TabsContent value="digest" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Daily Digest
+                </CardTitle>
+                <CardDescription>Receive a daily summary of activity</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Enable Daily Digest</Label>
+                    <p className="text-sm text-muted-foreground">Send daily email summaries</p>
+                  </div>
+                  <Switch
+                    checked={formData.dailyDigestEnabled ?? false}
+                    onCheckedChange={(checked) => handleChange('dailyDigestEnabled', checked)}
+                  />
+                </div>
+
+                {formData.dailyDigestEnabled && (
+                  <div className="space-y-2 pl-6">
+                    <Label htmlFor="dailyDigestTime">Send Time</Label>
+                    <Input
+                      id="dailyDigestTime"
+                      type="time"
+                      value={formData.dailyDigestTime || '09:00'}
+                      onChange={(e) => handleChange('dailyDigestTime', e.target.value)}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Weekly Digest
+                </CardTitle>
+                <CardDescription>Receive a weekly summary of activity</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Enable Weekly Digest</Label>
+                    <p className="text-sm text-muted-foreground">Send weekly email summaries</p>
+                  </div>
+                  <Switch
+                    checked={formData.weeklyDigestEnabled ?? false}
+                    onCheckedChange={(checked) => handleChange('weeklyDigestEnabled', checked)}
+                  />
+                </div>
+
+                {formData.weeklyDigestEnabled && (
+                  <div className="grid gap-4 md:grid-cols-2 pl-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="weeklyDigestDay">Day of Week</Label>
+                      <Select
+                        value={formData.weeklyDigestDay || 'monday'}
+                        onValueChange={(value) => handleChange('weeklyDigestDay', value)}
+                      >
+                        <SelectTrigger id="weeklyDigestDay">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                            <SelectItem key={day} value={day}>
+                              {day.charAt(0).toUpperCase() + day.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="weeklyDigestTime">Send Time</Label>
+                      <Input
+                        id="weeklyDigestTime"
+                        type="time"
+                        value={formData.weeklyDigestTime || '09:00'}
+                        onChange={(e) => handleChange('weeklyDigestTime', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Digest Content</CardTitle>
+                <CardDescription>Choose what to include in digest emails</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Include Projects</Label>
+                  <Switch
+                    checked={formData.digestIncludeProjects ?? true}
+                    onCheckedChange={(checked) => handleChange('digestIncludeProjects', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label>Include Tasks</Label>
+                  <Switch
+                    checked={formData.digestIncludeTasks ?? true}
+                    onCheckedChange={(checked) => handleChange('digestIncludeTasks', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label>Include Messages</Label>
+                  <Switch
+                    checked={formData.digestIncludeMessages ?? true}
+                    onCheckedChange={(checked) => handleChange('digestIncludeMessages', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label>Include Activities</Label>
+                  <Switch
+                    checked={formData.digestIncludeActivities ?? true}
+                    onCheckedChange={(checked) => handleChange('digestIncludeActivities', checked)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Schedule</CardTitle>
+                <CardDescription>Set quiet hours for notifications</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Enable Quiet Hours</Label>
+                    <p className="text-sm text-muted-foreground">Pause notifications during specific hours</p>
+                  </div>
+                  <Switch
+                    checked={formData.notificationQuietHoursEnabled ?? false}
+                    onCheckedChange={(checked) => handleChange('notificationQuietHoursEnabled', checked)}
+                  />
+                </div>
+
+                {formData.notificationQuietHoursEnabled && (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2 pl-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="notificationQuietHoursStart">Start Time</Label>
+                        <Input
+                          id="notificationQuietHoursStart"
+                          type="time"
+                          value={formData.notificationQuietHoursStart || '22:00'}
+                          onChange={(e) => handleChange('notificationQuietHoursStart', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="notificationQuietHoursEnd">End Time</Label>
+                        <Input
+                          id="notificationQuietHoursEnd"
+                          type="time"
+                          value={formData.notificationQuietHoursEnd || '08:00'}
+                          onChange={(e) => handleChange('notificationQuietHoursEnd', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pl-6">
+                      <Label>Active Days</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                          <Badge
+                            key={day}
+                            variant={formData.notificationDaysEnabled?.includes(day) ? 'default' : 'outline'}
+                            className="cursor-pointer"
+                            onClick={() => {
+                              const current = formData.notificationDaysEnabled || [];
+                              const updated = current.includes(day)
+                                ? current.filter(d => d !== day)
+                                : [...current, day];
+                              handleChange('notificationDaysEnabled', updated);
+                            }}
+                          >
+                            {day.charAt(0).toUpperCase() + day.slice(1)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Communication Tab */}
+          <TabsContent value="communication" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Messaging Settings
+                </CardTitle>
+                <CardDescription>Configure workspace messaging preferences</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Allow Direct Messages</Label>
+                    <p className="text-sm text-muted-foreground">Enable person-to-person messaging</p>
+                  </div>
+                  <Switch
+                    checked={formData.allowDirectMessages ?? true}
+                    onCheckedChange={(checked) => handleChange('allowDirectMessages', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Allow Channel Creation</Label>
+                    <p className="text-sm text-muted-foreground">Members can create new channels</p>
+                  </div>
+                  <Switch
+                    checked={formData.allowChannelCreation ?? true}
+                    onCheckedChange={(checked) => handleChange('allowChannelCreation', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Require Message Approval</Label>
+                    <p className="text-sm text-muted-foreground">Messages need approval before posting</p>
+                  </div>
+                  <Switch
+                    checked={formData.requireMessageApproval ?? false}
+                    onCheckedChange={(checked) => handleChange('requireMessageApproval', checked)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="messageRetentionDays">Message Retention (Days)</Label>
+                  <Input
+                    id="messageRetentionDays"
+                    type="number"
+                    min="1"
+                    value={formData.messageRetentionDays || ''}
+                    onChange={(e) => handleChange('messageRetentionDays', e.target.value ? parseInt(e.target.value) : null)}
+                    placeholder="Unlimited"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Leave empty for unlimited retention
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>File Sharing</CardTitle>
+                <CardDescription>Configure file sharing settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Allow File Sharing</Label>
+                    <p className="text-sm text-muted-foreground">Enable file uploads in messages</p>
+                  </div>
+                  <Switch
+                    checked={formData.allowFileSharing ?? true}
+                    onCheckedChange={(checked) => handleChange('allowFileSharing', checked)}
+                  />
+                </div>
+
+                {formData.allowFileSharing && (
+                  <>
+                    <div className="space-y-2 pl-6">
+                      <Label htmlFor="maxFileSize">Maximum File Size (MB)</Label>
+                      <Input
+                        id="maxFileSize"
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={formData.maxFileSize || 10}
+                        onChange={(e) => handleChange('maxFileSize', parseInt(e.target.value))}
+                      />
+                    </div>
+
+                    <div className="space-y-2 pl-6">
+                      <Label>Allowed File Types</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'zip'].map((type) => (
+                          <Badge
+                            key={type}
+                            variant={formData.allowedFileTypes?.includes(type) ? 'default' : 'outline'}
+                            className="cursor-pointer"
+                            onClick={() => {
+                              const current = formData.allowedFileTypes || [];
+                              const updated = current.includes(type)
+                                ? current.filter(t => t !== type)
+                                : [...current, type];
+                              handleChange('allowedFileTypes', updated);
+                            }}
+                          >
+                            {type}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </LazyDashboardLayout>
+  );
+}

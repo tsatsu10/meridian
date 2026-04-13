@@ -1,0 +1,794 @@
+# Product Requirements Document: Gamification & Motivation System
+
+## Executive Summary
+
+### Product Vision
+Transform Meridian into an engaging, motivating platform by adding game-like elements that encourage productivity, celebrate achievements, and foster healthy team competition—all while maintaining professional credibility.
+
+### Business Objectives
+1. Increase daily active users by 40% through engagement features
+2. Improve user retention by 25% via habit formation (streaks)
+3. Boost task completion rates by 30% through challenges and competition
+4. Enhance team collaboration by 50% via social gamification
+5. Create premium feature opportunity ($75K+ ARR potential)
+
+### Target Users
+- **Mike (Developer)**: Loves streaks, wants recognition for contributions
+- **David (Team Lead)**: Wants to motivate team, celebrate wins
+- **Sarah (Project Manager)**: Needs team engagement, progress visibility
+- **Jennifer (Executive)**: Wants high-performing, motivated teams
+
+---
+
+## Core Features
+
+### Feature 1: Achievement Badges 🏅
+**Priority**: P0 (Critical)  
+**User Story**: As a user, I want to unlock badges for accomplishments so I feel recognized and motivated to achieve more.
+
+**Requirements**:
+
+**Badge Categories** (50+ badges total):
+
+1. **Task Achievements** (15 badges):
+   - "First Steps" - Complete your first task
+   - "Getting Started" - Complete 10 tasks
+   - "Task Master" - Complete 100 tasks
+   - "Marathon Runner" - Complete 1,000 tasks
+   - "Speed Demon" - Complete 10 tasks in one day
+   - "Night Owl" - Complete task after 10 PM
+   - "Early Bird" - Complete task before 7 AM
+   - "Deadline Dancer" - Complete 20 tasks on time
+   - "Zero Inbox" - Have zero overdue tasks
+   - "Priority Pro" - Complete 50 high-priority tasks
+
+2. **Goal Achievements** (10 badges):
+   - "Goal Setter" - Create first OKR
+   - "Goal Achiever" - Complete first goal
+   - "Key Results Champion" - Complete 50 key results
+   - "OKR Master" - Complete 10 OKRs
+   - "Consistent" - Update goals weekly for 4 weeks
+   - "Ambitious" - Set 5 goals simultaneously
+   - "Overachiever" - Complete goal 2 weeks early
+
+3. **Team Achievements** (12 badges):
+   - "Team Player" - Give 10 kudos
+   - "Helpful Hero" - Receive 10 kudos
+   - "Mentor" - Help 5 teammates
+   - "Collaborator" - Work on 10 projects
+   - "Communicator" - Send 100 messages
+   - "Problem Solver" - Receive 5 problem-solving kudos
+
+4. **Streak Achievements** (8 badges):
+   - "Week Warrior" - 7-day streak
+   - "Month Master" - 30-day streak
+   - "Quarter Champion" - 90-day streak
+   - "Century" - 100-day streak
+   - "Legend" - 365-day streak
+
+5. **Special Achievements** (10 badges):
+   - "Early Adopter" - First 1000 users
+   - "Innovator" - Create first automation
+   - "Analyst" - View 100 reports
+   - "Designer" - Customize workspace theme
+   - "Completionist" - Unlock all common badges
+
+**Badge Properties**:
+- Name and description
+- Icon/emoji representation
+- Rarity (Common, Rare, Epic, Legendary)
+- Point value (10-500 points)
+- Unlock criteria (programmatic)
+- Unlock date/timestamp
+- Progress tracking (X/Y format)
+
+**UI/UX**:
+- Badge showcase page (grid view)
+- Locked/unlocked states (grayscale vs color)
+- Progress bars for in-progress badges
+- Badge detail modal (how to unlock)
+- Recent unlocks widget on dashboard
+- Badge notifications (toast + modal)
+- Share badge achievement (optional)
+
+**Success Criteria**:
+- 70% of users unlock at least 5 badges in first month
+- 50% of users view badge showcase page
+- Badge unlock notification engagement rate >80%
+
+---
+
+### Feature 2: Streak Tracker 🔥
+**Priority**: P0 (Critical)  
+**User Story**: As a user, I want to maintain activity streaks so I build consistent work habits and stay engaged.
+
+**Requirements**:
+
+**Streak Types** (5):
+1. **Login Streak**: Consecutive days logging into Meridian
+2. **Task Completion Streak**: Consecutive days completing at least 1 task
+3. **Goal Update Streak**: Consecutive weeks updating goal progress
+4. **Collaboration Streak**: Consecutive days helping teammates (kudos, comments)
+5. **Learning Streak**: Consecutive days viewing help/documentation
+
+**Streak Mechanics**:
+- **Daily Reset**: Midnight in user's timezone
+- **Grace Period**: 24-hour window to maintain streak
+- **Streak Freeze**: 1 freeze per month (premium feature)
+- **Streak Recovery**: Can recover once per month if broken
+- **Milestone Rewards**: Extra points at 7, 30, 100, 365 days
+
+**Streak Display**:
+- Flame emoji with number (🔥 23 days)
+- Progress bar to next milestone
+- Longest streak badge
+- Current vs longest streak comparison
+- Streak calendar (heatmap view)
+
+**Notifications**:
+- Daily reminder if streak at risk (8 PM)
+- Celebration when milestone reached
+- Warning if about to break (11 PM)
+- Recovery option when broken
+
+**UI/UX**:
+- Streak widget on dashboard
+- Flame animation on streak extension
+- Milestone celebration modal
+- Heatmap calendar (GitHub-style)
+- Streak comparison with friends (opt-in)
+
+**Success Criteria**:
+- 40% of users maintain 7+ day streak
+- 20% of users reach 30-day streak
+- 5% of users reach 100-day streak
+- Streak reminder engagement >60%
+
+---
+
+### Feature 3: Leaderboard 🏆
+**Priority**: P1 (High)  
+**User Story**: As a team lead, I want to see who's most productive so I can recognize top performers and motivate the team.
+
+**Requirements**:
+
+**Leaderboard Types**:
+1. **Task Completion** - Most tasks completed
+2. **Goal Achievement** - Highest goal completion %
+3. **Team Contribution** - Kudos + collaboration score
+4. **Streak Champion** - Longest active streaks
+5. **Quality Score** - On-time completion rate
+6. **Overall Score** - Weighted combination of all
+
+**Scoring Algorithm**:
+```typescript
+totalScore = (
+  (tasksCompleted * 10) +
+  (goalsCompleted * 100) +
+  (keyResultsCompleted * 25) +
+  (kudosReceived * 10) +
+  (kudosGiven * 5) +
+  (streakDays * 2) +
+  (achievementsUnlocked * 50)
+) * streakMultiplier
+```
+
+**Time Periods**:
+- Today
+- This Week
+- This Month
+- This Quarter
+- All Time
+
+**Scoping**:
+- Workspace-wide
+- Team-level
+- Department-level
+- Custom groups
+
+**Privacy Controls**:
+- **Opt-In Required**: Must explicitly join leaderboard
+- **Anonymous Mode**: "User #123" instead of name
+- **Friends Only**: Share rank only with connections
+- **Public**: Visible to all workspace members
+- **Opt-Out Anytime**: Can leave leaderboard
+
+**Leaderboard UI**:
+- Top 10 list with avatars
+- Rank medals (🥇🥈🥉)
+- Point breakdown on hover
+- Rank change indicators (↑↓)
+- User's rank highlighted
+- Filter by category and period
+- Podium visualization for top 3
+
+**Features**:
+- Real-time rank updates
+- Rank history graph
+- Achievement showcase for leaders
+- "Catch up" suggestions for lower ranks
+- Team aggregated score
+
+**Success Criteria**:
+- 60% opt-in rate
+- 80% of participants check leaderboard daily
+- 50% increase in task completion among participants
+- Zero negative feedback about toxic competition
+
+---
+
+### Feature 4: Progress Rings 💍
+**Priority**: P1 (High)  
+**User Story**: As a user, I want Apple Watch-style progress rings so I can see my daily/weekly/monthly activity at a glance.
+
+**Requirements**:
+
+**Ring Structure** (3 concentric rings):
+
+**Ring 1 (Outer - Blue)**: Daily Tasks
+- Target: Complete X tasks today (user-defined, default 5)
+- Progress: Tasks completed / Target
+- Color gradient: Blue (#007AFF) → Light Blue (#5AC8FA)
+- Completion: "Perfect Day" achievement
+
+**Ring 2 (Middle - Green)**: Weekly Goals
+- Target: Update Y goal key results this week (default 3)
+- Progress: Key results updated / Target
+- Color gradient: Green (#34C759) → Light Green (#30D158)
+- Completion: "Productive Week" achievement
+
+**Ring 3 (Inner - Red)**: Monthly Milestones
+- Target: Complete Z milestones this month (default 2)
+- Progress: Milestones completed / Target
+- Color gradient: Red (#FF3B30) → Pink (#FF375F)
+- Completion: "Milestone Master" achievement
+
+**Ring Achievements**:
+- Close all 3 rings: "Perfect Day" (+50 points)
+- Close all rings 7 days: "Perfect Week" (+200 points)
+- Close all rings 30 days: "Perfect Month" (+1000 points)
+
+**UI/UX**:
+- Large ring display (200px diameter)
+- Animated fill on progress
+- Sparkle effect on ring completion
+- Numbers in center (tasks, goals, milestones)
+- Click ring to see details
+- Mini rings in dashboard widget (100px)
+- Ring history calendar view
+
+**Customization**:
+- Set daily task target (1-20)
+- Set weekly goal target (1-10)
+- Set monthly milestone target (1-5)
+- Choose ring colors (theme-based)
+- Hide specific rings
+
+**Success Criteria**:
+- 50% of users close at least 1 ring daily
+- 30% close all 3 rings weekly
+- Ring widget viewed daily by 70% of users
+
+---
+
+### Feature 5: Daily Challenges ⚡
+**Priority**: P1 (High)  
+**User Story**: As a user, I want daily challenges so I have clear, achievable goals each day and stay motivated.
+
+**Requirements**:
+
+**Challenge Types** (20+ total):
+
+**Task Challenges**:
+- "Five Alive" - Complete 5 tasks today
+- "Priority Pro" - Complete 3 high-priority tasks
+- "Helping Hand" - Help a teammate with their task
+- "Early Finisher" - Complete task before noon
+- "Clean Sweep" - Zero overdue tasks by end of day
+
+**Goal Challenges**:
+- "Progress Push" - Update 2 key results
+- "Goal Review" - Review all your OKRs
+- "Milestone Maker" - Add a new milestone
+- "Key Result King" - Complete 1 key result
+
+**Collaboration Challenges**:
+- "Kudos Karma" - Give 3 kudos
+- "Social Butterfly" - Send 10 messages
+- "Commenter" - Comment on 5 tasks
+- "Helpful Hero" - Respond to 3 help requests
+
+**Quality Challenges**:
+- "On Time" - Complete all tasks on schedule
+- "Zero Backlog" - Clear all overdue tasks
+- "Focused" - 4 hours of focused work
+- "Organized" - Update all project statuses
+
+**Challenge Mechanics**:
+- 3 challenges presented daily (mix of easy, medium, hard)
+- Reroll option (1 per day)
+- Skip option (no penalty)
+- Bonus challenge (optional, high reward)
+- Challenge chains (7-day series)
+
+**Challenge Difficulty**:
+- **Easy** (70% success rate): 25 points, common rewards
+- **Medium** (40% success rate): 50 points, rare rewards
+- **Hard** (15% success rate): 100 points, epic rewards
+- **Legendary** (5% success rate): 250 points, legendary rewards
+
+**UI/UX**:
+- Challenge cards on dashboard
+- Progress bars for each challenge
+- Accept/Decline buttons
+- Timer showing time remaining
+- Completion celebration
+- Challenge history view
+
+**Success Criteria**:
+- 50% acceptance rate
+- 35% completion rate
+- Users complete average 2 challenges per day
+
+---
+
+### Feature 6: Team Celebrations 🎉
+**Priority**: P2 (Medium)  
+**User Story**: As a team member, I want to celebrate wins with my team so we build camaraderie and acknowledge success.
+
+**Requirements**:
+
+**Celebration Triggers** (automatic):
+1. **Project Completion**: When project marked as done
+2. **Milestone Achievement**: When milestone reached
+3. **Team Goal Complete**: When shared team goal completed
+4. **Perfect Week**: When team has perfect week (all tasks done)
+5. **Achievement Unlock**: When epic/legendary badge unlocked
+6. **Streak Milestone**: When team member hits 30/100/365 day streak
+
+**Celebration Types**:
+
+1. **Confetti Explosion** 🎊
+   - Multi-color confetti particles
+   - Fall from top of screen
+   - Physics-based animation
+   - 3-second duration
+   - Customizable colors (theme-based)
+
+2. **Success Modal** 🌟
+   - Full-screen takeover (dismissible)
+   - Achievement/milestone displayed
+   - Team avatars cascade in
+   - Congratulations message
+   - Share button (Slack, email, social)
+   - Dismiss or view details
+
+3. **Toast Celebration** 📣
+   - Non-intrusive toast notification
+   - Appears in top-right
+   - Animated entry
+   - Click to expand
+   - Auto-dismiss after 5 seconds
+
+4. **Fireworks** (premium) 🎆
+   - Particle burst animation
+   - Multiple launch points
+   - Sound effects (optional)
+   - Team celebration broadcast
+
+**Team Broadcast**:
+- When celebration triggered, notify all team members
+- Show who achieved what
+- Allow reactions (emoji)
+- Optional message from achiever
+- Team kudos suggestions
+
+**Customization**:
+- Enable/disable celebrations
+- Choose celebration type
+- Set celebration intensity (subtle, normal, epic)
+- Mute sounds
+- Opt-out of team broadcasts
+
+**UI Components**:
+```tsx
+<ConfettiCelebration 
+  trigger={projectCompleted}
+  colors={['#ff0', '#0ff', '#f0f']}
+  duration={3000}
+/>
+
+<CelebrationModal
+  type="achievement"
+  badge={badge}
+  onShare={() => {}}
+  onDismiss={() => {}}
+/>
+
+<FireworksEffect
+  intensity="epic"
+  colors={themeColors}
+/>
+```
+
+**Success Criteria**:
+- 80% of users experience at least 1 celebration in first week
+- 90% positive sentiment about celebrations
+- Zero complaints about "too distracting"
+- 50% share their achievements
+
+---
+
+## Technical Architecture
+
+### Database Schema
+
+```typescript
+// Table 1: achievement_definitions
+export const achievementDefinitions = pgTable("achievement_definitions", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(), // Emoji or icon name
+  criteria: jsonb("criteria").notNull(), // { type: 'task_count', target: 100 }
+  rarity: text("rarity").notNull(), // 'common', 'rare', 'epic', 'legendary'
+  points: integer("points").notNull(),
+  category: text("category").notNull(), // 'task', 'goal', 'team', 'streak', 'special'
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Table 2: user_achievements
+export const userAchievements = pgTable("user_achievements", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  achievementId: text("achievement_id").references(() => achievementDefinitions.id),
+  progress: integer("progress").default(0), // Current progress toward achievement
+  isUnlocked: boolean("is_unlocked").default(false),
+  unlockedAt: timestamp("unlocked_at"),
+  notified: boolean("notified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Table 3: user_streaks
+export const userStreaks = pgTable("user_streaks", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  streakType: text("streak_type").notNull(), // 'login', 'task', 'goal', 'collaboration', 'learning'
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  lastActivityDate: timestamp("last_activity_date"),
+  streakStartDate: timestamp("streak_start_date"),
+  freezesRemaining: integer("freezes_remaining").default(0), // Premium feature
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Table 4: leaderboard_scores
+export const leaderboardScores = pgTable("leaderboard_scores", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  workspaceId: text("workspace_id").references(() => workspaces.id),
+  scoreType: text("score_type").notNull(), // 'total', 'tasks', 'goals', 'kudos', 'quality'
+  score: integer("score").notNull(),
+  rank: integer("rank"),
+  period: text("period").notNull(), // 'daily', 'weekly', 'monthly', 'all_time'
+  isOptedIn: boolean("is_opted_in").default(false),
+  isAnonymous: boolean("is_anonymous").default(false),
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+});
+
+// Table 5: daily_challenges
+export const dailyChallenges = pgTable("daily_challenges", {
+  id: text("id").primaryKey(),
+  workspaceId: text("workspace_id").references(() => workspaces.id),
+  challengeType: text("challenge_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  difficulty: text("difficulty").notNull(), // 'easy', 'medium', 'hard', 'legendary'
+  target: integer("target").notNull(),
+  points: integer("points").notNull(),
+  validDate: timestamp("valid_date").notNull(), // Challenge valid for this date
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Table 6: user_challenge_progress
+export const userChallengeProgress = pgTable("user_challenge_progress", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  challengeId: text("challenge_id").references(() => dailyChallenges.id),
+  progress: integer("progress").default(0),
+  target: integer("target").notNull(),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  pointsEarned: integer("points_earned"),
+  acceptedAt: timestamp("accepted_at").defaultNow(),
+});
+
+// Table 7: celebration_events
+export const celebrationEvents = pgTable("celebration_events", {
+  id: text("id").primaryKey(),
+  workspaceId: text("workspace_id").references(() => workspaces.id),
+  triggerUserId: text("trigger_user_id").references(() => users.id),
+  celebrationType: text("celebration_type").notNull(), // 'confetti', 'fireworks', 'modal', 'toast'
+  reason: text("reason").notNull(), // 'project_complete', 'achievement_unlock', etc.
+  metadata: jsonb("metadata"),
+  teamMemberIds: jsonb("team_member_ids"), // Who sees this celebration
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Indexes for performance
+CREATE INDEX idx_achievements_user ON user_achievements(user_id);
+CREATE INDEX idx_achievements_unlocked ON user_achievements(is_unlocked);
+CREATE INDEX idx_streaks_user_type ON user_streaks(user_id, streak_type);
+CREATE INDEX idx_leaderboard_workspace_period ON leaderboard_scores(workspace_id, period);
+CREATE INDEX idx_leaderboard_rank ON leaderboard_scores(rank);
+CREATE INDEX idx_challenges_valid_date ON daily_challenges(valid_date);
+CREATE INDEX idx_user_challenges ON user_challenge_progress(user_id, challenge_id);
+```
+
+---
+
+## API Endpoints
+
+**Achievements** (6 endpoints):
+```
+GET    /api/achievements                        - List all achievements
+GET    /api/achievements/user/:userId           - User's achievements
+POST   /api/achievements/check/:userId          - Check for new unlocks
+GET    /api/achievements/:id/progress           - Progress toward badge
+GET    /api/achievements/recent                 - Recent unlocks (feed)
+POST   /api/achievements/:id/share              - Share achievement
+```
+
+**Streaks** (5 endpoints):
+```
+GET    /api/streaks/:userId                     - User's streaks
+POST   /api/streaks/record                      - Record activity
+GET    /api/streaks/leaderboard                 - Top streaks
+GET    /api/streaks/heatmap/:userId             - Activity heatmap
+POST   /api/streaks/freeze                      - Use streak freeze
+```
+
+**Leaderboard** (6 endpoints):
+```
+GET    /api/leaderboard/:workspaceId            - Workspace leaderboard
+GET    /api/leaderboard/team/:teamId            - Team leaderboard
+POST   /api/leaderboard/opt-in                  - Join leaderboard
+POST   /api/leaderboard/opt-out                 - Leave leaderboard
+GET    /api/leaderboard/user/:userId/rank       - User's rank
+POST   /api/leaderboard/calculate               - Trigger calculation
+```
+
+**Progress Rings** (4 endpoints):
+```
+GET    /api/progress-rings/:userId              - Today's rings
+GET    /api/progress-rings/:userId/history      - Historical data
+POST   /api/progress-rings/targets              - Update ring targets
+GET    /api/progress-rings/stats                - Ring completion stats
+```
+
+**Daily Challenges** (6 endpoints):
+```
+GET    /api/challenges/daily                    - Today's challenges
+POST   /api/challenges/:id/accept               - Accept challenge
+POST   /api/challenges/:id/progress             - Update progress
+POST   /api/challenges/:id/complete             - Mark complete
+GET    /api/challenges/user/:userId             - User's challenges
+POST   /api/challenges/reroll                   - Reroll 1 challenge
+```
+
+**Celebrations** (3 endpoints):
+```
+POST   /api/celebrations/trigger                - Trigger celebration
+GET    /api/celebrations/recent                 - Recent celebrations
+WebSocket: celebration:broadcast               - Real-time broadcast
+```
+
+---
+
+## Frontend Components
+
+```
+apps/web/src/components/gamification/
+├── achievements/
+│   ├── badge-showcase.tsx                 # All badges grid
+│   ├── badge-card.tsx                     # Single badge display
+│   ├── badge-progress.tsx                 # Progress toward badge
+│   ├── unlock-modal.tsx                   # Badge unlock celebration
+│   └── recent-achievements-widget.tsx     # Dashboard widget
+├── streaks/
+│   ├── streak-widget.tsx                  # Main streak display
+│   ├── streak-calendar.tsx                # Heatmap calendar
+│   ├── streak-milestone-modal.tsx         # Milestone celebration
+│   └── streak-reminder.tsx                # Notification component
+├── leaderboard/
+│   ├── leaderboard-widget.tsx             # Dashboard leaderboard
+│   ├── leaderboard-page.tsx               # Full leaderboard view
+│   ├── podium-display.tsx                 # Top 3 visualization
+│   ├── rank-card.tsx                      # User rank display
+│   └── leaderboard-opt-in-modal.tsx       # Privacy consent
+├── progress-rings/
+│   ├── progress-rings-widget.tsx          # Apple Watch-style rings
+│   ├── ring-detail-modal.tsx              # Ring details and history
+│   ├── ring-settings.tsx                  # Customize targets
+│   └── ring-completion-modal.tsx          # Ring closed celebration
+├── challenges/
+│   ├── daily-challenges-widget.tsx        # Today's challenges
+│   ├── challenge-card.tsx                 # Single challenge
+│   ├── challenge-progress.tsx             # Challenge progress bar
+│   └── challenge-complete-modal.tsx       # Completion celebration
+├── celebrations/
+│   ├── confetti.tsx                       # Confetti animation
+│   ├── fireworks.tsx                      # Fireworks effect
+│   ├── celebration-modal.tsx              # Success modal
+│   └── celebration-toast.tsx              # Toast notification
+└── index.ts                                # Component exports
+```
+
+---
+
+## User Experience Flows
+
+### Flow 1: Unlock First Achievement
+1. User completes 10th task
+2. System checks achievement criteria
+3. "Getting Started" badge unlocked
+4. Confetti animation plays (3 seconds)
+5. Modal appears: "🎉 Achievement Unlocked!"
+6. Badge displayed with description and points
+7. Option to share on team feed
+8. User clicks "Awesome!" to dismiss
+9. Badge appears in user's profile
+
+### Flow 2: Maintain Streak
+1. User logs in for 7th consecutive day
+2. Streak updates: 🔥 7 days
+3. Toast notification: "7-day streak! Keep it up!"
+4. Flame animation plays
+5. "Week Warrior" badge unlocked
+6. Points added to leaderboard (+14 points)
+
+### Flow 3: Complete Daily Challenge
+1. User sees daily challenges on dashboard
+2. Challenge: "Complete 5 tasks today" (3/5)
+3. User completes 4th task
+4. Challenge updates to 4/5
+5. User completes 5th task
+6. Challenge completes! ✅
+7. Celebration animation
+8. Points awarded (+25)
+9. Challenge marked complete
+
+### Flow 4: Climb Leaderboard
+1. User opts into workspace leaderboard
+2. Initial rank: #47 (2,450 points)
+3. Completes goal (+100 points)
+4. Rank updates to #42 (↑ 5)
+5. Green arrow shows rank improvement
+6. Toast: "You moved up 5 spots!"
+7. Next rank shown: #41 (need 50 more points)
+
+### Flow 5: Close Progress Rings
+1. User completes 5th task of the day
+2. Blue ring closes (tasks ring complete)
+3. Sparkle animation on ring
+4. Toast: "Tasks ring closed! 🎯"
+5. User updates goal progress
+6. Green ring closes (goals ring complete)
+7. User completes milestone
+8. Red ring closes (all rings complete!)
+9. "Perfect Day" modal with confetti
+10. Badge unlocked + 50 bonus points
+
+---
+
+## Gamification Settings
+
+**User Preferences**:
+```typescript
+{
+  gamificationEnabled: boolean,
+  showAchievements: boolean,
+  showStreaks: boolean,
+  showLeaderboard: boolean,
+  showProgressRings: boolean,
+  showDailyChallenges: boolean,
+  celebrationsEnabled: boolean,
+  celebrationType: 'confetti' | 'fireworks' | 'modal' | 'toast',
+  soundEffectsEnabled: boolean,
+  leaderboardOptIn: boolean,
+  leaderboardAnonymous: boolean,
+  notifyOnAchievementUnlock: boolean,
+  notifyOnStreakMilestone: boolean,
+  notifyOnRankChange: boolean,
+}
+```
+
+---
+
+## Success Metrics & KPIs
+
+### Engagement Metrics
+- **Daily Active Users**: +40% (Target: from 50% to 70%)
+- **Session Duration**: +20% (gamification increases time on platform)
+- **Task Completion Rate**: +30%
+- **Team Collaboration**: +50% (more kudos, comments, help)
+- **User Retention**: +25% (streaks create habit)
+
+### Gamification Metrics
+- **Achievement Unlock Rate**: 70% unlock 5+ badges in first month
+- **Streak Participation**: 40% maintain 7+ day streak
+- **Leaderboard Opt-In**: 60% join leaderboard
+- **Challenge Completion**: 35% complete daily challenges
+- **Celebration Engagement**: 80% interact with celebrations
+
+### Business Metrics
+- **Revenue Impact**: $75K+ ARR (premium gamification features)
+- **NPS Increase**: +15 points
+- **Viral Coefficient**: +30% (users share achievements)
+- **Churn Reduction**: -20% (streaks reduce churn)
+
+---
+
+## Release Plan
+
+### Phase 1: Foundation (Week 1)
+- Database schema
+- Achievement system backend
+- Streak tracking backend
+- Basic achievement unlocks
+
+### Phase 2: Core Gamification (Week 2)
+- Badge showcase UI
+- Streak widget
+- Achievement notifications
+- Basic celebrations
+
+### Phase 3: Social Features (Week 3)
+- Leaderboard system
+- Team celebrations
+- Share achievements
+- Social feed integration
+
+### Phase 4: Advanced Features (Week 4)
+- Progress rings
+- Daily challenges
+- Advanced animations
+- Customization options
+
+### Phase 5: Polish (Week 5)
+- Performance optimization
+- A11y improvements
+- Mobile optimization
+- Testing
+
+---
+
+## Competitive Differentiation
+
+**vs Todoist Karma**:
+- We have: Badges, team features, celebrations
+- They have: Just karma points
+
+**vs Asana Unicorns**:
+- We have: Full achievement system, leaderboards, streaks
+- They have: Just unicorn celebration
+
+**vs Habitica**:
+- We have: Professional + fun balance
+- They have: Too game-like (RPG elements)
+
+**Our Unique Value**:
+- Most comprehensive PM gamification
+- Professional yet motivating
+- Team-focused, not just individual
+- Integrated with goals and milestones
+
+---
+
+**Document Status**: Final  
+**Last Updated**: October 30, 2025  
+**Ready for**: Implementation
+

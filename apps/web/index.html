@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  
+  <!-- Security Headers (Meta Tag Compatible Only) -->
+  <!-- Note: Some headers like X-Frame-Options and frame-ancestors must be set via HTTP headers -->
+  <!-- Note: In development, we allow localhost API connections on different ports -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://plausible.meridian.app;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com data:;
+    img-src 'self' data: https: blob:;
+    connect-src 'self' http://localhost:* https: wss: ws:;
+    frame-src 'self' https://www.youtube.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+  " />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  
+  <link rel="icon" type="image/png" href="/meridian-logomark.png" />
+  <link rel="apple-touch-icon" href="/meridian-logomark.png" sizes="180x180" />
+  <title>Meridian - Open Source Project Management</title>
+  <meta name="title" content="Meridian - Open Source Project Management">
+  <meta name="description"
+    content="An open source project management platform focused on simplicity and efficiency. Organize projects, collaborate with your team, and get work done.">
+  <meta name="keywords" content="project management, open source, task management, team collaboration, kanban">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://meridian.app">
+  <meta property="og:title" content="Meridian - Open Source Project Management">
+  <meta property="og:description"
+    content="An open source project management platform focused on simplicity and efficiency. Organize projects, collaborate with your team, and get work done.">
+  <meta property="og:image" content="https://assets.meridian.app/readme-card.png">
+
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://meridian.app">
+  <meta property="twitter:title" content="Meridian - Open Source Project Management">
+  <meta property="twitter:description"
+    content="An open source project management platform focused on simplicity and efficiency. Organize projects, collaborate with your team, and get work done.">
+  <meta property="twitter:image" content="https://assets.meridian.app/readme-card.png">
+
+  <link rel="manifest" href="/manifest.json">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="msapplication-config" content="/browserconfig.xml" />
+  <meta name="msapplication-TileColor" content="#4F46E5">
+  <meta name="msapplication-TileImage" content="/meridian-logomark.png">
+  <meta name="application-name" content="Meridian">
+  <meta name="apple-mobile-web-app-title" content="Meridian">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="canonical" href="https://meridian.app">
+
+  <script>
+    if (window.location.hostname === 'demo.meridian.app') {
+      const script = document.createElement('script');
+      script.defer = true;
+      script.setAttribute('data-domain', 'demo.meridian.app');
+      script.src = 'https://plausible.meridian.app/js/script.js';
+      document.head.appendChild(script);
+    }
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

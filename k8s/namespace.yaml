@@ -1,0 +1,9 @@
+# Meridian Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: meridian
+  labels:
+    name: meridian
+    app: meridian
+    environment: production
