@@ -6,8 +6,8 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  NODE_VERSION: '22'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   # =====================================================
@@ -25,14 +25,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       # =====================================================
       # PR METADATA VALIDATION
@@ -103,15 +101,15 @@ jobs:
         run: |
           echo "📦 Checking for dependency changes..."
           
-          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep -E "(package\.json|pnpm-lock\.yaml)"; then
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep -E "(package\.json|package-lock\.json)"; then
             echo "📦 Package files changed - validating dependencies"
             
             # Install dependencies
-            pnpm install --frozen-lockfile
+            npm ci
             
             # Run security audit
             echo "🔒 Running security audit on new dependencies..."
-            pnpm audit --audit-level moderate || {
+            npm audit --audit-level=moderate || {
               echo "⚠️ Security vulnerabilities found in dependencies"
               echo "Please review and address security issues before merging"
             }
@@ -130,7 +128,7 @@ jobs:
       # =====================================================
       - name: 🧹 Quick lint check
         run: |
-          pnpm install --frozen-lockfile
+          npm ci
           
           echo "🧹 Running quick lint check..."
           
@@ -303,18 +301,18 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: 🏗️ Quick build test
         run: |

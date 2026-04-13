@@ -9,6 +9,9 @@ on:
 
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 permissions:
   contents: read
   pages: write
@@ -20,21 +23,18 @@ concurrency:
 
 jobs:
   build:
+    if: hashFiles('apps/docs/package.json') != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 10.7.0
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: 'pnpm'
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -42,11 +42,11 @@ jobs:
           static_site_generator: next
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Build documentation site
         working-directory: apps/docs
-        run: pnpm run build
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -54,6 +54,7 @@ jobs:
           path: ./apps/docs/out
 
   deploy:
+    if: hashFiles('apps/docs/package.json') != ''
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

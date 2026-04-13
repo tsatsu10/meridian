@@ -1,5 +1,8 @@
 name: Test Coverage
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 on:
   push:
     branches: [main, develop]
@@ -42,16 +45,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Run backend tests with coverage
         env:
@@ -60,12 +59,12 @@ jobs:
           NODE_ENV: test
         run: |
           cd apps/api
-          pnpm test:coverage
+          npm run test:coverage
 
       - name: Run frontend tests with coverage
         run: |
           cd apps/web
-          pnpm test:coverage
+          npm run test:coverage
 
       - name: Upload backend coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -84,9 +83,9 @@ jobs:
       - name: Check coverage thresholds
         run: |
           cd apps/api
-          pnpm test:coverage -- --run
+          npm run test:coverage -- --run
           cd ../web
-          pnpm test:coverage -- --run
+          npm run test:coverage -- --run
 
       - name: Comment PR with coverage
         if: github.event_name == 'pull_request'
@@ -106,23 +105,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Install Playwright
-        run: pnpm playwright install --with-deps
+        run: npx playwright install --with-deps
+        working-directory: apps/web
 
       - name: Run E2E tests
         run: |
           cd apps/web
-          pnpm test:e2e
+          npm run test:e2e
 
       - name: Upload Playwright report
         if: always()
