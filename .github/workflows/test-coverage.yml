@@ -1,13 +1,20 @@
+# Coverage + integration tests. Uses npm + root package-lock.json only.
+# Do not use cache: pnpm here without pnpm/action-setup first — setup-node will error "Unable to locate pnpm".
+
 name: Test Coverage
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   test:
@@ -40,12 +47,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
           cache-dependency-path: package-lock.json
 
@@ -67,14 +74,14 @@ jobs:
           npm run test:coverage
 
       - name: Upload backend coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./apps/api/coverage/lcov.info
           flags: backend
           name: backend-coverage
 
       - name: Upload frontend coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./apps/web/coverage/lcov.info
           flags: frontend
@@ -89,6 +96,7 @@ jobs:
 
       - name: Comment PR with coverage
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: romeovs/lcov-reporter-action@v0.3.1
         with:
           lcov-file: ./apps/api/coverage/lcov.info
@@ -100,12 +108,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
           cache-dependency-path: package-lock.json
 
@@ -128,4 +136,3 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 30
-
