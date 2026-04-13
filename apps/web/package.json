@@ -146,7 +146,7 @@
     "autoprefixer": "^10.4.17",
     "eslint": "^8.57.1",
     "eslint-plugin-meridian-local": "file:./eslint-plugin-meridian-local",
-    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.20",
     "jsdom": "^26.1.0",
     "postcss": "^8.4.35",
