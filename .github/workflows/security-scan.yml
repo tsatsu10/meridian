@@ -1,5 +1,8 @@
 name: Security Scan
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 on:
   push:
     branches: [main, develop]
@@ -21,22 +24,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Run npm audit
-        run: pnpm audit --audit-level=moderate
+        run: npm audit --audit-level=moderate
         continue-on-error: true
 
       - name: Check for outdated dependencies
-        run: pnpm outdated
+        run: npm outdated
         continue-on-error: true
 
   dependency-review:

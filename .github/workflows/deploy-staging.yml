@@ -9,6 +9,9 @@ on:
     branches: [ develop ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -47,24 +50,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'pnpm'
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install deps (no scripts)
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Build web
         working-directory: apps/web
-        run: pnpm build
+        run: npm run build
 
       - name: Build api
         working-directory: apps/api
-        run: pnpm build
+        run: npm run build
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7

@@ -8,7 +8,7 @@ on:
     paths:
       - 'apps/**'
       - 'packages/**'
-      - pnpm-lock.yaml
+      - 'package-lock.json'
 
 env:
   REGISTRY: ghcr.io

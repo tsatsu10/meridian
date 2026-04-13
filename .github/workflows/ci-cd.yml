@@ -17,8 +17,8 @@ on:
         - production
 
 env:
-  NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  NODE_VERSION: '22'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   # Cache keys for dependency management
   CACHE_KEY_PREFIX: 'v1-meridian'
 
@@ -55,12 +55,12 @@ jobs:
             packages:
               - 'packages/**'
               - 'package.json'
-              - 'pnpm-lock.yaml'
+              - 'package-lock.json'
 
       - name: 📊 Generate cache key
         id: cache-key
         run: |
-          echo "key=${{ env.CACHE_KEY_PREFIX }}-${{ hashFiles('**/pnpm-lock.yaml', '**/package.json') }}" >> $GITHUB_OUTPUT
+          echo "key=${{ env.CACHE_KEY_PREFIX }}-${{ hashFiles('package-lock.json', '**/package.json') }}" >> $GITHUB_OUTPUT
 
       - name: 🏷️ Validate branch naming
         if: github.event_name == 'pull_request'
@@ -90,33 +90,26 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Cache dependencies
         uses: actions/cache@v3
         id: deps-cache
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-
 
       - name: 📦 Install dependencies
         if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: 🔒 Audit dependencies
         run: |
           echo "🔍 Running security audit..."
-          pnpm audit --audit-level moderate
+          npm audit --audit-level=moderate
           
           echo "📊 Generating dependency report..."
-          pnpm list --depth=0 --json > dependency-report.json
+          npm ls --all --json --depth=0 > dependency-report.json
 
       - name: 📤 Upload dependency report
         uses: actions/upload-artifact@v3
@@ -136,21 +129,15 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Restore dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: 🧹 Lint API code
@@ -197,21 +184,15 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Restore dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: 🔍 Type check API
@@ -240,21 +221,15 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Restore dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: 🧪 Run API unit tests
@@ -296,21 +271,15 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Restore dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: 🏗️ Build API
@@ -371,21 +340,15 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Restore dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: 🎭 Install Playwright browsers
@@ -460,7 +423,7 @@ jobs:
           fi
           
           echo "🔍 Running npm audit..."
-          pnpm audit --audit-level high --json > npm-audit.json
+          npm audit --audit-level=high --json > npm-audit.json
 
       - name: 📤 Upload security reports
         uses: actions/upload-artifact@v3
@@ -484,21 +447,15 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Restore dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: 🏗️ Build for production
@@ -527,21 +484,15 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js & pnpm
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: 🗂️ Restore dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
+          path: '**/node_modules'
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: 🏗️ Build for staging
