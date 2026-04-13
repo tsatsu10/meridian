@@ -1,0 +1,21 @@
+---
+description: Ensures custom specialists in .cursor/agents/ are applied when the user invokes /name or asks for a named subagent, including when Task delegation does not list project agents.
+alwaysApply: true
+---
+
+# Custom subagents (`.cursor/agents/`)
+
+This project stores **Cursor custom subagents** as `.md` files under `.cursor/agents/` (YAML frontmatter: `name`, `description`, optional `model`, `readonly`, `is_background`). See [Cursor subagents](https://cursor.com/docs/context/subagents).
+
+When the user:
+
+- Uses slash syntax such as `/design-ui-designer` or `/engineering-frontend-developer`, or
+- Asks to follow, run, or use a specialist whose id matches a file in `.cursor/agents/` (e.g. “use the design-ui-designer subagent”),
+
+do this:
+
+1. Resolve the file path: `.cursor/agents/<id>.md` where `<id>` is lowercase with hyphens (same as the `name` field and basename).
+2. Read that file if its instructions are not already in context.
+3. Adopt the **body** of the file as the active persona and constraints for the requested work; respect frontmatter (`model` is chosen by Cursor when using native delegation; when simulating in-session, follow the specialist instructions).
+
+If automatic Agent delegation or a narrow Task tool list does not expose these project agents, **still** apply the specialist by reading the matching `.md` file so behavior stays consistent with Cursor’s custom subagent definitions.

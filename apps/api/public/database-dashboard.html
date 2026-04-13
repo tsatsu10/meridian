@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meridian Database Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e1e8ed;
+            transition: transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-healthy { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-critical { background: #ef4444; }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .stats-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .table-header {
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #e1e8ed;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .refresh-indicator.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐘 Database Dashboard</h1>
+        <div class="subtitle">Neon PostgreSQL Monitoring - Real-time Performance Metrics</div>
+    </div>
+
+    <div class="refresh-indicator" id="refreshIndicator">Refreshing data...</div>
+
+    <div class="container">
+        <!-- Key Metrics -->
+        <div class="metrics-grid" id="metricsGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading metrics...
+            </div>
+        </div>
+
+        <!-- Performance Charts -->
+        <div class="chart-container">
+            <div class="chart-title">📈 Performance Over Time</div>
+            <div class="chart-wrapper">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">🔌 Connection Pool Usage</div>
+            <div class="chart-wrapper">
+                <canvas id="connectionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Slow Queries Table -->
+        <div class="stats-table">
+            <div class="table-header">
+                <div class="table-title">🐌 Slow Queries</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Query</th>
+                        <th>Calls</th>
+                        <th>Avg Time (ms)</th>
+                        <th>Total Time (ms)</th>
+                    </tr>
+                </thead>
+                <tbody id="slowQueriesTable">
+                    <tr>
+                        <td colspan="4" class="loading">
+                            <div class="spinner"></div>
+                            Loading slow queries...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Statistics -->
+        <div class="stats-table">
+            <div class="table-header">
+                <div class="table-title">📊 Table Statistics</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Live Rows</th>
+                        <th>Dead Rows</th>
+                        <th>Bloat %</th>
+                        <th>Size</th>
+                    </tr>
+                </thead>
+                <tbody id="tableStatsTable">
+                    <tr>
+                        <td colspan="5" class="loading">
+                            <div class="spinner"></div>
+                            Loading table statistics...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        class DatabaseDashboard {
+            constructor() {
+                this.charts = {};
+                this.metricsHistory = [];
+                this.refreshInterval = 30000; // 30 seconds
+                this.maxHistoryPoints = 50;
+                
+                this.init();
+            }
+
+            async init() {
+                await this.loadInitialData();
+                this.setupCharts();
+                this.startAutoRefresh();
+            }
+
+            async loadInitialData() {
+                try {
+                    await Promise.all([
+                        this.updateMetrics(),
+                        this.updateSlowQueries(),
+                        this.updateTableStats(),
+                        this.loadMetricsHistory()
+                    ]);
+                } catch (error) {
+                    this.showError('Failed to load initial data: ' + error.message);
+                }
+            }
+
+            async updateMetrics() {
+                try {
+                    const response = await fetch('/api/dashboard/metrics');
+                    const metrics = await response.json();
+                    
+                    if (metrics.error) {
+                        throw new Error(metrics.error);
+                    }
+
+                    this.renderMetrics(metrics);
+                    this.storeMetrics(metrics);
+                } catch (error) {
+                    this.showError('Failed to fetch metrics: ' + error.message);
+                }
+            }
+
+            renderMetrics(metrics) {
+                const metricsGrid = document.getElementById('metricsGrid');
+                
+                metricsGrid.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Health Status</div>
+                            <div class="metric-status status-${metrics.health.status}"></div>
+                        </div>
+                        <div class="metric-value">${metrics.health.status.toUpperCase()}</div>
+                        <div class="metric-label">Response: ${metrics.health.responseTime}ms</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Connections</div>
+                            <div class="metric-status ${metrics.connections.poolUtilization > 80 ? 'status-warning' : 'status-healthy'}"></div>
+                        </div>
+                        <div class="metric-value">${metrics.connections.total}/${metrics.connections.maxConnections}</div>
+                        <div class="metric-label">Utilization: ${metrics.connections.poolUtilization}%</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Query Performance</div>
+                            <div class="metric-status ${metrics.performance.avgQueryTime > 1000 ? 'status-critical' : metrics.performance.avgQueryTime > 500 ? 'status-warning' : 'status-healthy'}"></div>
+                        </div>
+                        <div class="metric-value">${metrics.performance.avgQueryTime.toFixed(1)}</div>
+                        <div class="metric-label">ms avg query time</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Cache Hit Ratio</div>
+                            <div class="metric-status ${metrics.performance.cacheHitRatio < 90 ? 'status-warning' : 'status-healthy'}"></div>
+                        </div>
+                        <div class="metric-value">${metrics.performance.cacheHitRatio.toFixed(1)}%</div>
+                        <div class="metric-label">cache efficiency</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Database Size</div>
+                            <div class="metric-status status-healthy"></div>
+                        </div>
+                        <div class="metric-value">${this.formatBytes(metrics.storage.databaseSize)}</div>
+                        <div class="metric-label">${metrics.storage.tableCount} tables</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Dead Tuples</div>
+                            <div class="metric-status ${metrics.storage.deadTuples > 10000 ? 'status-warning' : 'status-healthy'}"></div>
+                        </div>
+                        <div class="metric-value">${metrics.storage.deadTuples.toLocaleString()}</div>
+                        <div class="metric-label">cleanup needed</div>
+                    </div>
+                `;
+            }
+
+            storeMetrics(metrics) {
+                this.metricsHistory.push(metrics);
+                if (this.metricsHistory.length > this.maxHistoryPoints) {
+                    this.metricsHistory.shift();
+                }
+                this.updateCharts();
+            }
+
+            async loadMetricsHistory() {
+                try {
+                    const response = await fetch('/api/dashboard/metrics/history?minutes=60');
+                    const history = await response.json();
+                    this.metricsHistory = history.slice(-this.maxHistoryPoints);
+                } catch (error) {
+                    console.warn('Failed to load metrics history:', error);
+                }
+            }
+
+            setupCharts() {
+                // Performance Chart
+                const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+                this.charts.performance = new Chart(performanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Avg Query Time (ms)',
+                            data: [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Response Time (ms)',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                // Connection Chart
+                const connectionCtx = document.getElementById('connectionChart').getContext('2d');
+                this.charts.connections = new Chart(connectionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Total Connections',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Active Connections',
+                            data: [],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateCharts() {
+                if (this.metricsHistory.length === 0) return;
+
+                const labels = this.metricsHistory.map(m => 
+                    new Date(m.timestamp).toLocaleTimeString()
+                );
+
+                // Update performance chart
+                if (this.charts.performance) {
+                    this.charts.performance.data.labels = labels;
+                    this.charts.performance.data.datasets[0].data = this.metricsHistory.map(m => m.performance.avgQueryTime);
+                    this.charts.performance.data.datasets[1].data = this.metricsHistory.map(m => m.health.responseTime);
+                    this.charts.performance.update('none');
+                }
+
+                // Update connection chart
+                if (this.charts.connections) {
+                    this.charts.connections.data.labels = labels;
+                    this.charts.connections.data.datasets[0].data = this.metricsHistory.map(m => m.connections.total);
+                    this.charts.connections.data.datasets[1].data = this.metricsHistory.map(m => m.connections.active);
+                    this.charts.connections.update('none');
+                }
+            }
+
+            async updateSlowQueries() {
+                try {
+                    const response = await fetch('/api/dashboard/slow-queries?limit=10');
+                    const slowQueries = await response.json();
+                    
+                    const tableBody = document.getElementById('slowQueriesTable');
+                    
+                    if (slowQueries.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b;">No slow queries detected 🎉</td></tr>';
+                        return;
+                    }
+
+                    tableBody.innerHTML = slowQueries.map(query => `
+                        <tr>
+                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${query.query}">
+                                ${query.query}
+                            </td>
+                            <td>${query.calls}</td>
+                            <td>${query.avg_time_ms}</td>
+                            <td>${query.total_time_ms}</td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    document.getElementById('slowQueriesTable').innerHTML = 
+                        '<tr><td colspan="4" class="error">Failed to load slow queries</td></tr>';
+                }
+            }
+
+            async updateTableStats() {
+                try {
+                    const response = await fetch('/api/dashboard/table-stats');
+                    const tableStats = await response.json();
+                    
+                    const tableBody = document.getElementById('tableStatsTable');
+                    
+                    tableBody.innerHTML = tableStats.map(table => `
+                        <tr>
+                            <td><strong>${table.tablename}</strong></td>
+                            <td>${table.live_rows.toLocaleString()}</td>
+                            <td>${table.dead_rows.toLocaleString()}</td>
+                            <td>
+                                <span style="color: ${table.bloat_percentage > 20 ? '#ef4444' : table.bloat_percentage > 10 ? '#f59e0b' : '#10b981'}">
+                                    ${table.bloat_percentage}%
+                                </span>
+                            </td>
+                            <td>${table.table_size}</td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    document.getElementById('tableStatsTable').innerHTML = 
+                        '<tr><td colspan="5" class="error">Failed to load table statistics</td></tr>';
+                }
+            }
+
+            formatBytes(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+
+            showError(message) {
+                console.error(message);
+                // Could show a toast notification here
+            }
+
+            showRefreshIndicator() {
+                const indicator = document.getElementById('refreshIndicator');
+                indicator.classList.add('show');
+                setTimeout(() => indicator.classList.remove('show'), 1000);
+            }
+
+            async refresh() {
+                this.showRefreshIndicator();
+                try {
+                    await Promise.all([
+                        this.updateMetrics(),
+                        this.updateSlowQueries(),
+                        this.updateTableStats()
+                    ]);
+                } catch (error) {
+                    this.showError('Refresh failed: ' + error.message);
+                }
+            }
+
+            startAutoRefresh() {
+                setInterval(() => this.refresh(), this.refreshInterval);
+            }
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new DatabaseDashboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useRBACAuth } from "@/lib/permissions";
+import useWorkspaceStore from "@/store/workspace";
+import { useDashboardData } from "@/hooks/queries/dashboard/use-dashboard-data";
+import { useRiskMonitor } from "@/hooks/queries/risk/use-risk-detection";
+import { getNotificationsFromStore } from "@/hooks/mutations/task/use-auto-status-update";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { MobileOptimizations } from "@/mobile/MobileOptimizations";
+import ErrorBoundary from "@/components/error-boundary";
+
+// Import refactored dashboard sections
+import DashboardHeader from "@/components/dashboard/sections/DashboardHeader";
+import DashboardStats from "@/components/dashboard/sections/DashboardStats";
+import RiskAlertSection from "@/components/dashboard/sections/RiskAlertSection";
+import MilestoneSection from "@/components/dashboard/sections/MilestoneSection";
+import RecentProjectsSection from "@/components/dashboard/sections/RecentProjectsSection";
+import NotificationSection from "@/components/dashboard/sections/NotificationSection";
+import SystemHealthSection from "@/components/dashboard/sections/SystemHealthSection";
+import WorkspacePerformanceSection from "@/components/dashboard/sections/WorkspacePerformanceSection";
+
+export const Route = createFileRoute("/dashboard/")({
+  component: DashboardOverviewPage,
+});
+
+// Loading component for dashboard
+const DashboardLoading = () => (
+  <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="text-center">
+      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Dashboard</h2>
+      <p className="text-gray-600">Preparing your workspace...</p>
+    </div>
+  </div>
+);
+
+function DashboardOverviewPage() {
+  const { workspace } = useWorkspaceStore();
+  const [isReady, setIsReady] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // RBAC hooks must be called at the top level
+  let rbacAuth;
+  let hasPermission: (action: any, context?: any) => boolean = () => false;
+
+  try {
+    rbacAuth = useRBACAuth();
+    hasPermission = rbacAuth?.hasPermission || (() => false);
+  } catch (error) {
+    console.warn("RBAC context not available, using fallback permissions");
+    rbacAuth = null;
+    hasPermission = () => false;
+  }
+
+  // Core dashboard data hooks
+  const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
+  const riskData = useRiskMonitor(workspace?.id || '', '30d');
+
+  // Enhanced notifications including auto-status updates and risk alerts
+  const autoNotifications = getNotificationsFromStore();
+  const allNotifications = useMemo(() => {
+    const notifications = Array.isArray(autoNotifications) ? autoNotifications : [];
+    return [...notifications].sort((a, b) =>
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [autoNotifications]);
+
+  // Initialize ready state with timeout to prevent blocking
+  useEffect(() => {
+    const initTimeout = setTimeout(() => {
+      setIsReady(true);
+    }, 100);
+    return () => clearTimeout(initTimeout);
+  }, []);
+
+  // Refresh handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // RBAC loading check - properly handle authentication state
+  if (rbacAuth?.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50/50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state if not ready
+  if (!isReady) {
+    return <DashboardLoading />;
+  }
+
+  if (!workspace) {
+    return null; // This will show the workspace selection state from parent
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-6 bg-gray-50/50">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-24 bg-white border border-gray-200 rounded shadow-sm"></div>
+            ))}
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+            <div className="col-span-3 h-64 bg-white border border-gray-200 rounded shadow-sm"></div>
+            <div className="col-span-2 h-64 bg-white border border-gray-200 rounded shadow-sm"></div>
+            <div className="col-span-2 h-64 bg-white border border-gray-200 rounded shadow-sm"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 p-6 bg-gray-50/50">
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+          <AlertTriangle className="h-12 w-12 text-orange-500" />
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-900">Unable to load dashboard</h3>
+            <p className="text-sm text-gray-500 mt-1">{error.message}</p>
+            <Button onClick={handleRefresh} className="mt-4">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return <div className="flex-1 p-6 bg-gray-50/50 text-gray-500">No dashboard data available</div>;
+  }
+
+  // Check if user has create project permission
+  const hasCreatePermission = hasPermission && hasPermission("canCreateProjects", {});
+
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<DashboardLoading />}>
+        <MobileOptimizations>
+          <LazyDashboardLayout>
+            {/* Dashboard Header */}
+            <DashboardHeader
+              riskData={riskData}
+              isRefreshing={isRefreshing}
+              onRefresh={handleRefresh}
+            />
+
+            <div className="space-y-6">
+              {/* Quick Stats Overview */}
+              <DashboardStats
+                dashboardData={dashboardData}
+                riskData={riskData}
+                allNotifications={allNotifications}
+              />
+
+              {/* Risk Alerts Section - Only show if there are actual risks */}
+              <RiskAlertSection riskData={riskData} />
+
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* Left Column: Primary Content (3/5 width) */}
+                <div className="lg:col-span-3 space-y-6">
+                  {/* Milestone Dashboard */}
+                  <MilestoneSection />
+
+                  {/* Recent Projects */}
+                  <RecentProjectsSection
+                    dashboardData={dashboardData}
+                    workspace={workspace}
+                    hasCreatePermission={hasCreatePermission}
+                  />
+                </div>
+
+                {/* Right Column: Secondary Content (2/5 width) */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* System Health Summary */}
+                  <SystemHealthSection
+                    riskData={riskData}
+                    allNotifications={allNotifications}
+                  />
+
+                  {/* Recent Activity/Notifications */}
+                  <NotificationSection allNotifications={allNotifications} />
+
+                  {/* Workspace Performance Chart */}
+                  <WorkspacePerformanceSection />
+                </div>
+              </div>
+            </div>
+          </LazyDashboardLayout>
+        </MobileOptimizations>
+      </Suspense>
+    </ErrorBoundary>
+  );
+}

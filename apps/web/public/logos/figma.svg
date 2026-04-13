@@ -1,0 +1,6 @@
+<svg width="100" height="50" viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="15" cy="15" r="8" fill="#f24e1e"/>
+  <circle cx="25" cy="15" r="8" fill="#a259ff"/>
+  <circle cx="15" cy="35" r="8" fill="#0acf83"/>
+  <text x="45" y="30" font-family="Arial" font-size="16" fill="#333">Figma</text>
+</svg>

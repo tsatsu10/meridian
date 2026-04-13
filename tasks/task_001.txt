@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: API Connection Issues - Fixed
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Resolved API server dependency and connection issues preventing client-server communication
+# Details:
+Fixed the Cannot find module '@hono/node-server' error by ensuring proper pnpm install from monorepo root. API server now successfully starts on port 1337 and endpoints like /users/me and /workspace are responding correctly. Client can now connect to API without ERR_CONNECTION_REFUSED errors.
+
+# Test Strategy:
+

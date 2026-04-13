@@ -1,0 +1,81 @@
+# Meridian Phase 2: Advanced Analytics & Reporting System
+
+## Overview
+Phase 2 focuses on implementing a comprehensive analytics and reporting system with three main components:
+1. Custom Report Builder (Phase 2.1)
+2. Scheduled Reports & Automation (Phase 2.2)
+3. Interactive Widgets & Dashboards (Phase 2.3)
+
+## User Personas
+- Jennifer (Executive): Needs high-level portfolio views and scheduled reports
+- David (Team Lead): Requires detailed time analytics and team performance metrics
+- Sarah (PM): Needs custom reports for project health and automation
+- Mike (Developer): Requires efficient task/time tracking visualization
+- Lisa (Designer): Needs file sharing analytics and version control insights
+
+## Core Features
+
+### 1. Custom Report Builder
+- Visual report designer with drag-and-drop interface
+- 20+ available metrics across 5 categories
+- 6+ visualization types (cards, charts, gauges, etc.)
+- Real-time preview functionality
+- Role-based access control integration
+- Mobile-responsive design
+
+### 2. Scheduled Reports System
+- Flexible scheduling options (daily, weekly, monthly, custom)
+- Multi-method delivery (email, Slack, Teams, webhook)
+- Execution history tracking
+- Performance analytics
+- Template management system
+- Error handling and retry policies
+
+### 3. Interactive Widgets
+- Real-time data visualization
+- Customizable dashboard layouts
+- Widget library with 10+ types
+- Cross-widget interactivity
+- Mobile-optimized views
+- Export capabilities
+
+## Technical Requirements
+
+### Database Schema
+- New tables for reports, schedules, executions
+- Optimized indexing for performance
+- Proper foreign key relationships
+- Audit logging support
+
+### API Infrastructure
+- RESTful endpoints for all operations
+- Strong type safety with TypeScript
+- Comprehensive error handling
+- RBAC integration
+- Real-time WebSocket support
+
+### Frontend Architecture
+- React/TypeScript implementation
+- Modular component design
+- State management optimization
+- Responsive layouts
+- Accessibility compliance
+
+## Success Metrics
+- 40% reduction in report creation time
+- 30% increase in analytics usage
+- 25% improvement in data-driven decisions
+- 50% faster access to key metrics
+- 90% user satisfaction rate
+
+## Timeline
+- Phase 2.1 (Custom Report Builder): 2 weeks
+- Phase 2.2 (Scheduled Reports): 2 weeks
+- Phase 2.3 (Interactive Widgets): 2 weeks
+
+## Dependencies
+- Phase 1 completion
+- Database migration system
+- RBAC system integration
+- Real-time infrastructure
+- Email delivery system 

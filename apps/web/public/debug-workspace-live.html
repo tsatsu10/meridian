@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Debug - Live Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; }
+        .section { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        h2 { color: #4ade80; margin-bottom: 15px; font-size: 18px; }
+        pre { background: #1a1a1a; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+        button {
+            background: #4ade80;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+        }
+        button:hover { background: #22c55e; }
+        .status { padding: 10px; border-radius: 6px; margin: 10px 0; }
+        .success { background: #065f46; border-left: 4px solid #10b981; }
+        .error { background: #7f1d1d; border-left: 4px solid #ef4444; }
+        .warning { background: #78350f; border-left: 4px solid #f59e0b; }
+        .info { background: #1e3a8a; border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Workspace Debug - Live Test</h1>
+        
+        <div class="section">
+            <h2>📊 Current Status</h2>
+            <div id="status" class="status info">Click "Run Full Test" to diagnose...</div>
+        </div>
+
+        <div class="section">
+            <h2>🛠️ Actions</h2>
+            <button onclick="runFullTest()">🔍 Run Full Test</button>
+            <button onclick="testAuth()">🔐 Test Auth</button>
+            <button onclick="testWorkspaces()">🏢 Test Workspaces API</button>
+            <button onclick="checkLocalStorage()">💾 Check localStorage</button>
+            <button onclick="fixNow()">🔧 Auto-Fix Now</button>
+            <button onclick="clearAndReload()">🗑️ Clear & Reload</button>
+        </div>
+
+        <div class="section">
+            <h2>📋 localStorage State</h2>
+            <pre id="localStorage">Not checked yet...</pre>
+        </div>
+
+        <div class="section">
+            <h2>🌐 API Response</h2>
+            <pre id="apiResponse">Not tested yet...</pre>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Diagnosis</h2>
+            <pre id="diagnosis">Not run yet...</pre>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3005';
+        
+        function updateStatus(msg, type = 'info') {
+            const el = document.getElementById('status');
+            el.textContent = msg;
+            el.className = `status ${type}`;
+        }
+
+        async function runFullTest() {
+            updateStatus('Running full diagnostic...', 'info');
+            const results = [];
+
+            // Test 1: Check localStorage
+            results.push('=== STEP 1: localStorage ===');
+            const meridian_ws = localStorage.getItem('meridian-workspace');
+            const meridian_prefs = localStorage.getItem('meridian-user-preferences');
+            const old_prefs = localStorage.getItem('user-preferences');
+            
+            results.push(`meridian-workspace: ${meridian_ws ? 'EXISTS' : 'MISSING'}`);
+            results.push(`meridian-user-preferences: ${meridian_prefs ? 'EXISTS' : 'MISSING'}`);
+            results.push(`user-preferences (old): ${old_prefs ? 'EXISTS (BAD!)' : 'not found (good)'}`);
+            
+            if (meridian_ws) {
+                const wsData = JSON.parse(meridian_ws);
+                results.push(`Workspace in storage: ${wsData?.state?.workspace?.name || 'NONE'}`);
+            }
+
+            document.getElementById('localStorage').textContent = JSON.stringify({
+                'meridian-workspace': meridian_ws ? JSON.parse(meridian_ws) : null,
+                'meridian-user-preferences': meridian_prefs ? JSON.parse(meridian_prefs) : null,
+                'user-preferences (old)': old_prefs
+            }, null, 2);
+
+            // Test 2: Check authentication
+            results.push('\n=== STEP 2: Authentication ===');
+            try {
+                const authRes = await fetch(`${API_URL}/api/user/me`, {
+                    credentials: 'include'
+                });
+                const authData = await authRes.json();
+                results.push(`Auth status: ${authRes.status}`);
+                results.push(`User: ${authData.user ? authData.user.email : 'NOT AUTHENTICATED'}`);
+                
+                if (!authData.user) {
+                    results.push('❌ ISSUE: Not authenticated!');
+                    updateStatus('❌ You need to sign in!', 'error');
+                }
+            } catch (e) {
+                results.push(`❌ Auth test failed: ${e.message}`);
+            }
+
+            // Test 3: Test workspaces API
+            results.push('\n=== STEP 3: Workspaces API ===');
+            try {
+                const wsRes = await fetch(`${API_URL}/api/workspaces`, {
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                results.push(`Workspaces API status: ${wsRes.status}`);
+                
+                if (wsRes.ok) {
+                    const workspaces = await wsRes.json();
+                    results.push(`Workspaces returned: ${Array.isArray(workspaces) ? workspaces.length : 0}`);
+                    
+                    document.getElementById('apiResponse').textContent = JSON.stringify(workspaces, null, 2);
+                    
+                    if (!Array.isArray(workspaces) || workspaces.length === 0) {
+                        results.push('❌ ISSUE: No workspaces returned!');
+                        updateStatus('❌ API returns no workspaces!', 'error');
+                    } else {
+                        results.push(`✅ Found ${workspaces.length} workspace(s)`);
+                        workspaces.forEach((ws, i) => {
+                            results.push(`   ${i + 1}. ${ws.name} (${ws.id})`);
+                        });
+                    }
+                } else {
+                    const error = await wsRes.text();
+                    results.push(`❌ API Error: ${error}`);
+                    document.getElementById('apiResponse').textContent = error;
+                    updateStatus(`❌ API Error: ${error}`, 'error');
+                }
+            } catch (e) {
+                results.push(`❌ Workspaces test failed: ${e.message}`);
+                updateStatus(`❌ Cannot reach API: ${e.message}`, 'error');
+            }
+
+            // Test 4: Check if workspace is in Zustand store
+            results.push('\n=== STEP 4: React/Zustand State ===');
+            if (meridian_ws) {
+                const wsData = JSON.parse(meridian_ws);
+                if (wsData?.state?.workspace) {
+                    results.push('✅ Workspace object exists in localStorage');
+                    results.push(`   Workspace: ${wsData.state.workspace.name}`);
+                    results.push(`   ID: ${wsData.state.workspace.id}`);
+                } else {
+                    results.push('❌ ISSUE: localStorage has meridian-workspace but no workspace object!');
+                }
+            } else {
+                results.push('❌ ISSUE: No meridian-workspace in localStorage!');
+            }
+
+            document.getElementById('diagnosis').textContent = results.join('\n');
+
+            // Final recommendation
+            if (!meridian_ws || !meridian_prefs) {
+                updateStatus('❌ localStorage missing - click "Auto-Fix Now"', 'error');
+            } else {
+                updateStatus('⚠️ Check diagnosis for details', 'warning');
+            }
+        }
+
+        async function testAuth() {
+            try {
+                const res = await fetch(`${API_URL}/api/user/me`, { credentials: 'include' });
+                const data = await res.json();
+                document.getElementById('apiResponse').textContent = JSON.stringify(data, null, 2);
+                
+                if (data.user) {
+                    updateStatus(`✅ Authenticated as: ${data.user.email}`, 'success');
+                } else {
+                    updateStatus('❌ Not authenticated - Sign in first!', 'error');
+                }
+            } catch (e) {
+                updateStatus(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function testWorkspaces() {
+            try {
+                const res = await fetch(`${API_URL}/api/workspaces`, {
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await res.json();
+                document.getElementById('apiResponse').textContent = JSON.stringify(data, null, 2);
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    updateStatus(`✅ Found ${data.length} workspace(s)`, 'success');
+                    window.__workspaces = data;
+                } else {
+                    updateStatus('❌ No workspaces returned!', 'error');
+                }
+            } catch (e) {
+                updateStatus(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        function checkLocalStorage() {
+            const data = {
+                'meridian-workspace': localStorage.getItem('meridian-workspace'),
+                'meridian-user-preferences': localStorage.getItem('meridian-user-preferences'),
+                'user-preferences (old)': localStorage.getItem('user-preferences')
+            };
+            
+            document.getElementById('localStorage').textContent = JSON.stringify(data, null, 2);
+            
+            const hasWorkspace = data['meridian-workspace'] && JSON.parse(data['meridian-workspace'])?.state?.workspace;
+            
+            if (hasWorkspace) {
+                updateStatus('✅ Workspace exists in localStorage', 'success');
+            } else {
+                updateStatus('❌ No workspace in localStorage', 'error');
+            }
+        }
+
+        async function fixNow() {
+            updateStatus('🔧 Running auto-fix...', 'info');
+            
+            try {
+                // Step 1: Clear old data
+                localStorage.removeItem('user-preferences');
+                
+                // Step 2: Fetch workspaces
+                const res = await fetch(`${API_URL}/api/workspaces`, {
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!res.ok) {
+                    const error = await res.text();
+                    throw new Error(`API error: ${error}`);
+                }
+                
+                const workspaces = await res.json();
+                
+                if (!Array.isArray(workspaces) || workspaces.length === 0) {
+                    throw new Error('No workspaces available');
+                }
+                
+                const firstWorkspace = workspaces[0];
+                
+                // Step 3: Set localStorage
+                localStorage.setItem('meridian-user-preferences', JSON.stringify({
+                    state: {
+                        activeWorkspaceId: firstWorkspace.id,
+                        isSidebarOpened: true,
+                        viewMode: 'board'
+                    },
+                    version: 0
+                }));
+                
+                localStorage.setItem('meridian-workspace', JSON.stringify({
+                    state: {
+                        workspace: firstWorkspace
+                    },
+                    version: 0
+                }));
+                
+                updateStatus(`✅ Fixed! Set workspace: ${firstWorkspace.name}`, 'success');
+                
+                // Reload after 1 second
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:5174/dashboard/settings/workspace';
+                }, 1000);
+                
+            } catch (e) {
+                updateStatus(`❌ Fix failed: ${e.message}`, 'error');
+                document.getElementById('diagnosis').textContent = `Error: ${e.message}\n${e.stack}`;
+            }
+        }
+
+        function clearAndReload() {
+            if (!confirm('Clear all data and reload?')) return;
+            
+            localStorage.clear();
+            updateStatus('✅ Cleared. Reloading...', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(runFullTest, 500);
+        });
+    </script>
+</body>
+</html>
+

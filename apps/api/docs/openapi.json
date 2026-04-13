@@ -1,0 +1,448 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Meridian Project Management API",
+    "version": "1.0.0",
+    "description": "\n# Meridian API Documentation\n\nWelcome to the comprehensive API documentation for Meridian, a modern project management and team collaboration platform.\n\n## Features\n\n- 🔐 **Authentication & Authorization**: Secure session-based authentication with RBAC\n- 🏢 **Multi-tenant Workspaces**: Complete workspace isolation and management\n- 📋 **Project Management**: Full project lifecycle with tasks, milestones, and dependencies\n- 💬 **Real-time Communication**: WebSocket-powered messaging and collaboration\n- 📊 **Analytics & Reporting**: Comprehensive dashboard and insights\n- 🔧 **Workflow Automation**: Custom workflows and integrations\n- 👥 **Team Collaboration**: Teams, roles, and permissions management\n\n## Authentication\n\nThis API uses session-based authentication. Include your session token in the `Authorization` header:\n\n```\nAuthorization: Bearer your-session-token\n```\n\n## Rate Limiting\n\nAll endpoints are rate-limited to ensure fair usage:\n- **Public endpoints**: 100 requests per minute\n- **Authenticated endpoints**: 1000 requests per minute\n- **Upload endpoints**: 10 requests per minute\n\n## Error Handling\n\nAll errors follow a consistent structure:\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"ERROR_CODE\",\n    \"message\": \"Human-readable error message\",\n    \"details\": { /* Additional error context */ }\n  },\n  \"meta\": {\n    \"timestamp\": \"2024-08-06T12:00:00Z\",\n    \"requestId\": \"req_123456789\",\n    \"version\": \"1.0.0\"\n  }\n}\n```\n\n## Response Format\n\nAll successful responses follow this structure:\n\n```json\n{\n  \"success\": true,\n  \"data\": { /* Response data */ },\n  \"meta\": {\n    \"timestamp\": \"2024-08-06T12:00:00Z\",\n    \"requestId\": \"req_123456789\",\n    \"version\": \"1.0.0\",\n    \"pagination\": { /* Pagination info for list endpoints */ }\n  }\n}\n```\n    ",
+    "contact": {
+      "name": "Meridian Support",
+      "email": "support@meridian.app",
+      "url": "https://meridian.com/support"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3005",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.meridian.com",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Session token obtained from sign-in endpoint"
+      }
+    },
+    "schemas": {
+      "BaseResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": false
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "VALIDATION_ERROR"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Invalid input data"
+                  },
+                  "details": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SuccessResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object"
+              }
+            }
+          }
+        ]
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sortBy": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "user_123456789"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "workspace-manager",
+              "project-manager",
+              "team-lead",
+              "team-member",
+              "guest"
+            ],
+            "example": "team-member"
+          },
+          "workspaceId": {
+            "type": "string",
+            "example": "workspace_123456789"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "workspace_123456789"
+          },
+          "name": {
+            "type": "string",
+            "example": "My Company"
+          },
+          "description": {
+            "type": "string",
+            "example": "Main workspace for the company"
+          },
+          "settings": {
+            "type": "object"
+          },
+          "ownerId": {
+            "type": "string",
+            "example": "user_123456789"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "project_123456789"
+          },
+          "name": {
+            "type": "string",
+            "example": "Website Redesign"
+          },
+          "description": {
+            "type": "string",
+            "example": "Complete redesign of company website"
+          },
+          "workspaceId": {
+            "type": "string",
+            "example": "workspace_123456789"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-12-31"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planning",
+              "active",
+              "on-hold",
+              "completed",
+              "cancelled"
+            ],
+            "example": "active"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "example": "high"
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "user_123456789"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "task_123456789"
+          },
+          "title": {
+            "type": "string",
+            "example": "Create homepage mockup"
+          },
+          "description": {
+            "type": "string",
+            "example": "Design and create mockup for new homepage"
+          },
+          "projectId": {
+            "type": "string",
+            "example": "project_123456789"
+          },
+          "assigneeId": {
+            "type": "string",
+            "example": "user_123456789"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "example": "medium"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "in-progress",
+              "review",
+              "done"
+            ],
+            "example": "in-progress"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-08-15"
+          },
+          "estimatedHours": {
+            "type": "number",
+            "minimum": 0,
+            "example": 8
+          },
+          "actualHours": {
+            "type": "number",
+            "minimum": 0,
+            "example": 6
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "message_123456789"
+          },
+          "content": {
+            "type": "string",
+            "example": "Hello team! How is the project going?"
+          },
+          "channelId": {
+            "type": "string",
+            "example": "channel_123456789"
+          },
+          "userId": {
+            "type": "string",
+            "example": "user_123456789"
+          },
+          "threadId": {
+            "type": "string",
+            "nullable": true,
+            "example": "thread_123456789"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "attachment_123456789"
+            ]
+          },
+          "reactions": {
+            "type": "object",
+            "example": {
+              "👍": 3,
+              "❤️": 1
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and session management"
+    },
+    {
+      "name": "Users",
+      "description": "User management and profiles"
+    },
+    {
+      "name": "Workspaces",
+      "description": "Workspace management and settings"
+    },
+    {
+      "name": "Projects",
+      "description": "Project lifecycle management"
+    },
+    {
+      "name": "Tasks",
+      "description": "Task management and tracking"
+    },
+    {
+      "name": "Messages",
+      "description": "Real-time messaging and communication"
+    },
+    {
+      "name": "Teams",
+      "description": "Team collaboration and management"
+    },
+    {
+      "name": "Analytics",
+      "description": "Dashboard analytics and reporting"
+    },
+    {
+      "name": "Integrations",
+      "description": "Third-party integrations and webhooks"
+    }
+  ],
+  "paths": {}
+}

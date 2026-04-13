@@ -1,0 +1,331 @@
+/* Mobile Widget Enhancements */
+
+/* Swipeable Cards on Mobile */
+@media (max-width: 768px) {
+  .glass-card {
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  /* Enable horizontal swipe for card actions */
+  .swipeable-card {
+    position: relative;
+    transition: transform 0.3s ease-out;
+  }
+
+  .swipeable-card.swiping-left {
+    transform: translateX(-80px);
+  }
+
+  .swipeable-card.swiping-right {
+    transform: translateX(80px);
+  }
+
+  /* Swipe action buttons */
+  .swipe-actions {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .swipe-actions.left {
+    right: 0;
+  }
+
+  .swipe-actions.right {
+    left: 0;
+  }
+
+  .swipeable-card.swiping-left .swipe-actions.left,
+  .swipeable-card.swiping-right .swipe-actions.right {
+    opacity: 1;
+  }
+}
+
+/* Mobile Widget Sizes */
+@media (max-width: 768px) {
+  /* Compact widgets on mobile */
+  .glass-card {
+    margin-bottom: 1rem;
+  }
+
+  .glass-card .text-3xl {
+    font-size: 1.875rem;
+  }
+
+  .glass-card .text-2xl {
+    font-size: 1.5rem;
+  }
+
+  /* Optimize chart heights for mobile */
+  .recharts-responsive-container {
+    max-height: 250px !important;
+  }
+
+  /* Stack grid layouts on mobile */
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4,
+  .md\\:grid-cols-2,
+  .md\\:grid-cols-3,
+  .md\\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  /* Compact padding on mobile */
+  .glass-card > div {
+    padding: 1rem;
+  }
+
+  /* Hide less important content on mobile */
+  .mobile-hide {
+    display: none;
+  }
+}
+
+/* Pull to Refresh Indicator */
+.pull-to-refresh {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), transparent);
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  z-index: 40;
+}
+
+.pull-to-refresh.pulling {
+  transform: translateY(0);
+}
+
+.pull-to-refresh.refreshing {
+  transform: translateY(0);
+}
+
+.pull-refresh-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Touch-friendly Buttons on Mobile */
+@media (max-width: 768px) {
+  button,
+  .button,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Increase tap targets */
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Better touch feedback */
+  button:active,
+  .button:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Drag and Drop on Mobile */
+@media (max-width: 768px) {
+  .draggable {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .draggable.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    z-index: 1000;
+  }
+
+  .drop-zone {
+    border: 2px dashed transparent;
+    transition: border-color 0.3s ease;
+  }
+
+  .drop-zone.drag-over {
+    border-color: hsl(var(--primary));
+    background-color: hsla(var(--primary) / 0.05);
+  }
+}
+
+/* Widget Sizes */
+.widget-small {
+  min-height: 200px;
+}
+
+.widget-medium {
+  min-height: 350px;
+}
+
+.widget-large {
+  min-height: 500px;
+}
+
+@media (max-width: 768px) {
+  /* All widgets default to medium on mobile */
+  .widget-small,
+  .widget-medium,
+  .widget-large {
+    min-height: 300px;
+  }
+}
+
+/* Mobile Navigation Improvements */
+@media (max-width: 768px) {
+  /* Bottom navigation bar spacing */
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  /* Ensure content doesn't hide behind notch */
+  .dashboard-container {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* Optimize scroll performance */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Mobile-Optimized Tabs */
+@media (max-width: 768px) {
+  [role="tablist"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  [role="tablist"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  [role="tab"] {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+/* Responsive Tables on Mobile */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Card-style table rows on mobile */
+  .mobile-table-card tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+
+  .mobile-table-card tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border: none;
+  }
+
+  .mobile-table-card tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: 1rem;
+  }
+
+  .mobile-table-card thead {
+    display: none;
+  }
+}
+
+/* Mobile Loading States */
+@media (max-width: 768px) {
+  .skeleton-loader {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
+
+/* Optimize Transitions on Mobile */
+@media (max-width: 768px) {
+  /* Reduce motion if preferred */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Faster transitions on mobile for better performance */
+  * {
+    transition-duration: 150ms !important;
+  }
+
+  .glass-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+}
+
+/* Haptic Feedback Visual Cue */
+@media (max-width: 768px) {
+  .haptic-feedback:active {
+    animation: haptic-pulse 0.3s ease;
+  }
+
+  @keyframes haptic-pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.95);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+

@@ -1,0 +1,1 @@
+CREATE INDEX "idx_users_last_seen" ON "users" USING btree ("last_seen");

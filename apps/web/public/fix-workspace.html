@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Fix Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .status {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button.secondary {
+            background: #6c757d;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        .actions {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e9ecef;
+            text-align: center;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span style="font-size: 32px;">🔧</span>
+            Workspace Fix Tool
+        </h1>
+        <p class="subtitle">Automatically fix the "No Workspace Selected" issue</p>
+
+        <div id="result"></div>
+
+        <div class="step">
+            <div>
+                <span class="step-number">1</span>
+                <strong>Automatic Fix</strong>
+            </div>
+            <p>Click the button below to automatically migrate your old workspace data to the new format.</p>
+            <button onclick="runAutoFix()">✨ Run Auto Fix</button>
+        </div>
+
+        <div class="step">
+            <div>
+                <span class="step-number">2</span>
+                <strong>Manual Fix</strong>
+            </div>
+            <p>If automatic fix doesn't work, try manual steps:</p>
+            <button class="secondary" onclick="clearOldData()">🗑️ Clear Old Data</button>
+            <button class="secondary" onclick="showDebugInfo()">🔍 Show Debug Info</button>
+        </div>
+
+        <div class="actions">
+            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                After fixing, reload your main application
+            </p>
+            <button onclick="window.location.href='/dashboard'">
+                🏠 Go to Dashboard
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3005';
+
+        async function runAutoFix() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">🔄 Running automatic fix...</div>';
+
+            try {
+                // Step 1: Check for old data
+                const oldKey = 'user-preferences';
+                const newKey = 'meridian-user-preferences';
+                const oldData = localStorage.getItem(oldKey);
+
+                if (oldData) {
+                    resultDiv.innerHTML += '<div class="warning">⚠️ Found old data in "user-preferences"</div>';
+                    
+                    // Migrate to new key
+                    localStorage.setItem(newKey, oldData);
+                    localStorage.removeItem(oldKey);
+                    
+                    resultDiv.innerHTML += '<div class="success">✅ Migrated data to "meridian-user-preferences"</div>';
+                }
+
+                // Step 2: Fetch workspaces from API
+                resultDiv.innerHTML += '<div class="info">🌐 Fetching workspaces from API...</div>';
+                
+                const response = await fetch(`${API_BASE}/api/workspaces`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                const workspaces = await response.json();
+
+                if (!Array.isArray(workspaces) || workspaces.length === 0) {
+                    throw new Error('No workspaces found');
+                }
+
+                resultDiv.innerHTML += `<div class="success">✅ Found ${workspaces.length} workspace(s)</div>`;
+
+                // Step 3: Set first workspace
+                const firstWorkspace = workspaces[0];
+                
+                // Update meridian-workspace
+                localStorage.setItem('meridian-workspace', JSON.stringify({
+                    state: { workspace: firstWorkspace },
+                    version: 0
+                }));
+
+                // Update meridian-user-preferences
+                const prefs = localStorage.getItem(newKey);
+                const prefsData = prefs ? JSON.parse(prefs) : { state: {} };
+                prefsData.state.activeWorkspaceId = firstWorkspace.id;
+                localStorage.setItem(newKey, JSON.stringify(prefsData));
+
+                resultDiv.innerHTML += `<div class="success">✅ Set active workspace: <strong>${firstWorkspace.name}</strong></div>`;
+                resultDiv.innerHTML += `<div class="success" style="margin-top: 20px;">
+                    <strong>🎉 Fix Complete!</strong><br>
+                    <span style="font-size: 14px;">Please click "Go to Dashboard" below to reload the app.</span>
+                </div>`;
+
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+                resultDiv.innerHTML += `<div class="info">
+                    Try the manual fix instead, or check that:
+                    <ul>
+                        <li>API server is running on port 3005</li>
+                        <li>You're logged in</li>
+                        <li>You have at least one workspace</li>
+                    </ul>
+                </div>`;
+            }
+        }
+
+        function clearOldData() {
+            const oldKeys = [
+                'user-preferences',
+                'meridian-workspace',
+                'meridian-user-preferences'
+            ];
+
+            oldKeys.forEach(key => localStorage.removeItem(key));
+
+            document.getElementById('result').innerHTML = `
+                <div class="success">✅ Cleared old data</div>
+                <div class="info">Now reload the app - it will automatically fetch and set your workspace</div>
+            `;
+        }
+
+        function showDebugInfo() {
+            const info = {
+                'user-preferences': localStorage.getItem('user-preferences'),
+                'meridian-user-preferences': localStorage.getItem('meridian-user-preferences'),
+                'meridian-workspace': localStorage.getItem('meridian-workspace')
+            };
+
+            let html = '<div class="info"><strong>Current localStorage:</strong></div>';
+            html += '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+
+            document.getElementById('result').innerHTML = html;
+        }
+
+        // Run on load
+        window.onload = () => {
+            showDebugInfo();
+        };
+    </script>
+</body>
+</html>
+

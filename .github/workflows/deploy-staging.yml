@@ -1,0 +1,114 @@
+name: Deploy to Staging
+
+# Note: YAML linter warnings about "Context access might be invalid" for secrets
+# are informational only. These secrets must be configured in repository settings.
+# See docs/GITHUB_SECRETS.md for required secrets configuration.
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate Required Secrets
+        run: |
+          # Check if required secrets are set (they'll be empty if not configured)
+          missing_secrets=()
+          
+          if [ -z "${{ secrets.STAGING_HOST }}" ]; then missing_secrets+=("STAGING_HOST"); fi
+          if [ -z "${{ secrets.STAGING_USER }}" ]; then missing_secrets+=("STAGING_USER"); fi
+          if [ -z "${{ secrets.STAGING_SSH_KEY }}" ]; then missing_secrets+=("STAGING_SSH_KEY"); fi
+          if [ -z "${{ secrets.STAGING_JWT_SECRET }}" ]; then missing_secrets+=("STAGING_JWT_SECRET"); fi
+          if [ -z "${{ secrets.STAGING_SESSION_SECRET }}" ]; then missing_secrets+=("STAGING_SESSION_SECRET"); fi
+          if [ -z "${{ secrets.STAGING_ADMIN_EMAIL }}" ]; then missing_secrets+=("STAGING_ADMIN_EMAIL"); fi
+          if [ -z "${{ secrets.STAGING_POSTGRES_PASSWORD }}" ]; then missing_secrets+=("STAGING_POSTGRES_PASSWORD"); fi
+          if [ -z "${{ secrets.STAGING_API_HOST }}" ]; then missing_secrets+=("STAGING_API_HOST"); fi
+          
+          if [ ${#missing_secrets[@]} -gt 0 ]; then
+            echo "❌ Missing required secrets:"
+            printf '%s\n' "${missing_secrets[@]}"
+            echo ""
+            echo "Please configure these secrets in:"
+            echo "Repository Settings → Secrets and variables → Actions → Repository secrets"
+            echo ""
+            echo "See docs/GITHUB_SECRETS.md for details"
+            exit 1
+          fi
+          
+          echo "✅ All required secrets are configured"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install deps (no scripts)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build web
+        working-directory: apps/web
+        run: pnpm build
+
+      - name: Build api
+        working-directory: apps/api
+        run: pnpm build
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: |
+            docker-compose.staging.yml
+            nginx.conf
+          target: /opt/meridian
+
+      - name: Deploy stack
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -e
+            mkdir -p /opt/meridian
+            cd /opt/meridian
+            # Write .env.staging from GitHub Secrets
+            cat > .env.staging << 'EOF'
+            NODE_ENV=staging
+            API_PORT=3005
+            FRONTEND_URL=https://staging.meridian.app
+            JWT_SECRET=${{ secrets.STAGING_JWT_SECRET }}
+            SESSION_SECRET=${{ secrets.STAGING_SESSION_SECRET }}
+            ADMIN_EMAIL=${{ secrets.STAGING_ADMIN_EMAIL }}
+            POSTGRES_PASSWORD=${{ secrets.STAGING_POSTGRES_PASSWORD }}
+            DATABASE_URL=postgresql://meridian:${{ secrets.STAGING_POSTGRES_PASSWORD }}@postgres:5432/meridian_staging
+            REDIS_URL=redis://redis:6379
+            CORS_ORIGINS=https://staging.meridian.app,https://api-staging.meridian.app
+            SENTRY_DSN=${{ secrets.STAGING_SENTRY_DSN }}
+            SENTRY_ENV=staging
+            EOF
+
+            # Pull images if any exist in compose (else builds from Dockerfile)
+            docker compose -f docker-compose.staging.yml --env-file .env.staging up -d --build
+
+      - name: Health check API
+        run: |
+          for i in {1..20}; do
+            if curl -fsS https://${{ secrets.STAGING_API_HOST }}/api/health || curl -fsS http://${{ secrets.STAGING_API_HOST }}:3005/api/health; then
+              echo "API healthy"; exit 0; fi; sleep 5; done
+          echo "API health check failed"; exit 1

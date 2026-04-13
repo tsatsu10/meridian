@@ -1,0 +1,78 @@
+# OWASP ZAP Scan Rules Configuration
+# Format: RULE_ID	THRESHOLD	ACTION
+#
+# THRESHOLD: IGNORE, INFO, LOW, MEDIUM, HIGH
+# ACTION: IGNORE, INFO, WARN, FAIL
+
+# High severity - Must fix
+10010	MEDIUM	WARN	Cookie No HttpOnly Flag
+10011	MEDIUM	WARN	Cookie Without Secure Flag
+10015	MEDIUM	FAIL	Incomplete or No Cache-control Header Set
+10016	MEDIUM	IGNORE	Web Browser XSS Protection Not Enabled
+10017	MEDIUM	FAIL	Cross-Domain JavaScript Source File Inclusion
+10019	MEDIUM	FAIL	Content-Type Header Missing
+10020	HIGH	FAIL	X-Frame-Options Header Not Set
+10021	HIGH	FAIL	X-Content-Type-Options Header Missing
+10023	MEDIUM	FAIL	Information Disclosure - Debug Error Messages
+10024	MEDIUM	FAIL	Information Disclosure - Sensitive Information in URL
+10025	MEDIUM	FAIL	Information Disclosure - Sensitive Information in HTTP Referrer Header
+10026	MEDIUM	FAIL	HTTP Parameter Override
+10027	MEDIUM	WARN	Information Disclosure - Suspicious Comments
+10028	MEDIUM	FAIL	Open Redirect
+10029	MEDIUM	FAIL	Cookie Poisoning
+10030	MEDIUM	FAIL	User Controllable Charset
+10031	HIGH	FAIL	User Controllable HTML Element Attribute (Potential XSS)
+10032	MEDIUM	FAIL	Viewstate
+10033	HIGH	FAIL	Directory Browsing
+10034	MEDIUM	FAIL	Heartbleed OpenSSL Vulnerability
+10035	HIGH	FAIL	Strict-Transport-Security Header Not Set
+10036	MEDIUM	FAIL	HTTP Server Response Header
+10037	MEDIUM	FAIL	Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s)
+10038	MEDIUM	FAIL	Content Security Policy (CSP) Header Not Set
+10039	MEDIUM	WARN	X-Backend-Server Header Information Leak
+10040	LOW	IGNORE	Secure Pages Include Mixed Content
+10041	MEDIUM	FAIL	HTTP to HTTPS Insecure Transition in Form Post
+10042	MEDIUM	FAIL	HTTPS to HTTP Insecure Transition in Form Post
+10043	HIGH	FAIL	User Controllable JavaScript Event (XSS)
+10044	MEDIUM	FAIL	Big Redirect Detected (Potential Sensitive Information Leak)
+10045	LOW	IGNORE	Source Code Disclosure - /WEB-INF folder
+10047	HIGH	FAIL	HTTPS Content Available via HTTP
+10048	HIGH	FAIL	Remote Code Execution - Shell Shock
+10049	MEDIUM	FAIL	Content Cacheability
+10050	MEDIUM	FAIL	Retrieved from Cache
+10051	MEDIUM	WARN	Relative Path Confusion
+10052	LOW	IGNORE	X-ChromeLogger-Data (XCOLD) Header Information Leak
+10054	LOW	IGNORE	Cookie without SameSite Attribute
+10055	LOW	IGNORE	CSP Scanner
+10056	MEDIUM	FAIL	X-Debug-Token Information Leak
+10057	MEDIUM	FAIL	Username Hash Found
+10058	MEDIUM	FAIL	GET for POST
+10061	HIGH	FAIL	X-AspNet-Version Response Header
+10062	MEDIUM	WARN	PII Disclosure
+10063	MEDIUM	FAIL	Permissions Policy Header Not Set
+10095	LOW	IGNORE	Backup File Disclosure
+10096	MEDIUM	FAIL	Timestamp Disclosure
+10097	LOW	IGNORE	Hash Disclosure
+10098	MEDIUM	FAIL	Cross-Domain Misconfiguration
+10099	LOW	IGNORE	Source Code Disclosure
+
+# SQL Injection
+40018	HIGH	FAIL	SQL Injection
+40019	HIGH	FAIL	SQL Injection - MySQL
+40020	HIGH	FAIL	SQL Injection - Hypersonic SQL
+40021	HIGH	FAIL	SQL Injection - Oracle
+40022	HIGH	FAIL	SQL Injection - PostgreSQL
+40023	HIGH	FAIL	SQL Injection - SQLite
+
+# XSS
+40012	HIGH	FAIL	Cross Site Scripting (Reflected)
+40013	HIGH	FAIL	Cross Site Scripting (Persistent)
+40014	HIGH	FAIL	Cross Site Scripting (Persistent) - Prime
+40016	HIGH	FAIL	Cross Site Scripting (Persistent) - Spider
+40017	HIGH	FAIL	Cross Site Scripting (Persistent) - JSON
+
+# Authentication
+10055	MEDIUM	FAIL	CSP: Wildcard Directive
+10056	MEDIUM	FAIL	X-Debug-Token Information Leak
+10202	HIGH	FAIL	Absence of Anti-CSRF Tokens
+

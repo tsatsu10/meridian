@@ -1,0 +1,42 @@
+import { client } from "@meridian/libs";
+import type { InferRequestType } from "hono/client";
+
+export type CreateTaskRequest = InferRequestType<
+  (typeof client)["task"][":projectId"]["$post"]
+>["json"] &
+  InferRequestType<(typeof client)["task"][":projectId"]["$post"]>["param"];
+
+async function createTask(
+  title: string,
+  description: string,
+  projectId: string,
+  userEmail: string,
+  status: string,
+  dueDate: Date,
+  priority: string,
+  parentId?: string,
+) {
+  const response = await client.task[":projectId"].$post({
+    json: {
+      title,
+      description,
+      userEmail,
+      status,
+      dueDate: dueDate.toISOString(),
+      priority,
+      parentId,
+    },
+    param: { projectId },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error);
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+export default createTask;

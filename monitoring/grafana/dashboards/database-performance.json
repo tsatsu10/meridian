@@ -1,0 +1,168 @@
+{
+  "dashboard": {
+    "title": "Meridian - Database Performance",
+    "tags": ["meridian", "database", "postgresql"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Connections",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends",
+            "legendFormat": "Active"
+          },
+          {
+            "expr": "pg_settings_max_connections",
+            "legendFormat": "Max"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Connection Pool Usage %",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "(pg_stat_database_numbackends / pg_settings_max_connections) * 100"
+          }
+        ],
+        "options": {
+          "thresholds": [
+            {"value": 0, "color": "green"},
+            {"value": 70, "color": "yellow"},
+            {"value": 85, "color": "red"}
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "title": "Transactions per Second",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_xact_commit[5m])"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Query Duration (p95)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95 by {{operation}}"
+          }
+        ],
+        "yaxes": [
+          {"label": "seconds", "format": "s"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Slow Queries (>1s)",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(database_query_duration_seconds_bucket{le=\"1\"}[5m]))"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Deadlocks",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "increase(pg_stat_database_deadlocks[1h])"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Size",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "pg_database_size_bytes",
+            "legendFormat": "{{datname}}"
+          }
+        ],
+        "yaxes": [
+          {"label": "bytes", "format": "bytes"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Temp Files Created",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_temp_files[5m])"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Cache Hit Ratio",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 24, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "pg_stat_database_blks_hit / (pg_stat_database_blks_hit + pg_stat_database_blks_read) * 100"
+          }
+        ],
+        "options": {
+          "thresholds": [
+            {"value": 0, "color": "red"},
+            {"value": 90, "color": "yellow"},
+            {"value": 95, "color": "green"}
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "title": "Rollbacks",
+        "type": "stat",
+        "gridPos": {"x": 8, "y": 24, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "increase(pg_stat_database_xact_rollback[1h])"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Top Queries by Execution Time",
+        "type": "table",
+        "gridPos": {"x": 16, "y": 24, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "topk(10, sum by(query_hash) (rate(pg_stat_statements_total_time[5m])))",
+            "format": "table",
+            "instant": true
+          }
+        ]
+      }
+    ],
+    "refresh": "30s",
+    "time": {"from": "now-1h", "to": "now"}
+  }
+}
+

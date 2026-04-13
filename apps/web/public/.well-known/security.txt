@@ -1,0 +1,66 @@
+Contact: mailto:security@meridian.app
+Contact: https://meridian.app/security
+Expires: 2026-10-30T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://meridian.app/.well-known/security.txt
+Policy: https://meridian.app/security-policy
+Hiring: https://meridian.app/careers
+Acknowledgments: https://meridian.app/security/hall-of-fame
+
+# Security Policy
+
+Thank you for helping keep Meridian and our users safe!
+
+# Reporting a Vulnerability
+
+If you discover a security vulnerability, please report it by emailing 
+security@meridian.app. Please include:
+
+1. Description of the vulnerability
+2. Steps to reproduce
+3. Potential impact
+4. Suggested fix (if any)
+
+We take all security reports seriously and will respond within 48 hours.
+
+# Scope
+
+In scope:
+- Meridian web application (meridian.app)
+- Meridian API (api.meridian.app)
+- Meridian mobile apps
+
+Out of scope:
+- Third-party services
+- Social engineering attacks
+- Physical security
+
+# Safe Harbor
+
+We support safe harbor for security researchers who:
+- Make a good faith effort to avoid privacy violations
+- Do not intentionally harm our users or disrupt our services
+- Report vulnerabilities promptly
+- Keep vulnerability details confidential until we've issued a fix
+
+# Bug Bounty
+
+We currently do not offer a bug bounty program, but we recognize 
+security researchers in our Hall of Fame and may provide swag/rewards 
+on a case-by-case basis.
+
+# Response Timeline
+
+- Initial response: 48 hours
+- Triage and assessment: 1 week
+- Fix deployment: 2-4 weeks (depending on severity)
+- Public disclosure: After fix is deployed and verified
+
+# Hall of Fame
+
+Contributors who responsibly disclose security vulnerabilities:
+- (Your name could be here!)
+
+Thank you for helping us keep Meridian secure!
+
+

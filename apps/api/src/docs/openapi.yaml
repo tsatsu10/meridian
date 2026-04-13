@@ -1,0 +1,1374 @@
+openapi: 3.0.3
+info:
+  title: Meridian Project Management API
+  description: |
+    Comprehensive REST API for the Meridian project management and team collaboration platform.
+    
+    ## Features
+    - **User Management**: Authentication, user profiles, and session management
+    - **Project Management**: Projects, tasks, milestones, and workflows
+    - **Real-time Communication**: Messages, channels, and notifications
+    - **Analytics**: Performance metrics, reporting, and insights
+    - **Database Optimization**: Query analysis, caching, and performance monitoring
+    - **Logging**: Structured logging, monitoring, and log management
+    
+    ## Authentication
+    This API uses session-based authentication with secure tokens.
+    Include the session token in the `Authorization` header as a Bearer token.
+    
+    ## Rate Limiting
+    API requests are rate-limited to prevent abuse. Check response headers for current limits.
+    
+    ## Error Handling
+    All errors follow RFC 7807 Problem Details format with structured error responses.
+  version: 2.0.0
+  contact:
+    name: Meridian Development Team
+    url: https://github.com/meridian-project
+    email: support@meridian.app
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3008
+    description: Development server
+  - url: https://api.meridian.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+  - SessionAuth: []
+
+paths:
+  # Health and System
+  /health:
+    get:
+      tags: [System]
+      summary: Health check endpoint
+      description: Get comprehensive system health information including database, services, and processes
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: System health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "ok"
+                timestamp: "2025-01-12T07:11:38.000Z"
+                database:
+                  status: "connected"
+                  message: "PostgreSQL connection healthy"
+                system:
+                  healthy: true
+                  details:
+                    "Process Health Monitor": true
+
+  /:
+    get:
+      tags: [System]
+      summary: API information
+      description: Get API version, database info, and available endpoints
+      operationId: getApiInfo
+      security: []
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfoResponse'
+
+  # User Management
+  /api/user/sign-up:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      description: Create a new user account with email and password
+      operationId: signUp
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+            example:
+              email: "user@example.com"
+              password: "SecurePassword123!"
+              name: "John Doe"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/user/sign-in:
+    post:
+      tags: [Authentication]
+      summary: User sign in
+      description: Authenticate user and create session
+      operationId: signIn
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+            example:
+              email: "user@example.com"
+              password: "SecurePassword123!"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/user/sign-out:
+    post:
+      tags: [Authentication]
+      summary: User sign out
+      description: Invalidate current session
+      operationId: signOut
+      responses:
+        '200':
+          description: Sign out successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/me:
+    get:
+      tags: [Users]
+      summary: Get current user
+      description: Get current authenticated user information
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Current user information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Database Optimization
+  /api/db/metrics:
+    get:
+      tags: [Database]
+      summary: Database performance metrics
+      description: Get comprehensive database performance metrics including query stats, cache performance, and optimization recommendations
+      operationId: getDatabaseMetrics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: timeWindow
+          in: query
+          description: Time window in milliseconds for metrics calculation
+          schema:
+            type: integer
+            default: 3600000
+            example: 3600000
+      responses:
+        '200':
+          description: Database performance metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseMetricsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/db/queries:
+    get:
+      tags: [Database]
+      summary: Query performance analysis
+      description: Get detailed analysis of database query performance including slow queries and optimization suggestions
+      operationId: getQueryAnalysis
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Query performance analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryAnalysisResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/db/cache:
+    get:
+      tags: [Database]
+      summary: Cache performance and statistics
+      description: Get cache performance metrics and health information
+      operationId: getCacheStats
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cache performance statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Database]
+      summary: Clear cache entries
+      description: Clear cache entries with optional pattern and tag filtering
+      operationId: clearCache
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: pattern
+          in: query
+          description: Regex pattern to match cache keys
+          schema:
+            type: string
+            example: "user:*"
+        - name: tags
+          in: query
+          description: Comma-separated list of tags to filter
+          schema:
+            type: string
+            example: "user,session"
+      responses:
+        '200':
+          description: Cache cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheClearResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/db/connections:
+    get:
+      tags: [Database]
+      summary: Connection pool status
+      description: Get database connection pool health and statistics
+      operationId: getConnectionStatus
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Connection pool status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/db/optimization-report:
+    get:
+      tags: [Database]
+      summary: Comprehensive optimization report
+      description: Generate detailed database optimization report with recommendations and action plans
+      operationId: getOptimizationReport
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Database optimization report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimizationReportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # Logging Management
+  /api/logs/analytics:
+    get:
+      tags: [Logging]
+      summary: Log analytics and metrics
+      description: Get comprehensive log analytics including error rates, performance metrics, and system health
+      operationId: getLogAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: timeWindow
+          in: query
+          description: Time window in milliseconds for analytics
+          schema:
+            type: integer
+            default: 3600000
+            example: 3600000
+      responses:
+        '200':
+          description: Log analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogAnalyticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/logs/export:
+    get:
+      tags: [Logging]
+      summary: Export logs
+      description: Export logs in JSON or CSV format with filtering options
+      operationId: exportLogs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: format
+          in: query
+          required: true
+          description: Export format
+          schema:
+            type: string
+            enum: [json, csv]
+            example: "json"
+        - name: timeWindow
+          in: query
+          description: Time window in milliseconds
+          schema:
+            type: integer
+            default: 3600000
+        - name: level
+          in: query
+          description: Comma-separated log levels to include
+          schema:
+            type: string
+            example: "error,warn"
+        - name: category
+          in: query
+          description: Comma-separated categories to include
+          schema:
+            type: string
+            example: "API,DATABASE"
+        - name: userId
+          in: query
+          description: Filter by user ID
+          schema:
+            type: string
+        - name: endpoint
+          in: query
+          description: Filter by endpoint
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Exported logs
+          content:
+            application/json:
+              description: JSON format export
+            text/csv:
+              description: CSV format export
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/logs/config:
+    get:
+      tags: [Logging]
+      summary: Get logging configuration
+      description: Get current logging configuration including levels, filters, and runtime settings
+      operationId: getLoggingConfig
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logging configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoggingConfigResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/logs/level:
+    post:
+      tags: [Logging]
+      summary: Update log level
+      description: Update the current log level at runtime
+      operationId: updateLogLevel
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLogLevelRequest'
+      responses:
+        '200':
+          description: Log level updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/logs/search:
+    get:
+      tags: [Logging]
+      summary: Search and filter logs
+      description: Search logs with advanced filtering and pagination
+      operationId: searchLogs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          description: Search query string
+          schema:
+            type: string
+            example: "failed authentication"
+        - name: level
+          in: query
+          description: Comma-separated log levels
+          schema:
+            type: string
+            example: "error,warn"
+        - name: category
+          in: query
+          description: Comma-separated categories
+          schema:
+            type: string
+            example: "AUTH,API"
+        - name: userId
+          in: query
+          description: Filter by user ID
+          schema:
+            type: string
+        - name: timeWindow
+          in: query
+          description: Time window in milliseconds
+          schema:
+            type: integer
+            default: 3600000
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSearchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/logs/stats:
+    get:
+      tags: [Logging]
+      summary: Log statistics and trends
+      description: Get log statistics, trends, and health metrics
+      operationId: getLogStats
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: timeWindow
+          in: query
+          description: Time window in milliseconds
+          schema:
+            type: integer
+            default: 3600000
+      responses:
+        '200':
+          description: Log statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from authentication
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionId
+      description: Session-based authentication cookie
+
+  schemas:
+    # Common Schemas
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+      required: [success]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid request parameters"
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        details:
+          type: object
+          additionalProperties: true
+      required: [error]
+
+    # Health and System
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, error]
+          example: "ok"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-12T07:11:38.000Z"
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [connected, error]
+            message:
+              type: string
+        system:
+          type: object
+          properties:
+            healthy:
+              type: boolean
+            details:
+              type: object
+              additionalProperties: true
+        processes:
+          type: object
+          properties:
+            total:
+              type: integer
+            meridian:
+              type: integer
+            orphaned:
+              type: integer
+            zombies:
+              type: integer
+            portConflicts:
+              type: integer
+            systemLoad:
+              type: number
+      required: [status, timestamp]
+
+    ApiInfoResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Meridian API Server - PostgreSQL Edition"
+        version:
+          type: string
+          example: "2.0.0"
+        database:
+          type: string
+          example: "PostgreSQL (Neon)"
+        endpoints:
+          type: array
+          items:
+            type: string
+          example:
+            - "GET /health - Health check"
+            - "POST /api/user/sign-up - User registration"
+      required: [message, version]
+
+    # Authentication
+    SignUpRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "SecurePassword123!"
+        name:
+          type: string
+          minLength: 1
+          example: "John Doe"
+      required: [email, password, name]
+
+    SignInRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          example: "SecurePassword123!"
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/Session'
+        token:
+          type: string
+          description: Session token for API authentication
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      required: [user, session, token]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clr3k2l4m0000..."
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        name:
+          type: string
+          example: "John Doe"
+        avatar:
+          type: string
+          nullable: true
+          example: "https://example.com/avatar.jpg"
+        role:
+          type: string
+          enum: [admin, manager, member, viewer]
+          example: "member"
+        timezone:
+          type: string
+          example: "UTC"
+        language:
+          type: string
+          example: "en"
+        isEmailVerified:
+          type: boolean
+          example: true
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, email, name, role, createdAt, updatedAt]
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "session_clr3k2l4m0000..."
+        userId:
+          type: string
+          example: "clr3k2l4m0000..."
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, expiresAt, createdAt]
+
+    UserResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+      required: [user]
+
+    # Database Management
+    DatabaseMetricsResponse:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+          format: int64
+          example: 1641980298000
+        database:
+          type: object
+          properties:
+            health:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, degraded, unhealthy]
+                connectionPool:
+                  type: object
+                  properties:
+                    active:
+                      type: integer
+                    total:
+                      type: integer
+                    failed:
+                      type: integer
+                    avgResponseTime:
+                      type: number
+        queries:
+          type: object
+          properties:
+            performance:
+              type: object
+              properties:
+                totalQueries:
+                  type: integer
+                averageExecutionTime:
+                  type: number
+                cacheHitRate:
+                  type: number
+                errorRate:
+                  type: number
+            optimization:
+              type: object
+              properties:
+                performanceIssues:
+                  type: array
+                  items:
+                    type: string
+                indexRecommendations:
+                  type: array
+                  items:
+                    type: string
+        cache:
+          type: object
+          properties:
+            statistics:
+              type: object
+              properties:
+                hits:
+                  type: integer
+                misses:
+                  type: integer
+                size:
+                  type: integer
+            health:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, degraded, unhealthy]
+        recommendations:
+          type: object
+          properties:
+            immediate:
+              type: array
+              items:
+                type: string
+            optimization:
+              type: array
+              items:
+                type: string
+      required: [timestamp]
+
+    QueryAnalysisResponse:
+      type: object
+      properties:
+        performance:
+          type: object
+          properties:
+            totalQueries:
+              type: integer
+            averageExecutionTime:
+              type: number
+            cacheHitRate:
+              type: number
+            errorRate:
+              type: number
+        slowQueries:
+          type: array
+          items:
+            type: object
+            properties:
+              query:
+                type: string
+              executionTime:
+                type: number
+              timestamp:
+                type: integer
+              error:
+                type: string
+                nullable: true
+        topQueries:
+          type: array
+          items:
+            type: object
+            properties:
+              query:
+                type: string
+              count:
+                type: integer
+              avgTime:
+                type: number
+        optimization:
+          type: object
+          properties:
+            queryOptimizations:
+              type: array
+              items:
+                type: string
+            indexRecommendations:
+              type: array
+              items:
+                type: string
+      required: [performance, slowQueries, topQueries]
+
+    CacheStatsResponse:
+      type: object
+      properties:
+        statistics:
+          type: object
+          properties:
+            hits:
+              type: integer
+            misses:
+              type: integer
+            size:
+              type: integer
+            hitRatio:
+              type: number
+        health:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            performance:
+              type: object
+              properties:
+                hitRatio:
+                  type: number
+                avgResponseTime:
+                  type: number
+                memoryUsage:
+                  type: number
+        recommendations:
+          type: array
+          items:
+            type: string
+      required: [statistics, health]
+
+    CacheClearResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        clearedCount:
+          type: integer
+          example: 42
+        message:
+          type: string
+          example: "Cleared 42 cache entries"
+      required: [success, clearedCount, message]
+
+    ConnectionStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        connectionPool:
+          type: object
+          properties:
+            active:
+              type: integer
+            total:
+              type: integer
+            failed:
+              type: integer
+            avgResponseTime:
+              type: number
+        recommendations:
+          type: array
+          items:
+            type: string
+      required: [status, connectionPool]
+
+    OptimizationReportResponse:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+          format: int64
+        overallHealthScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        executive_summary:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            totalQueries:
+              type: integer
+            errorRate:
+              type: number
+            averageResponseTime:
+              type: number
+            cacheHitRate:
+              type: number
+        detailed_analysis:
+          type: object
+          properties:
+            query_performance:
+              type: object
+            caching:
+              type: object
+            database:
+              type: object
+        recommendations:
+          type: object
+          properties:
+            immediate_actions:
+              type: array
+              items:
+                type: string
+            short_term:
+              type: array
+              items:
+                type: string
+            long_term:
+              type: array
+              items:
+                type: string
+        action_plan:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+                enum: [high, medium, low]
+              category:
+                type: string
+              tasks:
+                type: array
+                items:
+                  type: string
+      required: [timestamp, overallHealthScore]
+
+    # Logging
+    LogAnalyticsResponse:
+      type: object
+      properties:
+        analytics:
+          type: object
+          properties:
+            totalLogs:
+              type: integer
+            errorRate:
+              type: number
+            averageResponseTime:
+              type: number
+            topErrors:
+              type: array
+              items:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  count:
+                    type: integer
+                  lastSeen:
+                    type: integer
+            topEndpoints:
+              type: array
+              items:
+                type: object
+                properties:
+                  endpoint:
+                    type: string
+                  count:
+                    type: integer
+                  avgTime:
+                    type: number
+            userActivity:
+              type: array
+              items:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  actions:
+                    type: integer
+                  lastSeen:
+                    type: integer
+            systemHealth:
+              type: object
+              properties:
+                cpuUsage:
+                  type: number
+                memoryUsage:
+                  type: number
+                diskUsage:
+                  type: number
+                activeConnections:
+                  type: integer
+        health:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            metrics:
+              type: object
+              properties:
+                logsPerMinute:
+                  type: number
+                errorRatePercentage:
+                  type: number
+                alertRulesActive:
+                  type: integer
+                memoryUsage:
+                  type: number
+        timestamp:
+          type: integer
+          format: int64
+        timeWindow:
+          type: integer
+      required: [analytics, health, timestamp, timeWindow]
+
+    LoggingConfigResponse:
+      type: object
+      properties:
+        logging:
+          type: object
+          properties:
+            level:
+              type: string
+              enum: [silent, error, warn, info, debug, verbose]
+            enableConsole:
+              type: boolean
+            enableFileLogging:
+              type: boolean
+            enableAggregation:
+              type: boolean
+            structuredOutput:
+              type: boolean
+        security:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            logFailedLogins:
+              type: boolean
+            logSuspiciousRequests:
+              type: boolean
+        performance:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            slowQueryThreshold:
+              type: integer
+            slowRequestThreshold:
+              type: integer
+        runtime:
+          type: object
+          additionalProperties: true
+      required: [logging]
+
+    UpdateLogLevelRequest:
+      type: object
+      properties:
+        level:
+          type: string
+          enum: [silent, error, warn, info, debug, verbose]
+          example: "info"
+      required: [level]
+
+    LogSearchResponse:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: integer
+                format: int64
+              level:
+                type: string
+              category:
+                type: string
+              message:
+                type: string
+              metadata:
+                type: object
+                additionalProperties: true
+        total:
+          type: integer
+        query:
+          type: string
+        filters:
+          type: object
+          properties:
+            level:
+              type: array
+              items:
+                type: string
+            category:
+              type: array
+              items:
+                type: string
+            userId:
+              type: string
+        timeWindow:
+          type: integer
+        limit:
+          type: integer
+      required: [logs, total]
+
+    LogStatsResponse:
+      type: object
+      properties:
+        overview:
+          type: object
+          properties:
+            totalLogs:
+              type: integer
+            errorRate:
+              type: number
+            averageResponseTime:
+              type: number
+            systemHealth:
+              type: object
+        breakdown:
+          type: object
+          properties:
+            byLevel:
+              type: object
+              properties:
+                error:
+                  type: integer
+                warn:
+                  type: integer
+                info:
+                  type: integer
+                debug:
+                  type: integer
+            byEndpoint:
+              type: array
+              items:
+                type: object
+                properties:
+                  endpoint:
+                    type: string
+                  count:
+                    type: integer
+                  averageTime:
+                    type: number
+        trends:
+          type: object
+          properties:
+            performanceAlerts:
+              type: integer
+            topErrors:
+              type: array
+              items:
+                type: object
+        health:
+          type: object
+          properties:
+            status:
+              type: string
+            metrics:
+              type: object
+      required: [overview, breakdown, trends, health]
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Invalid request parameters"
+            code: "VALIDATION_ERROR"
+            details:
+              field: "email"
+              message: "Invalid email format"
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Authentication required"
+            code: "UNAUTHORIZED"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Insufficient permissions"
+            code: "FORBIDDEN"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Resource not found"
+            code: "NOT_FOUND"
+
+    Conflict:
+      description: Conflict - resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Resource already exists"
+            code: "CONFLICT"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Internal server error"
+            code: "INTERNAL_SERVER_ERROR"
+
+  examples:
+    HealthCheck:
+      summary: Healthy system
+      value:
+        status: "ok"
+        timestamp: "2025-01-12T07:11:38.000Z"
+        database:
+          status: "connected"
+          message: "PostgreSQL connection healthy"
+        system:
+          healthy: true
+          details:
+            "Process Health Monitor": true
+
+    DatabaseMetrics:
+      summary: Database performance metrics
+      value:
+        timestamp: 1641980298000
+        database:
+          health:
+            status: "healthy"
+            connectionPool:
+              active: 5
+              total: 10
+              failed: 0
+              avgResponseTime: 45.2
+        queries:
+          performance:
+            totalQueries: 1250
+            averageExecutionTime: 123.5
+            cacheHitRate: 89.2
+            errorRate: 0.8
+        cache:
+          statistics:
+            hits: 8920
+            misses: 1080
+            size: 256
+          health:
+            status: "healthy"
+        recommendations:
+          immediate: []
+          optimization:
+            - "Consider adding index on users.email"
+            - "Optimize query in getUsersByWorkspace"
+
+tags:
+  - name: System
+    description: System health, information, and monitoring endpoints
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User profile and account management
+  - name: Database
+    description: Database optimization, monitoring, and performance management
+  - name: Logging
+    description: Log management, analytics, and monitoring

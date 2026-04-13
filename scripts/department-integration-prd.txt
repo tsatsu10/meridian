@@ -1,0 +1,235 @@
+# Product Requirements Document: Optional Department Integration for Meridian
+
+## 1. Executive Summary
+
+### Vision
+Integrate optional department functionality into Meridian to provide enhanced organizational structure while maintaining the current simplicity for teams that don't need departmental hierarchy.
+
+### Objectives
+- Provide organizational structure for larger companies
+- Maintain existing workspace → project → task flow for simple use cases
+- Enable department-based permissions and analytics
+- Support both flat and hierarchical team structures
+- Ensure seamless migration from current structure
+
+## 2. Problem Statement
+
+### Current Situation
+- System supports workspace → project → task hierarchy
+- RBAC system includes department concepts in backend but no UI
+- Users with same roles appear to have different permissions (actually correct - different project assignments)
+- No way to organize projects by department or business unit
+- Limited reporting and analytics for organizational structures
+
+### User Pain Points
+- Large organizations struggle with flat project lists
+- No way to group projects by department or team
+- Managers can't easily see department-wide metrics
+- No departmental budgeting or resource allocation
+- Permission management becomes complex with many projects
+
+## 3. User Personas & Use Cases
+
+### Primary Personas
+- **Jennifer (Executive)**: Needs department-level analytics and budget oversight
+- **Sarah (Project Manager)**: Wants to see cross-department project dependencies
+- **David (Department Head)**: Needs department team management and metrics
+- **HR Manager**: Requires user onboarding with proper department assignment
+
+### Use Cases
+1. **Optional Department Creation**: Admin can choose to enable departments
+2. **Department-based Project Organization**: Group projects by department
+3. **Department Analytics**: See department-wide metrics and reports
+4. **Cross-department Collaboration**: Projects can span multiple departments
+5. **Department-based Permissions**: Restrict access based on department membership
+6. **Resource Allocation**: Manage budgets and resources at department level
+
+## 4. Functional Requirements
+
+### 4.1 Department Management
+- Create, edit, delete departments
+- Assign department heads
+- Set department descriptions and metadata
+- Enable/disable department features per workspace
+- Hierarchical departments (optional sub-departments)
+
+### 4.2 User Assignment
+- Assign users to primary department
+- Support multiple department memberships
+- Department-based role assignments
+- Bulk user department assignment
+
+### 4.3 Project Association
+- Optional department assignment for projects
+- Multi-department projects
+- Department-based project templates
+- Project inheritance of department settings
+
+### 4.4 Permissions & Access Control
+- Department-scoped permissions
+- Cross-department collaboration controls
+- Department head special permissions
+- Inheritance of workspace permissions
+
+### 4.5 Analytics & Reporting
+- Department performance metrics
+- Cross-department collaboration analysis
+- Resource utilization by department
+- Budget tracking and allocation
+
+### 4.6 Migration & Compatibility
+- Graceful migration from current structure
+- Backward compatibility with existing projects
+- Optional feature activation
+- Data integrity during migration
+
+## 5. Technical Requirements
+
+### 5.1 Database Schema
+- Extend existing department table
+- Project-department relationship table
+- User-department membership table
+- Department settings and metadata
+
+### 5.2 API Endpoints
+- CRUD operations for departments
+- Department membership management
+- Department-scoped data queries
+- Migration utilities
+
+### 5.3 Frontend Components
+- Department management interface
+- Department-aware navigation
+- Department selection in forms
+- Department-based filtering
+
+### 5.4 Performance Considerations
+- Efficient department-scoped queries
+- Caching for department hierarchies
+- Optimized permission checks
+- Minimal impact on existing workflows
+
+## 6. User Interface Requirements
+
+### 6.1 Settings Integration
+- Department management in workspace settings
+- Toggle to enable/disable departments
+- Department creation wizard
+- User assignment interface
+
+### 6.2 Navigation Enhancement
+- Optional department filter in sidebar
+- Department-based project grouping
+- Breadcrumb navigation with departments
+- Quick department switcher
+
+### 6.3 Dashboard Adaptations
+- Department-specific dashboards
+- Cross-department analytics
+- Department health metrics
+- Resource allocation views
+
+### 6.4 Project Management
+- Department field in project creation
+- Department-based project templates
+- Multi-department project handling
+- Department-aware task assignment
+
+## 7. Success Metrics
+
+### 7.1 Adoption Metrics
+- Percentage of workspaces enabling departments
+- Number of departments created per workspace
+- User engagement with department features
+- Migration completion rate
+
+### 7.2 Performance Metrics
+- Page load times with department filtering
+- Query performance for department-scoped data
+- User satisfaction with department navigation
+- Error rates in department operations
+
+### 7.3 Business Impact
+- Improved project organization efficiency
+- Better resource allocation accuracy
+- Enhanced reporting capabilities
+- Reduced permission management complexity
+
+## 8. Implementation Phases
+
+### Phase 1: Foundation (Week 1-2)
+- Database schema extensions
+- Basic CRUD API endpoints
+- Department model and services
+- Migration utilities
+
+### Phase 2: Core Features (Week 3-4)
+- Department management UI
+- User assignment interface
+- Basic department-project association
+- Permission system integration
+
+### Phase 3: Navigation & UX (Week 5-6)
+- Department-aware navigation
+- Project grouping by department
+- Enhanced filtering and search
+- Department-based dashboards
+
+### Phase 4: Advanced Features (Week 7-8)
+- Hierarchical departments
+- Advanced analytics
+- Cross-department collaboration
+- Resource allocation tools
+
+### Phase 5: Migration & Optimization (Week 9-10)
+- Data migration tools
+- Performance optimization
+- User training materials
+- Rollout to production
+
+## 9. Risk Assessment
+
+### High Priority Risks
+- **Data Migration Complexity**: Existing projects need careful migration
+- **Performance Impact**: Department queries could slow down system
+- **User Confusion**: Additional complexity might confuse existing users
+- **Permission Conflicts**: Department and project permissions might conflict
+
+### Mitigation Strategies
+- Comprehensive testing environment
+- Phased rollout with feature flags
+- Clear documentation and training
+- Rollback procedures for each phase
+
+## 10. Dependencies
+
+### Internal Dependencies
+- RBAC system completion
+- Settings page standardization
+- Navigation system updates
+- Analytics infrastructure
+
+### External Dependencies
+- Database migration approval
+- User acceptance testing
+- Documentation updates
+- Training material creation
+
+## 11. Future Considerations
+
+### Potential Enhancements
+- Department-based templates
+- Advanced workflow automation
+- Integration with HR systems
+- Department-specific branding
+- Advanced analytics and reporting
+
+### Scalability Planning
+- Support for large department hierarchies
+- Multi-tenant department isolation
+- Department-based data archiving
+- International department structures
+
+## 12. Conclusion
+
+This PRD outlines a comprehensive approach to integrating optional department functionality into Meridian. The implementation maintains backward compatibility while providing powerful organizational tools for larger teams. The phased approach ensures minimal disruption to existing users while delivering valuable new capabilities. 

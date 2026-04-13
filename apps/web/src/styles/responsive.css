@@ -1,0 +1,176 @@
+/* Mobile-First Responsive Design for Chat Dashboard */
+/* Based on Tailwind CSS breakpoints: sm: 640px, md: 768px, lg: 1024px, xl: 1280px */
+
+/* Chat container optimizations */
+.chat-container {
+  /* Mobile: Stack layout */
+  @apply flex flex-col h-full;
+}
+
+@media (min-width: 768px) {
+  .chat-container {
+    /* Desktop: Side-by-side layout */
+    @apply flex-row;
+  }
+}
+
+/* Message bubbles responsive sizing */
+.message-bubble {
+  @apply max-w-full px-3 py-2 text-sm;
+}
+
+@media (min-width: 640px) {
+  .message-bubble {
+    @apply max-w-md px-4 py-3 text-base;
+  }
+}
+
+@media (min-width: 1024px) {
+  .message-bubble {
+    @apply max-w-lg px-6 py-4;
+  }
+}
+
+/* Input area responsive design */
+.message-input-container {
+  @apply flex flex-col gap-2 p-3;
+}
+
+@media (min-width: 640px) {
+  .message-input-container {
+    @apply flex-row items-end gap-3 p-4;
+  }
+}
+
+/* Touch targets for mobile */
+.mobile-touch-target {
+  @apply min-h-[44px] min-w-[44px] p-2;
+}
+
+@media (min-width: 768px) {
+  .mobile-touch-target {
+    @apply min-h-[32px] min-w-[32px] p-1;
+  }
+}
+
+/* Avatar responsive sizing */
+.chat-avatar {
+  @apply w-8 h-8;
+}
+
+@media (min-width: 640px) {
+  .chat-avatar {
+    @apply w-10 h-10;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-avatar {
+    @apply w-12 h-12;
+  }
+}
+
+/* Sidebar responsive behavior */
+.chat-sidebar {
+  @apply w-full border-b border-gray-200;
+}
+
+@media (min-width: 768px) {
+  .chat-sidebar {
+    @apply w-80 border-r border-b-0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-sidebar {
+    @apply w-96;
+  }
+}
+
+/* Message spacing responsive */
+.message-spacing {
+  @apply space-y-1;
+}
+
+@media (min-width: 640px) {
+  .message-spacing {
+    @apply space-y-2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .message-spacing {
+    @apply space-y-3;
+  }
+}
+
+/* Chat header responsive */
+.chat-header {
+  @apply px-4 py-3 text-sm;
+}
+
+@media (min-width: 640px) {
+  .chat-header {
+    @apply px-6 py-4 text-base;
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 640px) {
+  /* Hide less important elements on mobile */
+  .mobile-hidden {
+    @apply hidden;
+  }
+  
+  /* Compact message layout */
+  .mobile-compact {
+    @apply text-xs leading-tight;
+  }
+  
+  /* Full-width buttons on mobile */
+  .mobile-full-width {
+    @apply w-full;
+  }
+  
+  /* Reduce padding on mobile */
+  .mobile-compact-padding {
+    @apply p-2;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .message-bubble {
+    @apply border-2 border-gray-800;
+  }
+  
+  .chat-input {
+    @apply border-2 border-gray-800;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animated-element {
+    @apply transition-none;
+  }
+  
+  .slide-animation {
+    @apply transform-none;
+  }
+}
+
+/* Dark mode responsive adjustments */
+@media (prefers-color-scheme: dark) {
+  .adaptive-bg {
+    @apply bg-gray-900;
+  }
+  
+  .adaptive-text {
+    @apply text-gray-100;
+  }
+  
+  .adaptive-border {
+    @apply border-gray-700;
+  }
+}

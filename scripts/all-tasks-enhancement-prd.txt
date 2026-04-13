@@ -1,0 +1,120 @@
+# All Tasks Page Enhancement PRD
+
+## Project Overview
+Enhance the Meridian all-tasks page by implementing missing components: Kanban view, Calendar view, and New Task functionality. The page currently has placeholders for these features that need to be replaced with fully functional components.
+
+## User Personas & Requirements
+
+### Sarah (Project Manager)
+- **Epic 1.1 Subtasks**: Needs efficient task management with visual organization
+- **Epic 1.2 Dependencies**: Requires dependency visualization in kanban and calendar views
+- **Requirements**: Kanban board with drag-and-drop, calendar view with due dates, quick task creation
+
+### Jennifer (Executive)
+- **Epic 3.1 Dashboards**: Needs high-level overview of task status
+- **Requirements**: Executive-friendly calendar view, status overview in kanban
+
+### David (Team Lead)
+- **Epic 3.2 Time Analytics**: Requires workload visualization
+- **Requirements**: Team member assignment in kanban, time-based calendar view
+
+### Mike (Developer)
+- **Epic 3.2 Time**: Needs efficient task management
+- **Requirements**: Quick task creation, keyboard shortcuts, efficient navigation
+
+## Feature Requirements
+
+### 1. Kanban View Implementation
+**Priority**: High
+**Persona**: Sarah (PM), David (Team Lead)
+**Epic**: 1.1-subtasks, 3.2-time
+
+**Acceptance Criteria**:
+- Replace "Kanban view coming soon..." placeholder with functional kanban board
+- Reuse existing kanban-board components from apps/web/src/components/kanban-board/
+- Display tasks grouped by status columns (to-do, in-progress, in-review, done)
+- Support drag-and-drop between columns to update task status
+- Show task cards with title, project, assignee, due date, priority
+- Apply current filters and search to kanban view
+- Maintain real-time updates when tasks change
+- Support bulk selection and operations
+- Responsive design for mobile/tablet
+
+### 2. Calendar View Implementation
+**Priority**: High
+**Persona**: Jennifer (Exec), David (Team Lead)
+**Epic**: 3.1-dashboards, 3.2-time
+
+**Acceptance Criteria**:
+- Replace "Calendar view coming soon..." placeholder with functional calendar
+- Display tasks based on due dates on calendar grid
+- Show monthly view with task indicators
+- Support week and day views for detailed planning
+- Color-code tasks by priority or status
+- Show task details on click/hover
+- Allow date navigation (previous/next month/week)
+- Apply current filters to calendar view
+- Handle tasks without due dates (show in separate section)
+- Responsive calendar layout
+
+### 3. New Task Functionality
+**Priority**: High
+**Persona**: Mike (Dev), Sarah (PM)
+**Epic**: 1.1-subtasks
+
+**Acceptance Criteria**:
+- Replace non-functional "New Task" button with working task creation
+- Open task creation modal/drawer on click
+- Form fields: title (required), description, project selection, assignee, priority, due date, labels
+- Validate required fields before submission
+- Create task via API and refresh task list
+- Support creating tasks in current workspace context
+- Pre-populate project if coming from project-specific view
+- Show success/error notifications
+- Close modal on successful creation or cancel
+
+### 4. Integration & UX Consistency
+**Priority**: Medium
+**Persona**: All personas
+
+**Acceptance Criteria**:
+- Maintain consistent styling with existing design system
+- Preserve current filtering, sorting, and search functionality across all views
+- Ensure view mode toggle works seamlessly
+- Maintain selected tasks state when switching views
+- Apply bulk operations consistently across views
+- Handle loading and error states gracefully
+- Ensure accessibility compliance (ARIA labels, keyboard navigation)
+
+## Technical Implementation
+
+### Components to Build/Enhance:
+1. **AllTasksKanbanView**: New component wrapping existing kanban-board
+2. **AllTasksCalendarView**: New calendar component
+3. **NewTaskModal/Drawer**: Task creation form component
+4. **Enhanced all-tasks.tsx**: Integration of new components
+
+### API Integration:
+- Use existing task APIs for CRUD operations
+- Leverage real-time WebSocket updates
+- Implement optimistic updates for better UX
+
+### Dependencies:
+- Reuse existing kanban-board components
+- Integrate with current task management APIs
+- Maintain workspace and project context
+- Use existing UI component library
+
+## Success Metrics
+- All placeholder components replaced with functional features
+- Task creation completion rate > 95%
+- View switching works without data loss
+- Performance maintains < 2s load time for 100+ tasks
+- Zero critical accessibility violations
+
+## Technical Constraints
+- Must integrate with existing React/TypeScript codebase
+- Use established design system and UI components
+- Maintain current filtering and search functionality
+- Preserve workspace/project context
+- Support real-time collaboration features 

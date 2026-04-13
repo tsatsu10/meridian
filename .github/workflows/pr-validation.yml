@@ -1,0 +1,424 @@
+name: 🔍 Pull Request Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # =====================================================
+  # PULL REQUEST VALIDATION
+  # =====================================================
+  pr-validation:
+    name: 🔍 PR Validation & Quality Check
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Setup Node.js & pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      # =====================================================
+      # PR METADATA VALIDATION
+      # =====================================================
+      - name: 🏷️ Validate PR title and description
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+          
+          echo "🔍 Validating PR title: $PR_TITLE"
+          
+          # Check PR title format (conventional commits)
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|ci|build)(\(.+\))?:\s.+ ]]; then
+            echo "❌ PR title should follow conventional commits format"
+            echo "Examples:"
+            echo "  feat: add user authentication"
+            echo "  fix(api): resolve database connection issue"
+            echo "  docs: update API documentation"
+            exit 1
+          fi
+          
+          # Check PR description exists
+          if [[ -z "$PR_BODY" || "$PR_BODY" == "null" ]]; then
+            echo "❌ PR description is required"
+            echo "Please provide a description explaining your changes"
+            exit 1
+          fi
+          
+          echo "✅ PR title and description are valid"
+
+      - name: 📏 Check PR size
+        run: |
+          echo "📏 Analyzing PR size..."
+          
+          # Get changed files count
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} | wc -l)
+          
+          # Get line changes
+          ADDITIONS=$(echo "${{ github.event.pull_request.additions }}")
+          DELETIONS=$(echo "${{ github.event.pull_request.deletions }}")
+          TOTAL_CHANGES=$((ADDITIONS + DELETIONS))
+          
+          echo "📊 PR Statistics:"
+          echo "  Files changed: $CHANGED_FILES"
+          echo "  Lines added: $ADDITIONS"
+          echo "  Lines deleted: $DELETIONS"
+          echo "  Total changes: $TOTAL_CHANGES"
+          
+          # Warn about large PRs
+          if [ $CHANGED_FILES -gt 20 ] || [ $TOTAL_CHANGES -gt 500 ]; then
+            echo "⚠️ This is a large PR. Consider breaking it into smaller chunks."
+            echo "Large PRs are harder to review and more likely to introduce issues."
+          fi
+          
+          # Fail on extremely large PRs
+          if [ $CHANGED_FILES -gt 50 ] || [ $TOTAL_CHANGES -gt 1000 ]; then
+            echo "❌ PR is too large for effective review"
+            echo "Please break this into smaller, focused PRs"
+            exit 1
+          fi
+          
+          echo "✅ PR size is reasonable for review"
+
+      # =====================================================
+      # DEPENDENCY CHANGES VALIDATION
+      # =====================================================
+      - name: 📦 Validate dependency changes
+        run: |
+          echo "📦 Checking for dependency changes..."
+          
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep -E "(package\.json|pnpm-lock\.yaml)"; then
+            echo "📦 Package files changed - validating dependencies"
+            
+            # Install dependencies
+            pnpm install --frozen-lockfile
+            
+            # Run security audit
+            echo "🔒 Running security audit on new dependencies..."
+            pnpm audit --audit-level moderate || {
+              echo "⚠️ Security vulnerabilities found in dependencies"
+              echo "Please review and address security issues before merging"
+            }
+            
+            # Check for development vs production dependencies
+            echo "🔍 Validating dependency categorization..."
+            
+            # You can add more specific dependency validation here
+            echo "✅ Dependency changes validated"
+          else
+            echo "ℹ️ No dependency changes detected"
+          fi
+
+      # =====================================================
+      # QUICK QUALITY CHECKS
+      # =====================================================
+      - name: 🧹 Quick lint check
+        run: |
+          pnpm install --frozen-lockfile
+          
+          echo "🧹 Running quick lint check..."
+          
+          # Check if API files changed
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep "apps/api/"; then
+            echo "🔍 Linting API changes..."
+            cd apps/api
+            npm run lint
+            cd ..
+          fi
+          
+          # Check if web files changed
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep "apps/web/"; then
+            echo "🔍 Linting Web changes..."
+            cd apps/web
+            npm run lint
+            cd ..
+          fi
+
+      - name: 🔍 Quick type check
+        run: |
+          echo "🔍 Running quick type check..."
+          
+          # Check if API files changed
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep "apps/api/"; then
+            echo "🔍 Type checking API changes..."
+            cd apps/api
+            npx tsc --noEmit --project tsconfig.json
+            cd ..
+          fi
+          
+          # Check if web files changed
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep "apps/web/"; then
+            echo "🔍 Type checking Web changes..."
+            cd apps/web
+            npx tsc --noEmit --project tsconfig.json
+            cd ..
+          fi
+
+      # =====================================================
+      # FILE CHANGES ANALYSIS
+      # =====================================================
+      - name: 📁 Analyze changed files
+        run: |
+          echo "📁 Analyzing changed files..."
+          
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
+          
+          # Categorize changes
+          HAS_API_CHANGES=$(echo "$CHANGED_FILES" | grep "apps/api/" | wc -l)
+          HAS_WEB_CHANGES=$(echo "$CHANGED_FILES" | grep "apps/web/" | wc -l)
+          HAS_CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E "\.(json|yaml|yml|config\.|\.config)" | wc -l)
+          HAS_TEST_CHANGES=$(echo "$CHANGED_FILES" | grep -E "\.(test|spec)\." | wc -l)
+          HAS_DOC_CHANGES=$(echo "$CHANGED_FILES" | grep -E "\.md$|docs/" | wc -l)
+          
+          echo "📊 Change analysis:"
+          echo "  API changes: $HAS_API_CHANGES files"
+          echo "  Web changes: $HAS_WEB_CHANGES files"
+          echo "  Config changes: $HAS_CONFIG_CHANGES files"
+          echo "  Test changes: $HAS_TEST_CHANGES files"
+          echo "  Documentation changes: $HAS_DOC_CHANGES files"
+          
+          # Validate test coverage for code changes
+          if [ $HAS_API_CHANGES -gt 0 ] || [ $HAS_WEB_CHANGES -gt 0 ]; then
+            if [ $HAS_TEST_CHANGES -eq 0 ]; then
+              echo "⚠️ Code changes detected but no test changes"
+              echo "Consider adding or updating tests for your changes"
+            else
+              echo "✅ Tests updated along with code changes"
+            fi
+          fi
+          
+          # Check for sensitive files
+          SENSITIVE_FILES=$(echo "$CHANGED_FILES" | grep -E "\.(env|key|pem|p12|pfx)$" | wc -l)
+          if [ $SENSITIVE_FILES -gt 0 ]; then
+            echo "⚠️ Sensitive files detected in changes"
+            echo "Please ensure no secrets are committed"
+          fi
+
+      # =====================================================
+      # SECURITY CHECKS
+      # =====================================================
+      - name: 🔒 Security checks
+        run: |
+          echo "🔒 Running security checks..."
+          
+          # Check for potential secrets in diff
+          git diff origin/${{ github.event.pull_request.base.ref }} > pr-diff.txt
+          
+          # Simple secret detection patterns
+          if grep -i -E "(password|secret|key|token|api[_-]?key)" pr-diff.txt | grep -E "^\+"; then
+            echo "⚠️ Potential secrets detected in PR diff:"
+            grep -i -E "(password|secret|key|token|api[_-]?key)" pr-diff.txt | grep -E "^\+" | head -5
+            echo "Please review these changes to ensure no secrets are exposed"
+          fi
+          
+          # Check for console.log in production code (should be removed)
+          if git diff origin/${{ github.event.pull_request.base.ref }} | grep -E "^\+.*console\.(log|debug|info)" | grep -v test; then
+            echo "⚠️ Console statements found in non-test code:"
+            git diff origin/${{ github.event.pull_request.base.ref }} | grep -E "^\+.*console\.(log|debug|info)" | grep -v test | head -5
+            echo "Consider removing console statements from production code"
+          fi
+          
+          rm -f pr-diff.txt
+
+  # =====================================================
+  # AUTOMATED CODE REVIEW
+  # =====================================================
+  code-review:
+    name: 🤖 Automated Code Review
+    runs-on: ubuntu-latest
+    needs: pr-validation
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🤖 Automated code review
+        run: |
+          echo "🤖 Running automated code review..."
+          
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
+          
+          echo "📝 Code review suggestions:"
+          
+          # Check for TypeScript best practices
+          if echo "$CHANGED_FILES" | grep "\.tsx\?$"; then
+            echo "🔍 TypeScript files detected - checking best practices..."
+            
+            # Check for any usage
+            if git diff origin/${{ github.event.pull_request.base.ref }} | grep -E "^\+.*:\s*any"; then
+              echo "⚠️ 'any' type usage detected. Consider using more specific types."
+            fi
+            
+            # Check for missing return types on functions
+            if git diff origin/${{ github.event.pull_request.base.ref }} | grep -E "^\+.*function.*\(" | grep -v ":\s*(void|Promise|[A-Z])" | head -3; then
+              echo "💡 Consider adding explicit return types to functions"
+            fi
+          fi
+          
+          # Check for React best practices
+          if echo "$CHANGED_FILES" | grep "\.tsx$"; then
+            echo "🔍 React files detected - checking best practices..."
+            
+            # Check for missing keys in lists
+            if git diff origin/${{ github.event.pull_request.base.ref }} | grep -E "^\+.*\.map\(" | head -3; then
+              echo "💡 When using .map(), ensure each item has a unique 'key' prop"
+            fi
+          fi
+          
+          # Performance suggestions
+          if git diff origin/${{ github.event.pull_request.base.ref }} | grep -E "^\+.*(forEach|for.*in|while)" | head -3; then
+            echo "💡 Consider performance implications of loops, especially with large datasets"
+          fi
+          
+          echo "✅ Automated code review completed"
+
+  # =====================================================
+  # BUILD VALIDATION
+  # =====================================================
+  build-check:
+    name: 🏗️ Quick Build Check
+    runs-on: ubuntu-latest
+    needs: pr-validation
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js & pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Quick build test
+        run: |
+          echo "🏗️ Testing if changes break the build..."
+          
+          # Check if API files changed
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep "apps/api/"; then
+            echo "🏗️ Testing API build..."
+            cd apps/api
+            npm run build
+            cd ..
+          fi
+          
+          # Check if web files changed
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep "apps/web/"; then
+            echo "🏗️ Testing Web build..."
+            cd apps/web
+            npm run build
+            cd ..
+          fi
+          
+          echo "✅ Build test passed"
+
+  # =====================================================
+  # PR STATUS SUMMARY
+  # =====================================================
+  pr-summary:
+    name: 📋 PR Summary
+    runs-on: ubuntu-latest
+    needs: [pr-validation, code-review, build-check]
+    if: always()
+    
+    steps:
+      - name: 📋 Generate PR summary
+        run: |
+          echo "📋 Pull Request Validation Summary"
+          echo "=================================="
+          echo ""
+          echo "🔍 PR Validation: ${{ needs.pr-validation.result }}"
+          echo "🤖 Code Review: ${{ needs.code-review.result }}"
+          echo "🏗️ Build Check: ${{ needs.build-check.result }}"
+          echo ""
+          
+          if [ "${{ needs.pr-validation.result }}" = "success" ] && [ "${{ needs.code-review.result }}" = "success" ] && [ "${{ needs.build-check.result }}" = "success" ]; then
+            echo "✅ All PR validation checks passed!"
+            echo "This PR is ready for manual review."
+          else
+            echo "❌ Some validation checks failed."
+            echo "Please address the issues before requesting review."
+          fi
+          
+          echo ""
+          echo "📊 Next Steps:"
+          echo "1. Address any failing checks above"
+          echo "2. Request review from team members"
+          echo "3. Full CI/CD pipeline will run after approval"
+
+      - name: 🔔 Add PR comment with summary
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo, number } = context.issue;
+            
+            const prValidation = '${{ needs.pr-validation.result }}';
+            const codeReview = '${{ needs.code-review.result }}';
+            const buildCheck = '${{ needs.build-check.result }}';
+            
+            const allPassed = prValidation === 'success' && codeReview === 'success' && buildCheck === 'success';
+            
+            const statusEmoji = {
+              success: '✅',
+              failure: '❌',
+              cancelled: '⏸️',
+              skipped: '⏭️'
+            };
+            
+            const comment = `
+            ## 🔍 PR Validation Summary
+            
+            | Check | Status | Result |
+            |-------|--------|---------|
+            | PR Validation | ${statusEmoji[prValidation] || '❓'} | ${prValidation} |
+            | Code Review | ${statusEmoji[codeReview] || '❓'} | ${codeReview} |
+            | Build Check | ${statusEmoji[buildCheck] || '❓'} | ${buildCheck} |
+            
+            ${allPassed 
+              ? '🎉 **All validation checks passed!** This PR is ready for manual review.' 
+              : '⚠️ **Some checks failed.** Please address the issues before requesting review.'
+            }
+            
+            ### 📊 Next Steps:
+            1. ${allPassed ? '✅' : '🔄'} Address any failing checks
+            2. 👥 Request review from team members  
+            3. 🚀 Full CI/CD pipeline will run after approval
+            
+            ---
+            *This comment was automatically generated by the PR validation workflow.*
+            `;
+            
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: comment
+            });

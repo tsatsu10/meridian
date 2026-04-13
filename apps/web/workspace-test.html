@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Workspace Test</title>
+    <script>
+        // Simple workspace test without TypeScript compilation
+        async function testWorkspaceAPI() {
+            console.log('=== WORKSPACE API TEST ===');
+
+            // Test authentication
+            const authResponse = await fetch('http://localhost:3008/api/user/me', {
+                credentials: 'include'
+            });
+            console.log('Auth status:', authResponse.status);
+
+            if (authResponse.status === 200) {
+                const user = await authResponse.json();
+                console.log('User:', user);
+
+                // Test workspace list
+                const workspacesResponse = await fetch('http://localhost:3008/api/workspace', {
+                    credentials: 'include'
+                });
+                console.log('Workspaces status:', workspacesResponse.status);
+
+                if (workspacesResponse.status === 200) {
+                    const workspaces = await workspacesResponse.json();
+                    console.log('Workspaces count:', workspaces.length);
+                    console.log('Workspaces:', workspaces.map(w => ({ id: w.id, name: w.name })));
+
+                    // Test workspace creation
+                    console.log('Creating test workspace...');
+                    const createResponse = await fetch('http://localhost:3008/api/workspace', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ name: 'API Test Workspace' })
+                    });
+
+                    console.log('Create status:', createResponse.status);
+                    if (createResponse.status === 201) {
+                        const newWorkspace = await createResponse.json();
+                        console.log('Created workspace:', newWorkspace);
+
+                        // Test updated list
+                        const updatedResponse = await fetch('http://localhost:3008/api/workspace', {
+                            credentials: 'include'
+                        });
+                        const updatedWorkspaces = await updatedResponse.json();
+                        console.log('Updated workspaces count:', updatedWorkspaces.length);
+
+                        console.log('✅ WORKSPACE API TEST PASSED');
+                    } else {
+                        console.log('❌ Workspace creation failed');
+                    }
+                } else {
+                    console.log('❌ Workspace list failed');
+                }
+            } else {
+                console.log('❌ Authentication failed - need to sign in first');
+            }
+        }
+
+        // Auto-run test when page loads
+        window.onload = testWorkspaceAPI;
+    </script>
+</head>
+<body>
+    <h1>Workspace API Test</h1>
+    <p>Check browser console for results...</p>
+    <button onclick="testWorkspaceAPI()">Run Test Again</button>
+</body>
+</html>

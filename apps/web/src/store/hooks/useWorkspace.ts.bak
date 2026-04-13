@@ -1,0 +1,539 @@
+import { useCallback, useMemo, useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from './index';
+import {
+  loadWorkspaces,
+  loadWorkspace,
+  createWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
+  loadWorkspaceMembers,
+  inviteMember,
+  updateMemberRole,
+  removeMember,
+  loadInvitations,
+  cancelInvitation,
+  loadUsage,
+  switchWorkspace,
+  setLoading,
+  setError,
+  clearErrors,
+  setShowInviteModal,
+  setShowSettingsModal,
+  setSelectedMemberId,
+  setMemberSearch,
+  setMemberFilter,
+  setOnlineMembers,
+  addOnlineMember,
+  removeOnlineMember,
+  setTypingMembers,
+  updateWorkspaceLocally,
+  updateMemberLocally,
+  resetWorkspace,
+  selectWorkspace,
+  selectCurrentWorkspace,
+  selectWorkspaces,
+  selectWorkspaceMembers,
+  selectWorkspaceInvitations,
+  selectWorkspaceUsage,
+  selectWorkspaceLoading,
+  selectWorkspaceErrors,
+  selectOnlineMembers,
+  selectFilteredMembers,
+  selectMemberById,
+  selectWorkspacePermissions,
+  selectCanManageWorkspace,
+  selectIsWorkspaceOwner,
+} from '../slices/workspaceSlice';
+
+export interface UseWorkspaceReturn {
+  // State
+  currentWorkspace: ReturnType<typeof selectCurrentWorkspace>;
+  workspaces: ReturnType<typeof selectWorkspaces>;
+  members: ReturnType<typeof selectWorkspaceMembers>;
+  filteredMembers: ReturnType<typeof selectFilteredMembers>;
+  invitations: ReturnType<typeof selectWorkspaceInvitations>;
+  usage: ReturnType<typeof selectWorkspaceUsage>;
+  loading: ReturnType<typeof selectWorkspaceLoading>;
+  errors: ReturnType<typeof selectWorkspaceErrors>;
+  onlineMembers: ReturnType<typeof selectOnlineMembers>;
+  permissions: string[];
+  canManage: boolean;
+
+  // Actions
+  loadWorkspaces: () => Promise<any>;
+  loadWorkspace: (workspaceId: string) => Promise<any>;
+  createWorkspace: (data: any) => Promise<any>;
+  updateWorkspace: (workspaceId: string, data: any) => Promise<any>;
+  deleteWorkspace: (workspaceId: string) => Promise<any>;
+  switchWorkspace: (workspaceId: string) => Promise<any>;
+  
+  // Member management
+  loadMembers: (workspaceId: string) => Promise<any>;
+  inviteMember: (workspaceId: string, email: string, role: string) => Promise<any>;
+  updateMemberRole: (workspaceId: string, memberId: string, role: string) => Promise<any>;
+  removeMember: (workspaceId: string, memberId: string) => Promise<any>;
+  
+  // Invitations
+  loadInvitations: (workspaceId: string) => Promise<any>;
+  cancelInvitation: (workspaceId: string, invitationId: string) => Promise<any>;
+  
+  // Usage
+  loadUsage: (workspaceId: string) => Promise<any>;
+  
+  // UI actions
+  setShowInviteModal: (show: boolean) => void;
+  setShowSettingsModal: (show: boolean) => void;
+  setSelectedMember: (memberId: string | null) => void;
+  setMemberSearch: (query: string) => void;
+  setMemberFilter: (filter: any) => void;
+  
+  // Real-time updates
+  updateOnlineMembers: (userIds: string[]) => void;
+  addOnlineMember: (userId: string) => void;
+  removeOnlineMember: (userId: string) => void;
+  
+  // Utilities
+  getMemberById: (memberId: string) => any;
+  isOwner: (userId: string) => boolean;
+  clearErrors: () => void;
+  updateWorkspaceLocally: (workspaceId: string, data: any) => void;
+  updateMemberLocally: (memberId: string, data: any) => void;
+  
+  // Reset
+  reset: () => void;
+}
+
+export function useWorkspace(userId?: string): UseWorkspaceReturn {
+  const dispatch = useAppDispatch();
+  
+  // Selectors
+  const workspaceState = useAppSelector(selectWorkspace);
+  const currentWorkspace = useAppSelector(selectCurrentWorkspace);
+  const workspaces = useAppSelector(selectWorkspaces);
+  const members = useAppSelector(selectWorkspaceMembers);
+  const filteredMembers = useAppSelector(selectFilteredMembers);
+  const invitations = useAppSelector(selectWorkspaceInvitations);
+  const usage = useAppSelector(selectWorkspaceUsage);
+  const loading = useAppSelector(selectWorkspaceLoading);
+  const errors = useAppSelector(selectWorkspaceErrors);
+  const onlineMembers = useAppSelector(selectOnlineMembers);
+  const permissions = useAppSelector(selectWorkspacePermissions);
+  const canManage = useAppSelector(selectCanManageWorkspace);
+
+  // Action creators
+  const handleLoadWorkspaces = useCallback(async () => {
+    try {
+      const result = await dispatch(loadWorkspaces());
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleLoadWorkspace = useCallback(async (workspaceId: string) => {
+    try {
+      const result = await dispatch(loadWorkspace(workspaceId));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleCreateWorkspace = useCallback(async (data: any) => {
+    try {
+      const result = await dispatch(createWorkspace(data));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleUpdateWorkspace = useCallback(async (workspaceId: string, data: any) => {
+    try {
+      const result = await dispatch(updateWorkspace({ workspaceId, data }));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleDeleteWorkspace = useCallback(async (workspaceId: string) => {
+    try {
+      const result = await dispatch(deleteWorkspace(workspaceId));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleSwitchWorkspace = useCallback(async (workspaceId: string) => {
+    try {
+      const result = await dispatch(switchWorkspace(workspaceId));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  // Member management
+  const handleLoadMembers = useCallback(async (workspaceId: string) => {
+    try {
+      const result = await dispatch(loadWorkspaceMembers(workspaceId));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleInviteMember = useCallback(async (workspaceId: string, email: string, role: string) => {
+    try {
+      const result = await dispatch(inviteMember({ workspaceId, email, role }));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleUpdateMemberRole = useCallback(async (workspaceId: string, memberId: string, role: string) => {
+    try {
+      const result = await dispatch(updateMemberRole({ workspaceId, memberId, role }));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleRemoveMember = useCallback(async (workspaceId: string, memberId: string) => {
+    try {
+      const result = await dispatch(removeMember({ workspaceId, memberId }));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  // Invitations
+  const handleLoadInvitations = useCallback(async (workspaceId: string) => {
+    try {
+      const result = await dispatch(loadInvitations(workspaceId));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  const handleCancelInvitation = useCallback(async (workspaceId: string, invitationId: string) => {
+    try {
+      const result = await dispatch(cancelInvitation({ workspaceId, invitationId }));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  // Usage
+  const handleLoadUsage = useCallback(async (workspaceId: string) => {
+    try {
+      const result = await dispatch(loadUsage(workspaceId));
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
+  // UI actions
+  const handleSetShowInviteModal = useCallback((show: boolean) => {
+    dispatch(setShowInviteModal(show));
+  }, [dispatch]);
+
+  const handleSetShowSettingsModal = useCallback((show: boolean) => {
+    dispatch(setShowSettingsModal(show));
+  }, [dispatch]);
+
+  const handleSetSelectedMember = useCallback((memberId: string | null) => {
+    dispatch(setSelectedMemberId(memberId));
+  }, [dispatch]);
+
+  const handleSetMemberSearch = useCallback((query: string) => {
+    dispatch(setMemberSearch(query));
+  }, [dispatch]);
+
+  const handleSetMemberFilter = useCallback((filter: any) => {
+    dispatch(setMemberFilter(filter));
+  }, [dispatch]);
+
+  // Real-time updates
+  const handleUpdateOnlineMembers = useCallback((userIds: string[]) => {
+    dispatch(setOnlineMembers(userIds));
+  }, [dispatch]);
+
+  const handleAddOnlineMember = useCallback((userId: string) => {
+    dispatch(addOnlineMember(userId));
+  }, [dispatch]);
+
+  const handleRemoveOnlineMember = useCallback((userId: string) => {
+    dispatch(removeOnlineMember(userId));
+  }, [dispatch]);
+
+  // Utilities
+  const getMemberById = useCallback((memberId: string) => {
+    const memberSelector = selectMemberById(memberId);
+    return memberSelector({ workspace: workspaceState });
+  }, [workspaceState]);
+
+  const isOwner = useCallback((userId: string) => {
+    if (!userId) return false;
+    const ownerSelector = selectIsWorkspaceOwner(userId);
+    return ownerSelector({ workspace: workspaceState });
+  }, [workspaceState]);
+
+  const handleClearErrors = useCallback(() => {
+    dispatch(clearErrors());
+  }, [dispatch]);
+
+  const handleUpdateWorkspaceLocally = useCallback((workspaceId: string, data: any) => {
+    dispatch(updateWorkspaceLocally({ workspaceId, data }));
+  }, [dispatch]);
+
+  const handleUpdateMemberLocally = useCallback((memberId: string, data: any) => {
+    dispatch(updateMemberLocally({ memberId, data }));
+  }, [dispatch]);
+
+  const handleReset = useCallback(() => {
+    dispatch(resetWorkspace());
+  }, [dispatch]);
+
+  return {
+    // State
+    currentWorkspace,
+    workspaces,
+    members,
+    filteredMembers,
+    invitations,
+    usage,
+    loading,
+    errors,
+    onlineMembers,
+    permissions,
+    canManage,
+
+    // Actions
+    loadWorkspaces: handleLoadWorkspaces,
+    loadWorkspace: handleLoadWorkspace,
+    createWorkspace: handleCreateWorkspace,
+    updateWorkspace: handleUpdateWorkspace,
+    deleteWorkspace: handleDeleteWorkspace,
+    switchWorkspace: handleSwitchWorkspace,
+
+    // Member management
+    loadMembers: handleLoadMembers,
+    inviteMember: handleInviteMember,
+    updateMemberRole: handleUpdateMemberRole,
+    removeMember: handleRemoveMember,
+
+    // Invitations
+    loadInvitations: handleLoadInvitations,
+    cancelInvitation: handleCancelInvitation,
+
+    // Usage
+    loadUsage: handleLoadUsage,
+
+    // UI actions
+    setShowInviteModal: handleSetShowInviteModal,
+    setShowSettingsModal: handleSetShowSettingsModal,
+    setSelectedMember: handleSetSelectedMember,
+    setMemberSearch: handleSetMemberSearch,
+    setMemberFilter: handleSetMemberFilter,
+
+    // Real-time updates
+    updateOnlineMembers: handleUpdateOnlineMembers,
+    addOnlineMember: handleAddOnlineMember,
+    removeOnlineMember: handleRemoveOnlineMember,
+
+    // Utilities
+    getMemberById,
+    isOwner,
+    clearErrors: handleClearErrors,
+    updateWorkspaceLocally: handleUpdateWorkspaceLocally,
+    updateMemberLocally: handleUpdateMemberLocally,
+
+    // Reset
+    reset: handleReset,
+  };
+}
+
+// Enhanced hook with workspace context and automatic loading
+export function useWorkspaceWithContext(workspaceId?: string): UseWorkspaceReturn & {
+  isLoading: boolean;
+  hasError: boolean;
+  retryCount: number;
+  retry: () => void;
+} {
+  const workspace = useWorkspace();
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Auto-load workspace data when workspace ID changes
+  useEffect(() => {
+    if (workspaceId && workspaceId !== workspace.currentWorkspace?.id) {
+      const loadData = async () => {
+        try {
+          await workspace.switchWorkspace(workspaceId);
+        } catch (error) {
+          console.error('Failed to load workspace:', error);
+        }
+      };
+      
+      loadData();
+    }
+  }, [workspaceId, workspace.currentWorkspace?.id, workspace.switchWorkspace]);
+
+  // Auto-load workspaces list if empty
+  useEffect(() => {
+    if (workspace.workspaces.length === 0 && !workspace.loading.workspace) {
+      workspace.loadWorkspaces().catch(error => {
+        console.error('Failed to load workspaces:', error);
+      });
+    }
+  }, [workspace.workspaces.length, workspace.loading.workspace, workspace.loadWorkspaces]);
+
+  // Auto-refresh usage data periodically
+  useEffect(() => {
+    if (!workspace.currentWorkspace?.id) return;
+
+    const interval = setInterval(() => {
+      workspace.loadUsage(workspace.currentWorkspace!.id).catch(error => {
+        console.error('Failed to refresh usage data:', error);
+      });
+    }, 60000); // Refresh every minute
+
+    return () => clearInterval(interval);
+  }, [workspace.currentWorkspace?.id, workspace.loadUsage]);
+
+  const isLoading = useMemo(() => {
+    return Object.values(workspace.loading).some(loading => loading);
+  }, [workspace.loading]);
+
+  const hasError = useMemo(() => {
+    return Object.values(workspace.errors).some(error => error !== null);
+  }, [workspace.errors]);
+
+  const retry = useCallback(() => {
+    setRetryCount(prev => prev + 1);
+    workspace.clearErrors();
+    
+    if (workspaceId) {
+      workspace.switchWorkspace(workspaceId).catch(error => {
+        console.error('Retry failed:', error);
+      });
+    } else {
+      workspace.loadWorkspaces().catch(error => {
+        console.error('Retry failed:', error);
+      });
+    }
+  }, [workspaceId, workspace]);
+
+  return {
+    ...workspace,
+    isLoading,
+    hasError,
+    retryCount,
+    retry,
+  };
+}
+
+// Hook for workspace selection and switching
+export function useWorkspaceSelection() {
+  const workspace = useWorkspace();
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
+
+  const selectWorkspace = useCallback(async (workspaceId: string) => {
+    try {
+      setSelectedWorkspaceId(workspaceId);
+      await workspace.switchWorkspace(workspaceId);
+    } catch (error) {
+      setSelectedWorkspaceId(null);
+      throw error;
+    }
+  }, [workspace]);
+
+  const selectedWorkspace = useMemo(() => {
+    return workspace.workspaces.find(w => w.id === selectedWorkspaceId) || null;
+  }, [workspace.workspaces, selectedWorkspaceId]);
+
+  return {
+    workspaces: workspace.workspaces,
+    selectedWorkspace,
+    selectedWorkspaceId,
+    selectWorkspace,
+    currentWorkspace: workspace.currentWorkspace,
+    loading: workspace.loading.workspace,
+    error: workspace.errors.workspace,
+  };
+}
+
+// Hook for workspace member management
+export function useWorkspaceMembers(workspaceId: string) {
+  const workspace = useWorkspace();
+
+  // Auto-load members when workspace changes
+  useEffect(() => {
+    if (workspaceId) {
+      workspace.loadMembers(workspaceId).catch(error => {
+        console.error('Failed to load members:', error);
+      });
+    }
+  }, [workspaceId, workspace.loadMembers]);
+
+  const inviteMultipleMembers = useCallback(async (
+    emails: string[], 
+    role: string
+  ) => {
+    const results = await Promise.allSettled(
+      emails.map(email => workspace.inviteMember(workspaceId, email, role))
+    );
+
+    const successful = results.filter(result => result.status === 'fulfilled');
+    const failed = results.filter(result => result.status === 'rejected');
+
+    return { successful: successful.length, failed: failed.length, errors: failed };
+  }, [workspaceId, workspace.inviteMember]);
+
+  const bulkUpdateMemberRoles = useCallback(async (
+    memberUpdates: Array<{ memberId: string; role: string }>
+  ) => {
+    const results = await Promise.allSettled(
+      memberUpdates.map(({ memberId, role }) => 
+        workspace.updateMemberRole(workspaceId, memberId, role)
+      )
+    );
+
+    const successful = results.filter(result => result.status === 'fulfilled');
+    const failed = results.filter(result => result.status === 'rejected');
+
+    return { successful: successful.length, failed: failed.length, errors: failed };
+  }, [workspaceId, workspace.updateMemberRole]);
+
+  return {
+    members: workspace.members,
+    filteredMembers: workspace.filteredMembers,
+    onlineMembers: workspace.onlineMembers,
+    invitations: workspace.invitations,
+    loading: workspace.loading.members,
+    error: workspace.errors.members,
+    
+    // Enhanced actions
+    inviteMultipleMembers,
+    bulkUpdateMemberRoles,
+    
+    // Original actions
+    inviteMember: (email: string, role: string) => workspace.inviteMember(workspaceId, email, role),
+    updateMemberRole: workspace.updateMemberRole,
+    removeMember: (memberId: string) => workspace.removeMember(workspaceId, memberId),
+    
+    // Filters and search
+    setMemberSearch: workspace.setMemberSearch,
+    setMemberFilter: workspace.setMemberFilter,
+  };
+}
+
+import { useState, useEffect, useMemo, useCallback } from 'react';

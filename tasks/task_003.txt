@@ -1,0 +1,55 @@
+# Task ID: 3
+# Title: Phase 2: Advanced Analytics & Reporting System
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Implement a comprehensive analytics and reporting system with custom report builder, scheduled reports, and interactive widgets to enhance data-driven decision making across all user personas.
+# Details:
+
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Phase 2.1: Custom Report Builder [done]
+### Dependencies: None
+### Description: Implement a visual report builder with drag-and-drop interface, metric selection, and visualization configuration. Features include 20+ metrics, 6+ chart types, real-time preview, and RBAC integration.
+### Details:
+
+
+## 2. Phase 2.2: Scheduled Reports & Automation [pending]
+### Dependencies: 3.1
+### Description: Implement a comprehensive scheduled reports system with flexible scheduling options, multi-method delivery (email, Slack, Teams), execution tracking, and template management.
+### Details:
+
+
+## 3. Phase 2.3: Interactive Widgets & Dashboards [pending]
+### Dependencies: 3.1, 3.2
+### Description: Implement real-time data visualization widgets, customizable dashboard layouts, cross-widget interactivity, and mobile-optimized views with export capabilities.
+### Details:
+
+
+## 4. Implement Visual Report Designer Interface [done]
+### Dependencies: None
+### Description: Create the main report builder interface with drag-and-drop functionality, metric selection panels, and visualization configuration options. Implement responsive layout and real-time preview.
+### Details:
+
+
+## 5. Develop Metric Library System [in-progress]
+### Dependencies: None
+### Description: Implement the comprehensive metric library with 20+ metrics across 5 categories (Project, Task, Team, Time, Custom). Include metric definitions, calculations, and data source mappings.
+### Details:
+
+
+## 6. Create Visualization Components [pending]
+### Dependencies: None
+### Description: Develop 6+ chart types including metric cards, bar charts, line charts, pie charts, gauges, and heatmaps. Implement configuration options and real-time data binding.
+### Details:
+
+
+## 7. Implement RBAC Integration [pending]
+### Dependencies: None
+### Description: Integrate role-based access control for report creation and management. Implement permission checks, workspace scoping, and user role validation throughout the report builder.
+### Details:
+
+
