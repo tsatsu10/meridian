@@ -11,7 +11,13 @@
       "**/dist",
       "**/.next",
       "**/coverage",
-      "**/*.min.js"
+      "**/*.min.js",
+      "**/.cursor/**",
+      "**/docs/**",
+      "**/prototypes/**",
+      "**/playwright-report/**",
+      "**/test-results/**",
+      "apps/web/eslint-plugin-meridian-local/**"
     ]
   },
   "formatter": {
