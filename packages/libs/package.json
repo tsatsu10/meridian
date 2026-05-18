@@ -5,7 +5,7 @@
 	"types": "./src/index.ts",
 	"license": "MIT",
 	"dependencies": {
-		"hono": "^4.7.9"
+		"hono": "^4.12.19"
 	},
 	"scripts": {
 		"lint": "tsc --noEmit"
