@@ -35,9 +35,6 @@ export const userRole = pgEnum("user_role", [
 ]);
 export const priority = pgEnum("priority", ['low', 'medium', 'high', 'urgent']);
 export const taskStatus = pgEnum("task_status", ['todo', 'in_progress', 'done']);
-export const helpArticleCategory = pgEnum("help_article_category", ['getting-started', 'features', 'integrations', 'troubleshooting', 'best-practices']);
-export const helpArticleDifficulty = pgEnum("help_article_difficulty", ['beginner', 'intermediate', 'advanced']);
-export const helpContentType = pgEnum("help_content_type", ['article', 'video', 'faq']);
 export const eventType = pgEnum("event_type", ['meeting', 'deadline', 'time-off', 'workload', 'milestone', 'other']);
 export const eventStatus = pgEnum("event_status", ['scheduled', 'in-progress', 'completed', 'cancelled']);
 export const attendeeStatus = pgEnum("attendee_status", ['pending', 'accepted', 'declined', 'maybe']);
@@ -358,105 +355,6 @@ export const teamMembers = pgTable("team_members", {
   addedBy: text("added_by").references(() => users.id),
 });
 
-/**
- * Team Messages Table
- * Stores messages in team channels
- * Schema matches existing database structure from team-messages.ts
- */
-export const teamMessages = pgTable("team_messages", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
-  // References
-  teamId: text("team_id")
-    .notNull()
-    .references(() => teams.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .references(() => users.id, { onDelete: "set null" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  
-  // Content
-  content: text("content").notNull(),
-  messageType: text("message_type").notNull().default("text"), // 'text', 'file', 'announcement', 'system'
-  
-  // Threading
-  replyToId: text("reply_to_id").references((): any => teamMessages.id, { onDelete: "set null" }),
-  threadCount: text("thread_count").default("0"), // TEXT not INTEGER!
-  
-  // Metadata
-  mentions: jsonb("mentions").$type<string[]>().default([]),
-  attachments: jsonb("attachments"),
-  metadata: jsonb("metadata"),
-  
-  // Edit/Delete status
-  isEdited: boolean("is_edited").default(false),
-  editedAt: timestamp("edited_at", { withTimezone: true }),
-  isDeleted: boolean("is_deleted").default(false),
-  deletedAt: timestamp("deleted_at", { withTimezone: true }),
-  
-  // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  // Indexes for performance
-  teamIdIdx: index("team_messages_team_id_idx").on(table.teamId),
-  userEmailIdx: index("team_messages_user_email_idx").on(table.userEmail),
-  createdAtIdx: index("team_messages_created_at_idx").on(table.createdAt),
-  replyToIdx: index("team_messages_reply_to_idx").on(table.replyToId),
-  messageTypeIdx: index("team_messages_type_idx").on(table.messageType),
-  teamCreatedIdx: index("team_messages_team_created_idx").on(table.teamId, table.createdAt),
-}));
-
-/**
- * Team Message Reactions Table
- * Stores emoji reactions to team messages
- * Schema matches existing database structure from team-messages.ts
- */
-export const teamMessageReactions = pgTable("team_message_reactions", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
-  messageId: text("message_id")
-    .notNull()
-    .references(() => teamMessages.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .references(() => users.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  
-  emoji: text("emoji").notNull(),
-  
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  messageIdIdx: index("team_reactions_message_id_idx").on(table.messageId),
-  userEmailIdx: index("team_reactions_user_email_idx").on(table.userEmail),
-  uniqueReactionIdx: index("team_reactions_unique_idx").on(table.messageId, table.userEmail, table.emoji),
-}));
-
-/**
- * Team Message Read Status Table  
- * Tracks which team messages have been read by users
- * Schema matches existing database structure from team-messages.ts
- * Uses composite PRIMARY KEY (messageId, userEmail) - NO separate id field!
- */
-export const teamMessageReadStatus = pgTable("team_message_read_status", {
-  messageId: text("message_id")
-    .notNull()
-    .references(() => teamMessages.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .references(() => users.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  
-  readAt: timestamp("read_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.messageId, table.userEmail] }),
-  messageIdIdx: index("team_read_status_message_id_idx").on(table.messageId),
-  userEmailIdx: index("team_read_status_user_email_idx").on(table.userEmail),
-  messageUserIdx: index("team_read_status_message_user_idx").on(table.messageId, table.userEmail),
-}));
 
 export const statusColumns = pgTable("status_columns", {
   id: text("id").$defaultFn(() => createId()).primaryKey(),
@@ -545,8 +443,6 @@ export const attachments = pgTable("attachments", {
   caption: text("caption"), // Optional description/message with file
   taskId: text("task_id").references(() => tasks.id, { onDelete: "cascade" }),
   commentId: text("comment_id"),
-  messageId: text("message_id").references(() => messagesTable.id, { onDelete: "cascade" }), // For chat attachments
-  channelId: text("channel_id").references(() => channelTable.id, { onDelete: "cascade" }), // For chat context
   projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
   workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
   uploadedBy: text("uploaded_by")
@@ -578,46 +474,6 @@ export const milestone = pgTable("milestone", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// @epic-3.2-integrations: Third-party integration connections
-export const integrationConnection = pgTable("integration_connection", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  provider: text("provider").notNull(), // 'github', 'slack', 'jira', 'discord', etc.
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  config: jsonb("config").notNull(), // Provider-specific configuration
-  credentials: jsonb("credentials"), // Encrypted credentials
-  status: text("status").notNull().default("active"), // 'active', 'inactive', 'error'
-  lastSync: timestamp("last_sync", { withTimezone: true }),
-  syncStatus: text("sync_status"), // 'success', 'failed', 'pending'
-  errorMessage: text("error_message"),
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-3.2-integrations: Webhook endpoints for integration events
-export const webhookEndpoint = pgTable("webhook_endpoint", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  url: text("url").notNull(),
-  secret: text("secret"), // Webhook signing secret
-  provider: text("provider"), // Optional: which provider this webhook is for
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  integrationId: text("integration_id").references(() => integrationConnection.id, { onDelete: "cascade" }),
-  events: jsonb("events").notNull(), // Array of event types to subscribe to
-  isActive: boolean("is_active").default(true),
-  lastTriggered: timestamp("last_triggered", { withTimezone: true }),
-  failureCount: integer("failure_count").default(0),
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
 // @epic-3.2-integrations: API keys for integration authentication
 export const apiKey = pgTable("api_key", {
   id: text("id").$defaultFn(() => createId()).primaryKey(),
@@ -627,7 +483,6 @@ export const apiKey = pgTable("api_key", {
   workspaceId: text("workspace_id")
     .notNull()
     .references(() => workspaces.id, { onDelete: "cascade" }),
-  integrationId: text("integration_id").references(() => integrationConnection.id, { onDelete: "cascade" }),
   scopes: jsonb("scopes"), // Permissions/scopes for this key
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   lastUsed: timestamp("last_used", { withTimezone: true }),
@@ -637,173 +492,6 @@ export const apiKey = pgTable("api_key", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
-
-// @epic-3.1-automation-engine: Automation rules for workflow triggers
-export const automationRule = pgTable("automation_rule", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
-  trigger: jsonb("trigger").notNull(), // Trigger configuration
-  conditions: jsonb("conditions"), // Conditions that must be met
-  actions: jsonb("actions").notNull(), // Actions to execute
-  isActive: boolean("is_active").default(true),
-  executionCount: integer("execution_count").default(0),
-  lastExecuted: timestamp("last_executed", { withTimezone: true }),
-  priority: integer("priority").default(0),
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-3.1-automation-engine: Workflow templates for reusable automation
-export const workflowTemplate = pgTable("workflow_template", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  category: text("category").notNull(), // 'task_automation', 'notification', 'integration', etc.
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  triggerConfig: text("trigger_config").notNull(), // JSON string of triggers
-  actionConfig: text("action_config").notNull(), // JSON string of actions
-  conditionConfig: text("condition_config"), // JSON string of conditions
-  isActive: boolean("is_active").default(true),
-  isGlobal: boolean("is_global").default(false), // Available to all workspaces
-  usageCount: integer("usage_count").default(0),
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-3.1-automation-engine: Workflow instances for active workflows
-export const workflowInstance = pgTable("workflow_instance", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  templateId: text("template_id").references(() => workflowTemplate.id, { onDelete: "set null" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
-  taskId: text("task_id").references(() => tasks.id, { onDelete: "cascade" }),
-  teamId: text("team_id").references(() => teams.id, { onDelete: "cascade" }),
-  status: text("status").notNull().default("pending"), // 'pending', 'running', 'completed', 'failed', 'cancelled'
-  currentStep: integer("current_step").default(0),
-  totalSteps: integer("total_steps").default(0),
-  config: jsonb("config"), // Instance-specific configuration
-  executionData: jsonb("execution_data"), // Runtime data and results
-  startedAt: timestamp("started_at", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  error: text("error"),
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-3.1-automation-engine: Workflow execution history
-export const workflowExecution = pgTable("workflow_execution", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  instanceId: text("instance_id")
-    .notNull()
-    .references(() => workflowInstance.id, { onDelete: "cascade" }),
-  templateId: text("template_id").references(() => workflowTemplate.id, { onDelete: "set null" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  status: text("status").notNull(), // 'success', 'failed', 'skipped'
-  stepNumber: integer("step_number").notNull(),
-  stepName: text("step_name"),
-  actionType: text("action_type"), // Type of action executed
-  input: jsonb("input"), // Input data for the step
-  output: jsonb("output"), // Output/result data
-  error: text("error"),
-  duration: integer("duration"), // Execution time in milliseconds
-  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
-// @epic-3.1-automation-engine: Visual workflow builder workflows
-export const visualWorkflow = pgTable("visual_workflow", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
-  nodes: jsonb("nodes").notNull(), // Array of visual workflow nodes
-  edges: jsonb("edges").notNull(), // Array of connections between nodes
-  layout: jsonb("layout"), // Canvas layout and positioning
-  isActive: boolean("is_active").default(true),
-  version: integer("version").default(1),
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-3.1-automation-engine: Visual workflow templates
-export const visualWorkflowTemplate = pgTable("visual_workflow_template", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  category: text("category").notNull(),
-  nodes: jsonb("nodes").notNull(),
-  edges: jsonb("edges").notNull(),
-  layout: jsonb("layout"),
-  isPublic: boolean("is_public").default(false),
-  usageCount: integer("usage_count").default(0),
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-3.1-automation-engine: Visual workflow execution logs
-export const visualWorkflowExecution = pgTable("visual_workflow_execution", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  workflowId: text("workflow_id")
-    .notNull()
-    .references(() => visualWorkflow.id, { onDelete: "cascade" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  status: text("status").notNull(), // 'running', 'completed', 'failed', 'cancelled'
-  currentNodeId: text("current_node_id"),
-  executionPath: jsonb("execution_path"), // Array of executed node IDs
-  results: jsonb("results"), // Results from each node
-  error: text("error"),
-  duration: integer("duration"),
-  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
-// Visual workflow builder: registry of draggable node types (built-in + custom)
-export const workflowNodeTypes = pgTable("workflow_node_types", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  description: text("description").notNull(),
-  icon: text("icon"),
-  color: text("color"),
-  configSchema: text("config_schema").notNull(),
-  outputSchema: text("output_schema"),
-  requiredIntegrations: text("required_integrations"),
-  isBuiltIn: boolean("is_built_in").default(false),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
 // @epic-3.2-integrations: Email templates for notifications
 export const emailTemplates = pgTable("email_templates", {
   id: text("id").$defaultFn(() => createId()).primaryKey(),
@@ -1039,260 +727,6 @@ export const userConnection = pgTable("user_connection", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// Direct message conversations
-export const directMessageConversations = pgTable("direct_message_conversations", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  participant1Id: text("participant1_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  participant2Id: text("participant2_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
-  lastMessagePreview: text("last_message_preview"),
-  isArchived: boolean("is_archived").default(false),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// Custom themes for workspace branding
-export const customThemes = pgTable("custom_themes", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
-  isGlobal: boolean("is_global").default(false), // Available to all workspaces
-  colors: jsonb("colors").notNull(), // Theme color palette
-  fonts: jsonb("fonts"), // Font settings
-  components: jsonb("components"), // Component styling overrides
-  isActive: boolean("is_active").default(true),
-  isDark: boolean("is_dark").default(false), // Dark or light theme
-  metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-4.6-dashboard-templates: Dashboard Templates for personalized layouts
-export const dashboardTemplates = pgTable("dashboard_templates", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
-  isGlobal: boolean("is_global").default(false), // Available to all workspaces
-  isPublic: boolean("is_public").default(false), // Publicly available in marketplace
-  
-  // Layout configuration
-  layout: jsonb("layout").notNull(), // Widget positions, sizes, and configurations
-  widgets: jsonb("widgets").notNull(), // Array of widget IDs and their settings
-  gridConfig: jsonb("grid_config"), // Grid system configuration (columns, rows, gaps)
-  
-  // Metadata
-  category: text("category"), // e.g., "Project Management", "Analytics", "Team Overview"
-  tags: jsonb("tags"), // Array of tags for filtering
-  thumbnail: text("thumbnail"), // Preview image URL or base64
-  usageCount: integer("usage_count").default(0), // Track popularity
-  isActive: boolean("is_active").default(true),
-  
-  // Ownership
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-4.7-widget-library: Dashboard Widgets for customizable dashboards
-export const dashboardWidgets = pgTable("dashboard_widgets", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  type: text("type").notNull(), // e.g., "chart", "table", "metric", "list", "calendar", "timeline"
-  category: text("category").notNull(), // e.g., "Analytics", "Tasks", "Team", "Files"
-  
-  // Widget Configuration
-  component: text("component").notNull(), // React component identifier
-  defaultConfig: jsonb("default_config").notNull(), // Default widget settings
-  configSchema: jsonb("config_schema"), // JSON schema for widget configuration
-  dataSource: text("data_source"), // API endpoint or data source identifier
-  refreshInterval: integer("refresh_interval"), // Auto-refresh interval in seconds
-  
-  // Display properties
-  defaultSize: jsonb("default_size"), // { width: 4, height: 2 } in grid units
-  minSize: jsonb("min_size"), // Minimum allowed size
-  maxSize: jsonb("max_size"), // Maximum allowed size
-  thumbnail: text("thumbnail"), // Preview image
-  icon: text("icon"), // Icon identifier
-  
-  // Marketplace & Sharing
-  isGlobal: boolean("is_global").default(false), // System-provided widget
-  isPublic: boolean("is_public").default(false), // Publicly available in marketplace
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
-  usageCount: integer("usage_count").default(0),
-  rating: numeric("rating", { precision: 3, scale: 2 }), // Average rating
-  
-  // Metadata
-  tags: jsonb("tags"), // Array of tags for filtering
-  version: text("version").default("1.0.0"),
-  isActive: boolean("is_active").default(true),
-  isPremium: boolean("is_premium").default(false), // Requires subscription
-  
-  // Ownership
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-4.7-widget-library: User Widget Instances (widgets added to dashboards)
-export const userWidgetInstances = pgTable("user_widget_instances", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  widgetId: text("widget_id")
-    .notNull()
-    .references(() => dashboardWidgets.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  dashboardId: text("dashboard_id"), // Optional: which dashboard this widget is on
-  
-  // Position & Size
-  position: jsonb("position").notNull(), // { x: 0, y: 0 } in grid coordinates
-  size: jsonb("size").notNull(), // { width: 4, height: 2 } in grid units
-  
-  // Custom Configuration
-  config: jsonb("config"), // User-specific widget configuration
-  filters: jsonb("filters"), // Data filtering options
-  
-  // State
-  isVisible: boolean("is_visible").default(true),
-  isPinned: boolean("is_pinned").default(false),
-  order: integer("order").default(0), // Display order
-  
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-export const userDashboards = pgTable("user_dashboards", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  description: text("description"),
-  icon: text("icon"),
-  isDefault: boolean("is_default").default(false),
-  layout: jsonb("layout"),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-4.7-widget-library: Widget Ratings
-export const widgetRatings = pgTable("widget_ratings", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  widgetId: text("widget_id")
-    .notNull()
-    .references(() => dashboardWidgets.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  rating: integer("rating").notNull(), // 1-5 stars
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-4.7-widget-library: Widget Reviews
-export const widgetReviews = pgTable("widget_reviews", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  widgetId: text("widget_id")
-    .notNull()
-    .references(() => dashboardWidgets.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  rating: integer("rating").notNull(), // 1-5
-  helpfulCount: integer("helpful_count").default(0),
-  isVerifiedInstall: boolean("is_verified_install").default(false), // User has actually installed the widget
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-4.7-widget-library: Widget Analytics
-export const widgetAnalytics = pgTable("widget_analytics", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  widgetId: text("widget_id")
-    .notNull()
-    .references(() => dashboardWidgets.id, { onDelete: "cascade" }),
-  userEmail: text("user_email").notNull(),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  eventType: text("event_type").notNull(), // 'view', 'install', 'uninstall', 'configure', 'error', 'render'
-  metadata: jsonb("metadata"), // Event-specific data
-  performanceMs: integer("performance_ms"), // Render time in milliseconds
-  timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow().notNull(),
-});
-
-// @epic-4.7-widget-library: Widget Versions
-export const widgetVersions = pgTable("widget_versions", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  widgetId: text("widget_id")
-    .notNull()
-    .references(() => dashboardWidgets.id, { onDelete: "cascade" }),
-  version: text("version").notNull(), // Semantic versioning (e.g., "1.2.3")
-  changelog: text("changelog"), // What's new in this version
-  config: jsonb("config"), // Widget configuration for this version
-  componentCode: text("component_code"), // Serialized component code (for custom widgets)
-  isStable: boolean("is_stable").default(true),
-  isBeta: boolean("is_beta").default(false),
-  isDeprecated: boolean("is_deprecated").default(false),
-  releaseNotes: text("release_notes"),
-  breakingChanges: text("breaking_changes"),
-  releaseDate: timestamp("release_date", { withTimezone: true }).defaultNow(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
-// @epic-4.7-widget-library: Widget Collections (Bundles)
-export const widgetCollections = pgTable("widget_collections", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
-  widgetIds: jsonb("widget_ids").notNull(), // Array of widget IDs
-  isGlobal: boolean("is_global").default(false), // System collection
-  isPublic: boolean("is_public").default(false), // Publicly available
-  category: text("category"), // "Starter Pack", "Analytics Suite", "Team Collaboration"
-  thumbnail: text("thumbnail"),
-  installCount: integer("install_count").default(0),
-  tags: jsonb("tags"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-4.7-widget-library: Review Helpfulness Tracking
-export const reviewHelpfulness = pgTable("review_helpfulness", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  reviewId: text("review_id")
-    .notNull()
-    .references(() => widgetReviews.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  isHelpful: boolean("is_helpful").notNull(), // true = helpful, false = not helpful
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
 // @epic-5.1-project-notes: Project Notes for collaborative documentation
 export const projectNotes = pgTable("project_notes", {
   id: text("id").$defaultFn(() => createId()).primaryKey(),
@@ -1369,40 +803,6 @@ export const backlogThemes = pgTable("backlog_themes", {
   // Timestamps
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// Workspace theme policies for enforcing branding
-export const workspaceThemePolicies = pgTable("workspace_theme_policies", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .unique()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  enforceTheme: boolean("enforce_theme").default(false), // Force users to use workspace theme
-  allowedThemeIds: jsonb("allowed_theme_ids"), // Array of theme IDs users can choose from
-  defaultThemeId: text("default_theme_id").references(() => customThemes.id),
-  allowUserThemes: boolean("allow_user_themes").default(true), // Users can create custom themes
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// Theme usage analytics
-export const themeUsageAnalytics = pgTable("theme_usage_analytics", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  themeId: text("theme_id")
-    .notNull()
-    .references(() => customThemes.id, { onDelete: "cascade" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  activeTime: integer("active_time").default(0), // Time in milliseconds
-  lastUsed: timestamp("last_used", { withTimezone: true }).defaultNow(),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 // Phase 1: Team Awareness - User Activity Sessions
@@ -1546,156 +946,6 @@ export const alertRules = pgTable("alert_rules", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// Phase 2: Smart Notifications - External Integrations
-export const integrations = pgTable("integrations", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  integrationType: text("integration_type").notNull(), // 'slack', 'teams', 'discord'
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  channelId: text("channel_id"),
-  channelName: text("channel_name"),
-  webhookUrl: text("webhook_url"),
-  isActive: boolean("is_active").default(true).notNull(),
-  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// @epic-2.2-realtime: User presence tracking for real-time collaboration
-export const userPresence = pgTable("user_presence", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  status: text("status").notNull().default("offline"), // 'online' | 'offline' | 'away' | 'busy'
-  lastSeen: timestamp("last_seen", { withTimezone: true }).defaultNow().notNull(),
-  currentPage: text("current_page"),
-  socketId: text("socket_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// Help & Documentation System
-export const helpArticles = pgTable("help_articles", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  title: text("title").notNull(),
-  slug: text("slug").notNull().unique(),
-  description: text("description").notNull(),
-  content: text("content").notNull(), // Markdown content
-  category: helpArticleCategory().notNull(),
-  difficulty: helpArticleDifficulty().default('beginner'),
-  contentType: helpContentType().default('article'),
-  readTime: integer("read_time").default(5), // in minutes
-  rating: integer("rating").default(0), // average rating * 10 (e.g., 45 = 4.5)
-  ratingCount: integer("rating_count").default(0),
-  views: integer("views").default(0),
-  helpful: integer("helpful").default(0), // count of helpful votes
-  notHelpful: integer("not_helpful").default(0),
-  tags: jsonb("tags").default([]), // array of tag strings
-  metadata: jsonb("metadata").default({}), // additional data like video URL, thumbnail, etc.
-  authorId: text("author_id").references(() => users.id, { onDelete: "set null" }),
-  isPublished: boolean("is_published").default(false),
-  publishedAt: timestamp("published_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-export const helpFAQs = pgTable("help_faqs", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  question: text("question").notNull(),
-  answer: text("answer").notNull(), // Markdown supported
-  category: text("category").notNull(),
-  helpful: integer("helpful").default(0),
-  notHelpful: integer("not_helpful").default(0),
-  tags: jsonb("tags").default([]),
-  relatedArticleIds: jsonb("related_article_ids").default([]), // array of article IDs
-  isPublished: boolean("is_published").default(true),
-  displayOrder: integer("display_order").default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-export const helpArticleViews = pgTable("help_article_views", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  articleId: text("article_id")
-    .notNull()
-    .references(() => helpArticles.id, { onDelete: "cascade" }),
-  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
-  sessionId: text("session_id"), // for anonymous tracking
-  viewedAt: timestamp("viewed_at", { withTimezone: true }).defaultNow().notNull(),
-  timeSpent: integer("time_spent").default(0), // in seconds
-  completed: boolean("completed").default(false), // read to end
-});
-
-export const helpSearchQueries = pgTable("help_search_queries", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  query: text("query").notNull(),
-  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
-  resultsCount: integer("results_count").default(0),
-  clickedArticleId: text("clicked_article_id").references(() => helpArticles.id, { onDelete: "set null" }),
-  searchedAt: timestamp("searched_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
-export const helpArticleComments = pgTable("help_article_comments", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  articleId: text("article_id")
-    .notNull()
-    .references(() => helpArticles.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  content: text("content").notNull(),
-  parentId: text("parent_id").references((): any => helpArticleComments.id, { onDelete: "cascade" }), // For nested comments
-  helpful: integer("helpful").default(0),
-  notHelpful: integer("not_helpful").default(0),
-  isEdited: boolean("is_edited").default(false),
-  editedAt: timestamp("edited_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// Channel tables (from introspected database schema)
-const channel = pgTable("channel", {
-  id: text("id").primaryKey().notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  workspaceId: text("workspace_id").notNull(),
-  isPrivate: boolean("is_private").default(false),
-  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-  createdBy: varchar("created_by"),
-  isArchived: boolean("is_archived").default(false),
-}, (table) => ({
-  // ⚡ Performance indexes for channel queries
-  workspaceIdIdx: index("idx_channel_workspace_id").on(table.workspaceId),
-  isArchivedIdx: index("idx_channel_is_archived").on(table.isArchived),
-  createdByIdx: index("idx_channel_created_by").on(table.createdBy),
-}));
-
-const channelMembership = pgTable("channel_membership", {
-  id: text("id").primaryKey().notNull(),
-  channelId: text("channel_id").notNull(),
-  userEmail: text("user_email").notNull(),
-  role: text("role").default("member").notNull(),
-  joinedAt: timestamp("joined_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
-  userId: varchar("user_id"),
-}, (table) => ({
-  // ⚡ Performance indexes for channel membership queries
-  channelIdIdx: index("idx_channel_membership_channel_id").on(table.channelId),
-  userEmailIdx: index("idx_channel_membership_user_email").on(table.userEmail),
-  userIdIdx: index("idx_channel_membership_user_id").on(table.userId),
-  // Composite index for membership checks
-  channelUserIdx: index("idx_channel_membership_channel_user").on(table.channelId, table.userEmail),
-}));
-
 export const favorites = pgTable("favorites", {
   id: text("id").$defaultFn(() => createId()).primaryKey(),
   userId: text("user_id")
@@ -1703,14 +953,12 @@ export const favorites = pgTable("favorites", {
     .references(() => users.id, { onDelete: "cascade" }),
   type: favoriteType().default("user").notNull(),
   favoriteUserId: text("favorite_user_id").references(() => users.id, { onDelete: "cascade" }),
-  favoriteChannelId: text("favorite_channel_id").references(() => channel.id, { onDelete: "cascade" }),
   metadata: jsonb("metadata").default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => ({
   userIdx: index("idx_favorites_user_id").on(table.userId),
   favoriteUserIdx: index("idx_favorites_favorite_user_id").on(table.favoriteUserId),
-  favoriteChannelIdx: index("idx_favorites_favorite_channel_id").on(table.favoriteChannelId),
 }));
 
 // Health System Tables - Phase 2.3.8
@@ -1785,175 +1033,6 @@ export const healthAlertsTable = pgTable("health_alerts", {
 });
 
 // ============================================================================
-// COLLABORATION TABLES - Phase 2.4
-// ============================================================================
-
-/**
- * Conversations Table
- * Stores conversation/chat room records
- * Supports general team chats, task-specific discussions, and direct messages
- */
-export const conversationsTable = pgTable("conversations", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
-  // Relations
-  projectId: text("project_id")
-    .references(() => projects.id, { onDelete: "cascade" }),
-  createdBy: text("created_by")
-    .references(() => users.id, { onDelete: "set null" }),
-  
-  // Content
-  name: text("name").notNull(),
-  description: text("description"),
-  type: text("type").notNull().default("general"), // general | task-specific | direct
-  
-  // Metadata
-  isArchived: boolean("is_archived").default(false).notNull(),
-  
-  // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-/**
- * Messages Table
- * Stores all messages in conversations
- * Supports edit history via editedAt timestamp
- */
-export const messagesTable = pgTable(
-  "messages",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    
-    // Relations
-    channelId: text("channel_id")
-      .notNull()
-      .references(() => channelTable.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    threadId: text("thread_id"),
-    parentMessageId: text("parent_message_id"),
-    
-    // Content
-    content: text("content").notNull(),
-    messageType: text("message_type").default("text").notNull(),
-    mentions: jsonb("mentions").$type<string[]>().default([]),
-    attachments: jsonb("attachments").default([]),
-    reactions: jsonb("reactions").default({}),
-    
-    // Metadata
-    isPinned: boolean("is_pinned").default(false),
-    isEdited: boolean("is_edited").default(false),
-    isDeleted: boolean("is_deleted").default(false),
-    deliveryStatus: text("delivery_status").default("sent"),
-    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
-    editedAt: timestamp("edited_at", { withTimezone: true }),
-    deletedAt: timestamp("deleted_at", { withTimezone: true }),
-    
-    // Timestamps
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  },
-  (table) => ({
-    channelIdx: index("idx_messages_channel_id").on(table.channelId),
-    createdAtIdx: index("idx_messages_created_at").on(table.createdAt),
-    threadIdx: index("idx_messages_thread_id").on(table.threadId),
-  }),
-);
-
-/**
- * Mentions Table
- * Stores user mentions in messages
- * Triggers notifications when user is mentioned
- */
-export const mentionsTable = pgTable(
-  "mentions",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    
-    // Relations
-    messageId: text("message_id")
-      .notNull()
-      .references(() => messagesTable.id, { onDelete: "cascade" }),
-    mentionedUserId: text("mentioned_user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    
-    // Metadata
-    readAt: timestamp("read_at", { withTimezone: true }),
-    
-    // Timestamps
-    mentionedAt: timestamp("mentioned_at", { withTimezone: true }).defaultNow().notNull(),
-  },
-  (table) => ({
-    userIdx: sql`create index mentions_user_idx on mentions(mentioned_user_id)`,
-    messageIdx: sql`create index mentions_message_idx on mentions(message_id)`,
-  })
-);
-
-/**
- * Read Receipts Table
- * Tracks which users have read which messages
- * Used for read status indicators in chat
- */
-export const readReceiptsTable = pgTable(
-  "read_receipts",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    
-    // Relations
-    messageId: text("message_id")
-      .notNull()
-      .references(() => messagesTable.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    userEmail: text("user_email")
-      .notNull()
-      .references(() => users.email, { onDelete: "cascade" }),
-    
-    // Timestamps
-    readAt: timestamp("read_at", { withTimezone: true }).defaultNow().notNull(),
-  },
-  (table) => ({
-    messageUserIdx: sql`create unique index read_receipts_message_user_idx on read_receipts(message_id, user_id)`,
-    userIdx: sql`create index read_receipts_user_idx on read_receipts(user_id)`,
-    messageIdx: sql`create index read_receipts_message_idx on read_receipts(message_id)`,
-  })
-);
-
-/**
- * Reactions Table
- * Stores emoji reactions to messages
- * Unique constraint prevents duplicate reactions from same user
- */
-export const reactionsTable = pgTable(
-  "reactions",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    
-    // Relations
-    messageId: text("message_id")
-      .notNull()
-      .references(() => messagesTable.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    
-    // Content
-    emoji: text("emoji").notNull(),
-    
-    // Timestamps
-    reactedAt: timestamp("reacted_at", { withTimezone: true }).defaultNow().notNull(),
-  },
-  (table) => ({
-    uniqueReaction: sql`unique(message_id, user_id, emoji)`,
-    messageIdx: sql`create index reactions_message_idx on reactions(message_id)`,
-    userIdx: sql`create index reactions_user_idx on reactions(user_id)`,
-  })
-);
-
 /**
  * Notification Preferences Table
  * Stores user notification settings
@@ -2011,18 +1090,12 @@ export const labelTable = label;
 export const roleAssignmentTable = roleAssignment;
 export const teamTable = teams;
 export const teamMemberTable = teamMembers;
-export const teamMessagesTable = teamMessages;
-export const teamMessageReactionsTable = teamMessageReactions;
-export const teamMessageReadStatusTable = teamMessageReadStatus;
 export const statusColumnTable = statusColumns;
 export const roleHistoryTable = roleHistory;
 export const taskDependencyTable = taskDependencies;
 export const customPermissionTable = customPermissions;
 export const departmentTable = departments;
 export const attachmentTable = attachments;
-export const userPresenceTable = userPresence;
-export const channelTable = channel;
-export const channelMembershipTable = channelMembership;
 export const favoritesTable = favorites;
 export const projectHealthTable_alias = projectHealthTable;
 export const healthHistoryTable_alias = healthHistoryTable;
@@ -2032,17 +1105,7 @@ export const backlogThemesTable = backlogThemes;
 
 // Phase 1.3: Milestones & Automation Aliases
 export const milestoneTable = milestone;
-export const integrationConnectionTable = integrationConnection;
-export const webhookEndpointTable = webhookEndpoint;
 export const apiKeyTable = apiKey;
-export const automationRuleTable = automationRule;
-export const workflowTemplateTable = workflowTemplate;
-export const workflowInstanceTable = workflowInstance;
-export const workflowExecutionTable = workflowExecution;
-export const visualWorkflowTable = visualWorkflow;
-export const visualWorkflowTemplateTable = visualWorkflowTemplate;
-export const visualWorkflowExecutionTable = visualWorkflowExecution;
-export const workflowNodeTypeTable = workflowNodeTypes;
 export const emailTemplatesTable = emailTemplates;
 export const settingsAuditLogTable = settingsAuditLog;
 export const userSettingsTable = userSettings;
@@ -2052,29 +1115,11 @@ export const userExperienceTable = userExperience;
 export const userEducationTable = userEducation;
 export const userSkillTable = userSkill;
 export const userConnectionTable = userConnection;
-export const directMessageConversationsTable = directMessageConversations;
-export const customThemesTable = customThemes;
-export const dashboardTemplatesTable = dashboardTemplates;
-export const dashboardWidgetsTable = dashboardWidgets;
-export const userWidgetInstancesTable = userWidgetInstances;
-export const userDashboardsTable = userDashboards;
-export const widgetRatingsTable = widgetRatings;
-export const widgetReviewsTable = widgetReviews;
-export const widgetAnalyticsTable = widgetAnalytics;
-export const widgetVersionsTable = widgetVersions;
-export const widgetCollectionsTable = widgetCollections;
-export const reviewHelpfulnessTable = reviewHelpfulness;
 export const projectNotesTable = projectNotes;
 export const noteVersionsTable = noteVersions;
 export const noteCommentsTable = noteComments;
-export const workspaceThemePoliciesTable = workspaceThemePolicies;
-export const themeUsageAnalyticsTable = themeUsageAnalytics;
 
 // Phase 2.4: Collaboration Aliases
-export const conversationTable = conversationsTable;
-export const messageTable = messagesTable;
-export const mentionTable = mentionsTable;
-export const reactionTable = reactionsTable;
 export const notificationPreferenceTable = notificationPreferencesTable;
 
 // ============================================================================
@@ -2212,75 +1257,6 @@ export const templateDependencyTable = templateDependencies;
 export const projectMemberTable = projectMembers;
 export const projectSettingsTable = projectSettings;
 // userPreferencesExtendedTable export moved below after definition
-
-// Message and Thread Tables
-export const threadNotificationTable = pgTable('thread_notification', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  threadId: text('thread_id').notNull(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  messageId: text('message_id').references(() => messagesTable.id, { onDelete: 'cascade' }),
-  type: text('type').notNull(),
-  isRead: boolean('is_read').default(false),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-export const threadParticipantTable = pgTable('thread_participant', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  threadId: text('thread_id').notNull(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow(),
-  lastReadAt: timestamp('last_read_at', { withTimezone: true }),
-  isActive: boolean('is_active').default(true),
-});
-
-export const messageBookmarkTable = pgTable('message_bookmark', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  messageId: text('message_id').notNull().references(() => messagesTable.id, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-// Channel Tables
-export const channelAuditLogTable = pgTable('channel_audit_log', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  channelId: text('channel_id').notNull().references(() => channelTable.id, { onDelete: 'cascade' }),
-  action: text('action').notNull(),
-  actorId: text('actor_id').references(() => users.id),
-  targetId: text('target_id'),
-  details: jsonb('details'),
-  ipAddress: text('ip_address'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-export const channelInvitationTable = pgTable('channel_invitation', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  channelId: text('channel_id').notNull().references(() => channelTable.id, { onDelete: 'cascade' }),
-  invitedBy: text('invited_by').notNull().references(() => users.id),
-  invitedUserId: text('invited_user_id').references(() => users.id),
-  invitedEmail: text('invited_email'),
-  status: text('status').default('pending').notNull(), // pending, accepted, declined, expired
-  expiresAt: timestamp('expires_at', { withTimezone: true }),
-  acceptedAt: timestamp('accepted_at', { withTimezone: true }),
-  declinedAt: timestamp('declined_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-/** Legacy `/api/call` scheduling rows (simple voice/video-style calls). */
-export const callTable = pgTable("calls", {
-  id: text("id").primaryKey().$defaultFn(() => createId()),
-  title: text("title").notNull(),
-  description: text("description").default(""),
-  organizerId: text("organizer_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  startTime: timestamp("start_time", { withTimezone: true, mode: "date" }).notNull(),
-  endTime: timestamp("end_time", { withTimezone: true, mode: "date" }),
-  roomId: text("room_id").notNull(),
-  participants: jsonb("participants").$type<string[]>().default([]),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
-});
 
 // User Preferences Table - Store user-specific settings like pinned projects
 export const userPreferencesTable = pgTable('user_preferences', {
@@ -2423,8 +1399,6 @@ export * from "./schema/files";
 // Export goal setting & OKR tables
 export * from "./schema/goals";
 
-// Export gamification & motivation tables
-export * from "./schema/gamification";
 
 // Export billing tables
 

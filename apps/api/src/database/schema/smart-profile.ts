@@ -26,70 +26,6 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { users, workspaces, projects, teams } from "../schema";
-
-// 1. Profile Views
-export const profileViews = pgTable(
-  "profile_views",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    profileUserId: text("profile_user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    viewerUserId: text("viewer_user_id")
-      .references(() => users.id, { onDelete: "set null" }),
-    viewedAt: timestamp("viewed_at", { withTimezone: true }).defaultNow(),
-    source: text("source"), // 'search', 'project', 'team', 'direct', 'notification'
-    duration: integer("duration").default(0), // seconds
-    sectionsViewed: jsonb("sections_viewed"), // ['overview', 'skills', 'achievements']
-    deviceType: text("device_type"), // 'desktop', 'mobile', 'tablet'
-    isAnonymous: boolean("is_anonymous").default(false),
-    metadata: jsonb("metadata"),
-  },
-  (table) => ({
-    profileIdx: index("idx_profile_views_profile").on(
-      table.profileUserId,
-      table.viewedAt
-    ),
-    viewerIdx: index("idx_profile_views_viewer").on(
-      table.viewerUserId,
-      table.viewedAt
-    ),
-    sourceIdx: index("idx_profile_views_source").on(table.source),
-  })
-);
-
-// 2. Profile Suggestions
-export const profileSuggestions = pgTable(
-  "profile_suggestions",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    suggestionType: text("suggestion_type").notNull(), // 'skill', 'bio', 'picture', etc.
-    suggestionText: text("suggestion_text").notNull(),
-    priority: text("priority").default("medium"), // 'low', 'medium', 'high'
-    impactScore: integer("impact_score"), // 1-100
-    isDismissed: boolean("is_dismissed").default(false),
-    isCompleted: boolean("is_completed").default(false),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
-    metadata: jsonb("metadata"),
-  },
-  (table) => ({
-    userIdx: index("idx_profile_suggestions_user").on(
-      table.userId,
-      table.isDismissed,
-      table.isCompleted
-    ),
-    priorityIdx: index("idx_profile_suggestions_priority").on(
-      table.userId,
-      table.priority,
-      table.isDismissed
-    ),
-  })
-);
-
 // 3. User Availability
 export const userAvailability = pgTable("user_availability", {
   id: text("id").$defaultFn(() => createId()).primaryKey(),
@@ -191,33 +127,6 @@ export const userStatistics = pgTable("user_statistics", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// 6. User Badges
-export const userBadges = pgTable(
-  "user_badges",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    badgeType: text("badge_type").notNull(), // 'top_performer', 'early_adopter', etc.
-    badgeName: text("badge_name").notNull(),
-    badgeDescription: text("badge_description"),
-    badgeIcon: text("badge_icon"),
-    badgeColor: text("badge_color"),
-    rarity: text("rarity").default("common"), // 'common', 'rare', 'epic', 'legendary'
-    awardedAt: timestamp("awarded_at", { withTimezone: true }).defaultNow(),
-    criteriaMet: jsonb("criteria_met"),
-    isVisible: boolean("is_visible").default(true),
-    displayOrder: integer("display_order").default(0),
-    metadata: jsonb("metadata"),
-  },
-  (table) => ({
-    userIdx: index("idx_user_badges_user").on(table.userId, table.displayOrder),
-    typeIdx: index("idx_user_badges_type").on(table.badgeType),
-    rarityIdx: index("idx_user_badges_rarity").on(table.rarity, table.awardedAt),
-  })
-);
-
 // 7. Work History
 export const userWorkHistory = pgTable(
   "user_work_history",
@@ -251,36 +160,6 @@ export const userWorkHistory = pgTable(
   })
 );
 
-// 8. Profile Section Views
-export const profileSectionViews = pgTable(
-  "profile_section_views",
-  {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    profileUserId: text("profile_user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    sectionName: text("section_name").notNull(), // 'overview', 'skills', 'experience', etc.
-    viewCount: integer("view_count").default(0),
-    lastViewed: timestamp("last_viewed", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  },
-  (table) => ({
-    uniqueSection: unique().on(table.profileUserId, table.sectionName),
-    profileIdx: index("idx_section_views_profile").on(
-      table.profileUserId,
-      table.viewCount
-    ),
-  })
-);
-
-// Type exports for use in controllers
-export type ProfileView = typeof profileViews.$inferSelect;
-export type NewProfileView = typeof profileViews.$inferInsert;
-
-export type ProfileSuggestion = typeof profileSuggestions.$inferSelect;
-export type NewProfileSuggestion = typeof profileSuggestions.$inferInsert;
-
 export type UserAvailability = typeof userAvailability.$inferSelect;
 export type NewUserAvailability = typeof userAvailability.$inferInsert;
 
@@ -290,12 +169,6 @@ export type NewFrequentCollaborator = typeof frequentCollaborators.$inferInsert;
 export type UserStatistics = typeof userStatistics.$inferSelect;
 export type NewUserStatistics = typeof userStatistics.$inferInsert;
 
-export type UserBadge = typeof userBadges.$inferSelect;
-export type NewUserBadge = typeof userBadges.$inferInsert;
 
 export type UserWorkHistory = typeof userWorkHistory.$inferSelect;
 export type NewUserWorkHistory = typeof userWorkHistory.$inferInsert;
-
-export type ProfileSectionView = typeof profileSectionViews.$inferSelect;
-export type NewProfileSectionView = typeof profileSectionViews.$inferInsert;
-

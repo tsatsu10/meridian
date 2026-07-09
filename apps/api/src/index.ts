@@ -57,7 +57,6 @@ import monitoringRoutes from "./monitoring";
 import quickCaptureRoutes from "./tasks/quick-capture"; // Security metrics and monitoring
 import metricsRoutes from "./modules/metrics"; // Monitoring & metrics endpoint
 import fileVersionsRoutes from "./modules/file-versions"; // File versioning API
-import webhooksRoutes from "./modules/webhooks"; // Outbound webhooks API
 // Removed old complex api-keys module - using simplified version
 import goalsRoutes from "./goals/routes"; // @epic-goal-setting: Goals & OKRs management
 import { createServer } from "http";
@@ -335,7 +334,6 @@ const monitoringRoute = app.route("/api/monitoring", monitoringRoutes);
 const quickCaptureRoute = app.route("/api/tasks/quick-capture", quickCaptureRoutes); // Security metrics and monitoring
 const metricsRoute = app.route("/api/metrics", metricsRoutes); // Monitoring & metrics (Prometheus compatible)
 const fileVersionsRoute = app.route("/api/file-versions", fileVersionsRoutes); // File versioning API
-const webhooksRoute = app.route("/api/webhooks", webhooksRoutes); // Outbound webhooks management
 // Removed duplicate api-keys route - using /api/settings/api-keys instead
 const goalsRoute = app.route("/api/goals", goalsRoutes); // @epic-goal-setting: Goals & OKRs management
 // Favorites: use `/api/favorites` only (web uses API_BASE_URL `/api/...`). Legacy `/favorites` mount removed.
