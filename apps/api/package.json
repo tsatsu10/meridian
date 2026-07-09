@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --outdir=dist --format=cjs --external:bcrypt --external:mock-aws-s3 --external:aws-sdk --external:nock --external:pg --external:postgres --external:@tensorflow/tfjs --external:puppeteer --external:googleapis --external:ml-kmeans --external:ml-matrix --external:ml-regression --external:@node-rs/argon2 --external:@sentry/profiling-node --external:@sentry-internal/node-cpu-profiler",
+    "build": "esbuild src/index.ts --bundle --platform=node --outdir=dist --format=cjs --external:bcrypt --external:mock-aws-s3 --external:aws-sdk --external:nock --external:pg --external:postgres --external:puppeteer --external:@node-rs/argon2 --external:@sentry/profiling-node --external:@sentry-internal/node-cpu-profiler",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -69,8 +69,6 @@
     "qrcode": "^1.5.4",
     "redis": "^5.9.0",
     "sharp": "^0.34.5",
-    "socket.io": "^4.8.2",
-    "stripe": "^19.2.0",
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0",
     "zod": "^3.24.1"
@@ -91,7 +89,6 @@
     "esbuild": "^0.25.0",
     "handlebars": "^4.7.8",
     "prettier": "^3.4.2",
-    "socket.io-client": "^4.8.1",
     "tsx": "^4.19.2",
     "typescript": "5.6.3",
     "vitest": "^2.1.8"
