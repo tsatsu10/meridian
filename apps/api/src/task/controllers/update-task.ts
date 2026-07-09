@@ -3,7 +3,6 @@ import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
 import { taskTable, userTable, projectTable } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { getWebSocketServer } from "../../realtime/websocket-singleton";
 import { ActivityTracker } from "../../services/team-awareness/activity-tracker";
 import logger from '../../utils/logger';
 import { sanitizeText, sanitizeRichText } from "../../lib/universal-sanitization";
@@ -90,21 +89,7 @@ async function updateTask(
       title: updatedTask.title,
     });
     
-    // Phase 3: Emit WebSocket event for task completion
     if (status === 'done' && existingTask.status !== 'done') {
-      const wsServer = getWebSocketServer();
-      const workspaceId = updatedTask.workspaceId || 'default';
-      
-      if (wsServer && updatedTask.projectId) {
-        wsServer.emitToWorkspace(workspaceId, 'task:completed', {
-          taskId: updatedTask.id,
-          title: updatedTask.title,
-          projectId: updatedTask.projectId,
-          workspaceId,
-          completedAt: new Date(),
-        });
-      }
-
       // 🎯 Log activity for completed task
       try {
         const [project] = await db

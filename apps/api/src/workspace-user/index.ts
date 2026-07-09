@@ -15,7 +15,6 @@ import resetUserPassword from "./controllers/reset-user-password";
 import { changeMemberRole } from "./controllers/change-member-role";
 import { removeMember } from "./controllers/remove-member";
 import { getMemberActivity } from "./controllers/get-member-activity";
-import { getOnlineUsers } from "../realtime/controllers/user-presence";
 
 const workspaceUser = new Hono<{
   Variables: {
@@ -95,11 +94,8 @@ const workspaceUser = new Hono<{
     "/:workspaceId/online",
     zValidator("param", z.object({ workspaceId: z.string() })),
     async (c) => {
-      const { workspaceId } = c.req.valid("param");
-
-      const onlineUsers = await getOnlineUsers(workspaceId);
-
-      return c.json(onlineUsers);
+      // Realtime presence was removed; report no online users.
+      return c.json([]);
     },
   )
   .post(

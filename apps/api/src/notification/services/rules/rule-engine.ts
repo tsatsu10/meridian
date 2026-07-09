@@ -8,7 +8,7 @@ import { alertRules, tasks, projects, notifications } from '../../../database/sc
 import { eq, and, gte, lte, count, desc } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import createNotification from '../../controllers/create-notification';
-import { sendThroughIntegrations } from '../../../integrations/services/integration-delivery';
+import emailService from '../../../services/email-service';
 
 export interface RuleCondition {
   type: 'project_progress' | 'task_overdue' | 'mention' | 'keyword' | 'task_count' | 'no_activity';
@@ -234,15 +234,12 @@ export async function triggerAlert(rule: AlertRule, workspaceId: string): Promis
           type: 'alert',
           priority: 'high',
         });
-      } else if (channel === 'email' || channel === 'slack' || channel === 'teams') {
-        // Send through integrations
-        await sendThroughIntegrations(rule.userEmail, workspaceId, {
-          title: `Alert: ${rule.name}`,
-          message,
-          type: 'alert',
-          priority: 'high',
-          createdAt: new Date(),
-        });
+      } else if (channel === 'email') {
+        await emailService.sendNotificationEmail(
+          rule.userEmail,
+          `Alert: ${rule.name}`,
+          message
+        );
       }
     }
     
