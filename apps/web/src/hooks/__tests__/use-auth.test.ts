@@ -41,7 +41,7 @@ function useAuth() {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, _password: string) => {
     setIsLoading(true);
     setError(null);
 
@@ -207,8 +207,7 @@ describe('useAuth Hook', () => {
     });
 
     // Mock login to throw error
-    const originalLogin = result.current.login;
-    const errorLogin = vi.fn().mockRejectedValue(new Error('Invalid credentials'));
+        const errorLogin = vi.fn().mockRejectedValue(new Error('Invalid credentials'));
 
     await expect(async () => {
       await act(async () => {

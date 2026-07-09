@@ -7,7 +7,6 @@ import {
   ChevronLeft, 
   ChevronRight, 
   FolderOpen, 
-  Calendar as CalendarIcon,
   Clock,
   Users,
   User

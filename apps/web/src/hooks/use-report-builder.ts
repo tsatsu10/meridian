@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { type Metric, type MetricCategory } from "@/components/analytics/metric-selector";
+import { type MetricCategory } from "@/components/analytics/metric-selector";
 import { type VisualizationType } from "@/components/analytics/visualization-selector";
 import { useQuery, useMutation } from "@tanstack/react-query";
 

@@ -8,7 +8,6 @@ import AuthProvider from "./components/providers/auth-provider";
 import useAuth from "./components/providers/auth-provider/hooks/use-auth";
 import { ThemeProvider } from "./components/providers/theme-provider";
 import { RBACProvider } from "./lib/permissions";
-import { emergencyMemoryCleanup, monitorMemory } from "./utils/emergency-memory-cleanup";
 import { routeTree } from "./routeTree.gen";
 import { TooltipProvider } from "./components/ui/tooltip";
 import WorkspaceProvider from "./components/providers/workspace-provider";
@@ -22,7 +21,7 @@ initSentry();
 if (import.meta.env.PROD) {
   import('./lib/web-vitals').then(({ initWebVitals }) => {
     initWebVitals();
-  }).catch((error) => {
+  }).catch((_error) => {
     console.info('Web Vitals monitoring disabled. Install with: pnpm install');
   });
 }

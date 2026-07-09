@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Download, Trash2, ExternalLink, Image, Video, File, FileText, MoreVertical } from 'lucide-react';
+import { Download, Trash2, ExternalLink, Image, Video, File, FileText, } from 'lucide-react';
 
 interface FileItem {
   id: string;
@@ -37,7 +37,7 @@ export function FileGallery({
   const [files, setFiles] = useState<FileItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [_selectedFile, _setSelectedFile] = useState<string | null>(null);
 
   const fetchFiles = async () => {
     try {

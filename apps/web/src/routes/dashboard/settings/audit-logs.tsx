@@ -6,8 +6,6 @@ import {
   FileText,
   Filter,
   Download,
-  Calendar,
-  User,
   Activity,
   TrendingUp,
   Settings,
@@ -122,7 +120,7 @@ function AuditLogsSettings() {
   });
 
   // Fetch audit logs
-  const { data: logsData, isLoading: logsLoading, refetch: refetchLogs } = useQuery({
+  const { data: logsData, isLoading: logsLoading } = useQuery({
     queryKey: ['audit-logs', currentWorkspace?.id, startDate, endDate, selectedUser, selectedAction, selectedEntityType, searchTerm, currentPage],
     queryFn: async () => {
       if (!currentWorkspace) throw new Error('No workspace selected');

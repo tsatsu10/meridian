@@ -1,6 +1,4 @@
-// @epic-3.3-projects: Recent activity display for projects
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
+
 import { 
   CheckCircle, 
   MessageSquare, 

@@ -2,18 +2,16 @@ import { priorityColorsTaskCard } from "@/constants/priority-colors";
 import { useBulkOperations } from "@/contexts/bulk-operations-context";
 import useProjectStore from "@/store/project";
 import useWorkspaceStore from "@/store/workspace";
-import type Task from "@/types/task";
 import type { TaskWithSubtasks } from "@/types/task";
 import { useSortable } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Calendar, Flag, UserIcon, ChevronDown, ChevronRight, Plus, Link2, Lock } from "lucide-react";
+import { Calendar, Flag, UserIcon, ChevronDown, ChevronRight, Plus, } from "lucide-react";
 import React, { type CSSProperties, useState } from "react";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 import TaskCardContextMenuContent from "./task-card-context-menu/task-card-context-menu-content";
-import TaskCardLabels from "./task-labels";
 // 🛡️ RBAC: Role-based UI controls
 import { useRBACAuth, RequirePermission } from "@/lib/permissions";
 
@@ -57,9 +55,7 @@ const TaskCard = React.memo(function TaskCard({ task, hierarchyLevel = 0, parent
   let selectedTasks = new Set<string>();
   let isSelectionMode = false;
   let toggleTaskSelection = (_taskId: string) => {};
-  let selectAllSubtasks = (_parentTaskId: string, _subtasks: TaskWithSubtasks[]) => {};
-
-  try {
+    try {
     const bulkOps = useBulkOperations();
     selectedTasks = bulkOps.selectedTasks;
     isSelectionMode = bulkOps.isSelectionMode;
@@ -261,7 +257,7 @@ const TaskCard = React.memo(function TaskCard({ task, hierarchyLevel = 0, parent
             {isExpanded && task.subtasks && task.subtasks.length > 0 && (
               <div className="mt-3 border-t border-zinc-200/50 dark:border-zinc-700/50 pt-3">
                 <div className="space-y-2">
-                  {task.subtasks.map((subtask, index) => (
+                  {task.subtasks.map((subtask, _index) => (
                     <div
                       key={subtask.id}
                       className="flex items-center gap-2 p-2 bg-zinc-50/50 dark:bg-zinc-800/30 rounded-md border border-zinc-200/30 dark:border-zinc-700/30 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,10 +10,9 @@ import {
   Check,
   Target,
   Sparkles,
-  ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import type { OnboardingFlow, OnboardingStep } from '@/types/tips';
+import type { OnboardingFlow, } from '@/types/tips';
 import { useOnboarding } from '@/hooks/use-tips';
 import { toast } from '@/lib/toast';
 

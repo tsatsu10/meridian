@@ -31,7 +31,7 @@ export function useScreenReaderSupport(options: ChartAccessibilityOptions) {
     chartType,
     dataPoints,
     enableSonification = false,
-    enableTableView = true,
+    
     enableDataExport = true
   } = options;
 

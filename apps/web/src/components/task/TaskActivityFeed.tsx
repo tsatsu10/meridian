@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from '@tanstack/react-router';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { useState, useEffect } from 'react';
+import { API_BASE_URL, } from '@/constants/urls';
 
 const EVENT_TYPES = [
   { key: 'status', label: 'Status' },

@@ -6,7 +6,7 @@ function useDeleteStatusColumn() {
 
   return useMutation({
     mutationFn: (data: DeleteStatusColumnRequest) => deleteStatusColumn(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate tasks query to refetch with updated columns
       queryClient.invalidateQueries({ 
         queryKey: ["tasks", variables.projectId] 

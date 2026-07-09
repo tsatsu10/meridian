@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, Star, Clock, Users, Sparkles } from "lucide-react";
+import { Search, Filter, Sparkles } from "lucide-react";
 import { getTemplates } from "../../fetchers/templates/get-templates";
 import type { TemplateFilterOptions, ProjectTemplate } from "../../types/templates";
 import { Input } from "../ui/input";

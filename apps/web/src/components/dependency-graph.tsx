@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
 
     // Build dependency graph
     const nodeMap = new Map<string, DependencyNode>();
-    const visited = new Set<string>();
+    void (new Set<string>());
     const levels = new Map<string, number>();
 
     // Calculate levels (depth in dependency tree)
@@ -73,9 +73,7 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
     });
 
     // Position nodes
-    const nodeWidth = 200;
-    const nodeHeight = 80;
-    const levelWidth = 250;
+            const levelWidth = 250;
     const levelHeight = 100;
 
     allItems.forEach(item => {

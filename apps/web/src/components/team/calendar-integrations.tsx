@@ -13,24 +13,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { 
   Calendar, 
-  Download, 
-  Upload, 
-  Settings, 
   ExternalLink,
   Check,
   X,
   RefreshCw
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 
 interface CalendarIntegrationsProps {
   teamId?: string;

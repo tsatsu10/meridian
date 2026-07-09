@@ -7,7 +7,7 @@
 
 import React, { useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 // Import existing auth
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";

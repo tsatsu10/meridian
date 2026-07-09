@@ -4,13 +4,13 @@
  */
 "use client";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Eye, EyeOff, Mail, MessageSquare, Globe, Lock, User, Users, Building } from 'lucide-react';
+import { Shield, Eye, Mail, MessageSquare, User, Users, } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 
@@ -74,7 +74,7 @@ const defaultSettings: PrivacySettings = {
 export function PrivacySettingsModal({ 
   isOpen, 
   onClose, 
-  userId,
+  
   currentSettings,
   onSave 
 }: PrivacySettingsModalProps) {
@@ -460,7 +460,7 @@ export function PrivacySettingsModal({
 /**
  * Hook to manage privacy settings
  */
-export function usePrivacySettings(userId: string) {
+export function usePrivacySettings(_userId: string) {
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<PrivacySettings>(defaultSettings);
 

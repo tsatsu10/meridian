@@ -29,7 +29,7 @@ export function useUpdateKeyResult() {
       const response = await api.put(`/api/goals/key-results/${id}`, data);
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate goal and progress data
       queryClient.invalidateQueries({ queryKey: ['goal', variables.goalId] });
       queryClient.invalidateQueries({ queryKey: ['goals'] });

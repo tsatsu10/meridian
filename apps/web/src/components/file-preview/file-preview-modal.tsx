@@ -2,7 +2,7 @@
 // @persona-sarah: PM needs quick file previews for efficient collaboration
 // @persona-david: Team lead needs visual file identification
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +10,10 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Download, 
-  X, 
   ZoomIn, 
   ZoomOut, 
   RotateCw, 
   Maximize2, 
-  Copy,
   Share,
   ExternalLink,
   FileText,

@@ -8,9 +8,8 @@
 import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Settings, MoreHorizontal, Plus, Filter, Search } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, } from "lucide-react";
 import { MeridianButton } from "./meridian-button";
-import { MeridianCard } from "./meridian-card";
 import { MeridianBadge } from "./meridian-badge";
 
 // Enhanced Page Container with Modern Light Mode Support

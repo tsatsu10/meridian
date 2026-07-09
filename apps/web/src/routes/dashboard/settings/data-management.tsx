@@ -11,14 +11,12 @@ import {
   Package,
   Save,
   RotateCcw,
-  Calendar,
   History,
   RefreshCw,
   Trash2,
   CheckCircle,
   XCircle,
   Clock,
-  Bell,
   AlertCircle,
   AlertTriangle,
   Loader2,
@@ -51,7 +49,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
 import { useWorkspaceStore } from '@/store/workspace';
@@ -129,19 +126,19 @@ interface ImportResult {
 }
 
 function DataManagementSettings() {
-  const navigate = useNavigate();
+  void (useNavigate());
   const workspace = useWorkspaceStore((state) => state.workspace);
   const currentWorkspace = workspace;
   const queryClient = useQueryClient();
   
   const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState<Partial<BackupSettings>>({});
-  const [recipientInput, setRecipientInput] = useState('');
+  const [_recipientInput, _setRecipientInput] = useState('');
 
   // Storage Usage State
   const [isLoading, setIsLoading] = useState(false);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [backupLoading, setBackupLoading] = useState(false);
+  const [_exportLoading, _setExportLoading] = useState(false);
+  const [_backupLoading, _setBackupLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string>("");
 
@@ -408,28 +405,7 @@ function DataManagementSettings() {
     });
   };
 
-  const handleFullBackup = async () => {
-    setBackupLoading(true);
-    try {
-      await manualBackupMutation.mutateAsync();
-    } finally {
-      setBackupLoading(false);
-    }
-  };
-
-  const handleExportData = async (type: string) => {
-    setExportLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success(`${type} export started. You'll receive an email when ready.`);
-    } catch (error) {
-      toast.error("Export failed - please try again");
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
-  const confirmDeleteData = (type: string) => {
+      const confirmDeleteData = (type: string) => {
     setDeleteTarget(type);
     setDeleteDialogOpen(true);
   };
@@ -447,24 +423,7 @@ function DataManagementSettings() {
     }
   };
 
-  const addRecipient = () => {
-    if (recipientInput && /\S+@\S+\.\S+/.test(recipientInput)) {
-      const recipients = formData.notificationRecipients || [];
-      if (!recipients.includes(recipientInput)) {
-        handleFormChange('notificationRecipients', [...recipients, recipientInput]);
-        setRecipientInput('');
-      }
-    } else {
-      toast.error('Please enter a valid email address');
-    }
-  };
-
-  const removeRecipient = (email: string) => {
-    const recipients = formData.notificationRecipients || [];
-    handleFormChange('notificationRecipients', recipients.filter(r => r !== email));
-  };
-
-  if (!currentWorkspace) {
+      if (!currentWorkspace) {
     return (
       <LazyDashboardLayout>
         <div className="container max-w-4xl py-6">

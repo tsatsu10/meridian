@@ -1,8 +1,4 @@
-/**
- * Isolated toast portal that renders outside React's context system
- * This prevents useState context errors in Sonner
- */
-import React from 'react';
+
 import { createRoot } from 'react-dom/client';
 import { Toaster } from '@/components/ui/minimal-toast';
 import { logger } from "../lib/logger";

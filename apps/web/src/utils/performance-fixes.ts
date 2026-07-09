@@ -251,7 +251,7 @@ export class PerformanceMonitor {
       try {
         const paintObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          entries.forEach((entry) => {
+          entries.forEach((_entry) => {
             if (process.env.NODE_ENV === 'development') {}
           });
         });
@@ -265,7 +265,7 @@ export class PerformanceMonitor {
       try {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1];
+          void (entries[entries.length - 1]);
           if (process.env.NODE_ENV === 'development') {}
         });
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
@@ -290,12 +290,12 @@ export const BundleOptimizer = {
   // Lazy load heavy components
   lazyLoad: <T extends React.ComponentType<any>>(
     importFunc: () => Promise<{ default: T }>,
-    fallback?: React.ComponentType
+    _fallback?: React.ComponentType
   ) => {
     return React.lazy(async () => {
-      const start = performance.now();
+      void (performance.now());
       const module = await importFunc();
-      const end = performance.now();
+      void (performance.now());
 
       if (process.env.NODE_ENV === 'development') {}
 

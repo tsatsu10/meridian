@@ -20,16 +20,10 @@ import {
   Settings,
   Bell,
   Search,
-  Plus,
-  HelpCircle,
   Layers,
   LayoutGrid,
-  Package,
-  GitBranch,
   Target,
   Clock,
-  Activity,
-  Zap,
   Shield,
   Database,
   FileText,
@@ -48,9 +42,7 @@ import type { AllPermissions } from "@/lib/permissions/types";
 import useWorkspaceStore from "@/store/workspace";
 import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
 import type { Notification } from "@/types/notification";
-import { useState } from "react";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
-import type { Project } from "@/types/project";
 
 // Navigation item interface with enhanced properties
 export interface NavigationItem {

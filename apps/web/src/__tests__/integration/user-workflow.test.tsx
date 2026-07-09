@@ -9,10 +9,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TestWrapper } from '../../test-utils/test-wrapper';
+import { QueryClient, } from '@tanstack/react-query';
 
 // Mock API responses
 const mockApi = {
@@ -25,9 +23,7 @@ const mockApi = {
 };
 
 describe('User Workflow Integration Tests', () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
+    beforeEach(() => {
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -41,7 +37,7 @@ describe('User Workflow Integration Tests', () => {
 
   describe('Complete Onboarding Flow', () => {
     it('should complete user onboarding: sign up → verify → first project', async () => {
-      const user = userEvent.setup();
+      void (userEvent.setup());
 
       // Mock API responses
       mockApi.signUp.mockResolvedValue({
@@ -90,7 +86,7 @@ describe('User Workflow Integration Tests', () => {
 
   describe('Project and Task Management Flow', () => {
     it('should complete task workflow: create → assign → in progress → complete', async () => {
-      const user = userEvent.setup();
+      void (userEvent.setup());
 
       // Mock responses
       mockApi.createProject.mockResolvedValue({
@@ -162,7 +158,7 @@ describe('User Workflow Integration Tests', () => {
 
   describe('Team Collaboration Flow', () => {
     it('should complete collaboration workflow: invite → accept → assign task → message', async () => {
-      const user = userEvent.setup();
+      void (userEvent.setup());
 
       // Mock responses
       mockApi.inviteMember.mockResolvedValue({

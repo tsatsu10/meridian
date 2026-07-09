@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { motion } from 'framer-motion';
 import { Lightbulb, Loader2 } from 'lucide-react';
 import { useLoadingTip } from '@/hooks/use-tips';

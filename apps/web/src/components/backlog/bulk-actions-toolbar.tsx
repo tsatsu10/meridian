@@ -16,7 +16,6 @@ import {
   Tag,
   Users,
   AlertTriangle,
-  CheckCircle2,
   MoreHorizontal
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

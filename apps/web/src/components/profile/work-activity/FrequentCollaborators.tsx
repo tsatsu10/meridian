@@ -82,7 +82,7 @@ export function FrequentCollaborators({ userId, limit = 5, className }: Frequent
         <div className="space-y-3">
           {collaborators.map((collab: any, index: number) => {
             const projectCount = collab.sharedProjects?.length || 0;
-            const score = parseFloat(collab.collaborationScore) || 0;
+            void (parseFloat(collab.collaborationScore) || 0);
 
             return (
               <div key={collab.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">

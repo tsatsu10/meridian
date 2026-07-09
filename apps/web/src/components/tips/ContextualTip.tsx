@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Lightbulb, Info, AlertCircle } from 'lucide-react';
 import { useContextualTip, useTips } from '@/hooks/use-tips';

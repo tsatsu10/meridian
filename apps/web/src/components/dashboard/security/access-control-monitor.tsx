@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
-import { cn } from "@/lib/cn";
 
 interface RoleDistribution {
   role: string;
@@ -43,7 +41,7 @@ interface AccessStats {
   recentChanges: number;
 }
 
-const ROLE_COLORS = {
+void ({
   "workspace-manager": "#ef4444", // red
   admin: "#f59e0b", // orange
   "department-head": "#eab308", // yellow
@@ -52,7 +50,7 @@ const ROLE_COLORS = {
   member: "#8b5cf6", // purple
   guest: "#6b7280", // gray
   "project-viewer": "#ec4899", // pink
-};
+});
 
 const ROLE_LABELS = {
   "workspace-manager": "Workspace Manager",

@@ -1,7 +1,7 @@
 "use client";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo, useCallback } from "react";
+import { useState, } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,19 +19,11 @@ import {
   Users,
   Target,
   TrendingUp,
-  Calendar,
   Clock,
   Filter,
-  Settings,
-  Plus,
-  Trash2,
-  Copy,
-  Download,
   Save,
   Eye,
-  Layout,
   Grid,
-  Layers,
   Search,
   ChevronDown,
   ChevronRight,
@@ -39,9 +31,7 @@ import {
   Zap,
   CheckCircle2,
   AlertTriangle,
-  ChevronLeft,
   Grid3x3,
-  ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,9 +39,7 @@ import { useRBACAuth } from "@/lib/permissions";
 import useWorkspaceStore from "@/store/workspace";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
-import { MetricSelector, type Metric, type MetricCategory } from "@/components/analytics/metric-selector";
-import { VisualizationSelector, type VisualizationType } from "@/components/analytics/visualization-selector";
+import { VisualizationSelector, } from "@/components/analytics/visualization-selector";
 import { VisualizationPreview } from "@/components/analytics/visualization-preview";
 import { useReportBuilder } from "@/hooks/use-report-builder";
 
@@ -106,7 +94,7 @@ interface ReportConfig {
 }
 
 // Available metrics for report building
-const AVAILABLE_METRICS: MetricDefinition[] = [
+void ([
   // Project Metrics
   {
     id: "totalProjects",
@@ -274,10 +262,10 @@ const AVAILABLE_METRICS: MetricDefinition[] = [
     dataType: "duration",
     icon: Clock,
   },
-];
+]);
 
 // Available visualization types
-const VISUALIZATION_TYPES: VisualizationType[] = [
+void ([
   {
     id: "metric-card",
     name: "Metric Card",
@@ -329,7 +317,7 @@ const VISUALIZATION_TYPES: VisualizationType[] = [
     maxMetrics: 1,
     requiresGrouping: true,
   },
-];
+]);
 
 // Draggable metric item component
 const DraggableMetric = ({ metric, isSelected }: { metric: MetricDefinition; isSelected: boolean }) => {
@@ -367,61 +355,10 @@ const DraggableMetric = ({ metric, isSelected }: { metric: MetricDefinition; isS
 };
 
 // Report preview component
-const ReportPreview = ({ config }: { config: ReportConfig }) => {
-  if (!config.metrics.length) {
-    return (
-      <div className="h-96 border-2 border-dashed border-border rounded-lg flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <Layout className="h-12 w-12 text-muted-foreground mx-auto" />
-          <p className="text-muted-foreground">Select metrics and visualizations to preview your report</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Report Preview</h3>
-        <Badge variant="outline">{config.metrics.length} metric{config.metrics.length > 1 ? 's' : ''}</Badge>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {config.visualizations.map((viz, index) => (
-          <Card key={index} className="border-border/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                {(() => {
-                  const vizType = VISUALIZATION_TYPES.find((v: VisualizationType) => v.id === viz.type);
-                  if (vizType?.icon) {
-                    const IconComponent = vizType.icon;
-                    return <IconComponent className="h-4 w-4" />;
-                  }
-                  return null;
-                })()}
-                {VISUALIZATION_TYPES.find((v: VisualizationType) => v.id === viz.type)?.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-32 bg-muted/30 rounded-md flex items-center justify-center">
-                <p className="text-xs text-muted-foreground text-center">
-                  {viz.metrics.map(metricId => 
-                    AVAILABLE_METRICS.find(m => m.id === metricId)?.name
-                  ).join(", ")}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // Main report builder component
 function ReportBuilderPage() {
   const navigate = useNavigate();
-  const { hasPermission, user, permissions } = useRBACAuth();
+  const { hasPermission } = useRBACAuth();
   const { workspace } = useWorkspaceStore();
   const [activeTab, setActiveTab] = useState("metrics");
   const [searchQuery, setSearchQuery] = useState("");
@@ -477,25 +414,21 @@ function ReportBuilderPage() {
     );
   }
 
-  const handleConfigUpdate = (config: Partial<ReportConfig>) => {
-    setReportConfig(prev => ({ ...prev, ...config }));
-  };
-
-  const {
+    const {
     reportName,
     reportDescription,
     selectedMetrics,
     selectedVisualization,
-    metricCategories,
+    
     visualizationTypes,
     reportData,
     selectedMetricObjects,
-    selectedMetricTypes,
+    
     isLoading,
     isSaving,
     setReportName,
     setReportDescription,
-    handleMetricSelect,
+    
     handleVisualizationSelect,
     handleSave
   } = useReportBuilder({

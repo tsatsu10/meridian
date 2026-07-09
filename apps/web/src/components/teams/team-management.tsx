@@ -37,15 +37,10 @@ import {
 import { 
   Users, 
   Search, 
-  Plus, 
-  Filter,
   MoreHorizontal,
   Mail,
   Shield,
-  Clock,
   TrendingUp,
-  AlertCircle,
-  CheckCircle2,
   Crown,
   Zap,
   UserMinus,
@@ -55,7 +50,6 @@ import {
   Star,
   BarChart3,
   Calendar,
-  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "framer-motion";
@@ -168,13 +162,13 @@ export default function TeamManagement({
   showFilters = true,
   showBulkActions = true
 }: TeamManagementProps) {
-  const { role, hasPermission } = useRBACAuth();
+  const { hasPermission } = useRBACAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [teamData, setTeamData] = useState<any[]>([]);
-  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
+  const [_isLoadingTeam, setIsLoadingTeam] = useState(false);
 
   // Fetch team members from API
   React.useEffect(() => {
@@ -245,7 +239,7 @@ export default function TeamManagement({
 
   // Permission checks
   const canManageMembers = hasPermission("canManageTeamRoles");
-  const canViewDetails = hasPermission("canViewTeamMembers");
+  void (hasPermission("canViewTeamMembers"));
   const canInviteMembers = hasPermission("canInviteMembers");
 
   // Filter and search team members
@@ -299,19 +293,7 @@ export default function TeamManagement({
     toast.success("Member removed successfully");
   };
 
-  const handleRoleChange = (memberId: string, newRole: string) => {
-    if (!canManageMembers) {
-      toast.error("You don't have permission to change roles");
-      return;
-    }
-
-    setTeamData(prev => prev.map(m => 
-      m.id === memberId ? { ...m, role: newRole } : m
-    ));
-    toast.success("Member role updated successfully");
-  };
-
-  const handleInviteMember = () => {
+    const handleInviteMember = () => {
     if (!canInviteMembers) {
       toast.error("You don't have permission to invite members");
       return;

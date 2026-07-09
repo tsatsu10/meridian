@@ -1,5 +1,5 @@
 // @epic-2.1-files: Upload attachment API client
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 export interface UploadAttachmentRequest {
   file: File;

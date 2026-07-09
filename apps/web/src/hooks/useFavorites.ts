@@ -10,7 +10,6 @@ import {
   addChannelToFavorites,
   removeUserFromFavorites,
   removeFavorite,
-  isUserInFavorites,
   type Favorite,
 } from '@/lib/api/favorites';
 import { toast } from 'sonner';
@@ -60,7 +59,7 @@ export function useFavorites() {
 
       return { previousFavorites };
     },
-    onError: (error, userId, context) => {
+    onError: (error, _userId, context) => {
       // Rollback on error
       if (context?.previousFavorites) {
         queryClient.setQueryData(['favorites'], context.previousFavorites);
@@ -100,7 +99,7 @@ export function useFavorites() {
 
       return { previousFavorites };
     },
-    onError: (error, channelId, context) => {
+    onError: (error, _channelId, context) => {
       if (context?.previousFavorites) {
         queryClient.setQueryData(['favorites'], context.previousFavorites);
       }
@@ -130,7 +129,7 @@ export function useFavorites() {
 
       return { previousFavorites };
     },
-    onError: (error, userId, context) => {
+    onError: (error, _userId, context) => {
       if (context?.previousFavorites) {
         queryClient.setQueryData(['favorites'], context.previousFavorites);
       }
@@ -160,7 +159,7 @@ export function useFavorites() {
 
       return { previousFavorites };
     },
-    onError: (error, favoriteId, context) => {
+    onError: (error, _favoriteId, context) => {
       if (context?.previousFavorites) {
         queryClient.setQueryData(['favorites'], context.previousFavorites);
       }

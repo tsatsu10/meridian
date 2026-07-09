@@ -204,7 +204,7 @@ export function createPermissionCheck(permission: PermissionAction) {
  * Route loader with permission checking
  */
 export function createProtectedLoader<T>(
-  permission: PermissionAction,
+  _permission: PermissionAction,
   loader: () => Promise<T>
 ) {
   return async (): Promise<T> => {

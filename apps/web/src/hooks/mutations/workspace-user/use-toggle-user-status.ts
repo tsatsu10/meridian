@@ -18,7 +18,7 @@ export function useToggleUserStatus() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["workspace-users", variables.workspaceId] });
       toast.success("User status updated successfully");
     },

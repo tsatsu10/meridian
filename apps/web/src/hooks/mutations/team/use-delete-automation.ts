@@ -18,7 +18,7 @@ export function useDeleteAutomation() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["team-automations", variables.teamId] });
       toast.success("Automation deleted successfully");
     },

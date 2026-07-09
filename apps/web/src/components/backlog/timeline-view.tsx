@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { format, isToday, isThisWeek, isThisMonth, addDays, isBefore } from 'date-fns';
-import { Calendar, Clock, Target, AlertTriangle, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
+import { format, isToday, isThisWeek, isThisMonth, isBefore } from 'date-fns';
+import { Calendar, Target, CheckCircle2, Circle, } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/cn';
 import type { EnhancedTask } from '@/types/backlog';

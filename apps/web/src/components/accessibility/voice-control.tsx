@@ -10,10 +10,8 @@ import {
   MicOff,
   Volume2,
   VolumeX,
-  Settings,
   AlertCircle,
   CheckCircle2,
-  RefreshCw,
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/cn";

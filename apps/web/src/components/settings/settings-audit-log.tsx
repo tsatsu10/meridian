@@ -13,7 +13,6 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Calendar,
   Settings,
   RotateCcw,
   Upload,
@@ -31,7 +30,6 @@ const DownloadIcon = Download as React.FC<{ className?: string }>;
 const SearchIcon = Search as React.FC<{ className?: string }>;
 const ChevronLeftIcon = ChevronLeft as React.FC<{ className?: string }>;
 const ChevronRightIcon = ChevronRight as React.FC<{ className?: string }>;
-const CalendarIcon = Calendar as React.FC<{ className?: string }>;
 const SettingsIcon = Settings as React.FC<{ className?: string }>;
 const RotateCcwIcon = RotateCcw as React.FC<{ className?: string }>;
 const UploadIcon = Upload as React.FC<{ className?: string }>;

@@ -11,7 +11,7 @@
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,11 +19,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   MessageCircle,
-  Award,
   MapPin,
   Clock,
   Briefcase,
@@ -42,11 +40,8 @@ import {
   Flame,
   Star,
   Sparkles,
-  ChevronRight,
   Eye,
-  Heart,
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { format } from "date-fns";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { BlurFade } from "@/components/magicui/blur-fade";
@@ -562,7 +557,7 @@ function ProfilePageRedesigned() {
                       <TabsContent value="goals" className="mt-6 space-y-4">
                         {profile.goals?.active && profile.goals.active.length > 0 ? (
                           <div className="space-y-4">
-                            {profile.goals.active.map((goal: any, index: number) => (
+                            {profile.goals.active.map((goal: any, _index: number) => (
                               <Card 
                                 key={goal.id} 
                                 className="overflow-hidden group hover:shadow-xl hover:border-blue-500/50 transition-all cursor-pointer"

@@ -1,14 +1,13 @@
-import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 import {
   DndContext,
   type DragEndEvent,
   DragOverlay,
   type DragStartEvent,
   KeyboardSensor,
-  MouseSensor,
   TouchSensor,
   type UniqueIdentifier,
   closestCorners,
@@ -16,7 +15,7 @@ import {
   useSensors,
   PointerSensor,
 } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, } from "@dnd-kit/sortable";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
@@ -78,7 +77,7 @@ const fetchInfiniteTasks = async ({
   pageParam = 0,
   projectId,
   workspaceId,
-  filters,
+  
   pageSize = 50
 }: {
   pageParam?: number;

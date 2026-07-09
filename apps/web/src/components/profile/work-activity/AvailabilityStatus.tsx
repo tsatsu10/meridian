@@ -7,7 +7,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Globe, MapPin } from "lucide-react";
+import { Clock, Globe, } from "lucide-react";
 import { getUserAvailability, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
 import { cn } from "@/lib/cn";
 

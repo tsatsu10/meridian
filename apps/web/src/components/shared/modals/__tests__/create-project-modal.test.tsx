@@ -410,7 +410,7 @@ describe('CreateProjectModal', () => {
     it.skip('should show error when workspace is not selected [MOCK COMPLEXITY]', async () => {
       // Note: This test requires dynamic mocking of the workspace store
       // which is complex with vi.mock() at the module level
-      const user = userEvent.setup()
+      void (userEvent.setup());
       const { toast } = await import('sonner')
 
       render(

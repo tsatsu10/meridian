@@ -53,7 +53,6 @@ const AllTheProviders = ({
   queryClient = TestQueryClient(),
   initialEntries = ['/'],
   withRouter = false,
-  withAuth = true,
 }: {
   children: ReactNode
   queryClient?: QueryClient

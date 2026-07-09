@@ -14,7 +14,6 @@ import {
   Trash2, 
   Send,
   Volume2,
-  Download
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { toast } from '@/lib/toast';

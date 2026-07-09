@@ -9,7 +9,6 @@ import {
   ZapOff,
   Info,
   CheckCircle2,
-  RefreshCw,
   Eye,
 } from "lucide-react";
 import { cn } from "@/lib/cn";

@@ -6,7 +6,6 @@ import {
   DragOverlay,
   type DragStartEvent,
   KeyboardSensor,
-  MouseSensor,
   TouchSensor,
   type UniqueIdentifier,
   closestCorners,
@@ -16,13 +15,12 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, } from "framer-motion";
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { OptimisticButton } from '@/components/ui/optimistic-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu,
@@ -34,7 +32,6 @@ import {
 import {
   MoreHorizontal,
   Eye,
-  Edit,
   Trash2,
   Clock,
   Flag,
@@ -47,7 +44,6 @@ import {
   GripVertical,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Link } from '@tanstack/react-router';
 import { toast } from "sonner";
 
 // @epic-3.2-time: Mike needs efficient task browsing with large datasets
@@ -850,7 +846,7 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
               }}
             >
               {virtualizer.getVirtualItems().map((virtualRow) => {
-                const task = tasks[virtualRow.index];
+                void (tasks[virtualRow.index]);
                 return (
                   <div
                     key={virtualRow.index}

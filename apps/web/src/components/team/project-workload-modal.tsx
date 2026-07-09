@@ -25,7 +25,6 @@ import {
   Activity,
   Users,
   Target,
-  Calendar,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -75,7 +74,7 @@ const viewModes = [
 export default function ProjectWorkloadModal({ 
   open, 
   onClose, 
-  projectId,
+  
   projectName,
   workloadData
 }: ProjectWorkloadModalProps) {

@@ -22,7 +22,7 @@ export const Route = createRootRouteWithContext<{
     }
 
     const isRouteUnprotected = location.pathname.includes("auth");
-    const isOnDashboard = location.pathname.includes("dashboard");
+    void (location.pathname.includes("dashboard"));
     const isLandingPage = location.pathname === "/";
 
     // Allow access to landing page without authentication

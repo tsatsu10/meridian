@@ -1,6 +1,6 @@
 // @epic-3.4-teams: Empty state components for teams page
 import { Button } from "@/components/ui/button";
-import { Users, UserPlus, Search, Plus, Inbox } from "lucide-react";
+import { Users, UserPlus, Search, } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface EmptyStateProps {

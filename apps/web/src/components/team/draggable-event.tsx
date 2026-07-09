@@ -79,7 +79,7 @@ export default function DraggableEvent({
     onDragStart?.(event);
   };
 
-  const handleDragEnd = (e: React.DragEvent) => {
+  const handleDragEnd = (_e: React.DragEvent) => {
     onDragEnd?.();
   };
 

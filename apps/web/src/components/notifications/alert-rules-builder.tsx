@@ -77,7 +77,7 @@ export const AlertRulesBuilder: React.FC<AlertRulesBuilderProps> = ({
   const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBuilder, setShowBuilder] = useState(false);
-  const [editingRule, setEditingRule] = useState<Rule | null>(null);
+  const [_editingRule, setEditingRule] = useState<Rule | null>(null);
 
   // Builder state
   const [name, setName] = useState('');

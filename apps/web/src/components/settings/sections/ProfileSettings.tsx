@@ -1,7 +1,6 @@
 // Profile settings section with avatar management and personal information
 import React, { useState, useRef, useEffect } from 'react';
 import { useSettings } from '../providers/SettingsProvider';
-import type { UserProfile } from '@/types/profile';
 import { getUserInitials } from '@/types/profile';
 import { ProfileSettingsSkeleton, AvatarUploadSkeleton } from '@/components/profile/ProfileSkeleton';
 import { toast } from 'sonner';
@@ -13,9 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Camera, Upload, X, Save, RotateCcw, Globe, MapPin } from 'lucide-react';
-import { cn } from '@/lib/cn';
 import { optimizeAvatarImage, formatFileSize } from '@/lib/image-optimization';
 
 const timezones = [

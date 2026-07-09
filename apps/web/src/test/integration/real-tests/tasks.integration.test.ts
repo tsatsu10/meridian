@@ -3,7 +3,7 @@
  * Tests actual task CRUD operations against the running API
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, } from 'vitest';
 import { waitForServer, shouldSkipIntegrationTests, createTestUser, getTestConfig } from '../setup/test-server';
 
 const SKIP_TESTS = shouldSkipIntegrationTests();

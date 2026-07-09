@@ -5,14 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { 
   Target, 
-  Calendar, 
   Users, 
   TrendingUp, 
   Clock, 
   AlertTriangle,
-  CheckCircle,
-  Filter,
-  Plus,
   Edit,
   Flag,
   CalendarDays,
@@ -22,14 +18,13 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { cn } from "@/lib/cn";
-import { format, differenceInDays, isAfter, isBefore, isToday } from "date-fns";
+import { format, differenceInDays, isToday } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useDashboardData } from '@/hooks/queries/dashboard/use-dashboard-data';
 
 // @epic-1.3-milestones: Sarah (PM) and Jennifer (Exec) need milestone tracking

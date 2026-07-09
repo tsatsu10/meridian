@@ -481,7 +481,7 @@ export function useSmartSuggestions() {
       .map(([type, count]) => ({ type, count }));
   };
 
-  const getPersonalizedSuggestions = (text: string) => {
+  const getPersonalizedSuggestions = (_text: string) => {
     // Return suggestions based on user's history and preferences
     const commonPatterns = suggestionsHistory
       .filter(s => s.category === preferredTone)

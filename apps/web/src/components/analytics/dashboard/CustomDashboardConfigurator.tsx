@@ -10,7 +10,6 @@ import {
   Grip,
   Plus,
   Trash2,
-  Settings,
   Save,
   RotateCcw,
   Eye,
@@ -18,14 +17,10 @@ import {
   Copy,
   Layout,
   BarChart3,
-  PieChart,
-  LineChart,
   Activity,
   Users,
   Target,
   Zap,
-  Brain,
-  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

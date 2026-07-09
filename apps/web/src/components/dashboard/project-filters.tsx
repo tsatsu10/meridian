@@ -7,15 +7,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Checkbox,
-  CheckboxProps,
 } from "@/components/ui/checkbox";
 import {
   Popover,
@@ -29,7 +21,6 @@ import {
   X,
   Filter,
   RotateCcw,
-  Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ProjectFilters } from "@/hooks/use-project-filters";

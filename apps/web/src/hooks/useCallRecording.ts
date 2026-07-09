@@ -262,7 +262,7 @@ export function useCallRecording(roomId: string, participants: string[]) {
   }, []);
 
   // Upload to cloud (placeholder implementation)
-  const uploadToCloud = useCallback(async (file: RecordingFile) => {
+  const uploadToCloud = useCallback(async (_file: RecordingFile) => {
     // This would integrate with your cloud storage provider
     // For now, just simulate upload
     toast.info('Cloud upload would be implemented here');

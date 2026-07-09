@@ -11,7 +11,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { TestWrapper } from '../../../test-utils/test-wrapper';
-import React from 'react';
 
 interface TaskCompletionChartProps {
   data?: Array<{ date: string; completed: number }>;

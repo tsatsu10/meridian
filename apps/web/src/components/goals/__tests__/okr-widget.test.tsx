@@ -2,7 +2,7 @@
  * 🎯 OKR Widget - Component Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, } from 'vitest';
 
 // Skip this test file due to module import issues
 describe.skip('OKR Widget Tests', () => {

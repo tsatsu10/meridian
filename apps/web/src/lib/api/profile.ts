@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/constants/urls";
-import type { ProfileUpdateData, UserProfile, ProfileApiResponse } from "@/types/profile";
+import type { ProfileUpdateData, } from "@/types/profile";
 
 /**
  * Get authentication headers for API requests

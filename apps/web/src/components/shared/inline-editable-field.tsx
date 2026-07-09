@@ -25,7 +25,7 @@ export function InlineEditableField({
   className,
   inputClassName,
   maxLength = 200,
-  multiline = false,
+  
   canEdit = true,
 }: InlineEditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);

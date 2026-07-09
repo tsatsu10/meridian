@@ -6,21 +6,17 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRBACAuth } from "@/lib/permissions";
+import { useState, } from "react";
 import { RequirePermission } from "@/lib/permissions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Users, Shield, Clock, History, AlertTriangle, Crown, UserCog, Eye, Settings, Ban } from "lucide-react";
+import { CalendarIcon, Users, Shield, Crown, UserCog, Eye, Settings, Ban } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";

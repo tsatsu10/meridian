@@ -323,7 +323,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
 
           {/* Tasks */}
           <div className="relative" style={{ zIndex: 2 }}>
-            {tasks.map((task, index) => {
+            {tasks.map((task, _index) => {
               const taskWidth = getTaskWidth(task);
               const taskLeft = getTaskStartX(task);
               const isCritical = showCriticalPath && criticalPath.includes(task.id);

@@ -1,8 +1,4 @@
-// @epic-2.1-workflow: Contextual help system for analytics
-// @persona-sarah: PM needs quick access to feature documentation
-// @persona-mike: Developer needs technical context for analytics features
 
-import { useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -25,7 +21,6 @@ import {
   ChevronRight,
   Info,
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 
 interface HelpItem {
   id: string;

@@ -22,8 +22,8 @@ import {
   jsonb,
   numeric,
   time,
-  unique,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { users, workspaces, projects, teams } from "../schema";
 // 3. User Availability
@@ -65,14 +65,15 @@ export const frequentCollaborators = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    uniquePair: unique().on(table.userId, table.collaboratorId),
+    // Unique index (not a table constraint): drizzle-kit push introspects this
+    // shape stably, keeping repeated pushes a no-op. Also covers pair lookups.
+    uniquePair: uniqueIndex("idx_frequent_collaborators_pair_unique").on(
+      table.userId,
+      table.collaboratorId
+    ),
     userIdx: index("idx_frequent_collaborators_user").on(
       table.userId,
       table.collaborationScore
-    ),
-    pairIdx: index("idx_frequent_collaborators_pair").on(
-      table.userId,
-      table.collaboratorId
     ),
   })
 );

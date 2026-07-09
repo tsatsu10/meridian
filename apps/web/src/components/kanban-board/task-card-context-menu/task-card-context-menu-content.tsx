@@ -34,7 +34,6 @@ import {
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import { generateLink } from "@/lib/generate-link";
 import queryClient from "@/query-client";
-import type Task from "@/types/task";
 import type { TaskWithSubtasks } from "@/types/task";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";

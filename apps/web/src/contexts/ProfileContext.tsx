@@ -80,7 +80,7 @@ export function ProfileProvider({ children, userId, initialData }: ProfileProvid
       
       return { previousProfile };
     },
-    onError: (err, newData, context) => {
+    onError: (_err, _newData, context) => {
       // Rollback on error
       if (context?.previousProfile) {
         queryClient.setQueryData(['profile', userId || 'current'], context.previousProfile);

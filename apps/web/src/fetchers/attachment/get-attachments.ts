@@ -1,5 +1,5 @@
 // @epic-2.1-files: Get attachments API client
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 export async function getTaskAttachments(taskId: string) {
   const response = await fetch(`${API_BASE_URL}/attachment/task/${taskId}`);

@@ -52,7 +52,7 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
     swipeThreshold = 50,
     swipeVelocityThreshold = 0.3,
     maxSwipeTime = 1000,
-    touchSensitivity = 10,
+    
     preventScroll = false,
     onSwipe,
     onSwipeLeft,

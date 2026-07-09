@@ -1,17 +1,10 @@
-import Tip from "@/components/common/tip";
-import icons from "@/constants/project-icons";
+
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
-import { cn } from "@/lib/cn";
 import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
-import type { ProjectWithTasks } from "@/types/project";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useRBACAuth } from "@/lib/permissions";
-import {
-  Layout,
-  Plus,
-} from "lucide-react";
-import { createElement, useState } from "react";
+import { useState } from "react";
 import CreateProjectModal from "../../../../shared/modals/create-project-modal";
 
 type ProjectsProps = {
@@ -20,33 +13,14 @@ type ProjectsProps = {
 
 function Projects({ workspaceId }: ProjectsProps) {
   const { project: currentProject, setProject } = useProjectStore();
-  const { data, isLoading } = useGetProjects({ workspaceId });
-  const projects = data as ProjectWithTasks[] | undefined;
-  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const { isLoading } = useGetProjects({ workspaceId });
+    const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const { isSidebarOpened } = useUserPreferencesStore();
   const { hasPermission } = useRBACAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  void (useNavigate());
+  void (useLocation());
 
-  const handleSelectProject = (selectedProject: ProjectWithTasks) => {
-    // Only prevent navigation if we're already on the exact overview page
-    if (
-      currentProject?.id === selectedProject.id &&
-      location.pathname === `/dashboard/workspace/${workspaceId}/project/${selectedProject.id}`
-    )
-      return;
-
-    setProject(selectedProject);
-    navigate({
-      to: "/dashboard/workspace/$workspaceId/project/$projectId",
-      params: {
-        workspaceId,
-        projectId: selectedProject.id,
-      },
-    });
-  };
-
-  if (isLoading) {
+    if (isLoading) {
     return (
       <div className="space-y-1 w-full">
         {[1, 2, 3].map((i) => (

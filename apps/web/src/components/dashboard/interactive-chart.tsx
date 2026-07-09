@@ -48,14 +48,14 @@ function InteractiveChartInternal({
   onChartTypeChange,
   onExport,
   showTrend = true,
-  showComparison = false,
+  
   height = 300,
   className = "",
   color = "#8884d8",
   drillDownEnabled = false,
   onDrillDown
 }: InteractiveChartProps) {
-  const [hoveredData, setHoveredData] = useState<ChartDataPoint | null>(null);
+  const [hoveredData, _setHoveredData] = useState<ChartDataPoint | null>(null);
 
   const chartData = useMemo(() => {
     return data.map(point => ({
@@ -173,7 +173,7 @@ function InteractiveChartInternal({
                 dataKey="displayValue"
                 cursor={drillDownEnabled ? "pointer" : "default"}
               >
-                {chartData.map((entry, index) => (
+                {chartData.map((_entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>

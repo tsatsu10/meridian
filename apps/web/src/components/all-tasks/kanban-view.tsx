@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   DndContext,
   type DragEndEvent,
@@ -19,11 +19,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { FolderOpen, MoreHorizontal, Calendar, MessageSquare, Paperclip, Users, User } from "lucide-react";
+import { FolderOpen, MoreHorizontal, Users, User } from "lucide-react";
 import { cn } from "@/lib/cn";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
-import { format, isAfter, isBefore } from "date-fns";
-import { arrayMove } from "@dnd-kit/sortable";
+import { format, isBefore } from "date-fns";
 import { client } from "@meridian/libs";
 
 // @epic-1.1-subtasks: Sarah (PM) needs visual task organization across all projects
@@ -83,7 +82,7 @@ interface AllTasksKanbanViewProps {
 }
 
 // Status configurations for kanban columns (ids must match API task_status enum)
-const statusColumns = [
+void ([
   {
     id: "todo",
     name: "To Do",
@@ -99,7 +98,7 @@ const statusColumns = [
     name: "Done",
     color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   },
-];
+]);
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",

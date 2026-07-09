@@ -1,16 +1,10 @@
 // 🎨 Complete Task Details Redesign - Modern, Clean, Functional
 import { useState, useCallback } from "react";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   MoreVertical,
-  Clock,
-  Calendar,
-  User,
-  Tag,
-  CheckCircle2,
-  Circle,
   AlertCircle,
   Paperclip,
   MessageSquare,
@@ -19,19 +13,11 @@ import {
   Trash2,
   Copy,
   Share2,
-  Star,
-  StarOff,
   Play,
   Pause,
   CheckSquare,
-  Square,
   ChevronDown,
-  ChevronRight,
   Plus,
-  X,
-  Zap,
-  TrendingUp,
-  Users,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -42,7 +28,7 @@ import { toast } from "sonner";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,

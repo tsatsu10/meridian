@@ -18,7 +18,7 @@ export function useDeleteTeam() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["team-metrics", variables.workspaceId] });
       toast.success("Team deleted successfully");

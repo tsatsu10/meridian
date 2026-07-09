@@ -13,9 +13,7 @@ import {
   Menu, 
   ChevronLeft, 
   ChevronRight,
-  Search,
   Bell,
-  Settings,
   HelpCircle
 } from 'lucide-react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -91,8 +89,8 @@ export const UniversalNavigation: React.FC<UniversalNavigationProps> = ({
   showBreadcrumbs = true,
   showSearch = true,
   showUserActions = true,
-  collapseOnMobile = true,
-  mobileBreakpoint = 768,
+  
+  
   headerContent,
   sidebarFooter,
   ariaLabel = "Main navigation",

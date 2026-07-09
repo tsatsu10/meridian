@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useBatchedLocalStorage } from './use-debounced-local-storage';
 
 /**

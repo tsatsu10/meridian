@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from '@tanstack/react-router'
 import { SignInForm } from '../sign-in-form'
 import { useAuth } from '../../providers/unified-context-provider'
-import useSignIn from '../../../hooks/mutations/use-sign-in'
 
 // Mock external dependencies
 vi.mock('../../providers/unified-context-provider')

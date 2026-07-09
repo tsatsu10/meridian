@@ -6,7 +6,7 @@ interface PerformanceChartsProps {
   className?: string;
 }
 
-export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({ data, className }) => {
+export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({ className }) => {
   return (
     <Card className={className}>
       <CardHeader>

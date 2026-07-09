@@ -6,12 +6,9 @@ import { useNavigation } from '../providers/NavigationProvider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import {
   Command,
@@ -22,7 +19,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from '@/components/ui/command';
 import {
   Search,
@@ -30,13 +26,10 @@ import {
   Users,
   MessageSquare,
   FolderKanban,
-  Calendar,
   Settings,
   Hash,
   ArrowRight,
   Clock,
-  Star,
-  Filter,
   X,
 } from 'lucide-react';
 
@@ -120,7 +113,7 @@ export const NavSearch: React.FC<NavSearchProps> = ({
   const { state, setSearchQuery, performSearch, clearSearch } = useNavigation();
   const { recentSearches, addRecentSearch, clearRecentSearches } = useRecentSearches();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [_selectedIndex, _setSelectedIndex] = useState(0);
   const [filters, setFilters] = useState<string[]>([]);
   const [localQuery, setLocalQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -181,7 +174,7 @@ export const NavSearch: React.FC<NavSearchProps> = ({
   }, {} as Record<string, SearchResult[]>);
 
   // Handle result selection
-  const handleResultSelect = (result: SearchResult) => {
+  const handleResultSelect = (_result: SearchResult) => {
     setIsOpen(false);
     clearSearch();
     setLocalQuery('');

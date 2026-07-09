@@ -15,20 +15,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  CheckCircle2, 
   Clock, 
   FileText, 
-  TrendingUp, 
   Calendar,
   Mail,
   Video,
   Settings,
   Download,
   Activity,
-  Target,
-  Zap,
   AlertCircle,
-  Info,
   Edit,
   MessageSquare,
   File,

@@ -19,7 +19,6 @@ function useCreateTask() {
       dueDate,
       priority,
       parentId,
-      labels,
     }: CreateTaskRequest & { labels?: string[] }) =>
       createTask(
         title,
@@ -31,7 +30,7 @@ function useCreateTask() {
         priority,
         parentId,
       ),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       // Invalidate all task-related queries to ensure calendar synchronization
       if (workspace?.id) {
         // Invalidate all-tasks queries (includes calendar views)

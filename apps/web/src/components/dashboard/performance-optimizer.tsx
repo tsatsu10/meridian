@@ -1,6 +1,5 @@
 import React, { 
   Suspense, 
-  lazy, 
   memo, 
   useCallback, 
   useMemo, 
@@ -15,7 +14,6 @@ import {
   Activity, 
   Clock, 
   Database, 
-  Wifi, 
   AlertTriangle,
   CheckCircle,
   TrendingUp,
@@ -38,7 +36,7 @@ export function usePerformanceMonitor() {
     score: 0
   });
 
-  const startTime = useRef(performance.now());
+  void (useRef(performance.now()));
   const observer = useRef<PerformanceObserver | null>(null);
 
   useEffect(() => {

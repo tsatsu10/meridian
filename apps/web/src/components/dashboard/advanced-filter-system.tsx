@@ -3,27 +3,21 @@
 // @role-department-head: Department-scoped filtering and search
 // @role-project-manager: Project-specific advanced filtering
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Search,
   Filter,
   X,
-  Save,
   BookmarkPlus,
   Calendar,
   Users,
@@ -31,10 +25,8 @@ import {
   Clock,
   TrendingUp,
   SlidersHorizontal,
-  ChevronDown,
   Star,
   History,
-  Download,
   RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -95,7 +87,7 @@ export function AdvancedFilterSystem({
   availableFields,
   savedFilters = [],
   onSaveFilter,
-  onDeleteFilter,
+  
   globalSearch = true,
   className = ""
 }: AdvancedFilterSystemProps) {
