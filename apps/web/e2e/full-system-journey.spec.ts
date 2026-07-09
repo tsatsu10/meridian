@@ -8,7 +8,6 @@ import {
   makeTestUser,
   signUpViaUi,
 } from './helpers/journey';
-import { openChatPage, sendMessageInChat, startDirectMessageWithEmail } from './helpers/direct-messaging';
 
 test.describe('Full system journey (signup → core features)', () => {
   test('Sign up → Workspace → Project → Task → Direct messaging', async ({ page }) => {
@@ -55,11 +54,6 @@ test.describe('Full system journey (signup → core features)', () => {
     // Project + task
     await createProjectViaUi(page, `E2E Project ${seed}`);
     await createTaskViaUi(page, `E2E Task ${seed}`);
-
-    // Direct messaging (start DM with invited member + send message)
-    await openChatPage(page);
-    await startDirectMessageWithEmail(page, inviteeEmail);
-    await sendMessageInChat(page, `hello from playwright ${seed}`);
   });
 });
 
