@@ -1,7 +1,6 @@
 import { Context, Next } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
-import { rateLimiter } from 'hono/rate-limiter';
 import { createError } from './errors';
 import logger from '../utils/logger';
 
@@ -239,7 +238,11 @@ async function verifyJWT(token: string): Promise<any> {
   // In a real implementation, you would verify the JWT signature
   // This is a simplified version for demonstration
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const segment = token.split('.')[1];
+    if (!segment) {
+      throw new Error('Invalid token');
+    }
+    const payload = JSON.parse(atob(segment));
     
     if (payload.exp && payload.exp < Date.now() / 1000) {
       throw new Error('Token expired');

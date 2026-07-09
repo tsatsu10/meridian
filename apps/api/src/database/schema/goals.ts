@@ -75,7 +75,7 @@ export const goals = pgTable("goals", {
   privacy: text("privacy").notNull().default("private"), // 'private' | 'team' | 'organization'
   
   // Hierarchy
-  parentGoalId: text("parent_goal_id").references(() => goals.id, { onDelete: "set null" }),
+  parentGoalId: text("parent_goal_id").references((): any => goals.id, { onDelete: "set null" }),
   
   // Priority & Metadata
   priority: text("priority").default("medium"), // 'low' | 'medium' | 'high' | 'critical'

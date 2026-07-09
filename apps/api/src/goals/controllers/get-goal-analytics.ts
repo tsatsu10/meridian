@@ -11,6 +11,11 @@ import { goals, goalProgress } from "../../database/schema/goals";
 import { eq, desc, gte, sql } from "drizzle-orm";
 import logger from '../../utils/logger';
 
+function toIsoDateOnly(d: Date): string {
+  const part = d.toISOString().split("T")[0];
+  return part ?? d.toISOString().slice(0, 10);
+}
+
 export async function getGoalAnalytics(c: Context) {
   try {
     const db = getDatabase();
@@ -19,6 +24,9 @@ export async function getGoalAnalytics(c: Context) {
     
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
+    }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
     }
     
     // Get goal with key results
@@ -103,18 +111,19 @@ function calculateVelocity(progressEntries: any[]): number {
  * Estimate completion date based on velocity
  */
 function estimateCompletion(goal: any): string | null {
-  if (goal.progress >= 100) return null; // Already complete
-  
+  const p = goal.progress ?? 0;
+  if (p >= 100) return null; // Already complete
+
   const velocity = calculateVelocity(goal.progressEntries);
   if (velocity <= 0) return null; // No progress or negative velocity
-  
-  const remainingProgress = 100 - (goal.progress || 0);
+
+  const remainingProgress = 100 - p;
   const daysToCompletion = remainingProgress / velocity;
   
   const estimatedDate = new Date();
   estimatedDate.setDate(estimatedDate.getDate() + daysToCompletion);
-  
-  return estimatedDate.toISOString().split('T')[0]; // Return YYYY-MM-DD
+
+  return toIsoDateOnly(estimatedDate);
 }
 
 /**
@@ -131,7 +140,7 @@ function calculateProgressTrend(progressEntries: any[]): Array<{ date: string; v
   
   for (const entry of recentEntries.reverse()) {
     trend.push({
-      date: new Date(entry.recordedAt).toISOString().split('T')[0],
+      date: toIsoDateOnly(new Date(entry.recordedAt)),
       value: parseFloat(entry.value as string) || 0,
     });
   }

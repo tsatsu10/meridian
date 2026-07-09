@@ -22,6 +22,7 @@ import { DEFAULT_API_PORT } from '../../config/default-api-port';
 import { SlackIntegration } from "../../integrations/services/slack-integration";
 import { EmailIntegration } from "../../integrations/services/email-integration";
 import createNotification from "../controllers/create-notification";
+import { parseIntegrationJsonField } from "../../lib/parse-integration-json";
 
 export interface NotificationPayload {
   userEmail: string;
@@ -431,7 +432,7 @@ export class NotificationDeliveryService {
           and(
             eq(integrationConnectionTable.workspaceId, workspaceId),
             eq(integrationConnectionTable.provider, "slack"),
-            eq(integrationConnectionTable.isActive, true)
+            eq(integrationConnectionTable.status, "active")
           )
         );
       
@@ -454,16 +455,25 @@ export class NotificationDeliveryService {
       } else {
         // Send a generic notification
         const integration = integrations[0];
-        const credentials = JSON.parse(integration.credentials || "{}");
-        
+        if (!integration) {
+          return {
+            channel: 'slack',
+            success: false,
+            error: 'No active Slack integration found'
+          };
+        }
+
+        const credentials = parseIntegrationJsonField(integration.credentials);
         const slack = new SlackIntegration({
-          botToken: credentials.botToken,
-          userToken: credentials.userToken,
-          signingSecret: credentials.signingSecret
+          botToken: String(credentials.botToken ?? ""),
+          userToken: credentials.userToken ? String(credentials.userToken) : undefined,
+          signingSecret: String(credentials.signingSecret ?? "")
         });
         
-        const config = JSON.parse(integration.config);
-        const targetChannel = config.defaultChannel || "general";
+        const config = parseIntegrationJsonField(integration.config);
+        const defaultCh =
+          typeof config.defaultChannel === "string" ? config.defaultChannel : undefined;
+        const targetChannel = defaultCh || "general";
         
         await slack.sendMeridianNotification(targetChannel, {
           title: payload.title,

@@ -11,6 +11,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import logger from '../../utils/logger';
+import { parseIntegrationJsonField } from "../../lib/parse-integration-json";
 import { 
   integrationConnectionTable, 
   projectTable,
@@ -379,6 +380,13 @@ export class SlackIntegration {
       signingSecret: string;
       teamName?: string;
       teamId?: string;
+      defaultChannel?: string;
+      features?: {
+        channelNotifications?: boolean;
+        directMessages?: boolean;
+        channelCreation?: boolean;
+        fileSharing?: boolean;
+      };
     }
   ) {
     try {
@@ -397,7 +405,7 @@ export class SlackIntegration {
 
       const db = getDatabase();
       
-      // Create integration connection
+      // Create integration connection (columns match integration_connection in schema)
       const integration = await db.insert(integrationConnectionTable).values({
         id: createId(),
         name: `Slack - ${testResult.team?.name || config.teamName || "Workspace"}`,
@@ -409,7 +417,8 @@ export class SlackIntegration {
           teamName: testResult.team?.name || config.teamName,
           teamUrl: testResult.team?.url,
           botId: testResult.team?.bot_id,
-          features: {
+          defaultChannel: config.defaultChannel,
+          features: config.features ?? {
             channelNotifications: true,
             directMessages: true,
             channelCreation: true,
@@ -421,9 +430,9 @@ export class SlackIntegration {
           userToken: config.userToken,
           signingSecret: config.signingSecret
         }),
-        connectionStatus: "connected",
-        isActive: true,
-        lastConnectedAt: new Date()
+        status: "active",
+        lastSync: new Date(),
+        syncStatus: "success"
       }).returning();
 
       return {
@@ -454,11 +463,12 @@ export class SlackIntegration {
         .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
         .where(eq(taskTable.id, taskId));
 
-      if (!task.length) {
+      const joinedRow = task[0];
+      if (!joinedRow) {
         throw new Error("Task not found");
       }
 
-      const taskData = task[0];
+      const { tasks: taskRow, projects: projectRow } = joinedRow;
 
       // Get Slack integrations for workspace
       const integrations = await db.select()
@@ -467,18 +477,18 @@ export class SlackIntegration {
           and(
             eq(integrationConnectionTable.workspaceId, workspaceId),
             eq(integrationConnectionTable.provider, "slack"),
-            eq(integrationConnectionTable.isActive, true)
+            eq(integrationConnectionTable.status, "active")
           )
         );
 
       for (const integration of integrations) {
-        const config = JSON.parse(integration.config);
-        const credentials = JSON.parse(integration.credentials || "{}");
+        const config = parseIntegrationJsonField(integration.config);
+        const credentials = parseIntegrationJsonField(integration.credentials);
 
         const slack = new SlackIntegration({
-          botToken: credentials.botToken,
-          userToken: credentials.userToken,
-          signingSecret: credentials.signingSecret
+          botToken: String(credentials.botToken ?? ""),
+          userToken: credentials.userToken ? String(credentials.userToken) : undefined,
+          signingSecret: String(credentials.signingSecret ?? "")
         });
 
         // Determine notification content based on action
@@ -486,42 +496,46 @@ export class SlackIntegration {
         let message: string;
         let color: string;
 
+        const assigneeLabel = taskRow.userEmail ?? "Unassigned";
+
         switch (action) {
           case "created":
             title = "New Task Created";
-            message = `Task "${taskData.task.title}" has been created in project ${taskData.project.name}`;
+            message = `Task "${taskRow.title}" has been created in project ${projectRow.name}`;
             color = "#4CAF50"; // Green
             break;
           case "updated":
             title = "Task Updated";
-            message = `Task "${taskData.task.title}" has been updated`;
+            message = `Task "${taskRow.title}" has been updated`;
             color = "#FF9800"; // Orange
             break;
           case "completed":
             title = "Task Completed";
-            message = `Task "${taskData.task.title}" has been completed! 🎉`;
+            message = `Task "${taskRow.title}" has been completed! 🎉`;
             color = "#2196F3"; // Blue
             break;
           case "assigned":
             title = "Task Assigned";
-            message = `Task "${taskData.task.title}" has been assigned to ${taskData.task.assigneeEmail}`;
+            message = `Task "${taskRow.title}" has been assigned to ${assigneeLabel}`;
             color = "#9C27B0"; // Purple
             break;
         }
 
         const fields = [
-          { title: "Project", value: taskData.project.name, short: true },
-          { title: "Priority", value: taskData.task.priority || "medium", short: true },
-          { title: "Status", value: taskData.task.status, short: true },
-          { title: "Due Date", value: taskData.task.dueDate ? new Date(taskData.task.dueDate).toLocaleDateString() : "Not set", short: true }
+          { title: "Project", value: projectRow.name, short: true },
+          { title: "Priority", value: String(taskRow.priority ?? "medium"), short: true },
+          { title: "Status", value: String(taskRow.status ?? ""), short: true },
+          { title: "Due Date", value: taskRow.dueDate ? new Date(taskRow.dueDate).toLocaleDateString() : "Not set", short: true }
         ];
 
-        if (taskData.task.assigneeEmail) {
-          fields.push({ title: "Assignee", value: taskData.task.assigneeEmail, short: true });
+        if (taskRow.userEmail) {
+          fields.push({ title: "Assignee", value: taskRow.userEmail, short: true });
         }
 
         // Send notification
-        const targetChannel = channelId || config.defaultChannel || "general";
+        const defaultChannel =
+          typeof config.defaultChannel === "string" ? config.defaultChannel : undefined;
+        const targetChannel = channelId || defaultChannel || "general";
         
         await slack.sendMeridianNotification(targetChannel, {
           title,
@@ -531,18 +545,16 @@ export class SlackIntegration {
           actions: [{
             type: "button",
             text: "View Task",
-            url: `${process.env.WEB_URL}/dashboard/workspace/${workspaceId}/project/${taskData.project.id}/tasks/${taskId}`
+            url: `${process.env.WEB_URL}/dashboard/workspace/${workspaceId}/project/${projectRow.id}/tasks/${taskId}`
           }],
-          footer: `Meridian • ${taskData.project.name}`,
+          footer: `Meridian • ${projectRow.name}`,
           timestamp: new Date()
         });
 
-        // Update integration metrics
         await db.update(integrationConnectionTable)
           .set({
-            totalOperations: integration.totalOperations + 1,
-            successfulOperations: integration.successfulOperations + 1,
-            lastSyncAt: new Date()
+            lastSync: new Date(),
+            syncStatus: "success"
           })
           .where(eq(integrationConnectionTable.id, integration.id));
       }

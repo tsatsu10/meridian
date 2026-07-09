@@ -5,20 +5,11 @@
  * @epic-3.2-integrations
  */
 
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
+import { HTTPException } from 'hono/http-exception';
 import { GitHubIntegration } from '../../services/github-integration';
 import { winstonLog } from '../../../utils/winston-logger';
 import { ValidationError, NotFoundError } from '../../../utils/errors';
-
-const syncSchema = z.object({
-  projectId: z.string(),
-  owner: z.string(),
-  repo: z.string(),
-  accessToken: z.string().optional(), // Use stored token if not provided
-  syncPRs: z.boolean().optional().default(false),
-});
+import { parseIntegrationJsonField } from '../../../lib/parse-integration-json';
 
 export const syncGitHubIssues = async (c: any) => {
   try {
@@ -38,8 +29,8 @@ export const syncGitHubIssues = async (c: any) => {
       const connection = await db.query.integrationConnectionTable.findFirst({
         where: (t: any, { eq, and }: any) => and(
           eq(t.workspaceId, workspaceId),
-          eq(t.integrationId, 'github'),
-          eq(t.isActive, true)
+          eq(t.provider, 'github'),
+          eq(t.status, 'active')
         ),
       });
 
@@ -47,9 +38,13 @@ export const syncGitHubIssues = async (c: any) => {
         throw new NotFoundError('GitHub integration not connected');
       }
 
-      token = typeof connection.credentials === 'string' 
-        ? JSON.parse(connection.credentials).accessToken
-        : connection.credentials.accessToken;
+      const creds = parseIntegrationJsonField(connection.credentials);
+      const fromStore = creds.accessToken;
+      token = typeof fromStore === 'string' ? fromStore : undefined;
+    }
+
+    if (!token) {
+      throw new ValidationError('GitHub access token required');
     }
 
     // Sync issues
@@ -78,13 +73,13 @@ export const syncGitHubIssues = async (c: any) => {
       message: `Synced ${result.totalIssues} issues (${result.createdTasks} created, ${result.updatedTasks} updated)`,
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     winstonLog.error('GitHub sync failed', {
       error: error instanceof Error ? error.message : String(error),
     });
 
-    if (error instanceof ValidationError || error instanceof NotFoundError) {
-      return c.json({ error: error.message }, error.statusCode);
+    if (error instanceof HTTPException) {
+      return c.json({ error: error.message }, error.status);
     }
 
     return c.json({ 

@@ -8,7 +8,6 @@
 import { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { goals, goalKeyResults } from "../../database/schema/goals";
-import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import type { CreateKeyResultRequest } from "../types";
 import logger from '../../utils/logger';
@@ -21,6 +20,9 @@ export async function addKeyResult(c: Context) {
     
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
+    }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
     }
     
     const body: CreateKeyResultRequest = await c.req.json();
@@ -61,12 +63,11 @@ export async function addKeyResult(c: Context) {
     
     // Create key result
     const [keyResult] = await db.insert(goalKeyResults).values({
-      id: createId(),
       goalId,
       title: body.title,
       description: body.description,
       targetValue: body.targetValue.toString(),
-      currentValue: (body.currentValue || 0).toString(),
+      currentValue: (body.currentValue ?? 0).toString(),
       unit: body.unit,
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
       status: 'not_started',

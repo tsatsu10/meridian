@@ -20,6 +20,9 @@ export async function getMilestones(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!targetUserId) {
+      return c.json({ error: "User id is required" }, 400);
+    }
     
     // Users can only see their own milestones for now
     if (targetUserId !== userId) {

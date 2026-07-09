@@ -26,7 +26,7 @@ const smtpConfigSchema = z.object({
   replyTo: z.string().email().optional()
 });
 
-export const configureSMTP = zValidator("json", smtpConfigSchema, async (c) => {
+export const configureSMTP = zValidator("json", smtpConfigSchema, async (c: any) => {
   try {
     const data = c.req.valid("json");
     const workspaceId = c.req.header("x-workspace-id");

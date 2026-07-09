@@ -20,6 +20,9 @@ export async function deleteKeyResult(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!keyResultId) {
+      return c.json({ error: "Key result id is required" }, 400);
+    }
     
     // Get existing key result
     const existingKR = await db.query.goalKeyResults.findFirst({

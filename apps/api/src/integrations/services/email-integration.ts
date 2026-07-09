@@ -20,6 +20,7 @@ import {
 import nodemailer from "nodemailer";
 import * as handlebars from "handlebars";
 import logger from '../../utils/logger';
+import { parseIntegrationJsonField } from "../../lib/parse-integration-json";
 
 // Email integration types
 export interface EmailConfig {
@@ -78,16 +79,16 @@ export class EmailIntegration {
 
   constructor(config: EmailConfig) {
     this.config = config;
-    this.transporter = this.createTransporter();
+    this.transporter = this.createMailTransport();
   }
 
   /**
    * Create nodemailer transporter based on configuration
    */
-  private createTransporter(): nodemailer.Transporter {
+  private createMailTransport(): nodemailer.Transporter {
     switch (this.config.provider) {
       case "smtp":
-        return nodemailer.createTransporter({
+        return nodemailer.createTransport({
           host: this.config.host,
           port: this.config.port || 587,
           secure: this.config.secure || false,
@@ -98,14 +99,16 @@ export class EmailIntegration {
         });
       
       case "ses":
-        // AWS SES configuration
-        return nodemailer.createTransporter({
-          SES: { /* AWS SES config */ },
-          sendingRate: 14 // messages per second
+        // AWS SES SMTP endpoint (configure host/port in EmailConfig for production)
+        return nodemailer.createTransport({
+          host: this.config.host ?? "email-smtp.us-east-1.amazonaws.com",
+          port: this.config.port ?? 587,
+          secure: this.config.secure ?? false,
+          auth: this.config.auth
         });
       
       case "sendgrid":
-        return nodemailer.createTransporter({
+        return nodemailer.createTransport({
           service: "SendGrid",
           auth: {
             user: "apikey",
@@ -114,7 +117,7 @@ export class EmailIntegration {
         });
       
       case "mailgun":
-        return nodemailer.createTransporter({
+        return nodemailer.createTransport({
           service: "Mailgun",
           auth: this.config.auth
         });
@@ -216,12 +219,13 @@ export class EmailIntegration {
           results.push(result.value);
         } else {
           logger.error(`Failed to send email ${i + index}:`, result.reason);
+          const msg = batch[index];
           results.push({
             messageId: "",
             accepted: [],
-            rejected: [batch[index].to as string],
+            rejected: [typeof msg?.to === "string" ? msg.to : String(msg?.to ?? "")],
             pending: [],
-            response: result.reason?.message || "Failed to send"
+            response: result.reason instanceof Error ? result.reason.message : "Failed to send"
           });
         }
       });
@@ -246,18 +250,24 @@ export class EmailIntegration {
         .from(emailTemplatesTable)
         .where(eq(emailTemplatesTable.id, templateId));
 
-      if (!template.length) {
+      const templateData = template[0];
+      if (!templateData) {
         return null;
       }
 
-      const templateData = template[0];
+      const varsRaw = templateData.variables;
+      const variablesParsed = Array.isArray(varsRaw)
+        ? (varsRaw as string[])
+        : typeof varsRaw === "string"
+          ? (JSON.parse(varsRaw) as string[])
+          : [];
       return {
         id: templateData.id,
         name: templateData.name,
         subject: templateData.subject,
-        htmlContent: templateData.htmlContent,
-        textContent: templateData.textContent || undefined,
-        variables: JSON.parse(templateData.variables || "[]"),
+        htmlContent: templateData.htmlBody,
+        textContent: templateData.textBody || undefined,
+        variables: variablesParsed,
         category: templateData.category as "notification" | "digest" | "reminder" | "welcome" | "custom"
       };
     } catch (error) {
@@ -304,9 +314,9 @@ export class EmailIntegration {
         credentials: JSON.stringify({
           auth: config.auth
         }),
-        connectionStatus: "connected",
-        isActive: true,
-        lastConnectedAt: new Date()
+        status: "active",
+        lastSync: new Date(),
+        syncStatus: "success"
       }).returning();
 
       return {
@@ -344,22 +354,27 @@ export class EmailIntegration {
         id: createId(),
         name: template.name,
         subject: template.subject,
-        htmlContent: template.htmlContent,
-        textContent: template.textContent,
+        htmlBody: template.htmlContent,
+        textBody: template.textContent,
         category: template.category,
-        variables: JSON.stringify(allVariables),
+        variables: allVariables,
         workspaceId,
         createdBy: userId
       }).returning();
 
+      const row = newTemplate[0];
+      if (!row) {
+        throw new Error("Failed to create email template");
+      }
+
       return {
-        id: newTemplate[0].id,
-        name: newTemplate[0].name,
-        subject: newTemplate[0].subject,
-        htmlContent: newTemplate[0].htmlContent,
-        textContent: newTemplate[0].textContent || undefined,
+        id: row.id,
+        name: row.name,
+        subject: row.subject,
+        htmlContent: row.htmlBody,
+        textContent: row.textBody || undefined,
         variables: allVariables,
-        category: newTemplate[0].category as any
+        category: row.category as any
       };
     } catch (error) {
       logger.error("Failed to create email template:", error);
@@ -384,11 +399,12 @@ export class EmailIntegration {
         .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
         .where(eq(taskTable.id, taskId));
 
-      if (!task.length) {
+      const joinedRow = task[0];
+      if (!joinedRow) {
         throw new Error("Task not found");
       }
 
-      const taskData = task[0];
+      const { tasks: taskRow, projects: projectRow } = joinedRow;
 
       // Get email integrations for workspace
       const integrations = await db.select()
@@ -397,7 +413,7 @@ export class EmailIntegration {
           and(
             eq(integrationConnectionTable.workspaceId, workspaceId),
             eq(integrationConnectionTable.provider, "email"),
-            eq(integrationConnectionTable.isActive, true)
+            eq(integrationConnectionTable.status, "active")
           )
         );
 
@@ -407,28 +423,28 @@ export class EmailIntegration {
       }
 
       for (const integration of integrations) {
-        const config = JSON.parse(integration.config);
-        const credentials = JSON.parse(integration.credentials || "{}");
+        const config = parseIntegrationJsonField(integration.config);
+        const credentials = parseIntegrationJsonField(integration.credentials);
 
         const emailConfig: EmailConfig = {
-          provider: config.provider,
-          host: config.host,
-          port: config.port,
-          secure: config.secure,
-          auth: credentials.auth,
+          provider: config.provider as EmailConfig["provider"],
+          host: config.host as string,
+          port: config.port as number,
+          secure: config.secure as boolean,
+          auth: credentials.auth as EmailConfig["auth"],
           from: {
-            name: config.fromName,
-            email: config.fromEmail
+            name: config.fromName as string,
+            email: config.fromEmail as string
           },
-          replyTo: config.replyTo
+          replyTo: config.replyTo as string | undefined
         };
 
         const emailService = new EmailIntegration(emailConfig);
 
         // Determine recipients
         let emailRecipients = recipients || [];
-        if (!emailRecipients.length && taskData.task.assigneeEmail) {
-          emailRecipients = [taskData.task.assigneeEmail];
+        if (!emailRecipients.length && taskRow.userEmail) {
+          emailRecipients = [taskRow.userEmail];
         }
 
         if (!emailRecipients.length) {
@@ -442,38 +458,38 @@ export class EmailIntegration {
 
         switch (action) {
           case "created":
-            subject = `New Task: ${taskData.task.title}`;
+            subject = `New Task: ${taskRow.title}`;
             break;
           case "updated":
-            subject = `Task Updated: ${taskData.task.title}`;
+            subject = `Task Updated: ${taskRow.title}`;
             break;
           case "completed":
-            subject = `Task Completed: ${taskData.task.title}`;
+            subject = `Task Completed: ${taskRow.title}`;
             break;
           case "assigned":
-            subject = `Task Assigned: ${taskData.task.title}`;
+            subject = `Task Assigned: ${taskRow.title}`;
             break;
           case "due_soon":
-            subject = `Task Due Soon: ${taskData.task.title}`;
+            subject = `Task Due Soon: ${taskRow.title}`;
             break;
         }
 
         templateData = {
           task: {
-            title: taskData.task.title,
-            description: taskData.task.description,
-            status: taskData.task.status,
-            priority: taskData.task.priority,
-            dueDate: taskData.task.dueDate,
-            assignee: taskData.task.assigneeEmail
+            title: taskRow.title,
+            description: taskRow.description,
+            status: taskRow.status,
+            priority: taskRow.priority,
+            dueDate: taskRow.dueDate,
+            assignee: taskRow.userEmail
           },
           project: {
-            name: taskData.project.name,
-            description: taskData.project.description
+            name: projectRow.name,
+            description: projectRow.description
           },
           action,
           actionText: this.getActionText(action),
-          taskUrl: `${process.env.WEB_URL}/dashboard/workspace/${workspaceId}/project/${taskData.project.id}/tasks/${taskId}`
+          taskUrl: `${process.env.WEB_URL}/dashboard/workspace/${workspaceId}/project/${projectRow.id}/tasks/${taskId}`
         };
 
         // Send email to each recipient
@@ -489,12 +505,10 @@ export class EmailIntegration {
           });
         }
 
-        // Update integration metrics
         await db.update(integrationConnectionTable)
           .set({
-            totalOperations: integration.totalOperations + emailRecipients.length,
-            successfulOperations: integration.successfulOperations + emailRecipients.length,
-            lastSyncAt: new Date()
+            lastSync: new Date(),
+            syncStatus: "success"
           })
           .where(eq(integrationConnectionTable.id, integration.id));
       }
@@ -523,7 +537,7 @@ export class EmailIntegration {
         .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
         .where(
           and(
-            eq(taskTable.assigneeEmail, recipientEmail),
+            eq(taskTable.userEmail, recipientEmail),
             eq(projectTable.workspaceId, workspaceId)
           )
         );
@@ -531,11 +545,13 @@ export class EmailIntegration {
       // Group tasks by status and priority
       const taskSummary = {
         total: userTasks.length,
-        completed: userTasks.filter(t => t.task.status === "completed").length,
-        inProgress: userTasks.filter(t => t.task.status === "in-progress").length,
-        pending: userTasks.filter(t => t.task.status === "todo").length,
-        overdue: userTasks.filter(t => 
-          t.task.dueDate && new Date(t.task.dueDate) < new Date() && t.task.status !== "completed"
+        completed: userTasks.filter(t => t.tasks.status === "done").length,
+        inProgress: userTasks.filter(t => t.tasks.status === "in_progress").length,
+        pending: userTasks.filter(t => t.tasks.status === "todo").length,
+        overdue: userTasks.filter(t =>
+          t.tasks.dueDate &&
+          new Date(t.tasks.dueDate) < new Date() &&
+          t.tasks.status !== "done"
         ).length
       };
 
@@ -546,7 +562,7 @@ export class EmailIntegration {
           and(
             eq(integrationConnectionTable.workspaceId, workspaceId),
             eq(integrationConnectionTable.provider, "email"),
-            eq(integrationConnectionTable.isActive, true)
+            eq(integrationConnectionTable.status, "active")
           )
         );
 
@@ -554,20 +570,25 @@ export class EmailIntegration {
         throw new Error("No email integration configured");
       }
 
-      const config = JSON.parse(integration[0].config);
-      const credentials = JSON.parse(integration[0].credentials || "{}");
+      const digestConn = integration[0];
+      if (!digestConn) {
+        throw new Error("No email integration configured");
+      }
+
+      const config = parseIntegrationJsonField(digestConn.config);
+      const credentials = parseIntegrationJsonField(digestConn.credentials);
 
       const emailConfig: EmailConfig = {
-        provider: config.provider,
-        host: config.host,
-        port: config.port,
-        secure: config.secure,
-        auth: credentials.auth,
+        provider: config.provider as EmailConfig["provider"],
+        host: config.host as string,
+        port: config.port as number,
+        secure: config.secure as boolean,
+        auth: credentials.auth as EmailConfig["auth"],
         from: {
-          name: config.fromName,
-          email: config.fromEmail
+          name: config.fromName as string,
+          email: config.fromEmail as string
         },
-        replyTo: config.replyTo
+        replyTo: config.replyTo as string | undefined
       };
 
       const emailService = new EmailIntegration(emailConfig);
@@ -596,13 +617,13 @@ export class EmailIntegration {
     const regex = /\{\{\s*([^}]+)\s*\}\}/g;
     const variables = new Set<string>();
     
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = regex.exec(htmlContent)) !== null) {
-      variables.add(match[1].trim());
+      variables.add(match[1]!.trim());
     }
     
     while ((match = regex.exec(subject)) !== null) {
-      variables.add(match[1].trim());
+      variables.add(match[1]!.trim());
     }
     
     return Array.from(variables);

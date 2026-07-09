@@ -218,7 +218,10 @@ export class Validator {
 
   static validatePartial<T>(schema: z.ZodSchema<T>, data: unknown): Partial<T> {
     try {
-      return schema.partial().parse(data);
+      if (!(schema instanceof z.ZodObject)) {
+        throw new ValidationError('Partial validation requires a Zod object schema');
+      }
+      return (schema as z.ZodObject<z.ZodRawShape>).partial().parse(data) as Partial<T>;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.errors.map(err => ({

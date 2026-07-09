@@ -6,7 +6,15 @@ import logger from '../utils/logger';
 export class MonitoringService {
   private static instance: MonitoringService;
   private metrics: Map<string, any> = new Map();
-  private alerts: Array<{ id: string; message: string; severity: string; timestamp: Date }> = [];
+  private alerts: Array<{
+    id: string;
+    message: string;
+    severity: string;
+    timestamp: Date;
+    tags?: Record<string, string>;
+    resolved?: boolean;
+    resolvedAt?: Date;
+  }> = [];
 
   static getInstance(): MonitoringService {
     if (!MonitoringService.instance) {
@@ -273,9 +281,10 @@ export function createMonitoringMiddleware() {
         );
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
-      
+      const errMsg = error instanceof Error ? error.message : String(error);
+
       // Record error metrics
       const monitoring = MonitoringService.getInstance();
       monitoring.recordMetric('http_request_duration', duration, {
@@ -283,19 +292,19 @@ export function createMonitoringMiddleware() {
         endpoint,
         status: 'error',
       });
-      
+
       monitoring.incrementCounter('http_requests_total', 1, {
         method,
         endpoint,
         status: 'error',
       });
-      
+
       monitoring.createAlert(
-        `Request failed: ${method} ${endpoint} - ${error.message}`,
+        `Request failed: ${method} ${endpoint} - ${errMsg}`,
         'high',
-        { method, endpoint, error: error.message }
+        { method, endpoint, error: errMsg },
       );
-      
+
       throw error;
     }
   };
@@ -322,17 +331,14 @@ export function createDatabaseMonitoringMiddleware() {
         );
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
       const monitoring = MonitoringService.getInstance();
-      
+      const errMsg = error instanceof Error ? error.message : String(error);
+
       monitoring.recordMetric('database_query_duration', duration);
-      monitoring.createAlert(
-        `Database query failed: ${error.message}`,
-        'high',
-        { error: error.message }
-      );
-      
+      monitoring.createAlert(`Database query failed: ${errMsg}`, 'high', { error: errMsg });
+
       throw error;
     }
   };

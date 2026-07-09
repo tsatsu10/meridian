@@ -41,13 +41,13 @@ export const note = pgTable('note', {
   // Collaboration
   currentVersion: integer('current_version').default(1).notNull(),
   isLocked: boolean('is_locked').default(false).notNull(),
-  lockedBy: uuid('locked_by').references(() => user.id),
+  lockedBy: uuid('locked_by').references(() => users.id),
   lockedAt: timestamp('locked_at'),
   
   // Timestamps
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  lastEditedBy: uuid('last_edited_by').references(() => user.id).notNull(),
+  lastEditedBy: uuid('last_edited_by').references(() => users.id).notNull(),
 }, (table) => ({
   createdByIdx: index('note_created_by_idx').on(table.createdBy),
   projectIdIdx: index('note_project_id_idx').on(table.projectId),
@@ -70,7 +70,7 @@ export const noteVersion = pgTable('note_version', {
   contentHtml: text('content_html'),
   
   // Change metadata
-  changedBy: uuid('changed_by').references(() => user.id, { onDelete: 'set null' }),
+  changedBy: uuid('changed_by').references(() => users.id, { onDelete: 'set null' }),
   changeDescription: text('change_description'), // Optional description of changes
   changeType: text('change_type'), // 'create', 'edit', 'restore'
   
@@ -93,7 +93,7 @@ export const noteComment = pgTable('note_comment', {
   noteId: uuid('note_id').references(() => note.id, { onDelete: 'cascade' }).notNull(),
   
   // Comment data
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   content: text('content').notNull(),
   
   // Threading
@@ -106,7 +106,7 @@ export const noteComment = pgTable('note_comment', {
   
   // Metadata
   isResolved: boolean('is_resolved').default(false).notNull(),
-  resolvedBy: uuid('resolved_by').references(() => user.id),
+  resolvedBy: uuid('resolved_by').references(() => users.id),
   resolvedAt: timestamp('resolved_at'),
   
   // Timestamps
@@ -125,7 +125,7 @@ export const noteComment = pgTable('note_comment', {
 export const noteCollaborator = pgTable('note_collaborator', {
   id: uuid('id').defaultRandom().primaryKey(),
   noteId: uuid('note_id').references(() => note.id, { onDelete: 'cascade' }).notNull(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   
   // Collaboration state
   cursorPosition: integer('cursor_position'),
@@ -162,7 +162,7 @@ export const noteTemplate = pgTable('note_template', {
   contentHtml: text('content_html'),
   
   // Ownership
-  createdBy: uuid('created_by').references(() => user.id, { onDelete: 'cascade' }),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'cascade' }),
   isPublic: boolean('is_public').default(false).notNull(), // Available to all users
   isSystem: boolean('is_system').default(false).notNull(), // Built-in template
   

@@ -80,6 +80,9 @@ export const PERMISSION_GROUPS = {
   ]
 } as const;
 
+/** Union of all permission strings declared in permission groups */
+type PermissionId = (typeof PERMISSION_GROUPS)[keyof typeof PERMISSION_GROUPS][number];
+
 // Simplified role hierarchy (fewer levels, clearer progression)
 export const SIMPLIFIED_ROLE_HIERARCHY: Record<UserRole, number> = {
   "guest": 0,           // External viewers
@@ -200,8 +203,8 @@ export function hasPermission(role: UserRole, permission: string): boolean {
   
   // Check if permission exists in any assigned group
   const hasGroupPermission = permissionGroups.some(groupName => {
-    const group = PERMISSION_GROUPS[groupName];
-    return group.includes(permission as any);
+    const group = PERMISSION_GROUPS[groupName] as readonly string[];
+    return group.includes(permission);
   });
   
   // Check for specific overrides
@@ -209,7 +212,7 @@ export function hasPermission(role: UserRole, permission: string): boolean {
   const hasOverride = permission in overrides;
   
   if (hasOverride) {
-    return overrides[permission];
+    return Boolean(overrides[permission]);
   }
   
   return hasGroupPermission;
@@ -238,8 +241,8 @@ export function getRolePermissions(role: UserRole): string[] {
   
   // Add permissions that are only in overrides
   Object.entries(overrides).forEach(([permission, allowed]) => {
-    if (allowed && !finalPermissions.includes(permission)) {
-      finalPermissions.push(permission);
+    if (allowed && !(finalPermissions as string[]).includes(permission)) {
+      finalPermissions.push(permission as PermissionId);
     }
   });
   

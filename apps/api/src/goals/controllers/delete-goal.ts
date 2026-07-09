@@ -20,6 +20,9 @@ export async function deleteGoal(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
+    }
     
     // Check if goal exists and user has permission
     const existingGoal = await db.query.goals.findFirst({

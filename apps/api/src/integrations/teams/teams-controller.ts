@@ -60,7 +60,7 @@ teams.get('/callback', async (c) => {
   const error_description = c.req.query('error_description');
   
   if (error) {
-    logger.error('Teams OAuth error:', error, error_description);
+    logger.error('Teams OAuth error', { error, error_description });
     return c.html('<html><body><h1>❌ Teams Integration Failed</h1><p>Error: ' + error + '</p></body></html>');
   }
   
@@ -158,7 +158,12 @@ teams.get('/callback', async (c) => {
  * Teams requires manual webhook URL configuration
  */
 teams.post('/webhook', async (c) => {
-  const userEmail = c.get('userEmail');
+  const userEmailRaw = c.get('userEmail');
+  if (typeof userEmailRaw !== 'string' || !userEmailRaw) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const userEmail = userEmailRaw;
+
   const body = await c.req.json();
   const { workspaceId, webhookUrl, channelName } = body;
   
@@ -222,7 +227,12 @@ teams.post('/webhook', async (c) => {
  * Disconnect Teams integration
  */
 teams.delete('/disconnect', async (c) => {
-  const userEmail = c.get('userEmail');
+  const userEmailRaw = c.get('userEmail');
+  if (typeof userEmailRaw !== 'string' || !userEmailRaw) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const userEmail = userEmailRaw;
+
   const workspaceId = c.req.query('workspaceId');
   
   if (!workspaceId) {
@@ -255,7 +265,12 @@ teams.delete('/disconnect', async (c) => {
  * Get Teams integration status
  */
 teams.get('/status', async (c) => {
-  const userEmail = c.get('userEmail');
+  const userEmailRaw = c.get('userEmail');
+  if (typeof userEmailRaw !== 'string' || !userEmailRaw) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const userEmail = userEmailRaw;
+
   const workspaceId = c.req.query('workspaceId');
   
   if (!workspaceId) {
@@ -293,7 +308,12 @@ teams.get('/status', async (c) => {
  * Send a test notification to Teams
  */
 teams.post('/test', async (c) => {
-  const userEmail = c.get('userEmail');
+  const userEmailRaw = c.get('userEmail');
+  if (typeof userEmailRaw !== 'string' || !userEmailRaw) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const userEmail = userEmailRaw;
+
   const body = await c.req.json();
   const { workspaceId } = body;
   

@@ -35,7 +35,8 @@ const sendMessageSchema = z.object({
   }).optional()
 });
 
-export const sendSlackMessage = zValidator("json", sendMessageSchema, async (c) => {
+// Hono zValidator narrows context; we still need full Context for req/json (same pattern as other integration routes).
+export const sendSlackMessage = zValidator("json", sendMessageSchema, async (c: any) => {
   const db = getDatabase();
   
   try {
@@ -55,20 +56,24 @@ export const sendSlackMessage = zValidator("json", sendMessageSchema, async (c) 
           eq(integrationConnectionTable.id, data.integrationId),
           eq(integrationConnectionTable.workspaceId, workspaceId),
           eq(integrationConnectionTable.provider, "slack"),
-          eq(integrationConnectionTable.isActive, true)
+          eq(integrationConnectionTable.status, "active")
         )
       );
 
-    if (!integration.length) {
+    const conn = integration[0];
+    if (!conn) {
       return c.json({ error: "Slack integration not found" }, 404);
     }
-
-    const credentials = JSON.parse(integration[0].credentials || "{}");
+    const credRaw = conn.credentials;
+    const credentials =
+      typeof credRaw === "string"
+        ? (JSON.parse(credRaw || "{}") as Record<string, string>)
+        : ((credRaw as Record<string, string> | null) ?? {});
     
     const slack = new SlackIntegration({
-      botToken: credentials.botToken,
-      userToken: credentials.userToken,
-      signingSecret: credentials.signingSecret
+      botToken: String(credentials.botToken ?? ""),
+      userToken: credentials.userToken ? String(credentials.userToken) : undefined,
+      signingSecret: String(credentials.signingSecret ?? "")
     });
 
     let result;
@@ -93,9 +98,8 @@ export const sendSlackMessage = zValidator("json", sendMessageSchema, async (c) 
     // Update integration metrics
     await db.update(integrationConnectionTable)
       .set({
-        totalOperations: integration[0].totalOperations + 1,
-        successfulOperations: integration[0].successfulOperations + 1,
-        lastSyncAt: new Date()
+        lastSync: new Date(),
+        syncStatus: "success"
       })
       .where(eq(integrationConnectionTable.id, data.integrationId));
 

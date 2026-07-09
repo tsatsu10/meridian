@@ -18,7 +18,7 @@ interface AnalyticsOptions {
 interface ProjectHealth {
   id: string;
   name: string;
-  slug: string;
+  slug: string | null;
   completion: number;
   health: "good" | "warning" | "critical";
   tasksCompleted: number;
@@ -102,7 +102,7 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
     .select({
       totalTasks: count(),
       completedTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'done' THEN 1 END)`,
-      inProgressTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'in-progress' THEN 1 END)`,
+      inProgressTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'in_progress' THEN 1 END)`,
       overdueTasks: sql<number>`COUNT(CASE WHEN ${taskTable.dueDate} < CURRENT_TIMESTAMP AND ${taskTable.status} != 'done' THEN 1 END)`,
       avgCompletionTime: sql<number>`AVG(CASE WHEN ${taskTable.status} = 'done' THEN ${taskTable.createdAt} END)`,
     })
@@ -273,7 +273,7 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
   const timeSeriesData: TimeSeriesData[] = [];
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0] ?? "";
     const dayStartTimestamp = new Date(dateStr).getTime();
     const dayEndTimestamp = dayStartTimestamp + 24 * 60 * 60 * 1000;
     

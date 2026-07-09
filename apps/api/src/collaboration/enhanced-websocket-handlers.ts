@@ -41,7 +41,10 @@ const resourceConnections = new Map<string, Set<string>>(); // resourceId -> Set
 export function setupEnhancedCollaborationHandlers(io: SocketIOServer, socket: Socket) {
   const userEmail = socket.handshake.query.userEmail as string;
   const workspaceId = socket.handshake.query.workspaceId as string;
-  const userName = socket.handshake.query.userName as string || userEmail.split('@')[0];
+  const userName =
+    (socket.handshake.query.userName as string | undefined) ||
+    userEmail.split('@')[0] ||
+    'User';
 
   logger.info(`🤝 Setting up enhanced collaboration for user: ${userEmail}`);
 
@@ -51,7 +54,7 @@ export function setupEnhancedCollaborationHandlers(io: SocketIOServer, socket: S
     userName,
     status: 'online',
     lastSeen: new Date(),
-    deviceType: detectDeviceType(socket.handshake.headers['user-agent']),
+    deviceType: detectDeviceType(socket.handshake.headers['user-agent'] ?? ''),
     connectionQuality: 'good'
   });
 

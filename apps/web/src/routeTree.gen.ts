@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MobilePerformanceRouteImport } from './routes/mobile-performance'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -95,10 +93,6 @@ import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutTimelineRou
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutTeamsRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/_layout.teams'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutListRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/_layout.list'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutCalendarRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/_layout.calendar'
-
-const DashboardTeamsWorkspaceIdRouteImport = createFileRoute(
-  '/dashboard/teams/$workspaceId',
-)()
 
 const MobilePerformanceRoute = MobilePerformanceRouteImport.update({
   id: '/mobile-performance',
@@ -256,12 +250,6 @@ const _dev_ChatInterfaceTestRoute = _dev_ChatInterfaceTestRouteImport.update({
   path: '/chat-interface-test',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardTeamsWorkspaceIdRoute =
-  DashboardTeamsWorkspaceIdRouteImport.update({
-    id: '/$workspaceId',
-    path: '/$workspaceId',
-    getParentRoute: () => DashboardTeamsRoute,
-  } as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -462,8 +450,9 @@ const DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute =
   } as any)
 const DashboardTeamsWorkspaceIdLayoutRoute =
   DashboardTeamsWorkspaceIdLayoutRouteImport.update({
-    id: '/_layout',
-    getParentRoute: () => DashboardTeamsWorkspaceIdRoute,
+    id: '/$workspaceId/_layout',
+    path: '/$workspaceId',
+    getParentRoute: () => DashboardTeamsRoute,
   } as any)
 const DashboardSettingsRolesUnifiedRoleIdRoute =
   DashboardSettingsRolesUnifiedRoleIdRouteImport.update({
@@ -636,14 +625,14 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/communication/': typeof DashboardCommunicationIndexRoute
-  '/dashboard/help': typeof DashboardHelpIndexRoute
-  '/dashboard/notifications': typeof DashboardNotificationsIndexRoute
+  '/dashboard/help/': typeof DashboardHelpIndexRoute
+  '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
   '/dashboard/teams/$workspaceId': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
   '/dashboard/workspace/$workspaceId/enhanced-analytics': typeof DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute
   '/dashboard/workspace/$workspaceId/templates': typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
-  '/dashboard/workspace-settings/$workspaceId': typeof DashboardWorkspaceSettingsWorkspaceIdIndexRoute
+  '/dashboard/workspace-settings/$workspaceId/': typeof DashboardWorkspaceSettingsWorkspaceIdIndexRoute
   '/dashboard/teams/$workspaceId/members': typeof DashboardTeamsWorkspaceIdLayoutMembersRoute
   '/dashboard/teams/$workspaceId/roles': typeof DashboardTeamsWorkspaceIdLayoutRolesRoute
   '/dashboard/workspace/$workspaceId/project/$projectId': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRouteWithChildren
@@ -805,7 +794,6 @@ export interface FileRoutesById {
   '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
-  '/dashboard/teams/$workspaceId': typeof DashboardTeamsWorkspaceIdRouteWithChildren
   '/dashboard/teams/$workspaceId/_layout': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
   '/dashboard/workspace/$workspaceId/enhanced-analytics': typeof DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute
   '/dashboard/workspace/$workspaceId/templates': typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
@@ -889,14 +877,14 @@ export interface FileRouteTypes {
     | '/dashboard/settings/workspace'
     | '/dashboard/analytics/'
     | '/dashboard/communication/'
-    | '/dashboard/help'
-    | '/dashboard/notifications'
+    | '/dashboard/help/'
+    | '/dashboard/notifications/'
     | '/dashboard/settings/'
     | '/dashboard/settings/roles-unified/$roleId'
     | '/dashboard/teams/$workspaceId'
     | '/dashboard/workspace/$workspaceId/enhanced-analytics'
     | '/dashboard/workspace/$workspaceId/templates'
-    | '/dashboard/workspace-settings/$workspaceId'
+    | '/dashboard/workspace-settings/$workspaceId/'
     | '/dashboard/teams/$workspaceId/members'
     | '/dashboard/teams/$workspaceId/roles'
     | '/dashboard/workspace/$workspaceId/project/$projectId'
@@ -1057,7 +1045,6 @@ export interface FileRouteTypes {
     | '/dashboard/notifications/'
     | '/dashboard/settings/'
     | '/dashboard/settings/roles-unified/$roleId'
-    | '/dashboard/teams/$workspaceId'
     | '/dashboard/teams/$workspaceId/_layout'
     | '/dashboard/workspace/$workspaceId/enhanced-analytics'
     | '/dashboard/workspace/$workspaceId/templates'
@@ -1317,13 +1304,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _dev_ChatInterfaceTestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/teams/$workspaceId': {
-      id: '/dashboard/teams/$workspaceId'
-      path: '/$workspaceId'
-      fullPath: '/dashboard/teams/$workspaceId'
-      preLoaderRoute: typeof DashboardTeamsWorkspaceIdRouteImport
-      parentRoute: typeof DashboardTeamsRoute
-    }
     '/dashboard/settings/': {
       id: '/dashboard/settings/'
       path: '/'
@@ -1334,14 +1314,14 @@ declare module '@tanstack/react-router' {
     '/dashboard/notifications/': {
       id: '/dashboard/notifications/'
       path: '/notifications'
-      fullPath: '/dashboard/notifications'
+      fullPath: '/dashboard/notifications/'
       preLoaderRoute: typeof DashboardNotificationsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/help/': {
       id: '/dashboard/help/'
       path: '/help'
-      fullPath: '/dashboard/help'
+      fullPath: '/dashboard/help/'
       preLoaderRoute: typeof DashboardHelpIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
@@ -1551,7 +1531,7 @@ declare module '@tanstack/react-router' {
     '/dashboard/workspace-settings/$workspaceId/': {
       id: '/dashboard/workspace-settings/$workspaceId/'
       path: '/workspace-settings/$workspaceId'
-      fullPath: '/dashboard/workspace-settings/$workspaceId'
+      fullPath: '/dashboard/workspace-settings/$workspaceId/'
       preLoaderRoute: typeof DashboardWorkspaceSettingsWorkspaceIdIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
@@ -1574,7 +1554,7 @@ declare module '@tanstack/react-router' {
       path: '/$workspaceId'
       fullPath: '/dashboard/teams/$workspaceId'
       preLoaderRoute: typeof DashboardTeamsWorkspaceIdLayoutRouteImport
-      parentRoute: typeof DashboardTeamsWorkspaceIdRoute
+      parentRoute: typeof DashboardTeamsRoute
     }
     '/dashboard/settings/roles-unified/$roleId': {
       id: '/dashboard/settings/roles-unified/$roleId'
@@ -1814,27 +1794,13 @@ const DashboardTeamsWorkspaceIdLayoutRouteWithChildren =
     DashboardTeamsWorkspaceIdLayoutRouteChildren,
   )
 
-interface DashboardTeamsWorkspaceIdRouteChildren {
+interface DashboardTeamsRouteChildren {
   DashboardTeamsWorkspaceIdLayoutRoute: typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
 }
 
-const DashboardTeamsWorkspaceIdRouteChildren: DashboardTeamsWorkspaceIdRouteChildren =
-  {
-    DashboardTeamsWorkspaceIdLayoutRoute:
-      DashboardTeamsWorkspaceIdLayoutRouteWithChildren,
-  }
-
-const DashboardTeamsWorkspaceIdRouteWithChildren =
-  DashboardTeamsWorkspaceIdRoute._addFileChildren(
-    DashboardTeamsWorkspaceIdRouteChildren,
-  )
-
-interface DashboardTeamsRouteChildren {
-  DashboardTeamsWorkspaceIdRoute: typeof DashboardTeamsWorkspaceIdRouteWithChildren
-}
-
 const DashboardTeamsRouteChildren: DashboardTeamsRouteChildren = {
-  DashboardTeamsWorkspaceIdRoute: DashboardTeamsWorkspaceIdRouteWithChildren,
+  DashboardTeamsWorkspaceIdLayoutRoute:
+    DashboardTeamsWorkspaceIdLayoutRouteWithChildren,
 }
 
 const DashboardTeamsRouteWithChildren = DashboardTeamsRoute._addFileChildren(

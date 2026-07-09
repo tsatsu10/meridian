@@ -20,6 +20,9 @@ export async function getGoals(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!workspaceId) {
+      return c.json({ error: "Workspace id is required" }, 400);
+    }
     
     // Get query parameters for filtering
     const status = c.req.query('status');

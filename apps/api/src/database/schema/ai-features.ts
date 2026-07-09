@@ -58,8 +58,8 @@ export const aiTaskSuggestion = pgTable('ai_task_suggestion', {
  */
 export const aiScheduleRecommendation = pgTable('ai_schedule_recommendation', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
-  projectId: uuid('project_id').references(() => project.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
   
   // Recommendation type
   type: text('type').notNull(), // 'task_order', 'deadline_adjustment', 'resource_allocation', 'break_reminder'
@@ -100,7 +100,7 @@ export const aiScheduleRecommendation = pgTable('ai_schedule_recommendation', {
  */
 export const aiDocumentSummary = pgTable('ai_document_summary', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   
   // Source document
   sourceType: text('source_type').notNull(), // 'message_thread', 'project_description', 'task_comments', 'document'
@@ -143,7 +143,7 @@ export const aiDocumentSummary = pgTable('ai_document_summary', {
  */
 export const aiChatConversation = pgTable('ai_chat_conversation', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   
   // Conversation metadata
   title: text('title').notNull(),
@@ -212,7 +212,7 @@ export const aiChatMessage = pgTable('ai_chat_message', {
  */
 export const aiUsageLog = pgTable('ai_usage_log', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   
   // Request details
   featureType: text('feature_type').notNull(), // 'task_suggestion', 'scheduling', 'summarization', 'chat'
@@ -248,7 +248,7 @@ export const aiUsageLog = pgTable('ai_usage_log', {
  */
 export const aiTrainingData = pgTable('ai_training_data', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   
   // Interaction type
   interactionType: text('interaction_type').notNull(), // 'task_suggestion_feedback', 'schedule_feedback', 'chat_rating'

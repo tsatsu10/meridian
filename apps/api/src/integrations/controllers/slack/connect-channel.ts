@@ -56,19 +56,16 @@ export const connectSlackChannel = async (c: Context) => {
       }
     );
 
-    if (!result.success) {
-      return c.json({
-        error: "Failed to connect Slack workspace",
-        details: result.error
-      }, 400);
+    const created = result.integration;
+    if (!created) {
+      return c.json({ error: "Slack integration was not persisted" }, 500);
     }
 
     return c.json({
       success: true,
       message: "Slack workspace connected successfully",
       data: {
-        integrationId: result.integrationId,
-        channels: result.channels
+        integrationId: created.id
       }
     });
 

@@ -19,7 +19,7 @@ const createTemplateSchema = z.object({
   variables: z.array(z.string()).optional()
 });
 
-export const createEmailTemplate = zValidator("json", createTemplateSchema, async (c) => {
+export const createEmailTemplate = zValidator("json", createTemplateSchema, async (c: any) => {
   try {
     const data = c.req.valid("json");
     const workspaceId = c.req.header("x-workspace-id");

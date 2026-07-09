@@ -49,7 +49,7 @@ app.get("/:teamId/messages", async (c) => {
       .from(teamMessages)
       .where(and(...conditions));
     
-    const total = Number(countResult.count);
+    const total = Number(countResult?.count ?? 0);
     
     // Fetch messages with user info
     const messages = await db
@@ -113,7 +113,8 @@ app.get("/:teamId/messages", async (c) => {
       if (!acc[reaction.messageId]) {
         acc[reaction.messageId] = [];
       }
-      acc[reaction.messageId].push({
+      const bucket = acc[reaction.messageId]!;
+      bucket.push({
         id: reaction.id,
         userId: reaction.userId,
         userEmail: reaction.userEmail,
@@ -151,7 +152,10 @@ app.get("/:teamId/messages", async (c) => {
     // Format messages with reactions and read status
     const formattedMessages = messages.map(msg => {
       const parentMsg = msg.replyToId ? parentMessageMap[msg.replyToId] : null;
-      const metadata = msg.metadata || {};
+      const metadata: Record<string, unknown> =
+        msg.metadata && typeof msg.metadata === 'object'
+          ? { ...(msg.metadata as Record<string, unknown>) }
+          : {};
       
       // Ensure replyToContent is in metadata if we have a parent message
       if (parentMsg && !metadata.replyToContent) {
@@ -284,6 +288,10 @@ app.post("/:teamId/messages", async (c) => {
       })
       .returning();
     
+    if (!newMessage) {
+      return c.json({ error: "Failed to create message" }, 500);
+    }
+    
     logger.info(`Message ${newMessage.id} created by ${userEmail} in team ${teamId}`);
     
     // Mark as read by sender immediately
@@ -384,6 +392,10 @@ app.post("/:teamId/broadcast", async (c) => {
       })
       .returning();
     
+    if (!newMessage) {
+      return c.json({ error: "Failed to create announcement" }, 500);
+    }
+    
     logger.info(`Announcement ${newMessage.id} created by ${userEmail} in team ${teamId}`);
     
     // Mark as read by sender immediately
@@ -470,6 +482,10 @@ app.patch("/:teamId/messages/:messageId", async (c) => {
       .where(eq(teamMessages.id, messageId))
       .returning();
 
+    if (!updatedMessage) {
+      return c.json({ error: "Failed to update message" }, 500);
+    }
+
     logger.info(`Message ${messageId} edited by ${userEmail}`);
 
     return c.json({
@@ -529,6 +545,10 @@ app.delete("/:teamId/messages/:messageId", async (c) => {
       })
       .where(eq(teamMessages.id, messageId))
       .returning();
+
+    if (!deletedMessage) {
+      return c.json({ error: "Failed to delete message" }, 500);
+    }
 
     logger.info(`Message ${messageId} soft deleted by ${userEmail}`);
 

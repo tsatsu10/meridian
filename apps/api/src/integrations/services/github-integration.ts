@@ -8,7 +8,7 @@
  */
 
 import { createId } from "@paralleldrive/cuid2";
-import { eq, and } from "drizzle-orm";
+import { eq, and, like } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { 
   integrationConnectionTable, 
@@ -18,6 +18,16 @@ import {
 } from "../../database/schema";
 import { triggerAutomationRules } from "../../automation/services/automation-rule-engine";
 import logger from '../../utils/logger';
+import { parseIntegrationJsonField } from "../../lib/parse-integration-json";
+
+/** Embedded in task.description so GitHub issues map to rows without an external_id column */
+function githubIssueMarker(issueId: number): string {
+  return `\n\n__MERIDIAN_GITHUB_ISSUE_ID__:github-${issueId}__`;
+}
+
+function githubIssueDescriptionPattern(issueId: number): string {
+  return `%__MERIDIAN_GITHUB_ISSUE_ID__:github-${issueId}__%`;
+}
 
 // GitHub API types
 export interface GitHubRepo {
@@ -311,40 +321,38 @@ export class GitHubIntegration {
       let updatedTasks = 0;
 
       for (const issue of issues) {
-        // Check if task already exists for this issue
         const existingTask = await db.select()
           .from(taskTable)
           .where(
             and(
               eq(taskTable.projectId, projectId),
-              eq(taskTable.externalId, `github-${issue.id}`)
+              like(taskTable.description, githubIssueDescriptionPattern(issue.id))
             )
           );
 
-        if (existingTask.length > 0) {
-          // Update existing task
+        const existing = existingTask[0];
+        const bodyWithMarker = `${issue.body ?? ""}${githubIssueMarker(issue.id)}`;
+
+        if (existing) {
           await db.update(taskTable)
             .set({
               title: issue.title,
-              description: issue.body || "",
-              status: issue.state === "closed" ? "completed" : "todo",
+              description: bodyWithMarker,
+              status: issue.state === "closed" ? "done" : "todo",
+              completedAt: issue.state === "closed" ? new Date() : null,
               updatedAt: new Date()
             })
-            .where(eq(taskTable.id, existingTask[0].id));
+            .where(eq(taskTable.id, existing.id));
           
           updatedTasks++;
         } else {
-          // Create new task
           await db.insert(taskTable).values({
             id: createId(),
             title: issue.title,
-            description: issue.body || "",
+            description: bodyWithMarker,
             projectId,
             status: "todo",
-            priority: "medium",
-            externalId: `github-${issue.id}`,
-            externalUrl: issue.html_url,
-            createdBy: "system"
+            priority: "medium"
           });
           
           createdTasks++;
@@ -381,12 +389,16 @@ export class GitHubIntegration {
     
     try {
       // Parse repository URL
-      const repoMatch = config.repositoryUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+      const repoMatch = config.repositoryUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
       if (!repoMatch) {
         throw new Error("Invalid GitHub repository URL");
       }
 
-      const [, owner, repo] = repoMatch;
+      const owner = repoMatch[1];
+      const repo = repoMatch[2];
+      if (!owner || !repo) {
+        throw new Error("Invalid GitHub repository URL");
+      }
 
       // Test GitHub connection
       const github = new GitHubIntegration({ accessToken: config.accessToken });
@@ -417,22 +429,40 @@ export class GitHubIntegration {
         credentials: JSON.stringify({
           accessToken: config.accessToken
         }),
-        connectionStatus: "connected",
-        isActive: true,
-        lastConnectedAt: new Date()
+        status: "active",
+        lastSync: new Date(),
+        syncStatus: "success"
       }).returning();
 
-      // Update project with GitHub integration
+      const created = integration[0];
+      if (!created) {
+        throw new Error("Failed to persist GitHub integration");
+      }
+
+      const [projectRow] = await db
+        .select()
+        .from(projectTable)
+        .where(eq(projectTable.id, projectId))
+        .limit(1);
+      if (!projectRow) {
+        throw new Error("Project not found");
+      }
+
+      const prevSettings =
+        (projectRow.settings as Record<string, unknown> | null | undefined) ?? {};
+
       await db.update(projectTable)
         .set({
-          integrationConfig: JSON.stringify({
+          settings: {
+            ...prevSettings,
             github: {
-              integrationId: integration[0].id,
+              integrationId: created.id,
               repositoryUrl: repository.html_url,
               owner,
               repo
             }
-          })
+          },
+          updatedAt: new Date()
         })
         .where(eq(projectTable.id, projectId));
 
@@ -449,7 +479,7 @@ export class GitHubIntegration {
 
       return {
         success: true,
-        integration: integration[0],
+        integration: created,
         repository
       };
     } catch (error) {
@@ -462,7 +492,7 @@ export class GitHubIntegration {
   private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;
     
-    const defaultHeaders = {
+    const defaultHeaders: Record<string, string> = {
       "Authorization": `Bearer ${this.accessToken}`,
       "Accept": "application/vnd.github.v3+json",
       "User-Agent": "Meridian-Integration/1.0"
@@ -476,7 +506,7 @@ export class GitHubIntegration {
       ...options,
       headers: {
         ...defaultHeaders,
-        ...options.headers
+        ...(options.headers as Record<string, string> | undefined)
       }
     });
   }
@@ -493,28 +523,26 @@ export class GitHubIntegration {
       .where(
         and(
           eq(integrationConnectionTable.provider, "github"),
-          eq(integrationConnectionTable.isActive, true)
+          eq(integrationConnectionTable.status, "active")
         )
       );
 
     // Create task for issue if auto-create is enabled
     for (const project of projects) {
-      const config = JSON.parse(project.integration_connection.config);
+      const config = parseIntegrationJsonField(project.integration_connection.config);
       
       if (config.autoCreateTasks && 
           config.owner === payload.repository.full_name.split("/")[0] &&
           config.repo === payload.repository.full_name.split("/")[1]) {
         
+        const issue = payload.issue;
         await db.insert(taskTable).values({
           id: createId(),
-          title: payload.issue.title,
-          description: payload.issue.body || "",
-          projectId: project.project.id,
+          title: issue.title,
+          description: `${issue.body ?? ""}${githubIssueMarker(issue.id)}`,
+          projectId: project.projects.id,
           status: "todo",
-          priority: "medium",
-          externalId: `github-${payload.issue.id}`,
-          externalUrl: payload.issue.html_url,
-          createdBy: "github-integration"
+          priority: "medium"
         });
       }
     }
@@ -525,17 +553,20 @@ export class GitHubIntegration {
     if (!payload.issue) return;
 
     // Find and update corresponding task
+    const issueId = payload.issue.id;
     const task = await db.select()
       .from(taskTable)
-      .where(eq(taskTable.externalId, `github-${payload.issue.id}`));
+      .where(like(taskTable.description, githubIssueDescriptionPattern(issueId)));
 
-    if (task.length > 0) {
+    const row = task[0];
+    if (row) {
       await db.update(taskTable)
         .set({
-          status: "completed",
+          status: "done",
+          completedAt: new Date(),
           updatedAt: new Date()
         })
-        .where(eq(taskTable.id, task[0].id));
+        .where(eq(taskTable.id, row.id));
     }
   }
 
@@ -544,20 +575,20 @@ export class GitHubIntegration {
     if (!payload.issue) return;
 
     // Find and update corresponding task
+    const issueId = payload.issue.id;
     const task = await db.select()
       .from(taskTable)
-      .where(eq(taskTable.externalId, `github-${payload.issue.id}`));
+      .where(like(taskTable.description, githubIssueDescriptionPattern(issueId)));
 
-    if (task.length > 0 && payload.issue.assignees.length > 0) {
-      // Note: This would need mapping from GitHub username to Meridian user email
-      const assignee = payload.issue.assignees[0];
-      
+    const row = task[0];
+    const assignee = payload.issue.assignees[0];
+    if (row && assignee) {
       await db.update(taskTable)
         .set({
-          assigneeEmail: `${assignee.login}@github.local`, // Placeholder mapping
+          userEmail: `${assignee.login}@github.local`,
           updatedAt: new Date()
         })
-        .where(eq(taskTable.id, task[0].id));
+        .where(eq(taskTable.id, row.id));
     }
   }
 } 
