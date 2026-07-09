@@ -31,6 +31,7 @@ export type ProjectColumn = {
   name: string;
   tasks: Task[];
   dbId?: string;
+  isDefault?: boolean;
 };
 
 /** GET /task/tasks/:projectId response. */
@@ -46,7 +47,22 @@ export type ProjectWithTasks = {
   plannedTasks: Task[];
 };
 
-/** Projects hub / list rows (API list payload + optional owner display name). */
-export type ProjectDashboardRow = ProjectWithTasks & {
+export type ProjectMemberSummary = {
+  id: string | null;
+  name: string | null;
+  email: string | null;
+  avatar: string | null;
+  role: string;
+};
+
+/** GET /project (list) rows — full project row plus joined tasks/members. */
+export type ProjectDashboardRow = Omit<Project, "workspace"> & {
+  workspace: { id: string | null; name: string | null } | null;
   ownerName?: string;
+  columns: ProjectColumn[];
+  tasks: Task[];
+  members: ProjectMemberSummary[];
+  teamSize: number;
+  plannedTasks: Task[];
+  archivedTasks: Task[];
 };

@@ -95,7 +95,7 @@ class Logger {
   private sendToExternalService(entry: LogEntry): void {
     // TODO: Integrate with external logging service
     // Examples: Sentry, LogRocket, Datadog, etc.
-    if (entry.level === 'error' && window.Sentry) {
+    if (entry.level === 'error' && (window as any).Sentry) {
       // window.Sentry.captureException(new Error(entry.message));
     }
   }

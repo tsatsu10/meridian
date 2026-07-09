@@ -49,9 +49,8 @@ jobs:
 
       # NOTE: apps/web/tsconfig.json is a solution-style config with files:[], so a bare
       # `tsc --noEmit` checks nothing. Point at tsconfig.app.json for the real check.
-      # Non-blocking until the pre-existing ~3.2k error backlog is cleared.
+      # Blocking: the error backlog was cleared to zero (was ~3.2k).
       - name: Typecheck web
-        continue-on-error: true
         working-directory: apps/web
         run: npx tsc --noEmit -p tsconfig.app.json
 

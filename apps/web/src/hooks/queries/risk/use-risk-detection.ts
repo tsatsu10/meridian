@@ -267,7 +267,7 @@ function useIdleReady(deferUntilIdle: boolean | undefined): boolean {
       if (typeof cancelIdleCallback !== "undefined" && typeof handle === "number") {
         cancelIdleCallback(handle);
       } else {
-        clearTimeout(handle as ReturnType<typeof setTimeout>);
+        clearTimeout(handle as unknown as ReturnType<typeof setTimeout>);
       }
     };
   }, [shouldDefer]);

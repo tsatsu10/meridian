@@ -301,7 +301,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
   // Sort handler with announcement
   const handleSortChange = useCallback(
     (newSortBy: string, newSortOrder?: string) => {
-      setSort(newSortBy, (newSortOrder as "asc" | "desc") || sortOrder);
+      setSort(newSortBy as "status" | "name" | "priority" | "progress" | "dueDate", (newSortOrder as "asc" | "desc") || sortOrder);
       announceFilterChange(`Sorted by ${newSortBy} in ${newSortOrder || sortOrder} order`);
       onFiltersChange?.();
     },

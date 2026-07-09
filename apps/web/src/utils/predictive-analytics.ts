@@ -36,22 +36,6 @@ export interface PredictionResult {
 }
 
 /**
- * Calculate simple moving average for smoothing
- */
-function calculateMovingAverage(data: number[], window: number): number[] {
-  const result: number[] = [];
-  for (let i = 0; i < data.length; i++) {
-    if (i < window - 1) {
-      result.push(data[i]);
-    } else {
-      const sum = data.slice(i - window + 1, i + 1).reduce((a, b) => a + b, 0);
-      result.push(sum / window);
-    }
-  }
-  return result;
-}
-
-/**
  * Calculate linear regression for trend prediction
  */
 function linearRegression(values: number[]): { slope: number; intercept: number } {

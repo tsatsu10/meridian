@@ -1,7 +1,7 @@
 import { client } from "@meridian/libs";
 
 async function getTasks(projectId: string) {
-  const response = await client.task.tasks[":projectId"].$get({
+  const response = await (client as any).task.tasks[":projectId"].$get({
     param: { projectId },
   });
 

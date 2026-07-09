@@ -114,9 +114,9 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
  * Pure helper for Projects hub filtering — matches filter chip values (on-track, at-risk, behind, ahead).
  */
 export function getProjectHealthFilterKey(project: {
-  tasks?: Array<{ status?: string; dueDate?: string | Date | null }>;
+  tasks?: Array<{ status?: string | null; dueDate?: string | Date | null }>;
   dueDate?: string | Date | null;
-  status?: string;
+  status?: string | null;
 }): "on-track" | "at-risk" | "behind" | "ahead" {
   const tasks = project.tasks ?? [];
   const totalTasks = tasks.length;

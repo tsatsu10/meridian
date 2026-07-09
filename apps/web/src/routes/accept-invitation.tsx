@@ -4,7 +4,7 @@ import { useAcceptInvitation } from "../lib/api/workspace-invitations";
 import { toast } from "sonner";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 
-interface InvitationSearchParams {
+export interface InvitationSearchParams {
   token?: string;
 }
 

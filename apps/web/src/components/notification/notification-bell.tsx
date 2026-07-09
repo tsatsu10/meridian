@@ -33,7 +33,6 @@ import {
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { useRBACAuth } from "@/lib/permissions";
 
 // Enhanced notification types with Magic UI styling
 interface Notification {
@@ -154,20 +153,12 @@ export default function NotificationBell({
   showBadge = true,
   maxNotifications = 10
 }: NotificationBellProps) {
-  const { hasPermission } = useRBACAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
 
-  // Filter notifications based on permissions
   const visibleNotifications = useMemo(() => {
-    return notifications.filter(notification => {
-      // Basic permission checks - in real app, this would be more sophisticated
-      if (notification.type === "approval" && !hasPermission("code", "review")) {
-        return false;
-      }
-      return true;
-    }).slice(0, maxNotifications);
-  }, [notifications, hasPermission, maxNotifications]);
+    return notifications.slice(0, maxNotifications);
+  }, [notifications, maxNotifications]);
 
   // Count unread notifications
   const unreadCount = useMemo(() => 

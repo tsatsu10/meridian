@@ -326,7 +326,8 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
       
       // Navigate to the projects page
       router.navigate({
-        to: '/dashboard/projects'
+        to: '/dashboard/projects',
+        search: { page: 1, ps: 12, q: undefined, archived: false },
       });
     } catch (error: any) {
       console.error("Failed to create project:", error);

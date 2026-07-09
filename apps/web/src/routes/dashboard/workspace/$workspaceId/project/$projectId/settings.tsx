@@ -62,6 +62,7 @@ import {
 import icons from "@/constants/project-icons";
 import useDeleteProject from "@/hooks/mutations/project/use-delete-project";
 import useUpdateProject from "@/hooks/mutations/project/use-update-project";
+import { useArchiveProject } from "@/hooks/mutations/project/use-archive-project";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
@@ -267,6 +268,7 @@ function ProjectSettings() {
   }, [projectData, setProject]);
   const [confirmProjectName, setConfirmProjectName] = useState("");
   const { mutateAsync: updateProject, isPending } = useUpdateProject();
+  const { mutateAsync: archiveProject } = useArchiveProject();
   const { mutateAsync: deleteProject, isPending: isDeleting } = useDeleteProject();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -627,9 +629,8 @@ function ProjectSettings() {
           name: project.name,
           slug: project.slug,
           description: project.description,
-          status: project.status,
-          priority: project.priority,
-          visibility: project.visibility,
+          status: projectData?.status,
+          priority: projectData?.priority,
           icon: project.icon,
         },
         teams: teams.map(team => ({
@@ -676,15 +677,8 @@ function ProjectSettings() {
     if (!project) return;
     
     try {
-      await updateProject({
-        workspaceId,
-        projectId,
-        data: {
-          ...project,
-          status: 'archived' as any,
-        },
-      });
-      
+      await archiveProject({ projectId, workspaceId });
+
       toast.success("Project archived successfully");
       setShowArchiveConfirm(false);
       // Navigate back to workspace using absolute URL

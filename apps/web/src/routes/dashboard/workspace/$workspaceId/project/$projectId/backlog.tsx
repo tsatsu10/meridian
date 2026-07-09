@@ -697,7 +697,7 @@ function BacklogPage() {
                   Ready to Start Sprint?
                 </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  You have {project.plannedTasks.length} planned tasks ready to move to active development
+                  You have {project?.plannedTasks?.length ?? 0} planned tasks ready to move to active development
                 </p>
               </div>
             </div>

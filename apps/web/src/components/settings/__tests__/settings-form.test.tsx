@@ -297,7 +297,7 @@ describe('Settings Form Component', () => {
 
   it('should disable button while saving', async () => {
     const user = userEvent.setup();
-    const onSave = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const onSave = vi.fn(() => new Promise<void>(resolve => setTimeout(() => resolve(), 100)));
 
     render(
       <SettingsForm initialSettings={defaultSettings} onSave={onSave} />,

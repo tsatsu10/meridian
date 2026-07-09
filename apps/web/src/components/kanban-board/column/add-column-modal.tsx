@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { client } from "@meridian/libs";
-import useProjectStore from "@/store/project";
 
 interface AddColumnModalProps {
   open: boolean;
@@ -19,7 +18,6 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
   const [name, setName] = useState("");
   const [color, setColor] = useState("#6b7280");
   const [isLoading, setIsLoading] = useState(false);
-  const { project, setProject } = useProjectStore();
 
   const predefinedColors = [
     "#6b7280", // gray
@@ -49,7 +47,7 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
 
     setIsLoading(true);
 
-    try {const response = await client.project[":projectId"]["status-columns"].$post({
+    try {const response = await (client as any).project[":projectId"]["status-columns"].$post({
         param: { projectId },
         json: {
           name: name.trim(),

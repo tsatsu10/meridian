@@ -1,11 +1,8 @@
 import { client } from "@meridian/libs";
 import { dedupeWorkspaceUsersForList } from "@/lib/workspace-users/dedupe-workspace-users";
 import type { WorkspaceMember } from "@/types/workspace-user";
-import type { InferRequestType } from "hono/client";
-
-export type GetWorkspaceUsersRequest = InferRequestType<
-  (typeof client)["workspace-user"][":workspaceId"]["$get"]
->;
+// The generated AppType is missing workspace-user[":workspaceId"], so type locally
+export type GetWorkspaceUsersRequest = { param: { workspaceId: string } };
 
 function normalizeWorkspaceMember(raw: Record<string, unknown>): WorkspaceMember {
   const emailRaw = (raw.email ?? raw.userEmail ?? "") as string;

@@ -4,14 +4,16 @@ import { client } from "@meridian/libs";
 export type InviteWorkspaceMemberRequest = {
   workspaceId: string;
   userEmail: string;
+  role?: string;
 };
 
 const inviteWorkspaceMember = async ({
   workspaceId,
   userEmail,
+  role,
 }: InviteWorkspaceMemberRequest) => {
   const response = await (client as any)["workspace-user"][":workspaceId"].invite.$post({
-    json: { userEmail },
+    json: { userEmail, ...(role ? { role } : {}) },
     param: { workspaceId },
   });
 

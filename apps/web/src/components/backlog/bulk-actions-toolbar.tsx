@@ -14,7 +14,6 @@ import {
   Archive, 
   ArrowRight, 
   Tag,
-  Users,
   AlertTriangle,
   MoreHorizontal
 } from "lucide-react";

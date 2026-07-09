@@ -1,9 +1,7 @@
 import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
 
-export type GetActiveWorkspaceUsersRequest = InferRequestType<
-  (typeof client)["workspace-user"][":workspaceId"]["active"]["$get"]
->["param"];
+// The generated AppType is missing workspace-user[":workspaceId"], so type locally
+export type GetActiveWorkspaceUsersRequest = { workspaceId: string };
 
 async function getActiveWorkspaceUsers({
   workspaceId,

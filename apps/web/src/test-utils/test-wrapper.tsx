@@ -10,7 +10,6 @@
 
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createMemoryHistory, createRootRoute, createRouter } from '@tanstack/react-router';
 import { ThemeProvider } from 'next-themes';
 
 // Create a new query client for each test
@@ -25,18 +24,6 @@ export function createTestQueryClient() {
         retry: false,
       },
     },
-  });
-}
-
-// Mock router for testing
-function createTestRouter() {
-  const rootRoute = createRootRoute({
-    component: () => <div>Root</div>,
-  });
-
-  return createRouter({
-    routeTree: rootRoute,
-    history: createMemoryHistory({ initialEntries: ['/'] }),
   });
 }
 

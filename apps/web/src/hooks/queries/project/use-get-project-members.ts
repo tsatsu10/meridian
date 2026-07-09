@@ -17,7 +17,7 @@ interface ProjectMember {
 }
 
 async function getProjectMembers(projectId: string): Promise<ProjectMember[]> {
-  const response = await client.project[":projectId"].members.$get({
+  const response = await (client as any).project[":projectId"].members.$get({
     param: { projectId },
   });
 

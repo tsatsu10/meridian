@@ -34,7 +34,6 @@ import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 // 🧠 MEMORY: Optimization utilities for large task lists
 import { optimizedFlattenTasks, optimizedFilter } from "@/utils/memory-optimization";
 import { useMemoryCleanup } from "@/components/performance/memory-cleanup-provider";
-import { MemoryStatusBadge } from "@/components/performance/memory-status-badge";
 // 🔒 SECURITY: XSS protection for user inputs
 import { sanitizeString } from "@/utils/xss-protection";
 // 🔒 SECURITY: Role-based access control
@@ -443,7 +442,6 @@ function ProjectListView() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <MemoryStatusBadge className="mr-2 hidden sm:block" />
             {canManageProject && (
               <Button 
                 variant="outline" 

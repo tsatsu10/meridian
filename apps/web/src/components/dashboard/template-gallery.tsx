@@ -38,7 +38,6 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { API_BASE_URL } from '@/constants/urls';
-import { useUserStore } from '@/store/user';
 
 interface DashboardTemplate {
   id: string;
@@ -66,7 +65,6 @@ interface TemplateGalleryProps {
 }
 
 export function TemplateGallery({ workspaceId, onApplyTemplate }: TemplateGalleryProps) {
-  const { user } = useUserStore();
   const [templates, setTemplates] = useState<DashboardTemplate[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<DashboardTemplate[]>([]);
   const [loading, setLoading] = useState(true);

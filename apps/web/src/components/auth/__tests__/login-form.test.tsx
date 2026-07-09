@@ -246,7 +246,7 @@ describe('Login Form Component', () => {
 
   it('should disable button while loading', async () => {
     const user = userEvent.setup();
-    const onSubmit = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const onSubmit = vi.fn(() => new Promise<void>(resolve => setTimeout(() => resolve(), 100)));
 
     render(<LoginForm onSubmit={onSubmit} />, { wrapper: TestWrapper });
 
