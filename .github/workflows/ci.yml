@@ -47,9 +47,13 @@ jobs:
         continue-on-error: true
         run: npm run typecheck --workspace=@meridian/api
 
+      # NOTE: apps/web/tsconfig.json is a solution-style config with files:[], so a bare
+      # `tsc --noEmit` checks nothing. Point at tsconfig.app.json for the real check.
+      # Non-blocking until the pre-existing ~3.2k error backlog is cleared.
       - name: Typecheck web
+        continue-on-error: true
         working-directory: apps/web
-        run: npx tsc --noEmit
+        run: npx tsc --noEmit -p tsconfig.app.json
 
       - name: Unit tests (api)
         continue-on-error: true

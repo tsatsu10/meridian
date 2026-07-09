@@ -265,23 +265,8 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
             </Link>
           </DropdownMenuItem>
           
-          <DropdownMenuItem asChild>
-            <Link to="/dashboard/settings/billing">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Billing
-            </Link>
-          </DropdownMenuItem>
-          
           <DropdownMenuSeparator />
-          
-          {/* Help & Support */}
-          <DropdownMenuItem asChild>
-            <Link to="/help">
-              <HelpCircle className="h-4 w-4 mr-2" />
-              Help & Support
-            </Link>
-          </DropdownMenuItem>
-          
+
           <DropdownMenuItem>
             <Keyboard className="h-4 w-4 mr-2" />
             Keyboard Shortcuts

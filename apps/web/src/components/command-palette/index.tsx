@@ -324,17 +324,6 @@ export function CommandPalette() {
                       <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">?</kbd>
                     </Command.Item>
 
-                    <Command.Item
-                      onSelect={() => {
-                        navigate({ to: "/dashboard/help" });
-                        setOpen(false);
-                        addToRecent("Get Help");
-                      }}
-                      className={commandItemStyles}
-                    >
-                      <HelpCircle className="w-4 h-4" />
-                      Get Help
-                    </Command.Item>
                   </CommandGroup>
 
                   <CommandGroup heading="Workspace" className="mt-4 mb-2">

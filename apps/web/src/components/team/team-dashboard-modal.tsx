@@ -128,9 +128,6 @@ export default function TeamDashboardModal({
   const [team, setTeam] = useState<Team | null>(selectedTeam);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activity, setActivity] = useState<TeamActivity[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [activeTab, setActiveTab] = useState("communication");
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
 
@@ -261,31 +258,6 @@ export default function TeamDashboardModal({
     const selectedTeam = allTeams.find(t => t.id === teamId);
     if (selectedTeam) {
       setTeam(selectedTeam);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (newMessage.trim() && teamPermissions.permissions.canSendMessages) {
-      try {
-        // TODO: Replace with actual channel ID when team channels are implemented
-        const channelId = `team-${team?.id || 'general'}`;
-        
-        // For now, add to local activity until channels are fully integrated
-        const newActivity: TeamActivity = {
-          id: Date.now().toString(),
-          type: "comment_added",
-          message: `posted: "${newMessage}"`,
-          user: "You",
-          timestamp: "just now",
-          icon: "💬"
-        };
-        setActivity([newActivity, ...activity]);
-        setNewMessage("");// TODO: Implement actual message sending when channels are set up
-        // await sendMessage({ channelId, content: newMessage });
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        // Show error toast or notification
-      }
     }
   };
 
@@ -581,73 +553,6 @@ export default function TeamDashboardModal({
               </div>
             </div>
 
-            {/* Team Communication */}
-            {activeTab === "communication" && (
-              <div className="space-y-6">
-                {/* Communication Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Team Communication</h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsChatOpen(true)}
-                      disabled={!teamPermissions.permissions.canSendMessages}
-                      className="flex items-center space-x-2"
-                    >
-                      <MessageSquareIcon className="h-4 w-4" />
-                      <span>Open Chat</span>
-                    </Button>
-                  </div>
-
-                  {/* Message Input - Only show if user can send messages */}
-                  {teamPermissions.permissions.canSendMessages && (
-                    <div className="flex space-x-2 mb-4">
-                      <Input
-                        placeholder="Send a message to the team..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        className="flex-1"
-                      />
-                      <Button size="sm" onClick={handleSendMessage}>
-                        <SendIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Recent Activity */}
-                  {teamPermissions.permissions.canViewChat ? (
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {activity.map((item) => (
-                        <div key={item.id} className="flex items-start space-x-3 text-sm">
-                          <span className="text-lg">{item.icon}</span>
-                          <div className="flex-1">
-                            <span className="font-medium">{item.user}</span>
-                            <span className="text-muted-foreground"> {item.message}</span>
-                            <div className="text-xs text-muted-foreground mt-1">{item.timestamp}</div>
-                          </div>
-                          {/* Show moderation options for privileged users */}
-                          {teamPermissions.permissions.canModeratChat && item.user !== "You" && (
-                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
-                              <MoreHorizontalIcon className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center p-4 text-muted-foreground">
-                      <div className="flex items-center justify-center space-x-2 mb-2">
-                        <LockIcon className="h-4 w-4" />
-                        <span className="text-sm">Chat Access Restricted</span>
-                      </div>
-                      <p className="text-xs">You don't have permission to view team chat</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Achievements */}
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
