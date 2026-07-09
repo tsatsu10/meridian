@@ -1,11 +1,6 @@
-/**
- * Loading skeleton for profile components
- * Provides visual feedback while profile data loads
- */
-import React from 'react';
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 
 export function ProfileCardSkeleton() {
   return (

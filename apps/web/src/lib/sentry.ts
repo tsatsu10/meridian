@@ -27,7 +27,7 @@ export function initSentry() {
       replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
 
       // Filter out known errors
-      beforeSend(event, hint) {
+      beforeSend(event, _hint) {
         // Filter out browser extension errors
         if (event.exception?.values?.[0]?.value?.includes('Extension context')) {
           return null;

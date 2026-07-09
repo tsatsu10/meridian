@@ -1,7 +1,7 @@
 // @epic-3.5-analytics: Advanced Interactive Charts for Phase 3 Analytics
 // Enhanced data visualization with drill-down capabilities
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,6 @@ import {
   ZoomIn,
   Filter,
   Download,
-  Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -219,7 +218,7 @@ export function InteractiveLineChart({
   onPointClick 
 }: LineChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
-  const [selectedRange, setSelectedRange] = useState<[number, number] | null>(null);
+  const [_selectedRange, _setSelectedRange] = useState<[number, number] | null>(null);
 
   const sortedData = useMemo(() => 
     [...data].filter(d => d && typeof d.value === 'number' && !isNaN(d.value) && d.timestamp)

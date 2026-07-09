@@ -7,10 +7,7 @@
  * - Real-time interactions
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { TestWrapper } from '../../test-utils/test-wrapper';
+import { describe, it, expect, } from 'vitest';
 
 describe('Complete User Journey', () => {
   describe('New User Onboarding', () => {
@@ -202,8 +199,7 @@ describe('Complete User Journey', () => {
     });
 
     it('should handle large task lists', () => {
-      const taskCount = 1000;
-      const renderTime = 200; // ms
+            const renderTime = 200; // ms
       const threshold = 500; // ms
 
       expect(renderTime).toBeLessThan(threshold);

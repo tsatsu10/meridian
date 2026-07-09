@@ -23,7 +23,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -46,7 +45,6 @@ import {
   AlertTriangle, 
   TrendingUp, 
   Users, 
-  Calendar,
   Target,
   Lightbulb,
   CheckCircle2,
@@ -173,10 +171,10 @@ export function CreateTaskModal({
   const { workspace } = useWorkspaceStore();
 
   // Fetch real projects and team members data
-  const { data: projects = [], isLoading: projectsLoading } = useGetProjects({
+  const { data: projects = [] } = useGetProjects({
     workspaceId: workspace?.id || ''
   });
-  const { data: workspaceUsers = [], isLoading: usersLoading } = useGetWorkspaceUsers({
+  const { data: workspaceUsers = [] } = useGetWorkspaceUsers({
     workspaceId: workspace?.id || ''
   });
 

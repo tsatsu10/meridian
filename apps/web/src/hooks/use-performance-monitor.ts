@@ -168,7 +168,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
   }, [queryClient, enableQueryTracking, sampleRate]);
 
   // Track user interaction latency with memory optimization
-  const trackInteraction = useCallback((type: 'click' | 'input' | 'scroll') => {
+  const trackInteraction = useCallback((_type: 'click' | 'input' | 'scroll') => {
     if (!enableInteractionTracking || Math.random() >= sampleRate) return;
 
     const startTime = performance.now();

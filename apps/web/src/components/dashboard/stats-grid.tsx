@@ -6,7 +6,6 @@
 import { useState, useEffect } from "react";
 import { 
   CheckCircle, 
-  Clock, 
   AlertTriangle, 
   TrendingUp, 
   TrendingDown,
@@ -14,11 +13,8 @@ import {
   FolderOpen, 
   BarChart3,
   Target,
-  Calendar,
-  Activity
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

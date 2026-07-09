@@ -136,7 +136,7 @@ const validateTaskMove = (task: TaskWithDependencies, newStatus: string, allTask
   };
 };
 
-function KanbanBoard({ project, setActiveColumn, setIsTaskModalOpen }: KanbanBoardProps) {
+function KanbanBoard({ project }: KanbanBoardProps) {
   // TypeScript sometimes loses the type for project.id due to complex inference; force as any for id access
   const projectId = (project as any).id;const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);

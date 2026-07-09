@@ -1,4 +1,4 @@
-import { DEFAULT_AVATARS, getAvatarById } from '@/constants/avatars'
+import { getAvatarById } from '@/constants/avatars'
 
 export interface UserWithAvatar {
   id?: string

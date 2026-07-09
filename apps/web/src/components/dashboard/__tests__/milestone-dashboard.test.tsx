@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MilestoneDashboard from '@/components/dashboard/milestone-dashboard';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -11,7 +11,7 @@ vi.mock('@/hooks/queries/dashboard/use-dashboard-data', () => ({
 
 // Mock date-fns functions
 vi.mock('date-fns', () => ({
-  format: vi.fn((date) => 'Dec 31'),
+  format: vi.fn((_date) => 'Dec 31'),
   differenceInDays: vi.fn(() => 30),
   isToday: vi.fn(() => false),
   isAfter: vi.fn(() => true),

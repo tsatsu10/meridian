@@ -174,7 +174,7 @@ interface NavigationProviderProps {
 
 export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children }) => {
   const router = useRouter();
-  const location = useLocation();
+  void (useLocation());
   const { workspace } = useWorkspaceStore();
   const { user } = useAuth();
   

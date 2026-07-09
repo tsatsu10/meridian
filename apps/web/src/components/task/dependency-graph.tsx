@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { 
   GitBranch, 
-  ArrowRight, 
   AlertTriangle, 
   CheckCircle2, 
   Clock,

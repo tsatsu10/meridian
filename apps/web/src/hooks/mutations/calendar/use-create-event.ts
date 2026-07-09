@@ -1,7 +1,7 @@
 // @epic-3.4-teams: Create calendar event mutation hook
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 interface CreateEventData {
   title: string;
@@ -63,7 +63,7 @@ export function useCreateEvent() {
   return useMutation({
     mutationFn: ({ teamId, data }: { teamId: string; data: CreateEventData }) =>
       createEvent(teamId, data),
-    onSuccess: (response, variables) => {
+    onSuccess: (_response, _variables) => {
       toast.success('Event created successfully!');
       
       // Invalidate all team events queries (includes all date ranges for this team)

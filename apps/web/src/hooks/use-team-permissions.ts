@@ -83,7 +83,7 @@ interface UseTeamPermissionsOptions {
   channelId?: string;
 }
 
-export const useTeamPermissions = (workspaceId?: string) => {
+export const useTeamPermissions = (_workspaceId?: string) => {
   const { user } = useUser();
   const { workspace } = useWorkspaceStore();
 
@@ -125,7 +125,7 @@ export const useTeamPermissions = (workspaceId?: string) => {
   }, [userRole]);
 
   const canPerformAction = useMemo(() => {
-    return (action: string, resource?: string): boolean => {
+    return (action: string, _resource?: string): boolean => {
       // Map actions to permissions
       const actionPermissionMap: Record<string, Permission> = {
         'send_message': 'canSendMessages',

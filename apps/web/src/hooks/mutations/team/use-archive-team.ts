@@ -12,13 +12,13 @@ export function useArchiveTeam() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ teamId, workspaceId }: ArchiveTeamData) => {
+    mutationFn: async ({ teamId }: ArchiveTeamData) => {
       const response = await fetchApi(`/team/${teamId}/archive`, {
         method: "POST",
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
       toast.success("Team archived successfully");
     },

@@ -9,13 +9,9 @@ import {
 } from "@/components/ui/popover";
 import { 
   Bell, 
-  X, 
   AlertTriangle, 
   Target, 
-  CheckCircle, 
-  Info,
   Trash2,
-  Settings
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { format, isToday, isYesterday } from "date-fns";

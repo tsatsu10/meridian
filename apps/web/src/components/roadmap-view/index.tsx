@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isWithinInterval, addMonths } from 'date-fns';
+import { useMemo } from 'react';
+import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isWithinInterval, } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';

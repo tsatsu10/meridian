@@ -5,7 +5,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 import type { BacklogTheme } from '@/types/backlog-theme';
 
 export const useGetThemes = (projectId: string) => {

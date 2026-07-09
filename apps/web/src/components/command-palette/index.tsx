@@ -15,27 +15,8 @@ import {
   Plus,
   Search,
   Settings,
-  Calendar,
-  Users,
-  BarChart3,
   Clock,
-  Flag,
-  Filter,
-  Download,
-  Upload,
-  Zap,
-  Star,
-  Eye,
-  CheckSquare,
-  Target,
-  TrendingUp,
-  FileText,
-  Palette,
-  Moon,
-  Sun,
-  Monitor,
   Keyboard,
-  HelpCircle,
   FolderOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -342,7 +323,7 @@ export function CommandPalette() {
                   {/* Recent Commands */}
                   {recentCommands.length > 0 && (
                     <CommandGroup heading="Recent" className="mt-4">
-                      {recentCommands.slice(0, 3).map((command, index) => (
+                      {recentCommands.slice(0, 3).map((command, _index) => (
                         <Command.Item
                           key={command}
                           className={cn(commandItemStyles, "text-muted-foreground")}

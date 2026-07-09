@@ -1,8 +1,8 @@
 // @epic-3.4-teams: Schedule conflict detection and resolution
 // @persona-david: Team Lead workload management
 import { useMemo } from 'react';
-import { isWithinInterval, areIntervalsOverlapping } from 'date-fns';
-import type { CalendarEvent, ScheduleConflict, Resolution, MemberSchedule, ConflictType, ConflictSeverity } from '@/types/schedule';
+import { areIntervalsOverlapping } from 'date-fns';
+import type { CalendarEvent, ScheduleConflict, Resolution, MemberSchedule, ConflictSeverity } from '@/types/schedule';
 
 interface UseScheduleConflictsOptions {
   events: CalendarEvent[];
@@ -178,7 +178,7 @@ function generateOverlapResolutions(event1: CalendarEvent, event2: CalendarEvent
   ];
 }
 
-function generateOverloadResolutions(schedule: MemberSchedule, events: CalendarEvent[]): Resolution[] {
+function generateOverloadResolutions(_schedule: MemberSchedule, events: CalendarEvent[]): Resolution[] {
   const resolutions: Resolution[] = [];
   
   // Suggest reassigning lower priority events

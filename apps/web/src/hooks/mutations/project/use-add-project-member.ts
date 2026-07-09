@@ -31,7 +31,7 @@ function useAddProjectMember() {
 
   return useMutation({
     mutationFn: addProjectMember,
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate and refetch project members
       queryClient.invalidateQueries({
         queryKey: ["project-members", variables.projectId],

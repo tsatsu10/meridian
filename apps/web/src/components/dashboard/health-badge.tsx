@@ -51,7 +51,7 @@ export function HealthBadge({
   showScore = true,
   size = "md",
 }: HealthBadgeProps) {
-  const color = HEALTH_COLORS[state];
+  void (HEALTH_COLORS[state]);
   const bgClass = HEALTH_BG_COLORS[state];
   const textClass = HEALTH_TEXT_COLORS[state];
   const label = HEALTH_LABELS[state];

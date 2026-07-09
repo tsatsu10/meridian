@@ -6,7 +6,6 @@ import type {
   TipPreferences,
   UserTipProgress,
   TipAnalytics,
-  OnboardingFlow,
   TipsStore as TipsStoreType,
   TipCategory,
   TipLevel,
@@ -135,7 +134,7 @@ export const useTipsStore = create<TipsStoreType>()(
 
       // Helper to apply frequency filtering
       applyFrequencyFilter: (tips: Tip[]): Tip[] => {
-        const { userProgress, preferences } = get();
+        const { userProgress } = get();
         const now = new Date();
 
         return tips.filter((tip) => {
@@ -318,7 +317,7 @@ export const useTipsStore = create<TipsStoreType>()(
       },
 
       // Record tip action
-      recordTipAction: (tipId: string, action: string) => {
+      recordTipAction: (tipId: string, _action: string) => {
         set((state) => ({
           userProgress: {
             ...state.userProgress,
@@ -369,7 +368,7 @@ export const useTipsStore = create<TipsStoreType>()(
         });
       },
 
-      completeOnboardingStep: (stepId: string) => {
+      completeOnboardingStep: (_stepId: string) => {
         set((state) => ({
           userProgress: {
             ...state.userProgress,

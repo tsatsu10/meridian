@@ -199,7 +199,7 @@ export function calculateTaskHealthFactor(input: ProjectHealthInput): HealthFact
  * Based on team allocation and capacity
  */
 export function calculateResourceHealthFactor(input: ProjectHealthInput): HealthFactor {
-  const { teamMembers = [], allocatedHours = 0, requiredHours = 0 } = input;
+  const { teamMembers = [], requiredHours = 0 } = input;
 
   if (teamMembers.length === 0) {
     return {
@@ -296,8 +296,7 @@ export function calculateRiskFactor(input: ProjectHealthInput): HealthFactor {
   // Determine trend and risk level
   const trend =
     blockers.length > 0 || criticalPathAtRisk ? 'declining' : 'stable';
-  const riskLevel =
-    score < 40 ? 'critical' : score < 60 ? 'high' : score < 80 ? 'medium' : 'low';
+  void (score < 40 ? 'critical' : score < 60 ? 'high' : score < 80 ? 'medium' : 'low');
 
   // Generate recommendation
   let recommendation = '';

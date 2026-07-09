@@ -10,7 +10,7 @@ import {
   compareProjectsHealth,
 } from '@/utils/health/calculate-health-score';
 import type { ProjectHealthMetrics, ProjectHealthInput } from '@/types/health';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 /**
  * Hook to calculate health for a single project
@@ -230,18 +230,14 @@ export function useMultipleProjectsHealth(projectIds: string[]) {
  * Hook for real-time health updates via WebSocket
  */
 export function useRealtimeHealthUpdates(projectId: string | undefined) {
-  const [realtimeHealth, setRealtimeHealth] = useState<ProjectHealthMetrics | null>(null);
+  const [realtimeHealth, _setRealtimeHealth] = useState<ProjectHealthMetrics | null>(null);
 
   useEffect(() => {
     if (!projectId) return;
 
     // Subscribe to health updates via WebSocket
     // This would connect to Socket.IO and listen for health updates
-    const handleHealthUpdate = (data: ProjectHealthMetrics) => {
-      setRealtimeHealth(data);
-    };
-
-    // Placeholder for WebSocket subscription
+        // Placeholder for WebSocket subscription
     // const unsubscribe = subscribeToHealthUpdates(projectId, handleHealthUpdate);
     // return () => unsubscribe();
   }, [projectId]);

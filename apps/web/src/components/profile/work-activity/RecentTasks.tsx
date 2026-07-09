@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Circle, Clock, AlertCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { getRecentTasks, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
 
 interface RecentTasksProps {

@@ -10,14 +10,12 @@ import { SystemAlert } from "@/components/system-alert";
 import PageTitle from "@/components/page-title";
 import EmptyWorkspaceState from "@/components/workspace/empty-state";
 import SelectWorkspaceState from "@/components/workspace/select-workspace-state";
-import { isProductionMode } from "@/constants/urls";
 import useGetWorkspaces from "@/hooks/queries/workspace/use-get-workspaces";
 import useWorkspaceStore from "@/store/workspace";
 import { DashboardErrorBoundary } from "@/components/error-boundary/error-boundary";
 import {
   Outlet,
   createFileRoute,
-  redirect,
   useRouterState,
 } from "@tanstack/react-router";
 

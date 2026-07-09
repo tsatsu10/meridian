@@ -38,7 +38,7 @@ function TeamMemberCard({
   member, 
   onViewProfile, 
   onRemove, 
-  onChangeRole,
+  
   showActions = true 
 }: TeamMemberCardProps) {
   const getStatusColor = (status?: string) => {

@@ -14,7 +14,6 @@ import {
   Send,
   X,
   AlertCircle,
-  CheckCircle
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { toast } from '@/lib/toast';

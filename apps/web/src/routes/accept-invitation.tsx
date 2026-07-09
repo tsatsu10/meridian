@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, X, Mail, Building, UserCheck, AlertCircle } from "lucide-react";
 import { useAcceptInvitation } from "../lib/api/workspace-invitations";
 import { toast } from "sonner";

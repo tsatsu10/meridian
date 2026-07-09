@@ -315,7 +315,7 @@ export function useCallErrorRecovery() {
   };
 
   // Attempt to reconnect with new session
-  const attemptReconnection = async (error: CallError): Promise<boolean> => {
+  const attemptReconnection = async (_error: CallError): Promise<boolean> => {
     // This would integrate with the actual call connection logic
     await new Promise(resolve => setTimeout(resolve, 2000));
     

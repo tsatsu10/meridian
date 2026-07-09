@@ -1,7 +1,7 @@
 // @epic-3.5-analytics: Advanced Forecasting Engine for Phase 3 Analytics
 // Sophisticated predictive models and trend analysis
 
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +12,8 @@ import {
   Brain, 
   Target, 
   AlertTriangle,
-  Calendar,
-  BarChart3,
   Zap,
   Settings,
-  Download
 } from 'lucide-react';
 import { InteractiveLineChart } from '../charts/AdvancedCharts';
 

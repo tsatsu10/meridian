@@ -52,7 +52,7 @@ export function MobileResponsiveLayout({
 }: MobileResponsiveLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [notifications, setNotifications] = useState(3);
+  const [notifications, _setNotifications] = useState(3);
 
   useEffect(() => {
     const checkIsMobile = () => {

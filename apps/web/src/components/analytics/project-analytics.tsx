@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InteractiveChart, ChartType, TimeRange } from "@/components/dashboard/interactive-chart";
@@ -40,8 +40,8 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [chartType, setChartType] = useState<ChartType>("line");
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [comparisonMode, setComparisonMode] = useState(false);
-  const [selectedDrillDown, setSelectedDrillDown] = useState<'overdue' | 'high-priority' | 'in-progress' | null>(null);
+  const [_comparisonMode, _setComparisonMode] = useState(false);
+  const [_selectedDrillDown, setSelectedDrillDown] = useState<'overdue' | 'high-priority' | 'in-progress' | null>(null);
 
   const { data: response, isLoading, error, refetch } = useQuery({
     queryKey: ["project-analytics", projectId, timeRange],

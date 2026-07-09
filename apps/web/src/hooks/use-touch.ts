@@ -278,7 +278,7 @@ export function useTapOrHold(
     }, holdDelay);
   };
 
-  const handleTouchEnd = (e: TouchEvent) => {
+  const handleTouchEnd = (_e: TouchEvent) => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }

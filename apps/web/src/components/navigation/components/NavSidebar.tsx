@@ -3,12 +3,11 @@ import React, { useMemo, useState } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/cn';
 import { useNavigation, NavigationItem } from '../providers/NavigationProvider';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, } from '@/components/ui/collapsible';
 import { useAuth } from '@/components/providers/unified-context-provider';
 import useWorkspaceStore from '@/store/workspace';
 import { useRBACAuth } from '@/lib/permissions';
@@ -16,22 +15,16 @@ import {
   LayoutDashboard,
   FolderKanban,
   Users,
-  MessageSquare,
   BarChart3,
   Settings,
-  Calendar,
   Bell,
   FileText,
   Zap,
   ChevronDown,
-  ChevronRight,
-  Hash,
-  Lock,
   Sparkles,
   Target,
   Clock,
   PlusCircle,
-  Search,
 } from 'lucide-react';
 
 interface NavSidebarProps {

@@ -31,15 +31,10 @@ import {
   PieChart,
   LineChart,
   TrendingUp,
-  Users,
   Target,
-  Clock,
   Activity,
   CheckCircle2,
-  AlertTriangle,
   Sparkles,
-  Settings,
-  Save,
   RotateCcw
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -312,22 +307,7 @@ export function CustomWidgetsManager({
   }
 
   // Get size class for widget preview
-  const getSizeClass = (size: WidgetSize) => {
-    switch (size) {
-      case 'small':
-        return 'col-span-1'
-      case 'medium':
-        return 'col-span-2'
-      case 'large':
-        return 'col-span-3'
-      case 'full':
-        return 'col-span-4'
-      default:
-        return 'col-span-1'
-    }
-  }
-
-  // Get size label
+    // Get size label
   const getSizeLabel = (size: WidgetSize) => {
     return size.charAt(0).toUpperCase() + size.slice(1)
   }

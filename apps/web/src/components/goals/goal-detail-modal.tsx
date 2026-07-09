@@ -26,8 +26,6 @@ import {
   Calendar,
   Edit2,
   Trash2,
-  Plus,
-  BarChart3,
   Activity,
   Zap,
 } from "lucide-react";

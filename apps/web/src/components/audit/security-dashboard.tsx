@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { useState, useEffect } from 'react';
+import { API_BASE_URL, } from '@/constants/urls';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { AlertTriangle, Shield, Lock, Eye, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertTriangle, Shield, Eye, TrendingUp, } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface SecurityEvent {

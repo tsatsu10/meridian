@@ -6,9 +6,8 @@
  */
 
 import { useMemo } from 'react';
-import { useTeamPermissions, type TeamRole, type TeamPermissions } from './useTeamPermissions';
+import { useTeamPermissions, type TeamRole, } from './useTeamPermissions';
 import { useAuth } from '@/components/providers/auth-provider';
-import { useWorkspacePermission } from './useWorkspacePermission';
 
 export interface CollaborationPermissions {
   // ========== LIVE CURSORS & PRESENCE ==========

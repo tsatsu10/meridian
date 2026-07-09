@@ -58,7 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private reportError = (error: Error, errorInfo: React.ErrorInfo) => {
     // TODO: Integrate with error tracking service
-    const errorReport = {
+    void ({
       message: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
@@ -67,7 +67,7 @@ export class ErrorBoundary extends Component<Props, State> {
       userAgent: navigator.userAgent,
       url: window.location.href,
       errorId: this.state.errorId,
-    };
+    });
     
     logger.error("📊 Error report:");
     // Example: sendToErrorService(errorReport);

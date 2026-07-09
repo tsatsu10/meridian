@@ -1,12 +1,11 @@
 // @epic-1.2-gantt: Timeline/Gantt view for schedule visualization
 // @persona-sarah: PM sprint planning with dependency view
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { format, differenceInDays, addDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/cn';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { TimelineEntry, CalendarEvent } from '@/types/schedule';
+import type { TimelineEntry, } from '@/types/schedule';
 import { ChevronRight, AlertCircle } from 'lucide-react';
 
 interface TimelineViewProps {
@@ -23,7 +22,7 @@ export function TimelineView({
   startDate,
   endDate,
   onEntryClick,
-  onDragEnd,
+  
   className
 }: TimelineViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,8 +54,7 @@ export function TimelineView({
   }, [entries, startDate, endDate]);
   
   const days = eachDayOfInterval(dateRange);
-  const totalDays = days.length;
-  const dayWidth = 40; // pixels
+    const dayWidth = 40; // pixels
   const rowHeight = 60; // pixels
   
   const getEntryPosition = (entry: TimelineEntry) => {

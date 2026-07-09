@@ -17,7 +17,6 @@ import {
   MoveRight,
   User as UserIcon,
   Users,
-  ChevronRight,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
@@ -42,7 +41,7 @@ interface BacklogTaskRowProps {
 
 export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBacklogData }: BacklogTaskRowProps) {
   const navigate = useNavigate();
-  const { project, setProject } = useProjectStore();
+  const { project } = useProjectStore();
   const { mutate: updateTask } = useUpdateTask();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

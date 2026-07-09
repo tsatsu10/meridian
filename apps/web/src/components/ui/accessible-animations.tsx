@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { motion, Variants, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/cn';
 import { useAccessibility } from '@/hooks/useAccessibility';
@@ -376,7 +376,7 @@ interface NotificationAnimationProps {
 
 export function NotificationAnimation({
   children,
-  type = 'info',
+  
   position = 'top',
   className
 }: NotificationAnimationProps) {

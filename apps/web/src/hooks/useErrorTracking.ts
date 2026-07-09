@@ -502,7 +502,7 @@ export function useErrorTracking(config?: Partial<ErrorTrackingConfig>) {
 
     const now = new Date();
     const today = now.toDateString();
-    const currentHour = now.getHours();
+    void (now.getHours());
 
     // Calculate trends
     const dailyTrends = groups.reduce((acc, group) => {

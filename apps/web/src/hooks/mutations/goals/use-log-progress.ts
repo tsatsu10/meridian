@@ -24,7 +24,7 @@ export function useLogProgress() {
       const response = await api.post(`/api/goals/${goalId}/progress`, data);
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate all goal-related queries
       queryClient.invalidateQueries({ queryKey: ['goal', variables.goalId] });
       queryClient.invalidateQueries({ queryKey: ['goals'] });

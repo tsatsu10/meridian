@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, UserPlus, UserMinus, Shield, AlertCircle } from 'lucide-react';

@@ -1,8 +1,4 @@
-/**
- * Shared File Utilities
- * Consolidates duplicate file-related functions across the codebase
- */
-import React from 'react';
+
 
 /**
  * Format file size in human-readable format

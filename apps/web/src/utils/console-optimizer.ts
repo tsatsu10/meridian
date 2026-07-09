@@ -28,11 +28,11 @@ export const logger = {
   ...createOptimizedConsole(),
 
   // Performance-aware logging
-  perf: (label: string, fn: () => void) => {
+  perf: (_label: string, fn: () => void) => {
     if (process.env.NODE_ENV === 'development') {
-      const start = performance.now();
+      void (performance.now());
       fn();
-      const end = performance.now();} else {
+      void (performance.now());} else {
       fn();
     }
   },
@@ -47,7 +47,7 @@ export const logger = {
   },
 
   // Conditional logging based on feature flags
-  feature: (feature: string, message: string, data?: any) => {
+  feature: (feature: string, _message: string, _data?: any) => {
     const enabledFeatures = localStorage?.getItem('debug-features')?.split(',') || [];
     if (process.env.NODE_ENV === 'development' || enabledFeatures.includes(feature)) {}
   },

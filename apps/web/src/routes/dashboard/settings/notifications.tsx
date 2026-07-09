@@ -27,12 +27,10 @@ import {
   TestTube,
   Loader2,
   Volume2,
-  Settings,
   Calendar,
   Users
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/cn";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 

@@ -405,7 +405,7 @@ export function AttachmentList({
         <VersionHistory
           attachments={safeAttachments}
           currentAttachmentId={versionHistoryAttachment.id}
-          onVersionSelect={(version) => {
+          onVersionSelect={(_version) => {
             // Could trigger a callback to parent component
           }}
           onClose={() => setVersionHistoryAttachment(null)}

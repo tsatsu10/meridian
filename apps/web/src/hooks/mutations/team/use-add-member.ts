@@ -14,14 +14,14 @@ export function useAddMember() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ teamId, userId, role, workspaceId }: AddMemberData) => {
+    mutationFn: async ({ teamId, userId, role }: AddMemberData) => {
       const response = await fetchApi(`/team/${teamId}/members`, {
         method: "POST",
         body: JSON.stringify({ userId, role }),
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["team-metrics", variables.workspaceId] });
       toast.success("Member added successfully");

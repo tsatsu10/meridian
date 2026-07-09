@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function TaskComment({ comment, ...props }) {
+export default function TaskComment({ comment }) {
   const [copied, setCopied] = useState(false);
   const permalink = `/dashboard/task/${comment.taskId}/comment/${comment.id}`;
   const handleCopyPermalink = () => {

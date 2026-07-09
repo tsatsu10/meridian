@@ -99,7 +99,7 @@ export function WorkHistoryTimeline({ userId, workspaceId, className }: WorkHist
           <div className="absolute left-6 top-0 bottom-0 w-px bg-border" />
 
           <div className="space-y-6">
-            {history.map((event: any, index: number) => {
+            {history.map((event: any, _index: number) => {
               const Icon = eventIcons[event.eventType] || History;
               const colorClass = eventColors[event.eventType] || eventColors.milestone;
 

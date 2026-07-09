@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { MeridianMark } from "@/components/branding/meridian-mark";
 import { cn } from "@/lib/cn";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, } from "framer-motion";
 import { toast } from "sonner";
 
 // SSO Providers with Magic UI styling

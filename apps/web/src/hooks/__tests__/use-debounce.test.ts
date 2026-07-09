@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useState, useEffect } from 'react';
 
 // Simple useDebounce implementation for testing
@@ -116,7 +116,7 @@ describe('useDebounce Hook', () => {
   it('should debounce search input', async () => {
     const mockSearch = vi.fn();
 
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       ({ query }) => {
         const debouncedQuery = useDebounce(query, 300);
 

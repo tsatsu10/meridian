@@ -79,7 +79,7 @@ class ErrorTrackingService {
   /**
    * Initialize error tracking
    */
-  initialize(config?: { dsn?: string; environment?: string }) {
+  initialize(_config?: { dsn?: string; environment?: string }) {
     if (this.isInitialized) return;
 
     // In production, you would initialize Sentry or similar here

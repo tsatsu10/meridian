@@ -1,5 +1,5 @@
 // @epic-3.4-teams: Project member management modal for settings page
-import { useState, useEffect } from "react";
+import { useState, } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,6 @@ import {
   Settings,
   Mail,
   Check,
-  X,
   AlertTriangle,
   Shield,
   Clock,
@@ -46,7 +45,6 @@ const UserPlusIcon = UserPlus as React.FC<{ className?: string }>;
 const SettingsIcon = Settings as React.FC<{ className?: string }>;
 const MailIcon = Mail as React.FC<{ className?: string }>;
 const CheckIcon = Check as React.FC<{ className?: string }>;
-const XIcon = X as React.FC<{ className?: string }>;
 const AlertTriangleIcon = AlertTriangle as React.FC<{ className?: string }>;
 const ShieldIcon = Shield as React.FC<{ className?: string }>;
 const ClockIcon = Clock as React.FC<{ className?: string }>;
@@ -90,7 +88,7 @@ const projectRoles = [
 export default function ProjectMemberManagementModal({ 
   open, 
   onClose, 
-  projectId,
+  
   projectName,
   projectMembers,
   availableUsers,

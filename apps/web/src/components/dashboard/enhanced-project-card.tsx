@@ -42,7 +42,6 @@ import {
 import { HealthBadge } from "./health-badge";
 import { TrendIndicator } from "./trend-indicator";
 import { useProjectHealth } from "@/hooks/use-project-health";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface EnhancedProjectCardProps {
   project: any;

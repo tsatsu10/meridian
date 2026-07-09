@@ -105,7 +105,7 @@ export default function RichTextEditor({
   }, [onChange, onMentionSearch]);
 
   // Insert mention
-  const insertMention = useCallback((mention: MentionSuggestion) => {
+  const insertMention = useCallback((_mention: MentionSuggestion) => {
     if (!editorRef.current) return;
     
     const selection = window.getSelection();
@@ -127,8 +127,8 @@ export default function RichTextEditor({
           mention.contentEditable = 'false';
           
           // Replace the @query with the mention
-          const beforeText = textContent.substring(0, beforeAt);
-          const afterText = textContent.substring(offset);
+          void (textContent.substring(0, beforeAt));
+          void (textContent.substring(offset));
           
           // Create new range and insert mention
           range.setStart(textNode, beforeAt);

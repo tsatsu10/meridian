@@ -1,6 +1,6 @@
 // @epic-3.4-teams: Get single calendar event query hook
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 interface CalendarEvent {
   id: string;

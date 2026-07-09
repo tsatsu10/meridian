@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { 
   Dialog,
   DialogContent,
@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Target, 
-  Calendar, 
   Users, 
   TrendingUp, 
   Clock, 
@@ -20,7 +19,6 @@ import {
   BarChart3,
   Activity,
   FileText,
-  Gauge
 } from 'lucide-react';
 import { cn } from "@/lib/cn";
 import { useMilestones } from "@/hooks/use-milestones";
@@ -49,10 +47,10 @@ export default function DashboardPopup({
   title = "Project Analytics",
   variant = 'full',
   realProjectStats,
-  realTasks,
+  
   realTeamMembers
 }: DashboardPopupProps) {
-  const { milestones, stats: milestoneStats } = useMilestones(projectId);
+  const { stats: milestoneStats } = useMilestones(projectId);
 
   // Use real data if provided, otherwise fallback to mock data
   const projectStats = realProjectStats || {

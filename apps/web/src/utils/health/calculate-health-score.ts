@@ -391,7 +391,7 @@ export function getHealthStateColor(state: string): string {
 /**
  * Get color for factor based on name and score
  */
-function getFactorColor(name: string, score: number): string {
+function getFactorColor(_name: string, score: number): string {
   if (score >= 90) return '#10b981'; // Green
   if (score >= 70) return '#f59e0b'; // Amber
   if (score >= 50) return '#ef4444'; // Red

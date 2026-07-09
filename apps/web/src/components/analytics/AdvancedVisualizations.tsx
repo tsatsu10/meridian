@@ -8,16 +8,11 @@ import {
   Network,
   Activity,
   TrendingUp,
-  Users,
   Calendar,
   Eye,
   Download,
-  RefreshCw,
   Settings,
-  Maximize2,
-  Minimize2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface AdvancedVisualizationsProps {
   workspaceId: string;
@@ -26,7 +21,7 @@ interface AdvancedVisualizationsProps {
 
 // Temporary simplified version until d3 dependency is properly installed
 export const AdvancedVisualizations: React.FC<AdvancedVisualizationsProps> = ({
-  workspaceId,
+  
   className = ''
 }) => {
   return (

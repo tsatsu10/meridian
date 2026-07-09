@@ -14,8 +14,6 @@ import {
   FileText,
   Settings,
   Shield,
-  Activity,
-  Zap
 } from "lucide-react";
 
 export const NOTIFICATION_CONFIG = {

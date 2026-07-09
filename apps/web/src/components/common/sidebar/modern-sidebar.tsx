@@ -4,20 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronDown, 
   ChevronRight,
   Menu,
   X,
-  Home,
-  FolderOpen,
-  Users,
-  BarChart3,
-  Settings,
-  Bell,
   Search,
-  Plus,
   LogOut,
-  HelpCircle,
   type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -62,7 +53,7 @@ const Tooltip: React.FC<{
   const timeoutRef = useRef<NodeJS.Timeout>();
   const childRef = useRef<HTMLDivElement>(null);
 
-  const showTooltip = (e: React.MouseEvent) => {
+  const showTooltip = (_e: React.MouseEvent) => {
     if (childRef.current) {
       const rect = childRef.current.getBoundingClientRect();
       setCoords({

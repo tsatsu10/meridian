@@ -4,16 +4,15 @@
  */
 "use client";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Volume2, VolumeX, Smartphone, Mail, MessageSquare, Zap } from 'lucide-react';
+import { Bell, BellOff, Volume2, Smartphone, Mail, MessageSquare, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Separator } from '@/components/ui/separator';
 
 interface NotificationSettingsModalProps {
   isOpen: boolean;
@@ -80,7 +79,7 @@ const defaultSettings: NotificationSettings = {
 export function NotificationSettingsModal({ 
   isOpen, 
   onClose, 
-  chatId,
+  
   chatName,
   currentSettings,
   onSave 
@@ -492,7 +491,7 @@ export function NotificationSettingsModal({
 /**
  * Hook to manage notification settings
  */
-export function useNotificationSettings(chatId?: string | null) {
+export function useNotificationSettings(_chatId?: string | null) {
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
 

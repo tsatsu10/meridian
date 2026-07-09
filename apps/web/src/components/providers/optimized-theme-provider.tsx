@@ -108,9 +108,7 @@ interface OptimizedThemeProviderProps {
 }
 
 export const OptimizedThemeProvider = memo<OptimizedThemeProviderProps>(({
-  children,
-  defaultMode = 'system',
-  defaultVariant = 'default'
+  children
 }) => {
   // Use optimized state hook with batched localStorage
   const {

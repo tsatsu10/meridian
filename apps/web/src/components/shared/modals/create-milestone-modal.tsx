@@ -9,7 +9,6 @@ import {
   DialogContent, 
   DialogDescription, 
   DialogFooter, 
-  DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
 import {
@@ -27,9 +26,7 @@ import {
   AlertTriangle,
   User,
   Calendar,
-  Flag
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { toast } from "sonner";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import { flattenTasks } from "@/utils/task-hierarchy";
@@ -73,25 +70,25 @@ interface CreateMilestoneModalProps {
   editingMilestone?: MilestoneTask | null;
 }
 
-const milestoneStatusColors = {
+void ({
   upcoming: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   achieved: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   missed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
+});
 
-const milestoneTypeColors = {
+void ({
   phase_completion: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
   deliverable: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   approval: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   deadline: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
+});
 
-const riskLevelColors = {
+void ({
   low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
   critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
+});
 
 export default function CreateMilestoneModal({
   open,
@@ -231,16 +228,7 @@ export default function CreateMilestoneModal({
     }));
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  return (
+    return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[700px] max-h-[95vh] overflow-hidden gap-0 flex items-center justify-center p-0">
         <div className="w-full max-w-[700px] mx-auto">

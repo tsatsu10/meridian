@@ -4,29 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MagicCard } from "@/components/magicui/magic-card";
-import { ShineBorder } from "@/components/magicui/shine-border";
 import { 
   Users, 
-  Plus, 
-  X, 
-  Search,
-  UserPlus,
-  Settings,
   Target,
-  Calendar,
-  Mail,
-  Send,
   Palette
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -43,12 +30,6 @@ import { toast } from "sonner";
 import { fetchApi } from "@/lib/fetch";
 
 // Icon wrappers to fix TypeScript issues
-const SearchIcon = Search as React.FC<{ className?: string }>;
-const XIcon = X as React.FC<{ className?: string }>;
-const UserPlusIcon = UserPlus as React.FC<{ className?: string }>;
-const MailIcon = Mail as React.FC<{ className?: string }>;
-const SendIcon = Send as React.FC<{ className?: string }>;
-
 interface TeamData {
   name: string;
   description: string;
@@ -75,7 +56,7 @@ interface TeamMember {
 // Available members will be fetched from workspace API
 // Remove hardcoded data
 
-const teamTemplates = [
+void ([
   {
     id: "dev",
     name: "Development Team",
@@ -108,7 +89,7 @@ const teamTemplates = [
     icon: "📈",
     suggestedRoles: ["Marketing Manager", "Content Creator", "SEO Specialist", "Social Media Manager"]
   }
-];
+]);
 
 const TEAM_TYPES = [
   { value: 'development', label: 'Development Team', description: 'Software engineering and technical work' },
@@ -132,28 +113,27 @@ const TEAM_COLORS = [
 export default function TeamCreationModal({ 
   open, 
   onClose, 
-  onTeamCreated,
-  projectId 
+  onTeamCreated 
 }: TeamCreationModalProps) {
-  const [step, setStep] = useState<"template" | "details" | "members">("template");
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [teamData, setTeamData] = useState({
+  const [_step, setStep] = useState<"template" | "details" | "members">("template");
+  const [_selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [_teamData, setTeamData] = useState({
     name: "",
     description: "",
     projectId: "",
     color: "bg-blue-500"
   });
   const [selectedMembers, setSelectedMembers] = useState<TeamMember[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [memberRoles, setMemberRoles] = useState<Record<string, string>>({});
-  const [showInviteForm, setShowInviteForm] = useState(false);
-  const [inviteData, setInviteData] = useState({
+  const [searchTerm, _setSearchTerm] = useState("");
+  const [_memberRoles, setMemberRoles] = useState<Record<string, string>>({});
+  const [_showInviteForm, setShowInviteForm] = useState(false);
+  const [_inviteData, setInviteData] = useState({
     name: "",
     email: ""
   });
   // Fetch available members from workspace API
   const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [_isLoadingMembers, setIsLoadingMembers] = useState(false);
 
   // Fetch workspace members when modal opens
   React.useEffect(() => {
@@ -197,103 +177,12 @@ export default function TeamCreationModal({
     workspaceId: workspace?.id || "" 
   });
 
-  const filteredMembers = availableMembers.filter(member =>
+  void (availableMembers.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
-  const handleTemplateSelect = (template: any) => {
-    setSelectedTemplate(template);
-    setTeamData({
-      name: template.name,
-      description: template.description,
-      projectId: "",
-      color: template.color
-    });
-    setStep("details");
-  };
-
-  const handleAddMember = (member: TeamMember) => {
-    if (!selectedMembers.find(m => m.id === member.id)) {
-      setSelectedMembers([...selectedMembers, member]);
-      setMemberRoles({
-        ...memberRoles,
-        [member.id]: selectedTemplate?.suggestedRoles[0] || "Member"
-      });
-    }
-  };
-
-  const handleInviteMember = () => {
-    if (!inviteData.email.trim()) return;
-    
-    const newMember: TeamMember = {
-      id: `invite-${Date.now()}`,
-      name: inviteData.name.trim() || inviteData.email.split('@')[0],
-      email: inviteData.email.trim(),
-      role: "Invited Member",
-      status: 'invited'
-    };
-
-    // Check if email already exists
-    const existingMember = selectedMembers.find(m => m.email === newMember.email);
-    const existingAvailable = availableMembers.find(m => m.email === newMember.email);
-    
-    if (existingMember || existingAvailable) {
-      // Could show a toast or error message here
-      return;
-    }
-
-    setSelectedMembers([...selectedMembers, newMember]);
-    setMemberRoles({
-      ...memberRoles,
-      [newMember.id]: selectedTemplate?.suggestedRoles[0] || "Member"
-    });
-
-    // Reset invite form
-    setInviteData({ name: "", email: "" });
-    setShowInviteForm(false);
-  };
-
-  const handleRemoveMember = (memberId: string) => {
-    setSelectedMembers(selectedMembers.filter(m => m.id !== memberId));
-    const newRoles = { ...memberRoles };
-    delete newRoles[memberId];
-    setMemberRoles(newRoles);
-  };
-
-  const handleRoleChange = (memberId: string, role: string) => {
-    setMemberRoles({
-      ...memberRoles,
-      [memberId]: role
-    });
-  };
-
-  const handleCreateTeam = () => {
-    const selectedProject = projects?.find(p => p.id === teamData.projectId);
-    const newTeam = {
-      id: Date.now().toString(),
-      ...teamData,
-      projectName: selectedProject?.name || "",
-      members: selectedMembers.map(member => ({
-        ...member,
-        role: memberRoles[member.id] || "Member",
-        projectId: teamData.projectId,
-        projectName: selectedProject?.name || ""
-      })),
-      lead: selectedMembers[0]?.name || "",
-      performance: 0,
-      workload: 0,
-      projects: 1
-    };
-
-    onTeamCreated?.(newTeam);
-    onClose();
-    
-    // Reset form
-    resetForm();
-  };
-
-  const resetForm = () => {
+              const resetForm = () => {
     setStep("template");
     setSelectedTemplate(null);
     setTeamData({ name: "", description: "", projectId: "", color: "bg-blue-500" });

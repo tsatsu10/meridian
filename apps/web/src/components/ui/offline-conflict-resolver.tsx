@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,17 +7,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   AlertTriangle, 
-  Clock, 
-  User, 
   GitMerge, 
-  CheckCircle, 
-  XCircle, 
-  RotateCcw,
   Eye,
   Download,
   Upload,
   Zap,
-  Info
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { AccessibleMotion } from './accessible-animations';
@@ -69,7 +63,7 @@ export function OfflineConflictResolver({
 }: OfflineConflictResolverProps) {
   const [selectedConflicts, setSelectedConflicts] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState('overview');
-  const [previewMode, setPreviewMode] = useState<'split' | 'unified'>('split');
+  const [_previewMode, _setPreviewMode] = useState<'split' | 'unified'>('split');
   const [autoResolvePreferences, setAutoResolvePreferences] = useState({
     messages: 'use_latest',
     files: 'create_copy',
@@ -122,55 +116,7 @@ export function OfflineConflictResolver({
     clearSelection();
   };
 
-  const renderConflictDiff = (conflict: ConflictData) => {
-    const { localVersion, serverVersion } = conflict;
-    
-    if (previewMode === 'split') {
-      return (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Local Version
-            </h4>
-            <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-              <CardContent className="p-3">
-                <pre className="text-xs whitespace-pre-wrap font-mono">
-                  {typeof localVersion === 'string' ? localVersion : JSON.stringify(localVersion, null, 2)}
-                </pre>
-              </CardContent>
-            </Card>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              Server Version
-            </h4>
-            <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
-              <CardContent className="p-3">
-                <pre className="text-xs whitespace-pre-wrap font-mono">
-                  {typeof serverVersion === 'string' ? serverVersion : JSON.stringify(serverVersion, null, 2)}
-                </pre>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      );
-    }
-
-    // Unified diff view (simplified)
-    return (
-      <Card>
-        <CardContent className="p-3">
-          <pre className="text-xs whitespace-pre-wrap font-mono">
-            {`- ${typeof localVersion === 'string' ? localVersion : JSON.stringify(localVersion, null, 2)}\n+ ${typeof serverVersion === 'string' ? serverVersion : JSON.stringify(serverVersion, null, 2)}`}
-          </pre>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const getSeverityColor = (severity: string) => {
+    const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical': return 'text-red-600 bg-red-100 dark:bg-red-900/20';
       case 'high': return 'text-orange-600 bg-orange-100 dark:bg-orange-900/20';

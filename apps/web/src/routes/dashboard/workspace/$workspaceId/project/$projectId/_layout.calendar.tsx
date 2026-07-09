@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Dialog, 
   DialogContent, 
@@ -27,11 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import useProjectStore from "@/store/project";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
@@ -46,40 +40,23 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
-  Settings,
-  Clock,
-  Flag,
-  Users,
   MoreVertical,
   Download,
   Share,
-  Eye,
   AlertCircle,
-  Target,
-  CheckCircle2,
-  PlayCircle,
-  PauseCircle,
-  FileText,
   Calendar as CalendarIcon,
   Grid3X3,
   List,
   User,
   UserCheck,
   UserX,
-  Zap,
-  TrendingUp,
   BarChart3,
   MapPin,
-  MessageSquare,
-  Video,
-  Coffee,
-  Focus,
   Search,
   X,
-  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, } from "react";
 import { toast } from "sonner";
 import { flattenTasks } from "@/utils/task-hierarchy";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, isSameMonth, isToday, parseISO, addDays, subDays, startOfDay } from "date-fns";
@@ -171,8 +148,8 @@ function ProjectCalendar() {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [_isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [_selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   // Filter state
   const [filters, setFilters] = useState({
@@ -362,7 +339,7 @@ function ProjectCalendar() {
         
         {/* Calendar grid */}
         <div className="flex-1 grid grid-cols-7 auto-rows-fr">
-          {calendarDays.map((day, index) => {
+          {calendarDays.map((day, _index) => {
             const dayEvents = filteredEvents.filter(event => 
               isSameDay(event.start, day) || 
               (event.start <= day && event.end >= day)

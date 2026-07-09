@@ -8,13 +8,11 @@ import { useWorkspaceTaskStats } from "@/hooks/queries/task/use-workspace-task-s
 import { useBulkUpdateTaskStatus } from "@/hooks/mutations/task/use-bulk-update-task-status";
 import { AllTasksVirtualGrid } from "@/components/all-tasks/all-tasks-virtual-grid";
 import { AdvancedFilters } from "@/components/all-tasks/advanced-filters";
-import React, { useState, useMemo, Suspense, lazy, memo } from "react";
-import { TasksPageSkeleton } from "@/components/ui/loading-skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useMemo, } from "react";
+import { Card, CardContent, } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   CheckSquare, 
@@ -25,12 +23,9 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
-  Pause,
   Play,
-  Filter,
   Search,
   MoreHorizontal,
-  Flag,
   User,
   Target,
   Zap,
@@ -45,7 +40,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, } from "framer-motion";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { useRBACAuth } from "@/lib/permissions";
@@ -72,7 +67,6 @@ import {
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import EditTaskModal from "@/components/shared/modals/edit-task-modal";
 import useAllTasks from "@/hooks/queries/task/use-all-tasks";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import useCreateTask from "@/hooks/mutations/task/use-create-task";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
@@ -378,7 +372,7 @@ export default function AllTasksPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [_isDeleting, _setIsDeleting] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -387,8 +381,7 @@ export default function AllTasksPage() {
   // View mode state management with database persistence
   const { 
     allTasksViewMode, 
-    updateAllTasksViewMode,
-    isLoading: preferencesLoading 
+    updateAllTasksViewMode 
   } = useUserPreferences();
   
   const viewMode = allTasksViewMode as "list" | "kanban" | "calendar";

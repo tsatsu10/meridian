@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, } from "react";
+import { Card, CardContent, } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -9,7 +9,6 @@ import {
   Users,
   Activity,
   RefreshCw,
-  Settings,
   Download,
 } from "lucide-react";
 import { SecurityMetricsCard } from "./security-metrics-card";
@@ -17,7 +16,6 @@ import { SecurityAlertsList } from "./security-alerts-list";
 import { SecurityThreatChart } from "./security-threat-chart";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SecurityMetrics, SecurityAlert } from "./types";
-import { cn } from "@/lib/cn";
 
 export function SecurityDashboardWidget() {
   const queryClient = useQueryClient();

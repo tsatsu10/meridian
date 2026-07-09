@@ -4,7 +4,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Activity, CheckCircle2, MessageSquare, FileText, UserPlus } from "lucide-react";
 import { getActivityFeed, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";

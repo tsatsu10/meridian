@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Keyboard, Users } from 'lucide-react';
+import { Keyboard, } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { logger } from "../../lib/logger";
 

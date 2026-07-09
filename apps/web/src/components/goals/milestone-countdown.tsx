@@ -1,15 +1,4 @@
-/**
- * 🎯 Milestone Countdown Widget
- * 
- * Displays upcoming milestones with visual countdown timers
- * Features:
- * - Large countdown numbers
- * - Color-coded urgency
- * - Progress indicators
- * - Quick actions
- */
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -8,7 +8,6 @@ import {
   XCircle, 
   Send,
   Eye,
-  MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 

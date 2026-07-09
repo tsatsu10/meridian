@@ -15,25 +15,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
-import {
   Filter,
   X,
   Check,
   ChevronDown,
   Save,
-  Star,
-  Trash2,
   Plus,
   AlertCircle,
   Users,
@@ -43,7 +29,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type {DashboardFilters,
-  FilterPreset,
   FilterPriority,
   FilterStatus,
   FilterTimeRange

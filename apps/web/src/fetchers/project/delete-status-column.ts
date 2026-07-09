@@ -1,5 +1,5 @@
-import { client } from "@meridian/libs";
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+
+import { API_BASE_URL, } from '@/constants/urls';
 
 export interface DeleteStatusColumnRequest {
   projectId: string;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MeridianCard, MeridianCardHeader, MeridianCardTitle, MeridianCardContent } from '@/components/ui/meridian-card';
-import { MeridianBadge, StatusBadge, PriorityBadge } from '@/components/ui/meridian-badge';
+import { StatusBadge, PriorityBadge } from '@/components/ui/meridian-badge';
 import { MeridianButton } from '@/components/ui/meridian-button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,10 +16,7 @@ import {
   Edit, 
   Trash2, 
   Plus, 
-  Flag, 
-  Clock, 
   Target,
-  AlertTriangle,
   CheckCircle,
   Calendar,
   Users

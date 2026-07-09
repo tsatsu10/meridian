@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, } from '@/components/ui/select';
 import { 
   Crown, 
   Shield, 
@@ -16,7 +16,6 @@ import {
   AlertTriangle,
   Mail,
   UserMinus,
-  MoreHorizontal
 } from 'lucide-react';
 import { UnifiedTeamMember, TeamRole } from '@/types/unified-team';
 import { cn } from '@/lib/utils';

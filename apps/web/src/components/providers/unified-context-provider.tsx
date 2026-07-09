@@ -5,7 +5,7 @@
  * that eliminates the 7-level nesting and context dependency conflicts.
  */
 
-import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import ErrorBoundary from '@/components/error-boundary';

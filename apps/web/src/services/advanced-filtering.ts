@@ -1,4 +1,4 @@
-import type { ProjectView, ViewState } from '@/store/project';
+import type { ProjectView, } from '@/store/project';
 
 // Advanced filter types
 interface FilterRule {
@@ -384,7 +384,7 @@ class AdvancedFilteringEngine {
   // Smart filter suggestions
   public generateFilterSuggestions(
     data: any[],
-    currentView: ProjectView,
+    _currentView: ProjectView,
     recentActions: string[]
   ): FilterSuggestion[] {
     const suggestions: FilterSuggestion[] = [];

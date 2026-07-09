@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { 
   Search, 
-  Filter, 
   Plus, 
   MoreHorizontal,
   RefreshCw,
@@ -21,7 +20,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from '@/lib/toast';
 import { cn } from '@/lib/cn';
 import type { 
   BaseProjectViewComponent, 
@@ -55,7 +53,7 @@ const ProjectViewHeader: React.FC<ProjectViewHeaderProps> = ({
   handlers,
   customActions,
   showSearch = true,
-  showFilters = true,
+  
   showActions = true
 }) => {
   const handleSearchChange = useCallback((value: string) => {
@@ -241,19 +239,19 @@ const BaseProjectView: React.FC<BaseProjectViewComponent & {
     errorStates: ErrorStates;
   }) => React.ReactNode;
 }> = ({
-  projectId,
-  workspaceId,
+  
+  
   viewState,
   onViewStateChange,
   data,
   analytics,
   loadingStates,
   errorStates,
-  permissions,
+  
   handlers,
   className,
   showHeader = true,
-  showToolbar = true,
+  
   showFooter = true,
   customActions,
   children
