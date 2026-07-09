@@ -21,6 +21,9 @@ export async function updateGoal(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
+    }
     
     const body: UpdateGoalRequest = await c.req.json();
     

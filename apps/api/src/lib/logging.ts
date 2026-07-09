@@ -7,8 +7,9 @@
 
 import logger from '../utils/logger';
 
-// Re-export types
-export type { LogLevel, LogCategory } from '../utils/logger';
+// Re-export types (LogLevel name is reserved for the enum below)
+export type { LogCategory } from '../utils/logger';
+export type { LogLevel as UtilsLogLevel } from '../utils/logger';
 
 export interface LogEntry {
   timestamp: string;

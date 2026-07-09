@@ -8,7 +8,6 @@
 import { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { goalReflections, goals } from "../../database/schema/goals";
-import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import logger from '../../utils/logger';
 
@@ -20,6 +19,9 @@ export async function createReflection(c: Context) {
     
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
+    }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
     }
     
     const body = await c.req.json();
@@ -46,19 +48,24 @@ export async function createReflection(c: Context) {
       return c.json({ error: "You can only create reflections for your own goals" }, 403);
     }
     
-    // Create reflection
+    const weekOf = body.weekOf ? new Date(body.weekOf) : new Date();
+
+    // Create reflection (schema: went_well, could_improve, etc. — map API body to columns + metadata)
     const [reflection] = await db.insert(goalReflections).values({
-      id: createId(),
-      goalId,
+      workspaceId: goal.workspaceId,
       userId,
-      content: body.content,
-      reflectionType: body.reflectionType || 'weekly',
-      mood: body.mood || 'neutral',
-      whatWentWell: body.whatWentWell,
-      whatToImprove: body.whatToImprove,
-      lessonsLearned: body.lessonsLearned,
-      isPrivate: body.isPrivate ?? true, // Default to private
-      createdAt: new Date(),
+      weekOf,
+      wentWell: body.content,
+      couldImprove: body.whatToImprove,
+      learned: body.lessonsLearned,
+      goalId,
+      privacy: (body.isPrivate ?? true) ? "private" : "team",
+      metadata: {
+        reflectionType: body.reflectionType || "weekly",
+        mood: body.mood || "neutral",
+        whatWentWell: body.whatWentWell,
+      },
+      submittedAt: new Date(),
     }).returning();
     
     return c.json({

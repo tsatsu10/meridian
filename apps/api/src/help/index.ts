@@ -57,29 +57,7 @@ helpRouter.get(
       const db = getDatabase(); // FIX: Initialize database connection
       const { q, category, difficulty, type, tags, limit, offset } = c.req.valid("query");
 
-      let query = db
-        .select({
-          id: helpArticles.id,
-          title: helpArticles.title,
-          slug: helpArticles.slug,
-          description: helpArticles.description,
-          category: helpArticles.category,
-          difficulty: helpArticles.difficulty,
-          contentType: helpArticles.contentType,
-          readTime: helpArticles.readTime,
-          rating: helpArticles.rating,
-          ratingCount: helpArticles.ratingCount,
-          views: helpArticles.views,
-          helpful: helpArticles.helpful,
-          tags: helpArticles.tags,
-          metadata: helpArticles.metadata,
-          publishedAt: helpArticles.publishedAt,
-          updatedAt: helpArticles.updatedAt,
-        })
-        .from(helpArticles)
-        .where(eq(helpArticles.isPublished, true));
-
-      // Apply filters
+      // Apply filters (single `.where(and(...))` — Drizzle does not allow chaining `.where` twice)
       const conditions = [eq(helpArticles.isPublished, true)];
 
       if (category) {
@@ -105,18 +83,30 @@ helpRouter.get(
         );
       }
 
-      // Apply all conditions
-      if (conditions.length > 1) {
-        query = query.where(and(...conditions) as any) as any;
-      }
-
-      // Order by relevance (views + rating) and recency
-      query = query
+      const articles = await db
+        .select({
+          id: helpArticles.id,
+          title: helpArticles.title,
+          slug: helpArticles.slug,
+          description: helpArticles.description,
+          category: helpArticles.category,
+          difficulty: helpArticles.difficulty,
+          contentType: helpArticles.contentType,
+          readTime: helpArticles.readTime,
+          rating: helpArticles.rating,
+          ratingCount: helpArticles.ratingCount,
+          views: helpArticles.views,
+          helpful: helpArticles.helpful,
+          tags: helpArticles.tags,
+          metadata: helpArticles.metadata,
+          publishedAt: helpArticles.publishedAt,
+          updatedAt: helpArticles.updatedAt,
+        })
+        .from(helpArticles)
+        .where(and(...conditions))
         .orderBy(desc(helpArticles.views), desc(helpArticles.publishedAt))
         .limit(limit)
-        .offset(offset) as any;
-
-      const articles = await query;
+        .offset(offset);
 
       // Track search query if provided
       if (q) {
@@ -133,7 +123,7 @@ helpRouter.get(
       // Calculate average rating for display
       const articlesWithRating = articles.map((article: any) => ({
         ...article,
-        rating: article.ratingCount > 0 ? article.rating / 10 : 0,
+        rating: (article.ratingCount ?? 0) > 0 ? (article.rating ?? 0) / 10 : 0,
       }));
 
       return c.json({
@@ -208,7 +198,7 @@ helpRouter.get(
       // Calculate display rating
       const displayArticle = {
         ...article,
-        rating: article.ratingCount > 0 ? article.rating / 10 : 0,
+        rating: (article.ratingCount ?? 0) > 0 ? (article.rating ?? 0) / 10 : 0,
       };
 
       return c.json({
@@ -257,8 +247,10 @@ helpRouter.post(
       }
 
       // Calculate new rating (rating is stored * 10 for precision)
-      const currentTotal = article.rating * article.ratingCount;
-      const newCount = article.ratingCount + 1;
+      const rc = article.ratingCount ?? 0;
+      const r = article.rating ?? 0;
+      const currentTotal = r * rc;
+      const newCount = rc + 1;
       const newTotal = currentTotal + (rating * 10);
       const newAverage = Math.round(newTotal / newCount);
 
@@ -342,11 +334,6 @@ helpRouter.get(
       const db = getDatabase(); // FIX: Initialize database connection
       const { category, q } = c.req.valid("query");
 
-      let query = db
-        .select()
-        .from(helpFAQs)
-        .where(eq(helpFAQs.isPublished, true));
-
       const conditions = [eq(helpFAQs.isPublished, true)];
 
       if (category) {
@@ -362,11 +349,11 @@ helpRouter.get(
         );
       }
 
-      if (conditions.length > 1) {
-        query = query.where(and(...conditions) as any) as any;
-      }
-
-      const faqs = await query.orderBy(asc(helpFAQs.displayOrder), desc(helpFAQs.helpful));
+      const faqs = await db
+        .select()
+        .from(helpFAQs)
+        .where(and(...conditions))
+        .orderBy(asc(helpFAQs.displayOrder), desc(helpFAQs.helpful));
 
       return c.json({
         success: true,
@@ -501,7 +488,7 @@ helpRouter.get(
       const user = c.get("user");
 
       // Check if user is admin
-      if (user.role !== "admin") {
+      if (!user || user.role !== "admin") {
         return c.json(
           {
             success: false,

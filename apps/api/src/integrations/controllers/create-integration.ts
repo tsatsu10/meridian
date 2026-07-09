@@ -17,7 +17,8 @@ const createIntegrationSchema = z.object({
   credentials: z.record(z.any()).optional()
 });
 
-export const createIntegration = zValidator("json", createIntegrationSchema, async (c) => {
+// Hono zValidator narrows context; use full handler context for req/json.
+export const createIntegration = zValidator("json", createIntegrationSchema, async (c: any) => {
   try {
     const data = c.req.valid("json");
     const workspaceId = c.req.header("x-workspace-id");

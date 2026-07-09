@@ -122,7 +122,7 @@ export class CacheInvalidation {
   ): Promise<void> {
     logger.debug('Invalidating caches for task status change', { taskId });
     
-    const invalidations = [
+    const invalidations: Array<Promise<void | number>> = [
       cacheManager.delete(CacheKeys.task.byId(taskId)),
       cacheManager.delete(CacheKeys.project.tasks(projectId)),
       cacheManager.delete(CacheKeys.project.health(projectId)),
@@ -148,7 +148,7 @@ export class CacheInvalidation {
     oldAssigneeId?: string,
     newAssigneeId?: string
   ): Promise<void> {
-    const invalidations = [
+    const invalidations: Array<Promise<void | number>> = [
       cacheManager.delete(CacheKeys.task.byId(taskId)),
     ];
     
@@ -184,7 +184,7 @@ export class CacheInvalidation {
     projectId?: string,
     workspaceId?: string
   ): Promise<void> {
-    const invalidations = [
+    const invalidations: Array<Promise<void | number>> = [
       cacheManager.invalidateTags(CacheKeys.timeEntry.tags(userId, taskId)),
     ];
     

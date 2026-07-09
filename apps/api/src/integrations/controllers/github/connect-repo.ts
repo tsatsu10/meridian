@@ -18,7 +18,7 @@ const connectRepoSchema = z.object({
   autoCreateTasks: z.boolean().default(false)
 });
 
-export const connectGitHubRepo = zValidator("json", connectRepoSchema, async (c) => {
+export const connectGitHubRepo = zValidator("json", connectRepoSchema, async (c: any) => {
   try {
     const data = c.req.valid("json");
     const workspaceId = c.req.header("x-workspace-id");

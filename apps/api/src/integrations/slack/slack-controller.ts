@@ -156,9 +156,14 @@ slack.get('/callback', async (c) => {
  * Disconnect Slack integration
  */
 slack.delete('/disconnect', async (c) => {
-  const userEmail = c.get('userEmail');
+  const userEmailRaw = c.get('userEmail');
   const workspaceId = c.req.query('workspaceId');
   
+  if (typeof userEmailRaw !== 'string' || !userEmailRaw) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const userEmail = userEmailRaw;
+
   if (!workspaceId) {
     return c.json({ error: 'Workspace ID is required' }, 400);
   }
@@ -189,9 +194,14 @@ slack.delete('/disconnect', async (c) => {
  * Get Slack integration status
  */
 slack.get('/status', async (c) => {
-  const userEmail = c.get('userEmail');
+  const userEmailRaw = c.get('userEmail');
   const workspaceId = c.req.query('workspaceId');
   
+  if (typeof userEmailRaw !== 'string' || !userEmailRaw) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const userEmail = userEmailRaw;
+
   if (!workspaceId) {
     return c.json({ error: 'Workspace ID is required' }, 400);
   }
@@ -226,10 +236,15 @@ slack.get('/status', async (c) => {
  * Send a test notification to Slack
  */
 slack.post('/test', async (c) => {
-  const userEmail = c.get('userEmail');
+  const userEmailRaw = c.get('userEmail');
   const body = await c.req.json();
   const { workspaceId } = body;
   
+  if (typeof userEmailRaw !== 'string' || !userEmailRaw) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const userEmail = userEmailRaw;
+
   if (!workspaceId) {
     return c.json({ error: 'Workspace ID is required' }, 400);
   }

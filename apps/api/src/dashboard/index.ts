@@ -76,7 +76,7 @@ const dashboard = new Hono()
       // Project filter
       if (filters.projectIds) {
         const projectIds = filters.projectIds.split(",");
-        if (projectIds.length === 1) {
+        if (projectIds.length === 1 && projectIds[0] !== undefined) {
           filterConditions.push(eq(taskTable.projectId, projectIds[0]));
         } else {
           filterConditions.push(sql`${taskTable.projectId} IN (${sql.join(projectIds.map(id => sql`${id}`), sql`, `)})`);
@@ -86,10 +86,10 @@ const dashboard = new Hono()
       // User filter
       if (filters.userEmails) {
         const userEmails = filters.userEmails.split(",");
-        if (userEmails.length === 1) {
-          filterConditions.push(eq(taskTable.assigneeEmail, userEmails[0]));
+        if (userEmails.length === 1 && userEmails[0] !== undefined) {
+          filterConditions.push(eq(taskTable.userEmail, userEmails[0]));
         } else {
-          filterConditions.push(sql`${taskTable.assigneeEmail} IN (${sql.join(userEmails.map(e => sql`${e}`), sql`, `)})`);
+          filterConditions.push(sql`${taskTable.userEmail} IN (${sql.join(userEmails.map(e => sql`${e}`), sql`, `)})`);
         }
       }
 
@@ -302,9 +302,11 @@ const dashboard = new Hono()
           return c.json(analytics);
         } else {
           // Use simple analytics for backward compatibility
+          const simpleTimeRange =
+            timeRange === "custom" ? "30d" : (timeRange ?? "30d");
           const options = {
             workspaceId,
-            timeRange,
+            timeRange: simpleTimeRange,
             projectIds: projectIds ? projectIds.split(",") : undefined,
           };
 
@@ -417,7 +419,8 @@ const dashboard = new Hono()
         }
       } catch (error) {
         logger.error("❌ Analytics error:", error);
-        return c.json({ error: "Failed to fetch analytics", details: error.message }, 500);
+        const message = error instanceof Error ? error.message : String(error);
+        return c.json({ error: "Failed to fetch analytics", details: message }, 500);
       }
     }
   );

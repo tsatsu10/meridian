@@ -18,7 +18,7 @@ export type { NotificationPayload, DeliveryResult } from '../notification/servic
 // Mock notification service interface for tests
 export const notificationService = {
   send: async (payload: any) => {
-    const { createNotification } = await import('../notification/controllers/create-notification');
+    const { default: createNotification } = await import('../notification/controllers/create-notification');
     return createNotification(payload);
   },
   

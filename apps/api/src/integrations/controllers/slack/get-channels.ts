@@ -35,20 +35,24 @@ export const getSlackChannels = async (c: any) => {
           eq(integrationConnectionTable.id, integrationId),
           eq(integrationConnectionTable.workspaceId, workspaceId),
           eq(integrationConnectionTable.provider, "slack"),
-          eq(integrationConnectionTable.isActive, true)
+          eq(integrationConnectionTable.status, "active")
         )
       );
 
-    if (!integration.length) {
+    const conn = integration[0];
+    if (!conn) {
       return c.json({ error: "Slack integration not found" }, 404);
     }
-
-    const credentials = JSON.parse(integration[0].credentials || "{}");
+    const credRaw = conn.credentials;
+    const credentials =
+      typeof credRaw === "string"
+        ? (JSON.parse(credRaw || "{}") as Record<string, string>)
+        : ((credRaw as Record<string, string> | null) ?? {});
     
     const slack = new SlackIntegration({
-      botToken: credentials.botToken,
-      userToken: credentials.userToken,
-      signingSecret: credentials.signingSecret
+      botToken: String(credentials.botToken ?? ""),
+      userToken: credentials.userToken ? String(credentials.userToken) : undefined,
+      signingSecret: String(credentials.signingSecret ?? "")
     });
 
     // Get channels

@@ -77,9 +77,6 @@ export async function initializeDatabase() {
       // Prevent connection leaks
       onnotice: () => {}, // Suppress notices to reduce memory
       fetch_types: false, // Disable type fetching for better performance
-      // Add retry logic
-      max_connections: 10,
-      idle_connection_timeout: 30,
     });
 
     // Test connection

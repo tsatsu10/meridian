@@ -301,15 +301,18 @@ export class CacheService {
       for (const line of lines) {
         if (line.startsWith('db0:')) {
           const match = line.match(/keys=(\d+)/);
-          if (match) {
-            stats.keysCount = parseInt(match[1]);
+          if (match?.[1] !== undefined) {
+            stats.keysCount = parseInt(match[1], 10);
           }
         }
         if (line.startsWith('used_memory_human:')) {
           stats.memoryUsage = line.split(':')[1];
         }
         if (line.startsWith('uptime_in_seconds:')) {
-          stats.uptime = parseInt(line.split(':')[1]);
+          const uptimePart = line.split(':')[1];
+          if (uptimePart !== undefined) {
+            stats.uptime = parseInt(uptimePart, 10);
+          }
         }
       }
 

@@ -12,13 +12,18 @@
  */
 
 import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
+import { eq, and } from 'drizzle-orm';
 import { GitHubIntegration } from './services/github-integration';
 import { connectGitHubRepo } from './controllers/github/connect-repo';
 import { syncGitHubIssues } from './controllers/github/sync-issues';
 import { winstonLog } from '../utils/winston-logger';
 import { ValidationError, UnauthorizedError } from '../utils/errors';
+import { getDatabase } from '../database/connection';
+import { integrationConnectionTable, projectTable } from '../database/schema';
+import { parseIntegrationJsonField } from '../lib/parse-integration-json';
 import crypto from 'crypto';
 
 const github = new Hono<{
@@ -120,13 +125,13 @@ github.post('/webhook', async (c) => {
 
     return c.json({ success: true, message: 'Webhook processed' });
 
-  } catch (error) {
+  } catch (error: unknown) {
     winstonLog.error('GitHub webhook processing failed', {
       error: error instanceof Error ? error.message : String(error),
     });
 
-    if (error instanceof UnauthorizedError || error instanceof ValidationError) {
-      return c.json({ error: error.message }, error.statusCode);
+    if (error instanceof HTTPException) {
+      return c.json({ error: error.message }, error.status);
     }
 
     return c.json({ error: 'Webhook processing failed' }, 500);
@@ -145,29 +150,29 @@ github.get('/repos', async (c) => {
       throw new ValidationError('Workspace ID is required');
     }
 
-    const db = await import('../database/connection').then(m => m.getDatabase());
-    const connections = await db.query.integrationConnectionTable.findMany({
-      where: (t: any, { eq, and }: any) => and(
-        eq(t.workspaceId, workspaceId),
-        eq(t.integrationId, 'github'),
-        eq(t.isActive, true)
-      ),
-    });
+    const db = getDatabase();
+    const connections = await db
+      .select()
+      .from(integrationConnectionTable)
+      .where(
+        and(
+          eq(integrationConnectionTable.workspaceId, workspaceId),
+          eq(integrationConnectionTable.provider, 'github'),
+          eq(integrationConnectionTable.status, 'active')
+        )
+      );
 
-    const repos = connections.map(conn => {
-      const config = typeof conn.configuration === 'string'
-        ? JSON.parse(conn.configuration)
-        : conn.configuration;
-
+    const repos = connections.map((conn) => {
+      const config = parseIntegrationJsonField(conn.config);
+      const owner = typeof config.owner === 'string' ? config.owner : '';
+      const repo = typeof config.repo === 'string' ? config.repo : '';
       return {
         id: conn.id,
-        projectId: conn.projectId,
-        repositoryName: config.repositoryName,
+        repositoryName: owner && repo ? `${owner}/${repo}` : (config.repositoryUrl as string) ?? '',
         repositoryUrl: config.repositoryUrl,
         syncIssues: config.syncIssues,
-        syncPullRequests: config.syncPullRequests,
         autoCreateTasks: config.autoCreateTasks,
-        lastSyncedAt: conn.lastSyncedAt,
+        lastSyncedAt: conn.lastSync,
         createdAt: conn.createdAt,
       };
     });
@@ -191,22 +196,19 @@ github.get('/repos', async (c) => {
 github.delete('/disconnect/:connectionId', async (c) => {
   try {
     const connectionId = c.req.param('connectionId');
-    const userId = c.get('userId');
 
-    const db = await import('../database/connection').then(m => m.getDatabase());
-    
-    // Soft delete connection
-    await db.update(db.select().from(db.schema.integrationConnectionTable))
+    const db = getDatabase();
+
+    await db
+      .update(integrationConnectionTable)
       .set({
-        isActive: false,
-        deletedAt: new Date(),
-        deletedBy: userId,
+        status: 'inactive',
+        updatedAt: new Date(),
       })
-      .where((t: any) => t.id === connectionId);
+      .where(eq(integrationConnectionTable.id, connectionId));
 
     winstonLog.info('GitHub repository disconnected', {
       connectionId,
-      userId,
     });
 
     return c.json({
@@ -227,16 +229,32 @@ github.delete('/disconnect/:connectionId', async (c) => {
 github.get('/sync-status/:projectId', async (c) => {
   try {
     const projectId = c.req.param('projectId');
-    const workspaceId = c.req.query('workspaceId');
 
-    const db = await import('../database/connection').then(m => m.getDatabase());
-    const connection = await db.query.integrationConnectionTable.findFirst({
-      where: (t: any, { eq, and }: any) => and(
-        eq(t.projectId, projectId),
-        eq(t.integrationId, 'github'),
-        eq(t.isActive, true)
-      ),
-    });
+    const db = getDatabase();
+    const [proj] = await db
+      .select()
+      .from(projectTable)
+      .where(eq(projectTable.id, projectId))
+      .limit(1);
+
+    const settings = proj?.settings as Record<string, unknown> | undefined;
+    const github = settings?.github as
+      | { integrationId?: string; repositoryUrl?: string; owner?: string; repo?: string }
+      | undefined;
+
+    if (!github?.integrationId) {
+      return c.json({
+        success: true,
+        connected: false,
+        syncStatus: null,
+      });
+    }
+
+    const [connection] = await db
+      .select()
+      .from(integrationConnectionTable)
+      .where(eq(integrationConnectionTable.id, github.integrationId))
+      .limit(1);
 
     if (!connection) {
       return c.json({
@@ -246,18 +264,17 @@ github.get('/sync-status/:projectId', async (c) => {
       });
     }
 
-    const config = typeof connection.configuration === 'string'
-      ? JSON.parse(connection.configuration)
-      : connection.configuration;
+    const config = parseIntegrationJsonField(connection.config);
+    const owner = typeof config.owner === 'string' ? config.owner : github.owner ?? '';
+    const repo = typeof config.repo === 'string' ? config.repo : github.repo ?? '';
 
     return c.json({
       success: true,
       connected: true,
       syncStatus: {
-        repositoryName: config.repositoryName,
-        lastSyncedAt: connection.lastSyncedAt,
+        repositoryName: owner && repo ? `${owner}/${repo}` : '',
+        lastSyncedAt: connection.lastSync,
         syncIssues: config.syncIssues,
-        syncPullRequests: config.syncPullRequests,
         autoCreateTasks: config.autoCreateTasks,
       },
     });

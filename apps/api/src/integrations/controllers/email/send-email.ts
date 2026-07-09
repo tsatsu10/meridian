@@ -10,8 +10,9 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../../database/connection";
 import { integrationConnectionTable } from "../../../database/schema";
-import { EmailIntegration } from "../../services/email-integration";
+import { EmailIntegration, type EmailConfig } from "../../services/email-integration";
 import logger from '../../../utils/logger';
+import { parseIntegrationJsonField } from "../../../lib/parse-integration-json";
 
 const sendEmailSchema = z.object({
   integrationId: z.string(),
@@ -25,7 +26,8 @@ const sendEmailSchema = z.object({
   templateData: z.record(z.any()).optional()
 });
 
-export const sendEmail = zValidator("json", sendEmailSchema, async (c) => {
+// Hono zValidator narrows context; full Context needed for req/json (see Slack send-message).
+export const sendEmail = zValidator("json", sendEmailSchema, async (c: any) => {
   const db = getDatabase();
   
   try {
@@ -45,28 +47,29 @@ export const sendEmail = zValidator("json", sendEmailSchema, async (c) => {
           eq(integrationConnectionTable.id, data.integrationId),
           eq(integrationConnectionTable.workspaceId, workspaceId),
           eq(integrationConnectionTable.provider, "email"),
-          eq(integrationConnectionTable.isActive, true)
+          eq(integrationConnectionTable.status, "active")
         )
       );
 
-    if (!integration.length) {
+    const conn = integration[0];
+    if (!conn) {
       return c.json({ error: "Email integration not found" }, 404);
     }
 
-    const config = JSON.parse(integration[0].config);
-    const credentials = JSON.parse(integration[0].credentials || "{}");
+    const config = parseIntegrationJsonField(conn.config);
+    const credentials = parseIntegrationJsonField(conn.credentials);
 
     const emailService = new EmailIntegration({
-      provider: config.provider,
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      auth: credentials.auth,
+      provider: config.provider as EmailConfig["provider"],
+      host: config.host as string,
+      port: config.port as number,
+      secure: config.secure as boolean,
+      auth: credentials.auth as EmailConfig["auth"],
       from: {
-        name: config.fromName,
-        email: config.fromEmail
+        name: config.fromName as string,
+        email: config.fromEmail as string
       },
-      replyTo: config.replyTo
+      replyTo: config.replyTo as string | undefined
     });
 
     // Send email
@@ -84,9 +87,8 @@ export const sendEmail = zValidator("json", sendEmailSchema, async (c) => {
     // Update integration metrics
     await db.update(integrationConnectionTable)
       .set({
-        totalOperations: integration[0].totalOperations + 1,
-        successfulOperations: integration[0].successfulOperations + 1,
-        lastSyncAt: new Date()
+        lastSync: new Date(),
+        syncStatus: "success"
       })
       .where(eq(integrationConnectionTable.id, data.integrationId));
 

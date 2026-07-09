@@ -14,6 +14,10 @@
 import { deletePattern, CacheKeys } from './redis-client';
 import logger from '../utils/logger';
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
  * Invalidate all caches for a specific project
  */
@@ -24,7 +28,7 @@ export async function invalidateProjectCaches(projectId: string): Promise<void> 
       logger.debug(`🔴 Cache invalidated: ${deletedCount} keys for project ${projectId}`);
     }
   } catch (error) {
-    logger.error(`🔴 Failed to invalidate project caches for ${projectId}:`, error.message);
+    logger.error(`🔴 Failed to invalidate project caches for ${projectId}:`, errorMessage(error));
   }
 }
 
@@ -38,7 +42,7 @@ export async function invalidateWorkspaceCaches(workspaceId: string): Promise<vo
       logger.debug(`🔴 Cache invalidated: ${deletedCount} keys for workspace ${workspaceId}`);
     }
   } catch (error) {
-    logger.error(`🔴 Failed to invalidate workspace caches for ${workspaceId}:`, error.message);
+    logger.error(`🔴 Failed to invalidate workspace caches for ${workspaceId}:`, errorMessage(error));
   }
 }
 
@@ -57,7 +61,7 @@ export async function invalidateProjectOverview(
       logger.debug(`🔴 Cache invalidated: Project overview for ${projectId}`);
     }
   } catch (error) {
-    logger.error(`🔴 Failed to invalidate project overview for ${projectId}:`, error.message);
+    logger.error(`🔴 Failed to invalidate project overview for ${projectId}:`, errorMessage(error));
   }
 }
 
@@ -69,7 +73,7 @@ export async function invalidateMultipleProjects(projectIds: string[]): Promise<
     await Promise.all(projectIds.map(id => invalidateProjectCaches(id)));
     logger.debug(`🔴 Cache invalidated: ${projectIds.length} projects`);
   } catch (error) {
-    logger.error(`🔴 Failed to batch invalidate projects:`, error.message);
+    logger.error(`🔴 Failed to batch invalidate projects:`, errorMessage(error));
   }
 }
 

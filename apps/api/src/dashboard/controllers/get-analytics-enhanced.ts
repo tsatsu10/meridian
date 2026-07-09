@@ -250,7 +250,7 @@ async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<
       statuses,
       includeArchived,
     });
-    logger.debug("📊 Filter conditions built:", conditions.length, "conditions");
+    logger.debug("📊 Filter conditions built", { count: conditions.length });
 
     // Execute analytics queries in parallel for performance
     logger.debug("📊 Executing parallel queries...");
@@ -602,7 +602,7 @@ async function getAdvancedProjectHealth(baseConditions: any[], period: any): Pro
     return {
       id: project.id,
       name: project.name,
-      slug: project.slug,
+      slug: project.slug ?? "",
       completion: Math.round(completion),
       health,
       healthScore: Math.round(healthScore),
@@ -727,7 +727,7 @@ async function getTimeSeriesData(
     const stepEndDate = new Date(stepEndMs);
     
     // Format date for display - use ISO format for consistency
-    const date = stepStartDate.toISOString().split('T')[0];
+    const date = stepStartDate.toISOString().split('T')[0] ?? "";
 
     // Build step-specific conditions
     // Use timestamp comparison for better database compatibility

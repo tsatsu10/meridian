@@ -8,9 +8,10 @@
  */
 
 import { createId } from "@paralleldrive/cuid2";
-import { eq, and, desc, count } from "drizzle-orm";
+import { eq, and, desc, count, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import logger from '../../utils/logger';
+import { parseIntegrationJsonField } from "../../lib/parse-integration-json";
 import { 
   integrationConnectionTable, 
   webhookEndpointTable,
@@ -88,8 +89,8 @@ export class IntegrationManager {
         createdBy: userId,
         config: JSON.stringify(config.config),
         credentials: config.credentials ? JSON.stringify(config.credentials) : null,
-        connectionStatus: "pending",
-        isActive: true
+        status: "pending",
+        syncStatus: "pending"
       }).returning();
 
       // Initialize provider-specific integration
@@ -123,7 +124,7 @@ export class IntegrationManager {
       // Parse JSON fields and remove sensitive credentials
       return integrations.map(integration => ({
         ...integration,
-        config: JSON.parse(integration.config),
+        config: parseIntegrationJsonField(integration.config),
         credentials: null, // Never return credentials
         hasCredentials: !!integration.credentials
       }));
@@ -240,13 +241,17 @@ export class IntegrationManager {
 
       // Test provider-specific connection
       const testResult = await this.testProvider(integration[0]);
+      const testErr =
+        "error" in testResult && typeof testResult.error === "string"
+          ? testResult.error
+          : null;
 
-      // Update connection status
       await db.update(integrationConnectionTable)
         .set({
-          connectionStatus: testResult.success ? "connected" : "error",
-          errorMessage: testResult.error || null,
-          lastConnectedAt: testResult.success ? new Date() : null,
+          status: testResult.success ? "active" : "error",
+          syncStatus: testResult.success ? "success" : "failed",
+          lastSync: testResult.success ? new Date() : null,
+          errorMessage: testErr,
           updatedAt: new Date()
         })
         .where(eq(integrationConnectionTable.id, integrationId));
@@ -272,7 +277,7 @@ export class IntegrationManager {
           and(
             eq(integrationConnectionTable.workspaceId, event.workspaceId),
             eq(integrationConnectionTable.provider, event.provider),
-            eq(integrationConnectionTable.isActive, true)
+            eq(integrationConnectionTable.status, "active")
           )
         );
 
@@ -287,12 +292,11 @@ export class IntegrationManager {
             result
           });
 
-          // Update success metrics
           await db.update(integrationConnectionTable)
             .set({
-              totalOperations: integration.totalOperations + 1,
-              successfulOperations: integration.successfulOperations + 1,
-              lastSyncAt: new Date()
+              lastSync: new Date(),
+              syncStatus: "success",
+              errorMessage: null
             })
             .where(eq(integrationConnectionTable.id, integration.id));
 
@@ -303,11 +307,10 @@ export class IntegrationManager {
             error: error instanceof Error ? error.message : "Unknown error"
           });
 
-          // Update failure metrics
           await db.update(integrationConnectionTable)
             .set({
-              totalOperations: integration.totalOperations + 1,
-              failedOperations: integration.failedOperations + 1,
+              lastSync: new Date(),
+              syncStatus: "failed",
               errorMessage: error instanceof Error ? error.message : "Unknown error"
             })
             .where(eq(integrationConnectionTable.id, integration.id));
@@ -338,12 +341,14 @@ export class IntegrationManager {
       }
 
       const webhookConfig = webhook[0];
+      if (!webhookConfig) {
+        throw new Error("Webhook not found");
+      }
 
-      // Verify webhook signature if required
-      if (webhookConfig.requireSignature) {
+      if (webhookConfig.secret) {
         const isValid = await this.verifyWebhookSignature(
-          webhookConfig.secret, 
-          JSON.stringify(payload), 
+          webhookConfig.secret,
+          JSON.stringify(payload),
           headers
         );
         
@@ -352,31 +357,28 @@ export class IntegrationManager {
         }
       }
 
-      // Process webhook based on integration type
       const result = await this.processWebhook(webhookConfig, payload);
 
-      // Update webhook metrics
       await db.update(webhookEndpointTable)
         .set({
-          totalRequests: webhookConfig.totalRequests + 1,
-          successfulRequests: webhookConfig.successfulRequests + 1,
-          lastRequestAt: new Date()
+          lastTriggered: new Date(),
+          updatedAt: new Date()
         })
         .where(eq(webhookEndpointTable.id, webhookId));
 
       return result;
     } catch (error) {
-      // Update failure metrics
       const webhook = await db.select()
         .from(webhookEndpointTable)
         .where(eq(webhookEndpointTable.id, webhookId));
 
-      if (webhook.length) {
+      const row = webhook[0];
+      if (row) {
         await db.update(webhookEndpointTable)
           .set({
-            totalRequests: webhook[0].totalRequests + 1,
-            failedRequests: webhook[0].failedRequests + 1,
-            lastRequestAt: new Date()
+            lastTriggered: new Date(),
+            failureCount: (row.failureCount ?? 0) + 1,
+            updatedAt: new Date()
           })
           .where(eq(webhookEndpointTable.id, webhookId));
       }
@@ -397,10 +399,7 @@ export class IntegrationManager {
         // Integration count by provider
         db.select({
           provider: integrationConnectionTable.provider,
-          count: count(),
-          totalOperations: integrationConnectionTable.totalOperations,
-          successfulOperations: integrationConnectionTable.successfulOperations,
-          failedOperations: integrationConnectionTable.failedOperations
+          count: count()
         })
         .from(integrationConnectionTable)
         .where(eq(integrationConnectionTable.workspaceId, workspaceId))
@@ -409,9 +408,7 @@ export class IntegrationManager {
         // Webhook statistics
         db.select({
           count: count(),
-          totalRequests: webhookEndpointTable.totalRequests,
-          successfulRequests: webhookEndpointTable.successfulRequests,
-          failedRequests: webhookEndpointTable.failedRequests
+          failureSum: sql<number>`coalesce(sum(${webhookEndpointTable.failureCount}), 0)`
         })
         .from(webhookEndpointTable)
         .where(eq(webhookEndpointTable.workspaceId, workspaceId)),
@@ -431,12 +428,12 @@ export class IntegrationManager {
         integrations: {
           total: integrations.reduce((sum, i) => sum + i.count, 0),
           byProvider: integrations,
-          totalOperations: integrations.reduce((sum, i) => sum + i.totalOperations, 0),
+          totalOperations: integrations.reduce((sum, i) => sum + i.count, 0),
           successRate: this.calculateSuccessRate(integrations)
         },
         webhooks: {
           total: webhooks[0]?.count || 0,
-          totalRequests: webhooks.reduce((sum, w) => sum + w.totalRequests, 0),
+          totalFailures: Number(webhooks[0]?.failureSum ?? 0),
           successRate: this.calculateWebhookSuccessRate(webhooks)
         },
         automation: {
@@ -465,17 +462,21 @@ export class IntegrationManager {
           try {
             const testResult = await this.testProvider(integration);
             
+            const errMsg =
+              "error" in testResult && typeof testResult.error === "string"
+                ? testResult.error
+                : undefined;
             return {
               id: integration.id,
               provider: integration.provider,
               name: integration.name,
               status: testResult.success ? "healthy" : "error",
               lastCheck: new Date(),
-              message: testResult.error || "Integration is healthy",
+              message: errMsg || "Integration is healthy",
               metrics: {
-                totalOperations: integration.totalOperations,
+                totalOperations: 0,
                 successRate: this.calculateIntegrationSuccessRate(integration),
-                lastOperation: integration.lastSyncAt || integration.createdAt
+                lastOperation: integration.lastSync ?? integration.createdAt
               }
             } as IntegrationHealth;
           } catch (error) {
@@ -487,9 +488,9 @@ export class IntegrationManager {
               lastCheck: new Date(),
               message: error instanceof Error ? error.message : "Health check failed",
               metrics: {
-                totalOperations: integration.totalOperations,
+                totalOperations: 0,
                 successRate: this.calculateIntegrationSuccessRate(integration),
-                lastOperation: integration.lastSyncAt || integration.createdAt
+                lastOperation: integration.lastSync ?? integration.createdAt
               }
             } as IntegrationHealth;
           }
@@ -543,22 +544,25 @@ export class IntegrationManager {
     return true;
   }
 
-  private static calculateSuccessRate(integrations: any[]): number {
-    const total = integrations.reduce((sum, i) => sum + i.totalOperations, 0);
-    const successful = integrations.reduce((sum, i) => sum + i.successfulOperations, 0);
-    return total > 0 ? (successful / total) * 100 : 100;
+  private static calculateSuccessRate(
+    integrations: { count: number; provider: string }[]
+  ): number {
+    const total = integrations.reduce((sum, i) => sum + i.count, 0);
+    return total > 0 ? 100 : 0;
   }
 
-  private static calculateWebhookSuccessRate(webhooks: any[]): number {
-    const total = webhooks.reduce((sum, w) => sum + w.totalRequests, 0);
-    const successful = webhooks.reduce((sum, w) => sum + w.successfulRequests, 0);
-    return total > 0 ? (successful / total) * 100 : 100;
+  private static calculateWebhookSuccessRate(
+    webhooks: { count: number; failureSum: number }[]
+  ): number {
+    const row = webhooks[0];
+    if (!row || row.count === 0) return 0;
+    return row.failureSum === 0 ? 100 : 0;
   }
 
-  private static calculateIntegrationSuccessRate(integration: any): number {
-    return integration.totalOperations > 0 
-      ? (integration.successfulOperations / integration.totalOperations) * 100 
-      : 100;
+  private static calculateIntegrationSuccessRate(integration: {
+    syncStatus?: string | null;
+  }): number {
+    return integration.syncStatus === "success" ? 100 : 0;
   }
 }
 

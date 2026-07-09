@@ -18,6 +18,15 @@ import { eq, and } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import logger from '../../../utils/logger';
 
+function requireUserIdAndEmail(c: Context): { userId: string; userEmail: string } | null {
+  const userId = c.req.param("userId");
+  const userEmail = c.get("userEmail");
+  if (typeof userId !== "string" || !userId || typeof userEmail !== "string" || !userEmail) {
+    return null;
+  }
+  return { userId, userEmail };
+}
+
 // Interface for channel configuration
 interface ChannelConfig {
   type: 'teams' | 'discord' | 'sms' | 'slack' | 'email';
@@ -32,12 +41,11 @@ interface ChannelConfig {
 export async function getNotificationChannels(c: Context) {
   try {
     const db = getDatabase();
-    const userId = c.req.param("userId");
-    const userEmail = c.get("userEmail");
-    
-    if (userId !== userEmail) {
+    const ids = requireUserIdAndEmail(c);
+    if (!ids || ids.userId !== ids.userEmail) {
       return c.json({ error: "Unauthorized" }, 403);
     }
+    const { userId, userEmail } = ids;
     
     // Get channel configurations
     const channels = await db
@@ -86,10 +94,12 @@ export async function getNotificationChannels(c: Context) {
       }
     };
     
-    // Merge defaults with user configurations
-    Object.keys(defaultChannels).forEach(type => {
+    (Object.keys(defaultChannels) as Array<keyof typeof defaultChannels>).forEach((type) => {
       if (!channelConfigs[type]) {
-        channelConfigs[type] = defaultChannels[type];
+        const fallback = defaultChannels[type];
+        if (fallback) {
+          channelConfigs[type] = fallback;
+        }
       }
     });
     
@@ -107,24 +117,23 @@ export async function getNotificationChannels(c: Context) {
 export async function updateNotificationChannel(c: Context) {
   try {
     const db = getDatabase();
-    const userId = c.req.param("userId");
-    const channelType = c.req.param("channelType");
-    const userEmail = c.get("userEmail");
-    
-    if (userId !== userEmail) {
+    const ids = requireUserIdAndEmail(c);
+    if (!ids || ids.userId !== ids.userEmail) {
       return c.json({ error: "Unauthorized" }, 403);
     }
-    
+    const { userId } = ids;
+
+    const channelType = c.req.param("channelType");
     const { config, enabled } = await c.req.json();
     
     // Validate channel type
-    const validChannels = ['teams', 'discord', 'sms', 'slack', 'email'];
-    if (!validChannels.includes(channelType)) {
+    const validChannels = ['teams', 'discord', 'sms', 'slack', 'email'] as const;
+    if (typeof channelType !== "string" || !validChannels.includes(channelType as (typeof validChannels)[number])) {
       return c.json({ error: "Invalid channel type" }, 400);
     }
     
     // Validate configuration based on channel type
-    const validationErrors = validateChannelConfig(channelType, config);
+    const validationErrors = validateChannelConfig(channelType as string, config);
     if (validationErrors.length > 0) {
       return c.json({ 
         error: "Validation failed", 
@@ -191,12 +200,15 @@ export async function updateNotificationChannel(c: Context) {
 export async function testNotificationChannel(c: Context) {
   try {
     const db = getDatabase();
-    const userId = c.req.param("userId");
-    const channelType = c.req.param("channelType");
-    const userEmail = c.get("userEmail");
-    
-    if (userId !== userEmail) {
+    const ids = requireUserIdAndEmail(c);
+    if (!ids || ids.userId !== ids.userEmail) {
       return c.json({ error: "Unauthorized" }, 403);
+    }
+    const { userId } = ids;
+
+    const channelType = c.req.param("channelType");
+    if (typeof channelType !== "string" || !channelType) {
+      return c.json({ error: "Invalid channel type" }, 400);
     }
     
     // Get channel configuration
@@ -256,12 +268,11 @@ export async function testNotificationChannel(c: Context) {
 export async function sendTestNotification(c: Context) {
   try {
     const db = getDatabase();
-    const userId = c.req.param("userId");
-    const userEmail = c.get("userEmail");
-    
-    if (userId !== userEmail) {
+    const ids = requireUserIdAndEmail(c);
+    if (!ids || ids.userId !== ids.userEmail) {
       return c.json({ error: "Unauthorized" }, 403);
     }
+    const { userId } = ids;
     
     const { message = "Test notification from Meridian! 🚀" } = await c.req.json();
     

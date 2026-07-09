@@ -1654,7 +1654,7 @@ export const helpArticleComments = pgTable("help_article_comments", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
-  parentId: text("parent_id").references(() => helpArticleComments.id, { onDelete: "cascade" }), // For nested comments
+  parentId: text("parent_id").references((): any => helpArticleComments.id, { onDelete: "cascade" }), // For nested comments
   helpful: integer("helpful").default(0),
   notHelpful: integer("not_helpful").default(0),
   isEdited: boolean("is_edited").default(false),

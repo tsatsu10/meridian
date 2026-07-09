@@ -34,7 +34,10 @@ export async function sendFcmNotification(tokens: string[], payload: any): Promi
       ...payload,
     };
     const response = await admin.messaging().sendEachForMulticast(multicastMessage);
-    logger.info('FCM sent:', response.successCount, 'success,', response.failureCount, 'failure');
+    logger.info('FCM sent', {
+      success: response.successCount,
+      failure: response.failureCount,
+    });
     return response;
   } catch (err) {
     logger.error('FCM send error:', err);

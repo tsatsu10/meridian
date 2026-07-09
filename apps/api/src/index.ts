@@ -453,12 +453,12 @@ async function startServer() {
         });
         
         req.on('end', () => {
-          logger.debug('[HTTP Server] Body received for', req.method, req.url);
-          logger.debug('[HTTP Server] Body length:', bodyData.length);
-          logger.debug('[HTTP Server] Body preview:', bodyData.substring(0, 100));
+          logger.debug(`[HTTP Server] Body received for ${req.method} ${req.url ?? ""}`);
+          logger.debug('[HTTP Server] Body length:', { length: bodyData.length });
+          logger.debug('[HTTP Server] Body preview:', { preview: bodyData.substring(0, 100) });
           
           if (!bodyData || bodyData.trim() === '') {
-            logger.warn('[HTTP Server] ⚠️ WARNING: Empty body received for', req.method, req.url);
+            logger.warn(`[HTTP Server] ⚠️ WARNING: Empty body received for ${req.method} ${req.url ?? ""}`);
           }
           
           // Now handle with Hono, passing the buffered body
@@ -470,23 +470,30 @@ async function startServer() {
       }
       
       function handleHonoRequest(req: any, res: any, body?: string) {
-        app.fetch(new Request(`http://localhost:${port}${req.url}`, {
-          method: req.method,
-          headers: req.headers as any,
-          body: body, // Pass buffered body
-        })).then((response) => {
-          res.statusCode = response.status;
-          response.headers.forEach((value, key) => {
-            res.setHeader(key, value);
+        void Promise.resolve(
+          app.fetch(
+            new Request(`http://localhost:${port}${req.url}`, {
+              method: req.method,
+              headers: req.headers as HeadersInit,
+              body: body,
+            }),
+          ),
+        )
+          .then((response: Response) => {
+            res.statusCode = response.status;
+            response.headers.forEach((value: string, key: string) => {
+              res.setHeader(key, value);
+            });
+            return response.arrayBuffer();
+          })
+          .then((responseBody: ArrayBuffer) => {
+            res.end(Buffer.from(responseBody));
+          })
+          .catch((error: unknown) => {
+            logger.error('❌ Request handling error:', error);
+            res.statusCode = 500;
+            res.end('Internal Server Error');
           });
-          return response.arrayBuffer();
-        }).then((responseBody) => {
-          res.end(Buffer.from(responseBody));
-        }).catch((error) => {
-          logger.error('❌ Request handling error:', error);
-          res.statusCode = 500;
-          res.end('Internal Server Error');
-        });
       }
     });
 

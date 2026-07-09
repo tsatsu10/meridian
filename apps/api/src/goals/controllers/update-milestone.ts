@@ -20,6 +20,9 @@ export async function updateMilestone(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!milestoneId) {
+      return c.json({ error: "Milestone id is required" }, 400);
+    }
     
     const body = await c.req.json();
     

@@ -20,6 +20,9 @@ export async function getReflections(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
+    }
     
     // Verify goal exists and user has permission
     const goal = await db.query.goals.findFirst({

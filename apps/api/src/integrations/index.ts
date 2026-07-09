@@ -7,6 +7,11 @@ import logger from '../utils/logger';
 
 const app = new Hono();
 
+function requireUserEmail(c: { get: (key: string) => unknown }): string | null {
+  const v = c.get('userEmail');
+  return typeof v === 'string' && v.length > 0 ? v : null;
+}
+
 // Available integration providers
 const AVAILABLE_INTEGRATIONS = [
   {
@@ -95,7 +100,10 @@ const AVAILABLE_INTEGRATIONS = [
 app.get('/', async (c) => {
   try {
     const { workspaceId } = c.req.query();
-    const userEmail = c.get('userEmail');
+    const userEmail = requireUserEmail(c);
+    if (!userEmail) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
 
     if (!workspaceId) {
       return c.json({ error: 'Missing workspaceId parameter' }, 400);
@@ -148,7 +156,10 @@ app.post('/:provider/connect', async (c) => {
     const { provider } = c.req.param();
     const body = await c.req.json();
     const { workspaceId, config } = body;
-    const userEmail = c.get('userEmail');
+    const userEmail = requireUserEmail(c);
+    if (!userEmail) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
 
     if (!workspaceId) {
       return c.json({ error: 'Missing workspaceId' }, 400);
@@ -223,7 +234,10 @@ app.post('/:provider/connect', async (c) => {
 app.delete('/:connectionId', async (c) => {
   try {
     const { connectionId } = c.req.param();
-    const userEmail = c.get('userEmail');
+    const userEmail = requireUserEmail(c);
+    if (!userEmail) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
 
     const db = getDatabase();
 
@@ -267,7 +281,10 @@ app.delete('/:connectionId', async (c) => {
 app.get('/webhooks', async (c) => {
   try {
     const { workspaceId } = c.req.query();
-    const userEmail = c.get('userEmail');
+    const userEmail = requireUserEmail(c);
+    if (!userEmail) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
 
     if (!workspaceId) {
       return c.json({ error: 'Missing workspaceId parameter' }, 400);
@@ -314,7 +331,10 @@ app.post('/webhooks', async (c) => {
   try {
     const body = await c.req.json();
     const { workspaceId, name, url, events } = body;
-    const userEmail = c.get('userEmail');
+    const userEmail = requireUserEmail(c);
+    if (!userEmail) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
 
     if (!workspaceId || !name || !url || !events) {
       return c.json({ error: 'Missing required fields: workspaceId, name, url, events' }, 400);
@@ -370,7 +390,10 @@ app.patch('/webhooks/:webhookId', async (c) => {
     const { webhookId } = c.req.param();
     const body = await c.req.json();
     const { isActive } = body;
-    const userEmail = c.get('userEmail');
+    const userEmail = requireUserEmail(c);
+    if (!userEmail) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
 
     const db = getDatabase();
 
@@ -415,7 +438,10 @@ app.patch('/webhooks/:webhookId', async (c) => {
 app.delete('/webhooks/:webhookId', async (c) => {
   try {
     const { webhookId } = c.req.param();
-    const userEmail = c.get('userEmail');
+    const userEmail = requireUserEmail(c);
+    if (!userEmail) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
 
     const db = getDatabase();
 

@@ -9,8 +9,25 @@
  * - Rate limiting and abuse protection
  */
 
-import { CSRFMiddlewareOptions } from '../middlewares/csrf-protection'
 import { SessionStoreOptions } from '../services/redis-session-store'
+
+/** Application CSRF policy (distinct from `csrf-protection` middleware runtime options) */
+export interface CSRFMiddlewareOptions {
+  tokenTTL: number
+  rotationInterval: number
+  production: boolean
+  trustedOrigins: string[]
+  allowSubdomains: boolean
+  skipPaths: string[]
+  cookieOptions: {
+    httpOnly: boolean
+    secure: boolean
+    sameSite: 'strict' | 'lax' | 'none'
+    maxAge: number
+    path: string
+    domain?: string
+  }
+}
 
 export interface SecurityConfig {
   csrf: CSRFMiddlewareOptions
@@ -262,7 +279,7 @@ export function validateSecurityConfig(config: SecurityConfig): {
     errors.push('Redis session host is required')
   }
 
-  if (config.session.ttl < 3600) {
+  if (config.session.ttl != null && config.session.ttl < 3600) {
     warnings.push('Session TTL is very short (< 1 hour)')
   }
 
