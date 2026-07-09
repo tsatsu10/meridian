@@ -16,12 +16,6 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { auth } from "../middlewares/auth";
 import {
-  recordProfileView,
-  getProfileViewers,
-  getProfileViewStats,
-  calculateCompletenessScore,
-  generateOptimizationSuggestions,
-  getProfileSuggestions,
   calculateUserStatistics,
   getUserStatistics,
 } from "../services/profile-analytics-service";
@@ -35,13 +29,6 @@ import {
   calculateFrequentCollaborators,
   getFrequentCollaborators,
 } from "../services/collaborators-service";
-import {
-  checkAndAwardBadges,
-  getUserBadges,
-  awardBadgeManually,
-  toggleBadgeVisibility,
-  BADGE_DEFINITIONS,
-} from "../services/badges-service";
 import {
   recordWorkHistoryEvent,
   getUserWorkHistory,
@@ -67,167 +54,6 @@ const smartProfileRoutes = new Hono<{
 // Apply authentication
 smartProfileRoutes.use("*", auth);
 
-// ========================================
-// PROFILE VIEWS & ANALYTICS
-// ========================================
-
-// Record a profile view (auto-called when viewing profile)
-smartProfileRoutes.post(
-  "/:userId/view",
-  zValidator(
-    "json",
-    z.object({
-      source: z.string().optional(),
-      sectionsViewed: z.array(z.string()).optional(),
-      deviceType: z.string().optional(),
-    })
-  ),
-  async (c) => {
-    try {
-      const viewerUserId = c.get("userId");
-      const { userId } = c.req.param();
-      const body = c.req.valid("json");
-
-      const view = await recordProfileView({
-        profileUserId: userId,
-        viewerUserId,
-        ...body,
-      });
-
-      return c.json({ success: true, data: view });
-    } catch (error: any) {
-      logger.error("Error recording profile view:", error);
-      return c.json({ error: error.message }, 500);
-    }
-  }
-);
-
-// Get who viewed profile
-smartProfileRoutes.get("/:userId/views", async (c) => {
-  try {
-    const { userId } = c.req.param();
-    const currentUserId = c.get("userId");
-
-    // Only allow viewing own profile viewers
-    if (userId !== currentUserId) {
-      return c.json({ error: "Unauthorized" }, 403);
-    }
-
-    const limit = parseInt(c.req.query("limit") || "50");
-    const offset = parseInt(c.req.query("offset") || "0");
-
-    const viewers = await getProfileViewers(userId, { limit, offset });
-
-    return c.json({ success: true, data: viewers });
-  } catch (error: any) {
-    logger.error("Error getting profile viewers:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Get profile view statistics
-smartProfileRoutes.get("/:userId/views/stats", async (c) => {
-  try {
-    const { userId } = c.req.param();
-    const currentUserId = c.get("userId");
-
-    // Only allow viewing own stats
-    if (userId !== currentUserId) {
-      return c.json({ error: "Unauthorized" }, 403);
-    }
-
-    const stats = await getProfileViewStats(userId);
-
-    return c.json({ success: true, data: stats });
-  } catch (error: any) {
-    logger.error("Error getting profile view stats:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Get profile insights
-smartProfileRoutes.get("/:userId/insights", async (c) => {
-  try {
-    const { userId } = c.req.param();
-    const currentUserId = c.get("userId");
-
-    // Only allow viewing own insights
-    if (userId !== currentUserId) {
-      return c.json({ error: "Unauthorized" }, 403);
-    }
-
-    const [viewStats, statistics, suggestions] = await Promise.all([
-      getProfileViewStats(userId),
-      getUserStatistics(userId),
-      getProfileSuggestions(userId),
-    ]);
-
-    return c.json({
-      success: true,
-      data: {
-        views: viewStats,
-        statistics,
-        suggestions,
-      },
-    });
-  } catch (error: any) {
-    logger.error("Error getting profile insights:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// ========================================
-// COMPLETENESS & OPTIMIZATION
-// ========================================
-
-// Get enhanced completeness score
-smartProfileRoutes.get("/:userId/completeness", async (c) => {
-  try {
-    const { userId } = c.req.param();
-
-    const score = await calculateCompletenessScore(userId);
-
-    return c.json({ success: true, data: { score } });
-  } catch (error: any) {
-    logger.error("Error getting completeness score:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Get optimization suggestions
-smartProfileRoutes.get("/:userId/suggestions", async (c) => {
-  try {
-    const { userId } = c.req.param();
-    const currentUserId = c.get("userId");
-
-    // Only allow viewing own suggestions
-    if (userId !== currentUserId) {
-      return c.json({ error: "Unauthorized" }, 403);
-    }
-
-    // Generate fresh suggestions
-    const suggestions = await generateOptimizationSuggestions(userId);
-
-    return c.json({ success: true, data: suggestions });
-  } catch (error: any) {
-    logger.error("Error getting suggestions:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Dismiss suggestion
-smartProfileRoutes.post("/suggestions/:id/dismiss", async (c) => {
-  try {
-    const { id } = c.req.param();
-    // Implementation for dismissing suggestions
-    return c.json({ success: true, message: "Suggestion dismissed" });
-  } catch (error: any) {
-    logger.error("Error dismissing suggestion:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// ========================================
 // AVAILABILITY
 // ========================================
 
@@ -373,104 +199,6 @@ smartProfileRoutes.post("/:userId/statistics/recalculate", async (c) => {
   }
 });
 
-// ========================================
-// BADGES
-// ========================================
-
-// Get user badges
-smartProfileRoutes.get("/:userId/badges", async (c) => {
-  try {
-    const { userId } = c.req.param();
-
-    const badges = await getUserBadges(userId);
-
-    return c.json({ success: true, data: badges });
-  } catch (error: any) {
-    logger.error("Error getting badges:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Check and award badges
-smartProfileRoutes.post("/:userId/badges/check", async (c) => {
-  try {
-    const { userId } = c.req.param();
-    const currentUserId = c.get("userId");
-
-    // Only allow checking own badges
-    if (userId !== currentUserId) {
-      return c.json({ error: "Unauthorized" }, 403);
-    }
-
-    const newBadges = await checkAndAwardBadges(userId);
-
-    return c.json({
-      success: true,
-      data: newBadges,
-      message: `Awarded ${newBadges.length} new badge(s)`,
-    });
-  } catch (error: any) {
-    logger.error("Error checking badges:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Award badge manually (admin only)
-smartProfileRoutes.post(
-  "/badges/award",
-  zValidator(
-    "json",
-    z.object({
-      userId: z.string(),
-      badgeType: z.string(),
-    })
-  ),
-  async (c) => {
-    try {
-      const awardedBy = c.get("userId");
-      const { userId, badgeType } = c.req.valid("json");
-
-      // TODO: Check if user is admin
-
-      const badge = await awardBadgeManually({ userId, badgeType, awardedBy });
-
-      return c.json({ success: true, data: badge });
-    } catch (error: any) {
-      logger.error("Error awarding badge:", error);
-      return c.json({ error: error.message }, 500);
-    }
-  }
-);
-
-// Toggle badge visibility
-smartProfileRoutes.put("/badges/:id/visibility", async (c) => {
-  try {
-    const { id } = c.req.param();
-    const userId = c.get("userId");
-
-    const badge = await toggleBadgeVisibility(id, userId);
-
-    return c.json({ success: true, data: badge });
-  } catch (error: any) {
-    logger.error("Error toggling badge visibility:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Get available badges
-smartProfileRoutes.get("/badges/available", async (c) => {
-  try {
-    return c.json({
-      success: true,
-      data: BADGE_DEFINITIONS,
-    });
-  } catch (error: any) {
-    logger.error("Error getting available badges:", error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// ========================================
 // WORK HISTORY
 // ========================================
 
@@ -645,32 +373,20 @@ smartProfileRoutes.get("/:userId/analytics", async (c) => {
     }
 
     const [
-      viewStats,
       statistics,
-      suggestions,
-      completenessScore,
       collaborators,
-      badges,
       availability,
     ] = await Promise.all([
-      getProfileViewStats(userId),
       getUserStatistics(userId),
-      getProfileSuggestions(userId),
-      calculateCompletenessScore(userId),
       getFrequentCollaborators(userId, 5),
-      getUserBadges(userId),
       getUserAvailability(userId),
     ]);
 
     return c.json({
       success: true,
       data: {
-        views: viewStats,
         statistics,
-        suggestions,
-        completenessScore,
         collaborators,
-        badges,
         availability: {
           ...availability,
           currentLocalTime: getCurrentLocalTime(availability.timezone || "UTC"),

@@ -4,7 +4,7 @@
  */
 
 import { logger } from './logger';
-import { lazyLoader, preloadCriticalModules } from './lazy-loader';
+import { lazyLoader } from './lazy-loader';
 
 export interface StartupMetrics {
   totalStartupTime: number;
@@ -100,10 +100,7 @@ class StartupOptimizer {
    * Preload critical modules in background
    */
   private async preloadCriticalModulesInBackground(): Promise<void> {
-    // Don't await this - let it run in background
-    preloadCriticalModules().catch(error => {
-      logger.warn('Background preloading failed', { error });
-    });
+    // Heavy optional modules (ML, googleapis, firebase) were removed; nothing to preload.
   }
 
   /**

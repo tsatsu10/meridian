@@ -118,8 +118,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageWorkspaceSettings: true,
     canManageWorkspaceMembers: true,
     canManageWorkspaceSecurity: true,
-    canManageBilling: true,
-    canViewBillingHistory: true,
     canChangePlan: true,
     canAccessWorkspaceAPI: true,
     canManageIntegrations: true,
@@ -163,9 +161,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canAccessProjectFiles: true,
     canViewProjectBudget: true,
     canManageProjectBudget: true,
-    canAccessProjectChat: true,
     canCreateProjectAnnouncements: true,
-    canModerateProjectDiscussion: true,
     
     // Task Management
     canCreateTasks: true,
@@ -213,28 +209,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canMentorMembers: true,
     canViewTeamProgress: true,
     canManageTeamCapacity: true,
-    canCreateTeamChannels: true,
-    canManageTeamChannels: true,
-    canModerateTeamChat: true,
     canCreateTeamAnnouncements: true,
     
     // Communication
-    canSendMessages: true,
-    canSendDirectMessages: true,
     canMentionUsers: true,
-    canReactToMessages: true,
-    canCreateChannels: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canManageChannels: true,
-    canArchiveChannels: true,
-    canModerateChat: true,
-    canDeleteMessages: true,
-    canPinMessages: true,
-    canManageChannelPermissions: true,
-    canStartVideoCall: true,
-    canShareScreen: true,
-    canRecordMeetings: true,
     canScheduleMeetings: true,
     
     // Files & Documents
