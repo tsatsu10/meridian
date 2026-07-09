@@ -47,7 +47,6 @@ import WeekView from '@/components/schedule/week-view';
 import { useScheduleConflicts } from '@/hooks/use-schedule-conflicts';
 import { useSmartScheduling } from '@/hooks/use-smart-scheduling';
 import { useScheduleDragDrop } from '@/hooks/use-schedule-drag-drop';
-import { useScheduleRealtime } from '@/hooks/use-schedule-realtime';
 import useAuth from '@/components/providers/auth-provider/hooks/use-auth';
 import useWorkspaceStore from '@/store/workspace';
 import type { CalendarEvent, MemberSchedule, CalendarViewMode, TimelineEntry } from '@/types/schedule';
@@ -276,53 +275,11 @@ export default function TeamCalendarModal({
     memberSchedules,
     onEventMove: (_eventId, _newDate, _newMember) => {
       toast.success('Event rescheduled successfully');
-      // Broadcast real-time update
-      if (team?.id && workspace?.id && user?.id) {
-        broadcastEventChange('event-moved', _eventId);
-      }
     },
     onEventResize: (_eventId, _newStartDate, _newEndDate) => {
       toast.success('Event duration updated');
-      // Broadcast real-time update
-      if (team?.id && workspace?.id && user?.id) {
-        broadcastEventChange('event-updated', _eventId);
-      }
     }
   });
-  
-  // Use real-time collaboration
-  const {
-    isConnected: isRealtimeConnected,
-    activeUsers: _activeUsers,
-    otherActiveUsers,
-    recentUpdates: _recentUpdates,
-    broadcastActivity: _broadcastActivity,
-    broadcastEventChange,
-    lockEvent: _lockEvent,
-    unlockEvent: _unlockEvent,
-    isEventLocked: _isEventLocked,
-    stats: _realtimeStats
-  } = useScheduleRealtime({
-    teamId: team?.id || '',
-    workspaceId: workspace?.id || '',
-    currentUserId: user?.id || '',
-    onEventUpdate: (update) => {
-      // Refresh events when other users make changes
-      toast.info('Schedule updated', {
-        description: `${update.type.replace('-', ' ')} by another user`
-      });
-    },
-    onUserActivity: (_users) => {
-      // Handle user activity updates
-    }
-  });
-  
-  // Broadcast activity when viewing different dates
-  useEffect(() => {
-    if (team?.id && workspace?.id && user?.id && isRealtimeConnected) {
-      _broadcastActivity(currentDate);
-    }
-  }, [currentDate, team?.id, workspace?.id, user?.id, isRealtimeConnected, _broadcastActivity]);
 
   const handleTeamSelect = (teamId: string) => {
     const selectedTeam = allTeams.find(t => t.id === teamId);
@@ -801,33 +758,6 @@ export default function TeamCalendarModal({
                   )}
                 </div>
                 
-                {/* Real-time presence indicator */}
-                {isRealtimeConnected && otherActiveUsers.length > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-                    <div className="flex -space-x-2">
-                      {otherActiveUsers.slice(0, 3).map((activeUser) => (
-                        <div
-                          key={activeUser.userId}
-                          className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 border-2 border-background flex items-center justify-center text-white text-xs font-semibold shadow-sm hover:scale-110 transition-transform"
-                          title={`${activeUser.userName} is viewing`}
-                        >
-                          {activeUser.userName.charAt(0).toUpperCase()}
-                        </div>
-                      ))}
-                      {otherActiveUsers.length > 3 && (
-                        <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium">
-                          +{otherActiveUsers.length - 3}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                        {otherActiveUsers.length} Online
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

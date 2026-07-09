@@ -42,7 +42,6 @@ import { useWorkspaceProjectStats } from "@/hooks/queries/project/use-workspace-
 import { useDuplicateProject } from "@/hooks/mutations/project/use-duplicate-project";
 import useDeleteProject from "@/hooks/mutations/project/use-delete-project";
 import { useArchiveProject, useRestoreProject } from "@/hooks/mutations/project/use-archive-project";
-import useProjectSocket from "@/hooks/use-project-socket";
 import ProjectFiltersAccessible from "@/components/dashboard/project-filters-accessible";
 import { useFilterStore } from "@/store/project-filters";
 import { BulkSelectAllCheckbox, useBulkKeyboardShortcuts } from "@/components/dashboard/bulk-select-checkbox";
@@ -149,7 +148,6 @@ function ProjectsPage() {
   
   useKeyboardShortcuts(keyboardShortcuts);
 
-  useProjectSocket(workspace?.id);
 
   const { data: projectStats } = useWorkspaceProjectStats();
 

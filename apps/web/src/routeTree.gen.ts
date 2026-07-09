@@ -9,9 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MobilePerformanceRouteImport } from './routes/mobile-performance'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
@@ -20,12 +18,7 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settin
 import { Route as DashboardSecurityRouteImport } from './routes/dashboard/security'
 import { Route as DashboardRbacExplanationRouteImport } from './routes/dashboard/rbac-explanation'
 import { Route as DashboardProjectsRouteImport } from './routes/dashboard/projects'
-import { Route as DashboardDebugWorkspaceRouteImport } from './routes/dashboard/debug-workspace'
-import { Route as DashboardCommunicationRouteImport } from './routes/dashboard/communication'
-import { Route as DashboardChatRouteImport } from './routes/dashboard/chat'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard/calendar'
-import { Route as DashboardBillingRouteImport } from './routes/dashboard/billing'
-import { Route as DashboardAutomationRouteImport } from './routes/dashboard/automation'
 import { Route as DashboardAuditRouteImport } from './routes/dashboard/audit'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard/analytics'
 import { Route as DashboardAllTasksRouteImport } from './routes/dashboard/all-tasks'
@@ -34,19 +27,10 @@ import { Route as AuthVerify2faRouteImport } from './routes/auth/verify-2fa'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
-import { Route as _dev_SidebarDemoRouteImport } from './routes/__dev__/sidebar-demo'
-import { Route as _dev_RbacTestRouteImport } from './routes/__dev__/rbac-test'
-import { Route as _dev_RbacDebugRouteImport } from './routes/__dev__/rbac-debug'
-import { Route as _dev_ProjectManagerTestRouteImport } from './routes/__dev__/project-manager-test'
-import { Route as _dev_ChatTestRouteImport } from './routes/__dev__/chat-test'
-import { Route as _dev_ChatInterfaceTestRouteImport } from './routes/__dev__/chat-interface-test'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardNotificationsIndexRouteImport } from './routes/dashboard/notifications/index'
-import { Route as DashboardHelpIndexRouteImport } from './routes/dashboard/help/index'
-import { Route as DashboardCommunicationIndexRouteImport } from './routes/dashboard/communication/index'
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
 import { Route as DashboardSettingsWorkspaceRouteImport } from './routes/dashboard/settings/workspace'
-import { Route as DashboardSettingsThemesRouteImport } from './routes/dashboard/settings/themes'
 import { Route as DashboardSettingsTemplatesRouteImport } from './routes/dashboard/settings/templates'
 import { Route as DashboardSettingsTeamManagementRouteImport } from './routes/dashboard/settings/team-management'
 import { Route as DashboardSettingsShortcutsRouteImport } from './routes/dashboard/settings/shortcuts'
@@ -55,26 +39,20 @@ import { Route as DashboardSettingsRolesUnifiedRouteImport } from './routes/dash
 import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard/settings/profile'
 import { Route as DashboardSettingsNotificationsRouteImport } from './routes/dashboard/settings/notifications'
 import { Route as DashboardSettingsLocalizationRouteImport } from './routes/dashboard/settings/localization'
-import { Route as DashboardSettingsIntegrationsRouteImport } from './routes/dashboard/settings/integrations'
 import { Route as DashboardSettingsFiltersRouteImport } from './routes/dashboard/settings/filters'
 import { Route as DashboardSettingsEmailRouteImport } from './routes/dashboard/settings/email'
 import { Route as DashboardSettingsDataManagementRouteImport } from './routes/dashboard/settings/data-management'
 import { Route as DashboardSettingsCalendarRouteImport } from './routes/dashboard/settings/calendar'
-import { Route as DashboardSettingsBillingRouteImport } from './routes/dashboard/settings/billing'
-import { Route as DashboardSettingsAutomationRouteImport } from './routes/dashboard/settings/automation'
 import { Route as DashboardSettingsAuditLogsRouteImport } from './routes/dashboard/settings/audit-logs'
 import { Route as DashboardSettingsAppearanceRouteImport } from './routes/dashboard/settings/appearance'
 import { Route as DashboardSettingsApiRouteImport } from './routes/dashboard/settings/api'
 import { Route as DashboardSettingsLayoutRouteImport } from './routes/dashboard/settings/_layout'
 import { Route as DashboardProfileUserIdRouteImport } from './routes/dashboard/profile/$userId'
-import { Route as DashboardHelpAdminRouteImport } from './routes/dashboard/help/admin'
-import { Route as DashboardHelpSlugRouteImport } from './routes/dashboard/help/$slug'
 import { Route as DashboardAnalyticsScheduledRouteImport } from './routes/dashboard/analytics/scheduled'
 import { Route as DashboardAnalyticsBuilderRouteImport } from './routes/dashboard/analytics/builder'
 import { Route as DashboardAdminRolesRouteImport } from './routes/dashboard/admin/roles'
 import { Route as DashboardWorkspaceSettingsWorkspaceIdIndexRouteImport } from './routes/dashboard/workspace-settings/$workspaceId/index'
 import { Route as DashboardWorkspaceWorkspaceIdTemplatesRouteImport } from './routes/dashboard/workspace/$workspaceId/templates'
-import { Route as DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRouteImport } from './routes/dashboard/workspace/$workspaceId/enhanced-analytics'
 import { Route as DashboardTeamsWorkspaceIdLayoutRouteImport } from './routes/dashboard/teams/$workspaceId/_layout'
 import { Route as DashboardSettingsRolesUnifiedRoleIdRouteImport } from './routes/dashboard/settings/roles-unified.$roleId'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId'
@@ -94,19 +72,9 @@ import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutTeamsRouteI
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutListRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/_layout.list'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutCalendarRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/_layout.calendar'
 
-const MobilePerformanceRoute = MobilePerformanceRouteImport.update({
-  id: '/mobile-performance',
-  path: '/mobile-performance',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatRoute = ChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptInvitationRoute = AcceptInvitationRouteImport.update({
@@ -150,34 +118,9 @@ const DashboardProjectsRoute = DashboardProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardDebugWorkspaceRoute = DashboardDebugWorkspaceRouteImport.update({
-  id: '/debug-workspace',
-  path: '/debug-workspace',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCommunicationRoute = DashboardCommunicationRouteImport.update({
-  id: '/communication',
-  path: '/communication',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardChatRoute = DashboardChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardBillingRoute = DashboardBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAutomationRoute = DashboardAutomationRouteImport.update({
-  id: '/automation',
-  path: '/automation',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAuditRoute = DashboardAuditRouteImport.update({
@@ -220,36 +163,6 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const _dev_SidebarDemoRoute = _dev_SidebarDemoRouteImport.update({
-  id: '/__dev__/sidebar-demo',
-  path: '/sidebar-demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const _dev_RbacTestRoute = _dev_RbacTestRouteImport.update({
-  id: '/__dev__/rbac-test',
-  path: '/rbac-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const _dev_RbacDebugRoute = _dev_RbacDebugRouteImport.update({
-  id: '/__dev__/rbac-debug',
-  path: '/rbac-debug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const _dev_ProjectManagerTestRoute = _dev_ProjectManagerTestRouteImport.update({
-  id: '/__dev__/project-manager-test',
-  path: '/project-manager-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const _dev_ChatTestRoute = _dev_ChatTestRouteImport.update({
-  id: '/__dev__/chat-test',
-  path: '/chat-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const _dev_ChatInterfaceTestRoute = _dev_ChatInterfaceTestRouteImport.update({
-  id: '/__dev__/chat-interface-test',
-  path: '/chat-interface-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -260,17 +173,6 @@ const DashboardNotificationsIndexRoute =
     id: '/notifications/',
     path: '/notifications/',
     getParentRoute: () => DashboardRoute,
-  } as any)
-const DashboardHelpIndexRoute = DashboardHelpIndexRouteImport.update({
-  id: '/help/',
-  path: '/help/',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCommunicationIndexRoute =
-  DashboardCommunicationIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardCommunicationRoute,
   } as any)
 const DashboardAnalyticsIndexRoute = DashboardAnalyticsIndexRouteImport.update({
   id: '/',
@@ -283,11 +185,6 @@ const DashboardSettingsWorkspaceRoute =
     path: '/workspace',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
-const DashboardSettingsThemesRoute = DashboardSettingsThemesRouteImport.update({
-  id: '/themes',
-  path: '/themes',
-  getParentRoute: () => DashboardSettingsRoute,
-} as any)
 const DashboardSettingsTemplatesRoute =
   DashboardSettingsTemplatesRouteImport.update({
     id: '/templates',
@@ -336,12 +233,6 @@ const DashboardSettingsLocalizationRoute =
     path: '/localization',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
-const DashboardSettingsIntegrationsRoute =
-  DashboardSettingsIntegrationsRouteImport.update({
-    id: '/integrations',
-    path: '/integrations',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
 const DashboardSettingsFiltersRoute =
   DashboardSettingsFiltersRouteImport.update({
     id: '/filters',
@@ -363,18 +254,6 @@ const DashboardSettingsCalendarRoute =
   DashboardSettingsCalendarRouteImport.update({
     id: '/calendar',
     path: '/calendar',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsBillingRoute =
-  DashboardSettingsBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsAutomationRoute =
-  DashboardSettingsAutomationRouteImport.update({
-    id: '/automation',
-    path: '/automation',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
 const DashboardSettingsAuditLogsRoute =
@@ -401,16 +280,6 @@ const DashboardSettingsLayoutRoute = DashboardSettingsLayoutRouteImport.update({
 const DashboardProfileUserIdRoute = DashboardProfileUserIdRouteImport.update({
   id: '/profile/$userId',
   path: '/profile/$userId',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHelpAdminRoute = DashboardHelpAdminRouteImport.update({
-  id: '/help/admin',
-  path: '/help/admin',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHelpSlugRoute = DashboardHelpSlugRouteImport.update({
-  id: '/help/$slug',
-  path: '/help/$slug',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAnalyticsScheduledRoute =
@@ -440,12 +309,6 @@ const DashboardWorkspaceWorkspaceIdTemplatesRoute =
   DashboardWorkspaceWorkspaceIdTemplatesRouteImport.update({
     id: '/workspace/$workspaceId/templates',
     path: '/workspace/$workspaceId/templates',
-    getParentRoute: () => DashboardRoute,
-  } as any)
-const DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute =
-  DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRouteImport.update({
-    id: '/workspace/$workspaceId/enhanced-analytics',
-    path: '/workspace/$workspaceId/enhanced-analytics',
     getParentRoute: () => DashboardRoute,
   } as any)
 const DashboardTeamsWorkspaceIdLayoutRoute =
@@ -568,15 +431,7 @@ const DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutCalendarRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
-  '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRouteWithChildren
-  '/mobile-performance': typeof MobilePerformanceRoute
-  '/chat-interface-test': typeof _dev_ChatInterfaceTestRoute
-  '/chat-test': typeof _dev_ChatTestRoute
-  '/project-manager-test': typeof _dev_ProjectManagerTestRoute
-  '/rbac-debug': typeof _dev_RbacDebugRoute
-  '/rbac-test': typeof _dev_RbacTestRoute
-  '/sidebar-demo': typeof _dev_SidebarDemoRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
@@ -585,12 +440,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/all-tasks': typeof DashboardAllTasksRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
   '/dashboard/audit': typeof DashboardAuditRoute
-  '/dashboard/automation': typeof DashboardAutomationRoute
-  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
-  '/dashboard/chat': typeof DashboardChatRoute
-  '/dashboard/communication': typeof DashboardCommunicationRouteWithChildren
-  '/dashboard/debug-workspace': typeof DashboardDebugWorkspaceRoute
   '/dashboard/projects': typeof DashboardProjectsRoute
   '/dashboard/rbac-explanation': typeof DashboardRbacExplanationRoute
   '/dashboard/security': typeof DashboardSecurityRoute
@@ -600,19 +450,14 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
   '/dashboard/analytics/builder': typeof DashboardAnalyticsBuilderRoute
   '/dashboard/analytics/scheduled': typeof DashboardAnalyticsScheduledRoute
-  '/dashboard/help/$slug': typeof DashboardHelpSlugRoute
-  '/dashboard/help/admin': typeof DashboardHelpAdminRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
-  '/dashboard/settings/automation': typeof DashboardSettingsAutomationRoute
-  '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
   '/dashboard/settings/calendar': typeof DashboardSettingsCalendarRoute
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsRoute
   '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
@@ -621,16 +466,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/shortcuts': typeof DashboardSettingsShortcutsRoute
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
   '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
-  '/dashboard/settings/themes': typeof DashboardSettingsThemesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
-  '/dashboard/communication/': typeof DashboardCommunicationIndexRoute
-  '/dashboard/help/': typeof DashboardHelpIndexRoute
   '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
   '/dashboard/teams/$workspaceId': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
-  '/dashboard/workspace/$workspaceId/enhanced-analytics': typeof DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute
   '/dashboard/workspace/$workspaceId/templates': typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
   '/dashboard/workspace-settings/$workspaceId/': typeof DashboardWorkspaceSettingsWorkspaceIdIndexRoute
   '/dashboard/teams/$workspaceId/members': typeof DashboardTeamsWorkspaceIdLayoutMembersRoute
@@ -652,14 +493,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
-  '/chat': typeof ChatRoute
-  '/mobile-performance': typeof MobilePerformanceRoute
-  '/chat-interface-test': typeof _dev_ChatInterfaceTestRoute
-  '/chat-test': typeof _dev_ChatTestRoute
-  '/project-manager-test': typeof _dev_ProjectManagerTestRoute
-  '/rbac-debug': typeof _dev_RbacDebugRoute
-  '/rbac-test': typeof _dev_RbacTestRoute
-  '/sidebar-demo': typeof _dev_SidebarDemoRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
@@ -667,11 +500,7 @@ export interface FileRoutesByTo {
   '/dashboard/activity': typeof DashboardActivityRoute
   '/dashboard/all-tasks': typeof DashboardAllTasksRoute
   '/dashboard/audit': typeof DashboardAuditRoute
-  '/dashboard/automation': typeof DashboardAutomationRoute
-  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
-  '/dashboard/chat': typeof DashboardChatRoute
-  '/dashboard/debug-workspace': typeof DashboardDebugWorkspaceRoute
   '/dashboard/projects': typeof DashboardProjectsRoute
   '/dashboard/rbac-explanation': typeof DashboardRbacExplanationRoute
   '/dashboard/security': typeof DashboardSecurityRoute
@@ -680,20 +509,15 @@ export interface FileRoutesByTo {
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
   '/dashboard/analytics/builder': typeof DashboardAnalyticsBuilderRoute
   '/dashboard/analytics/scheduled': typeof DashboardAnalyticsScheduledRoute
-  '/dashboard/help/$slug': typeof DashboardHelpSlugRoute
-  '/dashboard/help/admin': typeof DashboardHelpAdminRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
-  '/dashboard/settings/automation': typeof DashboardSettingsAutomationRoute
-  '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
   '/dashboard/settings/calendar': typeof DashboardSettingsCalendarRoute
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsRoute
   '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
@@ -702,15 +526,11 @@ export interface FileRoutesByTo {
   '/dashboard/settings/shortcuts': typeof DashboardSettingsShortcutsRoute
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
   '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
-  '/dashboard/settings/themes': typeof DashboardSettingsThemesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
-  '/dashboard/communication': typeof DashboardCommunicationIndexRoute
-  '/dashboard/help': typeof DashboardHelpIndexRoute
   '/dashboard/notifications': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
   '/dashboard/teams/$workspaceId': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
-  '/dashboard/workspace/$workspaceId/enhanced-analytics': typeof DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute
   '/dashboard/workspace/$workspaceId/templates': typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
   '/dashboard/workspace-settings/$workspaceId': typeof DashboardWorkspaceSettingsWorkspaceIdIndexRoute
   '/dashboard/teams/$workspaceId/members': typeof DashboardTeamsWorkspaceIdLayoutMembersRoute
@@ -732,15 +552,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
-  '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRouteWithChildren
-  '/mobile-performance': typeof MobilePerformanceRoute
-  '/__dev__/chat-interface-test': typeof _dev_ChatInterfaceTestRoute
-  '/__dev__/chat-test': typeof _dev_ChatTestRoute
-  '/__dev__/project-manager-test': typeof _dev_ProjectManagerTestRoute
-  '/__dev__/rbac-debug': typeof _dev_RbacDebugRoute
-  '/__dev__/rbac-test': typeof _dev_RbacTestRoute
-  '/__dev__/sidebar-demo': typeof _dev_SidebarDemoRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
@@ -749,12 +561,7 @@ export interface FileRoutesById {
   '/dashboard/all-tasks': typeof DashboardAllTasksRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
   '/dashboard/audit': typeof DashboardAuditRoute
-  '/dashboard/automation': typeof DashboardAutomationRoute
-  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
-  '/dashboard/chat': typeof DashboardChatRoute
-  '/dashboard/communication': typeof DashboardCommunicationRouteWithChildren
-  '/dashboard/debug-workspace': typeof DashboardDebugWorkspaceRoute
   '/dashboard/projects': typeof DashboardProjectsRoute
   '/dashboard/rbac-explanation': typeof DashboardRbacExplanationRoute
   '/dashboard/security': typeof DashboardSecurityRoute
@@ -764,20 +571,15 @@ export interface FileRoutesById {
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
   '/dashboard/analytics/builder': typeof DashboardAnalyticsBuilderRoute
   '/dashboard/analytics/scheduled': typeof DashboardAnalyticsScheduledRoute
-  '/dashboard/help/$slug': typeof DashboardHelpSlugRoute
-  '/dashboard/help/admin': typeof DashboardHelpAdminRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
   '/dashboard/settings/_layout': typeof DashboardSettingsLayoutRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
-  '/dashboard/settings/automation': typeof DashboardSettingsAutomationRoute
-  '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
   '/dashboard/settings/calendar': typeof DashboardSettingsCalendarRoute
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsRoute
   '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
@@ -786,16 +588,12 @@ export interface FileRoutesById {
   '/dashboard/settings/shortcuts': typeof DashboardSettingsShortcutsRoute
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
   '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
-  '/dashboard/settings/themes': typeof DashboardSettingsThemesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
-  '/dashboard/communication/': typeof DashboardCommunicationIndexRoute
-  '/dashboard/help/': typeof DashboardHelpIndexRoute
   '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
   '/dashboard/teams/$workspaceId/_layout': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
-  '/dashboard/workspace/$workspaceId/enhanced-analytics': typeof DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute
   '/dashboard/workspace/$workspaceId/templates': typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
   '/dashboard/workspace-settings/$workspaceId/': typeof DashboardWorkspaceSettingsWorkspaceIdIndexRoute
   '/dashboard/teams/$workspaceId/_layout/members': typeof DashboardTeamsWorkspaceIdLayoutMembersRoute
@@ -820,15 +618,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invitation'
-    | '/chat'
     | '/dashboard'
-    | '/mobile-performance'
-    | '/chat-interface-test'
-    | '/chat-test'
-    | '/project-manager-test'
-    | '/rbac-debug'
-    | '/rbac-test'
-    | '/sidebar-demo'
     | '/auth/forgot-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
@@ -837,12 +627,7 @@ export interface FileRouteTypes {
     | '/dashboard/all-tasks'
     | '/dashboard/analytics'
     | '/dashboard/audit'
-    | '/dashboard/automation'
-    | '/dashboard/billing'
     | '/dashboard/calendar'
-    | '/dashboard/chat'
-    | '/dashboard/communication'
-    | '/dashboard/debug-workspace'
     | '/dashboard/projects'
     | '/dashboard/rbac-explanation'
     | '/dashboard/security'
@@ -852,19 +637,14 @@ export interface FileRouteTypes {
     | '/dashboard/admin/roles'
     | '/dashboard/analytics/builder'
     | '/dashboard/analytics/scheduled'
-    | '/dashboard/help/$slug'
-    | '/dashboard/help/admin'
     | '/dashboard/profile/$userId'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
     | '/dashboard/settings/audit-logs'
-    | '/dashboard/settings/automation'
-    | '/dashboard/settings/billing'
     | '/dashboard/settings/calendar'
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/integrations'
     | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
@@ -873,16 +653,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings/shortcuts'
     | '/dashboard/settings/team-management'
     | '/dashboard/settings/templates'
-    | '/dashboard/settings/themes'
     | '/dashboard/settings/workspace'
     | '/dashboard/analytics/'
-    | '/dashboard/communication/'
-    | '/dashboard/help/'
     | '/dashboard/notifications/'
     | '/dashboard/settings/'
     | '/dashboard/settings/roles-unified/$roleId'
     | '/dashboard/teams/$workspaceId'
-    | '/dashboard/workspace/$workspaceId/enhanced-analytics'
     | '/dashboard/workspace/$workspaceId/templates'
     | '/dashboard/workspace-settings/$workspaceId/'
     | '/dashboard/teams/$workspaceId/members'
@@ -904,14 +680,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invitation'
-    | '/chat'
-    | '/mobile-performance'
-    | '/chat-interface-test'
-    | '/chat-test'
-    | '/project-manager-test'
-    | '/rbac-debug'
-    | '/rbac-test'
-    | '/sidebar-demo'
     | '/auth/forgot-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
@@ -919,11 +687,7 @@ export interface FileRouteTypes {
     | '/dashboard/activity'
     | '/dashboard/all-tasks'
     | '/dashboard/audit'
-    | '/dashboard/automation'
-    | '/dashboard/billing'
     | '/dashboard/calendar'
-    | '/dashboard/chat'
-    | '/dashboard/debug-workspace'
     | '/dashboard/projects'
     | '/dashboard/rbac-explanation'
     | '/dashboard/security'
@@ -932,20 +696,15 @@ export interface FileRouteTypes {
     | '/dashboard/admin/roles'
     | '/dashboard/analytics/builder'
     | '/dashboard/analytics/scheduled'
-    | '/dashboard/help/$slug'
-    | '/dashboard/help/admin'
     | '/dashboard/profile/$userId'
     | '/dashboard/settings'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
     | '/dashboard/settings/audit-logs'
-    | '/dashboard/settings/automation'
-    | '/dashboard/settings/billing'
     | '/dashboard/settings/calendar'
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/integrations'
     | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
@@ -954,15 +713,11 @@ export interface FileRouteTypes {
     | '/dashboard/settings/shortcuts'
     | '/dashboard/settings/team-management'
     | '/dashboard/settings/templates'
-    | '/dashboard/settings/themes'
     | '/dashboard/settings/workspace'
     | '/dashboard/analytics'
-    | '/dashboard/communication'
-    | '/dashboard/help'
     | '/dashboard/notifications'
     | '/dashboard/settings/roles-unified/$roleId'
     | '/dashboard/teams/$workspaceId'
-    | '/dashboard/workspace/$workspaceId/enhanced-analytics'
     | '/dashboard/workspace/$workspaceId/templates'
     | '/dashboard/workspace-settings/$workspaceId'
     | '/dashboard/teams/$workspaceId/members'
@@ -983,15 +738,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/accept-invitation'
-    | '/chat'
     | '/dashboard'
-    | '/mobile-performance'
-    | '/__dev__/chat-interface-test'
-    | '/__dev__/chat-test'
-    | '/__dev__/project-manager-test'
-    | '/__dev__/rbac-debug'
-    | '/__dev__/rbac-test'
-    | '/__dev__/sidebar-demo'
     | '/auth/forgot-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
@@ -1000,12 +747,7 @@ export interface FileRouteTypes {
     | '/dashboard/all-tasks'
     | '/dashboard/analytics'
     | '/dashboard/audit'
-    | '/dashboard/automation'
-    | '/dashboard/billing'
     | '/dashboard/calendar'
-    | '/dashboard/chat'
-    | '/dashboard/communication'
-    | '/dashboard/debug-workspace'
     | '/dashboard/projects'
     | '/dashboard/rbac-explanation'
     | '/dashboard/security'
@@ -1015,20 +757,15 @@ export interface FileRouteTypes {
     | '/dashboard/admin/roles'
     | '/dashboard/analytics/builder'
     | '/dashboard/analytics/scheduled'
-    | '/dashboard/help/$slug'
-    | '/dashboard/help/admin'
     | '/dashboard/profile/$userId'
     | '/dashboard/settings/_layout'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
     | '/dashboard/settings/audit-logs'
-    | '/dashboard/settings/automation'
-    | '/dashboard/settings/billing'
     | '/dashboard/settings/calendar'
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/integrations'
     | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
@@ -1037,16 +774,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings/shortcuts'
     | '/dashboard/settings/team-management'
     | '/dashboard/settings/templates'
-    | '/dashboard/settings/themes'
     | '/dashboard/settings/workspace'
     | '/dashboard/analytics/'
-    | '/dashboard/communication/'
-    | '/dashboard/help/'
     | '/dashboard/notifications/'
     | '/dashboard/settings/'
     | '/dashboard/settings/roles-unified/$roleId'
     | '/dashboard/teams/$workspaceId/_layout'
-    | '/dashboard/workspace/$workspaceId/enhanced-analytics'
     | '/dashboard/workspace/$workspaceId/templates'
     | '/dashboard/workspace-settings/$workspaceId/'
     | '/dashboard/teams/$workspaceId/_layout/members'
@@ -1070,15 +803,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcceptInvitationRoute: typeof AcceptInvitationRoute
-  ChatRoute: typeof ChatRoute
   DashboardRoute: typeof DashboardRouteWithChildren
-  MobilePerformanceRoute: typeof MobilePerformanceRoute
-  _dev_ChatInterfaceTestRoute: typeof _dev_ChatInterfaceTestRoute
-  _dev_ChatTestRoute: typeof _dev_ChatTestRoute
-  _dev_ProjectManagerTestRoute: typeof _dev_ProjectManagerTestRoute
-  _dev_RbacDebugRoute: typeof _dev_RbacDebugRoute
-  _dev_RbacTestRoute: typeof _dev_RbacTestRoute
-  _dev_SidebarDemoRoute: typeof _dev_SidebarDemoRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
@@ -1087,25 +812,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/mobile-performance': {
-      id: '/mobile-performance'
-      path: '/mobile-performance'
-      fullPath: '/mobile-performance'
-      preLoaderRoute: typeof MobilePerformanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-invitation': {
@@ -1164,46 +875,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProjectsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/debug-workspace': {
-      id: '/dashboard/debug-workspace'
-      path: '/debug-workspace'
-      fullPath: '/dashboard/debug-workspace'
-      preLoaderRoute: typeof DashboardDebugWorkspaceRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/communication': {
-      id: '/dashboard/communication'
-      path: '/communication'
-      fullPath: '/dashboard/communication'
-      preLoaderRoute: typeof DashboardCommunicationRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/chat': {
-      id: '/dashboard/chat'
-      path: '/chat'
-      fullPath: '/dashboard/chat'
-      preLoaderRoute: typeof DashboardChatRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/calendar': {
       id: '/dashboard/calendar'
       path: '/calendar'
       fullPath: '/dashboard/calendar'
       preLoaderRoute: typeof DashboardCalendarRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/billing': {
-      id: '/dashboard/billing'
-      path: '/billing'
-      fullPath: '/dashboard/billing'
-      preLoaderRoute: typeof DashboardBillingRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/automation': {
-      id: '/dashboard/automation'
-      path: '/automation'
-      fullPath: '/dashboard/automation'
-      preLoaderRoute: typeof DashboardAutomationRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/audit': {
@@ -1262,48 +938,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/__dev__/sidebar-demo': {
-      id: '/__dev__/sidebar-demo'
-      path: '/sidebar-demo'
-      fullPath: '/sidebar-demo'
-      preLoaderRoute: typeof _dev_SidebarDemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/__dev__/rbac-test': {
-      id: '/__dev__/rbac-test'
-      path: '/rbac-test'
-      fullPath: '/rbac-test'
-      preLoaderRoute: typeof _dev_RbacTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/__dev__/rbac-debug': {
-      id: '/__dev__/rbac-debug'
-      path: '/rbac-debug'
-      fullPath: '/rbac-debug'
-      preLoaderRoute: typeof _dev_RbacDebugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/__dev__/project-manager-test': {
-      id: '/__dev__/project-manager-test'
-      path: '/project-manager-test'
-      fullPath: '/project-manager-test'
-      preLoaderRoute: typeof _dev_ProjectManagerTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/__dev__/chat-test': {
-      id: '/__dev__/chat-test'
-      path: '/chat-test'
-      fullPath: '/chat-test'
-      preLoaderRoute: typeof _dev_ChatTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/__dev__/chat-interface-test': {
-      id: '/__dev__/chat-interface-test'
-      path: '/chat-interface-test'
-      fullPath: '/chat-interface-test'
-      preLoaderRoute: typeof _dev_ChatInterfaceTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/settings/': {
       id: '/dashboard/settings/'
       path: '/'
@@ -1318,20 +952,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardNotificationsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/help/': {
-      id: '/dashboard/help/'
-      path: '/help'
-      fullPath: '/dashboard/help/'
-      preLoaderRoute: typeof DashboardHelpIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/communication/': {
-      id: '/dashboard/communication/'
-      path: '/'
-      fullPath: '/dashboard/communication/'
-      preLoaderRoute: typeof DashboardCommunicationIndexRouteImport
-      parentRoute: typeof DashboardCommunicationRoute
-    }
     '/dashboard/analytics/': {
       id: '/dashboard/analytics/'
       path: '/'
@@ -1344,13 +964,6 @@ declare module '@tanstack/react-router' {
       path: '/workspace'
       fullPath: '/dashboard/settings/workspace'
       preLoaderRoute: typeof DashboardSettingsWorkspaceRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/themes': {
-      id: '/dashboard/settings/themes'
-      path: '/themes'
-      fullPath: '/dashboard/settings/themes'
-      preLoaderRoute: typeof DashboardSettingsThemesRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
     '/dashboard/settings/templates': {
@@ -1409,13 +1022,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsLocalizationRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
-    '/dashboard/settings/integrations': {
-      id: '/dashboard/settings/integrations'
-      path: '/integrations'
-      fullPath: '/dashboard/settings/integrations'
-      preLoaderRoute: typeof DashboardSettingsIntegrationsRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
     '/dashboard/settings/filters': {
       id: '/dashboard/settings/filters'
       path: '/filters'
@@ -1442,20 +1048,6 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/dashboard/settings/calendar'
       preLoaderRoute: typeof DashboardSettingsCalendarRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/billing': {
-      id: '/dashboard/settings/billing'
-      path: '/billing'
-      fullPath: '/dashboard/settings/billing'
-      preLoaderRoute: typeof DashboardSettingsBillingRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/automation': {
-      id: '/dashboard/settings/automation'
-      path: '/automation'
-      fullPath: '/dashboard/settings/automation'
-      preLoaderRoute: typeof DashboardSettingsAutomationRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
     '/dashboard/settings/audit-logs': {
@@ -1493,20 +1085,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileUserIdRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/help/admin': {
-      id: '/dashboard/help/admin'
-      path: '/help/admin'
-      fullPath: '/dashboard/help/admin'
-      preLoaderRoute: typeof DashboardHelpAdminRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/help/$slug': {
-      id: '/dashboard/help/$slug'
-      path: '/help/$slug'
-      fullPath: '/dashboard/help/$slug'
-      preLoaderRoute: typeof DashboardHelpSlugRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/analytics/scheduled': {
       id: '/dashboard/analytics/scheduled'
       path: '/scheduled'
@@ -1540,13 +1118,6 @@ declare module '@tanstack/react-router' {
       path: '/workspace/$workspaceId/templates'
       fullPath: '/dashboard/workspace/$workspaceId/templates'
       preLoaderRoute: typeof DashboardWorkspaceWorkspaceIdTemplatesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/workspace/$workspaceId/enhanced-analytics': {
-      id: '/dashboard/workspace/$workspaceId/enhanced-analytics'
-      path: '/workspace/$workspaceId/enhanced-analytics'
-      fullPath: '/dashboard/workspace/$workspaceId/enhanced-analytics'
-      preLoaderRoute: typeof DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/teams/$workspaceId/_layout': {
@@ -1693,20 +1264,6 @@ const DashboardAnalyticsRouteChildren: DashboardAnalyticsRouteChildren = {
 const DashboardAnalyticsRouteWithChildren =
   DashboardAnalyticsRoute._addFileChildren(DashboardAnalyticsRouteChildren)
 
-interface DashboardCommunicationRouteChildren {
-  DashboardCommunicationIndexRoute: typeof DashboardCommunicationIndexRoute
-}
-
-const DashboardCommunicationRouteChildren: DashboardCommunicationRouteChildren =
-  {
-    DashboardCommunicationIndexRoute: DashboardCommunicationIndexRoute,
-  }
-
-const DashboardCommunicationRouteWithChildren =
-  DashboardCommunicationRoute._addFileChildren(
-    DashboardCommunicationRouteChildren,
-  )
-
 interface DashboardSettingsRolesUnifiedRouteChildren {
   DashboardSettingsRolesUnifiedRoleIdRoute: typeof DashboardSettingsRolesUnifiedRoleIdRoute
 }
@@ -1727,13 +1284,10 @@ interface DashboardSettingsRouteChildren {
   DashboardSettingsApiRoute: typeof DashboardSettingsApiRoute
   DashboardSettingsAppearanceRoute: typeof DashboardSettingsAppearanceRoute
   DashboardSettingsAuditLogsRoute: typeof DashboardSettingsAuditLogsRoute
-  DashboardSettingsAutomationRoute: typeof DashboardSettingsAutomationRoute
-  DashboardSettingsBillingRoute: typeof DashboardSettingsBillingRoute
   DashboardSettingsCalendarRoute: typeof DashboardSettingsCalendarRoute
   DashboardSettingsDataManagementRoute: typeof DashboardSettingsDataManagementRoute
   DashboardSettingsEmailRoute: typeof DashboardSettingsEmailRoute
   DashboardSettingsFiltersRoute: typeof DashboardSettingsFiltersRoute
-  DashboardSettingsIntegrationsRoute: typeof DashboardSettingsIntegrationsRoute
   DashboardSettingsLocalizationRoute: typeof DashboardSettingsLocalizationRoute
   DashboardSettingsNotificationsRoute: typeof DashboardSettingsNotificationsRoute
   DashboardSettingsProfileRoute: typeof DashboardSettingsProfileRoute
@@ -1742,7 +1296,6 @@ interface DashboardSettingsRouteChildren {
   DashboardSettingsShortcutsRoute: typeof DashboardSettingsShortcutsRoute
   DashboardSettingsTeamManagementRoute: typeof DashboardSettingsTeamManagementRoute
   DashboardSettingsTemplatesRoute: typeof DashboardSettingsTemplatesRoute
-  DashboardSettingsThemesRoute: typeof DashboardSettingsThemesRoute
   DashboardSettingsWorkspaceRoute: typeof DashboardSettingsWorkspaceRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
@@ -1752,13 +1305,10 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsApiRoute: DashboardSettingsApiRoute,
   DashboardSettingsAppearanceRoute: DashboardSettingsAppearanceRoute,
   DashboardSettingsAuditLogsRoute: DashboardSettingsAuditLogsRoute,
-  DashboardSettingsAutomationRoute: DashboardSettingsAutomationRoute,
-  DashboardSettingsBillingRoute: DashboardSettingsBillingRoute,
   DashboardSettingsCalendarRoute: DashboardSettingsCalendarRoute,
   DashboardSettingsDataManagementRoute: DashboardSettingsDataManagementRoute,
   DashboardSettingsEmailRoute: DashboardSettingsEmailRoute,
   DashboardSettingsFiltersRoute: DashboardSettingsFiltersRoute,
-  DashboardSettingsIntegrationsRoute: DashboardSettingsIntegrationsRoute,
   DashboardSettingsLocalizationRoute: DashboardSettingsLocalizationRoute,
   DashboardSettingsNotificationsRoute: DashboardSettingsNotificationsRoute,
   DashboardSettingsProfileRoute: DashboardSettingsProfileRoute,
@@ -1768,7 +1318,6 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsShortcutsRoute: DashboardSettingsShortcutsRoute,
   DashboardSettingsTeamManagementRoute: DashboardSettingsTeamManagementRoute,
   DashboardSettingsTemplatesRoute: DashboardSettingsTemplatesRoute,
-  DashboardSettingsThemesRoute: DashboardSettingsThemesRoute,
   DashboardSettingsWorkspaceRoute: DashboardSettingsWorkspaceRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
@@ -1875,12 +1424,7 @@ interface DashboardRouteChildren {
   DashboardAllTasksRoute: typeof DashboardAllTasksRoute
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRouteWithChildren
   DashboardAuditRoute: typeof DashboardAuditRoute
-  DashboardAutomationRoute: typeof DashboardAutomationRoute
-  DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
-  DashboardChatRoute: typeof DashboardChatRoute
-  DashboardCommunicationRoute: typeof DashboardCommunicationRouteWithChildren
-  DashboardDebugWorkspaceRoute: typeof DashboardDebugWorkspaceRoute
   DashboardProjectsRoute: typeof DashboardProjectsRoute
   DashboardRbacExplanationRoute: typeof DashboardRbacExplanationRoute
   DashboardSecurityRoute: typeof DashboardSecurityRoute
@@ -1888,12 +1432,8 @@ interface DashboardRouteChildren {
   DashboardTeamsRoute: typeof DashboardTeamsRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAdminRolesRoute: typeof DashboardAdminRolesRoute
-  DashboardHelpSlugRoute: typeof DashboardHelpSlugRoute
-  DashboardHelpAdminRoute: typeof DashboardHelpAdminRoute
   DashboardProfileUserIdRoute: typeof DashboardProfileUserIdRoute
-  DashboardHelpIndexRoute: typeof DashboardHelpIndexRoute
   DashboardNotificationsIndexRoute: typeof DashboardNotificationsIndexRoute
-  DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute: typeof DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute
   DashboardWorkspaceWorkspaceIdTemplatesRoute: typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
   DashboardWorkspaceSettingsWorkspaceIdIndexRoute: typeof DashboardWorkspaceSettingsWorkspaceIdIndexRoute
   DashboardWorkspaceWorkspaceIdProjectProjectIdRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdRouteWithChildren
@@ -1904,12 +1444,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAllTasksRoute: DashboardAllTasksRoute,
   DashboardAnalyticsRoute: DashboardAnalyticsRouteWithChildren,
   DashboardAuditRoute: DashboardAuditRoute,
-  DashboardAutomationRoute: DashboardAutomationRoute,
-  DashboardBillingRoute: DashboardBillingRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
-  DashboardChatRoute: DashboardChatRoute,
-  DashboardCommunicationRoute: DashboardCommunicationRouteWithChildren,
-  DashboardDebugWorkspaceRoute: DashboardDebugWorkspaceRoute,
   DashboardProjectsRoute: DashboardProjectsRoute,
   DashboardRbacExplanationRoute: DashboardRbacExplanationRoute,
   DashboardSecurityRoute: DashboardSecurityRoute,
@@ -1917,13 +1452,8 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardTeamsRoute: DashboardTeamsRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAdminRolesRoute: DashboardAdminRolesRoute,
-  DashboardHelpSlugRoute: DashboardHelpSlugRoute,
-  DashboardHelpAdminRoute: DashboardHelpAdminRoute,
   DashboardProfileUserIdRoute: DashboardProfileUserIdRoute,
-  DashboardHelpIndexRoute: DashboardHelpIndexRoute,
   DashboardNotificationsIndexRoute: DashboardNotificationsIndexRoute,
-  DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute:
-    DashboardWorkspaceWorkspaceIdEnhancedAnalyticsRoute,
   DashboardWorkspaceWorkspaceIdTemplatesRoute:
     DashboardWorkspaceWorkspaceIdTemplatesRoute,
   DashboardWorkspaceSettingsWorkspaceIdIndexRoute:
@@ -1939,15 +1469,7 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptInvitationRoute: AcceptInvitationRoute,
-  ChatRoute: ChatRoute,
   DashboardRoute: DashboardRouteWithChildren,
-  MobilePerformanceRoute: MobilePerformanceRoute,
-  _dev_ChatInterfaceTestRoute: _dev_ChatInterfaceTestRoute,
-  _dev_ChatTestRoute: _dev_ChatTestRoute,
-  _dev_ProjectManagerTestRoute: _dev_ProjectManagerTestRoute,
-  _dev_RbacDebugRoute: _dev_RbacDebugRoute,
-  _dev_RbacTestRoute: _dev_RbacTestRoute,
-  _dev_SidebarDemoRoute: _dev_SidebarDemoRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
