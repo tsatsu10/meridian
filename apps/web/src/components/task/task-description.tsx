@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { Editor } from "../common/editor";
 import { Form, FormField } from "../ui/form";
 import { RealTimeTaskEditor } from "./real-time-task-editor";
-import { useTextSelectionTracking } from "@/components/presence/text-selection-overlay";
 import { useRef } from "react";
 
 interface TaskDescriptionProps {
@@ -19,10 +18,6 @@ function TaskDescription({ setIsSaving }: TaskDescriptionProps) {
   const { data: task, isLoading, error } = useGetTask(taskId);
   const { mutateAsync: updateTask } = useUpdateTask();
   const descriptionRef = useRef<HTMLDivElement>(null);
-
-  // Always call hooks unconditionally - React rule of hooks
-  // Track text selections in the description for collaborative editing
-  useTextSelectionTracking(descriptionRef, `task-description-${taskId}`);
 
   const form = useForm<{
     description: string;

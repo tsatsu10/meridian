@@ -2,7 +2,6 @@ import path from "node:path";
 import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vite.dev/config/
@@ -15,134 +14,6 @@ export default defineConfig({
   plugins: [
     TanStackRouterVite(),
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['meridian-logomark.png'],
-      manifest: {
-        name: 'Meridian - Project Management Platform',
-        short_name: 'Meridian',
-        description: 'Advanced project management and team collaboration platform with real-time analytics and workflow automation',
-        theme_color: '#1a1a1a',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'portrait-primary',
-        scope: '/',
-        start_url: '/',
-        categories: ['productivity', 'business', 'collaboration'],
-        icons: [
-          {
-            src: 'meridian-logomark.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: 'meridian-logomark.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: 'meridian-logomark.png',
-            sizes: '96x96',
-            type: 'image/png',
-            purpose: 'any'
-          }
-        ],
-        shortcuts: [
-          {
-            name: 'Dashboard',
-            short_name: 'Dashboard',
-            description: 'View your project dashboard',
-            url: '/dashboard',
-            icons: [{ src: 'meridian-logomark.png', sizes: '96x96' }]
-          },
-          {
-            name: 'Tasks',
-            short_name: 'Tasks',
-            description: 'Manage your tasks',
-            url: '/dashboard/all-tasks',
-            icons: [{ src: 'meridian-logomark.png', sizes: '96x96' }]
-          },
-          {
-            name: 'Analytics',
-            short_name: 'Analytics',
-            description: 'View project analytics',
-            url: '/dashboard/analytics',
-            icons: [{ src: 'meridian-logomark.png', sizes: '96x96' }]
-          }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB limit (increased from 2MB default)
-        skipWaiting: true,
-        clientsClaim: true,
-        // Do not SPA-fallback document requests under /api (offline shell should not swallow API paths)
-        navigateFallbackDenylist: [/^\/api(?:\/|$)/],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) =>
-              url.pathname.startsWith('/api/'),
-            handler: 'NetworkOnly',
-            options: {
-              cacheName: 'api-bypass',
-            },
-          },
-          {
-            urlPattern: /^https:\/\/api\./,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 3,
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
-              }
-            }
-          },
-          {
-            urlPattern: ({ url, request }) => {
-              const rawUrl =
-                typeof request?.url === 'string'
-                  ? request.url
-                  : typeof request?.url === 'object' && request.url !== null
-                  ? request.url.toString?.() ?? ''
-                  : url?.href ?? '';
-
-              const targetUrl = typeof rawUrl === 'string' ? rawUrl : rawUrl?.toString?.() ?? '';
-
-              // Don't cache Vite dev server URLs in development (/@fs/ paths)
-              if (targetUrl?.includes?.('/@fs/')) {
-                return false;
-              }
-
-              return /\.(?:js|css)$/.test(targetUrl);
-            },
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'static-resources',
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      },
-      devOptions: {
-        enabled: true
-      }
-    }),
     // Sentry source maps upload (only in production builds with SENTRY_AUTH_TOKEN)
     process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
       org: process.env.SENTRY_ORG,
@@ -231,10 +102,6 @@ export default defineConfig({
             if (id.includes('d3-')) {
               return 'vendor-d3';
             }
-            if (id.includes('reactflow') || id.includes('@reactflow')) {
-              return 'vendor-reactflow';
-            }
-            
             // Rich text editor (rarely used)
             if (id.includes('@tiptap') || id.includes('prosemirror')) {
               return 'vendor-editor';
@@ -340,7 +207,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', '@tanstack/react-router', 'framer-motion'],
-    exclude: ['@vite-pwa/assets-generator']
   }
 });
 

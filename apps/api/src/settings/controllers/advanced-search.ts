@@ -9,14 +9,13 @@ import {
   projectTable,
   taskTable,
   userTable,
-  messageTable,
   workspaceTable,
 } from "../../database/schema";
 import { createId } from "@paralleldrive/cuid2";
 
 export interface SearchFilters {
   query?: string;
-  types?: ('project' | 'task' | 'user' | 'message')[];
+  types?: ('project' | 'task' | 'user')[];
   status?: string[];
   priority?: string[];
   assignedTo?: string[];
@@ -28,7 +27,7 @@ export interface SearchFilters {
 
 export interface SearchResult {
   id: string;
-  type: 'project' | 'task' | 'user' | 'message';
+  type: 'project' | 'task' | 'user';
   title: string;
   description?: string;
   metadata: Record<string, any>;
@@ -58,7 +57,7 @@ export async function performSearch(
   const db = getDatabase();
   const results: SearchResult[] = [];
   
-  const searchTypes = filters.types || ['project', 'task', 'user', 'message'];
+  const searchTypes = filters.types || ['project', 'task', 'user'];
   const query = filters.query?.toLowerCase() || '';
   
   // Search Projects
@@ -182,38 +181,6 @@ export async function performSearch(
       },
       createdAt: u.createdAt,
       relevance: calculateRelevance(query, u.name, u.email),
-    })));
-  }
-  
-  // Search Messages
-  if (searchTypes.includes('message')) {
-    const messageWhere: any[] = [eq(messageTable.workspaceId, workspaceId)];
-    
-    if (query) {
-      messageWhere.push(like(messageTable.content, `%${query}%`));
-    }
-    
-    if (filters.createdBy && filters.createdBy.length > 0) {
-      messageWhere.push(inArray(messageTable.senderEmail, filters.createdBy));
-    }
-    
-    const messages = await db
-      .select()
-      .from(messageTable)
-      .where(and(...messageWhere))
-      .limit(limit);
-    
-    results.push(...messages.map(m => ({
-      id: m.id,
-      type: 'message' as const,
-      title: m.content.substring(0, 100),
-      description: m.content,
-      metadata: {
-        sender: m.senderEmail,
-        channelId: m.channelId,
-      },
-      createdAt: m.createdAt,
-      relevance: calculateRelevance(query, m.content),
     })));
   }
   

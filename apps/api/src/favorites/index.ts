@@ -7,7 +7,6 @@ import { getDatabase } from "../database/connection";
 import {
   favoritesTable,
   users,
-  channelTable,
 } from "../database/schema";
 import { auth } from "../middlewares/auth";
 import logger from "../utils/logger";
@@ -22,9 +21,7 @@ const app = new Hono<{
 app.use("*", auth);
 
 const createFavoriteSchema = z.object({
-  type: z.enum(["user", "channel"]).default("user"),
-  favoriteUserId: z.string().optional(),
-  favoriteChannelId: z.string().optional(),
+  favoriteUserId: z.string(),
   metadata: z.record(z.any()).optional(),
 });
 
@@ -43,7 +40,6 @@ app.get("/", async (c) => {
         userId: favoritesTable.userId,
         type: favoritesTable.type,
         favoriteUserId: favoritesTable.favoriteUserId,
-        favoriteChannelId: favoritesTable.favoriteChannelId,
         metadata: favoritesTable.metadata,
         createdAt: favoritesTable.createdAt,
         updatedAt: favoritesTable.updatedAt,
@@ -68,46 +64,17 @@ app.post(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { type, favoriteUserId, favoriteChannelId, metadata } =
-      c.req.valid("json");
-
-    if (type === "user" && !favoriteUserId) {
-      return c.json(
-        { error: "favoriteUserId is required for user favorites" },
-        400,
-      );
-    }
-
-    if (type === "channel" && !favoriteChannelId) {
-      return c.json(
-        { error: "favoriteChannelId is required for channel favorites" },
-        400,
-      );
-    }
+    const { favoriteUserId, metadata } = c.req.valid("json");
 
     try {
       const db = getDatabase();
 
-      if (type === "user") {
-        const targetUser = await db.query.users.findFirst({
-          where: eq(users.id, favoriteUserId!),
-        });
+      const targetUser = await db.query.users.findFirst({
+        where: eq(users.id, favoriteUserId),
+      });
 
-        if (!targetUser) {
-          return c.json({ error: "Target user not found" }, 404);
-        }
-      }
-
-      if (type === "channel") {
-        const [targetChannel] = await db
-          .select({ id: channelTable.id })
-          .from(channelTable)
-          .where(eq(channelTable.id, favoriteChannelId!))
-          .limit(1);
-
-        if (!targetChannel) {
-          return c.json({ error: "Channel not found" }, 404);
-        }
+      if (!targetUser) {
+        return c.json({ error: "Target user not found" }, 404);
       }
 
       // Prevent duplicates
@@ -117,10 +84,8 @@ app.post(
         .where(
           and(
             eq(favoritesTable.userId, userId),
-            eq(favoritesTable.type, type),
-            type === "user"
-              ? eq(favoritesTable.favoriteUserId, favoriteUserId!)
-              : eq(favoritesTable.favoriteChannelId, favoriteChannelId!),
+            eq(favoritesTable.type, "user"),
+            eq(favoritesTable.favoriteUserId, favoriteUserId),
           ),
         )
         .limit(1);
@@ -134,9 +99,8 @@ app.post(
         .values({
           id: createId(),
           userId,
-          type,
-          favoriteUserId: favoriteUserId ?? null,
-          favoriteChannelId: favoriteChannelId ?? null,
+          type: "user",
+          favoriteUserId,
           metadata: metadata ?? {},
         })
         .returning();
@@ -221,38 +185,4 @@ app.delete("/user/:targetUserId", async (c) => {
   }
 });
 
-app.delete("/channel/:channelId", async (c) => {
-  const userId = c.get("userId");
-  if (!userId) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  const channelId = c.req.param("channelId");
-
-  try {
-    const db = getDatabase();
-
-    const deleted = await db
-      .delete(favoritesTable)
-      .where(
-        and(
-          eq(favoritesTable.userId, userId),
-          eq(favoritesTable.type, "channel"),
-          eq(favoritesTable.favoriteChannelId, channelId),
-        ),
-      )
-      .returning();
-
-    if (deleted.length === 0) {
-      return c.json({ error: "Favorite not found" }, 404);
-    }
-
-    return c.json({ success: true });
-  } catch (error) {
-    logger.error("Error removing channel favorite:", error);
-    return c.json({ error: "Failed to remove favorite" }, 500);
-  }
-});
-
 export default app;
-

@@ -11,7 +11,18 @@
 
 import { getSessionStore, SessionData } from './redis-session-store'
 import logger from '../utils/logger'
-import { geolocationService, type LocationData } from './geolocation-service'
+// Minimal location shape kept for session metadata compatibility
+// (live IP geolocation was removed with the ipstack integration).
+export interface LocationData {
+  country?: string
+  countryCode?: string
+  city?: string
+  timezone?: string
+  isp?: string
+  isProxy?: boolean
+  isTor?: boolean
+  threatLevel?: string
+}
 
 export interface UserSessionInfo {
   sessionId: string
@@ -77,29 +88,8 @@ class SessionService {
     metadata?: Record<string, any>
   }): Promise<string> {
     try {
-      // Get geolocation data if IP address is available
-      let locationData: LocationData | null = null
-      if (userData.ipAddress) {
-        locationData = await geolocationService.getLocation(userData.ipAddress)
-        
-        // Check for suspicious IP
-        if (locationData && (locationData.isProxy || locationData.isTor || locationData.threatLevel === 'high')) {
-          this.addSecurityAlert({
-            type: 'suspicious_login',
-            userId: userData.userId,
-            sessionId: 'new',
-            timestamp: Date.now(),
-            details: {
-              ipAddress: userData.ipAddress,
-              isProxy: locationData.isProxy,
-              isTor: locationData.isTor,
-              threatLevel: locationData.threatLevel,
-              location: `${locationData.city}, ${locationData.country}`,
-            },
-            severity: 'high',
-          })
-        }
-      }
+      // IP geolocation (ipstack) was removed; sessions are created without location data.
+      const locationData: LocationData | null = null
 
       // Check for existing sessions and security concerns
       await this.checkSessionSecurity(userData.userId, userData.ipAddress, userData.userAgent, locationData)
@@ -117,13 +107,6 @@ class SessionService {
           ...userData.metadata,
           signInTime: Date.now(),
           deviceInfo: this.parseUserAgent(userData.userAgent),
-          location: locationData ? {
-            country: locationData.country,
-            countryCode: locationData.countryCode,
-            city: locationData.city,
-            timezone: locationData.timezone,
-            isp: locationData.isp,
-          } : undefined,
         },
       })
 
@@ -132,7 +115,6 @@ class SessionService {
         userId: userData.userId,
         role: userData.role,
         ipAddress: userData.ipAddress,
-        location: locationData ? `${locationData.city}, ${locationData.country}` : 'Unknown',
       })
 
       return sessionId
@@ -250,55 +232,10 @@ class SessionService {
 
       const securityWarnings: string[] = []
 
-      // Check IP address change
+      // Check IP address change (geolocation enrichment was removed with ipstack)
       if (ipAddress && session.ipAddress && session.ipAddress !== ipAddress) {
         securityWarnings.push('IP address changed')
-        
-        // Get geolocation for new IP and check for anomalies
-        const newLocation = await geolocationService.getLocation(ipAddress)
-        const oldLocation = session.metadata?.location
-        
-        if (newLocation && oldLocation) {
-          // Check if country changed
-          if (newLocation.countryCode !== oldLocation.countryCode) {
-            securityWarnings.push(`Location changed: ${oldLocation.country} → ${newLocation.country}`)
-            
-            this.addSecurityAlert({
-              type: 'suspicious_login',
-              userId: session.userId,
-              sessionId,
-              timestamp: Date.now(),
-              details: {
-                originalIP: session.ipAddress,
-                newIP: ipAddress,
-                originalLocation: `${oldLocation.city}, ${oldLocation.country}`,
-                newLocation: `${newLocation.city}, ${newLocation.country}`,
-                countryChanged: true,
-              },
-              severity: 'high',
-            })
-          }
-          
-          // Check for suspicious IP characteristics
-          if (newLocation.isProxy || newLocation.isTor) {
-            securityWarnings.push('Access via proxy/VPN/Tor detected')
-            
-            this.addSecurityAlert({
-              type: 'suspicious_login',
-              userId: session.userId,
-              sessionId,
-              timestamp: Date.now(),
-              details: {
-                ipAddress,
-                isProxy: newLocation.isProxy,
-                isTor: newLocation.isTor,
-                location: `${newLocation.city}, ${newLocation.country}`,
-              },
-              severity: 'high',
-            })
-          }
-        }
-        
+
         // Log IP change
         this.addSecurityAlert({
           type: 'suspicious_login',
@@ -308,7 +245,6 @@ class SessionService {
           details: {
             originalIP: session.ipAddress,
             newIP: ipAddress,
-            location: newLocation ? `${newLocation.city}, ${newLocation.country}` : 'Unknown',
           },
           severity: 'medium',
         })
@@ -548,7 +484,7 @@ class SessionService {
           const knownCountries = new Set(previousLocations.map(loc => loc.countryCode));
           
           // Alert on new country
-          if (!knownCountries.has(locationData.countryCode)) {
+          if (locationData.countryCode && !knownCountries.has(locationData.countryCode)) {
             this.addSecurityAlert({
               type: 'suspicious_login',
               userId,

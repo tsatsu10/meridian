@@ -22,6 +22,9 @@ export async function logProgress(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
+    }
     
     const body: LogProgressRequest = await c.req.json();
     

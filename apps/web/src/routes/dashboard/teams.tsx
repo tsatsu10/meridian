@@ -85,9 +85,7 @@ const TeamSettingsModal = lazy(() => import("@/components/team/team-settings-mod
 const TeamCalendarModal = lazy(() => import("@/components/team/team-calendar-modal"));
 const TeamDashboardModal = lazy(() => import("@/components/team/team-dashboard-modal"));
 const RoleManagementModal = lazy(() => import("@/components/team/role-management-modal"));
-const TeamChatContainer = lazy(() => import("@/components/team-chat"));
 const TeamMemberProfileModal = lazy(() => import("@/components/profile/team-member/team-member-profile-modal").then(m => ({ default: m.TeamMemberProfileModal })));
-import { useUnifiedWebSocket } from "@/hooks/useUnifiedWebSocket";
 import { useGetOnlineWorkspaceUsers } from "@/hooks/queries/workspace-users/use-online-workspace-users";
 import { NoTeamsEmpty, NoFilteredTeamsEmpty, NoMembersEmpty, NoFilteredMembersEmpty, NoUsersEmpty, NoFilteredUsersEmpty } from "@/components/team/empty-states";
 // @epic-1.1-rbac: Magic UI enhancements for modern team management
@@ -246,7 +244,6 @@ function TeamsPage() {
   const [isTeamCalendarOpen, setIsTeamCalendarOpen] = useState(false);
   const [isTeamDashboardOpen, setIsTeamDashboardOpen] = useState(false);
   const [isRoleManagementOpen, setIsRoleManagementOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<EnhancedTeamMember | null>(null);
@@ -257,14 +254,10 @@ function TeamsPage() {
   const [selectedTeamForSettings, setSelectedTeamForSettings] = useState<EnhancedTeam | null>(null);
   const [selectedTeamForCalendar, setSelectedTeamForCalendar] = useState<EnhancedTeam | null>(null);
   const [selectedTeamForDashboard, setSelectedTeamForDashboard] = useState<EnhancedTeam | null>(null);
-  const [selectedTeamForChat, setSelectedTeamForChat] = useState<EnhancedTeam | null>(null);
 
   const { workspace } = useWorkspaceStore();
   const { user } = useAuth();
 
-  const ENABLE_TEAMS_WS = import.meta.env.VITE_ENABLE_TEAMS_WEBSOCKET === "true";
-  const { connectionState } = useUnifiedWebSocket({ enabled: ENABLE_TEAMS_WS });
-  const isConnected = connectionState.isConnected;
   
   // @epic-2.2-realtime: Fallback API for online users when WebSocket is not connected
   const { data: apiOnlineUsers } = useGetOnlineWorkspaceUsers({ 
@@ -493,7 +486,7 @@ function TeamsPage() {
         activeProjects: 1,
       };
     });
-  }, [teamsData, workspaceUsers, apiOnlineUsers, isConnected, projects, teamMetrics]);
+  }, [teamsData, workspaceUsers, apiOnlineUsers, projects, teamMetrics]);
 
   // Combined member data for member view (with duplicates)
   const allMembers = useMemo(() => {
@@ -696,11 +689,6 @@ function TeamsPage() {
         setSelectedTeamForDashboard(team);
         setIsTeamDashboardOpen(true);
         break;
-      case 'teamChannel':
-      case 'chat': // Keep 'chat' for backward compatibility
-        setSelectedTeamForChat(team);
-        setIsChatOpen(true);
-        break;
       case 'role-management':
           setIsRoleManagementOpen(true);
         break;
@@ -869,7 +857,7 @@ function TeamsPage() {
       description: 'Show keyboard shortcuts',
       callback: () => setShowShortcutsHelp(true)
     }
-  ], !isCreateTeamOpen && !isTeamSettingsOpen && !isTeamCalendarOpen && !isTeamDashboardOpen && !isRoleManagementOpen && !isChatOpen);
+  ], !isCreateTeamOpen && !isTeamSettingsOpen && !isTeamCalendarOpen && !isTeamDashboardOpen && !isRoleManagementOpen);
 
   // ESC key to close modals
   useEscapeKey(() => {
@@ -879,7 +867,6 @@ function TeamsPage() {
     else if (isTeamCalendarOpen) setIsTeamCalendarOpen(false);
     else if (isTeamDashboardOpen) setIsTeamDashboardOpen(false);
     else if (isRoleManagementOpen) setIsRoleManagementOpen(false);
-    else if (isChatOpen) setIsChatOpen(false);
   }, true);
 
   const isLoading = isTeamsLoading || isProjectsLoading || isUsersLoading;
@@ -1828,20 +1815,6 @@ function TeamsPage() {
         </Suspense>
       )}
 
-      {isChatOpen && selectedTeamForChat && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setIsChatOpen(false)}>
-          <div className="w-full max-w-4xl mx-4" onClick={(e) => e.stopPropagation()}>
-            <Suspense fallback={<div className="bg-white rounded-lg p-8 text-center">Loading chat...</div>}>
-              <TeamChatContainer
-                teamId={selectedTeamForChat.id}
-                teamName={selectedTeamForChat.name}
-                onClose={() => setIsChatOpen(false)}
-              />
-            </Suspense>
-          </div>
-        </div>
-      )}
-
       {isCreateUserOpen && workspace?.id && (
         <InviteTeamMemberModal
           open={isCreateUserOpen}
@@ -1872,10 +1845,6 @@ function TeamsPage() {
             onViewFull={() => {
               // TODO: Navigate to full profile page
               toast.info("Full profile page coming soon!");
-            }}
-            onMessage={() => {
-              setIsProfileModalOpen(false);
-              setIsChatOpen(true);
             }}
             onGiveKudos={() => {
               toast.success("Kudos feature coming soon!");
@@ -2355,26 +2324,9 @@ function TeamCard({
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="glass-card relative"
-                onClick={() => onAction('teamChannel', team)}
-              >
-                <Hash className="h-4 w-4 mr-1" />
-                Team Channel
-                {team.unreadCount && team.unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="ml-2 h-5 min-w-[20px] px-1.5 flex items-center justify-center text-[10px] font-semibold"
-                  >
-                    {team.unreadCount > 99 ? '99+' : team.unreadCount}
-                  </Badge>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="glass-card"
                 onClick={() => onAction('calendar', team)}
               >
@@ -2662,24 +2614,6 @@ function TeamListItem({
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAction('teamChannel', team)}
-              title="Team Channel"
-              className="relative"
-            >
-              <Hash className="h-4 w-4" />
-              <span className="hidden md:inline ml-2">Team Channel</span>
-              {team.unreadCount && team.unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="ml-2 h-5 min-w-[20px] px-1.5 flex items-center justify-center text-[10px] font-semibold"
-                >
-                  {team.unreadCount > 99 ? '99+' : team.unreadCount}
-                </Badge>
-              )}
-            </Button>
             <Button
               variant="outline"
               size="sm"

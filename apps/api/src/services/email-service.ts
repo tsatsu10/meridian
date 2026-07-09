@@ -153,6 +153,27 @@ The Meridian Team
     `.trim();
   }
 
+  async sendNotificationEmail(to: string, subject: string, text: string): Promise<boolean> {
+    if (!this.isConfigured || !this.transporter) {
+      logger.debug(`📧 Email service not configured - notification email to ${to} not sent`);
+      return false;
+    }
+
+    try {
+      const result = await this.transporter.sendMail({
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to,
+        subject,
+        text,
+      });
+      logger.debug(`📧 Notification email sent to ${to}:`, result.messageId);
+      return true;
+    } catch (error) {
+      logger.error(`❌ Failed to send notification email to ${to}:`, error);
+      return false;
+    }
+  }
+
   async testConnection(): Promise<boolean> {
     if (!this.isConfigured || !this.transporter) {
       return false;

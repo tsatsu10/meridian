@@ -20,6 +20,9 @@ export async function getGoalDetail(c: Context) {
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
+    if (!goalId) {
+      return c.json({ error: "Goal id is required" }, 400);
+    }
     
     // Fetch goal with all related data
     const goal = await db.query.goals.findFirst({

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Context, Next } from 'hono';
 import { createError } from './errors';
 
 // Common validation schemas
@@ -288,15 +289,18 @@ export const searchSchemas = {
 };
 
 // Validation middleware factory
-export function createValidationMiddleware<T>(schemaOrMode: any, maybeSchema?: z.ZodSchema<T>) {
-  const mode: 'json' | 'query' | 'form' = typeof schemaOrMode === 'string' ? schemaOrMode : 'json';
+export function createValidationMiddleware<T>(schemaOrMode: unknown, maybeSchema?: z.ZodSchema<T>) {
+  const mode =
+    typeof schemaOrMode === 'string'
+      ? (schemaOrMode as 'json' | 'query' | 'form')
+      : 'json';
   const schema: z.ZodSchema<T> = (typeof schemaOrMode === 'string' ? maybeSchema : schemaOrMode) as z.ZodSchema<T>;
 
   return async (c: Context, next: Next) => {
     try {
       let input: any;
       if (mode === 'query') {
-        input = Object.fromEntries(c.req.query());
+        input = c.req.query();
       } else if (mode === 'form') {
         const form = await c.req.parseBody();
         input = form;
@@ -333,7 +337,7 @@ export function createValidationMiddleware<T>(schemaOrMode: any, maybeSchema?: z
 export function createQueryValidationMiddleware<T>(schema: z.ZodSchema<T>) {
   return async (c: Context, next: Next) => {
     try {
-      const query = Object.fromEntries(c.req.query());
+      const query = c.req.query();
       const validatedData = schema.parse(query);
       c.set('validatedQuery', validatedData);
       await next();

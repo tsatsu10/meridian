@@ -142,7 +142,8 @@ export abstract class BaseCrudController {
         search: c.req.query('search')
       };
 
-      let query = db.select().from(this.table);
+      // Dynamic Drizzle chain: each step narrows the builder type; use `any` for reassignment (see applyCustomFilters).
+      let query: any = db.select().from(this.table);
 
       // Apply workspace filtering if configured
       if (this.options.workspaceField) {

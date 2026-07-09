@@ -54,7 +54,6 @@ import {
 } from "@/components/analytics/empty-states";
 import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAnalyticsRealtime } from "@/hooks/use-analytics-realtime";
 import {
   Dialog,
   DialogContent,
@@ -687,37 +686,6 @@ function AnalyticsPage() {
     }));
   }, [enhancedAnalytics?.resourceUtilization]);
 
-  // Real-time WebSocket connection for live updates
-  // TODO: Enable when backend WebSocket analytics support is implemented
-  const {
-    connectionStatus: _connectionStatus, // TODO: Display in UI
-    liveUpdates,
-    isConnected,
-    isReconnecting,
-    reconnect: reconnectWebSocket,
-    requestRefresh: _requestRealtimeRefresh, // TODO: Wire to refresh button
-  } = useAnalyticsRealtime({
-    workspaceId: workspace?.id || '',
-    enabled: false, // Disabled until backend analytics WebSocket handlers are implemented
-    onUpdate: (data) => {
-      // Handle real-time analytics updates
-      logger.debug('Real-time analytics update:', data);
-      // Optionally refetch to get latest data
-      if (data.type === 'metric-changed') {
-        refetch();
-      }
-    },
-    onConnect: () => {
-      toast.success('Connected to live analytics');
-    },
-    onDisconnect: () => {
-      toast.info('Disconnected from live analytics');
-    },
-    onError: (error) => {
-      console.error('WebSocket error:', error);
-    },
-  });
-  
   // Refresh handler with toast feedback
   const handleRefresh = useCallback(async () => {
     dispatch({ type: "SET_REFRESHING", payload: true });
@@ -1119,51 +1087,6 @@ function AnalyticsPage() {
               </CardContent>
             </Card>
           </motion.div>
-        )}
-
-        {/* Real-Time Connection Status - TODO: Enable when backend WebSocket support is added */}
-        {false && (
-          <Card className={cn(
-            "border-border/50 transition-colors duration-300",
-            isConnected ? "border-green-500/30 bg-green-500/5" : 
-            isReconnecting ? "border-yellow-500/30 bg-yellow-500/5" :
-            "border-red-500/30 bg-red-500/5"
-          )}>
-            <CardContent className="py-3 px-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full animate-pulse",
-                    isConnected ? "bg-green-500" :
-                    isReconnecting ? "bg-yellow-500" :
-                    "bg-red-500"
-                  )} />
-                  <span className="text-sm font-medium">
-                    {isConnected ? "Live Updates Active" :
-                     isReconnecting ? "Reconnecting..." :
-                     "Live Updates Unavailable"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {liveUpdates.length > 0 && (
-                    <Badge variant="outline" className="text-xs">
-                      {liveUpdates.length} Recent Updates
-                    </Badge>
-                  )}
-                  {!isConnected && !isReconnecting && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={reconnectWebSocket}
-                      className="h-6 px-2"
-                    >
-                      Reconnect
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         {/* Data Quality Indicator */}

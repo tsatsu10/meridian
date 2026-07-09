@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '@/constants/urls';
 import { formatDistanceToNow } from 'date-fns';
-import { useNoteCollaboration } from '@/hooks/use-note-collaboration';
 
 interface ProjectNote {
   id: string;
@@ -70,21 +69,6 @@ export function NoteEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // @epic-5.3-realtime: Real-time collaboration
-  const {
-    connected,
-    collaborators,
-    typingUsers,
-    remoteChanges,
-    updateCursor,
-    setTyping,
-    clearRemoteChanges,
-  } = useNoteCollaboration({
-    noteId: note?.id || '',
-    userEmail: undefined, // TODO: Get from auth context
-    enabled: !!note,
-  });
-
   useEffect(() => {
     if (note) {
       setTitle(note.title);
@@ -93,26 +77,6 @@ export function NoteEditor({
       setIsPinned(note.isPinned);
     }
   }, [note]);
-
-  // Handle remote changes
-  useEffect(() => {
-    if (remoteChanges && textareaRef.current) {
-      // Apply remote changes to content
-      // Note: This is a simple implementation - a proper OT/CRDT would be more robust
-      remoteChanges.changes.forEach(change => {
-        if (change.type === 'insert' && change.content) {
-          setContent(prev => 
-            prev.slice(0, change.position) + change.content + prev.slice(change.position)
-          );
-        } else if (change.type === 'delete' && change.length) {
-          setContent(prev => 
-            prev.slice(0, change.position) + prev.slice(change.position + change.length)
-          );
-        }
-      });
-      clearRemoteChanges();
-    }
-  }, [remoteChanges, clearRemoteChanges]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -225,43 +189,6 @@ export function NoteEditor({
                 {note ? 'Edit Note' : 'New Note'}
               </CardTitle>
               
-              {/* @epic-5.3-realtime: Connection status and collaborators */}
-              {note && (
-                <div className="flex items-center gap-2">
-                  {connected ? (
-                    <Wifi className="w-4 h-4 text-green-500" title="Connected" />
-                  ) : (
-                    <WifiOff className="w-4 h-4 text-red-500" title="Disconnected" />
-                  )}
-                  
-                  {collaborators.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {collaborators.length}
-                      </span>
-                      <div className="flex -space-x-2">
-                        {collaborators.slice(0, 3).map((collab) => (
-                          <Avatar
-                            key={collab.userEmail}
-                            className="w-7 h-7 border-2 border-background"
-                            style={{ borderColor: collab.color }}
-                          >
-                            <AvatarFallback style={{ backgroundColor: collab.color + '20', color: collab.color }}>
-                              {collab.userName.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        ))}
-                        {collaborators.length > 3 && (
-                          <Avatar className="w-7 h-7 border-2 border-background">
-                            <AvatarFallback>+{collaborators.length - 3}</AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
             
             <div className="flex items-center gap-2">
@@ -302,15 +229,6 @@ export function NoteEditor({
               </div>
             )}
             
-            {/* @epic-5.3-realtime: Typing indicators */}
-            {typingUsers.length > 0 && (
-              <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <span className="animate-pulse">✍️</span>
-                {typingUsers.length === 1
-                  ? `${typingUsers[0]} is typing...`
-                  : `${typingUsers.length} people are typing...`}
-              </div>
-            )}
           </div>
         </CardHeader>
       </Card>
@@ -364,31 +282,11 @@ export function NoteEditor({
               value={content}
               onChange={(e) => {
                 setContent(e.target.value);
-                
-                // @epic-5.3-realtime: Send typing indicator
-                setTyping(true);
-                if (typingTimeoutRef.current) {
-                  clearTimeout(typingTimeoutRef.current);
-                }
-                typingTimeoutRef.current = setTimeout(() => {
-                  setTyping(false);
-                }, 2000);
-              }}
-              onSelect={(e) => {
-                // @epic-5.3-realtime: Track cursor position
-                const target = e.target as HTMLTextAreaElement;
-                updateCursor(target.selectionStart, {
-                  start: target.selectionStart,
-                  end: target.selectionEnd,
-                });
               }}
               className="min-h-[400px] resize-none font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
               💡 Tip: A rich text editor will be available soon. For now, you can use Markdown formatting.
-              {connected && collaborators.length > 0 && (
-                <> • 🟢 Live collaboration enabled with {collaborators.length} {collaborators.length === 1 ? 'person' : 'people'}</>
-              )}
             </p>
           </div>
 

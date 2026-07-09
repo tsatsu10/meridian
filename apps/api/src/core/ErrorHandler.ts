@@ -3,7 +3,7 @@
  * @persona-all - Consistent error experience for all users
  */
 
-import { APIResponseBuilder, ErrorCodes, ErrorCode } from './APIResponse';
+import { APIResponseBuilder, ErrorCodes, ErrorCode, type APIResponse } from './APIResponse';
 import { logger } from '../utils/logger';
 
 export interface AppError extends Error {
@@ -237,8 +237,8 @@ process.on('uncaughtException', (error: Error) => {
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  logger.error('Unhandled Rejection', { promise, reason }, 'ERROR');
   process.exit(1);
 }); 
 

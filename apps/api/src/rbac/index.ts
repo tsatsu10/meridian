@@ -556,8 +556,7 @@ async function checkContextualPermissions(
       "canManageRoles", 
       "canInviteUsers",
       "canRemoveUsers",
-      "canViewWorkspaceAnalytics",
-      "canManageBilling"
+      "canViewWorkspaceAnalytics"
     ];
     
     if (restrictedActions.includes(permission)) {

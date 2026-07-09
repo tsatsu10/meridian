@@ -1,26 +1,21 @@
 /**
  * 🔔 Notification Delivery Service
- * 
- * Handles multi-channel notification delivery based on user preferences:
+ *
+ * Delivers notifications based on user preferences:
  * - In-app notifications
- * - Email notifications
- * - Push notifications
- * - Slack notifications
- * - Teams, Discord, SMS (via multi-channel API)
- * 
+ * - Email notifications (via SMTP email service)
+ *
  * Integrates with time-based controls (quiet hours, work schedule)
  * and user notification preferences.
  */
 
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { userPreferencesExtendedTable, 
-  integrationConnectionTable,
+import { userPreferencesExtendedTable,
   userSettingsTable } from "../../database/schema";
 import logger from '../../utils/logger';
 import { DEFAULT_API_PORT } from '../../config/default-api-port';
-import { SlackIntegration } from "../../integrations/services/slack-integration";
-import { EmailIntegration } from "../../integrations/services/email-integration";
+import emailService from "../../services/email-service";
 import createNotification from "../controllers/create-notification";
 
 export interface NotificationPayload {
@@ -123,25 +118,6 @@ export class NotificationDeliveryService {
         const emailResult = await this.sendEmailNotification(payload, workspaceId);
         results.push(emailResult);
       }
-      
-      // Send push notification if enabled
-      if (preferences.channels?.push !== false && settings.push) {
-        const pushResult = await this.sendPushNotification(payload);
-        results.push(pushResult);
-      }
-      
-      // Send Slack notification if enabled and connected
-      if (preferences.channels?.slack !== false && workspaceId) {
-        const slackResult = await this.sendSlackNotification(payload, workspaceId);
-        results.push(slackResult);
-      }
-      
-      // Send notifications to other configured channels
-      const multiChannelResults = await this.sendMultiChannelNotifications(
-        payload,
-        preferences
-      );
-      results.push(...multiChannelResults);
       
       // Record analytics event
       await this.recordAnalyticsEvent(payload.userEmail, {
@@ -368,208 +344,25 @@ export class NotificationDeliveryService {
    */
   private static async sendEmailNotification(
     payload: NotificationPayload,
-    workspaceId?: string
+    _workspaceId?: string
   ): Promise<DeliveryResult> {
     try {
-      if (workspaceId) {
-        await EmailIntegration.sendTaskNotification(
-          workspaceId,
-          payload.resourceId || '',
-          'updated' // This could be more specific based on payload.type
-        );
-      }
-      
+      const sent = await emailService.sendNotificationEmail(
+        payload.userEmail,
+        payload.title,
+        payload.content
+      );
+
       return {
         channel: 'email',
-        success: true,
-        message: 'Email notification sent'
+        success: sent,
+        message: sent ? 'Email notification sent' : 'Email service not configured'
       };
     } catch (error) {
       return {
         channel: 'email',
         success: false,
         error: error instanceof Error ? error.message : 'Email delivery failed'
-      };
-    }
-  }
-  
-  /**
-   * Send push notification
-   */
-  private static async sendPushNotification(payload: NotificationPayload): Promise<DeliveryResult> {
-    try {
-      // This would integrate with a push notification service
-      // For now, we'll simulate success
-      return {
-        channel: 'push',
-        success: true,
-        message: 'Push notification queued'
-      };
-    } catch (error) {
-      return {
-        channel: 'push',
-        success: false,
-        error: error instanceof Error ? error.message : 'Push delivery failed'
-      };
-    }
-  }
-  
-  /**
-   * Send Slack notification
-   */
-  private static async sendSlackNotification(
-    payload: NotificationPayload,
-    workspaceId: string
-  ): Promise<DeliveryResult> {
-    try {
-      const db = await getDatabase();
-      // Get Slack integrations for the workspace
-      const integrations = await db
-        .select()
-        .from(integrationConnectionTable)
-        .where(
-          and(
-            eq(integrationConnectionTable.workspaceId, workspaceId),
-            eq(integrationConnectionTable.provider, "slack"),
-            eq(integrationConnectionTable.isActive, true)
-          )
-        );
-      
-      if (integrations.length === 0) {
-        return {
-          channel: 'slack',
-          success: false,
-          error: 'No active Slack integration found'
-        };
-      }
-      
-      // Use the existing Slack integration to send task notifications
-      if (payload.resourceType === 'task' && payload.resourceId) {
-        const action = this.getSlackActionFromType(payload.type);
-        await SlackIntegration.sendTaskNotification(
-          workspaceId,
-          payload.resourceId,
-          action
-        );
-      } else {
-        // Send a generic notification
-        const integration = integrations[0];
-        const credentials = JSON.parse(integration.credentials || "{}");
-        
-        const slack = new SlackIntegration({
-          botToken: credentials.botToken,
-          userToken: credentials.userToken,
-          signingSecret: credentials.signingSecret
-        });
-        
-        const config = JSON.parse(integration.config);
-        const targetChannel = config.defaultChannel || "general";
-        
-        await slack.sendMeridianNotification(targetChannel, {
-          title: payload.title,
-          message: payload.content,
-          color: this.getSlackColorFromPriority(payload.priority),
-          timestamp: new Date()
-        });
-      }
-      
-      return {
-        channel: 'slack',
-        success: true,
-        message: 'Slack notification sent'
-      };
-    } catch (error) {
-      return {
-        channel: 'slack',
-        success: false,
-        error: error instanceof Error ? error.message : 'Slack delivery failed'
-      };
-    }
-  }
-  
-  /**
-   * Send notifications to other configured channels (Teams, Discord, SMS)
-   */
-  private static async sendMultiChannelNotifications(
-    payload: NotificationPayload,
-    preferences: any
-  ): Promise<DeliveryResult[]> {
-    const results: DeliveryResult[] = [];
-
-    try {
-      const db = await getDatabase();
-      // Get multi-channel configurations
-      const channels = await db
-        .select()
-        .from(userPreferencesExtendedTable)
-        .where(
-          and(
-            eq(userPreferencesExtendedTable.userId, payload.userEmail),
-            eq(userPreferencesExtendedTable.preferenceType, "notification-channels")
-          )
-        );
-      
-      for (const channel of channels) {
-        const config = JSON.parse(channel.preferenceData);
-        
-        if (config.enabled && preferences.channels?.[config.type] !== false) {
-          const result = await this.sendToChannel(config, payload);
-          results.push(result);
-        }
-      }
-    } catch (error) {
-      logger.error('Error sending multi-channel notifications:', error);
-    }
-    
-    return results;
-  }
-  
-  /**
-   * Send notification to specific channel
-   */
-  private static async sendToChannel(
-    channelConfig: any,
-    payload: NotificationPayload
-  ): Promise<DeliveryResult> {
-    try {
-      const notification = {
-        title: payload.title,
-        message: payload.content,
-        timestamp: new Date().toISOString()
-      };
-      
-      // This would use the multi-channel manager we created earlier
-      // For now, we'll simulate the API call
-      const baseUrl =
-        process.env.API_BASE_URL || `http://localhost:${DEFAULT_API_PORT}`;
-      const response = await fetch(`${baseUrl}/api/integrations/notifications/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          channel: channelConfig.type,
-          config: channelConfig.config,
-          notification
-        })
-      });
-      
-      if (response.ok) {
-        return {
-          channel: channelConfig.type,
-          success: true,
-          message: `${channelConfig.type} notification sent`
-        };
-      } else {
-        return {
-          channel: channelConfig.type,
-          success: false,
-          error: `${channelConfig.type} API error: ${response.status}`
-        };
-      }
-    } catch (error) {
-      return {
-        channel: channelConfig.type,
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -620,27 +413,5 @@ export class NotificationDeliveryService {
     }
   }
   
-  private static getSlackActionFromType(type: string): "created" | "updated" | "completed" | "assigned" {
-    const actionMap: Record<string, "created" | "updated" | "completed" | "assigned"> = {
-      'task.created': 'created',
-      'task.assigned': 'assigned',
-      'task.completed': 'completed',
-      'task.status_changed': 'updated',
-      'task': 'updated'
-    };
-    
-    return actionMap[type] || 'updated';
-  }
-  
-  private static getSlackColorFromPriority(priority?: string): string {
-    const colorMap: Record<string, string> = {
-      'urgent': '#F44336', // Red
-      'high': '#FF9800',   // Orange
-      'medium': '#2196F3', // Blue
-      'low': '#4CAF50'     // Green
-    };
-    
-    return colorMap[priority || 'medium'] || '#2196F3';
-  }
-}
 
+}
