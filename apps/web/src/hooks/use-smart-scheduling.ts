@@ -1,7 +1,7 @@
 // @epic-3.4-teams: AI-powered smart scheduling suggestions
 // @persona-sarah: PM sprint planning with intelligent recommendations
 import { useMemo } from 'react';
-import { addDays, addHours, isWithinInterval, startOfDay, endOfDay, format } from 'date-fns';
+import { addDays, isWithinInterval, format } from 'date-fns';
 import type { CalendarEvent, MemberSchedule, SmartSuggestion } from '@/types/schedule';
 
 interface UseSmartSchedulingOptions {
@@ -243,7 +243,7 @@ function findBreakTime(schedule: MemberSchedule) {
   return null;
 }
 
-function detectResourceConflicts(events: CalendarEvent[], memberSchedules: MemberSchedule[]) {
+function detectResourceConflicts(_events: CalendarEvent[], memberSchedules: MemberSchedule[]) {
   const conflicts: Array<{
     description: string;
     members: string[];

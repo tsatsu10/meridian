@@ -29,13 +29,11 @@ import { useGetTeamAutomations } from "@/hooks/queries/team/use-get-team-automat
 import { useCreateAutomation } from "@/hooks/mutations/team/use-create-automation";
 import { useUpdateAutomation } from "@/hooks/mutations/team/use-update-automation";
 import { useDeleteAutomation } from "@/hooks/mutations/team/use-delete-automation";
-import { useSearchTeamMembers } from "@/hooks/queries/team/use-search-team-members";
 import useWorkspaceStore from "@/store/workspace";
 import { toast } from "sonner";
 import { 
   Settings, 
   Users, 
-  Shield, 
   Archive,
   Trash2,
   Edit3,
@@ -67,7 +65,6 @@ import { formatDistanceToNow } from "date-fns";
 // Icon wrappers to fix TypeScript issues
 const SettingsIcon = Settings as React.FC<{ className?: string }>;
 const UsersIcon = Users as React.FC<{ className?: string }>;
-const ShieldIcon = Shield as React.FC<{ className?: string }>;
 const ArchiveIcon = Archive as React.FC<{ className?: string }>;
 const Trash2Icon = Trash2 as React.FC<{ className?: string }>;
 const Edit3Icon = Edit3 as React.FC<{ className?: string }>;
@@ -165,7 +162,7 @@ export default function TeamSettingsModal({
   const { data: analyticsData, isLoading: isLoadingAnalytics } = useGetTeamAnalytics(initialTeam?.id, analyticsTimeRange);
   const { data: advancedPermissionsData, isLoading: isLoadingAdvancedPermissions } = useGetAdvancedPermissions(initialTeam?.id);
   const { data: automationsData, isLoading: isLoadingAutomations } = useGetTeamAutomations(initialTeam?.id);
-  const createAutomationMutation = useCreateAutomation();
+  void (useCreateAutomation());
   const updateAutomationMutation = useUpdateAutomation();
   const deleteAutomationMutation = useDeleteAutomation();
   
@@ -183,7 +180,7 @@ export default function TeamSettingsModal({
   const [editedTeam, setEditedTeam] = useState<Team | null>(initialTeam);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
-  const [memberSearchTerm, setMemberSearchTerm] = useState("");
+  const [memberSearchTerm, _setMemberSearchTerm] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [notificationPreferences, setNotificationPreferences] = useState(notificationsData?.preferences || {});
 

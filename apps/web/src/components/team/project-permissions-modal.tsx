@@ -1,5 +1,5 @@
 // @epic-3.4-teams: Project-specific permissions management modal
-import { useState, useEffect } from "react";
+import { useState, } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -20,8 +20,6 @@ import {
 import { 
   Shield, 
   Users,
-  Lock,
-  Unlock,
   Settings,
   Eye,
   Edit,
@@ -30,7 +28,6 @@ import {
   Save,
   RotateCcw,
   AlertTriangle,
-  CheckCircle
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { toast } from "sonner";
@@ -38,8 +35,6 @@ import { toast } from "sonner";
 // Icon wrappers
 const ShieldIcon = Shield as React.FC<{ className?: string }>;
 const UsersIcon = Users as React.FC<{ className?: string }>;
-const LockIcon = Lock as React.FC<{ className?: string }>;
-const UnlockIcon = Unlock as React.FC<{ className?: string }>;
 const SettingsIcon = Settings as React.FC<{ className?: string }>;
 const EyeIcon = Eye as React.FC<{ className?: string }>;
 const EditIcon = Edit as React.FC<{ className?: string }>;
@@ -48,8 +43,6 @@ const PlusIcon = Plus as React.FC<{ className?: string }>;
 const SaveIcon = Save as React.FC<{ className?: string }>;
 const RotateCcwIcon = RotateCcw as React.FC<{ className?: string }>;
 const AlertTriangleIcon = AlertTriangle as React.FC<{ className?: string }>;
-const CheckCircleIcon = CheckCircle as React.FC<{ className?: string }>;
-
 interface ProjectPermission {
   id: string;
   category: string;
@@ -352,7 +345,7 @@ const systemRoles: ProjectRole[] = [
 export default function ProjectPermissionsModal({ 
   open, 
   onClose, 
-  projectId,
+  
   projectName,
   roles: propRoles,
   permissions: initialPermissions,

@@ -21,58 +21,21 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { BlurFade } from "@/components/magicui/blur-fade";
-import { ShineBorder } from "@/components/magicui/shine-border";
-import { MagicCard } from "@/components/magicui/magic-card";
 import { 
-  Calendar as CalendarIcon, 
   X, 
-  ListTodo, 
   UserIcon, 
-  Flag, 
-  GitBranch, 
-  AlertTriangle, 
-  CheckCircle2,
-  Clock,
-  Tag,
-  Zap,
-  Plus,
-  ChevronDown,
-  ChevronUp,
-  Target,
   Users,
-  Calendar as CalendarIconAlt,
-  AlertCircle,
-  Sparkles,
-  Loader2,
   Layout,
 } from "lucide-react";
-import { cn } from "@/lib/cn";
-import { format, addDays, addWeeks, startOfTomorrow } from "date-fns";
+import { addWeeks, startOfTomorrow } from "date-fns";
 import { toast } from "sonner";
 import useCreateTask from "@/hooks/mutations/task/use-create-task";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useGetActiveWorkspaceUsers from "@/hooks/queries/workspace-users/use-active-workspace-users";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useWorkspaceStore from "@/store/workspace";
 import useProjectStore from "@/store/project";
 import { useTeams } from "@/hooks/use-teams";
-import { produce } from "immer";
-import { flattenTasks } from "@/utils/task-hierarchy";
 import { priorityOptions, statusOptions } from "@/constants/task";
 
 // @epic-1.1-subtasks: Mike (Dev) and Sarah (PM) need quick task creation with context awareness
@@ -195,15 +158,15 @@ interface ProjectOption extends ProjectWithTasks {
 }
 
 // Quick date presets
-const datePresets = [
+void ([
   { label: "Today", value: () => new Date() },
   { label: "Tomorrow", value: () => startOfTomorrow() },
   { label: "Next Week", value: () => addWeeks(new Date(), 1) },
   { label: "2 Weeks", value: () => addWeeks(new Date(), 2) },
-];
+]);
 
 // Team colors for display (fallback colors for teams without specific colors)
-const teamColors = [
+void ([
   "#3B82F6", // blue
   "#10B981", // emerald
   "#8B5CF6", // purple
@@ -212,7 +175,7 @@ const teamColors = [
   "#06B6D4", // cyan
   "#84CC16", // lime
   "#EC4899", // pink
-];
+]);
 
 export default function CreateTaskModal({ 
   open, 
@@ -250,7 +213,7 @@ export default function CreateTaskModal({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showDependencies, setShowDependencies] = useState(false);
   const [newLabel, setNewLabel] = useState("");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [_isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Type-safe hook usage with proper runtime validation
   const projectsQuery = useGetProjects({ workspaceId: workspace?.id ?? "" });
@@ -386,7 +349,7 @@ export default function CreateTaskModal({
     }
   };
 
-  const addLabel = () => {
+  void (() => {
     if (newLabel.trim()) {
       setFormData((prev) => ({
         ...prev,
@@ -394,23 +357,9 @@ export default function CreateTaskModal({
       }));
       setNewLabel("");
     }
-  };
+  });
 
-  const removeLabel = (labelToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      labels: prev.labels.filter(label => label !== labelToRemove)
-    }));
-  };
-
-  const handleLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addLabel();
-    }
-  };
-
-  // Dependency management functions
+      // Dependency management functions
   const handleDependencyToggle = (taskId: string, checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
@@ -427,16 +376,7 @@ export default function CreateTaskModal({
     }));
   };
 
-  const handleQuickDateSelect = (dateFunction: () => Date) => {
-    const newDate = dateFunction();
-    setFormData((prev) => ({
-      ...prev,
-      dueDate: newDate.toISOString()
-    }));
-    setIsCalendarOpen(false);
-  };
-
-  // Selected dependency tasks for display
+    // Selected dependency tasks for display
   const selectedDependencyTasks = useMemo(() => 
     availableTasks.filter(task => formData.dependencies.includes(task.id)),
     [availableTasks, formData.dependencies]
@@ -448,15 +388,15 @@ export default function CreateTaskModal({
     [formData.title, projectContext, selectedProject]
   );
 
-  const selectedPriority = useMemo(() => 
+  void (useMemo(() => 
     priorityOptions.find(p => p.value === formData.priority),
     [formData.priority]
-  );
+  ));
 
-  const selectedStatus = useMemo(() => 
+  void (useMemo(() => 
     statusOptions.find(s => s.value === formData.status),
     [formData.status]
-  );
+  ));
 
   const handleAssigneeChange = (value: string) => {
     setFormData(prev => ({

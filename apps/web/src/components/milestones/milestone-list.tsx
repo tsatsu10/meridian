@@ -1,9 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import { 
   Target, 
   Calendar, 
@@ -15,17 +13,8 @@ import {
   Trash2,
   MoreHorizontal,
   Info,
-  List,
-  Grid as GridIcon,
-  LayoutList,
-  Search,
   Filter,
-  ArrowUpDown,
   X,
-  Download,
-  Copy,
-  Share2,
-  Pin,
   Layers
 } from "lucide-react";
 import {
@@ -33,16 +22,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { useMilestones } from "@/hooks/use-milestones";
 import { toast } from "sonner";
@@ -116,7 +96,7 @@ const getMilestoneTypeIcon = (type: string) => {
 };
 
 export default function MilestoneList({ projectId, workspaceId, className, onEditMilestone }: MilestoneListProps) {
-  const { milestones: localStorageMilestones, deleteMilestone, updateMilestone, stats } = useMilestones(projectId);
+  const { milestones: localStorageMilestones, deleteMilestone, updateMilestone } = useMilestones(projectId);
   const { data: dashboardData } = useDashboardData();
   const [selectedMilestone, setSelectedMilestone] = useState<any | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);

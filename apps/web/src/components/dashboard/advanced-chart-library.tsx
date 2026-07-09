@@ -3,7 +3,7 @@
 // @role-department-head: Department-scoped analytics and reporting
 // @role-project-manager: Project-specific advanced visualization
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, } from "react";
 import { 
   ScatterChart, 
   Scatter, 
@@ -12,23 +12,18 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  Cell,
   ReferenceLine
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { 
-  TrendingUp, 
   Download, 
   RotateCcw,
   Maximize2,
   Calendar,
   Users,
-  Clock
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -86,13 +81,13 @@ export function ScatterPlot({
   xAxisLabel = "X Axis",
   yAxisLabel = "Y Axis",
   showTrendLine = false,
-  colorBy = 'category',
+  
   bubbleMode = false,
   className = "",
   height = 400,
   onExport,
   onDrillDown,
-  fullScreen = false,
+  
   onFullScreenToggle
 }: ScatterPlotProps) {
   const [zoomDomain, setZoomDomain] = useState<{x?: [number, number], y?: [number, number]}>({});
@@ -247,7 +242,7 @@ export function Heatmap({
   height = 400,
   onExport,
   onDrillDown,
-  fullScreen = false,
+  
   onFullScreenToggle
 }: HeatmapProps) {
   const [hoveredCell, setHoveredCell] = useState<HeatmapDataPoint | null>(null);
@@ -400,14 +395,14 @@ interface GanttChartProps extends AdvancedChartProps {
 export function GanttChart({
   title,
   data,
-  timeRange,
-  showDependencies = true,
+  
+  
   groupBy = 'none',
   className = "",
-  height = 400,
+  
   onExport,
   onDrillDown,
-  fullScreen = false,
+  
   onFullScreenToggle
 }: GanttChartProps) {
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);

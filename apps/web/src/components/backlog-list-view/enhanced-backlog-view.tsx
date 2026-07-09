@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -32,17 +32,12 @@ import {
   Grid, 
   BarChart3, 
   Calendar, 
-  Target,
-  Filter,
   Plus,
   Settings,
-  MoreHorizontal,
   Eye,
   EyeOff,
-  ChevronDown,
   Search,
   X,
-  Palette,
   Edit,
   Trash2,
   AlertTriangle
@@ -96,8 +91,7 @@ export default function EnhancedBacklogView({
   onTaskClick,
   onThemeCreate,
   onThemeEdit,
-  onThemeDelete,
-  onTaskUpdate
+  onThemeDelete
 }: EnhancedBacklogViewProps) {
   // Update the refinement status type to include 'all'
   type RefinementStatus = 'draft' | 'refined' | 'ready' | 'all';

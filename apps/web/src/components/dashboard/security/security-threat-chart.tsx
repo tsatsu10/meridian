@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from "recharts";
 import { Shield, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -42,14 +42,7 @@ export function SecurityThreatChart({ data, timeRange = "7d" }: SecurityThreatCh
     };
   }, [chartData]);
 
-  const getBarColor = (value: number) => {
-    if (value > 50) return "#ef4444"; // red
-    if (value > 20) return "#f59e0b"; // orange
-    if (value > 10) return "#eab308"; // yellow
-    return "#10b981"; // green
-  };
-
-  const timeRangeLabels = {
+    const timeRangeLabels = {
     "24h": "Last 24 Hours",
     "7d": "Last 7 Days",
     "30d": "Last 30 Days",

@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Target, TrendingUp, CheckCircle, Plus, Trash2, Calendar } from "lucide-react";
+import { Target, TrendingUp, CheckCircle, Plus, Trash2, } from "lucide-react";
 import { useCreateGoal, useAddKeyResult } from "@/hooks/mutations/goals";
 import { cn } from "@/lib/cn";
 import { format } from "date-fns";
@@ -58,7 +58,7 @@ interface KeyResultData {
 
 const STEP_TITLES = ['Set Objective', 'Add Key Results', 'Review'];
 
-export function CreateGoalModal({ open, onClose, workspaceId }: CreateGoalModalProps) {
+export function CreateGoalModal({ open, onClose }: CreateGoalModalProps) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<GoalFormData>({
     title: '',
@@ -138,7 +138,7 @@ export function CreateGoalModal({ open, onClose, workspaceId }: CreateGoalModalP
   };
   
   const canProceedStep1 = formData.title.trim().length > 0 && formData.timeframe.trim().length > 0;
-  const canProceedStep2 = keyResults.some(kr => kr.title.trim().length > 0);
+  void (keyResults.some(kr => kr.title.trim().length > 0));
   
   return (
     <Dialog open={open} onOpenChange={handleClose}>

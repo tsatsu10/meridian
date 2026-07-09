@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { X, Star, Clock, Users, TrendingUp, ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Star, Clock, TrendingUp, ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { getTemplate } from "../../fetchers/templates/get-template";
 import {

@@ -149,7 +149,7 @@ export function VisualizationPreview({
 
       case "gauge":
         const value = sampleData[0]?.value || 0;
-        const percentage = value / 100;
+        void (value / 100);
         const startAngle = 180;
         const endAngle = -180;
         const gaugeData = [

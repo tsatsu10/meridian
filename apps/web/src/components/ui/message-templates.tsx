@@ -20,7 +20,6 @@ import {
   Star,
   Plus
 } from 'lucide-react';
-import { cn } from '@/lib/cn';
 
 interface MessageTemplate {
   id: string;
@@ -230,7 +229,7 @@ const CATEGORIES = [
 export default function MessageTemplates({ onTemplateSelect, trigger, disabled = false }: MessageTemplatesProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [customTemplates, setCustomTemplates] = useState<MessageTemplate[]>([]);
+  const [customTemplates, _setCustomTemplates] = useState<MessageTemplate[]>([]);
 
   // Combine default and custom templates
   const allTemplates = [...DEFAULT_TEMPLATES, ...customTemplates];

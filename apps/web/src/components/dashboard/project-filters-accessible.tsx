@@ -17,8 +17,8 @@
  * Testing: axe DevTools, Lighthouse, NVDA, JAWS
  */
 
-import React, { useCallback, useRef, useEffect, useState } from "react";
-import { X, ChevronDown, Search, RotateCcw, ArrowUpDown } from "lucide-react";
+import React, { useCallback, useRef, useState } from "react";
+import { X, ChevronDown, Search, RotateCcw, } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";

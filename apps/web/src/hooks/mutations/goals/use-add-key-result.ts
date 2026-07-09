@@ -27,7 +27,7 @@ export function useAddKeyResult() {
       const response = await api.post(`/api/goals/${goalId}/key-results`, data);
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate goal to refetch with new key result
       queryClient.invalidateQueries({ queryKey: ['goal', variables.goalId] });
       queryClient.invalidateQueries({ queryKey: ['goals'] });

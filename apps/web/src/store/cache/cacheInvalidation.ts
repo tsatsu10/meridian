@@ -266,7 +266,7 @@ export const DEFAULT_INVALIDATION_RULES: InvalidationRule[] = [
     },
     action: {
       type: 'custom',
-      target: (event) => {
+      target: (_event) => {
         // This would trigger cache warming instead of invalidation
         setTimeout(() => {
           // Warm up user-related caches
@@ -581,7 +581,7 @@ export class CacheInvalidationManager {
   private executeInvalidation(
     type: InvalidationRule['action']['type'],
     target: string | RegExp,
-    options?: InvalidationRule['action']['options']
+    _options?: InvalidationRule['action']['options']
   ): void {
     switch (type) {
       case 'key':

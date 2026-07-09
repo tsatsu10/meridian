@@ -3,7 +3,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { AlertTriangle, RefreshCw, Bug, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 interface ErrorFallbackProps {
   error: Error;

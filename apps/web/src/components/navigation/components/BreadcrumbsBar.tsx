@@ -1,9 +1,4 @@
-// Standalone breadcrumbs bar that can be added anywhere
-// @epic-3.5-communication: Navigation breadcrumbs for clear user orientation
-// @persona-sarah: PM needs to quickly understand where they are in the hierarchy
-// @persona-mike: Dev needs minimal navigation that doesn't interfere
 
-import React from 'react';
 import { cn } from '@/lib/cn';
 import { useBreadcrumbs } from '../hooks/useBreadcrumbs';
 import { NavBreadcrumbs } from './NavBreadcrumbs';

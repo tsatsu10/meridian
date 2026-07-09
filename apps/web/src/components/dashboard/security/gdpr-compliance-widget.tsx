@@ -9,25 +9,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   FileText,
-  Calendar,
   Users,
   Database,
   Download,
-  ExternalLink,
-  Clock,
   AlertCircle,
   XCircle,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/cn";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface GDPRCompliance {
@@ -90,7 +79,7 @@ interface DataAccessRequest {
 }
 
 export function GDPRComplianceWidget() {
-  const queryClient = useQueryClient();
+  void (useQueryClient());
   const [selectedTab, setSelectedTab] = useState<string>("overview");
 
   // Fetch GDPR compliance overview

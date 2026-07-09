@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -24,16 +23,11 @@ import {
   Lightbulb,
   Search,
   BookmarkIcon,
-  TrendingUp,
-  Filter,
   X,
   Sparkles,
-  Book,
-  Star,
 } from 'lucide-react';
 import { useTips, useTipSearch, useBookmarkedTips } from '@/hooks/use-tips';
 import { TipCard } from './TipCard';
-import { cn } from '@/lib/cn';
 import type { TipCategory, TipLevel } from '@/types/tips';
 
 interface TipsPanelProps {

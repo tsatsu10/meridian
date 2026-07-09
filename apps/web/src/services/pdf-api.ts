@@ -260,7 +260,7 @@ export class PDFAPI {
     enabled: boolean;
   }): Promise<{ success: boolean; scheduleId: string }> {
     // This would integrate with the workflow system to create scheduled PDF generation
-    const workflowData = {
+    void ({
       name: `Automated ${config.schedule} Report`,
       description: `Automatically generate and send ${config.schedule} reports`,
       isActive: config.enabled,
@@ -293,7 +293,7 @@ export class PDFAPI {
           }
         }
       ]
-    };
+    });
 
     // This would use the WorkflowAPI to create the scheduled workflow
     // For now, return a mock response

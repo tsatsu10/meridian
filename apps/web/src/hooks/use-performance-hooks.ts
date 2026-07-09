@@ -314,7 +314,7 @@ function shallowEqual<T extends Record<string, any>>(objA: T, objB: T): boolean 
 /**
  * Hook for measuring component render performance
  */
-export function useRenderProfiler(componentName: string, enabled: boolean = false) {
+export function useRenderProfiler(_componentName: string, enabled: boolean = false) {
   const renderCountRef = useRef(0);
   const startTimeRef = useRef<number>();
 
@@ -322,7 +322,7 @@ export function useRenderProfiler(componentName: string, enabled: boolean = fals
     if (!enabled) return;
     
     renderCountRef.current++;
-    const renderTime = startTimeRef.current ? performance.now() - startTimeRef.current : 0;
+    void (startTimeRef.current ? performance.now() - startTimeRef.current : 0);
     
     logger.info("🎯 ${componentName} - Render #${renderCountRef.current} (${renderTime.toFixed(2)}ms)");
   });
@@ -335,7 +335,7 @@ export function useRenderProfiler(componentName: string, enabled: boolean = fals
 
   return {
     renderCount: renderCountRef.current,
-    logRender: (customMessage?: string) => {
+    logRender: (_customMessage?: string) => {
       if (enabled) {
         logger.info("🎯 ${componentName}: ${customMessage || ");
       }
@@ -352,7 +352,7 @@ export function useLazyComputation<T>(
   delay: number = 100
 ): T | undefined {
   const [result, setResult] = useState<T | undefined>();
-  const [isComputing, setIsComputing] = useState(false);
+  const [_isComputing, setIsComputing] = useState(false);
 
   const debouncedCompute = useDebouncedCallback(() => {
     setIsComputing(true);

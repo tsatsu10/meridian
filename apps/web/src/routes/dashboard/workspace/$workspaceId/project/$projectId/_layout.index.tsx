@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
@@ -20,46 +20,28 @@ import { useProjectPermissions } from "@/lib/permissions";
 
 import { 
   CheckCircle, 
-  Clock, 
   AlertTriangle, 
   TrendingUp, 
-  TrendingDown,
   Users, 
   Plus,
-  Calendar,
   BarChart3,
-  Activity,
   FileText,
   Settings,
   Share,
   MoreVertical,
-  Copy,
-  ExternalLink,
-  Mail,
   Trash2,
   Archive,
-  Edit,
   Download,
   UserPlus,
   Zap,
   Target,
-  Shield,
-  AlertCircle,
   Info,
-  Bell,
   Gauge,
-  Timer,
-  Flame,
-  ChevronUp,
-  ChevronDown,
   ChevronLeft,
-  Wifi,
-  WifiOff,
   RefreshCw,
   ShieldAlert,
   Lock
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { useMemo, useEffect, useCallback } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -149,33 +131,33 @@ interface SmartAlert {
   actions?: { label: string; action: string }[];
 }
 
-const statusColors = {
+void ({
   todo: "bg-secondary text-secondary-foreground dark:bg-secondary-hover dark:text-secondary-foreground",
   "in_progress": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   done: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   overdue: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
+});
 
-const priorityColors = {
+void ({
   low: "bg-secondary text-secondary-foreground dark:bg-secondary-hover dark:text-secondary-foreground",
   medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
   urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
+});
 
-const healthColors = {
+void ({
   excellent: "text-green-600",
   good: "text-green-500", 
   warning: "text-yellow-500",
   critical: "text-red-500"
-};
+});
 
-const riskColors = {
+void ({
   low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300", 
   high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
   critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-};
+});
 
 // @epic-1.1-subtasks @persona-sarah - PM needs comprehensive project overview
 // @epic-3.2-time @persona-david - Team Lead needs task analytics and workload visibility
@@ -196,13 +178,13 @@ function ProjectOverview() {
   const [isCreateMilestoneOpen, setIsCreateMilestoneOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  const { hasPermission, user } = useRBACAuth();
+  const { user } = useRBACAuth();
   
   // 🔒 SECURITY: Get project-scoped permissions
   const projectPermissions = useProjectPermissions(projectId);
   
-  const { data: users, isLoading: isUsersLoading, error: usersError } = useGetActiveWorkspaceUsers({ workspaceId });
-  const { milestones, stats: milestoneStats, createMilestone, updateMilestone } = useMilestones(projectId);
+  const { data: users, error: usersError } = useGetActiveWorkspaceUsers({ workspaceId });
+  const { milestones, stats: milestoneStats, createMilestone } = useMilestones(projectId);
   
   // Enhanced data queries with error handling
   const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProject({ 
@@ -237,9 +219,9 @@ function ProjectOverview() {
   }, [autoNotifications, allTasks]);
 
   // Task status change handler with auto-updates
-  const handleTaskStatusUpdate = useCallback((taskId: string, newStatus: string, oldStatus: string) => {
+  void (useCallback((taskId: string, newStatus: string, oldStatus: string) => {
     handleTaskStatusChange(taskId, newStatus, oldStatus, allTasks);
-  }, [handleTaskStatusChange, allTasks]);
+  }, [handleTaskStatusChange, allTasks]));
 
   // Calculate project statistics from real data
   const projectStats: ProjectStats = useMemo(() => {
@@ -322,7 +304,7 @@ function ProjectOverview() {
   }, [allTasks, riskData]);
 
   // Get recent tasks (last 5 updated)
-  const recentTasks: TaskItem[] = useMemo(() => {
+  void (useMemo(() => {
     if (!allTasks.length) return [];
     return allTasks
       .slice()
@@ -342,7 +324,7 @@ function ProjectOverview() {
         updatedAt: task.updatedAt,
         };
       });
-  }, [allTasks, users]);
+  }, [allTasks, users]));
 
   // Enhanced team members with productivity metrics
   const teamMembers: TeamMember[] = useMemo(() => {
@@ -382,7 +364,7 @@ function ProjectOverview() {
   }, [allTasks, users]);
 
   // Real-time activity feed - clean version with actual data
-  const recentActivity: ActivityItem[] = useMemo(() => {
+  void (useMemo(() => {
     if (!allTasks.length || !teamMembers.length) return [];
     
     // Generate activity from recent task updates
@@ -400,10 +382,10 @@ function ProjectOverview() {
         priority: task.priority || 'medium' as ActivityItem['priority'],
         icon: task.status === 'done' ? '✅' : '📝'
       }));
-  }, [allTasks, teamMembers]);
+  }, [allTasks, teamMembers]));
 
   // Smart alerts system
-  const smartAlerts: SmartAlert[] = useMemo(() => {
+  void (useMemo(() => {
     const alerts: SmartAlert[] = [];
     
     // Only show alerts if there are actual issues
@@ -459,7 +441,7 @@ function ProjectOverview() {
       const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
-  }, [projectStats]);
+  }, [projectStats]));
 
   // 🔒 SECURITY CHECK: Verify project belongs to workspace (after data loads)
   // NOTE: This must be a hook, called before any conditional returns
@@ -516,17 +498,7 @@ function ProjectOverview() {
     toast.success("Project link copied to clipboard");
   };
 
-  const handleShareByEmail = () => {
-    const subject = encodeURIComponent(`Project: ${projectData?.name || 'Unnamed Project'}`);
-    const body = encodeURIComponent(`Check out this project: ${window.location.href}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`);
-  };
-
-  const handleInviteTeamMembers = () => {
-    setIsInviteModalOpen(true);
-  };
-
-  const handleExportProject = async () => {
+      const handleExportProject = async () => {
     // 🔒 SECURITY: Use secure backend export endpoint with audit logging
     try {
       toast.loading("Preparing export...", { id: "export-loading" });
@@ -723,107 +695,16 @@ function ProjectOverview() {
     }
   };
 
-  const handleCreateTask = () => {
-    setIsCreateTaskOpen(true);
-  };
-
-  const handleCreateMilestone = () => {
-    setIsCreateMilestoneOpen(true);
-  };
-
-  // Enhanced smart alert action handlers
-  const handleAlertAction = (action: string, alertId?: string) => {switch (action) {
-      case 'analytics':
-        setIsDashboardOpen(true);
-        toast.success("Opening analytics dashboard");
-        break;
-      case 'reassign':
-        navigate({ 
-          to: '/dashboard/workspace/$workspaceId/project/$projectId/list',
-          params: { workspaceId, projectId }
-        });
-        toast.info("Navigate to task list to reassign tasks");
-        break;
-      case 'blockers':
-        navigate({ 
-          to: '/dashboard/workspace/$workspaceId/project/$projectId/board',
-          params: { workspaceId, projectId }
-        });
-        toast.info("Navigating to kanban board");
-        break;
-      case 'meeting':
-        navigate({ 
-          to: '/dashboard/workspace/$workspaceId/project/$projectId/calendar',
-          params: { workspaceId, projectId }
-        });
-        toast.info("Opening calendar for meeting scheduling");
-        break;
-      case 'overdue':
-        navigate({ 
-          to: '/dashboard/workspace/$workspaceId/project/$projectId/list',
-          params: { workspaceId, projectId }
-        });
-        toast.info("Navigating to task list");
-        break;
-      case 'reschedule':
-        navigate({ 
-          to: '/dashboard/workspace/$workspaceId/project/$projectId/list',
-          params: { workspaceId, projectId }
-        });
-        toast.info("Navigate to task list to reschedule overdue tasks");
-        break;
-      default:
-        toast.info(`Action: ${action}`);
-    }
-  };
-
-  // Calculate progress percentage
-  const progressPercentage = projectStats.totalTasks > 0 
+      // Enhanced smart alert action handlers
+    // Calculate progress percentage
+  void (projectStats.totalTasks > 0 
     ? Math.round((projectStats.completedTasks / projectStats.totalTasks) * 100)
-    : 0;
+    : 0);
 
   // Get health score color
-  const getHealthColor = (score: number) => {
-    if (score >= 80) return healthColors.excellent;
-    if (score >= 60) return healthColors.good;
-    if (score >= 40) return healthColors.warning;
-    return healthColors.critical;
-  };
-
-  // Get velocity trend
-  const getVelocityTrend = (velocity: number) => {
-    if (velocity >= 2) return { icon: TrendingUp, color: 'text-green-500' };
-    if (velocity >= 1) return { icon: TrendingUp, color: 'text-blue-500' };
-    return { icon: TrendingDown, color: 'text-red-500' };
-  };
-
-  // Risk Alert Component
-  const ProjectRiskAlerts = () => {
-    if (!riskData.hasHighRisk) return null;
-
-    return (
-      <Alert className="border-red-200 bg-red-50">
-        <AlertTriangle className="h-4 w-4 text-red-500" />
-        <AlertTitle className="text-red-700">Project Risks Detected</AlertTitle>
-        <AlertDescription className="text-red-600">
-          <div className="space-y-2 mt-2">
-            {riskData.highPriorityRisks.slice(0, 2).map((risk) => (
-              <div key={risk.id} className="text-sm">
-                <strong>{risk.title}:</strong> {risk.description}
-              </div>
-            ))}
-            {riskData.highPriorityRisks.length > 2 && (
-              <div className="text-sm">
-                ...and {riskData.highPriorityRisks.length - 2} more risks
-              </div>
-            )}
-          </div>
-        </AlertDescription>
-      </Alert>
-    );
-  };
-
-  // 🔒 SECURITY CHECK 1: Permission check (conditional rendering, not early return)
+    // Get velocity trend
+    // Risk Alert Component
+    // 🔒 SECURITY CHECK 1: Permission check (conditional rendering, not early return)
   if (!projectPermissions.canView) {
     return (
       <LazyDashboardLayout>
@@ -1163,8 +1044,8 @@ function ProjectOverview() {
                   showProjectFilter={false}
                   milestones={milestones}
                   stats={milestoneStats}
-                  onMilestoneClick={(milestone) => {}}
-                  onEditMilestone={(milestone) => {
+                  onMilestoneClick={(_milestone) => {}}
+                  onEditMilestone={(_milestone) => {
                     setIsCreateMilestoneOpen(true);
                   }}
                 />

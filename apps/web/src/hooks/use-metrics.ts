@@ -1,9 +1,7 @@
-import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, } from "@tanstack/react-query";
 import { metricLibrary } from "@/services/metric-library";
 import type {
-  MetricDefinition,
   MetricQuery,
-  MetricResult,
   MetricValue,
   MetricCategory,
   MetricTimeframe

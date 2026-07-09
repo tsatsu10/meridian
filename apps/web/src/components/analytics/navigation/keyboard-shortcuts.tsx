@@ -6,7 +6,6 @@
 
 import * as React from "react";
 import { useEffect, useCallback, useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
 import {
   Dialog,
   DialogContent,

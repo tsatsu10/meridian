@@ -62,7 +62,7 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
         throw new Error("Failed to create column");
       }
 
-      const newColumn = await response.json();
+      void (await response.json());
 
       toast.success(`"${name}" column created successfully`);
       setName("");

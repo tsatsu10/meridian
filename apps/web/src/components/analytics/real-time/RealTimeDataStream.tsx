@@ -1,8 +1,8 @@
 // @epic-3.5-analytics: Real-time Data Streaming for Phase 3 Analytics
 // Live data updates with WebSocket integration
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { API_BASE_URL, } from '@/constants/urls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

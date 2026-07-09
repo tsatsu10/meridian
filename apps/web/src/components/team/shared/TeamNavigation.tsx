@@ -9,11 +9,9 @@ import {
   Shield, 
   Layout, 
   BarChart3,
-  UserPlus,
   ArrowLeft,
   ExternalLink,
   ChevronRight,
-  Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -77,7 +75,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) => {
 
 export const TeamNavigation: React.FC<TeamNavigationProps> = ({
   currentPage,
-  workspaceId,
+  
   showBreadcrumbs = true,
   showDescriptions = false,
   variant = 'tabs',

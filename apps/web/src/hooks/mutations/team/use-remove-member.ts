@@ -13,13 +13,13 @@ export function useRemoveMember() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ teamId, userId, workspaceId }: RemoveMemberData) => {
+    mutationFn: async ({ teamId, userId }: RemoveMemberData) => {
       const response = await fetchApi(`/team/${teamId}/members/${userId}`, {
         method: "DELETE",
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["team-metrics", variables.workspaceId] });
       toast.success("Member removed successfully");

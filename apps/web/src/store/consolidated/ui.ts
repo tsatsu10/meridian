@@ -11,7 +11,6 @@
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { toast } from '@/lib/toast';
 
 // ===== CORE TYPES =====
 

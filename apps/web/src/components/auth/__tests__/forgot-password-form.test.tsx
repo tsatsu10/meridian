@@ -53,7 +53,7 @@ describe('ForgotPasswordForm', () => {
       const emailInput = screen.getByPlaceholderText(/enter your email address/i)
       await userEvent.type(emailInput, 'valid@example.com')
       
-      const submitButton = screen.getByRole('button', { name: /submit/i })
+      void (screen.getByRole('button', { name: /submit/i }));
       
       // No validation error should appear
       expect(screen.queryByText(/please enter a valid email address/i)).not.toBeInTheDocument()

@@ -1,6 +1,6 @@
 // @epic-3.4-teams: Workload heatmap visualization
 // @persona-david: Team Lead workload distribution view
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { cn } from '@/lib/cn';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';

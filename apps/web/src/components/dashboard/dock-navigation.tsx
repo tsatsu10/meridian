@@ -1,6 +1,4 @@
 "use client";
-
-import React from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { motion, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/cn";

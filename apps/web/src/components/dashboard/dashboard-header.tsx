@@ -1,47 +1,13 @@
-// @epic-3.5-communication: Dashboard header optimized for Magic UI Dock Navigation
-// @persona-sarah: PM needs streamlined header with quick access to key actions
-// @persona-jennifer: Exec needs executive-focused header controls
-// @persona-david: Team lead needs team management access from header
-// @persona-mike: Dev needs minimal header interference with dock navigation
-// @persona-lisa: Designer needs clean header design with dock system integration
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, 
-  Plus, 
-  Settings, 
-  Command,
-  LogOut,
-  User,
-  FolderPlus,
-  UserPlus,
-  CheckSquare,
-  MessageCircle
 } from "lucide-react";
-import NotificationBell from "@/components/notification/notification-bell";
 import PageHeaderActions from "@/components/dashboard/page-header-actions";
 import { cn } from "@/lib/cn";
 import { useNavigate } from "@tanstack/react-router";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PerformanceBadge } from "@/components/performance/performance-badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useState } from "react";
 import { toast } from "sonner";
 import useWorkspaceStore from "@/store/workspace";
@@ -49,16 +15,6 @@ import CreateProjectModal from "@/components/shared/modals/create-project-modal"
 
 // Icon wrappers for consistent typing
 const SearchIcon = Search as React.FC<{ className?: string }>;
-const PlusIcon = Plus as React.FC<{ className?: string }>;
-const SettingsIcon = Settings as React.FC<{ className?: string }>;
-const CommandIcon = Command as React.FC<{ className?: string }>;
-const LogOutIcon = LogOut as React.FC<{ className?: string }>;
-const UserIcon = User as React.FC<{ className?: string }>;
-const FolderPlusIcon = FolderPlus as React.FC<{ className?: string }>;
-const UserPlusIcon = UserPlus as React.FC<{ className?: string }>;
-const CheckSquareIcon = CheckSquare as React.FC<{ className?: string }>;
-const MessageCircleIcon = MessageCircle as React.FC<{ className?: string }>;
-
 interface DashboardHeaderProps {
   title?: string;
   subtitle?: string;
@@ -76,25 +32,13 @@ export default function DashboardHeader({
   children,
   variant = "default"
 }: DashboardHeaderProps) {
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  void (useNavigate());
+  const { signOut } = useAuth();
   const { workspace } = useWorkspaceStore();
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
 
   // Enhanced action handlers
-  const handleProfile = () => {
-    navigate({ to: '/dashboard/settings/profile' });
-  };
-
-  const handleSettings = () => {
-    navigate({ to: '/dashboard/settings' });
-  };
-
-  const handleNotificationSettings = () => {
-    navigate({ to: '/dashboard/settings/notifications' });
-  };
-
-  const handleCreateProject = () => {
+        const handleCreateProject = () => {
     if (!workspace) {
       toast.error("Please select a workspace first");
       return;
@@ -102,24 +46,7 @@ export default function DashboardHeader({
     setIsCreateProjectOpen(true);
   };
 
-  const handleCreateTask = () => {
-    navigate({ to: '/dashboard/all-tasks' });
-  };
-
-  const handleInviteUser = () => {
-    navigate({ to: '/dashboard/teams' });
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate({ to: '/auth/signin' });
-    } catch (error) {
-      toast.error("Failed to sign out");
-    }
-  };
-
-  // Variant-based styling
+        // Variant-based styling
   const headerVariants = {
     default: "flex items-center justify-between p-6 bg-white dark:bg-card border-b border-border glass-card",
     minimal: "flex items-center justify-between px-4 py-3 bg-transparent",

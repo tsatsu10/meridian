@@ -7,7 +7,6 @@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp } from "lucide-react";
-import { cn } from "@/lib/cn";
 
 interface ProfileGoalsSectionProps {
   goals: any;

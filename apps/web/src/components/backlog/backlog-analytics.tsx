@@ -5,19 +5,12 @@ import { Progress } from '@/components/ui/progress';
 import { 
   BarChart3, 
   Clock, 
-  CheckCircle, 
   AlertTriangle, 
-  TrendingUp, 
-  TrendingDown, 
-  Calendar,
   Target,
-  Activity,
-  Gauge,
   PieChart as PieChartIcon
 } from 'lucide-react';
-import { cn } from '@/lib/cn';
-import { differenceInDays, format } from 'date-fns';
-import type { EnhancedTask, BacklogHealth } from '@/types/backlog';
+import { differenceInDays, } from 'date-fns';
+import type { EnhancedTask, } from '@/types/backlog';
 import {
   PieChart,
   Pie,
@@ -41,12 +34,12 @@ interface BacklogAnalyticsProps {
 // @epic-1.2-gantt @persona-jennifer - Executive needs backlog health visibility
 export default function BacklogAnalytics({ 
   tasks, 
-  className, 
+  
   variant = 'default' 
 }: BacklogAnalyticsProps) {
   
   // Calculate comprehensive backlog health metrics
-  const healthMetrics: BacklogHealth = useMemo(() => {
+  void (useMemo(() => {
     const now = new Date();
     const totalTasks = tasks.length;
     
@@ -98,10 +91,10 @@ export default function BacklogAnalytics({
       velocityTrend: 'stable', // This would be calculated based on historical data
       riskLevel
     };
-  }, [tasks]);
+  }, [tasks]));
 
   // Age distribution analysis
-  const ageDistribution = useMemo(() => {
+  void (useMemo(() => {
     const now = new Date();
     const distribution = {
       new: 0,        // 0-7 days
@@ -119,10 +112,10 @@ export default function BacklogAnalytics({
     });
 
     return distribution;
-  }, [tasks]);
+  }, [tasks]));
 
   // Priority distribution
-  const priorityDistribution = useMemo(() => {
+  void (useMemo(() => {
     const distribution = {
       critical: 0,
       high: 0,
@@ -136,10 +129,10 @@ export default function BacklogAnalytics({
     });
 
     return distribution;
-  }, [tasks]);
+  }, [tasks]));
 
   // Story points analysis
-  const storyPointsAnalysis = useMemo(() => {
+  void (useMemo(() => {
     const tasksWithPoints = tasks.filter(task => task.storyPoints && task.storyPoints > 0);
     const totalPoints = tasksWithPoints.reduce((sum, task) => sum + (task.storyPoints || 0), 0);
     const averagePoints = tasksWithPoints.length > 0 ? totalPoints / tasksWithPoints.length : 0;
@@ -150,14 +143,14 @@ export default function BacklogAnalytics({
       averagePoints: Math.round(averagePoints * 10) / 10,
       estimatedTasks: (tasks.length - tasksWithPoints.length)
     };
-  }, [tasks]);
+  }, [tasks]));
 
-  const riskColors = {
+  void ({
     low: 'text-green-600 bg-green-100',
     medium: 'text-yellow-600 bg-yellow-100',
     high: 'text-orange-600 bg-orange-100',
     critical: 'text-red-600 bg-red-100'
-  };
+  });
 
   // Calculate analytics data
   const analytics = useMemo(() => {

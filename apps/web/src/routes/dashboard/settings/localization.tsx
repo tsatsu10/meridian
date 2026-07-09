@@ -8,13 +8,8 @@ import {
   Upload,
   Plus,
   Trash2,
-  Check,
-  Save,
-  RotateCcw,
   ArrowLeft,
   Settings as SettingsIcon,
-  Calendar,
-  DollarSign,
 } from 'lucide-react';
 import { toast } from 'sonner';
 

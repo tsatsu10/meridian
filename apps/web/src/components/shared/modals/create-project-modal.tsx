@@ -33,8 +33,6 @@ import { Separator } from "@/components/ui/separator";
 import { 
   FolderOpen, 
   Calendar as CalendarIcon, 
-  Users, 
-  DollarSign,
   Target,
   Clock,
   Zap,
@@ -44,9 +42,7 @@ import {
   Settings,
   CheckCircle2,
   AlertCircle,
-  Plus,
   X,
-  Upload,
   GitBranch,
   Database,
   Flag,
@@ -60,12 +56,10 @@ import { format } from "date-fns";
 import { useRBACAuth } from "@/lib/permissions";
 import useWorkspaceStore from "@/store/workspace";
 import { toast } from "sonner";
-import useCreateProject from "@/hooks/mutations/project/use-create-project";
 import { useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { client } from "@meridian/libs";
 import { getTemplates } from "@/fetchers/templates/get-templates";
-import type { ProjectTemplate } from "@/types/templates";
 
 // Project templates will be fetched from API
 
@@ -325,7 +319,7 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
     }
 
     try {
-      const result = await createProjectMutation.mutateAsync();
+      void (await createProjectMutation.mutateAsync());
       
       toast.success("Project created successfully!");
       handleClose();
@@ -363,9 +357,9 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
     return formData.name.trim().length > 0;
   }, [formData.name]);
 
-  const canProceedToStep3 = useMemo(() => {
+  void (useMemo(() => {
     return isStep2Valid && selectedTemplate;
-  }, [isStep2Valid, selectedTemplate]);
+  }, [isStep2Valid, selectedTemplate]));
 
   if (!canCreateProjects) {
     return (

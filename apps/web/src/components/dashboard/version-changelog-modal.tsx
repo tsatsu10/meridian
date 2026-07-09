@@ -74,7 +74,7 @@ const CHANGE_TYPE_CONFIG = {
 export function VersionChangelogModal({
   open,
   onOpenChange,
-  widgetId,
+  
   widgetName,
   currentVersion,
   latestVersion,

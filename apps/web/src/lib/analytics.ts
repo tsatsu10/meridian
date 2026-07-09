@@ -1,4 +1,4 @@
 
-export const trackEvent = (eventName: string, eventProperties: Record<string, any>) => {
+export const trackEvent = (_eventName: string, _eventProperties: Record<string, any>) => {
   logger.info("[Analytics Event] ${eventName}");
 };

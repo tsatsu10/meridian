@@ -13,7 +13,6 @@ import {
   Clock,
   TrendingUp,
   Calendar,
-  MessageCircle,
 } from "lucide-react";
 import { getUserStatistics, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
 import NumberTicker from "@/components/magicui/number-ticker";

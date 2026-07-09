@@ -46,9 +46,9 @@ export default function LazyAnalyticsWidget({
   workspaceId,
   projectId,
   data,
-  variant,
+  
   chartType,
-  showMetrics,
+  
   title,
   className
 }: LazyAnalyticsWidgetProps) {

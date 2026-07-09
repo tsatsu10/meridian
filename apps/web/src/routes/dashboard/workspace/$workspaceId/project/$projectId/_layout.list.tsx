@@ -5,8 +5,6 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -21,17 +19,14 @@ import {
   Layout,
   CheckSquare
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { useState, useMemo, useCallback, useRef } from "react";
 import { debounce, throttle } from "lodash";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useProjectStore from "@/store/project";
-import { flattenTasks } from "@/utils/task-hierarchy";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
-import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-active-workspace-users";
 import { toast } from "sonner";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useMilestones } from "@/hooks/use-milestones";
@@ -92,16 +87,14 @@ function ProjectListView() {
     canEditTasks,
     canDeleteTasks,
     canManageProject,
-    hasProjectAccess,
-    isLoading: permissionsLoading,
   } = useProjectPermissions(projectId, workspaceId);
   
   // Task management mutations
-  const { mutateAsync: updateTask, isPending: isUpdating } = useUpdateTask();
-  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask();
+  const { mutateAsync: updateTask } = useUpdateTask();
+  const { mutateAsync: deleteTask } = useDeleteTask();
   
   // ♻️ UX: Undo delete with 5-second window
-  const { deleteWithUndo, isPendingDelete } = useUndo(
+  const { deleteWithUndo } = useUndo(
     async (taskId: string) => {
       await deleteTask(taskId);
       setSelectedTasks(prev => prev.filter(id => id !== taskId));
@@ -144,7 +137,7 @@ function ProjectListView() {
     []
   );
 
-  const throttledUpdate = useMemo(
+  void (useMemo(
     () => throttle(async (task: any, updates: any) => {
       try {
         await updateTask({
@@ -158,7 +151,7 @@ function ProjectListView() {
       }
     }, 1000, { leading: true, trailing: false }),
     [updateTask]
-  );
+  ));
 
   // Memory-optimized task processing
   const allTasks = useMemo(() => {

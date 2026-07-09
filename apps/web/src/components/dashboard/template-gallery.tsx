@@ -35,7 +35,6 @@ import {
   Download,
   Globe,
   Lock,
-  Star,
   TrendingUp,
 } from 'lucide-react';
 import { API_BASE_URL } from '@/constants/urls';

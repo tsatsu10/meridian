@@ -72,8 +72,8 @@ const validateFile = (file: File, maxFileSize: number, allowedTypes?: string[]):
 
 // @epic-2.1-files: Main file upload component with drag & drop and progress
 export function FileUpload({
-  taskId,
-  commentId,
+  
+  
   onUploadComplete,
   onUploadError,
   maxFileSize = 10, // 10MB default

@@ -15,12 +15,9 @@ import {
   Flag, 
   Calendar,
   GitBranch,
-  Zap,
   Eye,
   Copy,
-  BookOpen,
   MessageSquare,
-  Bell,
   Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";

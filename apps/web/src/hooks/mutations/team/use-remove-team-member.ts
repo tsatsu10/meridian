@@ -20,7 +20,7 @@ export function useRemoveTeamMember() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate teams list and specific team details to refetch without removed member
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       queryClient.invalidateQueries({ queryKey: ["team", variables.teamId] });

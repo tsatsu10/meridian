@@ -60,7 +60,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 // Hook for uploading team files
 export function useUploadTeamFile() {
   const queryClient = useQueryClient();
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [_uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
   return useMutation({
     mutationFn: async (data: FileUploadData) => {

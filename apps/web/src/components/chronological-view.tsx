@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { format, parseISO, isValid, compareAsc, isSameDay, startOfDay } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Calendar, 
-  Clock, 
   Users, 
   Target, 
   Flag, 

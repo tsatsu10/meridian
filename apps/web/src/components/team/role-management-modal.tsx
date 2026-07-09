@@ -1,5 +1,5 @@
 // @epic-3.4-teams: Dedicated role management modal for workspace-wide permissions
-import { useState, useEffect } from "react";
+import { useState, } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,11 +15,9 @@ import {
   Shield, 
   Users, 
   Search,
-  Crown,
   UserMinus,
   UserPlus,
   Settings,
-  ChevronDown,
   Edit3,
   Save,
   Lock,
@@ -32,11 +30,9 @@ import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 const ShieldIcon = Shield as React.FC<{ className?: string }>;
 const UsersIcon = Users as React.FC<{ className?: string }>;
 const SearchIcon = Search as React.FC<{ className?: string }>;
-const CrownIcon = Crown as React.FC<{ className?: string }>;
 const UserMinusIcon = UserMinus as React.FC<{ className?: string }>;
 const UserPlusIcon = UserPlus as React.FC<{ className?: string }>;
 const SettingsIcon = Settings as React.FC<{ className?: string }>;
-const ChevronDownIcon = ChevronDown as React.FC<{ className?: string }>;
 const Edit3Icon = Edit3 as React.FC<{ className?: string }>;
 const SaveIcon = Save as React.FC<{ className?: string }>;
 const LockIcon = Lock as React.FC<{ className?: string }>;
@@ -122,7 +118,7 @@ export default function RoleManagementModal({
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(selectedTeam?.id || null);
   const [editingRoles, setEditingRoles] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [_selectedMember, setSelectedMember] = useState<any>(null);
   const [showMemberActions, setShowMemberActions] = useState<string | null>(null);
 
   // Get permissions for role management

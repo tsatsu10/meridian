@@ -190,7 +190,7 @@ export function useCallQualityMonitor(peerConnection?: RTCPeerConnection) {
   };
 
   // Calculate bitrate from RTC stats
-  const calculateBitrate = (stats: any, type: 'video' | 'audio'): number => {
+  const calculateBitrate = (stats: any, _type: 'video' | 'audio'): number => {
     if (!stats || !stats.bytesSent) return 0;
     
     const currentTime = Date.now();
@@ -261,7 +261,7 @@ export function useCallQualityMonitor(peerConnection?: RTCPeerConnection) {
 
   // Check quality thresholds and generate alerts
   const checkQualityThresholds = (metrics: CallQualityMetrics) => {
-    const { network, video, audio } = metrics;
+    const { network, video } = metrics;
     
     // High latency alert
     if (network.latency > 200 && !alertQueue.current.has('high-latency')) {
@@ -400,8 +400,8 @@ export function useCallQualityMonitor(peerConnection?: RTCPeerConnection) {
   const getQualityTrend = (): 'improving' | 'stable' | 'degrading' => {
     if (statsHistory.current.length < 10) return 'stable';
     
-    const recent = statsHistory.current.slice(-5);
-    const older = statsHistory.current.slice(-10, -5);
+    void (statsHistory.current.slice(-5));
+    void (statsHistory.current.slice(-10, -5));
     
     // Simple trend analysis based on network scores
     // In a real implementation, this would be more sophisticated

@@ -18,7 +18,6 @@ import {
   Hash,
   CheckSquare,
   AlertCircle,
-  Moon,
   WifiOff,
   Calendar,
   RefreshCw

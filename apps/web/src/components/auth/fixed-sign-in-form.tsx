@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { logger } from "../../lib/logger";
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),

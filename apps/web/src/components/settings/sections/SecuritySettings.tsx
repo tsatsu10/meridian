@@ -23,19 +23,12 @@ import {
   CheckCircle,
   X,
   Copy,
-  RefreshCw,
   Download,
   Trash2,
   Save, 
   RotateCcw,
-  Lock,
-  Unlock,
   Fingerprint,
-  Globe,
-  Archive,
-  UserCheck,
 } from 'lucide-react';
-import { cn } from '@/lib/cn';
 import { logger } from "../../../lib/logger";
 
 const sessionTimeouts = [
@@ -138,7 +131,7 @@ export const SecuritySettings: React.FC = () => {
     setBackupCodes([]);
   };
 
-  const revokeSession = (sessionId: string) => {
+  const revokeSession = (_sessionId: string) => {
     // TODO: Implement session revocation
     logger.info("Revoking session:");
   };
@@ -159,14 +152,7 @@ export const SecuritySettings: React.FC = () => {
     return 'Strong';
   };
 
-  const getPasswordStrengthColor = (score: number) => {
-    if (score < 25) return 'bg-red-500';
-    if (score < 50) return 'bg-orange-500';
-    if (score < 75) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-
-  return (
+    return (
     <div className="space-y-6">
       {/* Header */}
       <div>

@@ -88,12 +88,12 @@ interface Team {
 }
 
 
-const priorityColors = {
+void ({
   low: "border-gray-300 bg-gray-50",
   medium: "border-yellow-300 bg-yellow-50",
   high: "border-red-300 bg-red-50",
   critical: "border-red-500 bg-red-100"
-};
+});
 
 // Helper function to convert CalendarEvents to TimelineEntries
 function convertEventsToTimeline(events: CalendarEvent[]): TimelineEntry[] {
@@ -551,7 +551,7 @@ export default function TeamCalendarModal({
     setShowCreateEventModal(true);
   };
 
-  const handleCreateEvent = (eventData: any) => {
+  const handleCreateEvent = (_eventData: any) => {
     // Event creation is now handled by the CreateEventModal component
     // This handler is called after successful creation for any additional logic
     setShowCreateEventModal(false);

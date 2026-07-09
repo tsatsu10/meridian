@@ -390,15 +390,15 @@ export const roleThemeDefaults = {
 };
 
 // Utility functions
-export function generateColorScale(baseColor: string): ColorScale {
+export function generateColorScale(_baseColor: string): ColorScale {
   // This would implement color scale generation logic
   // For now, returning a placeholder
   return defaultColorScales.blue;
 }
 
 export function validateColorContrast(
-  foreground: string, 
-  background: string
+  _foreground: string, 
+  _background: string
 ): { ratio: number; passes: boolean; level: 'AA' | 'AAA' | 'fail' } {
   // Implement WCAG color contrast validation
   // Placeholder implementation

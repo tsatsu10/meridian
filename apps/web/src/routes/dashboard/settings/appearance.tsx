@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, } from '@/components/ui/tabs';
 import { 
   Palette, 
   Monitor, 
@@ -26,9 +26,7 @@ import {
   Upload,
   X,
   Maximize,
-  Minimize,
   Type,
-  Sparkles,
 } from 'lucide-react';
 import { useThemeSync } from "@/hooks/use-theme-sync";
 import { useSettingsStore } from "@/store/settings";
@@ -141,7 +139,7 @@ function AppearanceSettings() {
   };
 
   // Calculate sunrise/sunset times
-  const calculateSunTimes = (lat: number, lon: number) => {
+  const calculateSunTimes = (_lat: number, _lon: number) => {
     const date = new Date();
     // Simplified calculation - in production, use a proper sun calculation library
     const sunrise = new Date(date);
@@ -165,7 +163,7 @@ function AppearanceSettings() {
           calculateSunTimes(latitude, longitude);
           toast.success('Location detected successfully');
         },
-        (error) => {
+        (_error) => {
           toast.error('Could not detect location. Please enable location services.');
           setLocationBasedEnabled(false);
         }

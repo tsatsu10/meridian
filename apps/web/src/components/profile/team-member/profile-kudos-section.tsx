@@ -1,11 +1,4 @@
-/**
- * 🎉 Profile Kudos Section
- * 
- * Displays recent kudos received
- */
 
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Award, Heart } from "lucide-react";
 import { format } from "date-fns";
 

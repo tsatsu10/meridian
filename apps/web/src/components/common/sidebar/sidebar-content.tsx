@@ -9,9 +9,7 @@ import { cn } from "@/lib/cn";
 import useWorkspaceStore from "@/store/workspace";
 import Workspaces from "./sections/workspaces";
 import { useUserPreferencesStore } from "@/store/user-preferences";
-import { Link } from "@tanstack/react-router";
-import { HelpCircle, Settings } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider, } from "@/components/ui/tooltip";
 import { SidebarNavigation } from "@/components/navigation/magic-ui-navigation";
 
 export function SidebarContent() {

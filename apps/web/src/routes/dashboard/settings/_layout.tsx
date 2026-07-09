@@ -7,7 +7,6 @@
 
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/cn";
-import { Settings } from "lucide-react";
 import { useSettingsNavigation, getNavigationItemStyle } from "@/components/navigation/unified-navigation-config";
 
 export const Route = createFileRoute("/dashboard/settings/_layout")({

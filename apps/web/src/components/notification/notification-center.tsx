@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Bell, Filter, Search, Trash2, Check, Pin, Archive, Settings, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Bell, Search, Trash2, Check, Pin, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -23,12 +23,12 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    clearAll,
+    
     pinNotification,
     unpinNotification,
     getUnreadNotifications,
     getPinnedNotifications,
-    getNotificationsByType,
+    
     getNotificationsByPriority
   } = useNotificationStore();
 

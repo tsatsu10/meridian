@@ -29,7 +29,7 @@ export function useCreateGoal() {
       const response = await api.post('/api/goals', data);
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       // Invalidate goals list to refetch
       queryClient.invalidateQueries({ queryKey: ['goals'] });
 

@@ -60,7 +60,6 @@ function DashboardOverview({
   error = null,
   onRefresh,
   onWidgetToggle,
-  onWidgetReorder,
 }: DashboardOverviewProps) {
   const [refreshing, setRefreshing] = React.useState(false)
 

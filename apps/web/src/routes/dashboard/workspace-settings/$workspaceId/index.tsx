@@ -135,18 +135,11 @@ function RouteComponent() {
             </p>
             <Button
               variant="outline"
-              onClick={() =>
-                navigate({
-                  to: "/dashboard/workspace/$workspaceId",
-                  params: {
-                    workspaceId: workspaceId ?? "",
-                  },
-                })
-              }
+              onClick={() => navigate({ to: "/dashboard" })}
               className="gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Workspace
+              Back to Dashboard
             </Button>
           </div>
         </div>

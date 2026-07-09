@@ -343,7 +343,7 @@ export const circuitBreakerManager = new CircuitBreakerManager({
   failureThreshold: 5,
   resetTimeout: 60000,
   monitoringPeriod: 300000,
-  onStateChange: (state) => {
+  onStateChange: (_state) => {
     logger.info("Circuit breaker state changed to: ${state}");
   },
   onError: (error) => {

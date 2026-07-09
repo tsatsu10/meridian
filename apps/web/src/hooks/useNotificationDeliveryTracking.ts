@@ -204,7 +204,7 @@ export function useNotificationDeliveryTracking(config?: Partial<DeliveryConfig>
     const attempt = delivery.attempts.find(a => a.id === attemptId);
     if (!attempt) return;
 
-    const { retryPolicy, fallbackRules } = deliveryConfig.current;
+    const { retryPolicy } = deliveryConfig.current;
     
     // Check if we should retry
     if (attempt.retryCount < retryPolicy.maxRetries) {
@@ -252,7 +252,7 @@ export function useNotificationDeliveryTracking(config?: Partial<DeliveryConfig>
   const handleFallbackDelivery = async (
     notificationId: string,
     failedChannel: DeliveryAttempt['channel'],
-    originalError: string
+    _originalError: string
   ) => {
     const delivery = deliveries.get(notificationId);
     if (!delivery) return;

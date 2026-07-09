@@ -107,7 +107,7 @@ export const NavBreadcrumbs: React.FC<NavBreadcrumbsProps> = ({
           }
           
           const isLast = index === visible.length - 1;
-          const adjustedIndex = showHomeIcon && visible[0]?.id === 'home' ? index : index + 1;
+          void (showHomeIcon && visible[0]?.id === 'home' ? index : index + 1);
           
           return (
             <li key={breadcrumb.id} className="flex items-center">

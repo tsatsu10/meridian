@@ -84,7 +84,7 @@ export function sanitizeHtml(html: string): string {
   let sanitized = html;
   
   // Remove all tags except allowed ones
-  sanitized = sanitized.replace(/<(\/?)([\w]+)([^>]*)>/gi, (match, closing, tag, attrs) => {
+  sanitized = sanitized.replace(/<(\/?)([\w]+)([^>]*)>/gi, (_match, closing, tag, attrs) => {
     const tagLower = tag.toLowerCase();
     
     if (!allowedTags.includes(tagLower)) {

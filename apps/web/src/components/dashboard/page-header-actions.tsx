@@ -5,9 +5,9 @@
 // @persona-mike: Dev needs minimal header interference
 // @persona-lisa: Designer needs clean header design
 
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,16 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { 
-  Bell, 
   LogOut, 
   Settings, 
   User, 
@@ -35,7 +26,6 @@ import {
   CheckSquare,
   UserPlus
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { useRBACAuth } from "@/lib/permissions";
 import { cn } from "@/lib/cn";
@@ -45,7 +35,6 @@ import NotificationCenter from "@/components/shared/notifications/notification-c
 import useWorkspaceStore from "@/store/workspace";
 import useProjectStore from "@/store/project";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
-import type { Project } from "@/types/project";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
@@ -59,16 +48,16 @@ export default function PageHeaderActions({
   unreadNotifications = 3,
   showChat = true,
 }: PageHeaderActionsProps) {
-  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const [isInviteTeamMemberOpen, setIsInviteTeamMemberOpen] = useState(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [_isCreateProjectOpen, _setIsCreateProjectOpen] = useState(false);
+  const [_isCreateTaskOpen, _setIsCreateTaskOpen] = useState(false);
+  const [_isInviteTeamMemberOpen, _setIsInviteTeamMemberOpen] = useState(false);
+  const [_isCommandPaletteOpen, _setIsCommandPaletteOpen] = useState(false);
 
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
   const { data: projects } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { hasPermission } = useRBACAuth();
   const { workspace: workspaceStore } = useWorkspaceStore();
   
@@ -124,11 +113,7 @@ export default function PageHeaderActions({
     }
   };
 
-  const handleCreateClick = () => {
-    // Default create action - show dropdown or navigate
-  };
-
-  return (
+    return (
     <>
       <div className={cn("flex items-center space-x-3")}>
         {/* Quick Actions Dropdown */}

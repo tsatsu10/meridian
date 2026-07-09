@@ -217,8 +217,8 @@ export default function CreateEventModal({
     }));
   };
 
-  const selectedEventType = eventTypes.find(type => type.value === formData.type);
-  const selectedPriority = priorityOptions.find(p => p.value === formData.priority);
+  void (eventTypes.find(type => type.value === formData.type));
+  void (priorityOptions.find(p => p.value === formData.priority));
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

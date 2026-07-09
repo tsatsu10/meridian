@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Camera, MapPin, Briefcase, Calendar } from 'lucide-react';
+import { Camera, MapPin, Briefcase, } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,7 +21,7 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({
   name,
-  email,
+  
   jobTitle,
   company,
   location,

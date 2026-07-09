@@ -44,8 +44,7 @@ export function TaskBreadcrumb({
 
       {/* Workspace */}
       <Link
-        to="/dashboard/workspace/$workspaceId"
-        params={{ workspaceId }}
+        to="/dashboard/projects"
         className="hover:text-foreground transition-colors truncate max-w-[120px] sm:max-w-none"
         aria-label={`Go to workspace ${workspaceName}`}
       >

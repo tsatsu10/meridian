@@ -11,7 +11,6 @@ import {
   Clock,
   LogOut,
   AlertTriangle,
-  CheckCircle2,
   Wifi,
   WifiOff,
   Globe,
@@ -62,7 +61,7 @@ interface SessionStats {
 
 export function SessionManagementWidget() {
   const queryClient = useQueryClient();
-  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [_selectedSession, setSelectedSession] = useState<string | null>(null);
 
   // Fetch active sessions
   const { data: sessions, isLoading: sessionsLoading } = useQuery<ActiveSession[]>({

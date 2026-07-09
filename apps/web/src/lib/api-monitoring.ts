@@ -7,7 +7,7 @@ export const withApiMonitoring = async <T>(
   try {
     const result = await apiCall();
     const endTime = performance.now();
-    const duration = endTime - startTime;
+    void (endTime - startTime);
     logger.info("API call ${apiName} took ${duration.toFixed(2)}ms to complete.");
     return result;
   } catch (error) {

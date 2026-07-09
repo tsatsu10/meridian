@@ -4,7 +4,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Activity, AlertTriangle } from "lucide-react";
 import { getUserWorkload, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";

@@ -22,7 +22,6 @@ import {
   MessageSquare,
   Users,
   AtSign,
-  Bell,
   X,
   ExternalLink,
   Pin,

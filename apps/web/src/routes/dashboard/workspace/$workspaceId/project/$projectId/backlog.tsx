@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,6 @@ import {
 // Import enhanced backlog view and fallback
 import EnhancedBacklogView from "@/components/backlog-list-view/enhanced-backlog-view";
 import BacklogListView from "@/components/backlog-list-view";
-import PageTitle from "@/components/page-title";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import { BulkActionsToolbar } from "@/components/backlog/bulk-actions-toolbar";
 import { BacklogHelpDialog } from "@/components/backlog/backlog-help-dialog";
@@ -33,7 +32,7 @@ import useProjectStore from "@/store/project";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import { useRBACAuth } from "@/lib/permissions/context";
 import { useProjectPermissions } from "@/lib/permissions/hooks";
-import { useKeyboardShortcuts, type KeyboardShortcut } from "@/hooks/use-keyboard-shortcuts";
+import { useKeyboardShortcuts, } from "@/hooks/use-keyboard-shortcuts";
 import { z } from "zod";
 
 // Theme API hooks
@@ -58,12 +57,9 @@ import type Task from "@/types/task";
 // Icons
 import { 
   Layout, 
-  Grid, 
-  Settings,
   ArrowRight,
   Plus,
   Sparkles,
-  ChevronLeft,
   FolderKanban,
   AlertCircle,
   Filter,
@@ -107,9 +103,9 @@ function BacklogPage() {
   const { mutate: updateTask } = useUpdateTask();
   
   // 🎨 Theme mutations
-  const { mutate: createTheme, isPending: isCreatingTheme } = useCreateTheme();
-  const { mutate: updateTheme, isPending: isUpdatingTheme } = useUpdateTheme();
-  const { mutate: deleteTheme, isPending: isDeletingTheme } = useDeleteTheme();
+  const { mutate: createTheme } = useCreateTheme();
+  const { mutate: updateTheme } = useUpdateTheme();
+  const { mutate: deleteTheme } = useDeleteTheme();
   
   // ☑️ Bulk operation mutations
   const { mutate: bulkUpdateStatus } = useBulkUpdateStatus();

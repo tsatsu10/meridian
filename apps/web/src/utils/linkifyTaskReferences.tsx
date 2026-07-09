@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export function linkifyTaskReferences(content: string, onTaskClick: (taskNumber: string) => void) {
   return content.split(/(#[0-9]+)/g).map((part, i) => {

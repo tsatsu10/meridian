@@ -8,14 +8,11 @@ import {
   Circle,
   Clock,
   Flag,
-  User,
-  Calendar,
   Trash2,
   Edit,
   Eye,
   MoreHorizontal,
   Zap,
-  Star,
   AlertCircle,
 } from 'lucide-react';
 

@@ -43,7 +43,7 @@ export function BulkOperationsProvider({
     });
   };
 
-  const selectAllSubtasks = (parentTaskId: string, subtasks: TaskWithSubtasks[]) => {
+  const selectAllSubtasks = (_parentTaskId: string, subtasks: TaskWithSubtasks[]) => {
     setSelectedTasks(prev => {
       const newSet = new Set(prev);
       const addSubtasks = (tasks: TaskWithSubtasks[]) => {

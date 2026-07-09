@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { uploadAttachment, type UploadAttachmentRequest } from '@/fetchers/attachment/upload-attachment';
+import { uploadAttachment, } from '@/fetchers/attachment/upload-attachment';
 
 // @epic-2.1-files: React Query mutation hook for uploading attachments
 export function useUploadAttachment() {
@@ -7,7 +7,7 @@ export function useUploadAttachment() {
 
   return useMutation({
     mutationFn: uploadAttachment,
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate and refetch attachments for the task or comment
       if (variables.taskId) {
         queryClient.invalidateQueries({

@@ -17,17 +17,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Target,
   Plus,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   ChevronDown,
   ChevronRight,
   Calendar,
   CheckCircle,
   Circle,
-  AlertCircle,
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { useGoals } from "@/hooks/queries/goals";
 import { CreateGoalModal } from "./create-goal-modal";
 import { format, differenceInDays } from "date-fns";
@@ -38,7 +33,7 @@ interface OKRWidgetProps {
   className?: string;
 }
 
-export function OKRWidget({ workspaceId, userId, className }: OKRWidgetProps) {
+export function OKRWidget({ workspaceId, className }: OKRWidgetProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
   

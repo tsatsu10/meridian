@@ -10,7 +10,7 @@ import { persist } from 'zustand/middleware';
 import type { LoggedInUser } from '@/types/user';
 import type { UserRole, AllPermissions } from '@/lib/permissions/types';
 import { getRolePermissions } from '@/lib/permissions/definitions';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 import { logger } from "../../lib/logger";
 
 // ===== TYPES =====
@@ -334,7 +334,7 @@ export const useAuthStore = create<AuthStore>()(
         return (user.permissions as any)[action] === true;
       },
 
-      canAccessResource: (resource, level) => {
+      canAccessResource: (_resource, level) => {
         const { user } = get();
         if (!user) return false;
         

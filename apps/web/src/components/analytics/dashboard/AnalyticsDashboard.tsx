@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   BarChart3, 
@@ -11,10 +10,9 @@ import {
   TrendingUp, 
   Activity, 
   Download,
-  Calendar,
   RefreshCw
 } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { RealTimeMetrics } from './RealTimeMetrics';
 import { PerformanceCharts } from './PerformanceCharts';
@@ -34,7 +32,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   className
 }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
-  const [selectedMetric, setSelectedMetric] = useState<MetricType>('messages');
+  const [_selectedMetric, _setSelectedMetric] = useState<MetricType>('messages');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Calculate date range based on selected time range

@@ -4,15 +4,14 @@
  * Phase 3.4 - Advanced Analytics & Reporting
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Badge } from '../ui/badge';
-import { Switch } from '../ui/switch';
-import { Calendar, Clock, Mail, Plus, Trash2, Play, Pause } from 'lucide-react';
+import { Calendar, Clock, Mail, Plus, Play, Pause } from 'lucide-react';
 
 interface ScheduledReport {
   id: string;

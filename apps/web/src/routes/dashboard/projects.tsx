@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { ProjectsPageSkeleton } from "@/components/ui/loading-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -83,7 +81,6 @@ function ProjectsPage() {
     searchQuery,
     sortBy,
     sortOrder,
-    setSearchQuery,
   } = useFilterStore();
 
   const [currentPage, setCurrentPage] = useState(() => urlSearch.page ?? 1);

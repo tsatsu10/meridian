@@ -142,7 +142,7 @@ export const useMobileKeyboard = (options: MobileKeyboardOptions = {}) => {
     const targetBottom = rect.bottom + offset;
     
     if (targetBottom > viewportHeight) {
-      const scrollAmount = targetBottom - viewportHeight;
+      void (targetBottom - viewportHeight);
       element.scrollIntoView({ 
         behavior: 'smooth', 
         block: 'center',

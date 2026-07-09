@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Loader2, X, ZoomIn, ZoomOut, RotateCw, Check } from 'lucide-react';
+import { Upload, Loader2, X, ZoomIn, RotateCw, Check } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 
 interface AvatarUploadProps {
@@ -12,7 +12,7 @@ interface AvatarUploadProps {
   onSuccess?: (avatarUrl: string) => void;
 }
 
-export function AvatarUpload({ open, onOpenChange, currentAvatar, onSuccess }: AvatarUploadProps) {
+export function AvatarUpload({ open, onOpenChange, onSuccess }: AvatarUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [zoom, setZoom] = useState<number>(1);
