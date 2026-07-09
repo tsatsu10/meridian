@@ -98,7 +98,11 @@ interface ProjectColumn {
 }
 
 interface ProjectState {
-  columns: {
+  id?: string;
+  name?: string;
+  slug?: string;
+  icon?: React.ReactNode;
+  columns?: {
     tasks: Task[];
   }[];
 }
@@ -191,9 +195,15 @@ export default function CreateTaskModal({
   const { project } = useProjectStore();
   const createTaskMutation = useCreateTask();
 
-  // Helper function to safely check project context structure
+  // Helper functions to safely resolve the project from context
+  const getContextProjectId = (context: ProjectState | undefined): string | undefined => {
+    return context?.id ?? context?.columns?.[0]?.tasks?.[0]?.projectId;
+  };
+  const getContextProjectLabel = (context: ProjectState | undefined): string | undefined => {
+    return context?.name ?? getContextProjectId(context);
+  };
   const isValidProjectContext = (context: ProjectState | undefined): boolean => {
-    return !!(context?.columns?.[0]?.tasks?.[0]);
+    return !!getContextProjectId(context);
   };
   
   const [formData, setFormData] = useState<FormData>({
@@ -267,7 +277,7 @@ export default function CreateTaskModal({
   useEffect(() => {
     if (isValidProjectContext(projectContext)) {
       const contextProject = projects.find(
-        (p) => p.id === projectContext!.columns[0].tasks[0].projectId
+        (p) => p.id === getContextProjectId(projectContext)
       );
       if (contextProject) {
         setSelectedProject(contextProject);
@@ -301,7 +311,7 @@ export default function CreateTaskModal({
         status: formData.status,
         priority: formData.priority,
         dueDate: formData.dueDate || new Date().toISOString(),
-        projectId: selectedProject?.id || "",
+        projectId: selectedProject?.id || getContextProjectId(projectContext) || "",
         parentId: formData.parentId || undefined,
         userEmail: formData.assigneeEmail || undefined,
         dependencies: formData.dependencies,
@@ -422,13 +432,13 @@ export default function CreateTaskModal({
             Create New Task
             {isValidProjectContext(projectContext) && (
               <span className="ml-2 text-sm text-muted-foreground">
-                in {projectContext!.columns[0].tasks[0].projectId}
+                in {getContextProjectLabel(projectContext)}
               </span>
             )}
                     </DialogTitle>
           <DialogDescription>
             {isValidProjectContext(projectContext)
-              ? `Add a new task to ${projectContext!.columns[0].tasks[0].projectId}`
+              ? `Add a new task to ${getContextProjectLabel(projectContext)}`
               : "Create a new task in your workspace"}
           </DialogDescription>
         </DialogHeader>

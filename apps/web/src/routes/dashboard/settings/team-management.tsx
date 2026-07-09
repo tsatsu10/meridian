@@ -368,15 +368,7 @@ function TeamManagementSettings() {
           </div>
             
           <div className="flex gap-3">
-            <Button 
-              onClick={() => navigate({ to: "/dashboard/settings/components-features" })}
-              variant="outline"
-            >
-              <Layout className="h-4 w-4 mr-2" />
-              Manage Pages & Features
-            </Button>
-            
-            <Button 
+            <Button
               onClick={() => setIsInviteModalOpen(true)}
             >
               <UserPlus className="h-4 w-4 mr-2" />
@@ -622,7 +614,7 @@ function TeamManagementSettings() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => navigate({ to: '/dashboard/settings/role-permissions' })}
+                onClick={() => navigate({ to: '/dashboard/settings/roles-unified' })}
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Manage Role Permissions

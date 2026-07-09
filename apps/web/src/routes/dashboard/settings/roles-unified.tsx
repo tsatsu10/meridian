@@ -38,17 +38,7 @@ import { toast } from 'sonner';
 // TYPES
 // ==========================================
 
-interface Role {
-  id: string;
-  name: string;
-  description: string | null;
-  type: 'system' | 'custom';
-  color: string;
-  usersCount: number;
-  lastUsedAt: Date | null;
-  isActive: boolean;
-  createdAt: Date;
-}
+import type { Role } from '@/components/rbac/role-card';
 
 interface RoleFilters {
   type: 'all' | 'system' | 'custom';

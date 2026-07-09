@@ -39,12 +39,14 @@ interface ProjectMember {
   id: string;
   name: string;
   email: string;
+  avatar?: string;
   role: string;
-  status: string;
+  workspaceRole?: string;
+  status: "online" | "away" | "offline";
   activeTasks: number;
   completedTasks: number;
   productivity: number;
-  lastActive: string;
+  lastActive?: string;
   joinedProject: string;
 }
 

@@ -27,12 +27,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import useProjectStore from "@/store/project";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
-import useCreateTask from "@/hooks/mutations/task/use-create-task";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
-import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import GanttChart from "@/components/gantt-chart";
 import DependencyGraph from "@/components/dependency-graph";
@@ -127,10 +123,6 @@ const riskLevelColors = {
 // @epic-2.1-files @persona-lisa - Designer needs project timeline context
 function ProjectTimeline() {
   const { workspaceId, projectId } = Route.useParams();
-  const { project } = useProjectStore();
-  const { mutate: createTask } = useCreateTask();
-  const { mutate: updateTask } = useUpdateTask();
-  const { mutate: deleteTask } = useDeleteTask(projectId);
 
   // Fetch real project and task data
   const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProject({ 
@@ -510,7 +502,11 @@ function ProjectTimeline() {
       // Check if current task has dependencies in other milestones
       const task = allTasks.find((t: any) => t.id === currentId);
       if (task && task.dependencies) {
-        stack.push(...task.dependencies);
+        stack.push(
+          ...task.dependencies.map((d: any) =>
+            typeof d === "string" ? d : d.requiredTaskId,
+          ),
+        );
       }
       
       const milestone = realMilestones.find((m: any) => m.id === currentId);

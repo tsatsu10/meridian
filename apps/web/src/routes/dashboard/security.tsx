@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Lock, Users, FileCheck } from "lucide-react";
 import UniversalHeader from "@/components/dashboard/universal-header";
-import { useRBACAuth } from "@/lib/permissions";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 
 // Import Security Dashboard Components
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/dashboard/security")({
   component: SecurityDashboardPage,
   beforeLoad: ({ context }) => {
     // Check if user has access to security dashboard
-    const user = context.auth?.user;
+    const user = context.user;
     if (!user?.role || !["workspace-manager", "admin"].includes(user.role)) {
       throw new Error("Unauthorized: Security dashboard access restricted to admins and workspace managers");
     }
@@ -29,16 +28,6 @@ export const Route = createFileRoute("/dashboard/security")({
 
 function SecurityDashboardPage() {
   const { user } = useAuth();
-  
-  // Safe RBAC hook usage with fallback
-  let rbacAuth;
-    
-  try {
-    rbacAuth = useRBACAuth();
-    hasPermission = rbacAuth?.hasPermission || ((_action: string, _context?: any) => false);
-  } catch (error) {
-    console.warn("RBAC context not available, using fallback permissions");
-  }
 
   // Security role check - only admins and workspace managers can access
   if (!user?.role || !["workspace-manager", "admin"].includes(user.role)) {

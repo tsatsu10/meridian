@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { FolderOpen, Calendar, Users, Clock } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import useWorkspaceStore from "@/store/workspace";
 import { getActiveProjects, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
@@ -27,6 +28,7 @@ const roleColors: Record<string, string> = {
 };
 
 export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
+  const workspaceId = useWorkspaceStore((s) => s.workspace?.id);
   const { data, isLoading } = useQuery({
     queryKey: smartProfileKeys.activeProjects(userId),
     queryFn: () => getActiveProjects(userId),
@@ -95,8 +97,8 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
             return (
               <Link
                 key={project.id}
-                to="/dashboard/projects/$projectId"
-                params={{ projectId: project.id }}
+                to="/dashboard/workspace/$workspaceId/project/$projectId/board"
+                params={{ workspaceId: workspaceId ?? "", projectId: project.id }}
                 className="block"
               >
                 <div className="p-4 rounded-lg border hover:border-primary transition-colors">

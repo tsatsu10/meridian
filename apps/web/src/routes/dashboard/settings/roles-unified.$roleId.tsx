@@ -81,7 +81,7 @@ function RoleDetailsPage() {
   });
   
   // Fetch role usage stats
-  const { data: usageStats } = useQuery({
+  const { data: _usageStats } = useQuery({
     queryKey: ['role-usage', roleId],
     queryFn: async () => {
       const response = await fetch(`${API_BASE_URL}/roles/${roleId}/usage`, {

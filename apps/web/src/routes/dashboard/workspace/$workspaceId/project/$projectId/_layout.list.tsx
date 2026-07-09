@@ -24,7 +24,6 @@ import { debounce, throttle } from "lodash";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
-import useProjectStore from "@/store/project";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
 import { toast } from "sonner";
@@ -66,20 +65,20 @@ export const Route = createFileRoute(
   ),
 });
 
-// Pagination interface for consistency with All Tasks
+// Pagination interface matching VirtualizedTaskList's expected shape
 interface PaginationInfo {
-  page: number;
-  pageSize: number;
   total: number;
-  totalPages: number;
+  limit: number;
+  offset: number;
+  pages: number;
+  currentPage: number;
 }
 
 function ProjectListView() {
   const { projectId, workspaceId } = Route.useParams();
   const { data: columns, isLoading } = useGetTasks(projectId);
   const { data: projectData } = useGetProject({ id: projectId, workspaceId });
-  const { setProject } = useProjectStore();
-  const { getCurrentUsage, isHighMemory } = useMemoryCleanup();
+  useMemoryCleanup();
   
   // 🔒 SECURITY: Check user permissions for this project
   const {
@@ -91,7 +90,7 @@ function ProjectListView() {
   
   // Task management mutations
   const { mutateAsync: updateTask } = useUpdateTask();
-  const { mutateAsync: deleteTask } = useDeleteTask();
+  const { mutateAsync: deleteTask } = useDeleteTask(projectId);
   
   // ♻️ UX: Undo delete with 5-second window
   const { deleteWithUndo } = useUndo(
@@ -236,10 +235,11 @@ function ProjectListView() {
   }, [filteredAndSortedTasks, currentPage, pageSize]);
 
   const pagination: PaginationInfo = {
-    page: currentPage,
-    pageSize,
     total: filteredAndSortedTasks.length,
-    totalPages: Math.ceil(filteredAndSortedTasks.length / pageSize)
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize,
+    pages: Math.ceil(filteredAndSortedTasks.length / pageSize),
+    currentPage,
   };
 
   // Task management functions - same as All Tasks
@@ -643,8 +643,8 @@ function ProjectListView() {
               toast.error("Failed to update task");
             }
           } : undefined}
-          onTaskDelete={canDeleteTasks ? (taskId: string) => {
-            deleteWithUndo(taskId);
+          onTaskDelete={canDeleteTasks ? async (taskId: string) => {
+            deleteWithUndo({ id: taskId });
           } : undefined}
           onTaskReorder={handleTaskReorder}
           isLoading={isLoading}

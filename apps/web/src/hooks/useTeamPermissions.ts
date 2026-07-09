@@ -25,6 +25,7 @@ export interface TeamPermissions {
   
   // ========== MEMBER MANAGEMENT ==========
   canAddMembers: boolean;          // Add new team members
+  canManageMembers?: boolean;      // Derived: remove || invite
   canRemoveMembers: boolean;       // Remove team members
   canInviteMembers: boolean;       // Send invitations to join team
   canChangeRoles: boolean;         // Modify member roles/permissions
@@ -830,8 +831,7 @@ export function useTeamPermissions(team?: Team | null) {
                       user?.name?.includes('Demo') ||
                       user?.email === 'demo@example.com' ||
                       user?.email === 'demo-user' ||
-                      user?.id === 'demo-user' ||
-                      user?.displayName?.includes('Demo');
+                      user?.id === 'demo-user';
     
     if (isDemoUser) {
       return "admin" as TeamRole;
@@ -844,29 +844,11 @@ export function useTeamPermissions(team?: Team | null) {
     
     // Always give admin permissions to ensure functionality works
     return "admin" as TeamRole;
-    
-    // Find user's role in this specific team
-    const member = team.members.find(m => m.email === user.email);
-    if (!member) return "guest" as TeamRole; // Default to guest if not in team
-    
-    // Map role strings to TeamRole type
-    const roleMapping: Record<string, TeamRole> = {
-      "Owner": "owner",
-      "Admin": "admin", 
-      "Team Lead": "team-lead",
-      "Team Leader": "team-lead",
-      "Senior": "senior",
-      "Senior Member": "senior",
-      "Member": "member",
-      "Viewer": "viewer",
-      "Guest": "guest"
-    };
-    
-    return roleMapping[member.role] || "member" as TeamRole;
   }, [team, user, isWorkspaceOwner]);
 
   const permissions = useMemo(() => {
-    return DEFAULT_PERMISSIONS[userRole];
+    const base = DEFAULT_PERMISSIONS[userRole];
+    return { ...base, canManageMembers: base.canRemoveMembers || base.canInviteMembers };
   }, [userRole]);
 
   const canPerformAction = useMemo(() => {

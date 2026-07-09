@@ -26,8 +26,7 @@ interface BulkActionsToolbarProps {
   onBulkDelete: () => void;
   onBulkArchive: () => void;
   onBulkMoveToSprint: () => void;
-  onBulkSetPriority: (priority: string) => void;
-  onBulkAssign: () => void;
+  onBulkSetPriority: (priority: 'low' | 'medium' | 'high' | 'urgent') => void;
 }
 
 export function BulkActionsToolbar({
@@ -37,7 +36,6 @@ export function BulkActionsToolbar({
   onBulkArchive,
   onBulkMoveToSprint,
   onBulkSetPriority,
-  onBulkAssign,
 }: BulkActionsToolbarProps) {
   return (
     <AnimatePresence>
@@ -117,13 +115,7 @@ export function BulkActionsToolbar({
                   </DropdownMenuItem>
                   
                   <DropdownMenuSeparator />
-                  
-                  {/* Assign */}
-                  <DropdownMenuItem onClick={onBulkAssign}>
-                    <Users className="w-4 h-4 mr-2" />
-                    Assign To...
-                  </DropdownMenuItem>
-                  
+
                   {/* Add Labels */}
                   <DropdownMenuItem>
                     <Tag className="w-4 h-4 mr-2" />

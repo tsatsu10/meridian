@@ -463,12 +463,12 @@ function WorkspaceSettings() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Owner</Label>
-                <Input value={`${settings.ownerName} (${settings.ownerEmail})`} disabled />
+                <Input value={`${settings?.ownerName} (${settings?.ownerEmail})`} disabled />
               </div>
               
               <div className="space-y-2">
                 <Label>Members</Label>
-                <Input value={`${settings.memberCount} members`} disabled />
+                <Input value={`${settings?.memberCount ?? 0} members`} disabled />
               </div>
             </div>
 
@@ -871,7 +871,7 @@ function WorkspaceSettings() {
                       <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                       <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the workspace
-                        "{settings.name}" and remove all associated data including projects, tasks,
+                        "{settings?.name}" and remove all associated data including projects, tasks,
                         and team members.
                       </AlertDialogDescription>
                     </AlertDialogHeader>

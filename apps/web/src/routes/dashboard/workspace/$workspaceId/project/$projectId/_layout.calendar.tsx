@@ -26,11 +26,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import useProjectStore from "@/store/project";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
-import useCreateTask from "@/hooks/mutations/task/use-create-task";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import type { WorkspaceUser } from "@/types/workspace-user";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
@@ -131,9 +128,6 @@ const priorityColors = {
 // @persona-jennifer: Exec needs milestone tracking and project timeline overview
 function ProjectCalendar() {
   const { workspaceId, projectId } = Route.useParams();
-  const { project } = useProjectStore();
-  const { mutate: createTask } = useCreateTask();
-  const { mutate: updateTask } = useUpdateTask();
 
   // Fetch real project and task data
   const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProject({ 

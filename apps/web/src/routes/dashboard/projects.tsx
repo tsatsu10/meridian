@@ -128,7 +128,7 @@ function ProjectsPage() {
       shortcuts.push({
         key: 'n',
         ctrl: true,
-        callback: handleCreateProject,
+        action: handleCreateProject,
         description: 'Create new project'
       });
     }
@@ -136,7 +136,7 @@ function ProjectsPage() {
     shortcuts.push({
       key: 'k',
       ctrl: true,
-      callback: () => searchInputRef.current?.focus(),
+      action: () => searchInputRef.current?.focus(),
       description: 'Focus search'
     });
     
@@ -601,7 +601,6 @@ function ProjectsPage() {
                 onShare={handleShareProject}
                 onSettings={(p) => handleProjectAction("settings", p)}
                 onDelete={handleDeleteProject}
-                onRestore={handleRestoreProject}
               />
             )}
           />
@@ -619,7 +618,6 @@ function ProjectsPage() {
             onShare={handleShareProject}
             onSettings={(p) => handleProjectAction('settings', p)}
             onDelete={handleDeleteProject}
-            onRestore={handleRestoreProject}
           />
         )}
 
@@ -691,7 +689,6 @@ function ProjectsPage() {
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
-                          href="#"
                           onClick={(e) => {
                             e.preventDefault();
                             if (currentPage > 1) {
@@ -724,7 +721,6 @@ function ProjectsPage() {
                               <PaginationEllipsis />
                             ) : (
                               <PaginationLink
-                                href="#"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   setCurrentPage(pageNum as number);
@@ -741,7 +737,6 @@ function ProjectsPage() {
 
                       <PaginationItem>
                         <PaginationNext
-                          href="#"
                           onClick={(e) => {
                             e.preventDefault();
                             if (currentPage < pagination.pages) {

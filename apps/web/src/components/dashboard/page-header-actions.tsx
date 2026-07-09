@@ -44,10 +44,7 @@ interface PageHeaderActionsProps {
   showChat?: boolean;
 }
 
-export default function PageHeaderActions({
-  unreadNotifications = 3,
-  showChat = true,
-}: PageHeaderActionsProps) {
+export default function PageHeaderActions(_props: PageHeaderActionsProps = {}) {
   const [_isCreateProjectOpen, _setIsCreateProjectOpen] = useState(false);
   const [_isCreateTaskOpen, _setIsCreateTaskOpen] = useState(false);
   const [_isInviteTeamMemberOpen, _setIsInviteTeamMemberOpen] = useState(false);
@@ -58,8 +55,6 @@ export default function PageHeaderActions({
   const { data: projects } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasPermission } = useRBACAuth();
-  const { workspace: workspaceStore } = useWorkspaceStore();
   
   // Modal states
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
@@ -223,9 +218,6 @@ export default function PageHeaderActions({
         onOpenChange={setIsCreateTaskModalOpen}
         projectContext={project}
         hideProjectSelection={false}
-        filterOptions={{
-          projects: projects,
-        }}
       />
 
       {workspace && (

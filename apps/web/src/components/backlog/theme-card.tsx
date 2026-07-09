@@ -85,7 +85,7 @@ export function ThemeCard({
     return 'pending';
   };
 
-  const progressValue = tasks.length > 0 ? (theme.progress || 0) : 0;
+  const progressValue = tasks.length > 0 ? (theme.progress?.progressPercentage ?? 0) : 0;
   const taskCount = tasks.length;
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
 
@@ -109,7 +109,7 @@ export function ThemeCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <MeridianCardTitle className="text-h5 truncate">
-              {theme.title}
+              {theme.name}
             </MeridianCardTitle>
             
             <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export function ThemeCard({
                   {theme.assignees.slice(0, 3).map((assignee: any, index: any) => (
                     <Avatar key={index} className="h-6 w-6 border-2 border-background">
                       <AvatarFallback className="text-xs">
-                        {assignee.name.charAt(0).toUpperCase()}
+                        {String(assignee?.name ?? assignee).charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   ))}

@@ -37,6 +37,12 @@ interface UnifiedUser extends RBACUser {
   currentProjectId?: string;
 }
 
+type UnifiedSettings = {
+  theme: 'light' | 'dark' | 'system';
+  sidebarCollapsed: boolean;
+  animations: boolean;
+};
+
 interface UnifiedContextType {
   // ===== AUTH STATE =====
   user: UnifiedUser | null | undefined;
@@ -53,12 +59,8 @@ interface UnifiedContextType {
   canAccessResource: (resource: string, level: string) => boolean;
   
   // ===== SETTINGS =====
-  settings: {
-    theme: 'light' | 'dark' | 'system';
-    sidebarCollapsed: boolean;
-    animations: boolean;
-  };
-  updateSettings: (updates: Partial<typeof settings>) => void;
+  settings: UnifiedSettings;
+  updateSettings: (updates: Partial<UnifiedSettings>) => void;
   
   // ===== REALTIME =====
   isConnected: boolean;
@@ -319,7 +321,7 @@ function UnifiedContextInner({
   // ===== RENDER =====
 
   return (
-    <ErrorBoundary fallback={<div>Context initialization failed</div>}>
+    <ErrorBoundary fallbackUI={<div>Context initialization failed</div>}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <UnifiedContext.Provider value={contextValue}>
@@ -349,6 +351,8 @@ export function useUnifiedContext(): UnifiedContextType {
       signOut: async () => {},
       workspace: null,
       setWorkspace: () => {},
+      hasPermission: () => false,
+      canAccessResource: () => false,
       settings: { theme: 'light', sidebarCollapsed: false, animations: true },
       updateSettings: () => {},
       isConnected: false,
@@ -401,7 +405,7 @@ export function useRealtime() {
 
 export function UnifiedContextProvider({ children, queryClient }: UnifiedContextProviderProps) {
   return (
-    <ErrorBoundary fallback={<div>Provider initialization failed</div>}>
+    <ErrorBoundary fallbackUI={<div>Provider initialization failed</div>}>
       <QueryClientProvider client={queryClient || new QueryClient()}>
         <TooltipProvider>
           <RBACProvider>

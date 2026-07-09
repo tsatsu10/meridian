@@ -43,7 +43,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Hooks
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import { cn } from "@/lib/utils";
 
@@ -59,8 +58,7 @@ function TaskDetailsPage() {
   const navigate = useNavigate();
   const { data: task, isLoading } = useGetTask(taskId);
   const { data: project } = useGetTasks(projectId);
-  const { mutateAsync: updateTask } = useUpdateTask();
-  const { mutateAsync: deleteTask } = useDeleteTask();
+  const { mutateAsync: deleteTask } = useDeleteTask(projectId);
 
   const [isWatching, setIsWatching] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -110,7 +108,7 @@ function TaskDetailsPage() {
   const handleDelete = useCallback(async () => {
     if (confirm("Are you sure you want to delete this task?")) {
       try {
-        await deleteTask({ id: taskId, userEmail: "user@meridian.app" });
+        await deleteTask(taskId);
         toast.success("Task deleted");
         handleBack();
       } catch (error) {
@@ -124,20 +122,20 @@ function TaskDetailsPage() {
   }, []);
 
   // 📊 Computed Values
-  const statusColor = {
+  const statusColor = ({
     todo: "bg-zinc-500",
     in_progress: "bg-blue-500",
     review: "bg-amber-500",
     done: "bg-green-500",
     blocked: "bg-red-500",
-  }[task?.status || "todo"];
+  } as Record<string, string>)[task?.status || "todo"] ?? "bg-zinc-500";
 
-  const priorityColor = {
+  const priorityColor = ({
     low: "text-zinc-600 dark:text-zinc-400",
     medium: "text-blue-600 dark:text-blue-400",
     high: "text-amber-600 dark:text-amber-400",
     urgent: "text-red-600 dark:text-red-400",
-  }[task?.priority || "medium"];
+  } as Record<string, string>)[task?.priority || "medium"] ?? "text-blue-600 dark:text-blue-400";
 
   // 🎨 Loading State
   if (isLoading) {

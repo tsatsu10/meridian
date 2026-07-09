@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import useWorkspaceStore from "@/store/workspace";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import {
   Select,
   SelectContent,
@@ -135,6 +134,8 @@ export default function TeamCreationModal({
   const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
   const [_isLoadingMembers, setIsLoadingMembers] = useState(false);
 
+  const { workspace } = useWorkspaceStore();
+
   // Fetch workspace members when modal opens
   React.useEffect(() => {
     if (!open || !workspace?.id) return;
@@ -172,10 +173,6 @@ export default function TeamCreationModal({
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { workspace } = useWorkspaceStore();
-  const { data: projects } = useGetProjects({ 
-    workspaceId: workspace?.id || "" 
-  });
 
   void (availableMembers.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

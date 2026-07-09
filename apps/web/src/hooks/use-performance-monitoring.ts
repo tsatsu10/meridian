@@ -17,6 +17,8 @@ export interface PerformanceMetrics {
   jsLoadTime?: number;
   cssLoadTime?: number;
   imageLoadTime?: number;
+  // Arbitrary custom metric names recorded at runtime
+  [custom: string]: number | undefined;
 }
 
 export interface PerformanceObserverOptions {

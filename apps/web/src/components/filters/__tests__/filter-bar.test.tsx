@@ -27,7 +27,7 @@ function FilterBar({
   showStatusFilter = true,
   showPriorityFilter = true,
 }: FilterBarProps) {
-  const [filters, setFilters] = React.useState({
+  const [filters, setFilters] = React.useState<Record<string, string[]>>({
     status: [],
     priority: [],
     assignee: [],

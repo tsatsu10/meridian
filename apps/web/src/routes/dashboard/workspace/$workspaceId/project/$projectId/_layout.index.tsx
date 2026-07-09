@@ -551,7 +551,7 @@ function ProjectOverview() {
       
     } catch (error) {
       console.error('Export error:', error);
-      toast.error(error.message || "Failed to export project", { id: "export-loading" });
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to export project", { id: "export-loading" });
     }
   };
 
@@ -603,7 +603,7 @@ function ProjectOverview() {
 
     } catch (error) {
       console.error('Archive error:', error);
-      toast.error(error.message || "Failed to archive project", { id: "archive-loading" });
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to archive project", { id: "archive-loading" });
     }
   };
 
@@ -691,7 +691,7 @@ function ProjectOverview() {
 
     } catch (error) {
       console.error('Delete error:', error);
-      toast.error(error.message || "Failed to delete project", { id: "delete-loading" });
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to delete project", { id: "delete-loading" });
     }
   };
 
@@ -1226,9 +1226,6 @@ function ProjectOverview() {
           onClose={() => setIsCreateTaskOpen(false)}
           projectContext={project}
           hideProjectSelection={true}
-          filterOptions={{
-            projects: projects,
-          }}
         />
 
         <CreateMilestoneModal

@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
-import { getActivities, type Activity } from "@/fetchers/activity/get-activities";
+import { getActivities, type Activity, type GetActivitiesResponse } from "@/fetchers/activity/get-activities";
 import useWorkspaceStore from "@/store/workspace";
 import { cn } from "@/lib/cn";
 
@@ -66,7 +66,7 @@ function ActivityCenter() {
     queryKey: ["workspace-activities", workspace?.id, typeFilter],
     enabled: !!workspace?.id,
     initialPageParam: 0,
-    getNextPageParam: (lastPage, pages) =>
+    getNextPageParam: (lastPage: GetActivitiesResponse, pages: GetActivitiesResponse[]) =>
       lastPage.activities.length < PAGE_SIZE ? undefined : pages.length * PAGE_SIZE,
     queryFn: async ({ pageParam }) => {
       if (!workspace?.id) {
@@ -83,7 +83,7 @@ function ActivityCenter() {
   });
 
   const allActivities = useMemo(
-    () => data?.pages.flatMap((page) => page.activities) ?? [],
+    () => data?.pages.flatMap((page: GetActivitiesResponse) => page.activities) ?? [],
     [data]
   );
 
