@@ -60,7 +60,6 @@ import NumberTicker from "@/components/magicui/number-ticker";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { BorderBeam } from "@/components/magicui/border-beam";
-import { GiveKudosModal } from "@/components/team/give-kudos-modal";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TeamMemberProfileModalProps {
@@ -69,7 +68,6 @@ interface TeamMemberProfileModalProps {
   onClose: () => void;
   onViewFull?: () => void;
   onMessage?: () => void;
-  onGiveKudos?: () => void;
 }
 
 export function TeamMemberProfileModal({
@@ -78,10 +76,8 @@ export function TeamMemberProfileModal({
   onClose,
   onViewFull,
   onMessage,
-  onGiveKudos,
 }: TeamMemberProfileModalProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'goals' | 'activity'>('overview');
-  const [showKudosModalInternal, setShowKudosModalInternal] = useState(false);
   const [showScheduleCallModal, setShowScheduleCallModal] = useState(false);
   const router = useRouter();
   
@@ -326,40 +322,20 @@ export function TeamMemberProfileModal({
                     transition={{ delay: 0.6 }}
                     className="flex flex-wrap items-center gap-3 pt-4"
                   >
-                    <ShimmerButton 
+                    <ShimmerButton
                       onClick={() => {
                         if (onMessage) {
                           onMessage();
                         } else {
-                          // Navigate to chat with this user
-                          toast.success(`Opening chat with ${user.name}...`, {
-                            description: 'Redirecting to messages',
-                          });
-                          setTimeout(() => {
-                            router.navigate({ to: '/dashboard/chat', search: { userId } });
-                          }, 500);
+                          window.location.href = `mailto:${user.email}`;
                         }
-                      }} 
+                      }}
                       className="shadow-lg hover:shadow-2xl transition-all hover:scale-105"
                     >
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Message
                     </ShimmerButton>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        if (onGiveKudos) {
-                          onGiveKudos();
-                        } else {
-                          setShowKudosModalInternal(true);
-                        }
-                      }} 
-                      className="group border-2 border-amber-500/30 hover:border-amber-500 hover:bg-amber-500/10 hover:scale-105 transition-all shadow-md hover:shadow-lg"
-                    >
-                      <Award className="h-4 w-4 mr-2 group-hover:text-amber-500 group-hover:rotate-12 transition-all" />
-                      Give Kudos
-                    </Button>
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={() => {
                         // Open calendar/scheduling UI
@@ -420,19 +396,6 @@ export function TeamMemberProfileModal({
                   </MagicCard>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
-                  <MagicCard className="p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl border-2 border-transparent hover:border-green-500/30" gradientColor="#10B981">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="p-4 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-600/20 ring-4 ring-green-500/20 shadow-lg">
-                        <Star className="h-7 w-7 text-green-600" />
-                      </div>
-                      <div className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-br from-green-600 via-green-500 to-green-400">
-                        <NumberTicker value={profile.kudos?.received || 0} />
-                      </div>
-                      <p className="text-xs md:text-sm text-muted-foreground font-bold uppercase tracking-wider">Kudos</p>
-                    </div>
-                  </MagicCard>
-                </motion.div>
               </motion.div>
           
           {/* Bio section with enhanced glassmorphism */}
@@ -668,15 +631,6 @@ export function TeamMemberProfileModal({
             </motion.div>
           </DialogContent>
           
-          {/* Give Kudos Modal */}
-          {!isOwnProfile && user && (
-            <GiveKudosModal
-              open={showKudosModalInternal}
-              onOpenChange={setShowKudosModalInternal}
-              recipientEmail={user.email}
-              recipientName={user.name}
-            />
-          )}
         </Dialog>
       )}
     </AnimatePresence>
