@@ -57,7 +57,7 @@ export const roles = pgTable("roles", {
   // Role Inheritance
   // Custom roles can inherit from templates or other roles
   baseRoleId: text("base_role_id")
-    .references(() => roles.id, { onDelete: "set null" }),
+    .references((): any => roles.id, { onDelete: "set null" }),
   
   // Visual Customization
   color: text("color")

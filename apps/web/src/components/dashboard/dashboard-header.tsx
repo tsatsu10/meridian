@@ -26,7 +26,6 @@ import { useNavigate } from "@tanstack/react-router";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PerformanceBadge } from "@/components/performance/performance-badge";
-import { OfflineStatusIndicator } from "@/components/pwa/OfflineStatusIndicator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -111,10 +110,6 @@ export default function DashboardHeader({
     navigate({ to: '/dashboard/teams' });
   };
 
-  const handleCommunication = () => {
-    navigate({ to: '/dashboard/communication' });
-  };
-
   const handleLogout = async () => {
     try {
       await signOut();
@@ -187,7 +182,6 @@ export default function DashboardHeader({
         )}
         
         {/* Offline Indicator */}
-        <OfflineStatusIndicator showDetails={false} />
         
         <PageHeaderActions 
           variant={variant}

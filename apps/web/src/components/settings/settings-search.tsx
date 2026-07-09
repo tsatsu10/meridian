@@ -64,7 +64,6 @@ const searchableSettings = [
   { section: "team-management", path: "/dashboard/settings/team-management", title: "Onboarding Templates", description: "Automate new member onboarding", keywords: ["onboarding", "templates", "automation", "new members"] },
   
   // Integrations
-  { section: "integrations", path: "/dashboard/settings/integrations", title: "Connected Services", description: "Manage third-party integrations", keywords: ["integrations", "services", "github", "slack", "google"] },
   
   // Data Management
   { section: "data", path: "/dashboard/settings/data-management", title: "Data Export", description: "Download your data", keywords: ["export", "download", "backup"] },
@@ -77,8 +76,6 @@ const searchableSettings = [
   { section: "api", path: "/dashboard/settings/api", title: "Webhooks", description: "Configure webhook endpoints", keywords: ["webhooks", "endpoints", "callbacks"] },
   
   // Billing
-  { section: "billing", path: "/dashboard/settings/billing", title: "Subscription", description: "Manage your plan and billing", keywords: ["billing", "subscription", "plan", "payment"] },
-  { section: "billing", path: "/dashboard/settings/billing", title: "Payment Methods", description: "Update payment information", keywords: ["payment", "credit card", "billing"] },
 ];
 
 const SearchIcon = Search as React.FC<{ className?: string }>;

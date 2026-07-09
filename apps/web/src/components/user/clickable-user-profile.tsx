@@ -149,15 +149,6 @@ export function ClickableUserProfile({
             open={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onViewFull={openMode === "both" ? handleViewFull : undefined}
-            onMessage={() => {
-              // Navigate to chat/DM with user
-              setIsModalOpen(false);
-              navigate({ to: '/dashboard/chat', search: { userId: profileId } });
-            }}
-            onGiveKudos={() => {
-              // Kudos modal is handled internally by the profile modal now
-              // This callback is for external handling if needed
-            }}
           />
         </Suspense>
       )}

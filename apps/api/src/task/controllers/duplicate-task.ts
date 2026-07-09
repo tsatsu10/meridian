@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
-import { taskTable, userTable, teamTable, channelTable, projectTable, labelTaskTable } from "../../database/schema";
+import { taskTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import getNextTaskNumber from "./get-next-task-number";
 import { createId } from "@paralleldrive/cuid2";
@@ -32,12 +32,6 @@ async function duplicateTask({
     .select({ name: userTable.name })
     .from(userTable)
     .where(eq(userTable.email, originalTask.userEmail)) : [null];
-
-  // Get team name if it's a team assignment
-  const [team] = originalTask.assignedTeamId ? await db
-    .select({ name: teamTable.name })
-    .from(teamTable)
-    .where(eq(teamTable.id, originalTask.assignedTeamId)) : [null];
 
   // Get the next task number for the project
   const nextTaskNumber = await getNextTaskNumber(originalTask.projectId);
@@ -72,13 +66,13 @@ async function duplicateTask({
     .values({
       projectId: originalTask.projectId,
       userEmail: originalTask.userEmail,
-      assignedTeamId: originalTask.assignedTeamId,
+      assigneeId: originalTask.assigneeId,
       title: duplicatedTitle,
-      status: "to-do", // Reset status for new task
+      status: "todo", // Reset status for new task
       dueDate: originalTask.dueDate,
       description: originalTask.description,
       priority: originalTask.priority,
-      parentId: originalTask.parentId,
+      parentTaskId: originalTask.parentTaskId,
       number: nextTaskNumber + 1,
       position: 0, // Place at top of column
       createdAt: new Date(),
@@ -92,30 +86,6 @@ async function duplicateTask({
     });
   }
 
-  // Duplicate task labels if any exist
-  try {
-    const taskLabels = await db
-      .select()
-      .from(labelTaskTable)
-      .where(eq(labelTaskTable.taskId, taskId));
-
-    if (taskLabels.length > 0) {
-      const labelInserts = taskLabels.map(label => ({
-        id: createId(),
-        labelId: label.labelId,
-        taskId: duplicatedTask.id,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }));
-
-      await db.insert(labelTaskTable).values(labelInserts);
-      logger.info(`✅ Duplicated ${taskLabels.length} labels for task ${duplicatedTask.id}`);
-    }
-  } catch (error) {
-    logger.warn(`⚠️ Failed to duplicate labels for task ${duplicatedTask.id}:`, error);
-    // Continue execution - label duplication is not critical
-  }
-
   // Publish duplication event
   await publishEvent("task.duplicated", {
     originalTaskId: taskId,
@@ -125,41 +95,11 @@ async function duplicateTask({
     content: `duplicated task "${originalTask.title}"`,
   });
 
-  // Create a dedicated channel for the duplicated task
-  try {
-    const project = await db
-      .select({ workspaceId: projectTable.workspaceId })
-      .from(projectTable)
-      .where(eq(projectTable.id, originalTask.projectId))
-      .limit(1);
-
-    const workspaceId = project[0]?.workspaceId;
-    if (workspaceId) {
-      await db
-        .insert(channelTable)
-        .values({
-          name: duplicatedTitle,
-          description: `Chat for duplicated task: ${duplicatedTitle}`,
-          type: "task",
-          workspaceId: workspaceId,
-          projectId: originalTask.projectId,
-          createdBy: duplicatedBy,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      logger.info(`✅ Created channel for duplicated task ${duplicatedTask.id}`);
-    }
-  } catch (error) {
-    logger.warn(`⚠️ Failed to create channel for duplicated task ${duplicatedTask.id}:`, error);
-    // Continue execution - channel creation is not critical
-  }
-
   logger.info(`✅ Successfully duplicated task ${taskId} -> ${duplicatedTask.id}`);
 
   return {
     ...duplicatedTask,
     assigneeName: assignee?.name,
-    assignedTeam: team?.name ? { id: originalTask.assignedTeamId, name: team.name } : undefined,
   };
 }
 

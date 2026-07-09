@@ -98,30 +98,6 @@ const useNavigationItems = (): NavigationItem[] => {
         permissions: ['canViewTeams'],
       },
       
-      // Communication section
-      {
-        id: 'communication',
-        label: 'Communication',
-        icon: MessageSquare,
-        children: [
-          {
-            id: 'chat',
-            label: 'Team Chat',
-            icon: Hash,
-            href: '/dashboard/chat',
-            isActive: location.pathname.startsWith('/dashboard/chat'),
-            badge: '5', // Unread messages count
-          },
-          {
-            id: 'video-calls',
-            label: 'Video Calls',
-            icon: Calendar,
-            href: '/dashboard/video-calls',
-            isActive: location.pathname.startsWith('/dashboard/video-calls'),
-          },
-        ],
-      },
-      
       // Analytics section
       {
         id: 'analytics',
@@ -207,11 +183,6 @@ const useNavigationItems = (): NavigationItem[] => {
           id: 'security-settings',
           label: 'Security',
           href: '/dashboard/settings/security',
-        },
-        {
-          id: 'integrations-settings',
-          label: 'Integrations',
-          href: '/dashboard/settings/integrations',
         },
       ].filter(item => !item.permissions || item.permissions.every(permission => hasPermission(permission))),
     });

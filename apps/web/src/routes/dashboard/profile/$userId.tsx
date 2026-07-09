@@ -13,7 +13,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { recordProfileView } from "@/fetchers/profile/smart-profile-fetchers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,13 +54,8 @@ import NumberTicker from "@/components/magicui/number-ticker";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { BorderBeam } from "@/components/magicui/border-beam";
-import { GiveKudosModal } from "@/components/team/give-kudos-modal";
 
-// Smart Profile Components
-import { ProfileViewers } from "@/components/profile/analytics/ProfileViewers";
-import { CompletenessScore } from "@/components/profile/analytics/CompletenessScore";
-import { OptimizationSuggestions } from "@/components/profile/analytics/OptimizationSuggestions";
-import { ProfileInsights } from "@/components/profile/analytics/ProfileInsights";
+// Profile Components
 import { ActiveProjects } from "@/components/profile/work-activity/ActiveProjects";
 import { RecentTasks } from "@/components/profile/work-activity/RecentTasks";
 import { AvailabilityStatus } from "@/components/profile/work-activity/AvailabilityStatus";
@@ -69,8 +63,6 @@ import { FrequentCollaborators } from "@/components/profile/work-activity/Freque
 import { WorkloadIndicator } from "@/components/profile/work-activity/WorkloadIndicator";
 import { ActivityFeed } from "@/components/profile/work-activity/ActivityFeed";
 import { UserStatisticsCards } from "@/components/profile/statistics/UserStatisticsCards";
-import { BadgeCollection } from "@/components/profile/badges/BadgeCollection";
-import { EnhancedAchievements } from "@/components/profile/achievements/EnhancedAchievements";
 import { TeamsEnhanced } from "@/components/profile/teams/TeamsEnhanced";
 import { WorkHistoryTimeline } from "@/components/profile/work-history/WorkHistoryTimeline";
 
@@ -87,7 +79,6 @@ function ProfilePageRedesigned() {
   const { userId } = Route.useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'work' | 'analytics' | 'goals' | 'achievements' | 'activity'>('overview');
-  const [showKudosModal, setShowKudosModal] = useState(false);
   
   const { data, isLoading, error } = useQuery({
     queryKey: ['public-profile', userId],
@@ -100,24 +91,6 @@ function ProfilePageRedesigned() {
   const profile = data?.data || data;
   const user = profile?.user;
   const isOwnProfile = profile?.isOwnProfile;
-  
-  // Record profile view automatically
-  useEffect(() => {
-    if (userId && !isOwnProfile) {
-      const deviceType = /mobile/i.test(navigator.userAgent) 
-        ? 'mobile' 
-        : /tablet/i.test(navigator.userAgent)
-        ? 'tablet'
-        : 'desktop';
-      
-      recordProfileView(userId, {
-        source: 'direct',
-        deviceType,
-      }).catch((err) => {
-        console.error('Failed to record profile view:', err);
-      });
-    }
-  }, [userId, isOwnProfile]);
   
   // Calculate profile completeness
   const profileFields = [
@@ -368,24 +341,15 @@ function ProfilePageRedesigned() {
                     {/* Action buttons */}
                     {!isOwnProfile && (
                       <div className="flex items-center gap-3 pt-2">
-                        <ShimmerButton 
+                        <ShimmerButton
                           className="shadow-lg"
                           onClick={() => {
-                            // TODO: Implement messaging - navigate to DM with user
-                            navigate({ to: '/dashboard/chat', search: { userId } });
+                            window.location.href = `mailto:${user.email}`;
                           }}
                         >
                           <MessageCircle className="h-4 w-4 mr-2" />
                           Message
                         </ShimmerButton>
-                        <Button 
-                          variant="outline" 
-                          className="group"
-                          onClick={() => setShowKudosModal(true)}
-                        >
-                          <Award className="h-4 w-4 mr-2 group-hover:text-amber-500 transition-colors" />
-                          Give Kudos
-                        </Button>
                       </div>
                     )}
                   </div>
@@ -414,56 +378,6 @@ function ProfilePageRedesigned() {
                 </div>
               </MagicCard>
               
-              <MagicCard className="p-6 md:p-8 text-center group cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-xl" gradientColor="#F59E0B">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="p-4 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/20 ring-2 ring-amber-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Trophy className="h-8 w-8 text-amber-600" />
-                  </div>
-                  <div className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-amber-600 to-amber-400">
-                    <NumberTicker value={profile.achievements?.stats?.totalUnlocked || 0} />
-                  </div>
-                  <p className="text-sm md:text-base text-muted-foreground font-semibold uppercase tracking-wide">Achievements</p>
-                  {profile.achievements?.stats?.rare > 0 && (
-                    <Badge variant="secondary" className="bg-purple-500/20 text-purple-600 border-none">
-                      {profile.achievements.stats.rare} rare+
-                    </Badge>
-                  )}
-                </div>
-              </MagicCard>
-              
-              <MagicCard className="p-6 md:p-8 text-center group cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-xl" gradientColor="#EF4444">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="p-4 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/20 ring-2 ring-orange-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Flame className="h-8 w-8 text-orange-600" />
-                  </div>
-                  <div className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-orange-600 to-orange-400">
-                    <NumberTicker value={profile.streaks?.longest || 0} />
-                  </div>
-                  <p className="text-sm md:text-base text-muted-foreground font-semibold uppercase tracking-wide">Longest Streak</p>
-                  {profile.streaks?.current > 0 && (
-                    <p className="text-xs md:text-sm text-orange-600 font-medium">
-                      🔥 {profile.streaks.current} days active
-                    </p>
-                  )}
-                </div>
-              </MagicCard>
-              
-              <MagicCard className="p-6 md:p-8 text-center group cursor-pointer hover:scale-[1.02] transition-all duration-300 hover:shadow-xl" gradientColor="#10B981">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="p-4 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/20 ring-2 ring-green-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Star className="h-8 w-8 text-green-600" />
-                  </div>
-                  <div className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-green-600 to-green-400">
-                    <NumberTicker value={profile.kudos?.received || 0} />
-                  </div>
-                  <p className="text-sm md:text-base text-muted-foreground font-semibold uppercase tracking-wide">Kudos Received</p>
-                  {profile.kudos?.given > 0 && (
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      {profile.kudos.given} given
-                    </p>
-                  )}
-                </div>
-              </MagicCard>
             </div>
           </BlurFade>
           
@@ -551,7 +465,7 @@ function ProfilePageRedesigned() {
                 <Card className="overflow-hidden border-primary/20">
                   <CardContent className="p-6">
                     <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-                      <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-muted/50">
+                      <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted/50">
                         <TabsTrigger 
                           value="overview"
                           className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all"
@@ -580,14 +494,7 @@ function ProfilePageRedesigned() {
                           <Target className="h-4 w-4 mr-2" />
                           Goals
                         </TabsTrigger>
-                        <TabsTrigger 
-                          value="achievements"
-                          className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-600 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
-                        >
-                          <Trophy className="h-4 w-4 mr-2" />
-                          Achievements
-                        </TabsTrigger>
-                        <TabsTrigger 
+                        <TabsTrigger
                           value="activity"
                           className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-600 data-[state=active]:to-green-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
                         >
@@ -728,106 +635,7 @@ function ProfilePageRedesigned() {
                         )}
                       </TabsContent>
                       
-                      <TabsContent value="achievements" className="mt-6">
-                        {profile.achievements?.unlocked && profile.achievements.unlocked.length > 0 ? (
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {profile.achievements.unlocked.map((achievement: any) => (
-                              <Card 
-                                key={achievement.id}
-                                className={cn(
-                                  "overflow-hidden group cursor-pointer hover:scale-105 transition-all relative",
-                                  achievement.rarity === 'legendary' && 'border-purple-500/50 shadow-lg shadow-purple-500/20',
-                                  achievement.rarity === 'epic' && 'border-pink-500/50 shadow-lg shadow-pink-500/20',
-                                  achievement.rarity === 'rare' && 'border-blue-500/50'
-                                )}
-                              >
-                                {achievement.rarity === 'legendary' && (
-                                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-transparent" />
-                                )}
-                                <CardContent className="p-6 text-center space-y-3 relative">
-                                  <div className="text-6xl drop-shadow-lg">
-                                    {achievement.icon || '🏆'}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold group-hover:text-primary transition-colors">
-                                      {achievement.title}
-                                    </h4>
-                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                      {achievement.description}
-                                    </p>
-                                  </div>
-                                  <Badge 
-                                    className={cn(
-                                      "text-xs",
-                                      achievement.rarity === 'legendary' && 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none shadow-lg',
-                                      achievement.rarity === 'epic' && 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-none',
-                                      achievement.rarity === 'rare' && 'bg-blue-500/20 text-blue-600 border-blue-500/30'
-                                    )}
-                                  >
-                                    {achievement.rarity}
-                                  </Badge>
-                                  {achievement.unlockedAt && (
-                                    <p className="text-xs text-muted-foreground">
-                                      {format(new Date(achievement.unlockedAt), 'MMM dd, yyyy')}
-                                    </p>
-                                  )}
-                                  {achievement.rarity === 'legendary' && (
-                                    <Sparkles className="absolute top-2 right-2 h-5 w-5 text-purple-500 animate-pulse" />
-                                  )}
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-16">
-                            <div className="inline-flex p-8 rounded-full bg-muted/50 mb-6">
-                              <Trophy className="h-16 w-16 text-muted-foreground/50" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-2">No Achievements Yet</h3>
-                            <p className="text-muted-foreground">
-                              {isOwnProfile ? "Complete tasks to unlock achievements!" : "This user hasn't unlocked any achievements yet."}
-                            </p>
-                          </div>
-                        )}
-                      </TabsContent>
-                      
                       <TabsContent value="activity" className="mt-6 space-y-6">
-                        {/* Recent kudos */}
-                        {profile.kudos?.recent && profile.kudos.recent.length > 0 ? (
-                          <div className="space-y-4">
-                            <h3 className="font-semibold flex items-center gap-2">
-                              <Star className="h-4 w-4 text-amber-500" />
-                              Recent Kudos
-                            </h3>
-                            <div className="space-y-3">
-                              {profile.kudos.recent.map((kudos: any) => (
-                                <Card key={kudos.id} className="overflow-hidden hover:shadow-lg transition-all">
-                                  <CardContent className="p-5">
-                                    <div className="flex items-start gap-4">
-                                      <div className="text-4xl">{kudos.emoji || "⭐"}</div>
-                                      <div className="flex-1 space-y-2">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-sm font-medium">{kudos.fromName}</span>
-                                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                                          <Badge variant="secondary" className="text-xs capitalize">
-                                            {kudos.category?.replace('_', ' ')}
-                                          </Badge>
-                                        </div>
-                                        <p className="text-sm text-foreground leading-relaxed">
-                                          {kudos.message}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                          <Calendar className="h-3 w-3" />
-                                          {format(new Date(kudos.createdAt), 'MMM dd, yyyy')}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
                           <div className="text-center py-16">
                             <div className="inline-flex p-8 rounded-full bg-muted/50 mb-6">
                               <Star className="h-16 w-16 text-muted-foreground/50" />
@@ -837,7 +645,6 @@ function ProfilePageRedesigned() {
                               Activity will appear here as it happens
                             </p>
                           </div>
-                        )}
                       </TabsContent>
                       
                       {/* Work Tab - NEW */}
@@ -855,24 +662,9 @@ function ProfilePageRedesigned() {
                         <TeamsEnhanced userId={userId} />
                       </TabsContent>
                       
-                      {/* Analytics Tab - NEW */}
+                      {/* Analytics Tab */}
                       <TabsContent value="analytics" className="mt-6 space-y-6">
-                        {isOwnProfile ? (
-                          <>
-                            <ProfileInsights userId={userId} />
-                            <div className="grid lg:grid-cols-2 gap-6">
-                              <CompletenessScore userId={userId} />
-                              <OptimizationSuggestions userId={userId} />
-                            </div>
-                            <ProfileViewers userId={userId} />
-                            <UserStatisticsCards userId={userId} />
-                          </>
-                        ) : (
-                          <>
-                            <UserStatisticsCards userId={userId} />
-                          </>
-                        )}
-                        <BadgeCollection userId={userId} />
+                        <UserStatisticsCards userId={userId} />
                         <WorkHistoryTimeline userId={userId} />
                       </TabsContent>
                     </Tabs>
@@ -884,15 +676,6 @@ function ProfilePageRedesigned() {
         </div>
       </div>
       
-      {/* Give Kudos Modal */}
-      {!isOwnProfile && user && (
-        <GiveKudosModal
-          open={showKudosModal}
-          onOpenChange={setShowKudosModal}
-          recipientEmail={user.email}
-          recipientName={user.name}
-        />
-      )}
     </LazyDashboardLayout>
   );
 }

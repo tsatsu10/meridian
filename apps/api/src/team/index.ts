@@ -9,11 +9,8 @@ import {
   teamTable, 
   teamMemberTable, 
   taskTable,
-  integrationConnectionTable,
-  automationRuleTable
 } from "../database/schema";
 import { userActivity as userActivityTable } from "../database/schema/team-awareness";
-import messagesRouter from './messages';
 import { createTeam } from './controllers/create-team';
 import { updateTeam } from './controllers/update-team';
 import { deleteTeam } from './controllers/delete-team';
@@ -35,9 +32,6 @@ const teamUpdateLimiter = createSlidingWindowRateLimiter({
   burstMaxRequests: 30, // Max 30 per minute burst
   burstWindowMs: 60 * 1000,
 });
-
-// Mount message operations router
-app.route("/", messagesRouter);
 
 // @epic-3.4-teams: Get teams for a workspace
 app.get("/:workspaceId", async (c) => {
@@ -603,38 +597,6 @@ app.put("/:teamId/notifications", async (c) => {
   }
 });
 
-// @epic-3.4-teams: Get team integrations
-app.get("/:teamId/integrations", async (c) => {
-  const teamId = c.req.param("teamId");
-  
-  try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
-    await initializeDatabase();
-    const db = getDatabase();
-
-    // Get team to get workspace
-    const team = await db
-      .select()
-      .from(teamTable)
-      .where(eq(teamTable.id, teamId))
-      .limit(1);
-
-    if (!team[0]) {
-      return c.json({ error: "Team not found" }, 404);
-    }
-
-    // Get workspace integrations
-    const integrations = await db
-      .select()
-      .from(integrationConnectionTable)
-      .where(eq(integrationConnectionTable.workspaceId, team[0].workspaceId));
-
-    return c.json({ integrations });
-  } catch (error) {
-    logger.error("Error fetching team integrations:", error);
-    return c.json({ error: "Failed to fetch team integrations" }, 500);
-  }
-});
 
 // ============================================================================
 // Phase 3: Advanced Features
@@ -865,141 +827,6 @@ app.put("/:teamId/permissions/:userId", async (c) => {
   }
 });
 
-// @epic-3.4-teams: Get team automations
-app.get("/:teamId/automations", async (c) => {
-  const teamId = c.req.param("teamId");
-  
-  try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
-    await initializeDatabase();
-    const db = getDatabase();
-
-    // Get team to get workspace
-    const team = await db
-      .select()
-      .from(teamTable)
-      .where(eq(teamTable.id, teamId))
-      .limit(1);
-
-    if (!team[0]) {
-      return c.json({ error: "Team not found" }, 404);
-    }
-
-    // Get automation rules for the workspace
-    const automations = await db
-      .select()
-      .from(automationRuleTable)
-      .where(eq(automationRuleTable.workspaceId, team[0].workspaceId));
-
-    return c.json({ automations });
-  } catch (error) {
-    logger.error("Error fetching team automations:", error);
-    return c.json({ error: "Failed to fetch team automations" }, 500);
-  }
-});
-
-// @epic-3.4-teams: Create team automation
-app.post("/:teamId/automations", async (c) => {
-  const teamId = c.req.param("teamId");
-  
-  try {
-    const body = await c.req.json();
-    const { name, description, trigger, actions, enabled = true } = body;
-
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
-    await initializeDatabase();
-    const db = getDatabase();
-
-    // Get team to get workspace
-    const team = await db
-      .select()
-      .from(teamTable)
-      .where(eq(teamTable.id, teamId))
-      .limit(1);
-
-    if (!team[0]) {
-      return c.json({ error: "Team not found" }, 404);
-    }
-
-    // Create automation rule
-    const newAutomation = await db
-      .insert(automationRuleTable)
-      .values({
-        id: `auto_${Date.now()}`,
-        workspaceId: team[0].workspaceId,
-        name,
-        description,
-        triggerType: trigger.type,
-        triggerConfig: trigger.config,
-        actions: JSON.stringify(actions),
-        enabled,
-        createdBy: c.get("user")?.id || null,
-        createdAt: new Date(),
-      })
-      .returning();
-
-    return c.json({ automation: newAutomation[0] });
-  } catch (error) {
-    logger.error("Error creating team automation:", error);
-    return c.json({ error: "Failed to create team automation" }, 500);
-  }
-});
-
-// @epic-3.4-teams: Update team automation
-app.put("/:teamId/automations/:automationId", async (c) => {
-  const automationId = c.req.param("automationId");
-  
-  try {
-    const body = await c.req.json();
-    const { name, description, trigger, actions, enabled } = body;
-
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
-    await initializeDatabase();
-    const db = getDatabase();
-
-    const updates: any = { updatedAt: new Date() };
-    
-    if (name !== undefined) updates.name = name;
-    if (description !== undefined) updates.description = description;
-    if (enabled !== undefined) updates.enabled = enabled;
-    if (trigger) {
-      updates.triggerType = trigger.type;
-      updates.triggerConfig = trigger.config;
-    }
-    if (actions) updates.actions = JSON.stringify(actions);
-
-    const updatedAutomation = await db
-      .update(automationRuleTable)
-      .set(updates)
-      .where(eq(automationRuleTable.id, automationId))
-      .returning();
-
-    return c.json({ automation: updatedAutomation[0] });
-  } catch (error) {
-    logger.error("Error updating team automation:", error);
-    return c.json({ error: "Failed to update team automation" }, 500);
-  }
-});
-
-// @epic-3.4-teams: Delete team automation
-app.delete("/:teamId/automations/:automationId", async (c) => {
-  const automationId = c.req.param("automationId");
-  
-  try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
-    await initializeDatabase();
-    const db = getDatabase();
-
-    await db
-      .delete(automationRuleTable)
-      .where(eq(automationRuleTable.id, automationId));
-
-    return c.json({ success: true });
-  } catch (error) {
-    logger.error("Error deleting team automation:", error);
-    return c.json({ error: "Failed to delete team automation" }, 500);
-  }
-});
 
 // @epic-3.4-teams: Advanced member search and filtering
 app.get("/:teamId/members/search", async (c) => {

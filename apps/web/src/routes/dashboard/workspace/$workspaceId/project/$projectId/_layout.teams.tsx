@@ -234,8 +234,6 @@ function ProjectTeams() {
   // @epic-3.4-teams: Get team permissions for current user
   const permissions = useTeamPermissions();
 
-  // @epic-4.1-direct-messaging: Hook for opening direct messages
-  const { openDirectMessage, isLoading: isOpeningMessage } = useOpenDirectMessage();
 
   // @epic-3.4-teams: Transform real project members with enhanced workload calculation
   const projectMembers: ProjectMember[] = useMemo(() => {
@@ -430,14 +428,8 @@ function ProjectTeams() {
     setIsMemberDetailsOpen(true);
   };
 
-  const handleSendMessage = async (member: ProjectMember) => {
-    // @epic-4.1-direct-messaging: Open direct message with selected member
-    await openDirectMessage(member.email, member.name);
-  };
-
-  const handleStartVideoCall = (member: ProjectMember) => {
-    toast.info(`Starting video call with ${member.name}...`);
-    // Implementation for video call system
+  const handleSendMessage = (member: ProjectMember) => {
+    window.location.href = `mailto:${member.email}`;
   };
 
   const handleRemoveMember = (member: ProjectMember) => {
@@ -1514,10 +1506,6 @@ function ProjectTeams() {
                                         <DropdownMenuContent align="end">
                                           <DropdownMenuLabel>More Actions</DropdownMenuLabel>
                                           <DropdownMenuSeparator />
-                                          <DropdownMenuItem onClick={() => handleStartVideoCall(member)}>
-                                            <Video className="mr-2 h-4 w-4" />
-                                            Video Call
-                                          </DropdownMenuItem>
                                           {permissions.permissions.canChangeRoles && (
                                             <DropdownMenuItem onClick={() => handleChangeRole(member)}>
                                               <Settings className="mr-2 h-4 w-4" />
@@ -2016,7 +2004,6 @@ function ProjectTeams() {
           member={selectedMemberForDetails}
           workspaceId={workspaceId}
           onSendMessage={handleSendMessage}
-          onStartVideoCall={handleStartVideoCall}
           onChangeRole={(member) => {
             setIsMemberDetailsOpen(false);
             handleChangeRole(member);

@@ -218,7 +218,8 @@ export function errorHandler() {
       await reportError(err, c);
     }
 
-    return c.json(errorResponse, statusCode);
+    // Hono expects a finite ContentfulStatusCode, not arbitrary number
+    return c.json(errorResponse, statusCode as 200 | 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 502 | 503);
   };
 }
 

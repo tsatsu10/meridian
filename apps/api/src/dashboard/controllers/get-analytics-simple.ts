@@ -81,7 +81,7 @@ async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsO
         name: user.name,
       } : null;
     })
-    .filter(Boolean);
+    .filter((m): m is { userEmail: string; name: string } => m !== null);
 
   // Get time entries - filter by task IDs in memory
   const taskIds = tasks.map(t => t.id);
@@ -97,7 +97,7 @@ async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsO
   const totalProjects = projects.length;
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === 'done').length;
-  const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
   const overdueTasks = tasks.filter(t => 
     t.dueDate && 
     new Date(t.dueDate) < now && 

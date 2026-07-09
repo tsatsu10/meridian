@@ -7,7 +7,6 @@ import { logger } from './logger';
 import { getDatabase } from "../database/connection";
 import { auditLogTable } from '../database/schema';
 import { count, gte, desc, eq, and } from 'drizzle-orm';
-import { geolocationService } from '../services/geolocation-service';
 
 // Initialize database connection for audit logger
 let db: Awaited<ReturnType<typeof getDatabase>>;
@@ -600,40 +599,10 @@ export class AuditLogger {
    * Sanitize event data to remove sensitive information
    */
   /**
-   * Enrich audit event with geolocation data
+   * Enrich audit event with geolocation data.
+   * IP geolocation (ipstack) was removed; events pass through unchanged.
    */
   private async enrichWithGeolocation(event: AuditEvent): Promise<AuditEvent> {
-    // Skip if no IP address or geolocation already provided
-    if (!event.ipAddress || event.metadata?.location) {
-      return event;
-    }
-
-    try {
-      const location = await geolocationService.getLocation(event.ipAddress);
-      
-      if (location) {
-        return {
-          ...event,
-          metadata: {
-            ...event.metadata,
-            location: {
-              country: location.country,
-              countryCode: location.countryCode,
-              city: location.city,
-              timezone: location.timezone,
-              isp: location.isp,
-              isProxy: location.isProxy,
-              isTor: location.isTor,
-              threatLevel: location.threatLevel,
-            },
-          },
-        };
-      }
-    } catch (error) {
-      // Silently fail - geolocation is supplementary data
-      logger.debug('Failed to enrich audit event with geolocation:', error);
-    }
-
     return event;
   }
 

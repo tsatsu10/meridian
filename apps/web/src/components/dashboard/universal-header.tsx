@@ -11,7 +11,6 @@ import { cn } from "@/lib/cn";
 // import { NavBreadcrumbs } from "@/components/navigation/components/NavBreadcrumbs";
 // import type { BreadcrumbItem } from "@/components/navigation/providers/NavigationProvider";
 import { PerformanceBadge } from "@/components/performance/performance-badge";
-import { OfflineStatusIndicator } from "@/components/pwa/OfflineStatusIndicator";
 
 interface UniversalHeaderProps {
   title?: string;
@@ -131,7 +130,6 @@ export default function UniversalHeader({
           )}
           
           {/* Offline Indicator */}
-          <OfflineStatusIndicator showDetails={false} />
           
           {/* Custom Actions */}
           {customActions && (

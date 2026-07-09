@@ -129,15 +129,6 @@ export const useDashboardNavigation = (): NavigationItem[] => {
       color: "bg-gradient-to-br from-indigo-500 to-indigo-600",
       permissions: ["canViewAnalytics"]
     },
-    {
-      id: "chat",
-      label: "Chat",
-      icon: MessageSquare,
-      href: "/chat",
-      category: "workspace",
-      shortcut: "⌘C",
-      color: "bg-gradient-to-br from-green-500 to-emerald-600"
-    },
   ], [workspace?.id, projects, hasPermission]);
 };
 
@@ -248,34 +239,12 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       category: "workspace" as const,
       permissions: ["canManageRoles"]
     },
-    {
-      id: "billing",
-      label: "Billing & Plans",
-      icon: Package,
-      href: "/dashboard/settings/billing",
-      category: "workspace" as const
-    },
-    
-    // Data & Integration (5 items)
+    // Data & Integration
     {
       id: "data-management",
       label: "Data Management",
       icon: Database,
       href: "/dashboard/settings/data-management",
-      category: "utility" as const
-    },
-    {
-      id: "integrations",
-      label: "Integrations",
-      icon: Zap,
-      href: "/dashboard/settings/integrations",
-      category: "utility" as const
-    },
-    {
-      id: "automation",
-      label: "Automation",
-      icon: Zap,
-      href: "/dashboard/settings/automation",
       category: "utility" as const
     },
     {
@@ -293,19 +262,12 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       category: "utility" as const
     },
     
-    // Customization & Advanced (4 items)
+    // Customization & Advanced
     {
       id: "email-settings",
       label: "Email & SMTP",
       icon: MessageSquare,
       href: "/dashboard/settings/email",
-      category: "utility" as const
-    },
-    {
-      id: "themes",
-      label: "Themes & Branding",
-      icon: Layers,
-      href: "/dashboard/settings/themes",
       category: "utility" as const
     },
     {

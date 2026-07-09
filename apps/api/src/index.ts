@@ -12,7 +12,6 @@ import analytics from "./analytics";
 import teamAwareness from "./routes/team-awareness";
 import attachment from "./attachment";
 import reports from "./reports";
-import automation from "./automation"; // @epic-3.1-automation-engine
 // integrations module (kept below, imported once)
 // Import the new database connection system
 import { getDatabase } from "./database/connection";
@@ -36,47 +35,30 @@ import workspaceUser from "./workspace-user";
 import settings from "./settings";
 import auditSettings from "./settings/audit";
 import projectNotes from "./project-notes"; // @epic-5.1-project-notes: Project Notes System
-import channel from "./channel";
-import message from "./message";
 import dashboard from "./dashboard";
 import team from "./team";
-import directMessaging from "./direct-messaging";
 import calendar from "./calendar"; // @epic-3.4-teams: Calendar and scheduling
 import rbac from "./rbac";
 import milestone from "./milestone";
-import themes from "./themes/index"; // @epic-3.2-themes
 import backlogCategory from "./backlog-category"; // Backlog categories for organizing backlog items
 import profile from "./profile"; // Profile management
 import smartProfile from "./routes/smart-profile"; // Smart profile features
-import help from "./help"; // @epic-3.5-communication: Help & Documentation System
 import health from "./health"; // Phase 2.3.8: Health system API
 import templates from "./templates"; // Project templates for professions
 import userPreferences from "./user-preferences"; // User preferences (pinned projects, settings, etc.)
 import apiKeys from "./api-keys"; // API key management (simple)
-import integrations from "./integrations"; // Third-party integrations
-import geolocation from "./routes/geolocation";
-import weather from "./routes/weather";
-import unsplash from "./routes/unsplash";
-import whiteboardRoutes from "./routes/whiteboard";
-import videoRoutes from "./routes/video";
 import errorReportingRoutes from "./routes/errors";
-import billing from "./billing"; // Billing (Stripe/Paystack)
-import billingWebhooks from "./billing/webhooks"; // Billing webhooks
 import upload from "./modules/upload"; // @epic-3.1-messaging: File upload for chat and tasks
 import files from "./modules/files"; // @epic-3.1-messaging: File serving
 import search from "./modules/search"; // @epic-3.1-messaging: Global search API
-import presence from "./modules/presence"; // @epic-3.1-messaging: User presence tracking
 import systemHealth from "./modules/system-health"; // System health/readiness/liveness checks
 import securityMetrics from "./security-metrics";
 import monitoringRoutes from "./monitoring";
 import quickCaptureRoutes from "./tasks/quick-capture"; // Security metrics and monitoring
 import metricsRoutes from "./modules/metrics"; // Monitoring & metrics endpoint
 import fileVersionsRoutes from "./modules/file-versions"; // File versioning API
-import webhooksRoutes from "./modules/webhooks"; // Outbound webhooks API
 // Removed old complex api-keys module - using simplified version
 import goalsRoutes from "./goals/routes"; // @epic-goal-setting: Goals & OKRs management
-// @epic-2.2-realtime & @epic-3.1-messaging: Import Unified WebSocket server for robust real-time features
-import { UnifiedWebSocketServer } from "./realtime/unified-websocket-server";
 import { createServer } from "http";
 import { userTable } from "./database/schema";
 import { eq } from "drizzle-orm";
@@ -111,9 +93,6 @@ const isDevelopmentEnv = (process.env.NODE_ENV || "development") === "developmen
 const isTestEnv = process.env.NODE_ENV === "test";
 const allowDemoBypass = process.env.ALLOW_DEMO_AUTH_BYPASS === "true";
 const enableDemoAuthBypass = isDemoMode && allowDemoBypass && (isDevelopmentEnv || isTestEnv);
-const mountGeoWeatherUnsplash =
-  process.env.ENABLE_GEO_WEATHER_UNSPLASH !== "false";
-
 // 🛡️ Register global error handler
 app.onError(errorHandler);
 
@@ -326,53 +305,35 @@ const notificationRoute = app.route("/api/notification", notification);
 const settingsRoute = app.route("/api/settings", settings);
 const auditSettingsRoute = app.route("/api/settings/audit", auditSettings);
 const projectNotesRoute = app.route("/api/project-notes", projectNotes); // @epic-5.1-project-notes: Project Notes API
-const channelRoute = app.route("/api/channel", channel);
-const messageRoute = app.route("/api/message", message);
 const dashboardRoute = app.route("/api/dashboard", dashboard);
 const teamRoute = app.route("/api/team", team);
-const directMessagingRoute = app.route("/api/direct-messaging", directMessaging);
 const favoritesRoute = app.route("/api/favorites", favorites);
 const calendarRoute = app.route("/api/calendar", calendar); // @epic-3.4-teams: Calendar and scheduling
 const rbacRoute = app.route("/api/rbac", rbac);
 const milestoneRoute = app.route("/api/milestone", milestone);
 const reportsRoute = app.route("/api/reports", reports);
-const automationRoute = app.route("/api/automation", automation); // @epic-3.1-automation-engine
 // Removed old integrations route (duplicate) - using newer simple version above
-const themesRoute = app.route("/api/themes", themes); // @epic-3.2-themes (UI themes)
 const backlogCategoryRoute = app.route("/api/backlog-categories", backlogCategory); // Backlog categories
 const backlogThemeRoute = app.route("/api/backlog-themes", backlogCategory); // Backward compatibility alias
 const profileRoute = app.route("/api/profile", profile); // Profile management
 const smartProfileRoute = app.route("/api/smart-profile", smartProfile); // Smart profile features
 const analyticsRoute = app.route("/api/analytics", analytics); // @epic-3.1-analytics: Project and workspace analytics
-const helpRoute = app.route("/api/help", help); // @epic-3.5-communication: Help & Documentation System
 const healthRoute = app.route("/api/health", health); // Phase 2.3.8: Health system API
 const templatesRoute = app.route("/api/templates", templates); // Project templates for professions
 const userPreferencesRoute = app.route("/api/user-preferences", userPreferences); // User preferences (pinned projects, settings, etc.)
 const apiKeysRoute = app.route("/api/api-keys", apiKeys); // API key management
-const integrationsSettingsRoute = app.route("/api/integrations", integrations); // Third-party integrations (replaces old epic-3.2)
-if (mountGeoWeatherUnsplash) {
-  app.route("/api/geolocation", geolocation);
-  app.route("/api/weather", weather);
-  app.route("/api/unsplash", unsplash);
-}
-const billingRoute = app.route("/api/billing", billing); // Billing (Stripe/Paystack)
-const billingWebhooksRoute = app.route("/api/billing/webhooks", billingWebhooks); // Billing webhooks
-const whiteboardRoute = app.route("/api/whiteboard", whiteboardRoutes);
-const videoRoute = app.route("/api/video", videoRoutes);
 const errorReportingRoute = app.route("/api/errors", errorReportingRoutes);
 const uploadRoute = app.route("/api/upload", upload); // @epic-3.1-messaging: File upload
 const filesRoute = app.route("/api/files", files); // @epic-3.1-messaging: File serving
 const searchRoute = app.route("/api/search", search); // @epic-3.1-messaging: Global search
 const workspaceSettingsRoute = app.route("/api/workspace/settings", workspaceSettings);
 const workspaceInvitesRoute = app.route("/api/workspace/invites", workspaceInvites);
-const presenceRoute = app.route("/api/presence", presence); // @epic-3.1-messaging: User presence tracking
 const systemHealthRoute = app.route("/api/system-health", systemHealth); // System health/readiness/liveness probes
 const securityMetricsRoute = app.route("/api/security", securityMetrics);
 const monitoringRoute = app.route("/api/monitoring", monitoringRoutes);
 const quickCaptureRoute = app.route("/api/tasks/quick-capture", quickCaptureRoutes); // Security metrics and monitoring
 const metricsRoute = app.route("/api/metrics", metricsRoutes); // Monitoring & metrics (Prometheus compatible)
 const fileVersionsRoute = app.route("/api/file-versions", fileVersionsRoutes); // File versioning API
-const webhooksRoute = app.route("/api/webhooks", webhooksRoutes); // Outbound webhooks management
 // Removed duplicate api-keys route - using /api/settings/api-keys instead
 const goalsRoute = app.route("/api/goals", goalsRoutes); // @epic-goal-setting: Goals & OKRs management
 // Favorites: use `/api/favorites` only (web uses API_BASE_URL `/api/...`). Legacy `/favorites` mount removed.
@@ -453,12 +414,12 @@ async function startServer() {
         });
         
         req.on('end', () => {
-          logger.debug('[HTTP Server] Body received for', req.method, req.url);
-          logger.debug('[HTTP Server] Body length:', bodyData.length);
-          logger.debug('[HTTP Server] Body preview:', bodyData.substring(0, 100));
+          logger.debug(`[HTTP Server] Body received for ${req.method} ${req.url ?? ""}`);
+          logger.debug('[HTTP Server] Body length:', { length: bodyData.length });
+          logger.debug('[HTTP Server] Body preview:', { preview: bodyData.substring(0, 100) });
           
           if (!bodyData || bodyData.trim() === '') {
-            logger.warn('[HTTP Server] ⚠️ WARNING: Empty body received for', req.method, req.url);
+            logger.warn(`[HTTP Server] ⚠️ WARNING: Empty body received for ${req.method} ${req.url ?? ""}`);
           }
           
           // Now handle with Hono, passing the buffered body
@@ -470,42 +431,37 @@ async function startServer() {
       }
       
       function handleHonoRequest(req: any, res: any, body?: string) {
-        app.fetch(new Request(`http://localhost:${port}${req.url}`, {
-          method: req.method,
-          headers: req.headers as any,
-          body: body, // Pass buffered body
-        })).then((response) => {
-          res.statusCode = response.status;
-          response.headers.forEach((value, key) => {
-            res.setHeader(key, value);
+        void Promise.resolve(
+          app.fetch(
+            new Request(`http://localhost:${port}${req.url}`, {
+              method: req.method,
+              headers: req.headers as HeadersInit,
+              body: body,
+            }),
+          ),
+        )
+          .then((response: Response) => {
+            res.statusCode = response.status;
+            response.headers.forEach((value: string, key: string) => {
+              res.setHeader(key, value);
+            });
+            return response.arrayBuffer();
+          })
+          .then((responseBody: ArrayBuffer) => {
+            res.end(Buffer.from(responseBody));
+          })
+          .catch((error: unknown) => {
+            logger.error('❌ Request handling error:', error);
+            res.statusCode = 500;
+            res.end('Internal Server Error');
           });
-          return response.arrayBuffer();
-        }).then((responseBody) => {
-          res.end(Buffer.from(responseBody));
-        }).catch((error) => {
-          logger.error('❌ Request handling error:', error);
-          res.statusCode = 500;
-          res.end('Internal Server Error');
-        });
       }
     });
-
-    // Initialize WebSocket server
-    let wsServer: any = null;
-    try {
-      logger.debug('🔌 Initializing WebSocket server...');
-      wsServer = new UnifiedWebSocketServer(httpServer);
-      logger.info('✅ WebSocket server initialized successfully');
-    } catch (wsError) {
-      logger.error('❌ Failed to initialize WebSocket server:', wsError);
-      logger.warn('⚠️ Server will continue without WebSocket support');
-    }
 
     // Start listening
     httpServer.listen(port, () => {
       logger.debug(`🏃 Server is running at http://localhost:${port}`);
-      logger.debug(`🔌 WebSocket server listening on ws://localhost:${port}`);
-      
+
       // Phase 2: Start digest schedulers
       try {
         const { digestScheduler } = require('./notification/services/digest-scheduler');
@@ -598,8 +554,6 @@ app.route("/api/project", project);  // Alias for /api/projects
 app.route("/api/task", task);        // Alias for /api/tasks
 app.route("/api/workspace", workspace); // Alias for /api/workspaces
 app.route("/api/user", user);        // Alias for /api/users
-app.route("/api/channels", channel); // Alias for /api/channel (plural support)
-app.route("/api/messages", message); // Alias for /api/message (plural support)
 app.route("/api/workspace-users", workspaceUser); // Alias for /api/workspace-user (plural support)
 app.route("/api/teams", team); // Alias for /api/team (plural support)
 app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls

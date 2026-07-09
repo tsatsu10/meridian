@@ -72,9 +72,6 @@ export const DASHBOARD_TEMPLATES: DashboardTemplate[] = [
     icon: "Users",
     widgets: [
       "team-health-monitor",
-      "team-chat-widget",
-      "kudos-feed",
-      "team-mood-tracker",
       "team-capacity-planner"
     ],
     category: "team"

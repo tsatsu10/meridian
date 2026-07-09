@@ -25,6 +25,10 @@
   "exclude": [
     "node_modules",
     "dist",
+    "src/database/relations-introspected.ts",
+    "src/database/seed*.ts",
+    "src/database/seeds",
+    "src/docs/**/*",
     "src-backup-*",
     "src/**/__tests__/**",
     "src/__tests__/**",

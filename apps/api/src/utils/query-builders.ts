@@ -207,12 +207,11 @@ export async function getActivitiesPaginated(
 export async function getAttachmentsFiltered(options: {
   taskId?: string;
   commentId?: string;
-  userEmail?: string;
-  channelId?: string;
+  uploadedBy?: string;
   limit?: number;
 }) {
-  const { taskId, commentId, userEmail, channelId, limit = 50 } = options;
-  
+  const { taskId, commentId, uploadedBy, limit = 50 } = options;
+
   const db = getDatabase();
   let query = db
     .select()
@@ -220,21 +219,17 @@ export async function getAttachmentsFiltered(options: {
     .orderBy(desc(attachmentTable.createdAt));
 
   const conditions = [];
-  
+
   if (taskId) {
     conditions.push(eq(attachmentTable.taskId, taskId));
   }
-  
+
   if (commentId) {
     conditions.push(eq(attachmentTable.commentId, commentId));
   }
-  
-  if (userEmail) {
-    conditions.push(eq(attachmentTable.userEmail, userEmail));
-  }
-  
-  if (channelId) {
-    conditions.push(eq(attachmentTable.channelId, channelId));
+
+  if (uploadedBy) {
+    conditions.push(eq(attachmentTable.uploadedBy, uploadedBy));
   }
 
   if (conditions.length > 0) {

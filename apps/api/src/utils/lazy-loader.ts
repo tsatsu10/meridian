@@ -200,19 +200,6 @@ export const lazyLoader = new LazyLoader();
 // Common lazy loading functions for heavy dependencies
 export const lazyLoaders = {
   /**
-   * Lazy load TensorFlow.js
-   */
-  tensorflow: () => lazyLoader.load(
-    'tensorflow',
-    () => import('@tensorflow/tfjs'),
-    {
-      timeout: 60000, // TensorFlow can take a while to load
-      onLoad: () => logger.info('🧠 TensorFlow.js loaded successfully'),
-      onError: (error) => logger.error('❌ Failed to load TensorFlow.js', { error })
-    }
-  ),
-
-  /**
    * Lazy load Puppeteer
    */
   puppeteer: () => lazyLoader.load(
@@ -222,30 +209,6 @@ export const lazyLoaders = {
       timeout: 45000,
       onLoad: () => logger.info('🎭 Puppeteer loaded successfully'),
       onError: (error) => logger.error('❌ Failed to load Puppeteer', { error })
-    }
-  ),
-
-  /**
-   * Lazy load Firebase Admin
-   */
-  firebaseAdmin: () => lazyLoader.load(
-    'firebase-admin',
-    () => import('firebase-admin'),
-    {
-      onLoad: () => logger.info('🔥 Firebase Admin loaded successfully'),
-      onError: (error) => logger.error('❌ Failed to load Firebase Admin', { error })
-    }
-  ),
-
-  /**
-   * Lazy load Google APIs
-   */
-  googleapis: () => lazyLoader.load(
-    'googleapis',
-    () => import('googleapis'),
-    {
-      onLoad: () => logger.info('📊 Google APIs loaded successfully'),
-      onError: (error) => logger.error('❌ Failed to load Google APIs', { error })
     }
   ),
 
@@ -260,52 +223,7 @@ export const lazyLoaders = {
       onError: (error) => logger.error('❌ Failed to load Sharp', { error })
     }
   ),
-
-  /**
-   * Lazy load ML libraries
-   */
-  mlKmeans: () => lazyLoader.load(
-    'ml-kmeans',
-    () => import('ml-kmeans'),
-    {
-      onLoad: () => logger.info('📈 ML K-means loaded successfully')
-    }
-  ),
-
-  mlMatrix: () => lazyLoader.load(
-    'ml-matrix',
-    () => import('ml-matrix'),
-    {
-      onLoad: () => logger.info('🔢 ML Matrix loaded successfully')
-    }
-  ),
-
-  mlRegression: () => lazyLoader.load(
-    'ml-regression',
-    () => import('ml-regression'),
-    {
-      onLoad: () => logger.info('📉 ML Regression loaded successfully')
-    }
-  )
 };
-
-// Preload high-priority modules on startup (optional)
-export async function preloadCriticalModules(): Promise<void> {
-  const criticalModules = [
-    {
-      id: 'firebase-admin',
-      importFn: () => import('firebase-admin'),
-      priority: 10
-    },
-    {
-      id: 'googleapis',
-      importFn: () => import('googleapis'),
-      priority: 8
-    }
-  ];
-
-  await lazyLoader.preload(criticalModules);
-}
 
 export default lazyLoader;
 

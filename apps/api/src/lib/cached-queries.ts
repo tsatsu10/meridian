@@ -226,7 +226,7 @@ export class CacheMetrics {
   }
 }
 
-export { redisCache, CacheInvalidator, CacheMetrics };
+export { redisCache };
 
 // Helper function
 function cacheKey(...parts: (string | number)[]): string {

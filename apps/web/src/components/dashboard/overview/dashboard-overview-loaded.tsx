@@ -23,7 +23,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { DashboardRecentActivity, type DashboardActivityFeedItem } from "@/components/dashboard/dashboard-recent-activity";
 import UniversalHeader from "@/components/dashboard/universal-header";
 import { StaleDataIndicator } from "@/components/dashboard/loading-states";
-import { QuickCaptureFAB } from "@/components/mobile/quick-capture-fab";
 import { useRiskMonitor } from "@/hooks/queries/risk/use-risk-detection";
 import type { ValidatedDashboardData } from "@/schemas/dashboard";
 import { ModalChunkFallback, RiskSectionChunkFallback } from "./dashboard-overview-suspense-fallbacks";
@@ -297,7 +296,6 @@ export function DashboardOverviewLoaded({
           <CreateProjectModal open={isCreateProjectOpen} onClose={() => setIsCreateProjectOpen(false)} />
         </Suspense>
 
-        <QuickCaptureFAB />
       </div>
     </main>
   );

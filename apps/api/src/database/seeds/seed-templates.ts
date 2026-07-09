@@ -13,8 +13,6 @@ import {
 } from "../schema";
 import { allTemplates } from "./project-templates";
 import logger from '../../utils/logger';
-// Set DATABASE_URL environment variable
-process.env.DATABASE_URL = "postgresql://neondb_owner:npg_PoJlUnKCf32a@ep-dry-mode-ae1fy7m1-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 export async function seedProjectTemplates() {
   // Initialize database connection if not already initialized
@@ -105,11 +103,10 @@ export async function seedProjectTemplates() {
             for (const depInput of taskInput.dependencies) {
               const requiredTaskId = taskPositionToId[depInput.requiredTaskPosition];
 
-              if (requiredTaskId) {
+              if (taskId && requiredTaskId) {
                 await getDatabase().insert(templateDependencies).values({
-                  id: createId(),
                   dependentTaskId: taskId,
-                  requiredTaskId: requiredTaskId,
+                  requiredTaskId,
                   type: depInput.type || "blocks",
                 });
 
