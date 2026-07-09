@@ -22,9 +22,4 @@ declare module 'file-type' {
   ): Promise<{ ext: string; mime: string } | undefined>;
 }
 
-declare module '@tensorflow/tfjs';
 declare module 'puppeteer';
-declare module 'googleapis';
-declare module 'ml-kmeans';
-declare module 'ml-matrix';
-declare module 'ml-regression';

@@ -2427,7 +2427,6 @@ export * from "./schema/goals";
 export * from "./schema/gamification";
 
 // Export billing tables
-export * from "../billing/schema";
 
 // Export team awareness tables
 export * from "./schema/team-awareness";
