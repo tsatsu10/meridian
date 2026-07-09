@@ -4,20 +4,16 @@
  * Phase 3.4 - Advanced Analytics & Reporting
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
   FileText,
   Download,
-  Calendar,
   Clock,
   CheckCircle,
   XCircle,
-  Eye,
-  Play,
-  Trash2,
   Plus,
 } from 'lucide-react';
 
@@ -51,7 +47,7 @@ interface ReportDashboardProps {
 export function ReportDashboard({ workspaceId, onCreateNew }: ReportDashboardProps) {
   const [reports, setReports] = useState<Report[]>([]);
   const [executions, setExecutions] = useState<Execution[]>([]);
-  const [selectedReport, setSelectedReport] = useState<string | null>(null);
+  const [_selectedReport, _setSelectedReport] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
@@ -118,15 +114,7 @@ export function ReportDashboard({ workspaceId, onCreateNew }: ReportDashboardPro
     }
   };
 
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  return (
+    return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">

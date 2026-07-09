@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from '@tanstack/react-router';
 
 /**
@@ -10,7 +10,7 @@ export function useUnsavedChanges(
   hasUnsavedChanges: boolean,
   message = 'You have unsaved changes. Are you sure you want to leave?'
 ) {
-  const router = useRouter();
+  void (useRouter());
   const isBlocking = useRef(false);
 
   // Warn on browser/tab close
@@ -37,15 +37,7 @@ export function useUnsavedChanges(
   useEffect(() => {
     if (!hasUnsavedChanges || isBlocking.current) return;
 
-    const handleRouteChange = () => {
-      if (hasUnsavedChanges) {
-        const confirmLeave = window.confirm(message);
-        return confirmLeave;
-      }
-      return true;
-    };
-
-    // For TanStack Router, we can use history API
+        // For TanStack Router, we can use history API
     const originalPushState = window.history.pushState;
     const originalReplaceState = window.history.replaceState;
 

@@ -1,5 +1,4 @@
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import useSignOut from "@/hooks/mutations/use-sign-out";
 import { cn } from "@/lib/cn";
 import useProjectStore from "@/store/project";

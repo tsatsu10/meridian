@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,9 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Brain, 
   TrendingUp, 
-  TrendingDown, 
   AlertTriangle, 
-  CheckCircle,
   Lightbulb,
   Target,
   Clock,
@@ -20,7 +18,6 @@ import {
   Eye,
   Star,
   MessageSquare,
-  Share2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/lib/toast';

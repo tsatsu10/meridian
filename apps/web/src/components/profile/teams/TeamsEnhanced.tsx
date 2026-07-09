@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Crown, Calendar } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { getTeamCollaborations, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";

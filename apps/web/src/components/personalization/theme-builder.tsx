@@ -32,7 +32,7 @@ export const ThemeBuilder: React.FC<ThemeBuilderProps> = ({
   onClose,
   className = '',
 }) => {
-  const { theme, resolvedMode, setMode, setColorScheme, setTheme, resetTheme, isDark } = useTheme();
+  const { theme, setMode, setColorScheme, setTheme, resetTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'colors' | 'typography' | 'effects'>('colors');
 
   return (

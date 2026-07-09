@@ -13,7 +13,6 @@ import {
   PieChart,
   TrendingUp,
   Users,
-  Calendar,
   Clock
 } from 'lucide-react';
 
@@ -264,7 +263,7 @@ export function AdvancedPDFTemplates({
   className 
 }: AdvancedPDFTemplatesProps) {
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
-  const [previewTemplate, setPreviewTemplate] = React.useState<PDFTemplate | null>(null);
+  const [_previewTemplate, setPreviewTemplate] = React.useState<PDFTemplate | null>(null);
 
   const filteredTemplates = predefinedTemplates.filter(template => 
     selectedCategory === 'all' || template.category === selectedCategory

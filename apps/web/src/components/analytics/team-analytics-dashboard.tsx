@@ -2,7 +2,7 @@
 // @persona-sarah: PM needs workload and performance insights
 // @persona-jennifer: Exec needs high-level team performance view
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,24 +10,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { 
   TrendingUp, 
-  TrendingDown, 
   Users, 
   Target, 
   Activity, 
   AlertTriangle,
   CheckCircle2,
-  Clock,
   BarChart3,
-  PieChart,
-  LineChart,
   Download,
   Lightbulb,
   Zap,
   Brain,
   Maximize2,
-  Filter,
-  Calendar,
-  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchApi } from '@/lib/fetch';
@@ -112,7 +105,7 @@ export default function TeamAnalyticsDashboard({ teamId, teamName }: TeamAnalyti
   const [drillDownMode, setDrillDownMode] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
   const [realTimeData, setRealTimeData] = useState<any[]>([]);
-  const [showConfigurator, setShowConfigurator] = useState(false);
+  const [_showConfigurator, _setShowConfigurator] = useState(false);
 
   const { workspace } = useWorkspaceStore();
 
@@ -197,7 +190,7 @@ export default function TeamAnalyticsDashboard({ teamId, teamName }: TeamAnalyti
     setDrillDownMode(true);
   };
 
-  const handleMetricClick = (dataPoint: any) => {
+  const handleMetricClick = (_dataPoint: any) => {
     logger.info("Metric clicked:");
     // Implement drill-down functionality
   };
@@ -495,7 +488,7 @@ export default function TeamAnalyticsDashboard({ teamId, teamName }: TeamAnalyti
                 title="Team Capacity Distribution"
                 height={300}
                 interactive={true}
-                onBarClick={(dataPoint) => handleDrillDown('workload')}
+                onBarClick={(_dataPoint) => handleDrillDown('workload')}
                 colorScheme="blue"
                 showValues={true}
               />
@@ -611,7 +604,7 @@ export default function TeamAnalyticsDashboard({ teamId, teamName }: TeamAnalyti
               height={300}
               showTrend={true}
               interactive={true}
-              onPointClick={(point) => logger.info("Performance point:")}
+              onPointClick={(_point) => logger.info("Performance point:")}
             />
           )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -698,7 +691,7 @@ export default function TeamAnalyticsDashboard({ teamId, teamName }: TeamAnalyti
                 confidence_level: 0.9,
                 seasonality: true
               }}
-              onForecastUpdate={(result) => {
+              onForecastUpdate={(_result) => {
                 logger.info("Forecast updated:");
               }}
             />
@@ -825,7 +818,7 @@ export default function TeamAnalyticsDashboard({ teamId, teamName }: TeamAnalyti
             <RealTimeDataStream
               teamId={teamId}
               onDataUpdate={(data) => setRealTimeData(data)}
-              onConnectionChange={(connected) => {
+              onConnectionChange={(_connected) => {
                 logger.info("Real-time connection:");
               }}
             />
@@ -948,11 +941,11 @@ export default function TeamAnalyticsDashboard({ teamId, teamName }: TeamAnalyti
         <TabsContent value="custom" className="space-y-6">
           <CustomDashboardConfigurator
             teamId={teamId}
-            onSave={(layout) => {
+            onSave={(_layout) => {
               logger.info("Dashboard layout saved:");
               // In a real implementation, save to backend
             }}
-            onPreview={(layout) => {
+            onPreview={(_layout) => {
               logger.info("Dashboard preview:");
             }}
           />

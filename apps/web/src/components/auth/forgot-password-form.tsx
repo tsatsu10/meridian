@@ -34,7 +34,7 @@ export function ForgotPasswordForm() {
     },
   });
 
-  const onSubmit = async (data: ForgotPasswordFormValues) => {
+  const onSubmit = async (_data: ForgotPasswordFormValues) => {
     setIsPending(true);
     try {
       // Simulate API call

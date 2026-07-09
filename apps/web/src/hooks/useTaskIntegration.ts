@@ -394,8 +394,8 @@ export function useTaskIntegration(config?: Partial<TaskIntegrationConfig>) {
   const extractTaskFromMessage = useCallback((
     messageContent: string,
     messageAuthor: string,
-    chatId: string,
-    messageId: string,
+    _chatId: string,
+    _messageId: string,
     mentionedUsers: string[] = []
   ): MessageTaskExtraction => {
     const config = integrationConfig.current;
@@ -739,10 +739,10 @@ export function useTaskIntegration(config?: Partial<TaskIntegrationConfig>) {
   };
 
   const sendNotificationThroughChannel = async (
-    task: TaskData,
-    action: string,
-    channel: string,
-    recipients: string[]
+    _task: TaskData,
+    _action: string,
+    _channel: string,
+    _recipients: string[]
   ) => {
     // Mock implementation - would integrate with notification services
     logger.info("Sending ${channel} notification for task ${action}:");

@@ -20,7 +20,7 @@ export function useUpdateTeamNotifications() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["team-notifications", variables.teamId] });
       toast.success("Notification preferences updated");
     },

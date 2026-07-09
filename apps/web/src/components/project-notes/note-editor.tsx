@@ -10,20 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import {
   Save,
   X,
   Pin,
-  Archive,
   History,
   MessageSquare,
   Tag,
   Clock,
-  Users,
-  Wifi,
-  WifiOff,
 } from 'lucide-react';
 import { API_BASE_URL } from '@/constants/urls';
 import { formatDistanceToNow } from 'date-fns';
@@ -67,7 +62,7 @@ export function NoteEditor({
   const [saving, setSaving] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  void (useRef<NodeJS.Timeout | null>(null));
 
   useEffect(() => {
     if (note) {

@@ -10,7 +10,7 @@
 
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider, createMemoryHistory, createRootRoute, createRouter } from '@tanstack/react-router';
+import { createMemoryHistory, createRootRoute, createRouter } from '@tanstack/react-router';
 import { ThemeProvider } from 'next-themes';
 
 // Create a new query client for each test

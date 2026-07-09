@@ -58,7 +58,7 @@ export function TeamErrorFallback({ error, resetError, context = "Teams" }: Team
   );
 }
 
-export function TeamCardErrorFallback({ error, resetError }: TeamErrorFallbackProps) {
+export function TeamCardErrorFallback({ resetError }: TeamErrorFallbackProps) {
   return (
     <div className="border rounded-lg p-6 bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800">
       <div className="flex items-center justify-center space-x-2 text-orange-600 dark:text-orange-400 mb-3">

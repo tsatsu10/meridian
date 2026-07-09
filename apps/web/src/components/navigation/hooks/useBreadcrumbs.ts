@@ -1,6 +1,6 @@
 // Advanced breadcrumb management with auto-generation and customization
 import { useEffect, useMemo } from 'react';
-import { useLocation, useParams } from '@tanstack/react-router';
+import { useLocation, } from '@tanstack/react-router';
 import { useNavigation, BreadcrumbItem } from '../providers/NavigationProvider';
 import useWorkspaceStore from '@/store/workspace';
 import { useQuery } from '@tanstack/react-query';
@@ -224,7 +224,7 @@ function extractParams(pathname: string, pattern: RegExp): Record<string, string
   if (!match) return null;
   
   const params: Record<string, string> = {};
-  const groups = match.slice(1);
+  void (match.slice(1));
   
   // Map common parameter patterns
   if (pathname.includes('/workspace/')) {
@@ -301,11 +301,10 @@ export function useBreadcrumbs(config: BreadcrumbConfig = {}) {
     includeHome = true,
     includeWorkspace = true,
     maxItems = 5,
-    paramResolver,
   } = config;
   
   const location = useLocation();
-  const { setBreadcrumbs, state } = useNavigation();
+  const { setBreadcrumbs } = useNavigation();
   const { workspace } = useWorkspaceStore();
   
   // Extract route parameters

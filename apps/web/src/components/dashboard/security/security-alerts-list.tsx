@@ -17,7 +17,7 @@ interface SecurityAlertsListProps {
 export function SecurityAlertsList({
   alerts,
   maxItems = 10,
-  onViewDetails,
+  
   onResolve,
 }: SecurityAlertsListProps) {
   const [expandedAlerts, setExpandedAlerts] = useState<Set<string>>(new Set());

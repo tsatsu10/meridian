@@ -448,25 +448,25 @@ export function useSmartNotificationBundling(initialRules?: Partial<BundlingRule
   };
 
   // Send individual notification
-  const sendIndividualNotification = (notification: NotificationItem) => {
+  const sendIndividualNotification = (_notification: NotificationItem) => {
     // This would integrate with actual notification sending logic
     logger.info("Sending individual notification:");
   };
 
   // Send bundle notification
-  const sendBundleNotification = (bundle: NotificationBundle) => {
+  const sendBundleNotification = (_bundle: NotificationBundle) => {
     // This would integrate with actual notification sending logic
     logger.info("Sending bundle notification:");
   };
 
   // Update bundle notification
-  const updateBundleNotification = (bundle: NotificationBundle) => {
+  const updateBundleNotification = (_bundle: NotificationBundle) => {
     // This would update the existing notification
     logger.info("Updating bundle notification:");
   };
 
   // Determine bundle type
-  const determinebundleType = (notifications: NotificationItem[], strategy: BundleStrategy): NotificationBundle['type'] => {
+  const determinebundleType = (_notifications: NotificationItem[], strategy: BundleStrategy): NotificationBundle['type'] => {
     if (strategy.name.includes('digest')) return 'digest';
     if (strategy.name.includes('thread')) return 'thread';
     if (strategy.groupBy.includes('type')) return 'grouped';
@@ -492,7 +492,7 @@ export function useSmartNotificationBundling(initialRules?: Partial<BundlingRule
   };
 
   // Generate bundle summary
-  const generateBundleSummary = (notifications: NotificationItem[], strategy: BundleStrategy): string => {
+  const generateBundleSummary = (notifications: NotificationItem[], _strategy: BundleStrategy): string => {
     if (notifications.length <= 3) {
       return notifications.map(n => n.title).join(', ');
     }

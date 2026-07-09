@@ -31,7 +31,7 @@ export function useUpdateGoal() {
       const response = await api.put(`/api/goals/${id}`, data);
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate specific goal and goals list
       queryClient.invalidateQueries({ queryKey: ['goal', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['goals'] });

@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { LiveCommentThread, type LiveComment } from "@/components/comments/live-comment-thread";
 
 function TaskComment({
-  initialComment = "",
-  commentId = null,
+  
+  
   onSubmit,
 }: {
   initialComment?: string;
@@ -92,7 +92,7 @@ function TaskComment({
     }
   };
 
-  const handleResolveComment = async (commentId: string) => {
+  const handleResolveComment = async (_commentId: string) => {
     // TODO: Implement comment resolution in backendtoast.success("Comment resolved");
   };
 

@@ -4,14 +4,14 @@
  * Phase 3.4 - Advanced Analytics & Reporting
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Badge } from '../ui/badge';
-import { FileText, Download, Calendar, Plus, X, Filter, ChartBar } from 'lucide-react';
+import { FileText, Download, Plus, X, Filter, ChartBar } from 'lucide-react';
 
 interface ReportBuilderProps {
   workspaceId: string;
@@ -35,7 +35,7 @@ const CHART_TYPES = [
 
 const AGGREGATIONS = ['count', 'sum', 'avg', 'min', 'max'];
 
-export function ReportBuilder({ workspaceId, onSave }: ReportBuilderProps) {
+export function ReportBuilder({ onSave }: ReportBuilderProps) {
   const [step, setStep] = useState(1);
   const [report, setReport] = useState({
     name: '',

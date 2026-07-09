@@ -7,15 +7,13 @@
 
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { motion, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { Dock, DockIcon } from "@/components/magicui/dock";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { Plus, ChevronDown, ChevronRight, FolderOpen } from "lucide-react";
 import { useRBACAuth } from "@/lib/permissions";
 import type { AllPermissions } from "@/lib/permissions/types";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
@@ -169,18 +167,16 @@ export const SidebarNavigation: React.FC<MagicUINavigationProps> = ({
   showLabels = true,
   showTooltips = true,
   showBadges = true,
-  showShortcuts = false,
+  
   sections,
   items,
-  enableGlassMorphism = true,
-  enableAnimations = true,
 }) => {
   const location = useLocation();
   const navigationSections = sections || useNavigationSections();
-  const allItems = items || navigationSections.flatMap(section => section.items);
+  void (items || navigationSections.flatMap(section => section.items));
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const { hasPermission } = useRBACAuth();
-  const [projectsExpanded, setProjectsExpanded] = useState(false);
+  const [_projectsExpanded, _setProjectsExpanded] = useState(false);
   
   // Get workspace and projects data
   const { workspace } = useWorkspaceStore();
@@ -191,20 +187,12 @@ export const SidebarNavigation: React.FC<MagicUINavigationProps> = ({
   const renderNavigationItem = (item: NavigationItem) => {
     const isActive = location.pathname === item.href || 
       (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
-    const styles = getNavigationItemStyle(item, isActive);
-    const isProjects = item.id === "projects";
+    void (getNavigationItemStyle(item, isActive));
+    void (item.id === "projects");
     const isCollapsed = !showLabels;
 
     // Only toggle dropdown when clicking chevron for projects
-    const handleChevronClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (isProjects) {
-        setProjectsExpanded((prev) => !prev);
-      }
-    };
-
-    const linkContent = (
+        const linkContent = (
       <Link
         to={item.href}
         className={cn(
@@ -309,14 +297,13 @@ export const SidebarNavigation: React.FC<MagicUINavigationProps> = ({
 // Header Navigation Component  
 export const HeaderNavigation: React.FC<MagicUINavigationProps> = ({
   className,
-  variant = "default",
+  
   showLabels = true,
   showBadges = true,
-  showShortcuts = false,
+  
   items,
   onItemClick,
   enableGlassMorphism = false,
-  enableAnimations = true,
 }) => {
   const location = useLocation();
 
@@ -342,7 +329,7 @@ export const HeaderNavigation: React.FC<MagicUINavigationProps> = ({
               styles.focus,
               enableGlassMorphism && styles.glass
             )}
-            onClick={(e) => onItemClick?.(item)}
+            onClick={(_e) => onItemClick?.(item)}
           >
             <item.icon className="h-4 w-4" />
             {showLabels && <span>{item.label}</span>}

@@ -3,17 +3,14 @@
  * Tests actual API endpoints without mocks
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, } from 'vitest';
 import { waitForServer, shouldSkipIntegrationTests, createTestUser, getTestConfig } from '../setup/test-server';
 
 const SKIP_TESTS = shouldSkipIntegrationTests();
 
 describe.skipIf(SKIP_TESTS)('Authentication Integration Tests (Real API)', () => {
   const config = getTestConfig();
-  let authToken: string;
-  let testUserId: string;
-
-  beforeAll(async () => {
+      beforeAll(async () => {
     // Ensure server is running
     await waitForServer();
   });

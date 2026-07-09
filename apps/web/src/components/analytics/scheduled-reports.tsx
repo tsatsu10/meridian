@@ -2,7 +2,7 @@
 // @persona-jennifer: Executive needs automated report delivery
 // @persona-david: Team lead needs regular performance reports
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/select'
 import {
   Clock,
-  Mail,
   Calendar,
   Plus,
   Trash2,

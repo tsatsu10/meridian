@@ -47,7 +47,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import useProjectStore from "@/store/project";
 import useWorkspaceStore from "@/store/workspace";
@@ -58,10 +57,8 @@ import useAddProjectMember from "@/hooks/mutations/project/use-add-project-membe
 import { useChangeMemberRole } from "@/hooks/mutations/workspace-user/use-change-member-role";
 import { useRemoveMember } from "@/hooks/mutations/workspace-user/use-remove-member";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
-import { useOpenDirectMessage } from "@/hooks/use-open-direct-message";
 import { 
   Search, 
-  Plus, 
   UserPlus,
   MoreHorizontal,
   Users,
@@ -74,28 +71,17 @@ import {
   Activity,
   AlertTriangle,
   Mail,
-  Phone,
-  MessageSquare,
-  Video,
   Filter,
-  SortDesc,
   Download,
-  Edit,
   Trash2,
   Shield,
   UserCheck,
   UserX,
   BarChart3,
   Eye,
-  Send,
-  FileText,
   Star,
-  StarOff,
-  Ban,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  Info,
   Zap,
   Loader2,
   Lightbulb,
@@ -103,8 +89,7 @@ import {
 } from "lucide-react";
 import DashboardPopup from "@/components/dashboard/dashboard-popup";
 import { cn } from "@/lib/cn";
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import ProjectMemberManagementModal from "@/components/team/project-member-management-modal";
+import { useState, useMemo, useEffect, useRef } from "react";
 import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
 import { EnhancedMemberDetailsModal } from "@/components/team/enhanced-member-details-modal";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
@@ -178,7 +163,7 @@ const availableRoles = [
 ];
 
 function ProjectTeams() {
-  const { workspaceId, projectId } = Route.useParams();
+  const { workspaceId } = Route.useParams();
   const { project } = useProjectStore();
   const { workspace } = useWorkspaceStore();
   const [searchTerm, setSearchTerm] = useState("");
@@ -221,7 +206,7 @@ function ProjectTeams() {
   const { data: realProjectMembers, isLoading: isLoadingMembers } = useGetProjectMembers(project?.id || "");
   
   // @epic-3.4-teams: Get workspace users (for adding new members)
-  const { data: workspaceUsers, isLoading: isUsersLoading } = useGetWorkspaceUsers({ 
+  const { isLoading: isUsersLoading } = useGetWorkspaceUsers({ 
     workspaceId: workspace?.id || "" 
   });
 
@@ -229,7 +214,7 @@ function ProjectTeams() {
   const { data: tasksData, isLoading: isTasksLoading } = useGetTasks(project?.id || "");
 
   // @epic-3.4-teams: Add member mutation
-  const addMemberMutation = useAddProjectMember();
+  void (useAddProjectMember());
 
   // @epic-3.4-teams: Get team permissions for current user
   const permissions = useTeamPermissions();
@@ -247,7 +232,7 @@ function ProjectTeams() {
       // Basic counts
       const activeTasks = userTasks.filter((task: any) => task.status !== 'done').length;
       const completedTasks = userTasks.filter((task: any) => task.status === 'done').length;
-      const totalTasks = activeTasks + completedTasks;
+      void (activeTasks + completedTasks);
       
       // Enhanced workload calculation with complexity and priority
       const calculateTaskWeight = (task: any) => {

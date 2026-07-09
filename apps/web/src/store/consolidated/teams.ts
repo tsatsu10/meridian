@@ -2371,7 +2371,7 @@ export const useConsolidatedTeamsStore = create<ConsolidatedTeamsStore>()(
             ]);
           },
 
-          refreshMember: async (memberId: string) => {
+          refreshMember: async (_memberId: string) => {
             // Refresh member data by reloading all members
             await get().loadMembers();
           },

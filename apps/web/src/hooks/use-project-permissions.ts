@@ -52,7 +52,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
     
     // Project access check - everyone with valid user has basic access
     // Backend should enforce workspace membership
-    const hasProjectAccess = true; // Backend will validate
+     // Backend will validate
 
     // Role-based permissions (aligned with Meridian role system)
     const rolePermissions = {

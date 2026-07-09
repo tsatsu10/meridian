@@ -179,7 +179,7 @@ export const SidebarDemo: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleItemClick = (item: any) => {// Handle navigation here
+  const handleItemClick = (_item: any) => {// Handle navigation here
   };
 
   // Update sections with click handlers

@@ -4,8 +4,6 @@ import useGetTask from "@/hooks/queries/task/use-get-task";
 import { Route } from "@/routes/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Editor } from "../common/editor";
-import { Form, FormField } from "../ui/form";
 import { RealTimeTaskEditor } from "./real-time-task-editor";
 import { useRef } from "react";
 
@@ -52,7 +50,7 @@ function TaskDescription({ setIsSaving }: TaskDescriptionProps) {
     );
   }
 
-  const handleDescriptionChange = (value: string) => {
+  const handleDescriptionChange = (_value: string) => {
     // Real-time updates are handled by the RealTimeTaskEditor
     // This is just for local state management
   };

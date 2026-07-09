@@ -5,17 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { 
-  TrendingUp, 
   AlertTriangle, 
   Target, 
-  Zap, 
   Brain, 
   Timer,
-  Users,
-  GitBranch,
   BarChart3,
   Lightbulb,
-  TrendingDown,
   Activity,
   CheckCircle2
 } from "lucide-react";

@@ -7,7 +7,7 @@
 
 import { useMemo, useCallback } from "react";
 import { useRBACAuth } from "./context";
-import type { PermissionAction, UserRole, PermissionContext } from "./types";
+import type { PermissionAction, UserRole, } from "./types";
 
 // ===== PERMISSION CHECKING HOOKS =====
 
@@ -236,7 +236,7 @@ export function useRoleBasedComponent<T extends Record<UserRole, React.Component
  * Hook for workspace-scoped permissions
  */
 export function useWorkspacePermissions(workspaceId?: string) {
-  const { hasPermission, user, workspaceContext } = useRBACAuth();
+  const { hasPermission, workspaceContext } = useRBACAuth();
 
   const permissions = useMemo(() => {
     const targetWorkspace = workspaceId || workspaceContext?.workspaceId;
@@ -352,38 +352,38 @@ export function useTeamLeadActions() {
     // Subtask management actions
     createSubtask: {
       canExecute: hasPermission("canCreateSubtasks"),
-      action: (parentTaskId: string, subtaskData: any) => {// TODO: Implement subtask creation
+      action: (_parentTaskId: string, _subtaskData: any) => {// TODO: Implement subtask creation
       }
     },
 
     editSubtask: {
       canExecute: hasPermission("canEditSubtasks"),
-      action: (subtaskId: string, updates: any) => {// TODO: Implement subtask editing
+      action: (_subtaskId: string, _updates: any) => {// TODO: Implement subtask editing
       }
     },
 
     deleteSubtask: {
       canExecute: hasPermission("canDeleteSubtasks"),
-      action: (subtaskId: string) => {// TODO: Implement subtask deletion
+      action: (_subtaskId: string) => {// TODO: Implement subtask deletion
       }
     },
 
     assignSubtask: {
       canExecute: hasPermission("canAssignSubtasks"),
-      action: (subtaskId: string, assigneeId: string) => {// TODO: Implement subtask assignment
+      action: (_subtaskId: string, _assigneeId: string) => {// TODO: Implement subtask assignment
       }
     },
 
     reorderSubtasks: {
       canExecute: hasPermission("canManageSubtaskHierarchy"),
-      action: (parentTaskId: string, subtaskOrder: string[]) => {// TODO: Implement subtask reordering
+      action: (_parentTaskId: string, _subtaskOrder: string[]) => {// TODO: Implement subtask reordering
       }
     },
 
     // Team management actions
     manageTeam: {
       canExecute: hasPermission("canCreateTeams"),
-      action: (teamId: string, action: string, data: any) => {// TODO: Implement team management
+      action: (_teamId: string, _action: string, _data: any) => {// TODO: Implement team management
       }
     }
   }), [hasPermission]);

@@ -733,7 +733,7 @@ function GanttChart({ tasks }: GanttChartProps) {
               className="divide-y divide-gray-100 overflow-y-auto flex-1 bg-white"
               onScroll={handleTimelineScroll}
             >
-              {ganttTasks.map((task, taskIndex) => {
+              {ganttTasks.map((task, _taskIndex) => {
                 const position = getTaskPosition(task);return (
                   <div key={`timeline-${task.id}`} className="relative px-4 py-3 hover:bg-blue-50 transition-all duration-200 group border-b border-gray-100" style={{ height: '60px' }}>
                     {/* Today indicator */}

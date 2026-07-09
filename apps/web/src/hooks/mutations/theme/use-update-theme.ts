@@ -6,7 +6,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 import type { UpdateThemeInput, BacklogTheme } from '@/types/backlog-theme';
 
 interface UpdateThemeMutationInput extends UpdateThemeInput {
@@ -39,7 +39,7 @@ export const useUpdateTheme = () => {
       const result = await response.json();
       return result.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       toast.success('Theme updated successfully!');
       // Invalidate and refetch themes
       queryClient.invalidateQueries({

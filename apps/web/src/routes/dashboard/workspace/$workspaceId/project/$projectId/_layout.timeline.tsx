@@ -42,7 +42,6 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
-  Settings,
   GitBranch,
   Clock,
   Flag,
@@ -53,12 +52,8 @@ import {
   MoreVertical,
   Download,
   Share,
-  Zap,
-  Eye,
   AlertCircle,
   TrendingUp,
-  Users,
-  BarChart3,
   Search,
   X,
 } from "lucide-react";
@@ -148,7 +143,7 @@ function ProjectTimeline() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [_isFilterOpen, _setIsFilterOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -302,12 +297,7 @@ function ProjectTimeline() {
   };
 
   // Filter handlers - now functional
-  const handleApplyFilter = () => {
-    setIsFilterOpen(false);
-    toast.success(`Filters applied: ${filterStatus} status, ${filterPriority} priority`);
-  };
-
-  const handleClearFilters = () => {
+    const handleClearFilters = () => {
     setFilterStatus('all');
     setFilterPriority('all');
     setSearchQuery('');
@@ -551,23 +541,7 @@ function ProjectTimeline() {
     }));
   };
 
-  const addStakeholder = (email: string) => {
-    if (email.trim() && !formData.stakeholders.includes(email.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        stakeholders: [...prev.stakeholders, email.trim()]
-      }));
-    }
-  };
-
-  const removeStakeholder = (email: string) => {
-    setFormData(prev => ({
-      ...prev,
-      stakeholders: prev.stakeholders.filter(s => s !== email)
-    }));
-  };
-
-  // Keyboard shortcuts - defined after all handlers
+      // Keyboard shortcuts - defined after all handlers
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input

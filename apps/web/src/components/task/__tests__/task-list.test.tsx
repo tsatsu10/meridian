@@ -29,7 +29,7 @@ interface TaskListProps {
   onFilterChange?: (filters: any) => void;
 }
 
-function TaskList({ tasks = [], onTaskClick, onFilterChange }: TaskListProps) {
+function TaskList({ tasks = [], onTaskClick }: TaskListProps) {
   const [selectedTasks, setSelectedTasks] = React.useState<string[]>([]);
 
   const handleTaskClick = (taskId: string) => {

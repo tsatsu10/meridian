@@ -1,7 +1,6 @@
 // @epic-3.4-teams: Team dashboard and workspace management
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -16,10 +15,7 @@ import {
   Users, 
   TrendingUp,
   Target,
-  Clock,
-  MessageSquare,
   Plus,
-  ArrowRight,
   CheckCircle,
   AlertTriangle,
   Calendar,
@@ -29,25 +25,18 @@ import {
   Settings,
   Zap,
   Award,
-  Coffee,
-  Send,
   Lock,
-  MoreHorizontal
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { useProjectTimeline } from "@/hooks/useProjectTimeline";
-import { useQuickActions } from "@/hooks/use-quick-actions";
 
 // Icon wrappers to fix TypeScript issues
 const LayoutDashboardIcon = LayoutDashboard as React.FC<{ className?: string }>;
 const UsersIcon = Users as React.FC<{ className?: string }>;
 const TrendingUpIcon = TrendingUp as React.FC<{ className?: string }>;
 const TargetIcon = Target as React.FC<{ className?: string }>;
-const ClockIcon = Clock as React.FC<{ className?: string }>;
-const MessageSquareIcon = MessageSquare as React.FC<{ className?: string }>;
 const PlusIcon = Plus as React.FC<{ className?: string }>;
-const ArrowRightIcon = ArrowRight as React.FC<{ className?: string }>;
 const CheckCircleIcon = CheckCircle as React.FC<{ className?: string }>;
 const AlertTriangleIcon = AlertTriangle as React.FC<{ className?: string }>;
 const CalendarIcon = Calendar as React.FC<{ className?: string }>;
@@ -57,11 +46,7 @@ const ActivityIcon = Activity as React.FC<{ className?: string }>;
 const SettingsIcon = Settings as React.FC<{ className?: string }>;
 const ZapIcon = Zap as React.FC<{ className?: string }>;
 const AwardIcon = Award as React.FC<{ className?: string }>;
-const CoffeeIcon = Coffee as React.FC<{ className?: string }>;
-const SendIcon = Send as React.FC<{ className?: string }>;
 const LockIcon = Lock as React.FC<{ className?: string }>;
-const MoreHorizontalIcon = MoreHorizontal as React.FC<{ className?: string }>;
-
 interface TeamDashboardModalProps {
   open: boolean;
   onClose: () => void;
@@ -127,9 +112,9 @@ export default function TeamDashboardModal({
 }: TeamDashboardModalProps) {
   const [team, setTeam] = useState<Team | null>(selectedTeam);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [activity, setActivity] = useState<TeamActivity[]>([]);
-  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
-  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+  const [_activity, setActivity] = useState<TeamActivity[]>([]);
+  const [_isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [_isLoadingActivity, setIsLoadingActivity] = useState(false);
 
   // Get permissions for this team
   const teamPermissions = useTeamPermissions(team);

@@ -281,8 +281,7 @@ export function AdvancedFilters({
 
 // Smart Alerts Component (non-AI based contextual insights)
 export function SmartAlerts({ 
-  dashboardData,
-  filters
+  dashboardData
 }: {
   dashboardData: any;
   filters: DashboardFilters;

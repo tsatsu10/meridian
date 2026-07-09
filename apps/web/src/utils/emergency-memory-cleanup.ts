@@ -48,8 +48,7 @@ export function emergencyMemoryCleanup(): void {
     }
     
     keysToRemove.forEach(key => localStorage.removeItem(key));// 3. Clear sessionStorage completely
-    const sessionCount = sessionStorage.length;
-    sessionStorage.clear();// 4. Force garbage collection if available
+        sessionStorage.clear();// 4. Force garbage collection if available
     if ('gc' in window && typeof (window as any).gc === 'function') {
       (window as any).gc();}
     
@@ -71,7 +70,7 @@ export function emergencyMemoryCleanup(): void {
         URL.revokeObjectURL(img.src);
       }
     });const endUsage = getCurrentMemoryUsage();
-    const improvement = startUsage - endUsage;// Show success notification
+    void (startUsage - endUsage);// Show success notification
     showMemoryCleanupNotification(startUsage, endUsage);
     
   } catch (error) {

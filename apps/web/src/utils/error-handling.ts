@@ -227,7 +227,7 @@ export class FrontendErrorFactory {
 
   private static getUserMessage(
     category: ErrorCategory,
-    code: string,
+    _code: string,
     originalMessage?: string
   ): string {
     const categoryMessages = USER_MESSAGES[category];

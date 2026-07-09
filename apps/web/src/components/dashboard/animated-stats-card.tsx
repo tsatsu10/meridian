@@ -1,6 +1,4 @@
 "use client";
-
-import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import NumberTicker from "@/components/magicui/number-ticker";

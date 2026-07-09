@@ -293,7 +293,7 @@ export function useApiPerformance() {
     return measureAsync(apiCall, `${endpoint}LoadTime` as keyof PerformanceMetrics);
   };
 
-  const recordApiError = (endpoint: string, error: Error) => {
+  const recordApiError = (endpoint: string, _error: Error) => {
     recordMetric(`${endpoint}ErrorCount` as keyof PerformanceMetrics, 1);
   };
 

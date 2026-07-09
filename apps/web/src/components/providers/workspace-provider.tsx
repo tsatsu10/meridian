@@ -15,7 +15,7 @@ interface WorkspaceProviderProps {
 export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const { setWorkspace } = useWorkspaceStore();
   const { user } = useAuth();
-  const { data: workspaces, isLoading, error: workspacesError } = useGetWorkspaces();
+  const { data: workspaces, isLoading } = useGetWorkspaces();
   const { activeWorkspaceId, setActiveWorkspaceId } = useUserPreferencesStore();
 
   useEffect(() => {

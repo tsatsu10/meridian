@@ -17,7 +17,7 @@ export function useDeleteGoal() {
       const response = await api.delete(`/api/goals/${goalId}`);
       return response.data;
     },
-    onSuccess: (data, goalId) => {
+    onSuccess: (_data, goalId) => {
       // Invalidate goals list and specific goal
       queryClient.invalidateQueries({ queryKey: ['goals'] });
       queryClient.invalidateQueries({ queryKey: ['goal', goalId] });

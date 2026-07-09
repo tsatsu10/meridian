@@ -38,7 +38,7 @@ export const WebhookManager: React.FC<WebhookManagerProps> = ({
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
+  const [_editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
   const [testingWebhook, setTestingWebhook] = useState<string | null>(null);
 
   // Form state

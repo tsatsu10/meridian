@@ -5,9 +5,8 @@
  */
 
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Star, Sparkles } from "lucide-react";
+import { Trophy, Sparkles } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { format } from "date-fns";
 
 interface ProfileAchievementsSectionProps {
   achievements: any;

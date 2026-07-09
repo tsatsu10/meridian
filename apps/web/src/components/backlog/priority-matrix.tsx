@@ -6,7 +6,6 @@ import {
   Grid, 
   Maximize2, 
   Minimize2, 
-  Filter,
   RotateCcw,
   Info
 } from 'lucide-react';
@@ -37,7 +36,7 @@ interface QuadrantConfig {
 export default function PriorityMatrix({ 
   tasks, 
   onTaskClick, 
-  onTaskMove, 
+  
   showLegend = true,
   className 
 }: PriorityMatrixProps) {
@@ -115,7 +114,7 @@ export default function PriorityMatrix({
     return quadrants;
   }, [tasks]);
 
-  const TaskCard = ({ task, quadrant }: { task: TaskWithPriority; quadrant: MatrixQuadrant }) => (
+  const TaskCard = ({ task }: { task: TaskWithPriority; quadrant: MatrixQuadrant }) => (
     <div
       className={cn(
         "p-2 mb-2 rounded border cursor-pointer transition-all duration-200 hover:shadow-md",

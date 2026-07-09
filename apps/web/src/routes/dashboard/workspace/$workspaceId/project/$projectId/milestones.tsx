@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Target, Plus, ArrowLeft, BarChart3, Filter, Settings, Download } from 'lucide-react';
+import { Plus, } from 'lucide-react';
 import MilestoneList from '@/components/milestones/milestone-list';
 import CreateMilestoneModal from '@/components/shared/modals/create-milestone-modal';
 import DashboardPopup from '@/components/dashboard/dashboard-popup';
@@ -11,12 +11,6 @@ import useGetProject from '@/hooks/queries/project/use-get-project';
 import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
 import { AlertCircle } from 'lucide-react';
 import UniversalHeader from '@/components/dashboard/universal-header';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 // @epic-1.3-milestones: Sarah (PM) needs comprehensive milestone management
 // @persona-sarah: PM needs dedicated milestone tracking interface
@@ -28,22 +22,15 @@ export const Route = createFileRoute('/dashboard/workspace/$workspaceId/project/
 function ProjectMilestones() {
   const { projectId, workspaceId } = Route.useParams();
   const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProject({ id: projectId, workspaceId });
-  const { createMilestone, updateMilestone, deleteMilestone } = useMilestones(projectId);
+  const { createMilestone, updateMilestone } = useMilestones(projectId);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<any | null>(null);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  const navigate = useNavigate();
-  const [showFilters, setShowFilters] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  void (useNavigate());
+  const [_showFilters, _setShowFilters] = useState(false);
+  const [_isCreateModalOpen, _setIsCreateModalOpen] = useState(false);
 
-  const handleBackToOverview = () => {
-    navigate({ 
-      to: '/dashboard/workspace/$workspaceId/project/$projectId', 
-      params: { workspaceId, projectId } 
-    });
-  };
-
-  if (isProjectLoading) {
+    if (isProjectLoading) {
     return (
       <LazyDashboardLayout>
         <div className="flex items-center justify-center h-64">

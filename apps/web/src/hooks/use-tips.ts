@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation } from '@tanstack/react-router';
 import { useTipsStore } from '@/store/tips';
-import type { Tip, TipContext, TipCategory, TipLevel } from '@/types/tips';
+import type { TipContext, TipCategory, TipLevel } from '@/types/tips';
 import useAuth from '@/components/providers/auth-provider/hooks/use-auth';
 import useWorkspaceStore from '@/store/workspace';
 

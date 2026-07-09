@@ -1,8 +1,4 @@
-// @epic-3.1-messaging: Search result highlighting component
-// @persona-sarah: PM needs to quickly identify relevant search matches
-// @persona-david: Team lead needs efficient search result scanning
 
-import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface SearchResultHighlightProps {

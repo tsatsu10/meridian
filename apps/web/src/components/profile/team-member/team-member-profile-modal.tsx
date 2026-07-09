@@ -11,7 +11,7 @@
  * - Mobile-responsive design
  */
 
-import { useState, Suspense } from "react";
+import { useState, } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -31,7 +31,6 @@ import { toast } from 'sonner';
 import { useRouter } from '@tanstack/react-router';
 import { 
   MessageCircle, 
-  Award, 
   ExternalLink,
   MapPin,
   Clock,
@@ -44,7 +43,6 @@ import {
   Mail,
   Phone,
   Calendar,
-  TrendingUp,
   Target,
   Star,
   Users,
@@ -52,7 +50,6 @@ import {
   ChevronRight,
   X,
   Video,
-  Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { format } from "date-fns";
@@ -78,7 +75,7 @@ export function TeamMemberProfileModal({
   onMessage,
 }: TeamMemberProfileModalProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'goals' | 'activity'>('overview');
-  const [showScheduleCallModal, setShowScheduleCallModal] = useState(false);
+  const [_showScheduleCallModal, _setShowScheduleCallModal] = useState(false);
   const router = useRouter();
   
   const { data, isLoading, error } = useQuery({
@@ -541,7 +538,7 @@ export function TeamMemberProfileModal({
             <TabsContent value="goals" className="mt-6 space-y-4">
               {profile.goals?.active && profile.goals.active.length > 0 ? (
                 <div className="space-y-4">
-                  {profile.goals.active.map((goal: any, index: number) => (
+                  {profile.goals.active.map((goal: any, _index: number) => (
                     <Card key={goal.id} className="overflow-hidden group hover:shadow-lg transition-all">
                       <CardContent className="p-5 space-y-3">
                         <div className="flex items-start justify-between gap-4">

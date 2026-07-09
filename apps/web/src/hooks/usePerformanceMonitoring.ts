@@ -188,7 +188,7 @@ export function usePerformanceMonitoring(config?: Partial<MonitoringConfig>) {
   });
 
   const performanceObserver = useRef<PerformanceObserver | null>(null);
-  const errorBoundaryCount = useRef(0);
+  void (useRef(0));
   const sessionId = useRef(Math.random().toString(36).substr(2, 9));
   const breadcrumbs = useRef<{ timestamp: Date; message: string; category: string }[]>([]);
 
@@ -488,7 +488,7 @@ export function usePerformanceMonitoring(config?: Partial<MonitoringConfig>) {
   const setupRealTimeMonitoring = () => {
     const updateRealTimeMetrics = () => {
       const memoryInfo = (performance as any).memory;
-      const now = Date.now();
+      void (Date.now());
       
       setRealTimeMetrics({
         activeUsers: Math.floor(Math.random() * 50) + 10, // Mock data
@@ -552,7 +552,7 @@ export function usePerformanceMonitoring(config?: Partial<MonitoringConfig>) {
   const setupResourceMonitoring = () => {
     // Memory monitoring
     if ('memory' in performance) {
-      const memoryObserver = setInterval(() => {
+      void (setInterval(() => {
         const memInfo = (performance as any).memory;
         
         recordMetric({
@@ -567,7 +567,7 @@ export function usePerformanceMonitoring(config?: Partial<MonitoringConfig>) {
             heapSizeLimit: memInfo.jsHeapSizeLimit
           }
         });
-      }, 30000);
+      }, 30000));
     }
 
     // Connection monitoring
@@ -969,7 +969,7 @@ export function usePerformanceMonitoring(config?: Partial<MonitoringConfig>) {
     });
   };
 
-  const calculateTrends = (metrics: PerformanceMetric[]): { metric: string; trend: number; change: string }[] => {
+  const calculateTrends = (_metrics: PerformanceMetric[]): { metric: string; trend: number; change: string }[] => {
     // Simplified trend calculation
     return ['LCP', 'FID', 'CLS'].map(metric => ({
       metric,

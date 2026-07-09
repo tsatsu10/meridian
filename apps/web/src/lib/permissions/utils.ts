@@ -16,7 +16,6 @@ import type {
   RoleAssignment 
 } from "./types";
 import { 
-  ROLE_PERMISSIONS, 
   hasMinimumRole, 
   hasPermission, 
   getRolePermissions 
@@ -35,7 +34,7 @@ export function checkPermission(
 ): PermissionCheckResult {
   try {
     // Get base permissions for the role
-    const rolePermissions = getRolePermissions(userRole);
+    void (getRolePermissions(userRole));
     const hasBasePermission = hasPermission(userRole, action);
 
     // If no base permission, deny immediately
@@ -242,7 +241,7 @@ export function canAccessResource(
   userRole: UserRole,
   resourceType: ResourceType,
   accessLevel: AccessLevel,
-  context?: PermissionContext
+  _context?: PermissionContext
 ): boolean {
   
   const basePermissions = getRolePermissions(userRole);

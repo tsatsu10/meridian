@@ -5,9 +5,7 @@
  */
 
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Flame, Target, TrendingUp, Users, BookOpen } from "lucide-react";
-import { cn } from "@/lib/cn";
 
 interface ProfileStreaksSectionProps {
   streaks: any;

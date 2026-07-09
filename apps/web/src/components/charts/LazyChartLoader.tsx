@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
 
 // Dynamic imports for chart libraries - only load when needed
 const AdvancedChartLibrary = lazy(() => import("@/components/dashboard/advanced-chart-library"));

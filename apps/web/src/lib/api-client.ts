@@ -4,7 +4,7 @@
  */
 
 import { client } from "@meridian/libs"
-import { liveApi, liveApiClient } from './live-api-client'
+import { liveApi, } from './live-api-client'
 import { shouldUseMocks, getAppConfig } from '@/config/app-mode'
 import { API_URL } from '@/constants/urls'
 import { logger } from "@/lib/logger";

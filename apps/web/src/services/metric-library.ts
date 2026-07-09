@@ -1,5 +1,5 @@
 import { type MetricDefinition, type MetricQuery, type MetricResult, type MetricValue } from "@/types/metrics";
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 // Predefined metrics
 export const METRIC_DEFINITIONS: MetricDefinition[] = [

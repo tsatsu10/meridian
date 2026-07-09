@@ -16,18 +16,14 @@ import {
   Smartphone, 
   Monitor,
   Volume2,
-  VolumeX,
   Vibrate,
   MessageSquare,
   Hash,
   FolderKanban,
   Calendar,
-  Users,
   Save, 
   RotateCcw,
   TestTube,
-  Info,
-  CheckCircle,
   AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';

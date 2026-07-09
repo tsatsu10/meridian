@@ -1,9 +1,8 @@
 // @epic-3.1-dashboards: Simple chart components for enhanced data visualization
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/cn";
 
 export type TimeRange = "7d" | "30d" | "90d" | "1y";
 
@@ -32,7 +31,7 @@ export function SimpleBarChart({
   timeRange = "30d",
   onTimeRangeChange,
   showTrend = true,
-  height = 200,
+  
   className = "",
   color = "#8884d8"
 }: SimpleChartProps) {
@@ -252,7 +251,7 @@ export function SimpleLineChart({
 export function SimpleDonutChart({
   title,
   data,
-  height = 200,
+  
   className = ""
 }: Omit<SimpleChartProps, 'timeRange' | 'onTimeRangeChange' | 'showTrend'>) {
   const total = data.reduce((sum, item) => sum + item.value, 0);

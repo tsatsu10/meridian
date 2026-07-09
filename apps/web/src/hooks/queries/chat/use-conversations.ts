@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import useWorkspaceStore from '@/store/workspace';
 import useAuth from '@/components/providers/auth-provider/hooks/use-auth';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 export interface Conversation {
   id: string;

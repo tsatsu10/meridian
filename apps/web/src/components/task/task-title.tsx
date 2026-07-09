@@ -12,7 +12,7 @@ function TaskTitle({
   const { data: task } = useGetTask(taskId);
   const { mutateAsync: updateTask } = useUpdateTask();
 
-  const handleTitleChange = (value: string) => {
+  const handleTitleChange = (_value: string) => {
     // Real-time updates are handled by the RealTimeTaskEditor
     // This is just for local state management
   };

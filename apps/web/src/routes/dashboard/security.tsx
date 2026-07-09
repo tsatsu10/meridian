@@ -1,7 +1,7 @@
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Shield, Lock, Users, Eye, FileCheck } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Shield, Lock, Users, FileCheck } from "lucide-react";
 import UniversalHeader from "@/components/dashboard/universal-header";
 import { useRBACAuth } from "@/lib/permissions";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
@@ -32,11 +32,10 @@ function SecurityDashboardPage() {
   
   // Safe RBAC hook usage with fallback
   let rbacAuth;
-  let hasPermission = (action: string, context?: any) => false;
-  
+    
   try {
     rbacAuth = useRBACAuth();
-    hasPermission = rbacAuth?.hasPermission || ((action: string, context?: any) => false);
+    hasPermission = rbacAuth?.hasPermission || ((_action: string, _context?: any) => false);
   } catch (error) {
     console.warn("RBAC context not available, using fallback permissions");
   }

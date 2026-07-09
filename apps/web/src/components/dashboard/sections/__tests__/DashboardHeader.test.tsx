@@ -149,7 +149,7 @@ describe('DashboardHeader', () => {
   it('arranges action items in correct order', () => {
     render(<DashboardHeader {...defaultProps} riskData={mockRiskDataWithRisks} />);
 
-    const customActions = screen.getByTestId('custom-actions');
+    void (screen.getByTestId('custom-actions'));
     
     // Check that offline indicator, risk indicator, and refresh button are present
     const offlineIndicator = screen.getByTestId('offline-status-indicator');

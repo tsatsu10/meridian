@@ -156,7 +156,7 @@ export const useProjectData = (projectId: string, workspaceId: string) => {
       
       return { previousTasks };
     },
-    onError: (err, update, context) => {
+    onError: (_err, _update, context) => {
       // Rollback on error
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', projectId], context.previousTasks);

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Users, Loader2, Check, ArrowRight } from "lucide-react";
+import { Calendar, Users, Loader2, Check, } from "lucide-react";
 import { format } from "date-fns";
 import { applyTemplate } from "../../fetchers/templates/apply-template";
 import getProjects from "../../fetchers/project/get-projects";
@@ -111,9 +111,9 @@ export function TemplateApplicationModal({
     applyMutation.mutate();
   };
 
-  const tasksWithRole = template.tasks.filter(
+  void (template.tasks.filter(
     (task) => task.suggestedAssigneeRole || task.subtasks.some((st) => st.suggestedAssigneeRole)
-  ).length;
+  ).length);
 
   return (
     <Dialog open={true} onOpenChange={onClose}>

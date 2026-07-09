@@ -369,7 +369,7 @@ function isInQuietHours(quietHours: { start: string; end: string }): boolean {
   return currentTime >= startTime && currentTime <= endTime;
 }
 
-async function syncPreferencesWithServer(preferences: EmailPreferences) {
+async function syncPreferencesWithServer(_preferences: EmailPreferences) {
   // In a real implementation, sync with your backend
   logger.info("Syncing email preferences with server:");
   
@@ -377,7 +377,7 @@ async function syncPreferencesWithServer(preferences: EmailPreferences) {
   return new Promise(resolve => setTimeout(resolve, 1000));
 }
 
-async function sendEmailNotification(payload: {
+async function sendEmailNotification(_payload: {
   type: 'immediate' | 'digest' | 'test';
   userId: string;
   messages?: EmailMessage[];
@@ -400,7 +400,7 @@ async function sendEmailNotification(payload: {
   });
 }
 
-async function unsubscribeFromEmailNotifications(token?: string) {
+async function unsubscribeFromEmailNotifications(_token?: string) {
   // In a real implementation, handle unsubscribe via your backend
   logger.info("Unsubscribing from email notifications:");
   

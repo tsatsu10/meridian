@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { format, startOfDay, addHours, isSameHour, isAfter, isBefore, isSameDay, endOfDay } from "date-fns";
+import { format, startOfDay, addHours, isAfter, isBefore, isSameDay, endOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import { CalendarEvent } from "@/types/schedule";

@@ -5,8 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Upload, 
@@ -21,7 +19,6 @@ import {
   Mail,
   Globe,
   ArrowLeft,
-  Palette
 } from 'lucide-react'
 import { useSettingsStore } from '@/store/settings'
 import { toast } from 'sonner'
@@ -78,7 +75,7 @@ function ProfileSettings() {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(settings.profile.avatar || null)
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [_uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
   const [activeTab, setActiveTab] = useState("profile")

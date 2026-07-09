@@ -6,18 +6,12 @@ import {
   Mail,
   Server,
   MessageSquare,
-  FileText,
   Bell,
   ArrowLeft,
   Save,
   RotateCcw,
-  Plus,
-  Edit,
-  Trash2,
   TestTube,
   Send,
-  CheckCircle2,
-  XCircle,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';

@@ -28,7 +28,7 @@ function Verify2FA() {
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
-  const router = useRouter();
+  void (useRouter());
   const search = Route.useSearch();
 
   const handleVerify = async (e: React.FormEvent) => {

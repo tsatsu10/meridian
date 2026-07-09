@@ -11,7 +11,6 @@ import type {
   RequirePermissionProps, 
   RequireRoleProps, 
   RequireAccessProps,
-  PermissionGuardProps 
 } from "./context";
 import type { UserRole, PermissionAction, ResourceType, AccessLevel } from "./types";
 

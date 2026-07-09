@@ -338,17 +338,17 @@ class CacheManagerService {
     }
   }
 
-  private async setIndexedDB<T>(key: string, entry: CacheEntry<T>): Promise<void> {
+  private async setIndexedDB<T>(_key: string, _entry: CacheEntry<T>): Promise<void> {
     // Placeholder for IndexedDB implementation
     console.warn("IndexedDB caching not yet implemented");
   }
 
-  private async getIndexedDB<T>(key: string): Promise<CacheEntry<T> | null> {
+  private async getIndexedDB<T>(_key: string): Promise<CacheEntry<T> | null> {
     // Placeholder for IndexedDB implementation
     return null;
   }
 
-  private async deleteIndexedDB(key: string): Promise<void> {
+  private async deleteIndexedDB(_key: string): Promise<void> {
     // Placeholder for IndexedDB implementation
   }
 

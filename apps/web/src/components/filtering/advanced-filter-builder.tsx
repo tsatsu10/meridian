@@ -32,16 +32,10 @@ import {
   Trash2, 
   Filter, 
   Save, 
-  Share, 
-  Copy, 
   Lightbulb,
-  X,
   Calendar as CalendarIcon,
-  Users,
-  Tag,
   Zap,
   Eye,
-  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';

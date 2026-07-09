@@ -18,7 +18,7 @@ export function useDeleteWorkspaceUser() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["workspace-users", variables.workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
       toast.success("User removed successfully");

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -27,7 +27,6 @@ import {
   Layers,
   CheckSquare,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 interface MilestoneToolbarProps {
   // View mode

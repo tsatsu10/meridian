@@ -9,8 +9,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, } from "@/components/ui/card";
 import { 
   Dialog, 
   DialogContent, 
@@ -20,20 +19,12 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Avatar } from "@/components/ui/avatar";
 import { 
@@ -42,48 +33,24 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
-  Settings,
-  Clock,
-  Flag,
   Users,
   MoreVertical,
   Download,
   Share,
-  Eye,
-  AlertCircle,
-  Target,
-  CheckCircle2,
-  PlayCircle,
-  PauseCircle,
-  FileText,
   Grid3X3,
   List,
-  User,
-  MapPin,
-  MessageSquare,
-  Video,
-  Coffee,
-  Focus,
   Search,
   X,
-  ChevronDown,
-  Zap,
   TrendingUp,
   BarChart3,
-  Layers,
   Globe,
-  Building,
-  Calendar as Cal,
-  Briefcase,
-  Bell,
   RefreshCw,
-  ExternalLink,
   Edit
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, } from "react";
 import { toast } from "sonner";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, isSameMonth, isToday, parseISO, addDays, subDays, startOfDay, isBefore, isAfter, isWithinInterval, addHours } from "date-fns";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, isSameMonth, isToday, addDays, subDays, isAfter, isWithinInterval, addHours } from "date-fns";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import useWorkspaceStore from "@/store/workspace";
@@ -154,28 +121,28 @@ const eventTypeColors = {
   personal: '#F59E0B',
 };
 
-const statusColors = {
+void ({
   'todo': '#94A3B8',
   'in_progress': '#3B82F6', 
   'done': '#10B981',
   'overdue': '#EF4444',
   'cancelled': '#6B7280',
-};
+});
 
-const priorityColors = {
+void ({
   'urgent': '#EF4444',
   'high': '#F59E0B',
   'medium': '#3B82F6',
   'low': '#6B7280',
-};
+});
 
-const categoryColors = {
+void ({
   'work': '#3B82F6',
   'meeting': '#10B981',
   'personal': '#F59E0B',
   'travel': '#8B5CF6',
   'holiday': '#EF4444',
-};
+});
 
 function GlobalCalendar() {
   const { user } = useAuth();
@@ -184,14 +151,14 @@ function GlobalCalendar() {
   // Calendar state management
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarView, setCalendarView] = useState<GlobalCalendarView>('month');
-  const [activeTab, setActiveTab] = useState('calendar');
+  const [_activeTab, _setActiveTab] = useState('calendar');
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<GlobalCalendarEvent | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   // Filter state
-  const [filters, setFilters] = useState({
+  const [filters, _setFilters] = useState({
     workspaces: 'all',
     projects: 'all',
     type: 'all',
@@ -208,9 +175,9 @@ function GlobalCalendar() {
   // Mock data for demonstration - would be replaced with real API calls
   const globalEvents: GlobalCalendarEvent[] = useMemo(() => {
     const today = new Date();
-    const tomorrow = addDays(today, 1);
+    void (addDays(today, 1));
     const nextWeek = addDays(today, 7);
-    const nextMonth = addDays(today, 30);
+    void (addDays(today, 30));
     
     return [
       {
@@ -311,7 +278,7 @@ function GlobalCalendar() {
   }, []);
 
   // Mock team availability data
-  const teamAvailability: TeamAvailability[] = useMemo(() => [
+  void (useMemo(() => [
     {
       id: '1',
       name: 'Sarah Johnson',
@@ -348,7 +315,7 @@ function GlobalCalendar() {
       timezone: 'CST',
       workingHours: { start: '09:00', end: '17:00' }
     }
-  ], []);
+  ], []));
 
   // Apply filters to events
   const filteredEvents = useMemo(() => {
@@ -435,23 +402,7 @@ function GlobalCalendar() {
   };
 
   // Filter handlers
-  const clearFilters = () => {
-    setFilters({
-      workspaces: 'all',
-      projects: 'all',
-      type: 'all',
-      status: 'all',
-      priority: 'all',
-      category: 'all',
-      assignee: 'all',
-      showCompleted: true,
-      showPersonal: true,
-    });
-    setSearchQuery('');
-    toast.success('Filters cleared');
-  };
-
-  const exportCalendar = () => {
+    const exportCalendar = () => {
     toast.info('Calendar export feature will be implemented soon');
   };
 
@@ -508,7 +459,7 @@ function GlobalCalendar() {
         
         {/* Calendar grid */}
         <div className="flex-1 grid grid-cols-7 auto-rows-fr">
-          {calendarDays.map((day, index) => {
+          {calendarDays.map((day, _index) => {
             const dayEvents = filteredEvents.filter(event => 
               isSameDay(event.start, day) || 
               (event.start <= day && event.end >= day)
@@ -893,7 +844,7 @@ function GlobalCalendar() {
           {/* Timeline line */}
           <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border"></div>
           
-          {timelineEvents.map((event, index) => (
+          {timelineEvents.map((event, _index) => (
             <div key={event.id} className="relative flex items-start space-x-4 pb-8">
               {/* Timeline dot */}
               <div 

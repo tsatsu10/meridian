@@ -1,5 +1,5 @@
 // @epic-2.1-files: Upload new version API client
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, } from '@/constants/urls';
 
 export interface UploadNewVersionRequest {
   id: string;

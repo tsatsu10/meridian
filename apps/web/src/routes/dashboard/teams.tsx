@@ -14,12 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { MagicCard } from "@/components/magicui/magic-card";
-import { ShineBorder } from "@/components/magicui/shine-border";
 import {
   Search,
   Plus,
@@ -28,25 +27,19 @@ import {
   Calendar,
   Settings,
   BarChart3,
-  MessageSquare,
-  Hash,
   Shield,
   MoreHorizontal,
   Activity,
   Target,
   Edit3,
   UserPlus,
-  Archive,
   Trash2,
-  LayoutDashboard,
   AlertTriangle,
   Lock,
-  Clock,
   CheckCircle2,
   Eye,
   Crown,
   UserCheck,
-  Zap,
   LayoutGrid,
   List,
   Download,
@@ -54,16 +47,13 @@ import {
   MapPin
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { format, differenceInDays } from "date-fns";
 import { toast } from "sonner";
-import PageTitle from "@/components/page-title";
 import useWorkspaceStore from "@/store/workspace";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import { useTeams } from "@/hooks/use-teams";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import useInviteWorkspaceUser from "@/hooks/mutations/workspace-user/use-invite-workspace-user";
 import { useTeamMetrics } from "@/hooks/queries/team/use-team-metrics";
 import { useChangeUserRole } from "@/hooks/mutations/workspace-user/use-change-user-role";
 import { useToggleUserStatus } from "@/hooks/mutations/workspace-user/use-toggle-user-status";
@@ -91,10 +81,7 @@ import { NoTeamsEmpty, NoFilteredTeamsEmpty, NoMembersEmpty, NoFilteredMembersEm
 // @epic-1.1-rbac: Magic UI enhancements for modern team management
 import { BlurFade } from "@/components/magicui/blur-fade";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
-import AnimatedStatsCard from "@/components/dashboard/animated-stats-card";
-import NumberTicker from "@/components/magicui/number-ticker";
-import { motion, AnimatePresence } from "framer-motion";
-import DashboardHeader from "@/components/dashboard/dashboard-header";
+import { motion, } from "framer-motion";
 import UniversalHeader from "@/components/dashboard/universal-header";
 import { ErrorBoundary } from "react-error-boundary";
 import { RefreshCw as RefreshIcon } from "lucide-react";
@@ -338,7 +325,7 @@ function TeamsPage() {
   useTeamsTabFromSearch(tabFromSearch, setViewMode);
 
   // @epic-3.4-teams: User management mutations
-  const changeRoleMutation = useChangeUserRole();
+  void (useChangeUserRole());
   const toggleStatusMutation = useToggleUserStatus();
   const resetPasswordMutation = useResetPassword();
   const deleteUserMutation = useDeleteWorkspaceUser();
@@ -723,39 +710,7 @@ function TeamsPage() {
   };
 
   // Bulk operations handlers
-  const toggleSelectAll = () => {
-    if (viewMode === 'teams') {
-      if (selectedItems.size === filteredAndSortedTeams.length) {
-        setSelectedItems(new Set());
-      } else {
-        setSelectedItems(new Set(filteredAndSortedTeams.map(t => t.id)));
-      }
-    } else if (viewMode === 'members') {
-      if (selectedItems.size === filteredMembers.length) {
-        setSelectedItems(new Set());
-      } else {
-        setSelectedItems(new Set(filteredMembers.map(m => m.id)));
-      }
-    } else {
-      if (selectedItems.size === filteredUsers.length) {
-        setSelectedItems(new Set());
-      } else {
-        setSelectedItems(new Set(filteredUsers.map(u => u.id || u.userEmail)));
-      }
-    }
-  };
-
-  const toggleSelect = (id: string) => {
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedItems(newSelected);
-  };
-
-  const handleBulkExport = (format: 'csv' | 'json') => {
+      const handleBulkExport = (format: 'csv' | 'json') => {
     if (viewMode === 'teams') {
       const selectedTeams = filteredAndSortedTeams.filter(t => selectedItems.has(t.id));
       exportTeams(selectedTeams, format);
@@ -2070,14 +2025,13 @@ function EditUserModal({
 // Team Card Component
 function TeamCard({ 
   team, 
-  onAction, 
-  userPermissions 
+  onAction 
 }: { 
   team: EnhancedTeam; 
   onAction: (action: string, team: EnhancedTeam) => void;
   userPermissions: any;
 }) {
-  const teamPermissions = useTeamPermissions(team);
+  void (useTeamPermissions(team));
 
   return (
     <motion.div
@@ -2352,7 +2306,7 @@ function TeamCard({
 // Members List Component
 function MembersList({ 
   members, 
-  userPermissions,
+  
   onMemberAction 
 }: { 
   members: any[]; 
@@ -2544,8 +2498,7 @@ function MembersList({
 // Team List Item Component (Compact horizontal view)
 function TeamListItem({ 
   team, 
-  onAction, 
-  userPermissions 
+  onAction 
 }: { 
   team: EnhancedTeam; 
   onAction: (action: string, team: EnhancedTeam) => void;

@@ -14,10 +14,6 @@ import {
   ChevronsUpDown, 
   Filter, 
   Search,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
   Download,
   ArrowLeft,
   ArrowRight

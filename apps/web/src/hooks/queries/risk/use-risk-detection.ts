@@ -60,7 +60,7 @@ interface RiskAnalysisResult {
 const analyzeProjectRisks = async (
   tasks: any[],
   projects: any[],
-  teamMembers: any[]
+  _teamMembers: any[]
 ): Promise<RiskAnalysisResult> => {
   await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -178,7 +178,7 @@ const analyzeProjectRisks = async (
       (new Date(project.deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     );
     
-    const completionRate = projectTasks.length > 0 ? completedTasks.length / projectTasks.length : 1;
+    void (projectTasks.length > 0 ? completedTasks.length / projectTasks.length : 1);
     const estimatedDaysToComplete = remainingTasks.length * 2; // Rough estimate
     
     if (daysToDeadline > 0 && estimatedDaysToComplete > daysToDeadline) {

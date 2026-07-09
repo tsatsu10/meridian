@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteAttachment, type DeleteAttachmentRequest } from '@/fetchers/attachment/delete-attachment';
+import { deleteAttachment, } from '@/fetchers/attachment/delete-attachment';
 
 // @epic-2.1-files: React Query mutation hook for deleting attachments
 export function useDeleteAttachment() {
@@ -7,7 +7,7 @@ export function useDeleteAttachment() {
 
   return useMutation({
     mutationFn: deleteAttachment,
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, _variables) => {
       // Invalidate attachment queries to refresh the data
       queryClient.invalidateQueries({
         queryKey: ['attachments'],

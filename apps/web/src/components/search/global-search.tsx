@@ -10,14 +10,13 @@
  * - Keyboard shortcuts (Ctrl+K / Cmd+K)
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, } from 'react';
 import {
   Search,
   X,
   Filter,
   History,
   Bookmark,
-  Clock,
   FileText,
   Users,
   FolderOpen,
@@ -26,8 +25,6 @@ import {
   Target,
   Calendar,
   Loader2,
-  ChevronDown,
-  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,16 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,

@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Users, 
   UserPlus, 
@@ -97,25 +96,6 @@ const fetchTeamMembers = async (): Promise<TeamMember[]> => {
     console.error("Error fetching team members:", error);
     return [];
   }
-};
-
-const inviteTeamMember = async (email: string, role: TeamRole): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/rbac/assignments`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      userEmail: email,
-      role: role,
-      reason: `Invited as ${role}`
-    })
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to invite member: ${response.status}`);
-  }
-  
-  return response.json();
 };
 
 const updateMemberRole = async (userId: string, newRole: TeamRole): Promise<void> => {
