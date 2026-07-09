@@ -54,19 +54,6 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().url().optional(),
-  
-  // Geolocation Service (Optional)
-  IPSTACK_API_KEY: z.string().optional(),
-  IPSTACK_SECURITY: z.string().transform(val => val?.toLowerCase() === 'true').optional(),
-  
-  // Weather Service (Optional)
-  OPENWEATHERMAP_API_KEY: z.string().optional(),
-  OPENWEATHERMAP_UNITS: z.enum(['metric', 'imperial']).optional(),
-  
-  // Photo Library Service (Optional)
-  UNSPLASH_ACCESS_KEY: z.string().optional(),
-  UNSPLASH_SECRET_KEY: z.string().optional(),
-  UNSPLASH_APP_NAME: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -119,13 +106,6 @@ export class EnvironmentValidator {
     'GOOGLE_CLIENT_ID',
     'GOOGLE_CLIENT_SECRET',
     'GOOGLE_REDIRECT_URI',
-    'IPSTACK_API_KEY',
-    'IPSTACK_SECURITY',
-    'OPENWEATHERMAP_API_KEY',
-    'OPENWEATHERMAP_UNITS',
-    'UNSPLASH_ACCESS_KEY',
-    'UNSPLASH_SECRET_KEY',
-    'UNSPLASH_APP_NAME'
   ];
 
   /**
@@ -306,18 +286,6 @@ export class EnvironmentValidator {
 
     if (result.missingOptional.includes('GOOGLE_CLIENT_ID')) {
       result.recommendations.push('Configure Google OAuth for calendar integration');
-    }
-
-    if (result.missingOptional.includes('IPSTACK_API_KEY')) {
-      result.recommendations.push('Configure ipstack API for geolocation and security tracking');
-    }
-
-    if (result.missingOptional.includes('OPENWEATHERMAP_API_KEY')) {
-      result.recommendations.push('Configure OpenWeatherMap API for weather widgets and forecasts');
-    }
-
-    if (result.missingOptional.includes('UNSPLASH_ACCESS_KEY')) {
-      result.recommendations.push('Configure Unsplash API for professional stock photos and backgrounds');
     }
 
     // Performance recommendations
