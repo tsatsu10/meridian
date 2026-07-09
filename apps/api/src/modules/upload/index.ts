@@ -65,8 +65,6 @@ const multerUpload = multer({
 // Upload schema for validation
 const uploadSchema = z.object({
   caption: z.string().optional(),
-  channelId: z.string().optional(),
-  messageId: z.string().optional(),
   taskId: z.string().optional(),
   projectId: z.string().optional(),
   workspaceId: z.string().optional(),
@@ -108,8 +106,6 @@ upload.post('/', async (c) => {
     // Parse and validate form data
     const formData = await c.req.formData();
     const caption = formData.get('caption')?.toString();
-    const channelId = formData.get('channelId')?.toString();
-    const messageId = formData.get('messageId')?.toString();
     const taskId = formData.get('taskId')?.toString();
     const projectId = formData.get('projectId')?.toString();
     const workspaceId = formData.get('workspaceId')?.toString();
@@ -143,8 +139,6 @@ upload.post('/', async (c) => {
           fileType: uploadedFile.mimeType,
           fileUrl: uploadedFile.url,
           caption: caption || null,
-          channelId: channelId || null,
-          messageId: messageId || null,
           taskId: taskId || null,
           projectId: projectId || null,
           workspaceId: workspaceId || null,
