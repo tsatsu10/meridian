@@ -78,13 +78,13 @@ interface Team {
   name: string;
   description: string;
   members: any[];
-  lead: string;
-  projectId: string;
-  projectName: string;
-  performance: number;
-  workload: number;
-  projects: number;
-  color: string;
+  lead?: string;
+  projectId?: string;
+  projectName?: string;
+  performance?: number;
+  workload?: number;
+  projects?: number;
+  color?: string;
 }
 
 

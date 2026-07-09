@@ -136,14 +136,14 @@ export default function DayView({ events, currentDate, onEventClick, className }
                   {hourEvents.length > 0 ? (
                     <div className="space-y-1">
                       {hourEvents.map((event) => {
-                        const Icon = eventTypeIcons[event.type];
+                        const Icon = eventTypeIcons[event.type as keyof typeof eventTypeIcons];
                         return (
                           <button
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className={cn(
                               "w-full text-left p-3 rounded-lg border transition-all",
-                              eventTypeStyles[event.type],
+                              eventTypeStyles[event.type as keyof typeof eventTypeStyles],
                               "hover:shadow-md group"
                             )}
                           >
@@ -171,7 +171,7 @@ export default function DayView({ events, currentDate, onEventClick, className }
                                 {event.participants && event.participants.length > 0 && (
                                   <div className="flex items-center gap-1 mt-2">
                                     <div className="flex -space-x-2">
-                                      {event.participants.slice(0, 3).map((participant, i) => (
+                                      {event.participants.slice(0, 3).map((participant: any, i: any) => (
                                         <div
                                           key={i}
                                           className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-xs font-semibold"

@@ -12,7 +12,7 @@ const inviteWorkspaceMember = async ({
   workspaceId,
   userEmail,
 }: InviteWorkspaceMemberRequest) => {
-  const response = await client["workspace-user"][":workspaceId"].invite.$post({
+  const response = await (client as any)["workspace-user"][":workspaceId"].invite.$post({
     json: { userEmail },
     param: { workspaceId },
   });

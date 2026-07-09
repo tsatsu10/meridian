@@ -52,7 +52,7 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
       }
 
       const maxDepLevel = Math.max(
-        ...item.dependencies.map(depId => calculateLevel(depId))
+        ...item.dependencies.map((depId: any) => calculateLevel(depId))
       );
       const level = maxDepLevel + 1;
       levels.set(id, level);

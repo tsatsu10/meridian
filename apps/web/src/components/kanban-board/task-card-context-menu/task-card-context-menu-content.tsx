@@ -83,13 +83,13 @@ export default function TaskCardContextMenuContent({
   const { mutateAsync: deleteTask } = useDeleteTask();
 
   const projectsOptions = useMemo(() => {
-    return projects?.map((project) => {
+    return projects?.map((project: any) => {
       return { label: project.name, value: project.id };
     });
   }, [projects]);
 
   const usersOptions = useMemo(() => {
-    return workspaceUsers?.map((user) => ({
+    return workspaceUsers?.map((user: any) => ({
       label: user.userName ?? user.userEmail,
       value: user.userEmail,
     }));
@@ -124,7 +124,7 @@ export default function TaskCardContextMenuContent({
 
   const handleDuplicateTask = async (projectId: string) => {
     const selectedProject = projectsOptions?.find(
-      (project) => project.value === projectId,
+      (project: any) => project.value === projectId,
     );
 
     const newTask = {
@@ -207,7 +207,7 @@ export default function TaskCardContextMenuContent({
         onOpenChange={setIsCreateSubtaskModalOpen}
         status={task.status}
         parentTaskId={task.id}
-        projectContext={projects?.find(p => p.id === taskCardContext.projectId)}
+        projectContext={projects?.find((p: any) => p.id === taskCardContext.projectId)}
         hideProjectSelection={true}
       />
       
@@ -352,7 +352,7 @@ export default function TaskCardContextMenuContent({
 
         {usersOptions && (
           <ContextMenuSubContent>
-            {usersOptions.map((user) => (
+            {usersOptions.map((user: any) => (
               <ContextMenuCheckboxItem
                 key={user.value}
                 checked={task.userEmail === user.value}
@@ -405,7 +405,7 @@ export default function TaskCardContextMenuContent({
 
         {projectsOptions && (
           <ContextMenuSubContent>
-            {projectsOptions.map((project) => (
+            {projectsOptions.map((project: any) => (
               <ContextMenuItem
                 key={project.value}
                 onClick={() => handleDuplicateTask(project.value)}

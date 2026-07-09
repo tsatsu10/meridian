@@ -134,7 +134,7 @@ export function TemplateApplicationModal({
                 <SelectValue placeholder="Choose a project..." />
               </SelectTrigger>
               <SelectContent>
-                {projects?.map((project) => (
+                {projects?.map((project: any) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
                   </SelectItem>

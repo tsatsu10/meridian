@@ -995,15 +995,15 @@ function ProjectTimeline() {
                   <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
                         <Target className="h-4 w-4 text-orange-500" />
-                        <Badge className={cn("text-xs", milestoneTypeColors[milestone.milestoneType])}>
+                        <Badge className={cn("text-xs", milestoneTypeColors[milestone.milestoneType as keyof typeof milestoneTypeColors])}>
                           {milestone.milestoneType.replace('_', ' ')}
                         </Badge>
                       </div>
                       <div className="flex items-center space-x-2">
-                    <Badge className={cn("text-xs", milestoneStatusColors[milestone.status])}>
+                    <Badge className={cn("text-xs", milestoneStatusColors[milestone.status as keyof typeof milestoneStatusColors])}>
                       {milestone.status}
                     </Badge>
-                        <Badge className={cn("text-xs", riskLevelColors[milestone.riskLevel])}>
+                        <Badge className={cn("text-xs", riskLevelColors[milestone.riskLevel as keyof typeof riskLevelColors])}>
                           {milestone.riskLevel}
                         </Badge>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">

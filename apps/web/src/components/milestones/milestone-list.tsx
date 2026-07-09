@@ -645,7 +645,7 @@ export default function MilestoneList({ projectId, workspaceId, className, onEdi
 
                   {milestone.stakeholders && milestone.stakeholders.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {milestone.stakeholders.slice(0, 3).map((email, index) => (
+                      {milestone.stakeholders.slice(0, 3).map((email: any, index: any) => (
                         <Badge key={index} variant="secondary" className="text-xs">
                           {email.split('@')[0]}
                         </Badge>

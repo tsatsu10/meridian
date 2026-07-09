@@ -439,7 +439,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
               <div>
                 <p className="text-sm font-medium mb-2">Risk Factors:</p>
                 <div className="space-y-1">
-                  {data.projectHealth.riskFactors.map((risk, index) => (
+                  {data.projectHealth.riskFactors.map((risk: any, index: any) => (
                     <div key={index} className="flex items-center text-xs text-muted-foreground">
                       <AlertTriangle className="h-3 w-3 mr-1 text-yellow-500" />
                       {risk}

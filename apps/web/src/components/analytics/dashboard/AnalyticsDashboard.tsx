@@ -274,7 +274,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(dashboardData?.channelAnalytics || []).slice(0, 5).map((channel, index) => (
+                  {(dashboardData?.channelAnalytics || []).slice(0, 5).map((channel: any, index: any) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-primary rounded-full"></div>

@@ -222,7 +222,7 @@ export default function EditTaskModal({
                         Unassigned
                       </div>
                     </SelectItem>
-                    {workspaceUsers?.map((user) => (
+                    {workspaceUsers?.map((user: any) => (
                       <SelectItem key={user.userEmail} value={user.userEmail}>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-blue-600" />
