@@ -10,7 +10,6 @@ import type { UserProfile, ProfileUpdateData } from '@/types/profile';
 import { normalizeProfile, isValidProfile } from '@/types/profile';
 import { getUserProfile, updateProfile as updateProfileAPI, uploadAvatar } from '@/lib/api/profile';
 import { toast } from 'sonner';
-import { CACHE_KEYS, isOnline, setupOnlineListeners, saveToCache, getFromCache, queuePendingUpdate, processPendingUpdates, getPendingUpdates, getCacheAge, formatCacheAge } from '@/lib/offline-storage';
 
 interface ProfileContextValue {
   // Current profile data
@@ -30,12 +29,6 @@ interface ProfileContextValue {
   // Cache management
   invalidateCache: () => void;
   clearCache: () => void;
-  
-  // Offline support
-  isOnline: boolean;
-  hasPendingUpdates: boolean;
-  cacheAge: string | null;
-  syncPendingUpdates: () => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextValue | undefined>(undefined);
@@ -49,9 +42,7 @@ interface ProfileProviderProps {
 export function ProfileProvider({ children, userId, initialData }: ProfileProviderProps) {
   const queryClient = useQueryClient();
   const [optimisticData, setOptimisticData] = useState<Partial<UserProfile> | null>(null);
-  const [isOnlineState, setIsOnlineState] = useState(isOnline());
-  const [cacheAgeMs, setCacheAgeMs] = useState<number | null>(null);
-  
+
   // Fetch profile data
   const { 
     data: profileData, 
@@ -157,57 +148,6 @@ export function ProfileProvider({ children, userId, initialData }: ProfileProvid
     setOptimisticData(null);
   }, [queryClient, userId]);
 
-  // Sync pending updates when coming back online
-  const syncPendingUpdates = useCallback(async () => {
-    const pending = getPendingUpdates();
-    if (pending.length === 0) return;
-
-    try {
-      await processPendingUpdates(async (update) => {
-        if (update.type === 'update' && update.data) {
-          await updateProfileAction(update.data);
-        }
-      });
-      toast.success(`Synced ${pending.length} pending changes`);
-    } catch (error) {
-      console.error('Failed to sync pending updates:', error);
-      toast.error('Some changes failed to sync. Will retry later.');
-    }
-  }, [updateProfileAction]);
-
-  // Handle online/offline events
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnlineState(true);
-      toast.success('Back online! Syncing changes...');
-      syncPendingUpdates();
-      refreshProfile();
-    };
-
-    const handleOffline = () => {
-      setIsOnlineState(false);
-      toast.warning('You\'re offline. Changes will sync when connection is restored.');
-    };
-
-    const cleanup = setupOnlineListeners(handleOnline, handleOffline);
-    return cleanup;
-  }, [syncPendingUpdates, refreshProfile]);
-
-  // Update cache age periodically
-  useEffect(() => {
-    if (profile) {
-      const age = getCacheAge(CACHE_KEYS.PROFILE);
-      setCacheAgeMs(age);
-      
-      // Update every minute
-      const interval = setInterval(() => {
-        setCacheAgeMs(getCacheAge(CACHE_KEYS.PROFILE));
-      }, 60000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [profile]);
-
   // Validate profile data on load
   useEffect(() => {
     if (profile && !isLoading && !isValidProfile(profile)) {
@@ -226,10 +166,6 @@ export function ProfileProvider({ children, userId, initialData }: ProfileProvid
     setOptimisticProfile,
     invalidateCache,
     clearCache,
-    isOnline: isOnlineState,
-    hasPendingUpdates: getPendingUpdates().length > 0,
-    cacheAge: cacheAgeMs ? formatCacheAge(cacheAgeMs) : null,
-    syncPendingUpdates,
   };
 
   return (

@@ -15,7 +15,6 @@ import { RBACProvider, useRBACAuth } from '@/lib/permissions/provider';
 import type { RBACUser } from '@/lib/permissions/context';
 
 // Import notification provider
-import { NotificationProvider } from './notification-provider';
 
 // Import existing types
 import type { LoggedInUser } from '@/types/user';
@@ -324,9 +323,7 @@ function UnifiedContextInner({
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <UnifiedContext.Provider value={contextValue}>
-            <NotificationProvider>
-              {children}
-            </NotificationProvider>
+            {children}
           </UnifiedContext.Provider>
         </TooltipProvider>
       </QueryClientProvider>

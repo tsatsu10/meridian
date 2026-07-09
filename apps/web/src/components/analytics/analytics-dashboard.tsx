@@ -38,7 +38,6 @@ import {
 import { useChatAnalytics } from '../../hooks/useChatAnalytics';
 import { usePerformanceMonitoring } from '../../hooks/usePerformanceMonitoring';
 import { AdvancedPDFTemplates } from './advanced-pdf-templates';
-import { AdvancedMLInsights } from './advanced-ml-insights';
 import { logger } from "../../lib/logger";
 
 interface MetricCardProps {
@@ -334,7 +333,6 @@ export const AnalyticsDashboard: React.FC = () => {
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="channels">Channels</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="ai-insights">AI Insights</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
@@ -623,21 +621,6 @@ export const AnalyticsDashboard: React.FC = () => {
               )}
             </>
           )}
-        </TabsContent>
-
-        {/* AI Insights Tab */}
-        <TabsContent value="ai-insights" className="space-y-6">
-          <AdvancedMLInsights
-            projectData={analyticsData ? [analyticsData] : []}
-            teamData={analyticsData ? analyticsData.userEngagement.topUsers : []}
-            taskData={analyticsData ? analyticsData.overview : []}
-            onInsightAction={(insight, action) => {
-              logger.info("Acting on insight ${insight.id} with action: ${action}");
-              if (action === 'export') {
-                handleExport('ai-insights');
-              }
-            }}
-          />
         </TabsContent>
 
         {/* Reports Tab */}

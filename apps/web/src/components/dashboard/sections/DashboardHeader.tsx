@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import UniversalHeader from "@/components/dashboard/universal-header";
-import OfflineStatusIndicator from "@/components/pwa/OfflineStatusIndicator";
 
 interface DashboardHeaderProps {
   riskData: any;
@@ -24,7 +23,6 @@ export default function DashboardHeader({
       customActions={
         <div className="flex items-center space-x-3">
           {/* Offline Status Indicator */}
-          <OfflineStatusIndicator data-testid="offline-status-indicator" />
 
           {/* Risk Indicator - Only show if there are actual risks */}
           {riskData?.hasHighRisk && (
