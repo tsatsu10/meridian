@@ -75,8 +75,6 @@ import fileVersionsRoutes from "./modules/file-versions"; // File versioning API
 import webhooksRoutes from "./modules/webhooks"; // Outbound webhooks API
 // Removed old complex api-keys module - using simplified version
 import goalsRoutes from "./goals/routes"; // @epic-goal-setting: Goals & OKRs management
-// @epic-2.2-realtime & @epic-3.1-messaging: Import Unified WebSocket server for robust real-time features
-import { UnifiedWebSocketServer } from "./realtime/unified-websocket-server";
 import { createServer } from "http";
 import { userTable } from "./database/schema";
 import { eq } from "drizzle-orm";
@@ -497,22 +495,10 @@ async function startServer() {
       }
     });
 
-    // Initialize WebSocket server
-    let wsServer: any = null;
-    try {
-      logger.debug('🔌 Initializing WebSocket server...');
-      wsServer = new UnifiedWebSocketServer(httpServer);
-      logger.info('✅ WebSocket server initialized successfully');
-    } catch (wsError) {
-      logger.error('❌ Failed to initialize WebSocket server:', wsError);
-      logger.warn('⚠️ Server will continue without WebSocket support');
-    }
-
     // Start listening
     httpServer.listen(port, () => {
       logger.debug(`🏃 Server is running at http://localhost:${port}`);
-      logger.debug(`🔌 WebSocket server listening on ws://localhost:${port}`);
-      
+
       // Phase 2: Start digest schedulers
       try {
         const { digestScheduler } = require('./notification/services/digest-scheduler');

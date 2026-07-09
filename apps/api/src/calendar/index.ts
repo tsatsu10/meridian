@@ -1,297 +1,20 @@
 import { Hono } from 'hono';
 import { and, eq } from 'drizzle-orm';
-import { lazyLoaders } from '../utils/lazy-loader';
 import { getDatabase } from '../database/connection';
-import { userTable, userPreferencesExtendedTable } from '../database/schema';
-import { createId } from '@paralleldrive/cuid2';
+import { userPreferencesExtendedTable } from '../database/schema';
 import { logger } from '../utils/logger';
 import getTeamEvents from './controllers/get-team-events';
 
 const calendar = new Hono();
 
-// Google Calendar OAuth2 configuration
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/calendar/google/callback';
+// Google Calendar sync was removed along with external integrations.
+calendar.get('/google/auth', (c) =>
+  c.json({ error: 'Google Calendar sync is no longer available' }, 410)
+);
 
-// Initialize Google OAuth2 client lazily
-let oauth2Client: any = null;
-
-async function getGoogleAuth() {
-  if (!oauth2Client) {
-    const googleapis = await lazyLoaders.googleapis();
-    oauth2Client = new googleapis.google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      REDIRECT_URI
-    );
-  }
-  return oauth2Client;
-}
-
-// Get Google Calendar authorization URL
-calendar.get('/google/auth', async (c) => {
-  const userId = c.req.query('userId');
-  if (!userId) {
-    return c.json({ error: 'Missing userId' }, 400);
-  }
-
-  const scopes = [
-    'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/calendar.events'
-  ];
-
-  const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes,
-    state: userId, // Pass userId in state for callback
-  });
-
-  return c.json({ authUrl });
-});
-
-// Google Calendar OAuth2 callback
-calendar.get('/google/callback', async (c) => {
-  const { code, state: userId } = c.req.query();
-  
-  if (!code || !userId) {
-    return c.json({ error: 'Missing authorization code or user ID' }, 400);
-  }
-
-  try {
-    // Exchange code for tokens
-    const { tokens } = await oauth2Client.getToken(code);
-    
-    // Store tokens in user preferences
-    const calendarPrefs = {
-      provider: 'google',
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
-      expiryDate: tokens.expiry_date,
-      scope: tokens.scope,
-    };
-
-    const db = getDatabase();
-    await db.insert(userPreferencesExtendedTable).values({
-      id: createId(),
-      userId,
-      preferenceType: 'calendar',
-      preferenceData: JSON.stringify(calendarPrefs),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).onConflictDoUpdate({
-      target: [userPreferencesExtendedTable.userId, userPreferencesExtendedTable.preferenceType],
-      set: {
-        preferenceData: JSON.stringify(calendarPrefs),
-        updatedAt: new Date(),
-      },
-    });
-
-    return c.json({ success: true, message: 'Calendar connected successfully' });
-  } catch (error) {
-    logger.error('Google Calendar OAuth error:', error);
-    return c.json({ error: 'Failed to connect calendar' }, 500);
-  }
-});
-
-// OLD Google Calendar Create - DEPRECATED (commented out - using new calendar system below)
-/*
-calendar.post('/events', async (c) => {
-  const { userId, title, description, startTime, endTime, participants } = await c.req.json();
-
-  if (!userId || !title || !startTime) {
-    return c.json({ error: 'Missing required fields' }, 400);
-  }
-
-  try {
-    const db = getDatabase();
-    const prefs = await db.query.userPreferencesExtendedTable.findFirst({
-      where: (prefs, { eq, and }) => and(
-        eq(prefs.userId, userId),
-        eq(prefs.preferenceType, 'calendar')
-      ),
-    });
-
-    if (!prefs) {
-      return c.json({ error: 'Calendar not connected' }, 400);
-    }
-
-    const calendarPrefs = JSON.parse(prefs.preferenceData);
-    
-    if (calendarPrefs.provider === 'google') {
-      oauth2Client.setCredentials({
-        access_token: calendarPrefs.accessToken,
-        refresh_token: calendarPrefs.refreshToken,
-        expiry_date: calendarPrefs.expiryDate,
-      });
-
-      const googleapis = await lazyLoaders.googleapis();
-      const calendar = googleapis.google.calendar({ version: 'v3', auth: oauth2Client });
-
-      const event = {
-        summary: title,
-        description: description || '',
-        start: {
-          dateTime: new Date(startTime).toISOString(),
-          timeZone: 'UTC',
-        },
-        end: {
-          dateTime: endTime ? new Date(endTime).toISOString() : new Date(startTime + 60 * 60 * 1000).toISOString(),
-          timeZone: 'UTC',
-        },
-        attendees: participants?.map((email: string) => ({ email })) || [],
-        reminders: {
-          useDefault: false,
-          overrides: [
-            { method: 'email', minutes: 24 * 60 },
-            { method: 'popup', minutes: 15 },
-          ],
-        },
-      };
-
-      const response = await calendar.events.insert({
-        calendarId: 'primary',
-        resource: event,
-        sendUpdates: 'all',
-      });
-
-      return c.json({ 
-        success: true, 
-        eventId: response.data.id,
-        eventUrl: response.data.htmlLink 
-      });
-    }
-
-    return c.json({ error: 'Unsupported calendar provider' }, 400);
-  } catch (error) {
-    logger.error('Calendar event creation error:', error);
-    return c.json({ error: 'Failed to create calendar event' }, 500);
-  }
-});
-*/
-
-// OLD Google Calendar Update - DEPRECATED (commented out - using new calendar system below)
-/*
-calendar.patch('/events/:eventId', async (c) => {
-  const eventId = c.req.param('eventId');
-  const { userId, title, description, startTime, endTime, participants } = await c.req.json();
-
-  if (!userId || !eventId) {
-    return c.json({ error: 'Missing required fields' }, 400);
-  }
-
-  try {
-    const db = getDatabase();
-    const prefs = await db.query.userPreferencesExtendedTable.findFirst({
-      where: (prefs, { eq, and }) => and(
-        eq(prefs.userId, userId),
-        eq(prefs.preferenceType, 'calendar')
-      ),
-    });
-
-    if (!prefs) {
-      return c.json({ error: 'Calendar not connected' }, 400);
-    }
-
-    const calendarPrefs = JSON.parse(prefs.preferenceData);
-    
-    if (calendarPrefs.provider === 'google') {
-      oauth2Client.setCredentials({
-        access_token: calendarPrefs.accessToken,
-        refresh_token: calendarPrefs.refreshToken,
-        expiry_date: calendarPrefs.expiryDate,
-      });
-
-      const googleapis = await lazyLoaders.googleapis();
-      const calendar = googleapis.google.calendar({ version: 'v3', auth: oauth2Client });
-
-      const event = {
-        summary: title,
-        description: description || '',
-        start: {
-          dateTime: new Date(startTime).toISOString(),
-          timeZone: 'UTC',
-        },
-        end: {
-          dateTime: endTime ? new Date(endTime).toISOString() : new Date(startTime + 60 * 60 * 1000).toISOString(),
-          timeZone: 'UTC',
-        },
-        attendees: participants?.map((email: string) => ({ email })) || [],
-      };
-
-      const response = await calendar.events.update({
-        calendarId: 'primary',
-        eventId,
-        resource: event,
-        sendUpdates: 'all',
-      });
-
-      return c.json({ 
-        success: true, 
-        eventId: response.data.id,
-        eventUrl: response.data.htmlLink 
-      });
-    }
-
-    return c.json({ error: 'Unsupported calendar provider' }, 400);
-  } catch (error) {
-    logger.error('Calendar event update error:', error);
-    return c.json({ error: 'Failed to update calendar event' }, 500);
-  }
-});
-*/
-
-// OLD Google Calendar Delete - DEPRECATED (commented out - using new calendar system below)
-/*
-calendar.delete('/events/:eventId', async (c) => {
-  const eventId = c.req.param('eventId');
-  const userId = c.req.query('userId');
-
-  if (!userId || !eventId) {
-    return c.json({ error: 'Missing required fields' }, 400);
-  }
-
-  try {
-    const db = getDatabase();
-    const prefs = await db.query.userPreferencesExtendedTable.findFirst({
-      where: (prefs, { eq, and }) => and(
-        eq(prefs.userId, userId),
-        eq(prefs.preferenceType, 'calendar')
-      ),
-    });
-
-    if (!prefs) {
-      return c.json({ error: 'Calendar not connected' }, 400);
-    }
-
-    const calendarPrefs = JSON.parse(prefs.preferenceData);
-    
-    if (calendarPrefs.provider === 'google') {
-      oauth2Client.setCredentials({
-        access_token: calendarPrefs.accessToken,
-        refresh_token: calendarPrefs.refreshToken,
-        expiry_date: calendarPrefs.expiryDate,
-      });
-
-      const googleapis = await lazyLoaders.googleapis();
-      const calendar = googleapis.google.calendar({ version: 'v3', auth: oauth2Client });
-
-      await calendar.events.delete({
-        calendarId: 'primary',
-        eventId,
-        sendUpdates: 'all',
-      });
-
-      return c.json({ success: true });
-    }
-
-    return c.json({ error: 'Unsupported calendar provider' }, 400);
-  } catch (error) {
-    logger.error('Calendar event deletion error:', error);
-    return c.json({ error: 'Failed to delete calendar event' }, 500);
-  }
-});
-*/
+calendar.get('/google/callback', (c) =>
+  c.json({ error: 'Google Calendar sync is no longer available' }, 410)
+);
 
 // Get calendar connection status
 calendar.get('/status/:userId', async (c) => {
@@ -388,17 +111,6 @@ calendar.post('/team/:teamId/events', async (c) => {
       workspaceId
     );
 
-    // Broadcast event creation to team members via WebSocket
-    const io = c.get('io');
-    if (io && teamId) {
-      io.to(`team:${teamId}`).emit('calendar:event-created', {
-        eventId: newEvent.id,
-        event: newEvent,
-        updatedBy: actor,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
     return c.json({ event: newEvent }, 201);
   } catch (error) {
     logger.error('Create event error:', error);
@@ -440,22 +152,10 @@ calendar.patch('/events/:eventId', async (c) => {
 
   try {
     const eventData = await c.req.json();
-    const { updateEvent, getEventTeamId } = await import('./controllers/update-event');
-    
+    const { updateEvent } = await import('./controllers/update-event');
+
     const updatedEvent = await updateEvent(eventId, eventData, actor);
-    
-    // Broadcast event update to team members via WebSocket
-    const io = c.get('io');
-    const teamId = await getEventTeamId(eventId);
-    if (io && teamId) {
-      io.to(`team:${teamId}`).emit('calendar:event-updated', {
-        eventId,
-        event: updatedEvent,
-        updatedBy: actor,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    
+
     return c.json({ event: updatedEvent });
   } catch (error) {
     logger.error('Update event error:', error);
@@ -480,23 +180,10 @@ calendar.delete('/events/:eventId', async (c) => {
   }
 
   try {
-    const { deleteEvent, getEventTeamId } = await import('./controllers/delete-event');
-    
-    // Get team ID before deleting
-    const teamId = await getEventTeamId(eventId);
-    
+    const { deleteEvent } = await import('./controllers/delete-event');
+
     const result = await deleteEvent(eventId, actor);
-    
-    // Broadcast event deletion to team members via WebSocket
-    const io = c.get('io');
-    if (io && teamId) {
-      io.to(`team:${teamId}`).emit('calendar:event-deleted', {
-        eventId,
-        updatedBy: actor,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    
+
     return c.json(result);
   } catch (error) {
     logger.error('Delete event error:', error);
