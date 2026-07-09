@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, TrendingUp, Users, Clock } from 'lucide-react';
 import { motion, useSpring, useTransform } from 'framer-motion';
-import confetti from 'canvas-confetti';
-import { useSocket } from '@/hooks/use-socket';
 
 interface TaskStats {
   completed: number;
@@ -44,34 +42,7 @@ export function LiveTaskCounter() {
   const prevCompletedToday = useRef(0);
   
   const workspaceId = currentWorkspace?.id;
-  
-  // Listen to WebSocket for real-time task completions
-  const { socket } = useSocket();
-  
-  useEffect(() => {
-    if (!workspaceId || !socket || typeof socket.on !== 'function') return;
-    
-    const handleTaskCompleted = (data: any) => {
-      // Update counter
-      fetchStats();
-      
-      // Trigger confetti if it's a milestone
-      if (taskStats && taskStats.completedToday > 0) {
-        const newCount = taskStats.completedToday + 1;
-        if (newCount === 5 || newCount === 10 || newCount === 25 || 
-            newCount === 50 || newCount === 100 || newCount % 100 === 0) {
-          triggerConfetti();
-        }
-      }
-    };
-    
-    socket.on('task:completed', handleTaskCompleted);
-    
-    return () => {
-      socket.off('task:completed', handleTaskCompleted);
-    };
-  }, [socket, workspaceId, taskStats]);
-  
+
   const fetchStats = async () => {
     if (!workspaceId) return;
     
@@ -90,12 +61,6 @@ export function LiveTaskCounter() {
       
       if (statsData.success) {
         const newStats = statsData.data;
-        
-        // Check for milestone achievement
-        if (prevCompletedToday.current < newStats.completedToday && newStats.milestone) {
-          triggerConfetti();
-        }
-        
         prevCompletedToday.current = newStats.completedToday;
         setTaskStats(newStats);
       }
@@ -108,48 +73,6 @@ export function LiveTaskCounter() {
     } finally {
       setLoading(false);
     }
-  };
-  
-  const triggerConfetti = () => {
-    const count = 200;
-    const defaults = {
-      origin: { y: 0.7 },
-    };
-    
-    function fire(particleRatio: number, opts: confetti.Options) {
-      confetti({
-        ...defaults,
-        ...opts,
-        particleCount: Math.floor(count * particleRatio),
-      });
-    }
-    
-    fire(0.25, {
-      spread: 26,
-      startVelocity: 55,
-    });
-    
-    fire(0.2, {
-      spread: 60,
-    });
-    
-    fire(0.35, {
-      spread: 100,
-      decay: 0.91,
-      scalar: 0.8,
-    });
-    
-    fire(0.1, {
-      spread: 120,
-      startVelocity: 25,
-      decay: 0.92,
-      scalar: 1.2,
-    });
-    
-    fire(0.1, {
-      spread: 120,
-      startVelocity: 45,
-    });
   };
   
   useEffect(() => {

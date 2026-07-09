@@ -2,7 +2,16 @@
 import { useMemo } from "react";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { useWorkspacePermission } from "./useWorkspacePermission";
-import { CommunicationPermissions } from '@/components/communication/MainCommunicationInterface';
+export interface CommunicationPermissions {
+  canSendMessages: boolean;
+  canCreateChannels: boolean;
+  canManageChannels: boolean;
+  canViewCommunication: boolean;
+  canMentionUsers: boolean;
+  canShareFiles: boolean;
+  canPinMessages: boolean;
+  canModerateChat: boolean;
+}
 
 export type TeamRole = "owner" | "admin" | "team-lead" | "senior" | "member" | "viewer" | "guest";
 

@@ -4,12 +4,10 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/index.css";
 import "@/styles/scrollbars.css";
-import "@/styles/mobile-widgets.css";
 import AuthProvider from "./components/providers/auth-provider";
 import useAuth from "./components/providers/auth-provider/hooks/use-auth";
 import { ThemeProvider } from "./components/providers/theme-provider";
 import { RBACProvider } from "./lib/permissions";
-import { RealtimeProvider } from "./providers/realtime-provider";
 import { emergencyMemoryCleanup, monitorMemory } from "./utils/emergency-memory-cleanup";
 import { routeTree } from "./routeTree.gen";
 import { TooltipProvider } from "./components/ui/tooltip";
@@ -128,13 +126,7 @@ if (!rootElement.innerHTML) {
                 <AuthProvider>
                   <RBACProvider>
                     <WorkspaceProvider>
-                      <RealtimeProvider
-                        userId={import.meta.env.VITE_DEMO_USER_ID || 'demo-user'}
-                        username={import.meta.env.VITE_DEMO_USERNAME || 'Demo User'}
-                        persona={import.meta.env.VITE_DEMO_PERSONA || 'mike'}
-                      >
-                        <App />
-                      </RealtimeProvider>
+                      <App />
                     </WorkspaceProvider>
                   </RBACProvider>
                 </AuthProvider>

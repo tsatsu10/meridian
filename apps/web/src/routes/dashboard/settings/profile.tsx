@@ -23,7 +23,6 @@ import {
   ArrowLeft,
   Palette
 } from 'lucide-react'
-import { AvatarCustomizer } from '@/components/avatar/avatar-customizer'
 import { useSettingsStore } from '@/store/settings'
 import { toast } from 'sonner'
 import useAuth from '@/components/providers/auth-provider/hooks/use-auth'
@@ -351,14 +350,10 @@ function ProfileSettings() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Profile
-            </TabsTrigger>
-            <TabsTrigger value="avatar" className="flex items-center gap-2">
-              <Palette className="w-4 h-4" />
-              Avatar
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="w-4 h-4" />
@@ -548,28 +543,6 @@ function ProfileSettings() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Avatar Tab - DiceBear customization */}
-          <TabsContent value="avatar" className="space-y-6">
-            <AvatarCustomizer
-              userEmail={user?.email || ''}
-              userName={user?.name || 'User'}
-              userRole={user?.role}
-              initialStyle={(user as any)?.avatarStyle || 'personas'}
-              initialBackgroundColor={(user as any)?.avatarBackgroundColor}
-              initialScale={(user as any)?.avatarScale || 100}
-              initialRotation={(user as any)?.avatarRotation || 0}
-              initialFlip={(user as any)?.avatarFlip || false}
-              onSave={(preferences) => {
-                // TODO: Save to backend when user preferences schema is updated
-                console.log('Avatar preferences:', preferences);
-                toast.success('Avatar preferences saved!', {
-                  description: 'Your avatar will update across the platform',
-                });
-              }}
-              showSaveButton={true}
-            />
           </TabsContent>
 
           {/* Notifications Tab - real API-backed preferences */}

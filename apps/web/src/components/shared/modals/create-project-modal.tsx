@@ -30,7 +30,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { SmartAvatar } from "@/components/avatar/smart-avatar";
 import { 
   FolderOpen, 
   Calendar as CalendarIcon, 
@@ -903,16 +902,12 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
                               )}
                               onClick={() => toggleTeamMember(member.id)}
                             >
-                              <SmartAvatar
-                                user={{
-                                  email: member.email,
-                                  name: member.name,
-                                  role: member.role,
-                                  avatar: member.avatar,
-                                }}
-                                size="sm"
-                                showRole={false}
-                              />
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={member.avatar} alt={member.name} />
+                                <AvatarFallback>
+                                  {member.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
                               <div className="flex-1">
                                 <p className="text-sm font-medium">{member.name}</p>
                                 <p className="text-xs text-muted-foreground capitalize">
@@ -1013,17 +1008,12 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
                           {formData.teamMembers.slice(0, 5).map((memberId) => {
                             const member = availableMembers.find(m => m.id === memberId);
                             return member ? (
-                              <SmartAvatar
-                                key={member.id}
-                                user={{
-                                  email: member.email,
-                                  name: member.name,
-                                  role: member.role,
-                                  avatar: member.avatar,
-                                }}
-                                size="sm"
-                                className="ring-2 ring-background"
-                              />
+                              <Avatar key={member.id} className="h-8 w-8 ring-2 ring-background">
+                                <AvatarImage src={member.avatar} alt={member.name} />
+                                <AvatarFallback>
+                                  {member.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
                             ) : null;
                           })}
                           {formData.teamMembers.length > 5 && (

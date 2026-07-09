@@ -35,8 +35,6 @@ import { useSettingsStore } from "@/store/settings";
 import { useAuthStore } from "@/store/consolidated/auth";
 import { toast } from 'sonner';
 import { API_BASE_URL } from '@/constants/urls';
-import { UnsplashPhotoPicker } from '@/components/unsplash/unsplash-photo-picker';
-import type { UnsplashPhoto } from '@/types/unsplash';
 
 // Import Accessibility Components
 import { VoiceControl } from "@/components/accessibility/voice-control";
@@ -70,9 +68,6 @@ function AppearanceSettings() {
   const [backgroundOpacity, setBackgroundOpacity] = useState(100);
   const [uploadingBackground, setUploadingBackground] = useState(false);
   
-  // Unsplash photo picker
-  const [unsplashPickerOpen, setUnsplashPickerOpen] = useState(false);
-  const [selectedUnsplashPhoto, setSelectedUnsplashPhoto] = useState<UnsplashPhoto | null>(null);
   
   // @epic-4.4-font-customization: Font customization
   const [fontFamily, setFontFamily] = useState('Inter');
@@ -302,37 +297,8 @@ function AppearanceSettings() {
     }
   };
 
-  const handleUnsplashPhotoSelect = async (photo: UnsplashPhoto) => {
-    try {
-      setSelectedUnsplashPhoto(photo);
-      setBackgroundImage(photo.urls.regular);
-      
-      // Track download (required by Unsplash TOS)
-      await fetch(`${API_BASE_URL}/unsplash/download`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ downloadLocation: photo.links.download_location }),
-      });
-      
-      // Save preferences with Unsplash photo URL
-      await saveBackgroundPreferences(photo.urls.regular, backgroundPosition, backgroundBlur, backgroundOpacity);
-      
-      toast.success(
-        `Background set to photo by ${photo.user.name}`,
-        {
-          description: 'Photo from Unsplash',
-        }
-      );
-    } catch (error) {
-      console.error('Failed to set Unsplash background:', error);
-      toast.error('Failed to set background image');
-    }
-  };
-
   const handleRemoveBackground = async () => {
     setBackgroundImage(null);
-    setSelectedUnsplashPhoto(null);
     await saveBackgroundPreferences(null, backgroundPosition, backgroundBlur, backgroundOpacity);
     toast.success('Background image removed');
   };
@@ -764,17 +730,6 @@ function AppearanceSettings() {
               <CardContent className="space-y-4">
                 {!backgroundImage ? (
                   <Tabs defaultValue="upload" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="upload" className="gap-2">
-                        <Upload className="w-4 h-4" />
-                        Upload
-                      </TabsTrigger>
-                      <TabsTrigger value="unsplash" className="gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        Unsplash
-                      </TabsTrigger>
-                    </TabsList>
-                    
                     <TabsContent value="upload" className="mt-4">
                       <div>
                         <Label htmlFor="background-upload" className="cursor-pointer">
@@ -799,24 +754,6 @@ function AppearanceSettings() {
                             Uploading...
                           </p>
                         )}
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="unsplash" className="mt-4">
-                      <div>
-                        <Button
-                          variant="outline"
-                          className="w-full h-auto py-8 border-2 border-dashed hover:border-primary hover:bg-muted/50 transition-colors"
-                          onClick={() => setUnsplashPickerOpen(true)}
-                        >
-                          <div className="text-center">
-                            <Sparkles className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm font-medium mb-1">Choose from Unsplash</p>
-                            <p className="text-xs text-muted-foreground">
-                              Millions of free professional photos
-                            </p>
-                          </div>
-                        </Button>
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -1155,13 +1092,6 @@ function AppearanceSettings() {
         </div>
       </div>
       
-      {/* Unsplash Photo Picker Modal */}
-      <UnsplashPhotoPicker
-        isOpen={unsplashPickerOpen}
-        onClose={() => setUnsplashPickerOpen(false)}
-        onSelect={handleUnsplashPhotoSelect}
-        initialQuery="workspace background"
-      />
     </div>
   );
 }

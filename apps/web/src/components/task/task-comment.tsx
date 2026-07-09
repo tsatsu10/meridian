@@ -6,8 +6,7 @@ import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activitie
 import { Route } from "@/routes/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { LiveCommentThread } from "@/components/comments/live-comment-thread";
-import type { LiveComment } from "@/types/realtime";
+import { LiveCommentThread, type LiveComment } from "@/components/comments/live-comment-thread";
 
 function TaskComment({
   initialComment = "",

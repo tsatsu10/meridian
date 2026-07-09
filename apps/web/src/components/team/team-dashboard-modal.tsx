@@ -38,7 +38,6 @@ import { cn } from "@/lib/cn";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { useProjectTimeline } from "@/hooks/useProjectTimeline";
 import { useQuickActions } from "@/hooks/use-quick-actions";
-import { SimpleCommunicationTest } from "@/components/communication/SimpleCommunicationTest";
 
 // Icon wrappers to fix TypeScript issues
 const LayoutDashboardIcon = LayoutDashboard as React.FC<{ className?: string }>;
@@ -585,10 +584,7 @@ export default function TeamDashboardModal({
             {/* Team Communication */}
             {activeTab === "communication" && (
               <div className="space-y-6">
-                {/* Test the Fixed Communication System */}
-                <SimpleCommunicationTest />
-                
-                {/* Original Communication Section */}
+                {/* Communication Section */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Team Communication</h3>
