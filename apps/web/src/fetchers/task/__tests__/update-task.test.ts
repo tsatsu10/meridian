@@ -27,22 +27,22 @@ describe('updateTask', () => {
     status: 'in-progress',
     priority: 'high',
     userEmail: 'user@example.com',
-    dueDate: new Date('2024-12-31'),
+    dueDate: new Date('2024-12-31').toISOString(),
     position: 1,
     projectId: 'project-123',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   it('should update a task successfully', async () => {
-    const mockResponse = { ...mockTask, updatedAt: new Date() };
+    const mockResponse = { ...mockTask, updatedAt: new Date().toISOString() };
 
     const mockPut = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockResponse,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     const result = await updateTask('task-123', mockTask);
 
@@ -75,7 +75,7 @@ describe('updateTask', () => {
       json: async () => taskWithParent,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskWithParent);
 
@@ -101,7 +101,7 @@ describe('updateTask', () => {
       json: async () => minimalTask,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', minimalTask as Task);
 
@@ -126,7 +126,7 @@ describe('updateTask', () => {
       json: async () => taskNoDueDate,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskNoDueDate as Task);
 
@@ -143,7 +143,7 @@ describe('updateTask', () => {
       json: async () => taskNewStatus,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskNewStatus);
 
@@ -164,7 +164,7 @@ describe('updateTask', () => {
       json: async () => taskNewPriority,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskNewPriority);
 
@@ -185,7 +185,7 @@ describe('updateTask', () => {
       json: async () => taskNewPosition,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskNewPosition);
 
@@ -204,7 +204,7 @@ describe('updateTask', () => {
       text: async () => 'Task update failed: Task not found',
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await expect(
       updateTask('invalid-task', mockTask)
@@ -217,7 +217,7 @@ describe('updateTask', () => {
       text: async () => 'Permission denied',
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await expect(
       updateTask('task-123', mockTask)
@@ -230,7 +230,7 @@ describe('updateTask', () => {
       json: async () => mockTask,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', mockTask);
 
@@ -246,7 +246,7 @@ describe('updateTask', () => {
       json: async () => taskNewAssignee,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskNewAssignee);
 
@@ -267,7 +267,7 @@ describe('updateTask', () => {
       json: async () => taskNoDesc,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskNoDesc);
 
@@ -288,7 +288,7 @@ describe('updateTask', () => {
       json: async () => taskNoUser,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('task-123', taskNoUser as Task);
 
@@ -302,7 +302,7 @@ describe('updateTask', () => {
       json: async () => mockTask,
     });
 
-    (client.task[':id'].$put as any) = mockPut;
+    ((client.task as any)[':id'].$put as any) = mockPut;
 
     await updateTask('specific-task-id', mockTask);
 

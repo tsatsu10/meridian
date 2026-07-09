@@ -22,9 +22,9 @@ interface Task {
   description: string;
   status: string;
   priority: string;
-  dueDate: Date | null;
+  dueDate: string | null;
   position: number;
-  createdAt: Date;
+  createdAt: string;
   userEmail: string | null;
   assigneeName: string | null;
   assigneeEmail: string | null;

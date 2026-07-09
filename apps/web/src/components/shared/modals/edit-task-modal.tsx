@@ -255,7 +255,7 @@ export default function EditTaskModal({
                       mode="single"
                       selected={dueDate}
                       onSelect={setDueDate}
-                      initialFocus
+                      autoFocus
                     />
                     {dueDate && (
                       <div className="p-3 border-t">

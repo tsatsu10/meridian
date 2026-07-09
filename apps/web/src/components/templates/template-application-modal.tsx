@@ -167,7 +167,7 @@ export function TemplateApplicationModal({
                   mode="single"
                   selected={startDate}
                   onSelect={(date) => date && setStartDate(date)}
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>

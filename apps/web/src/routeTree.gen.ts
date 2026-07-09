@@ -29,7 +29,6 @@ import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardNotificationsIndexRouteImport } from './routes/dashboard/notifications/index'
-import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
 import { Route as DashboardSettingsWorkspaceRouteImport } from './routes/dashboard/settings/workspace'
 import { Route as DashboardSettingsTemplatesRouteImport } from './routes/dashboard/settings/templates'
 import { Route as DashboardSettingsTeamManagementRouteImport } from './routes/dashboard/settings/team-management'
@@ -48,8 +47,6 @@ import { Route as DashboardSettingsAppearanceRouteImport } from './routes/dashbo
 import { Route as DashboardSettingsApiRouteImport } from './routes/dashboard/settings/api'
 import { Route as DashboardSettingsLayoutRouteImport } from './routes/dashboard/settings/_layout'
 import { Route as DashboardProfileUserIdRouteImport } from './routes/dashboard/profile/$userId'
-import { Route as DashboardAnalyticsScheduledRouteImport } from './routes/dashboard/analytics/scheduled'
-import { Route as DashboardAnalyticsBuilderRouteImport } from './routes/dashboard/analytics/builder'
 import { Route as DashboardAdminRolesRouteImport } from './routes/dashboard/admin/roles'
 import { Route as DashboardWorkspaceSettingsWorkspaceIdIndexRouteImport } from './routes/dashboard/workspace-settings/$workspaceId/index'
 import { Route as DashboardWorkspaceWorkspaceIdTemplatesRouteImport } from './routes/dashboard/workspace/$workspaceId/templates'
@@ -174,11 +171,6 @@ const DashboardNotificationsIndexRoute =
     path: '/notifications/',
     getParentRoute: () => DashboardRoute,
   } as any)
-const DashboardAnalyticsIndexRoute = DashboardAnalyticsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardAnalyticsRoute,
-} as any)
 const DashboardSettingsWorkspaceRoute =
   DashboardSettingsWorkspaceRouteImport.update({
     id: '/workspace',
@@ -282,18 +274,6 @@ const DashboardProfileUserIdRoute = DashboardProfileUserIdRouteImport.update({
   path: '/profile/$userId',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAnalyticsScheduledRoute =
-  DashboardAnalyticsScheduledRouteImport.update({
-    id: '/scheduled',
-    path: '/scheduled',
-    getParentRoute: () => DashboardAnalyticsRoute,
-  } as any)
-const DashboardAnalyticsBuilderRoute =
-  DashboardAnalyticsBuilderRouteImport.update({
-    id: '/builder',
-    path: '/builder',
-    getParentRoute: () => DashboardAnalyticsRoute,
-  } as any)
 const DashboardAdminRolesRoute = DashboardAdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
@@ -438,7 +418,7 @@ export interface FileRoutesByFullPath {
   '/auth/verify-2fa': typeof AuthVerify2faRoute
   '/dashboard/activity': typeof DashboardActivityRoute
   '/dashboard/all-tasks': typeof DashboardAllTasksRoute
-  '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/audit': typeof DashboardAuditRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/projects': typeof DashboardProjectsRoute
@@ -448,8 +428,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/teams': typeof DashboardTeamsRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
-  '/dashboard/analytics/builder': typeof DashboardAnalyticsBuilderRoute
-  '/dashboard/analytics/scheduled': typeof DashboardAnalyticsScheduledRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
@@ -467,7 +445,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
   '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
-  '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
@@ -499,6 +476,7 @@ export interface FileRoutesByTo {
   '/auth/verify-2fa': typeof AuthVerify2faRoute
   '/dashboard/activity': typeof DashboardActivityRoute
   '/dashboard/all-tasks': typeof DashboardAllTasksRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/audit': typeof DashboardAuditRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/projects': typeof DashboardProjectsRoute
@@ -507,8 +485,6 @@ export interface FileRoutesByTo {
   '/dashboard/teams': typeof DashboardTeamsRouteWithChildren
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
-  '/dashboard/analytics/builder': typeof DashboardAnalyticsBuilderRoute
-  '/dashboard/analytics/scheduled': typeof DashboardAnalyticsScheduledRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
@@ -527,7 +503,6 @@ export interface FileRoutesByTo {
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
   '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
-  '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/notifications': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
   '/dashboard/teams/$workspaceId': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
@@ -559,7 +534,7 @@ export interface FileRoutesById {
   '/auth/verify-2fa': typeof AuthVerify2faRoute
   '/dashboard/activity': typeof DashboardActivityRoute
   '/dashboard/all-tasks': typeof DashboardAllTasksRoute
-  '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/audit': typeof DashboardAuditRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/projects': typeof DashboardProjectsRoute
@@ -569,8 +544,6 @@ export interface FileRoutesById {
   '/dashboard/teams': typeof DashboardTeamsRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
-  '/dashboard/analytics/builder': typeof DashboardAnalyticsBuilderRoute
-  '/dashboard/analytics/scheduled': typeof DashboardAnalyticsScheduledRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
   '/dashboard/settings/_layout': typeof DashboardSettingsLayoutRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
@@ -589,7 +562,6 @@ export interface FileRoutesById {
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
   '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
-  '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
@@ -635,8 +607,6 @@ export interface FileRouteTypes {
     | '/dashboard/teams'
     | '/dashboard/'
     | '/dashboard/admin/roles'
-    | '/dashboard/analytics/builder'
-    | '/dashboard/analytics/scheduled'
     | '/dashboard/profile/$userId'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
@@ -654,7 +624,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/team-management'
     | '/dashboard/settings/templates'
     | '/dashboard/settings/workspace'
-    | '/dashboard/analytics/'
     | '/dashboard/notifications/'
     | '/dashboard/settings/'
     | '/dashboard/settings/roles-unified/$roleId'
@@ -686,6 +655,7 @@ export interface FileRouteTypes {
     | '/auth/verify-2fa'
     | '/dashboard/activity'
     | '/dashboard/all-tasks'
+    | '/dashboard/analytics'
     | '/dashboard/audit'
     | '/dashboard/calendar'
     | '/dashboard/projects'
@@ -694,8 +664,6 @@ export interface FileRouteTypes {
     | '/dashboard/teams'
     | '/dashboard'
     | '/dashboard/admin/roles'
-    | '/dashboard/analytics/builder'
-    | '/dashboard/analytics/scheduled'
     | '/dashboard/profile/$userId'
     | '/dashboard/settings'
     | '/dashboard/settings/api'
@@ -714,7 +682,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/team-management'
     | '/dashboard/settings/templates'
     | '/dashboard/settings/workspace'
-    | '/dashboard/analytics'
     | '/dashboard/notifications'
     | '/dashboard/settings/roles-unified/$roleId'
     | '/dashboard/teams/$workspaceId'
@@ -755,8 +722,6 @@ export interface FileRouteTypes {
     | '/dashboard/teams'
     | '/dashboard/'
     | '/dashboard/admin/roles'
-    | '/dashboard/analytics/builder'
-    | '/dashboard/analytics/scheduled'
     | '/dashboard/profile/$userId'
     | '/dashboard/settings/_layout'
     | '/dashboard/settings/api'
@@ -775,7 +740,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/team-management'
     | '/dashboard/settings/templates'
     | '/dashboard/settings/workspace'
-    | '/dashboard/analytics/'
     | '/dashboard/notifications/'
     | '/dashboard/settings/'
     | '/dashboard/settings/roles-unified/$roleId'
@@ -952,13 +916,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardNotificationsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/analytics/': {
-      id: '/dashboard/analytics/'
-      path: '/'
-      fullPath: '/dashboard/analytics/'
-      preLoaderRoute: typeof DashboardAnalyticsIndexRouteImport
-      parentRoute: typeof DashboardAnalyticsRoute
-    }
     '/dashboard/settings/workspace': {
       id: '/dashboard/settings/workspace'
       path: '/workspace'
@@ -1084,20 +1041,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/profile/$userId'
       preLoaderRoute: typeof DashboardProfileUserIdRouteImport
       parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/analytics/scheduled': {
-      id: '/dashboard/analytics/scheduled'
-      path: '/scheduled'
-      fullPath: '/dashboard/analytics/scheduled'
-      preLoaderRoute: typeof DashboardAnalyticsScheduledRouteImport
-      parentRoute: typeof DashboardAnalyticsRoute
-    }
-    '/dashboard/analytics/builder': {
-      id: '/dashboard/analytics/builder'
-      path: '/builder'
-      fullPath: '/dashboard/analytics/builder'
-      preLoaderRoute: typeof DashboardAnalyticsBuilderRouteImport
-      parentRoute: typeof DashboardAnalyticsRoute
     }
     '/dashboard/admin/roles': {
       id: '/dashboard/admin/roles'
@@ -1248,21 +1191,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface DashboardAnalyticsRouteChildren {
-  DashboardAnalyticsBuilderRoute: typeof DashboardAnalyticsBuilderRoute
-  DashboardAnalyticsScheduledRoute: typeof DashboardAnalyticsScheduledRoute
-  DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
-}
-
-const DashboardAnalyticsRouteChildren: DashboardAnalyticsRouteChildren = {
-  DashboardAnalyticsBuilderRoute: DashboardAnalyticsBuilderRoute,
-  DashboardAnalyticsScheduledRoute: DashboardAnalyticsScheduledRoute,
-  DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
-}
-
-const DashboardAnalyticsRouteWithChildren =
-  DashboardAnalyticsRoute._addFileChildren(DashboardAnalyticsRouteChildren)
 
 interface DashboardSettingsRolesUnifiedRouteChildren {
   DashboardSettingsRolesUnifiedRoleIdRoute: typeof DashboardSettingsRolesUnifiedRoleIdRoute
@@ -1422,7 +1350,7 @@ const DashboardWorkspaceWorkspaceIdProjectProjectIdRouteWithChildren =
 interface DashboardRouteChildren {
   DashboardActivityRoute: typeof DashboardActivityRoute
   DashboardAllTasksRoute: typeof DashboardAllTasksRoute
-  DashboardAnalyticsRoute: typeof DashboardAnalyticsRouteWithChildren
+  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
   DashboardAuditRoute: typeof DashboardAuditRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardProjectsRoute: typeof DashboardProjectsRoute
@@ -1442,7 +1370,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardActivityRoute: DashboardActivityRoute,
   DashboardAllTasksRoute: DashboardAllTasksRoute,
-  DashboardAnalyticsRoute: DashboardAnalyticsRouteWithChildren,
+  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
   DashboardAuditRoute: DashboardAuditRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardProjectsRoute: DashboardProjectsRoute,
