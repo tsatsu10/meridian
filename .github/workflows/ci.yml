@@ -1,13 +1,17 @@
-name: Code quality
+name: CI
 
 on:
   push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  quality:
+  lint:
+    name: Lint (Biome)
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -20,3 +24,40 @@ jobs:
       - name: Run Biome
         continue-on-error: true
         run: biome ci apps/web apps/api packages/libs
+
+  typecheck-and-test:
+    name: Typecheck, test, build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install deps (no scripts)
+        run: npm ci --ignore-scripts
+
+      # API typecheck is non-blocking until the pre-existing error backlog is cleared.
+      - name: Typecheck api
+        continue-on-error: true
+        run: npm run typecheck --workspace=@meridian/api
+
+      - name: Typecheck web
+        working-directory: apps/web
+        run: npx tsc --noEmit
+
+      - name: Unit tests (api)
+        continue-on-error: true
+        run: npm run test:run --workspace=@meridian/api
+
+      - name: Build api
+        run: npm run build --workspace=@meridian/api
+
+      - name: Build web
+        working-directory: apps/web
+        run: npx vite build
