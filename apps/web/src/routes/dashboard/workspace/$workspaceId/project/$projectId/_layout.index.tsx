@@ -1100,7 +1100,7 @@ function ProjectOverview() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {users && users.length > 0 ? (
-                  users.slice(0, 5).map((user) => {
+                  users.slice(0, 5).map((user: any) => {
                     const userTasks = allTasks.filter((task: any) => task.userEmail === user.userEmail);
                     const completedTasks = userTasks.filter((task: any) => task.status === 'done').length;
                     const workloadPercentage = userTasks.length > 0 ? Math.round((completedTasks / userTasks.length) * 100) : 0;
@@ -1109,7 +1109,7 @@ function ProjectOverview() {
                       <div key={user.userEmail} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                         <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                           <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-medium text-white">
-                            {user.userName?.split(' ').map(n => n[0]).join('') || '?'}
+                            {user.userName?.split(' ').map((n: any) => n[0]).join('') || '?'}
                           </div>
                         </Avatar>
                         <div className="flex-1 min-w-0">

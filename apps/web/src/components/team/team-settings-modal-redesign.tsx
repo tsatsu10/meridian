@@ -41,11 +41,11 @@ interface Team {
   id: string;
   name: string;
   description?: string;
-  lead: string;
+  lead?: string;
   members: Array<{ id: string; name: string; email: string; role: string }>;
   projectId?: string | null;
   workspaceId: string;
-  isActive: boolean;
+  isActive?: boolean;
   createdAt: Date;
 }
 

@@ -141,7 +141,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
       }
 
       // Update local state to remove the column
-      setProject(produce(project, (draft) => {
+      setProject(produce(project, (draft: any) => {
         draft.columns = draft.columns.filter((col: any) => col.id !== (column as any)?.id);
       }));
 
@@ -168,7 +168,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
       });
 
       // Update local state to remove the column
-      setProject(produce(project, (draft) => {
+      setProject(produce(project, (draft: any) => {
         draft.columns = draft.columns.filter((col: any) => col.id !== (column as any)?.id);
       }));
 

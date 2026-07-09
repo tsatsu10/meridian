@@ -36,7 +36,7 @@ function normalizeWorkspaceMember(raw: Record<string, unknown>): WorkspaceMember
 }
 
 async function getWorkspaceUsers({ param }: GetWorkspaceUsersRequest) {
-  const response = await client["workspace-user"][":workspaceId"].$get({
+  const response = await (client as any)["workspace-user"][":workspaceId"].$get({
     param,
   });
 

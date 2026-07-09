@@ -125,7 +125,7 @@ export function AssignUsersModal({
   };
   
   const handleSelectAll = () => {
-    const filtered = filteredUsers.map(u => u.id);
+    const filtered = filteredUsers.map((u: any) => u.id);
     setSelectedUsers(filtered);
   };
   

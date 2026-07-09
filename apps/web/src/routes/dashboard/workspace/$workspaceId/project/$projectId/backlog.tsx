@@ -207,8 +207,8 @@ function BacklogPage() {
         action: () => {
           // Select all visible tasks
           const allTaskIds = new Set([
-            ...(project?.plannedTasks || []).map(t => t.id),
-            ...(project?.archivedTasks || []).map(t => t.id),
+            ...(project?.plannedTasks || []).map((t: any) => t.id),
+            ...(project?.archivedTasks || []).map((t: any) => t.id),
           ]);
           setSelectedTasks(allTaskIds);
         },
@@ -372,7 +372,7 @@ function BacklogPage() {
     }
 
     // Move all planned tasks to the to-do column
-    plannedTasks.forEach((task) => {
+    plannedTasks.forEach((task: any) => {
       const taskUpdate = {
         ...task,
         status: "todo" as const,
@@ -500,7 +500,7 @@ function BacklogPage() {
       {
         id: "planned" as const,
         name: "Planned" as const,
-        tasks: (project.plannedTasks || []).map((task) => ({
+        tasks: (project.plannedTasks || []).map((task: any) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,
@@ -509,19 +509,19 @@ function BacklogPage() {
       {
         id: "archived" as const,
         name: "Archived" as const,
-        tasks: (project.archivedTasks || []).map((task) => ({
+        tasks: (project.archivedTasks || []).map((task: any) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,
         })),
       },
     ],
-    plannedTasks: (project.plannedTasks || []).map((task) => ({
+    plannedTasks: (project.plannedTasks || []).map((task: any) => ({
       ...task,
       assigneeName: null,
       assigneeEmail: null,
     })),
-    archivedTasks: (project.archivedTasks || []).map((task) => ({
+    archivedTasks: (project.archivedTasks || []).map((task: any) => ({
       ...task,
       assigneeName: null,
       assigneeEmail: null,

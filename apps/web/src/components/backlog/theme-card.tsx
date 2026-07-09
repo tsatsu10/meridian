@@ -209,7 +209,7 @@ export function ThemeCard({
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <div className="flex -space-x-1">
-                  {theme.assignees.slice(0, 3).map((assignee, index) => (
+                  {theme.assignees.slice(0, 3).map((assignee: any, index: any) => (
                     <Avatar key={index} className="h-6 w-6 border-2 border-background">
                       <AvatarFallback className="text-xs">
                         {assignee.name.charAt(0).toUpperCase()}

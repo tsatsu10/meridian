@@ -149,14 +149,14 @@ export default function WeekView({ events, currentDate, onEventClick, className 
                     >
                       <div className="space-y-1">
                         {dayEvents.map((event) => {
-                          const Icon = eventTypeIcons[event.type];
+                          const Icon = eventTypeIcons[event.type as keyof typeof eventTypeIcons];
                           return (
                             <button
                               key={event.id}
                               onClick={() => onEventClick?.(event)}
                               className={cn(
                                 "w-full text-left p-1.5 rounded border-l-2 text-xs transition-all",
-                                eventTypeStyles[event.type],
+                                eventTypeStyles[event.type as keyof typeof eventTypeStyles],
                                 "hover:shadow-sm group"
                               )}
                               title={`${event.title}\n${format(new Date(event.startTime), 'h:mm a')} - ${format(new Date(event.endTime), 'h:mm a')}`}
@@ -206,14 +206,14 @@ export default function WeekView({ events, currentDate, onEventClick, className 
                   >
                     <div className="space-y-1">
                       {allDayEvents.map((event) => {
-                        const Icon = eventTypeIcons[event.type];
+                        const Icon = eventTypeIcons[event.type as keyof typeof eventTypeIcons];
                         return (
                           <button
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className={cn(
                               "w-full text-left p-2 rounded-lg border transition-all text-xs",
-                              eventTypeStyles[event.type]
+                              eventTypeStyles[event.type as keyof typeof eventTypeStyles]
                             )}
                           >
                             <div className="flex items-center gap-2">

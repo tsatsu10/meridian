@@ -596,7 +596,7 @@ function ReportBuilderPage() {
                                   className="overflow-hidden"
                                 >
                                   <div className="space-y-2 ml-6 mt-2">
-                                    {metrics.map((metric) => (
+                                    {metrics.map((metric: any) => (
                                       <div
                                         key={metric.id}
                                         onClick={() => handleMetricToggle(metric.id)}
