@@ -1,12 +1,10 @@
 import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
 
-export type InviteWorkspaceMemberRequest = InferRequestType<
-  (typeof client)["workspace-user"][":workspaceId"]["invite"]["$post"]
->["json"] &
-  InferRequestType<
-    (typeof client)["workspace-user"][":workspaceId"]["invite"]["$post"]
-  >["param"];
+// The generated AppType is missing workspace-user[":workspaceId"], so type the request locally
+export type InviteWorkspaceMemberRequest = {
+  workspaceId: string;
+  userEmail: string;
+};
 
 const inviteWorkspaceMember = async ({
   workspaceId,

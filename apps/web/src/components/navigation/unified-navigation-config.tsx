@@ -48,6 +48,7 @@ import useGetProjects from "@/hooks/queries/project/use-get-projects";
 export interface NavigationItem {
   id: string;
   label: string;
+  description?: string;
   icon: LucideIcon;
   href: string;
   category: "main" | "project" | "workspace" | "utility" | "development";

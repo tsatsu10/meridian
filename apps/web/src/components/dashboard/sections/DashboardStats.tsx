@@ -16,7 +16,7 @@ export default function DashboardStats({
   keyboardNavigation
 }: DashboardStatsProps) {
   // Only register keyboard navigation if it's provided
-  const tasksCard = keyboardNavigation ? useKeyboardNavigationItem(
+  const tasksCard = keyboardNavigation ? useKeyboardNavigationItem<HTMLDivElement>(
     'stats-total-tasks',
     keyboardNavigation,
     {
@@ -31,7 +31,7 @@ export default function DashboardStats({
     }
   ) : { ref: { current: null }, isActive: false, focus: () => {}, activate: () => {} };
 
-  const projectsCard = keyboardNavigation ? useKeyboardNavigationItem(
+  const projectsCard = keyboardNavigation ? useKeyboardNavigationItem<HTMLDivElement>(
     'stats-active-projects',
     keyboardNavigation,
     {
@@ -47,7 +47,7 @@ export default function DashboardStats({
     }
   ) : { ref: { current: null }, isActive: false, focus: () => {}, activate: () => {} };
 
-  const riskCard = keyboardNavigation ? useKeyboardNavigationItem(
+  const riskCard = keyboardNavigation ? useKeyboardNavigationItem<HTMLDivElement>(
     'stats-risk-score',
     keyboardNavigation,
     {
@@ -64,7 +64,7 @@ export default function DashboardStats({
     }
   ) : { ref: { current: null }, isActive: false, focus: () => {}, activate: () => {} };
 
-  const notificationsCard = keyboardNavigation ? useKeyboardNavigationItem(
+  const notificationsCard = keyboardNavigation ? useKeyboardNavigationItem<HTMLDivElement>(
     'stats-notifications',
     keyboardNavigation,
     {

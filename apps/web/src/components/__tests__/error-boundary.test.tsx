@@ -8,7 +8,7 @@
  * - Fallback UI
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { TestWrapper } from '../../test-utils/test-wrapper';
 import React from 'react';

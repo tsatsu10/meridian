@@ -96,6 +96,8 @@ export interface ThemeProgress {
 }
 
 export interface ThemeWithProgress extends TaskTheme {
+  dueDate?: string;
+  assignees?: Array<{ name?: string } | string>;
   progress: ThemeProgress;
   health: 'excellent' | 'good' | 'warning' | 'critical';
   risks: string[];

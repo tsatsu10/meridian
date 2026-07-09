@@ -38,7 +38,7 @@ import {
 // TYPES
 // ==========================================
 
-interface Role {
+export interface Role {
   id: string;
   name: string;
   description: string | null;
@@ -47,6 +47,7 @@ interface Role {
   usersCount: number;
   lastUsedAt: Date | null;
   isActive: boolean;
+  createdAt: Date;
 }
 
 interface RoleCardProps {

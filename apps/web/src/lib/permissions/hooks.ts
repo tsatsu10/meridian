@@ -149,12 +149,12 @@ export function useFeatureFlags() {
       
       // Communication features
       canCreateChannels: hasPermission("canCreateChannels"),
-      canModerateChannels: hasPermission("canModerateChannels"),
+      canModerateChannels: hasPermission("canModerateChat"),
       canDeleteMessages: hasPermission("canDeleteMessages"),
       
       // Resource features
       canUploadFiles: hasPermission("canUploadFiles"),
-      canManageFiles: hasPermission("canManageFiles"),
+      canManageFiles: hasPermission("canOrganizeFiles"),
       canDeleteFiles: hasPermission("canDeleteFiles"),
       
       // User type flags
@@ -236,10 +236,10 @@ export function useRoleBasedComponent<T extends Record<UserRole, React.Component
  * Hook for workspace-scoped permissions
  */
 export function useWorkspacePermissions(workspaceId?: string) {
-  const { hasPermission, workspaceContext } = useRBACAuth();
+  const { hasPermission, currentWorkspace } = useRBACAuth();
 
   const permissions = useMemo(() => {
-    const targetWorkspace = workspaceId || workspaceContext?.workspaceId;
+    const targetWorkspace = workspaceId || currentWorkspace;
     
     if (!targetWorkspace) {
       return {
@@ -256,13 +256,13 @@ export function useWorkspacePermissions(workspaceId?: string) {
     // For now, use global permissions
     return {
       canView: hasPermission("canViewWorkspace"),
-      canEdit: hasPermission("canEditWorkspace"),
+      canEdit: hasPermission("canManageWorkspace"),
       canManage: hasPermission("canManageWorkspace"),
       canInvite: hasPermission("canInviteUsers"),
       canDelete: hasPermission("canDeleteWorkspace"),
       workspaceId: targetWorkspace,
     };
-  }, [workspaceId, workspaceContext, hasPermission]);
+  }, [workspaceId, currentWorkspace, hasPermission]);
 
   return permissions;
 }
@@ -271,10 +271,10 @@ export function useWorkspacePermissions(workspaceId?: string) {
  * Hook for project-scoped permissions
  */
 export function useProjectPermissions(projectId?: string) {
-  const { hasPermission, workspaceContext } = useRBACAuth();
+  const { hasPermission, currentProject } = useRBACAuth();
 
   const permissions = useMemo(() => {
-    const targetProject = projectId || workspaceContext?.projectId;
+    const targetProject = projectId || currentProject;
     
     if (!targetProject) {
       return {
@@ -305,7 +305,7 @@ export function useProjectPermissions(projectId?: string) {
       canRemoveMembers: hasPermission("canRemoveFromProject"),
       projectId: targetProject,
     };
-  }, [projectId, workspaceContext, hasPermission]);
+  }, [projectId, currentProject, hasPermission]);
 
   return permissions;
 }
@@ -397,7 +397,8 @@ export function useTeamLeadActions() {
  * Hook for permission debugging
  */
 export function usePermissionDebug() {
-  const { user, permissions, isLoading } = useRBACAuth();
+  const { user, getAllowedActions, isLoading } = useRBACAuth();
+  const permissions = Object.fromEntries(getAllowedActions().map(a => [a, true]));
 
   const debugInfo = useMemo(() => {
     if (isLoading) {

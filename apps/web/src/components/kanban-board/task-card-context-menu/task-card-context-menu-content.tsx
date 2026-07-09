@@ -80,13 +80,16 @@ export default function TaskCardContextMenuContent({
   });
   const { mutateAsync: updateTask } = useUpdateTask();
   const { mutateAsync: createTask } = useCreateTask();
-  const { mutateAsync: deleteTask } = useDeleteTask();
+  const { mutateAsync: deleteTask } = useDeleteTask(taskCardContext.projectId);
+
+  // useGetProjects returns either a bare array or { projects, pagination }
+  const projectList = Array.isArray(projects) ? projects : (projects as any)?.projects;
 
   const projectsOptions = useMemo(() => {
-    return projects?.map((project: any) => {
+    return projectList?.map((project: any) => {
       return { label: project.name, value: project.id };
     });
-  }, [projects]);
+  }, [projectList]);
 
   const usersOptions = useMemo(() => {
     return workspaceUsers?.map((user: any) => ({
@@ -207,7 +210,7 @@ export default function TaskCardContextMenuContent({
         onOpenChange={setIsCreateSubtaskModalOpen}
         status={task.status}
         parentTaskId={task.id}
-        projectContext={projects?.find((p: any) => p.id === taskCardContext.projectId)}
+        projectContext={projectList?.find((p: any) => p.id === taskCardContext.projectId)}
         hideProjectSelection={true}
       />
       

@@ -20,6 +20,7 @@ interface CreateEventData {
   estimatedHours?: number;
   color?: string;
   attendees?: string[];
+  reminderMinutes?: number;
   isRecurring?: boolean;
   recurringPattern?: {
     frequency: 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';

@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { LoggedInUser } from '@/types/user';
 import type { UserRole, AllPermissions } from '@/lib/permissions/types';
+import { ROLE_HIERARCHY } from '@/lib/permissions/types';
 import { getRolePermissions } from '@/lib/permissions/definitions';
 import { API_BASE_URL, } from '@/constants/urls';
 import { logger } from "../../lib/logger";
@@ -338,14 +339,7 @@ export const useAuthStore = create<AuthStore>()(
         const { user } = get();
         if (!user) return false;
         
-        const roleLevel = {
-          'guest': 0,
-          'member': 1,
-          'team-lead': 2,
-          'project-manager': 3,
-          'department-head': 4,
-          'workspace-manager': 5
-        }[user.role] || 0;
+        const roleLevel = ROLE_HIERARCHY[user.role] || 0;
 
         const requiredLevel = {
           'read': 1,

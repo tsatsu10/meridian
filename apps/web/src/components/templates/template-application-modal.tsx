@@ -40,7 +40,7 @@ export function TemplateApplicationModal({
   onClose,
   onSuccess,
 }: TemplateApplicationModalProps) {
-  const { workspaceId } = useParams({ from: '/_authenticated/dashboard/workspace/$workspaceId' });
+  const { workspaceId } = useParams({ strict: false }) as { workspaceId: string };
   const queryClient = useQueryClient();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -48,11 +48,15 @@ export function TemplateApplicationModal({
   const [roleMapping, setRoleMapping] = useState<Record<string, string>>({});
 
   // Fetch projects in workspace
-  const { data: projects } = useQuery({
+  const { data: projectsData } = useQuery({
     queryKey: ['projects', workspaceId],
     queryFn: () => getProjects(workspaceId),
     enabled: !!workspaceId,
   });
+  // getProjects returns either a bare array or { projects, pagination }
+  const projects = Array.isArray(projectsData)
+    ? projectsData
+    : (projectsData?.projects as any[] | undefined);
 
   // Fetch workspace users
   const { data: users } = useQuery({
@@ -207,7 +211,7 @@ export function TemplateApplicationModal({
                       <SelectContent>
                         <SelectItem value="">Unassigned</SelectItem>
                         {users?.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
+                          <SelectItem key={user.id ?? user.email} value={user.id ?? ""}>
                             {user.name}
                           </SelectItem>
                         ))}

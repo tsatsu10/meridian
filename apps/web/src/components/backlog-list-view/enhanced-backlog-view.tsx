@@ -79,7 +79,7 @@ interface EnhancedBacklogViewProps {
     archivedTasks: Task[];
   };
   onTaskClick?: (task: EnhancedTask) => void;
-  onThemeCreate?: (theme: Omit<TaskTheme, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TaskTheme>;
+  onThemeCreate?: (theme: Omit<TaskTheme, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TaskTheme | void>;
   onThemeEdit?: (theme: TaskTheme) => void;
   onThemeDelete?: (themeId: string) => void;
   onTaskUpdate?: (taskId: string, updates: Partial<EnhancedTask>) => void;
@@ -189,27 +189,30 @@ export default function EnhancedBacklogView({
     try {
       if (onThemeCreate) {
         const createdTheme = await onThemeCreate(newThemeData);
-        
-        // Create theme with progress for local state
-        const themeWithProgress: ThemeWithProgress = {
-          ...createdTheme,
-          progress: {
-            totalTasks: 0,
-            completedTasks: 0,
-            inProgressTasks: 0,
-            plannedTasks: 0,
-            progressPercentage: 0,
-            storyPointsTotal: 0,
-            storyPointsCompleted: 0,
-            estimatedCompletion: undefined
-          },
-          health: 'excellent',
-          risks: []
-        };
-        
-        // Add to local state immediately for UI update
-        setThemes(prev => [...prev, themeWithProgress]);
-        
+
+        // Handlers that create via react-query invalidate and refetch;
+        // only add to local state when the created theme is returned
+        if (createdTheme) {
+          const themeWithProgress: ThemeWithProgress = {
+            ...createdTheme,
+            progress: {
+              totalTasks: 0,
+              completedTasks: 0,
+              inProgressTasks: 0,
+              plannedTasks: 0,
+              progressPercentage: 0,
+              storyPointsTotal: 0,
+              storyPointsCompleted: 0,
+              estimatedCompletion: undefined
+            },
+            health: 'excellent',
+            risks: []
+          };
+
+          // Add to local state immediately for UI update
+          setThemes(prev => [...prev, themeWithProgress]);
+        }
+
         setIsCreateThemeOpen(false);
         setThemeForm({
           name: '',

@@ -281,12 +281,12 @@ export function useKeyboardNavigation(
 /**
  * Hook for registering individual keyboard navigation items
  */
-export function useKeyboardNavigationItem(
+export function useKeyboardNavigationItem<T extends HTMLElement = HTMLElement>(
   id: string,
   navigation: ReturnType<typeof useKeyboardNavigation>,
   options: Partial<KeyboardNavigationItem> = {}
 ) {
-  const elementRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<T | null>(null);
 
   const {
     priority = 0,

@@ -15,6 +15,9 @@ describe.skipIf(SKIP_TESTS)('Authentication Integration Tests (Real API)', () =>
     await waitForServer();
   });
 
+  let authToken: string;
+  let testUserId: string;
+
   describe('User Registration', () => {
     it('should register a new user successfully', async () => {
       const timestamp = Date.now();
