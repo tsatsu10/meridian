@@ -270,7 +270,7 @@ export default function EnhancedBacklogView({
         storyPoints: Math.floor(Math.random() * 8) + 1,
         businessValue: Math.floor(Math.random() * 10) + 1,
         effort: Math.floor(Math.random() * 10) + 1,
-        refinementStatus: ['draft', 'refined', 'ready'][Math.floor(Math.random() * 3)] as RefinementStatus,
+        refinementStatus: ['draft', 'refined', 'ready'][Math.floor(Math.random() * 3)] as 'draft' | 'refined' | 'ready',
         labels: ['frontend', 'backend', 'api'].slice(0, Math.floor(Math.random() * 3) + 1),
         acceptanceCriteria: ['User can login', 'Error handling works', 'UI is responsive'],
         ageInDays
@@ -324,7 +324,7 @@ export default function EnhancedBacklogView({
       filtered = filtered.filter(task => task.userEmail === filters.assignee);
     }
 
-    if (filters.refinementStatus && filters.refinementStatus !== 'all') {
+    if (filters.refinementStatus) {
       filtered = filtered.filter(task => task.refinementStatus === filters.refinementStatus);
     }
 

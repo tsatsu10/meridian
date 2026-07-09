@@ -39,7 +39,7 @@ import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import { useWorkspaceProjectStats } from "@/hooks/queries/project/use-workspace-project-stats";
 import { useDuplicateProject } from "@/hooks/mutations/project/use-duplicate-project";
 import useDeleteProject from "@/hooks/mutations/project/use-delete-project";
-import { useArchiveProject, useRestoreProject } from "@/hooks/mutations/project/use-archive-project";
+import { useArchiveProject } from "@/hooks/mutations/project/use-archive-project";
 import ProjectFiltersAccessible from "@/components/dashboard/project-filters-accessible";
 import { useFilterStore } from "@/store/project-filters";
 import { BulkSelectAllCheckbox, useBulkKeyboardShortcuts } from "@/components/dashboard/bulk-select-checkbox";
@@ -64,7 +64,6 @@ function ProjectsPage() {
   const urlSearch = useSearch({ from: "/dashboard/projects" });
   const deleteProjectMutation = useDeleteProject();
   const archiveProjectMutation = useArchiveProject();
-  const restoreProjectMutation = useRestoreProject();
   const duplicateProjectMutation = useDuplicateProject();
 
   // Initialize bulk operations
@@ -390,14 +389,6 @@ function ProjectsPage() {
     }
   };
 
-  // Restore Project Handler
-  const handleRestoreProject = async (project: ProjectDashboardRow) => {
-    restoreProjectMutation.mutate({
-      projectId: project.id,
-      workspaceId: workspace?.id || '',
-    });
-  };
-
   if (!workspace) {
     return (
       <LazyDashboardLayout>
@@ -488,12 +479,12 @@ function ProjectsPage() {
             projects={projects || []}
             owners={
               projects
-                ?.map((p) => ({ id: p.ownerId, name: p.ownerName ?? "Owner" }))
+                ?.map((p) => ({ id: p.ownerId ?? "", name: p.ownerName ?? "Owner" }))
                 .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) || []
             }
             teamMembers={
               projects
-                ?.flatMap((p) => p.members || [])
+                ?.flatMap((p) => (p.members || []).map((m) => ({ id: m.id ?? m.email ?? "", name: m.name ?? m.email ?? "Member" })))
                 .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) || []
             }
             onFiltersChange={() => setCurrentPage(1)}

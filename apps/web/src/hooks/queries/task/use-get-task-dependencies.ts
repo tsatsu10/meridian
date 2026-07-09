@@ -2,7 +2,7 @@ import { client } from "@meridian/libs";
 import { useQuery } from "@tanstack/react-query";
 
 async function getTaskDependencies(taskId: string) {
-  const response = await client.task[":taskId"].dependencies.$get({
+  const response = await (client as any).task[":taskId"].dependencies.$get({
     param: { taskId },
   });
 

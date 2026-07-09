@@ -148,11 +148,11 @@ function TaskLabels({
 
     setIsSaving(true);
     try {
-      const newLabel = await createLabel({
+      const newLabel = (await createLabel({
         name: searchValue.trim(),
         color: selectedColor,
         taskId,
-      });
+      })) as { id?: string };
 
       setSearchValue("");
       setSelectedColor("gray");
@@ -160,7 +160,7 @@ function TaskLabels({
       await queryClient.invalidateQueries({ queryKey: ["labels", taskId] });
 
       if (newLabel?.id) {
-        setTaskLabels((prev) => [...prev, newLabel.id]);
+        setTaskLabels((prev) => [...prev, newLabel.id as string]);
       }
 
       toast.success("Label created successfully");

@@ -7,7 +7,7 @@ function useBatchDelete() {
 
   return useMutation({
     mutationFn: async (notificationIds: string[]) => {
-      const response = await client.notification.batch.delete.$post({
+      const response = await (client as any).notification.batch.delete.$post({
         json: { ids: notificationIds },
       });
 

@@ -5,7 +5,7 @@ import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useGetActiveWorkspaceUsers from "@/hooks/queries/workspace-users/use-active-workspace-users";
 import useProjectStore from "@/store/project";
-import type { ProjectWithTasks, ProjectState } from "@/types/project";
+import type { ProjectWithTasks } from "@/types/project";
 import type { Task } from "@/types/task";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -19,19 +19,6 @@ import TaskLabels from "./task-labels";
 import TaskDependencies from "./task-dependencies";
 import CreateTaskModal from "../shared/modals/create-task-modal";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-
-interface Column {
-  id: string;
-  name: string;
-}
-
-interface ProjectWithColumns extends ProjectWithTasks {
-  columns: Column[];
-  workspaceId: string;
-  id: string;
-  name: string;
-  slug: string;
-}
 
 export const taskInfoSchema = z.object({
   status: z.string(),
@@ -51,7 +38,7 @@ function TaskInfo({
   const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] = useState(false);
   const { project } = useProjectStore();
   const { mutateAsync: updateTask } = useUpdateTask();
-  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask();
+  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask(task.projectId);
   const queryClient = useQueryClient();
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
     project ? { workspaceId: project.workspaceId } : { workspaceId: "" }
@@ -59,7 +46,7 @@ function TaskInfo({
   const { user } = useAuth();
 
   const isCreator = user?.email === task.userEmail;
-  const typedProject = project ? (project as unknown as ProjectWithColumns) : null;
+  const typedProject: ProjectWithTasks | null = project ?? null;
 
   const form = useForm<z.infer<typeof taskInfoSchema>>({
     defaultValues: {
@@ -287,7 +274,7 @@ function TaskInfo({
           id: typedProject.id,
           name: typedProject.name,
           slug: typedProject.slug
-        } as ProjectState : undefined}
+        } : undefined}
       />
     </div>
   );

@@ -58,8 +58,6 @@ import DashboardPopup from "@/components/dashboard/dashboard-popup";
   import { useRBACAuth } from "@/lib/permissions";
   import LazyDashboardLayout, { StatsCardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/performance/lazy-dashboard-layout";
 import useWorkspaceStore from "@/store/workspace";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
-import type { Project } from "@/types/project";
 import { API_BASE_URL } from "@/constants/urls";
 import { logger } from "@/lib/logger";
 
@@ -173,7 +171,6 @@ function ProjectOverview() {
   const navigate = useNavigate();
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
-  const { data: projects = [] as Project[] } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateMilestoneOpen, setIsCreateMilestoneOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);

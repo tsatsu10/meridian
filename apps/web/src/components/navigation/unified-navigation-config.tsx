@@ -275,8 +275,6 @@ export const useSettingsNavigation = (): NavigationItem[] => {
 
 // Project-specific navigation items
 export const useProjectNavigation = (workspaceId: string, projectId: string): NavigationItem[] => {
-  const { hasPermission } = useRBACAuth();
-
   // Return empty array if no valid workspace or project ID
   if (!workspaceId || !projectId) {
     return [];

@@ -132,7 +132,7 @@ interface Team {
   id: string;
   name: string;
   members: TeamMember[];
-  lead: string;
+  lead?: string;
   isArchived?: boolean;
   createdAt?: string;
 }

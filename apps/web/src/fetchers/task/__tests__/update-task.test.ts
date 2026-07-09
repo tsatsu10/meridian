@@ -22,6 +22,8 @@ describe('updateTask', () => {
 
   const mockTask: Task = {
     id: 'task-123',
+    parentId: null,
+    number: 1,
     title: 'Updated Task',
     description: 'Updated description',
     status: 'in-progress',
@@ -290,7 +292,7 @@ describe('updateTask', () => {
 
     ((client.task as any)[':id'].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNoUser as Task);
+    await updateTask('task-123', taskNoUser as unknown as Task);
 
     const call = mockPut.mock.calls[0][0];
     expect(call.json.userEmail).toBe('');

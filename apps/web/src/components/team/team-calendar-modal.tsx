@@ -47,8 +47,6 @@ import WeekView from '@/components/schedule/week-view';
 import { useScheduleConflicts } from '@/hooks/use-schedule-conflicts';
 import { useSmartScheduling } from '@/hooks/use-smart-scheduling';
 import { useScheduleDragDrop } from '@/hooks/use-schedule-drag-drop';
-import useAuth from '@/components/providers/auth-provider/hooks/use-auth';
-import useWorkspaceStore from '@/store/workspace';
 import type { CalendarEvent, MemberSchedule, CalendarViewMode, TimelineEntry } from '@/types/schedule';
 import CreateEventModal from './create-event-modal';
 import EventDetailsModal from './event-details-modal';
@@ -128,9 +126,6 @@ export default function TeamCalendarModal({
   const [showEditEventModal, setShowEditEventModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  // Get auth and workspace context
-  const { user } = useAuth();
-  const { workspace } = useWorkspaceStore();
 
   // Calculate date range based on view mode and current date
   const { startDate, endDate } = useMemo(() => {

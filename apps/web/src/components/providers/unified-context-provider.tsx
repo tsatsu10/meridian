@@ -134,7 +134,7 @@ function UnifiedContextInner({
   // Use provided user from RBAC bridge
   const user = providedUser;
   const [workspace, setWorkspace] = useState<WorkspaceData | null>(null);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<UnifiedSettings>({
     theme: 'light' as const,
     sidebarCollapsed: false,
     animations: true,

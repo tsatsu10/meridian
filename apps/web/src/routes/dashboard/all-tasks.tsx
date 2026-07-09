@@ -573,7 +573,7 @@ export default function AllTasksPage() {
             projectId: task.project.id,
             userEmail: user?.email ?? "",
             status: "todo", // Reset to todo for duplicated task
-            dueDate: task.dueDate ? new Date(task.dueDate) : new Date(),
+            dueDate: task.dueDate ?? new Date().toISOString(),
             priority: task.priority || "medium",
             parentId: task.parentId || undefined,
           });

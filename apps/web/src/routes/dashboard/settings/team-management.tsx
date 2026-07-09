@@ -22,7 +22,6 @@ import {
   Sparkles,
   User,
   UserCheck,
-  Layout,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -720,8 +719,8 @@ function TeamManagementSettings() {
       <InviteUserModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
-        workspaceId={currentWorkspace.id}
-        workspaceName={currentWorkspace.name}
+        workspaceId={currentWorkspace?.id ?? ""}
+        workspaceName={currentWorkspace?.name ?? ""}
       />
     </LazyDashboardLayout>
   );

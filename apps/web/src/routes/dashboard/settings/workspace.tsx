@@ -319,7 +319,7 @@ function WorkspaceSettings() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading workspace settings...</p>
-            <p className="text-xs text-muted-foreground mt-2">Workspace: {currentWorkspace.name}</p>
+            <p className="text-xs text-muted-foreground mt-2">Workspace: {currentWorkspace?.name}</p>
           </div>
         </div>
       </LazyDashboardLayout>
@@ -338,10 +338,10 @@ function WorkspaceSettings() {
                 <div className="mt-2 space-y-1">
                   <p className="text-sm text-destructive">{error.message}</p>
                   <p className="text-xs text-muted-foreground">
-                    Workspace ID: {currentWorkspace.id}
+                    Workspace ID: {currentWorkspace?.id}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    API: {API_BASE_URL}/workspaces/{currentWorkspace.id}/settings
+                    API: {API_BASE_URL}/workspaces/{currentWorkspace?.id}/settings
                   </p>
                 </div>
               )}

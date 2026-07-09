@@ -50,7 +50,7 @@ export function TemplateApplicationModal({
   // Fetch projects in workspace
   const { data: projectsData } = useQuery({
     queryKey: ['projects', workspaceId],
-    queryFn: () => getProjects(workspaceId),
+    queryFn: () => getProjects({ workspaceId }),
     enabled: !!workspaceId,
   });
   // getProjects returns either a bare array or { projects, pagination }
@@ -61,7 +61,7 @@ export function TemplateApplicationModal({
   // Fetch workspace users
   const { data: users } = useQuery({
     queryKey: ['workspace-users', workspaceId],
-    queryFn: () => getWorkspaceUsers(workspaceId),
+    queryFn: () => getWorkspaceUsers({ param: { workspaceId } }),
     enabled: !!workspaceId,
   });
 

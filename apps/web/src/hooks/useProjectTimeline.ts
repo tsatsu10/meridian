@@ -153,9 +153,11 @@ export function useProjectTimeline(teams: any[] = []) {
   });
 
   const timelineData = useMemo(() => {
-    if (!projects || teams.length === 0) return [];
+    // useGetProjects returns either a bare array or { projects, pagination }
+    const projectList = Array.isArray(projects) ? projects : projects?.projects;
+    if (!projectList || teams.length === 0) return [];
 
-    return projects.map((project: any) => {
+    return projectList.map((project: any) => {
       // Filter events for this project
       const projectEvents = sampleTimelineEvents.filter(
         event => event.projectId === project.id

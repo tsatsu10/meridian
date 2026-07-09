@@ -7,7 +7,7 @@ function useBatchArchive() {
 
   return useMutation({
     mutationFn: async (notificationIds: string[]) => {
-      const response = await client.notification.batch.archive.$post({
+      const response = await (client as any).notification.batch.archive.$post({
         json: { ids: notificationIds },
       });
 

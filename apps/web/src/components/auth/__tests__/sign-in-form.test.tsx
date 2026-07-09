@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter } from '@tanstack/react-router'
 import { SignInForm } from '../sign-in-form'
 import { useAuth } from '../../providers/unified-context-provider'
 
@@ -62,6 +61,9 @@ vi.mock('../../../hooks/mutations/use-sign-in', () => ({
 // Mock useAuth
 const mockUseAuth = vi.mocked(useAuth)
 
+// Router-free stand-in used by the local TestWrapper
+const BrowserRouter = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+
 // Test wrapper
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -87,7 +89,8 @@ describe('SignInForm', () => {
       user: null,
       signIn: mockSignIn,
       signOut: vi.fn(),
-      isAuthenticated: false,
+      setUser: vi.fn(),
+      isInitialized: true,
       isLoading: false,
     })
   })

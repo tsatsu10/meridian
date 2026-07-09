@@ -95,7 +95,7 @@ describe('Dashboard Charts', () => {
 
       render(<TaskCompletionChart data={data} />, { wrapper: TestWrapper });
 
-      expect(screen.getAllByClassName('chart-bar')).toHaveLength(30);
+      expect(document.querySelectorAll('.chart-bar')).toHaveLength(30);
     });
   });
 

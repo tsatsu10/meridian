@@ -1,9 +1,12 @@
-import type { client } from "@meridian/libs";
-import type { InferResponseType } from "hono/client";
-
-export type Workspace = Extract<
-  InferResponseType<(typeof client)["workspace"][":id"]["$get"]>,
-  { id: string }
->;
+// The generated AppType is missing workspace[":id"], so this mirrors the API
+// response (apps/api workspace/controllers/get-workspace.ts).
+export type Workspace = {
+  id: string;
+  name: string;
+  ownerId: string | null;
+  ownerEmail: string | null;
+  description: string | null;
+  createdAt: string;
+};
 
 export default Workspace;

@@ -27,14 +27,12 @@ import {
   UserPlus
 } from "lucide-react";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import { useRBACAuth } from "@/lib/permissions";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/shared/notifications/notification-center";
 import useWorkspaceStore from "@/store/workspace";
 import useProjectStore from "@/store/project";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
@@ -52,7 +50,6 @@ export default function PageHeaderActions(_props: PageHeaderActionsProps = {}) {
 
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
-  const { data: projects } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const navigate = useNavigate();
   const { user } = useAuth();
   

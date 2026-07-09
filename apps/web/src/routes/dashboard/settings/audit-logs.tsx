@@ -606,7 +606,7 @@ function AuditLogsSettings() {
                     .map(([action, count]) => (
                       <div key={action} className="flex items-center justify-between">
                         <span className="text-sm">{action}</span>
-                        <Badge variant="secondary">{count}</Badge>
+                        <Badge variant="secondary">{Number(count)}</Badge>
                       </div>
                     ))}
                 </div>

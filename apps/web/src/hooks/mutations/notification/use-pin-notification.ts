@@ -2,7 +2,7 @@ import { client } from "@meridian/libs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 async function pinNotification(id: string) {
-  const response = await client.notification[":id"].pin.$patch({
+  const response = await (client as any).notification[":id"].pin.$patch({
     param: { id },
   });
 

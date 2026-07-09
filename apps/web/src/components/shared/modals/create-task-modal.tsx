@@ -44,15 +44,6 @@ import { priorityOptions, statusOptions } from "@/constants/task";
 // @persona-sarah: PM needs comprehensive task creation with dependency tracking
 // @persona-mike: Dev needs fast, efficient task creation without friction
 
-interface User {
-  id: string;
-  userEmail: string;
-  userName: string;
-  workspaceId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface Team {
     id: string;
     name: string;
@@ -92,18 +83,14 @@ interface Task {
   userEmail: string | null;
 }
 
-interface ProjectColumn {
-  id: string;
-  tasks: Task[];
-}
-
 interface ProjectState {
   id?: string;
   name?: string;
   slug?: string;
   icon?: React.ReactNode;
+  // Only projectId is read from context tasks, so keep this structural
   columns?: {
-    tasks: Task[];
+    tasks: Array<{ projectId: string }>;
   }[];
 }
 
@@ -231,7 +218,7 @@ export default function CreateTaskModal({
     ? (projectsQuery.data as ProjectOption[]) 
     : [];
 
-  const usersQuery = useGetActiveWorkspaceUsers(workspace?.id ?? "");
+  const usersQuery = useGetActiveWorkspaceUsers({ workspaceId: workspace?.id ?? "" });
   const users = Array.isArray(usersQuery.data) 
     ? (usersQuery.data as WorkspaceUser[]) 
     : [];
@@ -242,7 +229,7 @@ export default function CreateTaskModal({
     : [];
 
   const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(
-    hideProjectSelection && project ? project as ProjectOption : null
+    hideProjectSelection && project ? (project as unknown as ProjectOption) : null
   );
 
   const tasksQuery = useGetTasks(selectedProject?.id ?? "");

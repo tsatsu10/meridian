@@ -262,7 +262,7 @@ export default function MilestoneList({ projectId, workspaceId, className, onEdi
   }, [sortedMilestones, groupBy]);
 
   // Check if any filters are active
-  const hasActiveFilters = searchQuery || statusFilter !== 'all' || riskFilter !== 'all' || typeFilter !== 'all';
+  const hasActiveFilters = !!searchQuery || statusFilter !== 'all' || riskFilter !== 'all' || typeFilter !== 'all';
 
   // Clear all filters
   const clearAllFilters = () => {

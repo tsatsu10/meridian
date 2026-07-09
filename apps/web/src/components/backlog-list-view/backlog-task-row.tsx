@@ -1,5 +1,4 @@
 import { priorityColorsTaskCard } from "@/constants/priority-colors";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import { cn } from "@/lib/cn";
 import useProjectStore from "@/store/project";
 import type { ProjectWithTasks } from "@/types/project";
@@ -42,7 +41,6 @@ interface BacklogTaskRowProps {
 export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBacklogData }: BacklogTaskRowProps) {
   const navigate = useNavigate();
   const { project } = useProjectStore();
-  const { mutate: updateTask } = useUpdateTask();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const {
@@ -180,7 +178,7 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
               ) : task.userEmail ? (
                 <div className="flex items-center space-x-2">
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={task.assigneeAvatar} />
+                    <AvatarImage src={task.assigneeAvatar ?? undefined} />
                     <AvatarFallback>
                       {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                     </AvatarFallback>

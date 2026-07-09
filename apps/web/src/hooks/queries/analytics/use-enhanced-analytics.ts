@@ -306,7 +306,7 @@ export function useEnhancedAnalytics(options: EnhancedAnalyticsOptions = {}) {
         skillGapAnalysis: Array.isArray(data?.skillGapAnalysis) ? data.skillGapAnalysis : [],
         capacityPlanning: Array.isArray(data?.capacityPlanning) ? data.capacityPlanning : [],
         riskAssessment: Array.isArray(data?.riskAssessment) ? data.riskAssessment : [],
-        forecasting: data?.forecasting || null,
+        forecasting: data?.forecasting ?? undefined,
         industryBenchmarks: data?.industryBenchmarks || null,
         summary: {
           timeRange: data?.summary?.timeRange || "",

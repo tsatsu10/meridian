@@ -17,8 +17,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useRBACAuth } from "@/lib/permissions";
 import type { AllPermissions } from "@/lib/permissions/types";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
-import useWorkspaceStore from "@/store/workspace";
 import { 
   useNavigationSections,
   useActiveNavigation,
@@ -178,11 +176,6 @@ export const SidebarNavigation: React.FC<MagicUINavigationProps> = ({
   const { hasPermission } = useRBACAuth();
   const [_projectsExpanded, _setProjectsExpanded] = useState(false);
   
-  // Get workspace and projects data
-  const { workspace } = useWorkspaceStore();
-  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({ 
-    workspaceId: workspace?.id || "" 
-  });
 
   const renderNavigationItem = (item: NavigationItem) => {
     const isActive = location.pathname === item.href || 
@@ -287,7 +280,7 @@ export const SidebarNavigation: React.FC<MagicUINavigationProps> = ({
         </div>
       ))}
       <CreateProjectModal
-        isOpen={isCreateProjectOpen}
+        open={isCreateProjectOpen}
         onClose={() => setIsCreateProjectOpen(false)}
       />
     </nav>

@@ -481,7 +481,7 @@ export default function CreateEventModal({
                 )}
 
                 <div className="text-sm text-muted-foreground p-2 bg-background rounded">
-                  <strong>Preview:</strong> {formData.recurring === 'none' ? 'Single event' : 
+                  <strong>Preview:</strong> { 
                     `Repeats ${formData.recurring}${
                       recurringOptions.endDate ? ` until ${new Date(recurringOptions.endDate).toLocaleDateString()}` :
                       ` for ${recurringOptions.occurrences} occurrences`

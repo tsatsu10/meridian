@@ -33,7 +33,6 @@ interface CreateEventData {
     customPattern?: Record<string, any>;
     exceptionDates?: string[];
   };
-  reminderMinutes?: number;
 }
 
 interface CreateEventResponse {

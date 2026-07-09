@@ -34,6 +34,7 @@ interface TeamData {
   description: string;
   color: string;
   type: 'development' | 'design' | 'marketing' | 'management' | 'other';
+  projectId?: string;
 }
 
 interface TeamCreationModalProps {
