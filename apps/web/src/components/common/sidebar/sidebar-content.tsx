@@ -52,24 +52,6 @@ export function SidebarContent() {
           isSidebarOpened ? "p-3" : "p-2"
         )}>
           {/* Workspace Settings link removed per request */}
-          
-          {/* Help & Support - Only show when expanded */}
-          {isSidebarOpened && (
-            <Link
-              to="/dashboard/help"
-              className={cn(
-                "group flex items-center gap-3 px-3 py-2.5 rounded-xl w-full",
-                "transition-all duration-200 ease-out",
-                "hover:bg-white/10 hover:shadow-lg hover:shadow-black/5",
-                "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white/10"
-              )}
-            >
-              <HelpCircle className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-200" />
-              <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-200">
-                Help & Support
-              </span>
-            </Link>
-          )}
         </div>
       </nav>
     </TooltipProvider>

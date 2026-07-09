@@ -134,17 +134,7 @@ const settingsCategories = [
     href: '/dashboard/settings/roles-unified',
     category: 'workspace'
   },
-  {
-    id: 'billing',
-    title: 'Billing & Plans',
-    description: 'Subscription, payments, and billing history',
-    icon: CreditCard,
-    color: 'from-emerald-500 to-teal-500',
-    href: '/dashboard/settings/billing',
-    category: 'workspace'
-  },
-  
-  // 💾 Data & Integration (5)
+  // 💾 Data & Integration
   {
     id: 'data-management',
     title: 'Data Management',
@@ -152,24 +142,6 @@ const settingsCategories = [
     icon: Database,
     color: 'from-cyan-500 to-blue-500',
     href: '/dashboard/settings/data-management',
-    category: 'data'
-  },
-  {
-    id: 'integrations',
-    title: 'Integrations',
-    description: 'Connect with external services and tools',
-    icon: Puzzle,
-    color: 'from-pink-500 to-rose-500',
-    href: '/dashboard/settings/integrations',
-    category: 'data'
-  },
-  {
-    id: 'automation',
-    title: 'Automation',
-    description: 'Workflow automation, rules, and execution settings',
-    icon: Zap,
-    color: 'from-amber-500 to-orange-500',
-    href: '/dashboard/settings/automation',
     category: 'data'
   },
   {
@@ -199,15 +171,6 @@ const settingsCategories = [
     icon: Mail,
     color: 'from-red-500 to-pink-500',
     href: '/dashboard/settings/email',
-    category: 'customization'
-  },
-  {
-    id: 'themes',
-    title: 'Themes & Branding',
-    description: 'Custom themes, color palettes, and workspace branding',
-    icon: Palette,
-    color: 'from-pink-500 to-rose-500',
-    href: '/dashboard/settings/themes',
     category: 'customization'
   },
   {

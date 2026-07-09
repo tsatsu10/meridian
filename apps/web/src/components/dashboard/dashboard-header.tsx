@@ -110,10 +110,6 @@ export default function DashboardHeader({
     navigate({ to: '/dashboard/teams' });
   };
 
-  const handleCommunication = () => {
-    navigate({ to: '/dashboard/communication' });
-  };
-
   const handleLogout = async () => {
     try {
       await signOut();

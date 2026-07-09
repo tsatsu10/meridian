@@ -90,15 +90,6 @@ const ROUTE_MAPPINGS: RouteMapping[] = [
     ]
   },
   
-  // Chat routes
-  {
-    pattern: /^\/dashboard\/chat$/,
-    template: () => [
-      { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
-      { id: 'chat', label: 'Team Communication', href: '/dashboard/chat' }
-    ]
-  },
-  
   // Settings routes
   {
     pattern: /^\/dashboard\/settings$/,
@@ -157,37 +148,6 @@ const ROUTE_MAPPINGS: RouteMapping[] = [
     ]
   },
   
-  // Help routes
-  {
-    pattern: /^\/dashboard\/help$/,
-    template: () => [
-      { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
-      { id: 'help', label: 'Help Center', href: '/dashboard/help' }
-    ]
-  },
-  
-  {
-    pattern: /^\/dashboard\/help\/admin$/,
-    template: () => [
-      { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
-      { id: 'help', label: 'Help Center', href: '/dashboard/help' },
-      { id: 'help-admin', label: 'Admin Guide', href: '/dashboard/help/admin' }
-    ]
-  },
-  
-  {
-    pattern: /^\/dashboard\/help\/([^/]+)$/,
-    template: (params) => [
-      { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
-      { id: 'help', label: 'Help Center', href: '/dashboard/help' },
-      { 
-        id: `help-${params.slug}`, 
-        label: formatHelpSlug(params.slug), 
-        href: `/dashboard/help/${params.slug}` 
-      }
-    ]
-  },
-  
   // Project milestones
   {
     pattern: /^\/dashboard\/workspace\/([^/]+)\/project\/([^/]+)\/milestones$/,
@@ -241,9 +201,6 @@ const ROUTE_MAPPINGS: RouteMapping[] = [
   }
 ];
 
-function formatHelpSlug(slug: string): string {
-  return slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
 
 function formatSettingsSection(section: string): string {
   const sectionNames: Record<string, string> = {

@@ -113,15 +113,6 @@ export default function TaskActivityFeed({ taskId }) {
               <div className="mb-1">
                 {event.content || event.description}
               </div>
-              {event.messageId && event.channelId && (
-                <Link
-                  to="/dashboard/chat"
-                  search={{ channel: event.channelId, message: event.messageId }}
-                  className="text-xs text-blue-700 underline"
-                >
-                  View Message
-                </Link>
-              )}
               {event.commentId && (
                 <a href={`/dashboard/task/${taskId}/comment/${event.commentId}`} className="text-xs text-blue-700 underline ml-2">View Comment</a>
               )}
