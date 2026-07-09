@@ -25,7 +25,7 @@ interface TaskCardProps {
 const TaskCard = React.memo(function TaskCard({ task, hierarchyLevel = 0, parentTask }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // 🛡️ RBAC: Get user permissions for role-based UI
-  const { hasPermission, user } = useRBACAuth();
+  useRBACAuth();
   
   const {
     attributes,
@@ -60,7 +60,6 @@ const TaskCard = React.memo(function TaskCard({ task, hierarchyLevel = 0, parent
     selectedTasks = bulkOps.selectedTasks;
     isSelectionMode = bulkOps.isSelectionMode;
     toggleTaskSelection = bulkOps.toggleTaskSelection;
-    selectAllSubtasks = bulkOps.selectAllSubtasks;
   } catch (error) {
     // BulkOperationsProvider not available, use defaults
   }
@@ -341,31 +340,31 @@ const TaskCard = React.memo(function TaskCard({ task, hierarchyLevel = 0, parent
             )}
 
             {/* @epic-1.2-dependencies: Enhanced dependency indicators with specific task names */}
-            {(task.dependencies?.length > 0 || task.blockedBy?.length > 0) && (
+            {((task.dependencies?.length ?? 0) > 0 || (task.blockedBy?.length ?? 0) > 0) && (
               <div className="flex items-center gap-1 mb-2">
-                {task.dependencies?.length > 0 && (
+                {(task.dependencies?.length ?? 0) > 0 && (
                   <div 
                     className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-md cursor-help"
-                    title={`Blocks: ${task.dependencies.map(dep => dep.requiredTask?.title || 'Unknown task').join(', ')}`}
+                    title={`Blocks: ${(task.dependencies ?? []).map(dep => dep.requiredTask?.title || 'Unknown task').join(', ')}`}
                   >
                     <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                     <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                      Blocks {task.dependencies.length}
+                      Blocks {task.dependencies?.length ?? 0}
                     </span>
                   </div>
                 )}
-                {task.blockedBy?.length > 0 && (
+                {(task.blockedBy?.length ?? 0) > 0 && (
                   <div 
                     className="flex items-center gap-1 px-2 py-1 bg-orange-50 dark:bg-orange-900/20 rounded-md cursor-help"
-                    title={`Blocked by: ${task.blockedBy.map(dep => dep.dependentTask?.title || 'Unknown task').join(', ')}`}
+                    title={`Blocked by: ${(task.blockedBy ?? []).map(dep => dep.dependentTask?.title || 'Unknown task').join(', ')}`}
                   >
                     <svg className="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                      Blocked by {task.blockedBy.length}
+                      Blocked by {task.blockedBy?.length ?? 0}
                     </span>
                   </div>
                 )}

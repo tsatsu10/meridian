@@ -65,9 +65,10 @@ interface ApiProject {
 
 interface RecentProject {
   id: string;
-  name: string;
+  name?: string;
+  icon?: string;
   progress: number;
-  lastActivity: string;
+  lastActivity?: string;
   teamSize: number;
   color?: string;
   status?: string;
@@ -140,7 +141,7 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
         count: Array.isArray(projects) ? projects.length : (projects?.projects?.length || 0),
       });
 
-      const teamMembersData = workspaceUsers?.users || [];
+      const teamMembersData = workspaceUsers || [];
 
       let filteredProjects: ApiProject[] = Array.isArray(projects)
         ? projects
@@ -150,12 +151,12 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
         filteredProjects = filteredProjects.filter((project: ApiProject) => {
           // Status filter
           if (filters.status && filters.status.length > 0) {
-            if (!filters.status.includes(project.status)) return false;
+            if (!filters.status.includes(project.status as (typeof filters.status)[number])) return false;
           }
           
           // Priority filter
-          if (filters.priority && filters.priority.length > 0) {
-            if (!filters.priority.includes(project.priority || "medium")) return false;
+          if (filters.priorities && filters.priorities.length > 0) {
+            if (!filters.priorities.includes((project.priority || "medium") as (typeof filters.priorities)[number])) return false;
           }
           
           // Project filter
@@ -165,19 +166,19 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
           
           // Time range filter
           if (filters.timeRange && filters.timeRange !== "all") {
-            const createdAt = new Date(project.createdAt);
+            const createdAt = new Date(project.createdAt ?? 0);
             const now = new Date();
             let startDate: Date;
             
             switch (filters.timeRange) {
-              case "today":
-                startDate = new Date(now.setHours(0, 0, 0, 0));
-                break;
-              case "week":
+              case "7d":
                 startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
                 break;
-              case "month":
+              case "30d":
                 startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+              case "90d":
+                startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
                 break;
               default:
                 startDate = new Date(0);
@@ -306,7 +307,7 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
           const dueDate = new Date(task.dueDate);
           return dueDate > new Date() && dueDate <= futureDate;
         })
-        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+        .sort((a, b) => new Date(a.dueDate as string).getTime() - new Date(b.dueDate as string).getTime())
         .slice(0, 5)
         .forEach((task) => {
           if (!task.id || !task.dueDate || !task.title || !task.projectName) return;
@@ -335,17 +336,17 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
         projects: mappedProjects,
         teamMembers: teamMembersData.map(
           (member: {
-            id: string;
-            name?: string;
-            email?: string;
-            avatar?: string;
-            role?: string;
+            id: string | null;
+            name?: string | null;
+            email?: string | null;
+            avatar?: string | null;
+            role?: string | null;
           }): TeamMember => ({
-            id: member.id,
+            id: member.id ?? "",
             name: member.name ?? "Team member",
-            email: member.email,
-            avatar: member.avatar,
-            role: member.role,
+            email: member.email ?? undefined,
+            avatar: member.avatar ?? undefined,
+            role: member.role ?? undefined,
             status: "online",
             activeTasks: 0,
           })

@@ -36,8 +36,8 @@ export default function DayView({ events, currentDate, onEventClick, className }
   const eventsForDay = useMemo(() => {
     const dayEnd = endOfDay(currentDate);
     return events.filter(event => {
-      const eventStart = new Date(event.startTime);
-      const eventEnd = new Date(event.endTime);
+      const eventStart = new Date(event.startTime ?? event.date ?? 0);
+      const eventEnd = new Date(event.endTime ?? event.startTime ?? event.date ?? 0);
       // Include events that start on this day OR span across this day
       return (
         isSameDay(eventStart, currentDate) ||
@@ -52,8 +52,8 @@ export default function DayView({ events, currentDate, onEventClick, className }
     const hourEnd = addHours(hourStart, 1);
     
     return eventsForDay.filter(event => {
-      const eventStart = new Date(event.startTime);
-      const eventEnd = new Date(event.endTime);
+      const eventStart = new Date(event.startTime ?? event.date ?? 0);
+      const eventEnd = new Date(event.endTime ?? event.startTime ?? event.date ?? 0);
       
       return (
         (isAfter(eventStart, hourStart) && isBefore(eventStart, hourEnd)) ||
@@ -159,7 +159,7 @@ export default function DayView({ events, currentDate, onEventClick, className }
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
-                                    {format(new Date(event.startTime), 'h:mm a')} - {format(new Date(event.endTime), 'h:mm a')}
+                                    {format(new Date(event.startTime ?? event.date ?? 0), 'h:mm a')} - {format(new Date(event.endTime ?? event.startTime ?? event.date ?? 0), 'h:mm a')}
                                   </span>
                                   {event.location && (
                                     <span className="flex items-center gap-1 truncate">
@@ -168,21 +168,21 @@ export default function DayView({ events, currentDate, onEventClick, className }
                                     </span>
                                   )}
                                 </div>
-                                {event.participants && event.participants.length > 0 && (
+                                {event.attendees && event.attendees.length > 0 && (
                                   <div className="flex items-center gap-1 mt-2">
                                     <div className="flex -space-x-2">
-                                      {event.participants.slice(0, 3).map((participant: any, i: any) => (
+                                      {event.attendees.slice(0, 3).map((participant: any, i: any) => (
                                         <div
                                           key={i}
                                           className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-xs font-semibold"
-                                          title={participant.name}
+                                          title={participant}
                                         >
-                                          {participant.name.charAt(0).toUpperCase()}
+                                          {String(participant).charAt(0).toUpperCase()}
                                         </div>
                                       ))}
-                                      {event.participants.length > 3 && (
+                                      {event.attendees.length > 3 && (
                                         <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium">
-                                          +{event.participants.length - 3}
+                                          +{event.attendees.length - 3}
                                         </div>
                                       )}
                                     </div>

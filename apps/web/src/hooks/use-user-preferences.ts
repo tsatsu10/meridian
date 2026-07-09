@@ -223,8 +223,8 @@ export function useUserPreferences() {
         let bodyString: string;
         try {
           bodyString = JSON.stringify(requestBody);
-          logger.debug('[Preferences] JSON body length:', bodyString.length);
-          logger.debug('[Preferences] JSON body preview:', bodyString.substring(0, 200));
+          logger.debug('[Preferences] JSON body length:', { value: bodyString.length });
+          logger.debug('[Preferences] JSON body preview:', { value: bodyString.substring(0, 200) });
           
           // Validate the string is not empty
           if (!bodyString || bodyString.length < 10) {
@@ -252,9 +252,9 @@ export function useUserPreferences() {
           credentials: 'include',
           body: bodyString,
         });
-        logger.debug('[Preferences] Fetch completed, status:', response.status);
+        logger.debug('[Preferences] Fetch completed, status:', { value: response.status });
 
-        logger.debug('[Preferences] Response status:', response.status);
+        logger.debug('[Preferences] Response status:', { value: response.status });
 
         if (!response.ok) {
           const errorText = await response.text();

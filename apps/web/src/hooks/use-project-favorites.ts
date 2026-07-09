@@ -77,12 +77,12 @@ export function useProjectFavorites() {
       };
       
       logger.debug('[Favorites] Saving to API:', payload);
-      logger.debug('[Favorites] API_URL:', API_URL);
-      logger.debug('[Favorites] Full URL:', `${API_BASE_URL}/user-preferences`);
+      logger.debug('[Favorites] API_URL:', { value: API_URL });
+      logger.debug(`[Favorites] Full URL: ${API_BASE_URL}/user-preferences`);
       
       const bodyString = JSON.stringify(payload);
-      logger.debug('[Favorites] Stringified body:', bodyString);
-      logger.debug('[Favorites] Body length:', bodyString.length);
+      logger.debug('[Favorites] Stringified body:', { value: bodyString });
+      logger.debug('[Favorites] Body length:', { value: bodyString.length });
       
       const response = await fetch(`${API_BASE_URL}/user-preferences`, {
         method: 'POST',
@@ -93,7 +93,7 @@ export function useProjectFavorites() {
         body: bodyString,
       });
       
-      logger.debug('[Favorites] Response status:', response.status);
+      logger.debug('[Favorites] Response status:', { value: response.status });
       logger.debug('[Favorites] Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {

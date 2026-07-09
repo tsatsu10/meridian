@@ -37,7 +37,7 @@ export default function WeekView({ events, currentDate, onEventClick, className 
 
   const eventsForWeek = useMemo(() => {
     return events.filter(event => {
-      const eventStart = new Date(event.startTime);
+      const eventStart = new Date(event.startTime ?? event.date ?? 0);
       // Use inclusive comparison to include events on Sunday (weekStart) and Saturday (weekEnd)
       return isWithinInterval(eventStart, { start: weekStart, end: weekEnd });
     });
@@ -48,8 +48,8 @@ export default function WeekView({ events, currentDate, onEventClick, className 
     const hourEnd = addHours(hourStart, 1);
     
     return eventsForWeek.filter(event => {
-      const eventStart = new Date(event.startTime);
-      const eventEnd = new Date(event.endTime);
+      const eventStart = new Date(event.startTime ?? event.date ?? 0);
+      const eventEnd = new Date(event.endTime ?? event.startTime ?? event.date ?? 0);
       
       return (
         isSameDay(eventStart, day) &&
@@ -66,7 +66,7 @@ export default function WeekView({ events, currentDate, onEventClick, className 
 
   const getEventsCountForDay = (day: Date) => {
     return eventsForWeek.filter(event => {
-      const eventStart = new Date(event.startTime);
+      const eventStart = new Date(event.startTime ?? event.date ?? 0);
       return isSameDay(eventStart, day);
     }).length;
   };
@@ -159,14 +159,14 @@ export default function WeekView({ events, currentDate, onEventClick, className 
                                 eventTypeStyles[event.type as keyof typeof eventTypeStyles],
                                 "hover:shadow-sm group"
                               )}
-                              title={`${event.title}\n${format(new Date(event.startTime), 'h:mm a')} - ${format(new Date(event.endTime), 'h:mm a')}`}
+                              title={`${event.title}\n${format(new Date(event.startTime ?? event.date ?? 0), 'h:mm a')} - ${format(new Date(event.endTime ?? event.startTime ?? event.date ?? 0), 'h:mm a')}`}
                             >
                               <div className="flex items-start gap-1">
                                 <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium truncate leading-tight">{event.title}</p>
                                   <p className="text-[10px] text-muted-foreground truncate">
-                                    {format(new Date(event.startTime), 'h:mm a')}
+                                    {format(new Date(event.startTime ?? event.date ?? 0), 'h:mm a')}
                                   </p>
                                 </div>
                               </div>
@@ -184,7 +184,7 @@ export default function WeekView({ events, currentDate, onEventClick, className 
 
         {/* All-day events section */}
         {eventsForWeek.some(e => {
-          const duration = new Date(e.endTime).getTime() - new Date(e.startTime).getTime();
+          const duration = new Date(e.endTime ?? e.startTime ?? e.date ?? 0).getTime() - new Date(e.startTime ?? e.date ?? 0).getTime();
           return duration >= 24 * 60 * 60 * 1000; // 24 hours or more
         }) && (
           <div className="border-t bg-muted/30">
@@ -194,8 +194,8 @@ export default function WeekView({ events, currentDate, onEventClick, className 
               </div>
               {daysInWeek.map((day) => {
                 const allDayEvents = eventsForWeek.filter(event => {
-                  const eventStart = new Date(event.startTime);
-                  const duration = new Date(event.endTime).getTime() - eventStart.getTime();
+                  const eventStart = new Date(event.startTime ?? event.date ?? 0);
+                  const duration = new Date(event.endTime ?? event.startTime ?? event.date ?? 0).getTime() - eventStart.getTime();
                   return isSameDay(eventStart, day) && duration >= 24 * 60 * 60 * 1000;
                 });
                 

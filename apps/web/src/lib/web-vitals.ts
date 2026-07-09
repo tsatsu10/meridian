@@ -129,21 +129,21 @@ export function logPerformanceMetrics() {
     if (metrics.navigation) {
       const nav = metrics.navigation;
       console.group('📊 Performance Metrics');
-      logger.debug('DNS Lookup:', `${nav.domainLookupEnd - nav.domainLookupStart}ms`);
-      logger.debug('TCP Connection:', `${nav.connectEnd - nav.connectStart}ms`);
-      logger.debug('Request Time:', `${nav.responseStart - nav.requestStart}ms`);
-      logger.debug('Response Time:', `${nav.responseEnd - nav.responseStart}ms`);
-      logger.debug('DOM Interactive:', `${nav.domInteractive - nav.fetchStart}ms`);
-      logger.debug('DOM Complete:', `${nav.domComplete - nav.fetchStart}ms`);
-      logger.debug('Load Complete:', `${nav.loadEventEnd - nav.fetchStart}ms`);
+      logger.debug(`DNS Lookup: ${nav.domainLookupEnd - nav.domainLookupStart}ms`);
+      logger.debug(`TCP Connection: ${nav.connectEnd - nav.connectStart}ms`);
+      logger.debug(`Request Time: ${nav.responseStart - nav.requestStart}ms`);
+      logger.debug(`Response Time: ${nav.responseEnd - nav.responseStart}ms`);
+      logger.debug(`DOM Interactive: ${nav.domInteractive - nav.fetchStart}ms`);
+      logger.debug(`DOM Complete: ${nav.domComplete - nav.fetchStart}ms`);
+      logger.debug(`Load Complete: ${nav.loadEventEnd - nav.fetchStart}ms`);
       console.groupEnd();
     }
 
     if (metrics.memory) {
       console.group('💾 Memory Usage');
-      logger.debug('Used:', `${(metrics.memory.usedJSHeapSize / 1048576).toFixed(2)} MB`);
-      logger.debug('Total:', `${(metrics.memory.totalJSHeapSize / 1048576).toFixed(2)} MB`);
-      logger.debug('Limit:', `${(metrics.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`);
+      logger.debug(`Used: ${(metrics.memory.usedJSHeapSize / 1048576).toFixed(2)} MB`);
+      logger.debug(`Total: ${(metrics.memory.totalJSHeapSize / 1048576).toFixed(2)} MB`);
+      logger.debug(`Limit: ${(metrics.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`);
       console.groupEnd();
     }
   });
