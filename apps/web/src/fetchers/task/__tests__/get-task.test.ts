@@ -39,7 +39,7 @@ describe('getTask', () => {
       json: async () => mockTask,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     const result = await getTask('task-123');
 
@@ -56,7 +56,7 @@ describe('getTask', () => {
       json: async () => mockTask,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await getTask('specific-task-id');
 
@@ -71,7 +71,7 @@ describe('getTask', () => {
       json: async () => mockTask,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     const result = await getTask('task-123');
 
@@ -90,7 +90,7 @@ describe('getTask', () => {
       text: async () => 'Task not found',
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await expect(
       getTask('nonexistent-task')
@@ -103,7 +103,7 @@ describe('getTask', () => {
       text: async () => 'Permission denied: Cannot access this task',
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await expect(
       getTask('task-123')
@@ -113,7 +113,7 @@ describe('getTask', () => {
   it('should handle network errors', async () => {
     const mockGet = vi.fn().mockRejectedValue(new Error('Network error'));
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await expect(
       getTask('task-123')
@@ -134,7 +134,7 @@ describe('getTask', () => {
       json: async () => taskWithSubtasks,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     const result = await getTask('task-123');
 
@@ -156,7 +156,7 @@ describe('getTask', () => {
       json: async () => taskWithLabels,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     const result = await getTask('task-123');
 
@@ -179,7 +179,7 @@ describe('getTask', () => {
       json: async () => taskWithAssignee,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     const result = await getTask('task-123');
 
@@ -193,7 +193,7 @@ describe('getTask', () => {
       text: async () => 'Unauthorized: Please log in',
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await expect(
       getTask('task-123')
@@ -206,7 +206,7 @@ describe('getTask', () => {
       text: async () => 'Internal server error',
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await expect(
       getTask('task-123')
@@ -219,7 +219,7 @@ describe('getTask', () => {
       json: async () => mockTask,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await getTask('task-123');
 
@@ -241,7 +241,7 @@ describe('getTask', () => {
       json: async () => taskWithParent,
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     const result = await getTask('task-123');
 
@@ -255,7 +255,7 @@ describe('getTask', () => {
       text: async () => 'Invalid task ID',
     });
 
-    (client.task[':id'].$get as any) = mockGet;
+    ((client.task as any)[':id'].$get as any) = mockGet;
 
     await expect(
       getTask('')

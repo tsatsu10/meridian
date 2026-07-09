@@ -388,7 +388,7 @@ export default function TaskCardContextMenuContent({
               selected={task.dueDate ? new Date(task.dueDate) : undefined}
               onSelect={(value) => handleChange("dueDate", String(value))}
               className="w-auto border-none"
-              initialFocus
+              autoFocus
             />
           </ContextMenuSubContent>
         )}

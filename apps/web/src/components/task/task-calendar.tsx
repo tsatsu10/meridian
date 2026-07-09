@@ -52,7 +52,7 @@ function TaskCalendar({ value, onChange, disabled }: TaskCalendarProps) {
             selected={value}
             onSelect={(date) => date && onChange(date)}
             className="w-auto border-none"
-            initialFocus
+            autoFocus
             disabled={disabled}
           />
         </PopoverContent>

@@ -230,7 +230,7 @@ function RoleAssignmentForm({
               mode="single"
               selected={formData.expiresAt}
               onSelect={(date) => setFormData(prev => ({ ...prev, expiresAt: date }))}
-              initialFocus
+              autoFocus
             />
           </PopoverContent>
         </Popover>

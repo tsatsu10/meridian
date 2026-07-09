@@ -27,7 +27,7 @@ describe('deleteTask', () => {
       json: async () => mockResponse,
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     const result = await deleteTask('task-123');
 
@@ -44,7 +44,7 @@ describe('deleteTask', () => {
       json: async () => ({ success: true }),
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await deleteTask('specific-task-id');
 
@@ -59,7 +59,7 @@ describe('deleteTask', () => {
       text: async () => 'Task deletion failed: Task not found',
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await expect(
       deleteTask('invalid-task')
@@ -72,7 +72,7 @@ describe('deleteTask', () => {
       text: async () => 'Permission denied: Cannot delete task',
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await expect(
       deleteTask('task-123')
@@ -82,7 +82,7 @@ describe('deleteTask', () => {
   it('should handle network errors', async () => {
     const mockDelete = vi.fn().mockRejectedValue(new Error('Network error'));
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await expect(
       deleteTask('task-123')
@@ -101,7 +101,7 @@ describe('deleteTask', () => {
       json: async () => mockResponse,
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     const result = await deleteTask('task-123');
 
@@ -122,7 +122,7 @@ describe('deleteTask', () => {
       json: async () => mockResponse,
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     const result = await deleteTask('task-123');
 
@@ -135,7 +135,7 @@ describe('deleteTask', () => {
       text: async () => 'Invalid task ID',
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await expect(
       deleteTask('')
@@ -148,7 +148,7 @@ describe('deleteTask', () => {
       json: async () => ({ success: true }),
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await deleteTask('task-123');
 
@@ -161,7 +161,7 @@ describe('deleteTask', () => {
       text: async () => 'Internal server error',
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await expect(
       deleteTask('task-123')
@@ -174,7 +174,7 @@ describe('deleteTask', () => {
       text: async () => 'Task not found',
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await expect(
       deleteTask('nonexistent-task')
@@ -187,7 +187,7 @@ describe('deleteTask', () => {
       text: async () => 'Unauthorized: Please log in',
     });
 
-    (client.task[':id'].$delete as any) = mockDelete;
+    ((client.task as any)[':id'].$delete as any) = mockDelete;
 
     await expect(
       deleteTask('task-123')
