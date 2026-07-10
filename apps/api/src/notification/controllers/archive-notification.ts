@@ -16,12 +16,17 @@ async function archiveNotification(userEmail: string, notificationId: string) {
     throw new Error("Notification not found");
   }
 
+  const [notification] = result;
+  if (!notification) {
+    throw new Error("Notification not found");
+  }
+
   // Verify the notification belongs to the user
-  if (result[0].userEmail !== userEmail) {
+  if (notification.userEmail !== userEmail) {
     throw new Error("Unauthorized");
   }
 
-  return result[0];
+  return notification;
 }
 
 export default archiveNotification;

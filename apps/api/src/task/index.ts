@@ -157,8 +157,7 @@ const task = new Hono<{
 
       const tasks = await getTasks(projectId);
 
-      // Explicitly type the response to ensure position field is recognized
-      return c.json(tasks as z.infer<typeof ProjectWithTasksSchema>);
+      return c.json(tasks);
     },
   )
   .post(

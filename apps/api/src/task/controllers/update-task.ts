@@ -61,11 +61,12 @@ async function updateTask(
     .update(taskTable)
     .set({
       title: sanitizedTitle,
-      status,
+      // request-boundary narrowing onto the enum columns
+      status: status as "todo" | "in_progress" | "done",
       dueDate,
       projectId,
       description: sanitizedDescription,
-      priority,
+      priority: priority as "low" | "medium" | "high" | "urgent",
       position,
       assigneeId: assignee?.id || null, // Use assigneeId instead of userEmail
       parentTaskId: parentId || null, // Use parentTaskId instead of parentId

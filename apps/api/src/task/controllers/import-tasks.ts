@@ -58,12 +58,13 @@ async function importTasks(projectId: string, tasksToImport: ImportTask[]) {
         .values({
           projectId,
           userEmail: taskData.userEmail || null,
-          assignedTeamId: taskData.assignedTeamId || null,
+          // tasks has no assignedTeamId column; team assignment is not imported
           title: taskData.title,
-          status: taskData.status,
+          // request-boundary narrowing onto the enum columns
+          status: taskData.status as "todo" | "in_progress" | "done",
           dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
           description: taskData.description || "",
-          priority: taskData.priority || "low",
+          priority: (taskData.priority as "low" | "medium" | "high" | "urgent" | undefined) || "low",
           number: ++taskNumber,
         })
         .returning();
@@ -72,7 +73,7 @@ async function importTasks(projectId: string, tasksToImport: ImportTask[]) {
         await publishEvent("task.created", {
           taskId: createdTask.id,
           userEmail: createdTask.userEmail ?? "",
-          teamId: createdTask.assignedTeamId ?? "",
+          teamId: "",
           type: "create",
           content: "imported the task",
         });

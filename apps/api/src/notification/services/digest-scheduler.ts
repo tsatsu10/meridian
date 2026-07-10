@@ -62,7 +62,7 @@ class DigestScheduler {
         .where(eq(digestSettings.dailyEnabled, true));
 
       const filteredUsers = usersToProcess.filter(setting => {
-        const [hour] = setting.dailyTime?.split(':') || ['09'];
+        const [hour = '09'] = setting.dailyTime?.split(':') || [];
         return parseInt(hour) === currentHour;
       });
 

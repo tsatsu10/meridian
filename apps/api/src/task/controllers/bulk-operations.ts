@@ -130,7 +130,8 @@ export async function bulkAssignTasks(
       .update(tasks)
       .set({
         assigneeId,
-        assigneeEmail,
+        // the tasks table stores the assignee email in userEmail
+        userEmail: assigneeEmail,
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))

@@ -139,7 +139,7 @@ async function evaluateTaskOverdue(db: any, rule: AlertRule, workspaceId: string
       .from(tasks)
       .where(
         and(
-          eq(tasks.assignee, rule.userEmail),
+          eq(tasks.userEmail, rule.userEmail),
           lte(tasks.dueDate, overdueDate)
         )
       );
@@ -163,8 +163,9 @@ async function evaluateTaskCount(db: any, rule: AlertRule, workspaceId: string):
       .from(tasks)
       .where(
         and(
-          eq(tasks.assignee, rule.userEmail),
-          eq(tasks.status, status)
+          eq(tasks.userEmail, rule.userEmail),
+          // rule conditions carry plain strings; narrow onto the enum
+          eq(tasks.status, status as "todo" | "in_progress" | "done")
         )
       );
     
@@ -201,7 +202,7 @@ async function evaluateNoActivity(db: any, rule: AlertRule, workspaceId: string)
       .from(tasks)
       .where(
         and(
-          eq(tasks.assignee, rule.userEmail),
+          eq(tasks.userEmail, rule.userEmail),
           gte(tasks.updatedAt, inactivityDate)
         )
       );

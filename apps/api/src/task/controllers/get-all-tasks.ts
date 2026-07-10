@@ -49,15 +49,21 @@ async function getAllTasks({
   }
 
   if (status && status.length > 0) {
-    conditions.push(
-      or(...status.map((s) => eq(taskTable.status, s)))!
+    const statusCondition = or(
+      ...status.map((s) => eq(taskTable.status, s as "todo" | "in_progress" | "done"))
     );
+    if (statusCondition) {
+      conditions.push(statusCondition);
+    }
   }
 
   if (priority && priority.length > 0) {
-    conditions.push(
-      or(...priority.map((p) => eq(taskTable.priority, p)))!
+    const priorityCondition = or(
+      ...priority.map((p) => eq(taskTable.priority, p as "low" | "medium" | "high" | "urgent"))
     );
+    if (priorityCondition) {
+      conditions.push(priorityCondition);
+    }
   }
 
   if (projectIds && projectIds.length > 0) {

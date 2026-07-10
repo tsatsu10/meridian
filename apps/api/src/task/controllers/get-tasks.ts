@@ -169,8 +169,10 @@ async function getTasks(projectId: string) {
     ),
   }));
 
-  const archivedTasks = tasks.filter((task) => task.status === "archived");
-  const plannedTasks = tasks.filter((task) => task.status === "planned");
+  // The task_status enum is todo|in_progress|done — "archived"/"planned"
+  // never existed as statuses, so these buckets are honestly empty.
+  const archivedTasks: typeof tasks = [];
+  const plannedTasks: typeof tasks = [];
 
   return {
     id: project.id,

@@ -72,10 +72,11 @@ async function createTask({
       projectId,
       assigneeId: assignee?.id || null, // Use assigneeId instead of userEmail
       title: sanitizedTitle,
-      status: status || "",
+      // request-boundary narrowing onto the enum column
+      status: (status as "todo" | "in_progress" | "done" | undefined) || "todo",
       dueDate: dueDate || new Date(),
       description: sanitizedDescription,
-      priority: priority || "",
+      priority: (priority as "low" | "medium" | "high" | "urgent" | undefined) || "medium",
       parentTaskId: parentId || null, // Use parentTaskId instead of parentId
       number: nextTaskNumber + 1,
       // Note: assignedTeamId not in schema - store in task metadata/settings if needed
