@@ -12,11 +12,14 @@ interface StatusColumn {
   isDefault: boolean;
 }
 
+// Column ids MUST equal the task_status enum values (todo|in_progress|done) —
+// tasks are bucketed by `task.status === column.id`. The previous hyphenated
+// ids ("to-do"/"in-progress") never matched, so boards rendered empty columns;
+// "in-review" was dropped because the enum has no such status.
 const DEFAULT_COLUMNS: StatusColumn[] = [
-  { id: "to-do", name: "To Do", color: "#6b7280", position: 0, isDefault: true },
-  { id: "in-progress", name: "In Progress", color: "#3b82f6", position: 1, isDefault: true },
-  { id: "in-review", name: "In Review", color: "#8b5cf6", position: 2, isDefault: true },
-  { id: "done", name: "Done", color: "#10b981", position: 3, isDefault: true },
+  { id: "todo", name: "To Do", color: "#6b7280", position: 0, isDefault: true },
+  { id: "in_progress", name: "In Progress", color: "#3b82f6", position: 1, isDefault: true },
+  { id: "done", name: "Done", color: "#10b981", position: 2, isDefault: true },
 ];
 
 async function getTasks(projectId: string) {

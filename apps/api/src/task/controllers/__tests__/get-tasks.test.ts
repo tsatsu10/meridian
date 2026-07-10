@@ -32,12 +32,12 @@ describe('GetTasks Controller', () => {
       
       // Mock select() calls in order: 1st returns tasks, 2nd returns users
       const tasksData = [
-        { ...mockTasks.openTask, status: 'planned', userEmail: 'test@example.com' },
+        { ...mockTasks.openTask, status: 'todo', userEmail: 'test@example.com' },
         {
           ...mockTasks.openTask,
           id: 'task-2',
           title: 'Second Task',
-          status: 'planned',
+          status: 'todo',
           userEmail: 'test@example.com',
         },
       ];
@@ -49,7 +49,10 @@ describe('GetTasks Controller', () => {
 
       // Assert
       expect(result).toBeDefined();
-      const allTasks = [...(result.archivedTasks || []), ...(result.plannedTasks || [])];
+      // The task_status enum is todo|in_progress|done — tasks land in the
+      // matching status column, not the (always-empty) planned/archived buckets
+      const todoColumn = result.columns.find((c) => c.id === 'todo');
+      const allTasks = todoColumn?.tasks ?? [];
       expect(allTasks).toHaveLength(2);
       expect(allTasks[0].id).toBe('task-1');
       expect(allTasks[1].id).toBe('task-2');
@@ -104,14 +107,14 @@ describe('GetTasks Controller', () => {
       // Assert
       expect(result.columns).toContainEqual(
         expect.objectContaining({
-          id: 'to-do',
+          id: 'todo',
           name: 'To Do',
           isDefault: true,
         })
       );
       expect(result.columns).toContainEqual(
         expect.objectContaining({
-          id: 'in-progress',
+          id: 'in_progress',
           name: 'In Progress',
           isDefault: true,
         })
@@ -175,8 +178,8 @@ describe('GetTasks Controller', () => {
       mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
       
       const tasksData = [
-        { ...mockTasks.openTask, id: 'task-1', status: 'to-do' },
-        { ...mockTasks.openTask, id: 'task-2', status: 'in-progress' },
+        { ...mockTasks.openTask, id: 'task-1', status: 'todo' },
+        { ...mockTasks.openTask, id: 'task-2', status: 'in_progress' },
         { ...mockTasks.openTask, id: 'task-3', status: 'done' },
       ];
       mockDb.__setSelectResults(tasksData, []);
@@ -187,8 +190,8 @@ describe('GetTasks Controller', () => {
       // Assert
       // Tasks are grouped into columns by status, not into archivedTasks/plannedTasks
       expect(result.columns).toBeDefined();
-      const todoColumn = result.columns.find((c: any) => c.id === 'to-do');
-      const inProgressColumn = result.columns.find((c: any) => c.id === 'in-progress');
+      const todoColumn = result.columns.find((c: any) => c.id === 'todo');
+      const inProgressColumn = result.columns.find((c: any) => c.id === 'in_progress');
       const doneColumn = result.columns.find((c: any) => c.id === 'done');
 
       expect(todoColumn.tasks).toHaveLength(1);
@@ -205,17 +208,17 @@ describe('GetTasks Controller', () => {
       mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
       
       const tasksData = [
-        { ...mockTasks.openTask, id: 'task-3', number: 3, position: 2, status: 'planned' },
-        { ...mockTasks.openTask, id: 'task-1', number: 1, position: 0, status: 'planned' },
-        { ...mockTasks.openTask, id: 'task-2', number: 2, position: 1, status: 'planned' },
+        { ...mockTasks.openTask, id: 'task-3', number: 3, position: 2, status: 'todo' },
+        { ...mockTasks.openTask, id: 'task-1', number: 1, position: 0, status: 'todo' },
+        { ...mockTasks.openTask, id: 'task-2', number: 2, position: 1, status: 'todo' },
       ];
       mockDb.__setSelectResults(tasksData, []);
 
       // Act
       const result = await getTasks(projectId);
 
-      // Assert
-      const allTasks = [...(result.archivedTasks || []), ...(result.plannedTasks || [])];
+      // Assert — see enum note above: tasks group into status columns
+      const allTasks = result.columns.find((c) => c.id === 'todo')?.tasks ?? [];
       expect(allTasks).toHaveLength(3);
       // Verify tasks are sorted by position
       expect(allTasks[0].id).toBe('task-1');
