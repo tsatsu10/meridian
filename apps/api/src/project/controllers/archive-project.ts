@@ -17,6 +17,7 @@ import { eq, and } from "drizzle-orm";
 import { auditLogger } from "../../utils/audit-logger";
 import { CacheInvalidation } from "../../utils/cache-invalidation";
 import logger from '../../utils/logger';
+import { errorMessage } from "../../utils/errors";
 
 /**
  * 🔒 SECURITY: Archive a project with full audit trail
@@ -26,6 +27,10 @@ export async function archiveProject(c: Context) {
   const projectId = c.req.param("id");
   const workspaceId = c.req.query("workspaceId");
   const userEmail = c.get("userEmail");
+
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
   const startTime = Date.now();
 
   if (!projectId) {
@@ -36,9 +41,12 @@ export async function archiveProject(c: Context) {
     return c.json({ error: "Workspace ID is required" }, 400);
   }
 
+  // Hoisted so the catch block's audit logging can see it
+  let user: typeof userTable.$inferSelect | undefined;
+
   try {
     // Get user context for audit logging
-    const [user] = await db
+    [user] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, userEmail))
@@ -105,6 +113,10 @@ export async function archiveProject(c: Context) {
       .where(eq(projects.id, projectId))
       .returning();
 
+    if (!archivedProject) {
+      return c.json({ error: "Archive returned no row" }, 500);
+    }
+
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Successful archive
@@ -159,12 +171,12 @@ export async function archiveProject(c: Context) {
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: user?.role || 'unknown',
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
       }
     });
@@ -182,6 +194,10 @@ export async function restoreProject(c: Context) {
   const projectId = c.req.param("id");
   const workspaceId = c.req.query("workspaceId");
   const userEmail = c.get("userEmail");
+
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
   const startTime = Date.now();
 
   if (!projectId) {
@@ -192,9 +208,12 @@ export async function restoreProject(c: Context) {
     return c.json({ error: "Workspace ID is required" }, 400);
   }
 
+  // Hoisted so the catch block's audit logging can see it
+  let user: typeof userTable.$inferSelect | undefined;
+
   try {
     // Get user context for audit logging
-    const [user] = await db
+    [user] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, userEmail))
@@ -261,6 +280,10 @@ export async function restoreProject(c: Context) {
       .where(eq(projects.id, projectId))
       .returning();
 
+    if (!restoredProject) {
+      return c.json({ error: "Restore returned no row" }, 500);
+    }
+
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Successful restore
@@ -315,12 +338,12 @@ export async function restoreProject(c: Context) {
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: user?.role || 'unknown',
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
       }
     });

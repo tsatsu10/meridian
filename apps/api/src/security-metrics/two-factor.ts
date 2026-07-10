@@ -35,7 +35,7 @@ twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
       .where(
         and(
           eq(settingsAuditLogTable.action, "two_factor_enabled"),
-          gte(settingsAuditLogTable.timestamp, lastMonth)
+          gte(settingsAuditLogTable.createdAt, lastMonth)
         )
       );
 
@@ -101,6 +101,9 @@ twoFactorRoutes.post("/enforcement", authMiddleware, async (c) => {
   try {
     const { enabled } = await c.req.json();
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const db = getDatabase();
 
     // TODO: Store enforcement setting in workspace settings table
@@ -110,11 +113,13 @@ twoFactorRoutes.post("/enforcement", authMiddleware, async (c) => {
     await db.insert(settingsAuditLogTable).values({
       id: crypto.randomUUID(),
       userEmail,
+      section: "security",
       action: enabled ? "two_factor_enforcement_enabled" : "two_factor_enforcement_disabled",
-      details: JSON.stringify({ enabled }),
-      ipAddress: c.req.header("x-forwarded-for") || "unknown",
-      timestamp: new Date(),
-      severity: "info",
+      metadata: {
+        enabled,
+        ipAddress: c.req.header("x-forwarded-for") || "unknown",
+        severity: "info",
+      },
     });
 
     return c.json({
@@ -133,6 +138,9 @@ twoFactorRoutes.post("/send-reminder", authMiddleware, async (c) => {
   try {
     const { userEmail } = await c.req.json();
     const senderEmail = c.get("userEmail");
+    if (!senderEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const db = getDatabase();
 
     // TODO: Send actual email reminder
@@ -142,11 +150,13 @@ twoFactorRoutes.post("/send-reminder", authMiddleware, async (c) => {
     await db.insert(settingsAuditLogTable).values({
       id: crypto.randomUUID(),
       userEmail: senderEmail,
+      section: "security",
       action: "two_factor_reminder_sent",
-      details: JSON.stringify({ targetUser: userEmail }),
-      ipAddress: c.req.header("x-forwarded-for") || "unknown",
-      timestamp: new Date(),
-      severity: "info",
+      metadata: {
+        targetUser: userEmail,
+        ipAddress: c.req.header("x-forwarded-for") || "unknown",
+        severity: "info",
+      },
     });
 
     return c.json({

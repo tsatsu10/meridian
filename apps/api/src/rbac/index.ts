@@ -181,18 +181,18 @@ rbac.post(
         .where(eq(userTable.email, assignerEmail))
         .limit(1);
       
-      if (!assignerUser.length) {
+      const [assigner] = assignerUser;
+      if (!assigner) {
         return c.json({ error: "Assigner not found" }, 400);
       }
-      
+
       // TODO: Check if assigner has permission to assign this role
-      
+
       // Deactivate existing role assignments for this user
       await db
         .update(roleAssignmentTable)
-        .set({ 
+        .set({
           isActive: false,
-          updatedAt: new Date()
         })
         .where(
           and(
@@ -200,40 +200,38 @@ rbac.post(
             eq(roleAssignmentTable.isActive, true)
           )
         );
-      
-      // Create new role assignment
+
+      // Create new role assignment (only columns role_assignment actually has;
+      // assigner/expiry/reason context is captured in role_history below)
       const newAssignment = {
         id: createId(),
         userId: data.userId,
         role: data.role,
-        assignedBy: assignerUser[0].id,
         assignedAt: new Date(),
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
         isActive: true,
         workspaceId: data.workspaceId || null,
-        projectIds: data.projectIds ? JSON.stringify(data.projectIds) : null,
-        departmentIds: data.departmentIds ? JSON.stringify(data.departmentIds) : null,
-        reason: data.reason || null,
-        notes: data.notes || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        projectIds: data.projectIds ?? null,
       };
-      
+
       await db.insert(roleAssignmentTable).values(newAssignment);
-      
+
       // Record in role history
       await db.insert(roleHistoryTable).values({
         id: createId(),
         userId: data.userId,
-        previousRole: null, // TODO: Get previous role
-        newRole: data.role,
+        role: data.role,
         action: "assigned",
-        changedBy: assignerUser[0].id,
+        performedBy: assigner.id,
         reason: data.reason || "Role assigned",
         workspaceId: data.workspaceId || null,
-        ipAddress: c.req.header("x-forwarded-for") || "unknown",
-        userAgent: c.req.header("user-agent") || "unknown",
-        changedAt: new Date(),
+        projectIds: data.projectIds ?? null,
+        departmentIds: data.departmentIds ?? null,
+        notes: data.notes || null,
+        metadata: {
+          ipAddress: c.req.header("x-forwarded-for") || "unknown",
+          userAgent: c.req.header("user-agent") || "unknown",
+          expiresAt: data.expiresAt ?? null,
+        },
       });
       
       return c.json({ 
@@ -265,12 +263,13 @@ rbac.delete("/remove/:userId", async (c) => {
       .where(eq(userTable.email, removerEmail))
       .limit(1);
     
-    if (!removerUser.length) {
+    const [remover] = removerUser;
+    if (!remover) {
       return c.json({ error: "User not found" }, 400);
     }
-    
+
     // TODO: Check if remover has permission to remove roles
-    
+
     // Get current role assignment
     const currentAssignment = await db
       .select()
@@ -282,33 +281,33 @@ rbac.delete("/remove/:userId", async (c) => {
         )
       )
       .limit(1);
-    
-    if (!currentAssignment.length) {
+
+    const [activeAssignment] = currentAssignment;
+    if (!activeAssignment) {
       return c.json({ error: "No active role assignment found" }, 404);
     }
-    
+
     // Deactivate role assignment
     await db
       .update(roleAssignmentTable)
-      .set({ 
+      .set({
         isActive: false,
-        updatedAt: new Date()
       })
-      .where(eq(roleAssignmentTable.id, currentAssignment[0].id));
-    
+      .where(eq(roleAssignmentTable.id, activeAssignment.id));
+
     // Record in role history
     await db.insert(roleHistoryTable).values({
       id: createId(),
       userId: userId,
-      previousRole: currentAssignment[0].role,
-      newRole: "guest",
+      role: activeAssignment.role,
       action: "removed",
-      changedBy: removerUser[0].id,
+      performedBy: remover.id,
       reason: "Role removed",
-      workspaceId: currentAssignment[0].workspaceId,
-      ipAddress: c.req.header("x-forwarded-for") || "unknown",
-      userAgent: c.req.header("user-agent") || "unknown",
-      changedAt: new Date(),
+      workspaceId: activeAssignment.workspaceId,
+      metadata: {
+        ipAddress: c.req.header("x-forwarded-for") || "unknown",
+        userAgent: c.req.header("user-agent") || "unknown",
+      },
     });
     
     return c.json({ 
@@ -363,18 +362,19 @@ rbac.post(
         });
       }
 
-      const userRole = assignment[0].role as UserRole;
       const roleAssignment = assignment[0];
-      
-      // Check if role assignment has expired
-      if (roleAssignment.expiresAt && new Date() > roleAssignment.expiresAt) {
+      if (!roleAssignment) {
         return c.json({
           allowed: false,
-          role: userRole,
-          reason: "Role assignment has expired",
-          context: data.context,
+          role: "guest",
+          reason: "No active role assignment",
         });
       }
+      const userRole = roleAssignment.role as UserRole;
+
+      // NOTE: role_assignment has no expires_at column, so assignments in this
+      // schema cannot expire — the old expiry check here was dead code and was
+      // removed.
 
       // Get base permissions for the role
       const rolePermissions = getRolePermissions(userRole);
@@ -416,7 +416,7 @@ rbac.post(
         );
 
       // Apply custom permission overrides (most recent takes precedence)
-      let finalPermission = hasBasePermission;
+      let finalPermission: boolean = hasBasePermission;
       if (customPermissions.length > 0) {
         const latestCustom = customPermissions.sort((a, b) => 
           new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
@@ -636,7 +636,8 @@ rbac.post(
         .where(eq(userTable.email, granterEmail))
         .limit(1);
       
-      if (!granterUser.length) {
+      const [granter] = granterUser;
+      if (!granter) {
         return c.json({ error: "Granter not found" }, 400);
       }
       
@@ -652,7 +653,7 @@ rbac.post(
         projectId: data.projectId || null,
         resourceType: data.resourceType || null,
         resourceId: data.resourceId || null,
-        assignedBy: granterUser[0].id,
+        assignedBy: granter.id,
         reason: data.reason || null,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
         createdAt: new Date(),
@@ -690,9 +691,9 @@ rbac.get("/history/:userId", async (c) => {
         changedByUser: userTable,
       })
       .from(roleHistoryTable)
-      .leftJoin(userTable, eq(roleHistoryTable.changedBy, userTable.id))
+      .leftJoin(userTable, eq(roleHistoryTable.performedBy, userTable.id))
       .where(eq(roleHistoryTable.userId, userId))
-      .orderBy(desc(roleHistoryTable.changedAt));
+      .orderBy(desc(roleHistoryTable.createdAt));
     
     return c.json({ history });
   } catch (error) {
@@ -766,7 +767,7 @@ rbac.get("/departments", async (c) => {
         headUser: userTable,
       })
       .from(departmentTable)
-      .leftJoin(userTable, eq(departmentTable.headUserId, userTable.id))
+      .leftJoin(userTable, eq(departmentTable.headId, userTable.id))
       .where(eq(departmentTable.isActive, true));
     
     return c.json({ departments });
@@ -792,17 +793,18 @@ rbac.post("/migrate/workspace-creators", async (c) => {
       .where(eq(userTable.email, userEmail))
       .limit(1);
     
-    if (!user.length) {
+    const [migrationUser] = user;
+    if (!migrationUser) {
       return c.json({ error: "User not found" }, 400);
     }
-    
+
     // Check if user has workspace-manager role (simplified check)
     const hasPermission = await db
       .select()
       .from(roleAssignmentTable)
       .where(
         and(
-          eq(roleAssignmentTable.userId, user[0].id),
+          eq(roleAssignmentTable.userId, migrationUser.id),
           eq(roleAssignmentTable.role, "workspace-manager"),
           eq(roleAssignmentTable.isActive, true)
         )
@@ -818,9 +820,9 @@ rbac.post("/migrate/workspace-creators", async (c) => {
     const result = await assignWorkspaceManagerToCreators.default();
     
     return c.json({
-      success: true,
       message: "Workspace creator migration completed",
-      ...result
+      ...result,
+      success: true,
     });
     
   } catch (error) {

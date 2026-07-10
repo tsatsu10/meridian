@@ -52,10 +52,14 @@ export async function createMilestone(c: Context) {
         stakeholderIds: stakeholderIds ? JSON.stringify(stakeholderIds) : null,
         createdBy: userId,
       })
-      .returning()
-      .get();
+      .returning();
 
-    return c.json(milestone);
+    const [created] = milestone;
+    if (!created) {
+      return c.json({ error: "Milestone insert returned no row" }, 500);
+    }
+
+    return c.json(created);
   } catch (error) {
     logger.error("Error creating milestone:", error);
     return c.json(

@@ -23,9 +23,9 @@ export default async function rateTemplate(
   // Calculate new average rating
   // Current average = (current rating * 10) / 10
   // New average = ((current total) + new rating) / (count + 1)
-  const currentTotal = template.rating * template.ratingCount;
+  const currentTotal = (template.rating ?? 0) * (template.ratingCount ?? 0);
   const newTotal = currentTotal + (rating * 10); // Store as * 10
-  const newCount = template.ratingCount + 1;
+  const newCount = (template.ratingCount ?? 0) + 1;
   const newAverage = Math.round(newTotal / newCount);
 
   // Update template

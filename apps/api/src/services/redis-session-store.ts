@@ -40,7 +40,8 @@ export interface SessionStoreOptions {
 
 class RedisSessionStore {
   private redis: Redis
-  private options: Required<SessionStoreOptions>
+  // password stays optional — Required<> would force a dummy value
+  private options: Required<Omit<SessionStoreOptions, 'password'>> & { password?: string }
   private connected: boolean = false
 
   constructor(options: SessionStoreOptions = {}) {
@@ -57,10 +58,10 @@ class RedisSessionStore {
       lazyConnect: options.lazyConnect ?? true,
     }
 
-    this.initializeRedis()
+    this.redis = this.initializeRedis()
   }
 
-  private initializeRedis(): void {
+  private initializeRedis(): Redis {
     const redisOptions: RedisOptions = {
       host: this.options.host,
       port: this.options.port,
@@ -68,50 +69,50 @@ class RedisSessionStore {
       db: this.options.db,
       keyPrefix: this.options.keyPrefix,
       maxRetriesPerRequest: this.options.maxRetries || 3,
-      retryDelayOnFailover: this.options.retryDelayOnFailover,
+      // retryDelayOnFailover is not an ioredis option (cluster-era leftover)
       enableOfflineQueue: this.options.enableOfflineQueue,
       lazyConnect: this.options.lazyConnect,
       connectTimeout: 10000,
       commandTimeout: 5000,
       // Connection pool settings
       family: 4,
-      keepAlive: true,
+      keepAlive: 10000, // ms — ioredis expects a number
       // Reconnection settings
-      retryDelayOnClusterDown: 300,
       enableReadyCheck: true,
-      maxLoadingTimeout: 5000,
     }
 
-    this.redis = new Redis(redisOptions)
+    const redis = new Redis(redisOptions)
 
     // Event handlers
-    this.redis.on('connect', () => {
+    redis.on('connect', () => {
       this.connected = true
       logger.info('✅ Redis session store connected')
     })
 
-    this.redis.on('ready', () => {
+    redis.on('ready', () => {
       logger.info('🚀 Redis session store ready')
     })
 
-    this.redis.on('error', (error) => {
+    redis.on('error', (error) => {
       this.connected = false
       logger.error('❌ Redis session store error:', error)
     })
 
-    this.redis.on('close', () => {
+    redis.on('close', () => {
       this.connected = false
       logger.warn('⚠️ Redis session store connection closed')
     })
 
-    this.redis.on('reconnecting', () => {
+    redis.on('reconnecting', () => {
       logger.info('🔄 Redis session store reconnecting...')
     })
 
-    this.redis.on('end', () => {
+    redis.on('end', () => {
       this.connected = false
       logger.info('📴 Redis session store connection ended')
     })
+
+    return redis
   }
 
   /**

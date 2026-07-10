@@ -68,7 +68,7 @@ fileVersions.post(
 
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof ValidationError) {
-        return c.json({ error: error.message }, error.statusCode);
+        return c.json({ error: error.message }, error.status);
       }
       
       winstonLog.error('Create version failed', { error });
@@ -152,7 +152,7 @@ fileVersions.post(
 
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof ValidationError) {
-        return c.json({ error: error.message }, error.statusCode);
+        return c.json({ error: error.message }, error.status);
       }
       
       winstonLog.error('Restore version failed', { error });

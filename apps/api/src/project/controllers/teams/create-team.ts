@@ -28,6 +28,9 @@ async function createTeam(c: Context) {
   const db = getDatabase();
   const { projectId } = c.req.param();
   const userEmail = c.get("userEmail");
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
 
   if (!projectId) {
     return c.json({ error: "Project ID is required" }, 400);

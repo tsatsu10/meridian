@@ -113,6 +113,10 @@ export default async function applyTemplate(
       })
       .returning();
 
+    if (!createdTask) {
+      throw new Error("Template task insert returned no row");
+    }
+
     createdTaskIds.push(createdTask.id);
 
     // Get and create subtasks
@@ -160,6 +164,7 @@ export default async function applyTemplate(
 
   for (const templateTask of templateTasksList) {
     const realTaskId = templateTaskIdToRealTaskId[templateTask.id];
+    if (!realTaskId) continue;
 
     const templateDeps = await getDatabase()
       .select()
@@ -186,7 +191,7 @@ export default async function applyTemplate(
   await getDatabase()
     .update(projectTemplates)
     .set({
-      usageCount: template.usageCount + 1,
+      usageCount: (template.usageCount ?? 0) + 1,
     })
     .where(eq(projectTemplates.id, templateId));
 

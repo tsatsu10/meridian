@@ -75,6 +75,9 @@ const uploadSchema = z.object({
  * Upload one or more files
  */
 upload.post('/', async (c) => {
+  // Hoisted so the catch block's telemetry can see it
+  let files: Express.Multer.File[] | undefined;
+
   try {
     const user = c.get('user');
     if (!user?.id) {
@@ -98,7 +101,7 @@ upload.post('/', async (c) => {
     });
 
     // Access uploaded files
-    const files = (c.req.raw as any).files as Express.Multer.File[];
+    files = (c.req.raw as any).files as Express.Multer.File[];
     if (!files || files.length === 0) {
       return c.json({ error: 'No files uploaded' }, 400);
     }
@@ -148,6 +151,10 @@ upload.post('/', async (c) => {
             uploadedAt: new Date().toISOString(),
           },
         }).returning();
+
+        if (!attachment) {
+          throw new Error("attachment: write returned no row");
+        }
 
         uploadedFiles.push({
           id: attachment.id,

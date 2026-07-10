@@ -67,6 +67,10 @@ async function updateMemberRole(c: Context) {
       .where(eq(teamMembers.id, memberId))
       .returning();
 
+    if (!updatedMember) {
+      throw new Error("updatedMember: write returned no row");
+    }
+
     // Get user details
     const [user] = await db
       .select()

@@ -93,25 +93,27 @@ export async function exportWorkspaceData(
       description: p.description,
       status: p.status,
       startDate: p.startDate,
-      endDate: p.endDate,
-      ownerEmail: p.ownerEmail,
+      endDate: p.dueDate,
+      ownerId: p.ownerId,
       createdAt: p.createdAt,
     }));
   }
   
   // Export tasks
   if (options.includeTasks) {
-    const taskWhere: any[] = [eq(taskTable.workspaceId, workspaceId)];
+    const taskWhere: any[] = [eq(projectTable.workspaceId, workspaceId)];
     
     if (options.projectIds && options.projectIds.length > 0) {
       taskWhere.push(inArray(taskTable.projectId, options.projectIds));
     }
     
-    const tasks = await db
-      .select()
+    const taskRows = await db
+      .select({ task: taskTable })
       .from(taskTable)
+      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
       .where(and(...taskWhere));
-    
+    const tasks = taskRows.map((r) => r.task);
+
     exportData.tasks = tasks.map(t => ({
       id: t.id,
       projectId: t.projectId,
@@ -119,7 +121,7 @@ export async function exportWorkspaceData(
       description: t.description,
       status: t.status,
       priority: t.priority,
-      assignee: t.assignee,
+      assigneeId: t.assigneeId,
       dueDate: t.dueDate,
       createdAt: t.createdAt,
     }));
@@ -147,9 +149,9 @@ export async function exportWorkspaceData(
       .where(eq(roleAssignmentTable.workspaceId, workspaceId));
     
     exportData.roleAssignments = roles.map(r => ({
-      userEmail: r.userEmail,
+      userId: r.userId,
       role: r.role,
-      projectId: r.projectId,
+      projectIds: r.projectIds,
       assignedAt: r.assignedAt,
     }));
   }
@@ -345,13 +347,14 @@ function parseCSV(csvData: string): any {
     const lines = section.trim().split('\n');
     if (lines.length < 2) continue;
     
-    const type = lines[0].trim().toLowerCase();
-    const headers = lines[1].split(',').map(h => h.trim());
-    
+    const type = lines[0]?.trim().toLowerCase() ?? '';
+    const headers = (lines[1] ?? '').split(',').map(h => h.trim());
+
     for (let i = 2; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      
-      const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      const line = lines[i];
+      if (!line || !line.trim()) continue;
+
+      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
       const record: any = {};
       
       headers.forEach((header, index) => {
@@ -475,8 +478,8 @@ export async function importWorkspaceData(
             description: project.description || null,
             status: project.status || 'active',
             startDate: project.startDate ? new Date(project.startDate) : null,
-            endDate: project.endDate ? new Date(project.endDate) : null,
-            ownerEmail: project.ownerEmail,
+            dueDate: project.endDate ? new Date(project.endDate) : null,
+            ownerId: project.ownerId ?? null,
             createdAt: new Date(),
             updatedAt: new Date(),
           });
@@ -505,13 +508,13 @@ export async function importWorkspaceData(
           
           await db.insert(taskTable).values({
             id: taskId,
-            workspaceId,
             projectId: task.projectId,
             title: task.title,
             description: task.description || null,
-            status: task.status || 'backlog',
-            priority: task.priority || 'medium',
-            assignee: task.assignee || null,
+            // request-boundary narrowing onto the enum columns
+            status: (task.status as "todo" | "in_progress" | "done" | undefined) || 'todo',
+            priority: (task.priority as "low" | "medium" | "high" | "urgent" | undefined) || 'medium',
+            assigneeId: task.assigneeId || null,
             dueDate: task.dueDate ? new Date(task.dueDate) : null,
             createdAt: new Date(),
             updatedAt: new Date(),

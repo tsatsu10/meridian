@@ -237,10 +237,10 @@ export class ActivityTracker {
       Logger.info('Deleted old activities', {
         workspaceId,
         daysToKeep,
-        deletedCount: result.rowCount,
+        deletedCount: result.count,
       });
 
-      return result.rowCount || 0;
+      return result.count || 0;
     } catch (error) {
       Logger.error('Failed to delete old activities', error, { workspaceId });
       return 0;

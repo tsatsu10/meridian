@@ -148,17 +148,21 @@ async function storeAuditLog(auditLog: SecurityAuditLog): Promise<void> {
 
     // For now, we'll use the role_history table to store security events
     // In a production system, you'd want a dedicated audit_log table
+    // Mapped to the columns role_history actually has (role/performedBy/
+    // metadata) — the previous shape wrote nonexistent columns
     await db.insert(roleHistoryTable).values({
       id: auditLog.id,
       userId: auditLog.userId,
       action: "security_audit",
-      newRole: auditLog.userRole,
-      changedBy: auditLog.userId,
+      role: auditLog.userRole ?? "unknown",
+      performedBy: auditLog.userId,
       reason: `Security audit: ${auditLog.action} - ${auditLog.allowed ? 'ALLOWED' : 'DENIED'}`,
       workspaceId: auditLog.context?.workspaceId || null,
-      ipAddress: auditLog.ipAddress,
-      userAgent: auditLog.userAgent,
-      changedAt: auditLog.timestamp,
+      metadata: {
+        ipAddress: auditLog.ipAddress,
+        userAgent: auditLog.userAgent,
+        timestamp: auditLog.timestamp,
+      },
     });
   } catch (error) {
     logger.error("Failed to store audit log:", error);

@@ -16,13 +16,12 @@ async function deleteTask(taskId: string, deleterId?: string) {
     .returning()
     .execute();
 
-  if (!deletedTasks || deletedTasks.length === 0) {
+  const deletedTask = deletedTasks?.[0];
+  if (!deletedTask) {
     throw new HTTPException(404, {
       message: "Task not found",
     });
   }
-
-  const deletedTask = deletedTasks[0];
 
   // Publish task.deleted event
   await publishEvent("task.deleted", {

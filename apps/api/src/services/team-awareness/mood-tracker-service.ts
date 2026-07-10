@@ -344,7 +344,7 @@ export class MoodTrackerService {
       }
 
       // Check if today is a reminder day
-      const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today.getDay()];
+      const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today.getDay()] ?? 'monday';
       const reminderDays = settings.moodReminderDays as string[] || ['monday', 'wednesday', 'friday'];
 
       return reminderDays.includes(dayOfWeek);
@@ -360,7 +360,7 @@ export class MoodTrackerService {
   static async getUsersNeedingReminders(workspaceId: string): Promise<string[]> {
     try {
       const today = new Date();
-      const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today.getDay()];
+      const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today.getDay()] ?? 'monday';
       today.setHours(0, 0, 0, 0);
 
       // Get users with mood reminders enabled

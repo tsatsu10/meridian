@@ -74,7 +74,7 @@ files.get('/:subdir/:filename', async (c) => {
     const range = c.req.header('range');
     if (range && (contentType.startsWith('video/') || contentType.startsWith('audio/'))) {
       const parts = range.replace(/bytes=/, '').split('-');
-      const start = parseInt(parts[0], 10);
+      const start = parseInt(parts[0] ?? "0", 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileBuffer.length - 1;
       const chunksize = (end - start) + 1;
       const chunk = fileBuffer.slice(start, end + 1);

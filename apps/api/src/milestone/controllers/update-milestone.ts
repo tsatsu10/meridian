@@ -12,6 +12,9 @@ export async function updateMilestone(c: Context) {
   try {
     const db = getDatabase();
     const milestoneId = c.req.param("milestoneId");
+    if (!milestoneId) {
+      return c.json({ error: "Milestone ID is required" }, 400);
+    }
     const body = await c.req.json();
     const {
       title,
@@ -50,12 +53,11 @@ export async function updateMilestone(c: Context) {
     if (progress !== undefined) updateData.progress = progress;
 
     // Update milestone
-    const milestone = await db
+    const [milestone] = await db
       .update(milestoneTable)
       .set(updateData)
       .where(eq(milestoneTable.id, milestoneId))
-      .returning()
-      .get();
+      .returning();
 
     if (!milestone) {
       return c.json(

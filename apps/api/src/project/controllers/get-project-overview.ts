@@ -29,6 +29,7 @@ import {
   users,
   activityTable,
 } from "../../database/schema";
+import { errorMessage } from "../../utils/errors";
 
 interface ProjectOverviewOptions {
   includeActivity?: boolean;
@@ -102,10 +103,12 @@ async function getProjectOverview(c: Context) {
       completed: tasks.filter((t) => t.status === "done").length,
       inProgress: tasks.filter((t) => t.status === "in_progress").length,
       todo: tasks.filter((t) => t.status === "todo").length,
-      blocked: tasks.filter((t) => t.status === "blocked").length,
+      // the task_status enum has no "blocked" value in this schema
+      blocked: 0,
       
       // By priority
-      critical: tasks.filter((t) => t.priority === "critical").length,
+      // the priority enum has "urgent", not "critical"
+      critical: tasks.filter((t) => t.priority === "urgent").length,
       high: tasks.filter((t) => t.priority === "high").length,
       medium: tasks.filter((t) => t.priority === "medium").length,
       low: tasks.filter((t) => t.priority === "low").length,
@@ -160,8 +163,9 @@ async function getProjectOverview(c: Context) {
         description: project.description,
         status: project.status,
         priority: project.priority,
-        category: project.category,
-        visibility: project.visibility,
+        // category/visibility live in the settings jsonb bag, not as columns
+        category: (project.settings as Record<string, unknown> | null)?.category ?? null,
+        visibility: (project.settings as Record<string, unknown> | null)?.visibility ?? null,
         isArchived: project.isArchived,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
@@ -208,7 +212,7 @@ async function getProjectOverview(c: Context) {
     logger.error("Error fetching project overview:", error);
     return c.json({
       error: "Failed to fetch project overview",
-      message: error.message,
+      message: errorMessage(error),
     }, 500);
   }
 }

@@ -344,9 +344,9 @@ export async function getUserTeamCollaborations(userId: string): Promise<any> {
         color: teams.color,
         // Member info
         role: teamMembers.role,
+        // team_members has no isPrimaryTeam/teamJoinDate columns; joinedAt is
+        // the membership date
         joinedAt: teamMembers.joinedAt,
-        isPrimaryTeam: teamMembers.isPrimaryTeam,
-        teamJoinDate: teamMembers.teamJoinDate,
       })
       .from(teamMembers)
       .innerJoin(teams, eq(teamMembers.teamId, teams.id))
@@ -363,9 +363,9 @@ export async function getUserTeamCollaborations(userId: string): Promise<any> {
         return {
           ...team,
           memberCount: memberCount[0]?.count || 0,
-          tenureDays: team.teamJoinDate
+          tenureDays: team.joinedAt
             ? Math.floor(
-                (Date.now() - new Date(team.teamJoinDate).getTime()) /
+                (Date.now() - new Date(team.joinedAt).getTime()) /
                   (1000 * 60 * 60 * 24)
               )
             : 0,
@@ -377,7 +377,11 @@ export async function getUserTeamCollaborations(userId: string): Promise<any> {
       teams: teamsWithCounts,
       totalTeams: teamsWithCounts.length,
       leadingTeams: teamsWithCounts.filter((t) => t.role === "lead").length,
-      primaryTeam: teamsWithCounts.find((t) => t.isPrimaryTeam),
+      // No isPrimaryTeam flag exists in the schema; the longest-standing
+      // membership is the closest real signal
+      primaryTeam: [...teamsWithCounts].sort(
+        (a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
+      )[0],
     };
   } catch (error) {
     logger.error("Error getting user team collaborations:", error);

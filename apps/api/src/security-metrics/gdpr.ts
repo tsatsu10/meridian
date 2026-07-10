@@ -342,7 +342,7 @@ async function calculateDataRetentionScore(db: any): Promise<number> {
   const oldLogs = await db
     .select({ count: count() })
     .from(settingsAuditLogTable)
-    .where(lt(settingsAuditLogTable.timestamp, twoYearsAgo));
+    .where(lt(settingsAuditLogTable.createdAt, twoYearsAgo));
 
   const totalLogs = await db.select({ count: count() }).from(settingsAuditLogTable);
 
@@ -360,7 +360,7 @@ async function calculateUserConsentScore(db: any): Promise<number> {
   const verifiedUsers = await db
     .select({ count: count() })
     .from(userTable)
-    .where(eq(userTable.isVerified, true));
+    .where(eq(userTable.isEmailVerified, true));
 
   const totalCount = totalUsers[0]?.count ?? 1;
   const verifiedCount = verifiedUsers[0]?.count ?? 0;
@@ -378,7 +378,7 @@ async function calculateDataAccessScore(db: any): Promise<number> {
   const recentAuditLogs = await db
     .select({ count: count() })
     .from(settingsAuditLogTable)
-    .where(gte(settingsAuditLogTable.timestamp, thirtyDaysAgo));
+    .where(gte(settingsAuditLogTable.createdAt, thirtyDaysAgo));
 
   const logCount = recentAuditLogs[0]?.count ?? 0;
 
@@ -420,7 +420,7 @@ async function calculateBreachNotificationScore(db: any): Promise<number> {
   const recentSecurityLogs = await db
     .select({ count: count() })
     .from(settingsAuditLogTable)
-    .where(gte(settingsAuditLogTable.timestamp, oneWeekAgo));
+    .where(gte(settingsAuditLogTable.createdAt, oneWeekAgo));
 
   const logCount = recentSecurityLogs[0]?.count ?? 0;
 

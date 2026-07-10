@@ -49,9 +49,7 @@ async function updateProject(
       .from(projectTable)
       .where(eq(projectTable.id, id));
 
-    const isProjectExisting = Boolean(existingProject);
-
-    if (!isProjectExisting) {
+    if (!existingProject) {
       throw new HTTPException(404, {
         message: "Project doesn't exist",
       });
@@ -94,9 +92,9 @@ async function updateProject(
   if (data.startDate !== undefined) updateFields.startDate = data.startDate ? new Date(data.startDate) : null;
   if (data.endDate !== undefined) updateFields.dueDate = data.endDate ? new Date(data.endDate) : null; // Map endDate -> dueDate
 
-  // Build settings object for extra fields
-  const currentSettings = existingProject.settings || {};
-  const newSettings = { ...currentSettings };
+  // Build settings object for extra fields (settings is a free-form jsonb bag)
+  const currentSettings = (existingProject.settings ?? {}) as Record<string, unknown>;
+  const newSettings: Record<string, unknown> = { ...currentSettings };
 
   // Store non-schema fields in settings JSONB
   if (data.category !== undefined) newSettings.category = data.category;
@@ -120,6 +118,10 @@ async function updateProject(
     .set(updateFields)
     .where(eq(projectTable.id, id))
     .returning();
+
+  if (!updatedProject) {
+    throw new HTTPException(500, { message: "Update returned no row" });
+  }
 
     // 🎯 Log activity for project update
     try {

@@ -58,6 +58,10 @@ app.post(
         })
         .returning();
 
+      if (!note) {
+        throw new Error("note: write returned no row");
+      }
+
       // Create initial version
       await db.insert(noteVersionsTable).values({
         noteId: note.id,
@@ -94,16 +98,17 @@ app.get("/projects/:projectId/notes", async (c) => {
   try {
     const db = getDatabase();
     
-    let query = db
-      .select()
-      .from(projectNotesTable)
-      .where(eq(projectNotesTable.projectId, projectId));
-
+    // Build conditions up front — drizzle builders can't be re-.where()d
+    const noteConditions = [eq(projectNotesTable.projectId, projectId)];
     if (!includeArchived) {
-      query = query.where(eq(projectNotesTable.isArchived, false));
+      noteConditions.push(eq(projectNotesTable.isArchived, false));
     }
 
-    let notes = await query.orderBy(
+    let notes = await db
+      .select()
+      .from(projectNotesTable)
+      .where(and(...noteConditions))
+      .orderBy(
       desc(projectNotesTable.isPinned),
       desc(projectNotesTable.updatedAt)
     );
@@ -216,6 +221,10 @@ app.patch(
         .where(eq(projectNotesTable.id, noteId))
         .returning();
 
+      if (!note) {
+        throw new Error("note: write returned no row");
+      }
+
       // Create new version if content changed
       if (updates.content !== undefined && updates.content !== currentNote.content) {
         // Get latest version number
@@ -309,6 +318,10 @@ app.patch("/notes/:noteId/pin", async (c) => {
       })
       .where(eq(projectNotesTable.id, noteId))
       .returning();
+
+    if (!note) {
+      throw new Error("note: write returned no row");
+    }
 
     return c.json({
       data: note,

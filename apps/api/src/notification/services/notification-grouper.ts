@@ -193,9 +193,10 @@ export async function mergeSimilarNotifications(
       ? recent.filter(n => n.resourceType === resourceType && n.resourceId === resourceId)
       : recent;
     
-    if (matching.length > 1) {
+    const [firstMatch] = matching;
+    if (matching.length > 1 && firstMatch) {
       // Create a group
-      const groupId = matching[0].groupId || createId();
+      const groupId = firstMatch.groupId || createId();
       const ids = matching.map(n => n.id);
       
       await db
@@ -246,7 +247,8 @@ export async function markGroupAsRead(userEmail: string, groupId: string): Promi
   try {
     await db
       .update(notifications)
-      .set({ isRead: true, readAt: new Date() })
+      // notifications has no readAt column; isRead is the read marker
+      .set({ isRead: true })
       .where(
         and(
           eq(notifications.userEmail, userEmail),

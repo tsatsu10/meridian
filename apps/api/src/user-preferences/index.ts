@@ -83,7 +83,7 @@ app.post('/', async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
     
-    logger.debug('[User Preferences] Found user:', user.id, user.email);
+    logger.debug('[User Preferences] Found user', { id: user.id, email: user.email });
     
     // Check if preferences exist
     const existing = await db.query.userPreferencesTable.findFirst({
@@ -184,7 +184,7 @@ app.post('/toggle-pin', async (c) => {
         .returning();
 
       return c.json({
-        pinnedProjects: updated[0].pinnedProjects,
+        pinnedProjects: updated[0]?.pinnedProjects ?? newPinned,
         isPinned: newPinned.includes(projectId),
       });
     } else {
@@ -198,7 +198,7 @@ app.post('/toggle-pin', async (c) => {
         .returning();
 
       return c.json({
-        pinnedProjects: created[0].pinnedProjects,
+        pinnedProjects: created[0]?.pinnedProjects ?? newPinned,
         isPinned: newPinned.includes(projectId),
       });
     }
@@ -290,7 +290,7 @@ app.patch('/appearance/:userEmail', async (c) => {
         .returning();
 
       logger.debug('[Appearance] Updated settings for user:', userEmail);
-      return c.json({ settings: updated[0].settings });
+      return c.json({ settings: updated[0]?.settings ?? {} });
     } else {
       const created = await db
         .insert(userPreferencesTable)
@@ -301,7 +301,7 @@ app.patch('/appearance/:userEmail', async (c) => {
         .returning();
 
       logger.debug('[Appearance] Created settings for user:', userEmail);
-      return c.json({ settings: created[0].settings });
+      return c.json({ settings: created[0]?.settings ?? {} });
     }
   } catch (error) {
     logger.error('Error updating appearance settings:', error);
@@ -397,7 +397,7 @@ app.patch('/background/:userEmail', async (c) => {
       logger.debug('[Background] Updated background preferences for user:', userEmail);
       return c.json({ 
         success: true,
-        settings: updated[0].settings 
+        settings: updated[0]?.settings ?? {} 
       });
     } else {
       const created = await db
@@ -411,7 +411,7 @@ app.patch('/background/:userEmail', async (c) => {
       logger.debug('[Background] Created background preferences for user:', userEmail);
       return c.json({ 
         success: true,
-        settings: created[0].settings 
+        settings: created[0]?.settings ?? {} 
       });
     }
   } catch (error) {
@@ -468,7 +468,7 @@ app.patch('/fonts/:userEmail', async (c) => {
       logger.debug('[Fonts] Updated font preferences for user:', userEmail);
       return c.json({ 
         success: true,
-        settings: updated[0].settings 
+        settings: updated[0]?.settings ?? {} 
       });
     } else {
       const created = await db
@@ -482,7 +482,7 @@ app.patch('/fonts/:userEmail', async (c) => {
       logger.debug('[Fonts] Created font preferences for user:', userEmail);
       return c.json({ 
         success: true,
-        settings: created[0].settings 
+        settings: created[0]?.settings ?? {} 
       });
     }
   } catch (error) {

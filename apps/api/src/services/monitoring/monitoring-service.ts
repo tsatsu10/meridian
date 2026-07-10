@@ -279,7 +279,7 @@ class MonitoringService extends EventEmitter {
         durationMs,
         userId,
         threshold: slowThreshold,
-      }, { category: 'PERFORMANCE' });
+      }, 'PERFORMANCE');
     }
   }
 
@@ -308,7 +308,7 @@ class MonitoringService extends EventEmitter {
         table,
         durationMs,
         threshold: slowThreshold,
-      }, { category: 'DATABASE' });
+      }, 'DATABASE');
     }
   }
 

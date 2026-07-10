@@ -50,7 +50,8 @@ async function deleteStatusColumn({
     .from(taskTable)
     .where(and(
       eq(taskTable.projectId, projectId),
-      eq(taskTable.status, statusColumn.slug)
+      // slug is a free string; the status column is a pg enum
+      eq(taskTable.status, statusColumn.slug as "todo" | "in_progress" | "done")
     ));
 
   if (tasksWithStatus.length > 0) {

@@ -46,7 +46,7 @@ export async function bulkUpdateStatus(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
       }
     }
 
@@ -97,7 +97,7 @@ export async function bulkUpdatePriority(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
       }
     }
 
@@ -130,7 +130,8 @@ export async function bulkAssignTasks(
       .update(tasks)
       .set({
         assigneeId,
-        assigneeEmail,
+        // the tasks table stores the assignee email in userEmail
+        userEmail: assigneeEmail,
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))
@@ -151,7 +152,7 @@ export async function bulkAssignTasks(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
       }
     }
 
@@ -197,7 +198,7 @@ export async function bulkDeleteTasks(taskIds: string[], userId: string) {
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
       }
     }
 
@@ -242,7 +243,7 @@ export async function bulkArchiveTasks(taskIds: string[], userId: string) {
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
       }
     }
 

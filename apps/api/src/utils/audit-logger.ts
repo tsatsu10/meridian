@@ -7,6 +7,7 @@ import { logger } from './logger';
 import { getDatabase } from "../database/connection";
 import { auditLogTable } from '../database/schema';
 import { count, gte, desc, eq, and } from 'drizzle-orm';
+import { errorMessage } from "./errors";
 
 // Initialize database connection for audit logger
 let db: Awaited<ReturnType<typeof getDatabase>>;
@@ -41,6 +42,8 @@ export interface AuditEvent {
     duration?: number;
     errorCode?: string;
     errorMessage?: string;
+    // Free-form extras callers attach for forensics (e.g. deleted-entity snapshots)
+    [key: string]: unknown;
     location?: {
       country?: string;
       countryCode?: string;
@@ -65,7 +68,8 @@ export type AuditEventType =
   | 'rate_limit'
   | 'configuration_change'
   | 'data_access'
-  | 'admin_operation';
+  | 'admin_operation'
+  | 'role_change';
 
 export interface AuditQuery {
   eventTypes?: AuditEventType[];
@@ -298,7 +302,7 @@ export class AuditLogger {
    * Log rate limiting events
    */
   async logRateLimit(params: {
-    action: 'connection_limit' | 'message_limit' | 'typing_limit' | 'presence_limit';
+    action: 'connection_limit' | 'message_limit' | 'typing_limit' | 'presence_limit' | 'api_rate_limit';
     userEmail?: string;
     ipAddress: string;
     workspaceId?: string;
@@ -515,7 +519,7 @@ export class AuditLogger {
 
       const eventsBySeverity: Record<string, number> = {};
       severityResults.forEach(result => {
-        eventsBySeverity[result.severity] = result.count;
+        eventsBySeverity[result.severity ?? 'unknown'] = result.count;
       });
 
       // Events by outcome (category field as proxy)
@@ -697,10 +701,10 @@ export class AuditLogger {
 
       // Don't retry database connection errors to prevent infinite loops
       // Instead, log the error and drop the batch to prevent memory buildup
-      if (error.message?.includes('no such table') || error.code === '42P01') { // PostgreSQL relation does not exist
+      if (errorMessage(error).includes('no such table') || (error as { code?: string }).code === '42P01') { // PostgreSQL relation does not exist
         logger.warn('Dropping audit batch due to database schema error - audit logging disabled until fixed', {
           batchSize: batch.length,
-          errorCode: error.code
+          errorCode: (error as { code?: string }).code
         });
       } else {
         // For other errors, retry only once

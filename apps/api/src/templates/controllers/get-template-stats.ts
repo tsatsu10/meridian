@@ -57,15 +57,15 @@ export default async function getTemplateStats(): Promise<TemplateStats> {
     totalProfessions,
     mostPopularTemplate: mostPopularTemplate ? {
       ...mostPopularTemplate,
-      rating: mostPopularTemplate.rating / 10,
+      rating: (mostPopularTemplate.rating ?? 0) / 10,
     } : null,
     highestRatedTemplate: highestRatedTemplate ? {
       ...highestRatedTemplate,
-      rating: highestRatedTemplate.rating / 10,
+      rating: (highestRatedTemplate.rating ?? 0) / 10,
     } : null,
     recentlyAdded: recentTemplates.map(t => ({
       ...t,
-      rating: t.rating / 10,
+      rating: (t.rating ?? 0) / 10,
     })),
   };
 }

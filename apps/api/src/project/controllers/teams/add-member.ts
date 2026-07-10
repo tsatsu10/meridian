@@ -27,6 +27,9 @@ async function addMember(c: Context) {
   const db = getDatabase();
   const { projectId, teamId } = c.req.param();
   const currentUserEmail = c.get("userEmail");
+  if (!currentUserEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
 
   if (!projectId || !teamId) {
     return c.json({ error: "Project ID and Team ID are required" }, 400);
@@ -98,6 +101,10 @@ async function addMember(c: Context) {
         joinedAt: new Date(),
       })
       .returning();
+
+    if (!newMember) {
+      throw new Error("newMember: write returned no row");
+    }
 
     // Return member with user details
     return c.json({

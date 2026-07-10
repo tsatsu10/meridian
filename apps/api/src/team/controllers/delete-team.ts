@@ -13,6 +13,9 @@ import { HTTPException } from "hono/http-exception";
 
 export async function deleteTeam(c: Context) {
   const teamId = c.req.param("teamId");
+  if (!teamId) {
+    throw new HTTPException(400, { message: "Team ID is required" });
+  }
   
   try {
     const db = getDatabase();

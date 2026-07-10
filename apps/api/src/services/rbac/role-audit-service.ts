@@ -11,6 +11,7 @@
  */
 
 import { createId } from '@paralleldrive/cuid2';
+import { eq, desc } from 'drizzle-orm';
 import { getDatabase } from '../../database/connection';
 import { roleAuditLog, roleHistoryTable, userTable } from '../../database/schema';
 import { winstonLog } from '../../utils/winston-logger';
@@ -131,7 +132,7 @@ export class RoleAuditService {
         error: error instanceof Error ? error.message : String(error),
         ctx,
         details,
-      }, { category: 'AUTH' });
+      }, 'AUTH');
       
       // Don't throw - audit logging failure shouldn't block the operation
     }

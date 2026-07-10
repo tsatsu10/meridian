@@ -101,7 +101,8 @@ errorRouter.get('/recent', async (c) => {
     const severity = c.req.query('severity');
 
     // This would typically query your error database
-    const recentErrors = [];
+    // No error store is wired up yet; this endpoint reports an empty list
+    const recentErrors: unknown[] = [];
 
     return c.json({
       success: true,

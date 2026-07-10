@@ -22,11 +22,11 @@ const getExperience = async (userId: string) => {
       .where(eq(userExperienceTable.userId, userId))
       .orderBy(desc(userExperienceTable.createdAt));
 
-    logger.debug("🔍 getExperience: Query complete, got", experience.length, "rows");
+    logger.debug("🔍 getExperience: Query complete", { rows: experience.length });
     logger.debug("🔍 getExperience: Mapping results...");
     
     const mapped = experience.map(exp => {
-      logger.debug("🔍 getExperience: Mapping exp:", exp.id, "skills type:", typeof exp.skills);
+      logger.debug("🔍 getExperience: Mapping exp", { id: exp.id, skillsType: typeof exp.skills });
       return {
         ...exp,
         skills: exp.skills || [], // Already parsed by postgres JSONB driver

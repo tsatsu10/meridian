@@ -181,7 +181,7 @@ export class StorageService {
     if (this.config.allowedMimeTypes.length > 0) {
       const isAllowed = this.config.allowedMimeTypes.some(type => {
         if (type.endsWith('/*')) {
-          const category = type.split('/')[0];
+          const category = type.split('/')[0] ?? '';
           return file.mimetype.startsWith(category);
         }
         return file.mimetype === type;
@@ -417,7 +417,8 @@ export class StorageService {
 
     try {
       const { GetObjectCommand } = await import('@aws-sdk/client-s3');
-      const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+      // Optional dependency: only present when S3 storage is configured
+      const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner' as string);
       
       const command = new GetObjectCommand({
         Bucket: this.config.s3Bucket || process.env.AWS_S3_BUCKET,

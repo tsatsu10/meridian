@@ -12,13 +12,15 @@ export async function getMilestones(c: Context) {
   try {
     const db = getDatabase();
     const projectId = c.req.param("projectId");
+    if (!projectId) {
+      return c.json({ error: "Project ID is required" }, 400);
+    }
 
     // Get all milestones for the project
     const milestones = await db
       .select()
       .from(milestoneTable)
-      .where(eq(milestoneTable.projectId, projectId))
-      .all();
+      .where(eq(milestoneTable.projectId, projectId));
 
     // Calculate milestone statistics
     const stats = {

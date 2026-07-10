@@ -14,6 +14,9 @@ import { HTTPException } from "hono/http-exception";
 
 export async function updateTeam(c: Context) {
   const teamId = c.req.param("teamId");
+  if (!teamId) {
+    throw new HTTPException(400, { message: "Team ID is required" });
+  }
   
   try {
     // Parse request body
@@ -105,9 +108,8 @@ export async function updateTeam(c: Context) {
       throw error;
     }
 
-    throw new HTTPException(500, { 
-      message: "Failed to update team",
-      details: error instanceof Error ? error.message : String(error)
+    throw new HTTPException(500, {
+      message: `Failed to update team: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }

@@ -34,15 +34,20 @@ import { CacheInvalidation } from "../../utils/cache-invalidation";
 import logger from '../../utils/logger';
 import { ActivityTracker } from "../../services/team-awareness/activity-tracker";
 import { captureException, addBreadcrumb } from "../../services/monitoring/sentry";
+import { errorMessage, toError } from "../../utils/errors";
 
 /**
  * 🔒 SECURITY: Delete a project with full cascade and audit trail
  */
 async function deleteProject(c: Context) {
   const db = getDatabase();
-  const projectId = c.req.param("id");
+  const projectId = c.req.param("projectId");
   const workspaceId = c.req.query("workspaceId");
   const userEmail = c.get("userEmail");
+
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
   const startTime = Date.now();
 
   if (!projectId) {
@@ -53,9 +58,12 @@ async function deleteProject(c: Context) {
     return c.json({ error: "Workspace ID is required" }, 400);
   }
 
+  // Hoisted so the catch block's audit logging can see it
+  let user: typeof userTable.$inferSelect | undefined;
+
   try {
     // Get user context for audit logging
-    const [user] = await db
+    [user] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, userEmail))
@@ -151,6 +159,10 @@ async function deleteProject(c: Context) {
       .where(eq(projectTable.id, projectId))
       .returning();
 
+    if (!deletedProject) {
+      return c.json({ error: "Delete returned no row" }, 500);
+    }
+
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Successful deletion (CRITICAL SEVERITY)
@@ -242,13 +254,13 @@ async function deleteProject(c: Context) {
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: user?.role || 'unknown',
-        errorStack: error.stack,
+        errorStack: toError(error).stack,
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
       }
     });
@@ -265,7 +277,7 @@ async function deleteProject(c: Context) {
     
     return c.json({ 
       error: "Failed to delete project",
-      message: error.message 
+      message: errorMessage(error) 
     }, 500);
   }
 }

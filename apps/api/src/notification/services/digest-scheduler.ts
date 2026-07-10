@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import { getDatabase } from '../../database/connection';
 import { digestSettings } from '../../database/schema';
 import { eq } from 'drizzle-orm';
@@ -62,7 +62,7 @@ class DigestScheduler {
         .where(eq(digestSettings.dailyEnabled, true));
 
       const filteredUsers = usersToProcess.filter(setting => {
-        const [hour] = setting.dailyTime?.split(':') || ['09'];
+        const [hour = '09'] = setting.dailyTime?.split(':') || [];
         return parseInt(hour) === currentHour;
       });
 

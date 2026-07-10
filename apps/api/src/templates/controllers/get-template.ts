@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import {
   projectTemplates,
@@ -34,20 +34,8 @@ export default async function getTemplate(templateId: string): Promise<TemplateW
     subtasks = await getDatabase()
       .select()
       .from(templateSubtasks)
-      .where(eq(templateSubtasks.templateTaskId, taskIds[0]))
+      .where(inArray(templateSubtasks.templateTaskId, taskIds))
       .orderBy(templateSubtasks.position);
-
-    // If there are multiple tasks, get all subtasks
-    if (taskIds.length > 1) {
-      for (let i = 1; i < taskIds.length; i++) {
-        const moreSubtasks = await getDatabase()
-          .select()
-          .from(templateSubtasks)
-          .where(eq(templateSubtasks.templateTaskId, taskIds[i]))
-          .orderBy(templateSubtasks.position);
-        subtasks = [...subtasks, ...moreSubtasks];
-      }
-    }
   }
 
   // Get dependencies for these tasks
@@ -57,18 +45,7 @@ export default async function getTemplate(templateId: string): Promise<TemplateW
     dependencies = await getDatabase()
       .select()
       .from(templateDependencies)
-      .where(eq(templateDependencies.dependentTaskId, taskIds[0]));
-
-    // If there are multiple tasks, get all dependencies
-    if (taskIds.length > 1) {
-      for (let i = 1; i < taskIds.length; i++) {
-        const moreDeps = await getDatabase()
-          .select()
-          .from(templateDependencies)
-          .where(eq(templateDependencies.dependentTaskId, taskIds[i]));
-        dependencies = [...dependencies, ...moreDeps];
-      }
-    }
+      .where(inArray(templateDependencies.dependentTaskId, taskIds));
   }
 
   // Group subtasks by task
@@ -98,7 +75,7 @@ export default async function getTemplate(templateId: string): Promise<TemplateW
 
   return {
     ...template,
-    rating: template.rating / 10, // Convert back to 0-5 scale
+    rating: (template.rating ?? 0) / 10, // Convert back to 0-5 scale
     tasks: tasksWithDetails,
   } as TemplateWithTasks;
 }

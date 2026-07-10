@@ -1,5 +1,5 @@
 import { getDatabase } from "../../database/connection";
-import { userStatus, users } from "../../database/schema";
+import { userStatus, users, workspaceMembers } from "../../database/schema";
 import { eq, inArray } from "drizzle-orm";
 import { logger } from "../../utils/logger";
 
@@ -72,8 +72,10 @@ export async function getWorkspaceStatuses(workspaceId: string) {
         updatedAt: userStatus.updatedAt,
       })
       .from(users)
+      // users aren't workspace-scoped; membership comes from workspace_members
+      .innerJoin(workspaceMembers, eq(workspaceMembers.userId, users.id))
       .leftJoin(userStatus, eq(userStatus.userEmail, users.email))
-      .where(eq(users.workspaceId, workspaceId));
+      .where(eq(workspaceMembers.workspaceId, workspaceId));
     
     // Filter out expired statuses and set defaults
     const now = new Date();

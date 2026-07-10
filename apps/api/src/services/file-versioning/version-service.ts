@@ -19,7 +19,7 @@ import { NotFoundError, ValidationError, ForbiddenError } from '../../utils/erro
 export interface CreateVersionOptions {
   fileId: string;
   changedBy: string;
-  changeDescription?: string;
+  changeDescription?: string | null;
   preserveOriginal?: boolean;
 }
 
@@ -30,7 +30,7 @@ export interface VersionInfo {
   fileName: string;
   url: string;
   size: number;
-  changeDescription?: string;
+  changeDescription?: string | null;
   changedBy: string;
   changedByName?: string;
   createdAt: Date;
@@ -70,9 +70,7 @@ export class FileVersioningService {
         .orderBy(desc(fileVersions.version))
         .limit(1);
 
-      const newVersionNumber = latestVersion.length > 0
-        ? latestVersion[0].version + 1
-        : 1;
+      const newVersionNumber = (latestVersion[0]?.version ?? 0) + 1;
 
       // Create version snapshot
       const [version] = await db.insert(fileVersions).values({
@@ -86,6 +84,10 @@ export class FileVersioningService {
         changedBy: options.changedBy,
         createdAt: new Date(),
       }).returning();
+
+      if (!version) {
+        throw new Error('Version insert returned no row');
+      }
 
       // Update file's version number
       await db
@@ -146,28 +148,25 @@ export class FileVersioningService {
     const db = getDatabase();
 
     try {
+      // NOTE: a previous revision nested a raw db.select() as a field value,
+      // which drizzle can't execute — plain select of the versions table.
       const versions = await db
-        .select({
-          version: fileVersions,
-          user: {
-            name: db.select({ name: files.uploadedBy }).from(files).where(eq(files.id, fileVersions.changedBy)).limit(1),
-          },
-        })
+        .select()
         .from(fileVersions)
         .where(eq(fileVersions.fileId, fileId))
         .orderBy(desc(fileVersions.version))
         .limit(limit);
 
       return versions.map((v) => ({
-        id: v.version.id,
-        fileId: v.version.fileId,
-        version: v.version.version,
-        fileName: v.version.fileName,
-        url: v.version.url,
-        size: v.version.size,
-        changeDescription: v.version.changeDescription,
-        changedBy: v.version.changedBy,
-        createdAt: v.version.createdAt,
+        id: v.id,
+        fileId: v.fileId,
+        version: v.version,
+        fileName: v.fileName,
+        url: v.url,
+        size: v.size,
+        changeDescription: v.changeDescription,
+        changedBy: v.changedBy,
+        createdAt: v.createdAt,
       }));
 
     } catch (error) {
@@ -283,6 +282,10 @@ export class FileVersioningService {
         changedBy: restoredBy,
         createdAt: new Date(),
       }).returning();
+
+      if (!restoredVersion) {
+        throw new Error('Version restore insert returned no row');
+      }
 
       // Log activity
       await db.insert(fileActivityLog).values({

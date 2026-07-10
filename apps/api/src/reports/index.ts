@@ -18,19 +18,18 @@ reportsRoutes.get("/scheduled", authMiddleware, async (c) => {
       .from(scheduledReports)
       .orderBy(desc(scheduledReports.createdAt));
 
-    // Transform to API format
+    // Transform to API format (mapped to the real scheduled_reports columns:
+    // frequency/isActive/lastRunAt/nextRunAt; recipients is jsonb, not a string)
     const reports = dbReports.map((report) => ({
       id: report.id.toString(),
       name: report.name,
-      description: report.description,
       reportType: report.reportType,
-      schedule: report.schedule ? JSON.parse(report.schedule) : {},
-      recipients: report.recipients ? JSON.parse(report.recipients) : [],
+      schedule: { frequency: report.frequency },
+      recipients: (report.recipients as string[] | null) ?? [],
       format: report.format,
-      enabled: report.enabled,
-      lastRun: report.lastRun,
-      nextRun: report.nextRun,
-      runCount: report.runCount,
+      enabled: report.isActive,
+      lastRun: report.lastRunAt,
+      nextRun: report.nextRunAt,
       createdAt: report.createdAt,
       createdBy: report.createdBy || "System",
     }));
@@ -52,14 +51,15 @@ reportsRoutes.post("/schedule", authMiddleware, async (c) => {
       .insert(scheduledReports)
       .values({
         name: body.name,
-        description: body.description,
         reportType: body.reportType,
-        schedule: JSON.stringify(body.schedule),
-        recipients: JSON.stringify(body.recipients),
+        frequency: body.schedule?.frequency ?? body.frequency ?? "weekly",
+        recipients: body.recipients ?? [],
+        filters: body.filters ?? null,
         format: body.format || "pdf",
-        enabled: body.enabled !== false,
-        createdBy: body.createdBy || "User",
-        runCount: 0,
+        isActive: body.enabled !== false,
+        // scheduled_reports.createdBy is an integer with no FK to the text user
+        // ids — schema drift; 0 marks "unattributed" until the column is fixed
+        createdBy: Number(body.createdBy) || 0,
       })
       .returning();
 
@@ -81,12 +81,11 @@ reportsRoutes.put("/schedule/:id", authMiddleware, async (c) => {
       .update(scheduledReports)
       .set({
         name: body.name,
-        description: body.description,
         reportType: body.reportType,
-        schedule: body.schedule ? JSON.stringify(body.schedule) : undefined,
-        recipients: body.recipients ? JSON.stringify(body.recipients) : undefined,
+        frequency: body.schedule?.frequency ?? body.frequency,
+        recipients: body.recipients ?? undefined,
         format: body.format,
-        enabled: body.enabled,
+        isActive: body.enabled,
       })
       .where(eq(scheduledReports.id, parseInt(id)))
       .returning();
@@ -136,16 +135,20 @@ reportsRoutes.post("/send-now", authMiddleware, async (c) => {
       .values({
         reportId: parseInt(reportId),
         status: "pending",
-        startedAt: new Date(),
       })
       .returning();
+
+    const [createdExecution] = execution;
+    if (!createdExecution) {
+      return c.json({ error: "Execution insert returned no row" }, 500);
+    }
 
     // In production, this would trigger actual report generation
     // For now, just return success
     return c.json({
       success: true,
       data: {
-        executionId: execution[0].id,
+        executionId: createdExecution.id,
         reportId,
         message: "Report generation started",
         estimatedTime: "2-5 minutes",

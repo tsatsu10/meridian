@@ -136,7 +136,7 @@ export default async function listTemplates(
   // Format templates with additional info
   const formattedTemplates = templates.map((template) => ({
     ...template,
-    rating: template.rating / 10, // Convert back to 0-5 scale
+    rating: (template.rating ?? 0) / 10, // Convert back to 0-5 scale
     taskCount: taskCounts[template.id] || 0,
   }));
 
