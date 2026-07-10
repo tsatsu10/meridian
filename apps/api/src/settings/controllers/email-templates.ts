@@ -178,7 +178,7 @@ export async function testSMTPConnection(config: {
     const nodemailer = await import('nodemailer');
     
     // Create transporter
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
       secure: config.secure,
@@ -219,7 +219,7 @@ export async function sendTestEmail(
   try {
     const nodemailer = await import('nodemailer');
     
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
       secure: config.secure,

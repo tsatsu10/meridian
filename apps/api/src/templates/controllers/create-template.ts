@@ -84,6 +84,7 @@ export default async function createTemplate(
     // Second pass: Create dependencies
     for (const taskInput of input.tasks) {
       const taskId = taskPositionToId[taskInput.position];
+      if (!taskId) continue;
 
       if (taskInput.dependencies && taskInput.dependencies.length > 0) {
         for (const depInput of taskInput.dependencies) {

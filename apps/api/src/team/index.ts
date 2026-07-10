@@ -86,13 +86,11 @@ app.get("/:workspaceId", async (c) => {
 
     // Group team members by team ID and deduplicate by userId within each team
     const membersByTeam = allTeamMembers.reduce((acc, member) => {
-      if (!acc[member.teamId]) {
-        acc[member.teamId] = [];
-      }
+      const teamMembers = acc[member.teamId] ?? (acc[member.teamId] = []);
       // Only add member if not already in the team (prevent duplicates from JOIN issues)
-      const isDuplicate = acc[member.teamId].some(m => m.userId === member.userId);
+      const isDuplicate = teamMembers.some(m => m.userId === member.userId);
       if (!isDuplicate) {
-        acc[member.teamId].push(member);
+        teamMembers.push(member);
       }
       return acc;
     }, {} as Record<string, typeof allTeamMembers>);
@@ -432,12 +430,12 @@ app.get("/:teamId/statistics", async (c) => {
       statistics: {
         memberCount: Number(memberCount[0]?.count || 0),
         tasks: {
-          total: Number(taskStats[0]?.total || 0),
-          completed: Number(taskStats[0]?.completed || 0),
-          inProgress: Number(taskStats[0]?.inProgress || 0),
-          todo: Number(taskStats[0]?.todo || 0),
-          completionRate: taskStats[0]?.total > 0 
-            ? Math.round((Number(taskStats[0].completed) / Number(taskStats[0].total)) * 100)
+          total: Number(taskStats[0]?.total ?? 0),
+          completed: Number(taskStats[0]?.completed ?? 0),
+          inProgress: Number(taskStats[0]?.inProgress ?? 0),
+          todo: Number(taskStats[0]?.todo ?? 0),
+          completionRate: Number(taskStats[0]?.total ?? 0) > 0
+            ? Math.round((Number(taskStats[0]?.completed ?? 0) / Number(taskStats[0]?.total ?? 1)) * 100)
             : 0,
         },
         recentActivityCount: Number(recentActivity[0]?.count || 0),
@@ -853,12 +851,11 @@ app.get("/:teamId/members/search", async (c) => {
       })
       .from(teamMemberTable)
       .innerJoin(userTable, eq(teamMemberTable.userId, userTable.id))
-      .where(eq(teamMemberTable.teamId, teamId));
-
-    // Filter by role if specified
-    if (role) {
-      membersQuery = membersQuery.where(eq(teamMemberTable.role, role));
-    }
+      .where(
+        role
+          ? and(eq(teamMemberTable.teamId, teamId), eq(teamMemberTable.role, role))
+          : eq(teamMemberTable.teamId, teamId)
+      );
 
     let members = await membersQuery;
 
