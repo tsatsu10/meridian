@@ -3,10 +3,9 @@
  * Handles custom role creation, permissions, and role templates
  */
 
-import { eq, and } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { workspaceTable, roleAssignmentTable, customPermissionTable } from "../../database/schema";
-import { createId } from "@paralleldrive/cuid2";
+import { workspaceTable, roleAssignmentTable } from "../../database/schema";
 
 // Standard permissions grouped by category
 export const PERMISSION_CATEGORIES = {
@@ -167,46 +166,33 @@ export interface CustomRole {
   updatedAt: Date;
 }
 
-// Get all roles for workspace (custom + predefined)
+// NOTE: there is no custom-roles table in the schema (custom_permissions holds
+// per-user permission grants, not role definitions), so only the predefined
+// role templates exist. A previous revision mapped custom_permissions rows as
+// role definitions using columns that don't exist — it could never have worked.
+const CUSTOM_ROLES_UNSUPPORTED =
+  "Custom roles are not supported: the schema has no custom-roles table";
+
+// Get all roles for workspace (predefined templates with usage counts)
 export async function getRoles(workspaceId: string): Promise<CustomRole[]> {
   const db = getDatabase();
-  
-  // Get custom roles from database
-  const customRoles = await db
-    .select()
-    .from(customPermissionTable)
-    .where(eq(customPermissionTable.workspaceId, workspaceId));
-  
+
   // Get user counts for each role
   const userCounts = await db
     .select({
       role: roleAssignmentTable.role,
-      count: db.$count(roleAssignmentTable.role)
+      count: sql<number>`count(*)`,
     })
     .from(roleAssignmentTable)
     .where(eq(roleAssignmentTable.workspaceId, workspaceId))
     .groupBy(roleAssignmentTable.role);
-  
+
   const countMap = userCounts.reduce((acc, { role, count }) => {
-    acc[role] = count;
+    acc[role] = Number(count);
     return acc;
   }, {} as Record<string, number>);
-  
-  // Map custom roles
-  const customRolesMapped: CustomRole[] = customRoles.map(role => ({
-    id: role.id,
-    workspaceId: role.workspaceId,
-    name: role.roleName,
-    description: role.description || '',
-    permissions: role.permissions as string[],
-    color: role.color || '#3B82F6',
-    isCustom: true,
-    userCount: countMap[role.roleName] || 0,
-    createdAt: role.createdAt,
-    updatedAt: role.updatedAt || role.createdAt,
-  }));
-  
-  // Add predefined roles
+
+  // Predefined roles only — see CUSTOM_ROLES_UNSUPPORTED above
   const predefinedRoles: CustomRole[] = Object.entries(ROLE_TEMPLATES).map(([key, template]) => ({
     id: `template_${key}`,
     workspaceId: workspaceId,
@@ -216,12 +202,12 @@ export async function getRoles(workspaceId: string): Promise<CustomRole[]> {
     color: template.color,
     isCustom: false,
     basedOn: key,
-    userCount: countMap[template.name.toLowerCase()] || 0,
+    userCount: countMap[key] ?? countMap[template.name.toLowerCase()] ?? 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   }));
-  
-  return [...customRolesMapped, ...predefinedRoles];
+
+  return predefinedRoles;
 }
 
 // Get single role
@@ -246,30 +232,8 @@ export async function getRole(workspaceId: string, roleId: string): Promise<Cust
     }
   }
   
-  // Get custom role
-  const db = getDatabase();
-  const [role] = await db
-    .select()
-    .from(customPermissionTable)
-    .where(and(
-      eq(customPermissionTable.id, roleId),
-      eq(customPermissionTable.workspaceId, workspaceId)
-    ))
-    .limit(1);
-  
-  if (!role) return null;
-  
-  return {
-    id: role.id,
-    workspaceId: role.workspaceId,
-    name: role.roleName,
-    description: role.description || '',
-    permissions: role.permissions as string[],
-    color: role.color || '#3B82F6',
-    isCustom: true,
-    createdAt: role.createdAt,
-    updatedAt: role.updatedAt || role.createdAt,
-  };
+  // No custom-roles storage exists — see CUSTOM_ROLES_UNSUPPORTED
+  return null;
 }
 
 // Create custom role
@@ -283,41 +247,9 @@ export async function createRole(
     basedOn?: string;
   }
 ): Promise<CustomRole> {
-  const db = getDatabase();
-  
-  const id = createId();
-  const now = new Date();
-  
-  const [newRole] = await db
-    .insert(customPermissionTable)
-    .values({
-      id,
-      workspaceId,
-      roleName: data.name,
-      description: data.description,
-      permissions: data.permissions,
-      color: data.color || '#3B82F6',
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
-
-  if (!newRole) {
-    throw new Error("newRole: write returned no row");
-  }
-  
-  return {
-    id: newRole.id,
-    workspaceId: newRole.workspaceId,
-    name: newRole.roleName,
-    description: newRole.description || '',
-    permissions: newRole.permissions as string[],
-    color: newRole.color || '#3B82F6',
-    isCustom: true,
-    basedOn: data.basedOn,
-    createdAt: newRole.createdAt,
-    updatedAt: newRole.updatedAt || newRole.createdAt,
-  };
+  void workspaceId;
+  void data;
+  throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
 // Update custom role
@@ -331,64 +263,17 @@ export async function updateRole(
     color: string;
   }>
 ): Promise<CustomRole> {
-  const db = getDatabase();
-  
-  const [updated] = await db
-    .update(customPermissionTable)
-    .set({
-      roleName: data.name,
-      description: data.description,
-      permissions: data.permissions,
-      color: data.color,
-      updatedAt: new Date(),
-    })
-    .where(and(
-      eq(customPermissionTable.id, roleId),
-      eq(customPermissionTable.workspaceId, workspaceId)
-    ))
-    .returning();
-  
-  if (!updated) {
-    throw new Error('Role not found or not authorized');
-  }
-  
-  return {
-    id: updated.id,
-    workspaceId: updated.workspaceId,
-    name: updated.roleName,
-    description: updated.description || '',
-    permissions: updated.permissions as string[],
-    color: updated.color || '#3B82F6',
-    isCustom: true,
-    createdAt: updated.createdAt,
-    updatedAt: updated.updatedAt || updated.createdAt,
-  };
+  void workspaceId;
+  void roleId;
+  void data;
+  throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
 // Delete custom role
 export async function deleteRole(workspaceId: string, roleId: string): Promise<void> {
-  const db = getDatabase();
-  
-  // Check if role is being used
-  const usersWithRole = await db
-    .select()
-    .from(roleAssignmentTable)
-    .where(and(
-      eq(roleAssignmentTable.workspaceId, workspaceId),
-      eq(roleAssignmentTable.roleId, roleId)
-    ))
-    .limit(1);
-  
-  if (usersWithRole.length > 0) {
-    throw new Error('Cannot delete role that is currently assigned to users');
-  }
-  
-  await db
-    .delete(customPermissionTable)
-    .where(and(
-      eq(customPermissionTable.id, roleId),
-      eq(customPermissionTable.workspaceId, workspaceId)
-    ));
+  void workspaceId;
+  void roleId;
+  throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
 // Clone role from template
@@ -397,19 +282,10 @@ export async function cloneRole(
   sourceRoleId: string,
   newName: string
 ): Promise<CustomRole> {
-  const sourceRole = await getRole(workspaceId, sourceRoleId);
-  
-  if (!sourceRole) {
-    throw new Error('Source role not found');
-  }
-  
-  return createRole(workspaceId, {
-    name: newName,
-    description: `Based on ${sourceRole.name}`,
-    permissions: sourceRole.permissions,
-    color: sourceRole.color,
-    basedOn: sourceRole.isCustom ? undefined : sourceRole.basedOn,
-  });
+  void workspaceId;
+  void sourceRoleId;
+  void newName;
+  throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
 // Get all available permissions
