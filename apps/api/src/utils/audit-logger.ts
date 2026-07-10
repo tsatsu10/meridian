@@ -42,6 +42,8 @@ export interface AuditEvent {
     duration?: number;
     errorCode?: string;
     errorMessage?: string;
+    // Free-form extras callers attach for forensics (e.g. deleted-entity snapshots)
+    [key: string]: unknown;
     location?: {
       country?: string;
       countryCode?: string;

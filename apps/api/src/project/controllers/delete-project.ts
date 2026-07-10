@@ -44,6 +44,10 @@ async function deleteProject(c: Context) {
   const projectId = c.req.param("id");
   const workspaceId = c.req.query("workspaceId");
   const userEmail = c.get("userEmail");
+
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
   const startTime = Date.now();
 
   if (!projectId) {
@@ -154,6 +158,10 @@ async function deleteProject(c: Context) {
       .delete(projectTable)
       .where(eq(projectTable.id, projectId))
       .returning();
+
+    if (!deletedProject) {
+      return c.json({ error: "Delete returned no row" }, 500);
+    }
 
     const duration = Date.now() - startTime;
 
