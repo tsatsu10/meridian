@@ -61,11 +61,10 @@ const getProfile = async (userId: string) => {
       .where(eq(userTable.id, userId))
       .limit(1);
 
-    if (result.length === 0) {
+    const user = result[0];
+    if (!user) {
       throw new Error("User not found");
     }
-
-    const user = result[0];
 
     // Calculate completeness score if not set
     let completenessScore = user.completenessScore || 0;

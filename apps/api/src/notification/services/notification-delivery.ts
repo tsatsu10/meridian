@@ -250,7 +250,8 @@ export class NotificationDeliveryService {
         )
         .limit(1);
       
-      if (prefs.length === 0) {
+      const [prefsRow] = prefs;
+      if (!prefsRow) {
         return {
           channels: { inApp: true, email: true, push: false, slack: false },
           types: { task: true, mention: true, comment: true, 'project-update': true },
@@ -258,7 +259,7 @@ export class NotificationDeliveryService {
         };
       }
       
-      return JSON.parse(prefs[0].preferenceData);
+      return JSON.parse(prefsRow.preferenceData);
     } catch (error) {
       logger.error('Error getting notification preferences:', error);
       return {
@@ -286,7 +287,8 @@ export class NotificationDeliveryService {
         )
         .limit(1);
       
-      if (settings.length === 0) {
+      const [settingsRow] = settings;
+      if (!settingsRow) {
         return {
           email: { taskAssigned: true, taskCompleted: true, mentions: true },
           push: { taskAssigned: true, mentions: true },
@@ -295,7 +297,7 @@ export class NotificationDeliveryService {
         };
       }
       
-      return JSON.parse(settings[0].settings);
+      return JSON.parse(settingsRow.settings);
     } catch (error) {
       logger.error('Error getting notification settings:', error);
       return {
@@ -397,9 +399,9 @@ export class NotificationDeliveryService {
   
   // Helper methods
   private static isTimeInRange(timeStr: string, startTime: string, endTime: string): boolean {
-    const [timeHour, timeMin] = timeStr.split(':').map(Number);
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
+    const [timeHour = 0, timeMin = 0] = timeStr.split(':').map(Number);
+    const [startHour = 0, startMin = 0] = startTime.split(':').map(Number);
+    const [endHour = 0, endMin = 0] = endTime.split(':').map(Number);
     
     const timeMinutes = timeHour * 60 + timeMin;
     const startMinutes = startHour * 60 + startMin;
