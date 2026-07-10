@@ -48,11 +48,12 @@ export function requirePermission(permission: PermissionAction) {
         .where(eq(userTable.email, userEmail))
         .limit(1);
       
-      if (!user.length) {
+      const [currentUser] = user;
+      if (!currentUser) {
         return c.json({ error: "User not found" }, 404);
       }
       
-      const userId = user[0].id;
+      const userId = currentUser.id;
       
       // Get user's active role assignment
       const roleAssignment = await db
@@ -66,7 +67,7 @@ export function requirePermission(permission: PermissionAction) {
         )
         .limit(1);
       
-      const userRole: UserRole = roleAssignment.length ? roleAssignment[0].role as UserRole : "guest";
+      const userRole: UserRole = (roleAssignment[0]?.role as UserRole | undefined) ?? "guest";
       
       // Get base permissions for the role
       const rolePermissions = getRolePermissions(userRole);
@@ -87,10 +88,10 @@ export function requirePermission(permission: PermissionAction) {
       
       // Apply custom permission overrides (most recent takes precedence)
       let finalPermission = hasBasePermission;
-      if (customPermissions.length > 0) {
-        const latestCustom = customPermissions.sort((a, b) => 
-          new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-        )[0];
+      const latestCustom = customPermissions.sort((a, b) =>
+        new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+      )[0];
+      if (latestCustom) {
         finalPermission = latestCustom.granted;
       }
       
@@ -146,7 +147,8 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
         .where(eq(userTable.email, userEmail))
         .limit(1);
       
-      if (!user.length) {
+      const [currentUser] = user;
+      if (!currentUser) {
         return c.json({ error: "User not found" }, 404);
       }
       
@@ -155,13 +157,13 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
         .from(roleAssignmentTable)
         .where(
           and(
-            eq(roleAssignmentTable.userId, user[0].id),
+            eq(roleAssignmentTable.userId, currentUser.id),
             eq(roleAssignmentTable.isActive, true)
           )
         )
         .limit(1);
       
-      const userRole: UserRole = roleAssignment.length ? roleAssignment[0].role as UserRole : "guest";
+      const userRole: UserRole = (roleAssignment[0]?.role as UserRole | undefined) ?? "guest";
       
       const userLevel = ROLE_HIERARCHY[userRole] || 0;
       const requiredLevel = ROLE_HIERARCHY[requiredRole] || 0;
@@ -180,7 +182,7 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
       
       // Add role context to request
       c.set("userRole", userRole);
-      c.set("userId", user[0].id);
+      c.set("userId", currentUser.id);
       c.set("roleAssignment", roleAssignment[0] || null);
       
       await next();
@@ -222,7 +224,8 @@ export function requireWorkspacePermission(permission: PermissionAction, workspa
         .where(eq(userTable.email, userEmail))
         .limit(1);
       
-      if (!user.length) {
+      const [currentUser] = user;
+      if (!currentUser) {
         return c.json({ error: "User not found" }, 404);
       }
       
@@ -232,7 +235,7 @@ export function requireWorkspacePermission(permission: PermissionAction, workspa
         .from(roleAssignmentTable)
         .where(
           and(
-            eq(roleAssignmentTable.userId, user[0].id),
+            eq(roleAssignmentTable.userId, currentUser.id),
             eq(roleAssignmentTable.isActive, true),
             eq(roleAssignmentTable.workspaceId, workspaceId)
           )
@@ -241,16 +244,17 @@ export function requireWorkspacePermission(permission: PermissionAction, workspa
       
       // 🚨 SECURITY: If no workspace assignment exists, DENY ACCESS
       // Users can only access workspaces they own or were explicitly invited to
-      if (!roleAssignment.length) {
+      const [workspaceAssignment] = roleAssignment;
+      if (!workspaceAssignment) {
         logger.debug(`🚨 SECURITY: User ${userEmail} has no authorized access to workspace ${workspaceId}`);
-        return c.json({ 
+        return c.json({
           error: "Access denied - No workspace membership",
           workspaceId: workspaceId,
-          message: "You do not have access to this workspace. Contact the workspace owner for an invitation." 
+          message: "You do not have access to this workspace. Contact the workspace owner for an invitation."
         }, 403);
       }
-      
-      const userRole: UserRole = roleAssignment[0].role as UserRole;
+
+      const userRole: UserRole = workspaceAssignment.role as UserRole;
       
       // Check if user has the required permission
       const rolePermissions = getRolePermissions(userRole);
@@ -268,8 +272,8 @@ export function requireWorkspacePermission(permission: PermissionAction, workspa
       
       // Add context to request
       c.set("userRole", userRole);
-      c.set("userId", user[0].id);
-      c.set("roleAssignment", roleAssignment[0]);
+      c.set("userId", currentUser.id);
+      c.set("roleAssignment", workspaceAssignment);
       c.set("workspaceId", workspaceId);
       
       await next();
@@ -302,7 +306,8 @@ export function requireProjectPermission(permission: PermissionAction, projectId
         .where(eq(userTable.email, userEmail))
         .limit(1);
       
-      if (!user.length) {
+      const [currentUser] = user;
+      if (!currentUser) {
         return c.json({ error: "User not found" }, 404);
       }
       
@@ -312,19 +317,20 @@ export function requireProjectPermission(permission: PermissionAction, projectId
         .from(roleAssignmentTable)
         .where(
           and(
-            eq(roleAssignmentTable.userId, user[0].id),
+            eq(roleAssignmentTable.userId, currentUser.id),
             eq(roleAssignmentTable.isActive, true)
           )
         )
         .limit(1);
       
-      if (!roleAssignment.length) {
-        return c.json({ 
-          error: "No active role assignment found" 
+      const [projectAssignment] = roleAssignment;
+      if (!projectAssignment) {
+        return c.json({
+          error: "No active role assignment found"
         }, 403);
       }
-      
-      const userRole: UserRole = roleAssignment[0].role as UserRole;
+
+      const userRole: UserRole = projectAssignment.role as UserRole;
       
       // Check if user has the required permission
       const rolePermissions = getRolePermissions(userRole);
@@ -341,8 +347,10 @@ export function requireProjectPermission(permission: PermissionAction, projectId
       
       // For project-scoped roles, check if they have access to this specific project
       if (userRole === "project-manager" || userRole === "project-viewer") {
-        const projectIds = roleAssignment[0].projectIds ? 
-          JSON.parse(roleAssignment[0].projectIds || '[]') : [];
+        // projectIds is a jsonb column — drizzle already returns the parsed value
+        const projectIds: string[] = Array.isArray(projectAssignment.projectIds)
+          ? (projectAssignment.projectIds as string[])
+          : [];
         
         if (projectIds.length > 0 && !projectIds.includes(projectId)) {
           return c.json({ 
@@ -357,8 +365,8 @@ export function requireProjectPermission(permission: PermissionAction, projectId
       
       // Add context to request
       c.set("userRole", userRole);
-      c.set("userId", user[0].id);
-      c.set("roleAssignment", roleAssignment[0]);
+      c.set("userId", currentUser.id);
+      c.set("roleAssignment", projectAssignment);
       c.set("projectId", projectId);
       
       await next();

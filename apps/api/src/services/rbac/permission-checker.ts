@@ -169,10 +169,11 @@ export class PermissionChecker {
         .orderBy(sql`${permissionOverrides.createdAt} DESC`)
         .limit(1);
       
-      if (overrides.length > 0) {
+      const [override] = overrides;
+      if (override) {
         return {
-          granted: overrides[0].granted,
-          reason: overrides[0].reason || 'Permission override',
+          granted: override.granted,
+          reason: override.reason || 'Permission override',
         };
       }
       
@@ -267,6 +268,7 @@ export class PermissionChecker {
         if (role.length === 0) continue;
         
         const userRole = role[0];
+        if (!userRole) continue;
         const hasPermission = await this.roleHasPermission(userRole, permission);
         
         if (hasPermission) {
@@ -356,9 +358,9 @@ export class PermissionChecker {
           .where(eq(roles.id, assignment.roleId))
           .limit(1);
         
-        if (role.length === 0) continue;
-        
         const userRole = role[0];
+        if (!userRole) continue;
+
         let permissions: string[] = [];
         
         if (userRole.type === 'system') {
@@ -562,6 +564,7 @@ export class PermissionChecker {
       });
       
       const primaryRole = sortedRoles[0];
+      if (!primaryRole) return null;
       return {
         id: primaryRole.id,
         name: primaryRole.name,
