@@ -236,7 +236,7 @@ export function DashboardOverviewLoaded({
                   dashboardData.projects.slice(0, 6).map((project: ProjectRow) => {
                     const allProjectTasks = project.tasks || [];
                     const completedTasks = allProjectTasks.filter(
-                      (task) => task.status === "done" || task.status === "completed"
+                      (task: any) => task.status === "done" || task.status === "completed"
                     ).length;
                     const progressPercentage =
                       allProjectTasks.length > 0 ? Math.round((completedTasks / allProjectTasks.length) * 100) : 0;

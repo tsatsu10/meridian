@@ -342,7 +342,7 @@ export function CommandPalette() {
       </AnimatePresence>
 
       <CreateProjectModal
-        isOpen={isCreateProjectOpen}
+        open={isCreateProjectOpen}
         onClose={() => setIsCreateProjectOpen(false)}
       />
       <CreateTaskModal

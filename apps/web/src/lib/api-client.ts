@@ -9,6 +9,9 @@ import { shouldUseMocks, getAppConfig } from '@/config/app-mode'
 import { API_URL } from '@/constants/urls'
 import { logger } from "@/lib/logger";
 
+// AppType lacks several mounted routes; single escape hatch until it is complete.
+const rpc = client as any;
+
 /**
  * Determines if we're in a test environment
  */
@@ -48,7 +51,7 @@ class SmartApiClient {
         return liveApi.auth.me()
       }
       // Use the existing Hono client for mocks in tests
-      const response = await client.auth.me.$get()
+      const response = await rpc.auth.me.$get()
       if (!response.ok) throw new Error('Auth failed')
       return response.json()
     },
@@ -58,7 +61,7 @@ class SmartApiClient {
         return liveApi.auth.signIn(credentials)
       }
       // Mock implementation for tests
-      const response = await client.auth.signin.$post({ json: credentials })
+      const response = await rpc.auth.signin.$post({ json: credentials })
       if (!response.ok) throw new Error('Sign in failed')
       return response.json()
     },
@@ -68,7 +71,7 @@ class SmartApiClient {
         return liveApi.auth.signUp(userData)
       }
       // Mock implementation for tests
-      const response = await client.auth.signup.$post({ json: userData })
+      const response = await rpc.auth.signup.$post({ json: userData })
       if (!response.ok) throw new Error('Sign up failed')
       return response.json()
     },
@@ -78,7 +81,7 @@ class SmartApiClient {
         return liveApi.auth.signOut()
       }
       // Mock implementation for tests
-      const response = await client.auth.signout.$post()
+      const response = await rpc.auth.signout.$post()
       if (!response.ok) throw new Error('Sign out failed')
       return response.json()
     },
@@ -157,7 +160,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.workspaces.list()
       }
-      const response = await client.workspace.$get()
+      const response = await rpc.workspace.$get()
       if (!response.ok) throw new Error('Failed to fetch workspaces')
       return response.json()
     },
@@ -166,7 +169,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.workspaces.get(id)
       }
-      const response = await client.workspace[':workspaceId'].$get({ param: { workspaceId: id } })
+      const response = await rpc.workspace[':workspaceId'].$get({ param: { workspaceId: id } })
       if (!response.ok) throw new Error('Failed to fetch workspace')
       return response.json()
     },
@@ -175,7 +178,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.workspaces.create(data)
       }
-      const response = await client.workspace.$post({ json: data })
+      const response = await rpc.workspace.$post({ json: data })
       if (!response.ok) throw new Error('Failed to create workspace')
       return response.json()
     },
@@ -233,7 +236,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.projects.list(workspaceId)
       }
-      const response = await client.project.$get({ query: { workspaceId } })
+      const response = await rpc.project.$get({ query: { workspaceId } })
       if (!response.ok) throw new Error('Failed to fetch projects')
       return response.json()
     },
@@ -242,7 +245,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.projects.get(id)
       }
-      const response = await client.project[':projectId'].$get({ param: { projectId: id } })
+      const response = await rpc.project[':projectId'].$get({ param: { projectId: id } })
       if (!response.ok) throw new Error('Failed to fetch project')
       return response.json()
     },
@@ -251,7 +254,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.projects.create(workspaceId, data)
       }
-      const response = await client.project.$post({ json: { ...data, workspaceId } })
+      const response = await rpc.project.$post({ json: { ...data, workspaceId } })
       if (!response.ok) throw new Error('Failed to create project')
       return response.json()
     },
@@ -349,7 +352,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.tasks.list(projectId)
       }
-      const response = await client.task.tasks[':projectId'].$get({ param: { projectId } })
+      const response = await rpc.task.tasks[':projectId'].$get({ param: { projectId } })
       if (!response.ok) throw new Error('Failed to fetch tasks')
       return response.json()
     },
@@ -358,7 +361,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.tasks.get(id)
       }
-      const response = await client.task[':taskId'].$get({ param: { taskId: id } })
+      const response = await rpc.task[':taskId'].$get({ param: { taskId: id } })
       if (!response.ok) throw new Error('Failed to fetch task')
       return response.json()
     },
@@ -367,7 +370,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.tasks.create(projectId, data)
       }
-      const response = await client.task[':projectId'].$post({ 
+      const response = await rpc.task[':projectId'].$post({ 
         param: { projectId }, 
         json: data 
       })
@@ -379,7 +382,7 @@ class SmartApiClient {
       if (this.useLive) {
         return liveApi.tasks.update(id, data)
       }
-      const response = await client.task[':taskId'].$put({ 
+      const response = await rpc.task[':taskId'].$put({ 
         param: { taskId: id }, 
         json: data 
       })

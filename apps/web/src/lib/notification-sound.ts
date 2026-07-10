@@ -1,3 +1,5 @@
+import logger from "@/lib/logger";
+
 // Notification sound utility
 // Note: Add actual notification.mp3 file to public/sounds/
 

@@ -45,7 +45,6 @@ import { format, isToday, isTomorrow, isPast } from "date-fns";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { useRBACAuth } from "@/lib/permissions";
 import useWorkspaceStore from "@/store/workspace";
-import useProjectStore from "@/store/project";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { Input } from "@/components/ui/input";
 import {
@@ -308,7 +307,7 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
             ) : task.assigneeEmail && task.assigneeEmail !== 'unassigned' ? (
               <div className="flex items-center space-x-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={task.assigneeAvatar} />
+                  <AvatarImage src={task.assigneeAvatar ?? undefined} />
                   <AvatarFallback>
                     {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                   </AvatarFallback>
@@ -359,7 +358,6 @@ export default function AllTasksPage() {
   const { user } = useAuth();
   const { hasPermission } = useRBACAuth();
   const { workspace } = useWorkspaceStore();
-  const { project } = useProjectStore();
   const { data: projects = [] as Project[] } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(urlSearch.q ?? "");
@@ -575,7 +573,7 @@ export default function AllTasksPage() {
             projectId: task.project.id,
             userEmail: user?.email ?? "",
             status: "todo", // Reset to todo for duplicated task
-            dueDate: task.dueDate ? new Date(task.dueDate) : new Date(),
+            dueDate: task.dueDate ?? new Date().toISOString(),
             priority: task.priority || "medium",
             parentId: task.parentId || undefined,
           });
@@ -705,7 +703,7 @@ export default function AllTasksPage() {
     isLoading,
     selectedTasks,
     onTaskSelect: handleTaskSelect,
-    projects: projects
+    projects: (Array.isArray(projects) ? projects : (projects as any)?.projects ?? []) as any,
   };
 
   // Pagination helper to generate page numbers
@@ -1139,7 +1137,6 @@ export default function AllTasksPage() {
                                   <PaginationContent>
                                 <PaginationItem>
                                   <PaginationPrevious
-                                    href="#"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       if (currentPage > 1) {
@@ -1159,7 +1156,6 @@ export default function AllTasksPage() {
                                       <PaginationEllipsis />
                                     ) : (
                                       <PaginationLink
-                                        href="#"
                                         onClick={(e) => {
                                           e.preventDefault();
                                           setCurrentPage(pageNum as number);
@@ -1175,7 +1171,6 @@ export default function AllTasksPage() {
                                 
                                 <PaginationItem>
                                   <PaginationNext
-                                    href="#"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       if (currentPage < pagination.pages) {
@@ -1244,9 +1239,6 @@ export default function AllTasksPage() {
                 <BlurFade delay={0.3}>
                   <AllTasksKanbanView
                     {...commonViewProps}
-                    onTaskUpdate={handleTaskAction}
-                    activeTab={activeTab}
-                    filters={{ status: filterStatus, priority: filterPriority, search: searchQuery }}
                   />
                 </BlurFade>
               </TabsContent>
@@ -1255,9 +1247,6 @@ export default function AllTasksPage() {
                 <BlurFade delay={0.3}>
                   <AllTasksCalendarView
                     {...commonViewProps}
-                    onTaskUpdate={handleTaskAction}
-                    activeTab={activeTab}
-                    filters={{ status: filterStatus, priority: filterPriority, search: searchQuery }}
                   />
                 </BlurFade>
               </TabsContent>

@@ -15,6 +15,7 @@ describe.skipIf(SKIP_TESTS)('Authentication Integration Tests (Real API)', () =>
     await waitForServer();
   });
 
+
   describe('User Registration', () => {
     it('should register a new user successfully', async () => {
       const timestamp = Date.now();
@@ -40,8 +41,6 @@ describe.skipIf(SKIP_TESTS)('Authentication Integration Tests (Real API)', () =>
       expect(data).toHaveProperty('user');
       expect(data.user.email).toBe(email);
 
-      authToken = data.token;
-      testUserId = data.user.id;
     });
 
     it('should reject duplicate email registration', async () => {

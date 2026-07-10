@@ -158,7 +158,7 @@ export function checkContextualPermissions(
   }
 
   // Time-limited roles
-  if (roleAssignment?.hasTimeLimit && roleAssignment?.expiresAt) {
+  if (roleAssignment?.expiresAt) {
     if (new Date() > roleAssignment.expiresAt) {
       return {
         allowed: false,
@@ -187,7 +187,7 @@ export function checkRoleAssignmentRestrictions(
 ): PermissionCheckResult {
   
   if (!roleAssignment) {
-    return { allowed: true, role: roleAssignment?.role || "guest" };
+    return { allowed: true, role: "guest" };
   }
 
   // Check if role assignment is active

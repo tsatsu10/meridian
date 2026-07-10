@@ -7,7 +7,7 @@ function useDeleteNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await client.notification[":id"].$delete({
+      const response = await (client as any).notification[":id"].$delete({
         param: { id: notificationId },
       });
       if (!response.ok) {

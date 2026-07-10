@@ -6,12 +6,7 @@ import {
 import PageHeaderActions from "@/components/dashboard/page-header-actions";
 import { cn } from "@/lib/cn";
 import { useNavigate } from "@tanstack/react-router";
-import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { PerformanceBadge } from "@/components/performance/performance-badge";
-import { useState } from "react";
-import { toast } from "sonner";
-import useWorkspaceStore from "@/store/workspace";
-import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 
 // Icon wrappers for consistent typing
 const SearchIcon = Search as React.FC<{ className?: string }>;
@@ -33,20 +28,8 @@ export default function DashboardHeader({
   variant = "default"
 }: DashboardHeaderProps) {
   void (useNavigate());
-  const { signOut } = useAuth();
-  const { workspace } = useWorkspaceStore();
-  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
 
-  // Enhanced action handlers
-        const handleCreateProject = () => {
-    if (!workspace) {
-      toast.error("Please select a workspace first");
-      return;
-    }
-    setIsCreateProjectOpen(true);
-  };
-
-        // Variant-based styling
+  // Variant-based styling
   const headerVariants = {
     default: "flex items-center justify-between p-6 bg-white dark:bg-card border-b border-border glass-card",
     minimal: "flex items-center justify-between px-4 py-3 bg-transparent",
@@ -110,17 +93,8 @@ export default function DashboardHeader({
         
         {/* Offline Indicator */}
         
-        <PageHeaderActions 
-          variant={variant}
-          onCreateClick={handleCreateProject}
-        />
+        <PageHeaderActions />
       </div>
-
-      {/* Create Project Modal */}
-      <CreateProjectModal 
-        isOpen={isCreateProjectOpen} 
-        onClose={() => setIsCreateProjectOpen(false)} 
-      />
     </header>
   );
 } 

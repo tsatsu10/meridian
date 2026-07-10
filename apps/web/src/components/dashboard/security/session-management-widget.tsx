@@ -182,7 +182,7 @@ export function SessionManagementWidget() {
             <Badge variant="outline" className="text-xs">
               {stats?.activeNow ?? 0} Active Now
             </Badge>
-            {stats?.suspiciousSessions! > 0 && (
+            {(stats?.suspiciousSessions ?? 0) > 0 && (
               <Badge variant="destructive" className="text-xs">
                 {stats?.suspiciousSessions} Suspicious
               </Badge>
@@ -369,11 +369,11 @@ export function SessionManagementWidget() {
         </div>
 
         {/* Info Banner */}
-        {stats?.suspiciousSessions! > 0 && (
+        {(stats?.suspiciousSessions ?? 0) > 0 && (
           <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
             <div className="text-xs text-red-900 dark:text-red-200">
-              <strong>Security Alert:</strong> {stats.suspiciousSessions} suspicious session(s) detected. Review and
+              <strong>Security Alert:</strong> {stats?.suspiciousSessions} suspicious session(s) detected. Review and
               terminate any unauthorized access immediately.
             </div>
           </div>

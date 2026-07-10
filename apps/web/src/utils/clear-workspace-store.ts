@@ -28,9 +28,9 @@ export function setDemoWorkspace() {
       id: 'demo-workspace-123',
       name: 'Meridian Development',
       description: 'Main development workspace for Meridian project management',
+      ownerId: null,
       ownerEmail: 'elidegbotse@gmail.com',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     });} catch (error) {
     console.error('❌ Failed to set demo workspace:', error);
   }

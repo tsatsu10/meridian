@@ -140,9 +140,7 @@ export default function UniversalHeader({
 
           {/* Page Header Actions */}
           {showPageHeaderActions && (
-            <PageHeaderActions 
-              variant={variant === "hero" ? "default" : variant}
-            />
+            <PageHeaderActions />
           )}
         </div>
       </div>

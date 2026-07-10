@@ -1,12 +1,8 @@
 import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
-
-export type DeleteTaskRequest = InferRequestType<
-  (typeof client)["task"][":id"]["$delete"]
->["param"];
 
 async function deleteTask(taskId: string) {
-  const response = await client.task[":id"].$delete({ param: { id: taskId } });
+  // The generated AppType is missing task[":id"], hence the cast
+  const response = await (client as any).task[":id"].$delete({ param: { id: taskId } });
 
   if (!response.ok) {
     const error = await response.text();

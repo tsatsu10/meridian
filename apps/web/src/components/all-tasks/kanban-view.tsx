@@ -21,7 +21,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FolderOpen, MoreHorizontal, Users, User } from "lucide-react";
 import { cn } from "@/lib/cn";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import { format, isBefore } from "date-fns";
 import { client } from "@meridian/libs";
 
@@ -35,11 +34,12 @@ interface Task {
   description: string;
   status: string;
   priority: string;
-  dueDate: Date | null;
+  dueDate: string | null;
   position: number;
-  createdAt: Date;
+  createdAt: string;
   userEmail: string | null;
   assigneeName: string | null;
+  assigneeAvatar?: string | null;
   assigneeEmail: string | null;
   projectId: string;
   parentId: string | null;
@@ -173,7 +173,7 @@ function TaskCard({ task, isSelected, onSelect }: {
   isSelected: boolean;
   onSelect: (taskId: string) => void;
 }) {
-  const isOverdue = (dueDate: Date | null) => {
+  const isOverdue = (dueDate: string | null) => {
     if (!dueDate) return false;
     return isBefore(new Date(dueDate), new Date()) && new Date(dueDate).toDateString() !== new Date().toDateString();
   };
@@ -231,7 +231,7 @@ function TaskCard({ task, isSelected, onSelect }: {
           ) : task.assigneeEmail ? (
             <div className="flex items-center space-x-2">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={task.assigneeAvatar} />
+                <AvatarImage src={task.assigneeAvatar ?? undefined} />
                 <AvatarFallback>
                   {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                 </AvatarFallback>
@@ -324,7 +324,6 @@ export function AllTasksKanbanView({
   projects = []
 }: AllTasksKanbanViewProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const { mutate: updateTask } = useUpdateTask();
 
   // @epic-1.1-subtasks: Get dynamic status columns
   const statusColumns = getStatusColumnsFromProjects(projects, tasks);
@@ -366,7 +365,7 @@ export function AllTasksKanbanView({
     if (task.status === newStatus) return;
 
     try {
-      await client.task[":id"].$put({
+      await (client.task as any)[":id"].$put({
         param: { id: taskId },
         json: {
           id: task.id,
@@ -374,13 +373,13 @@ export function AllTasksKanbanView({
           description: task.description || "",
           status: newStatus,
           priority: task.priority,
-          dueDate: task.dueDate ? task.dueDate.toISOString() : undefined,
+          dueDate: task.dueDate ?? undefined,
           position: task.position,
           projectId: task.projectId,
           parentId: task.parentId || undefined,
           userEmail: task.userEmail || undefined,
           number: task.number,
-          createdAt: task.createdAt.toISOString(),
+          createdAt: task.createdAt,
         },
       });
       toast.success(`Task moved to ${statusColumns.find(col => col.id === newStatus)?.name}`);

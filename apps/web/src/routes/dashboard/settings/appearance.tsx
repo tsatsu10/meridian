@@ -374,7 +374,7 @@ function AppearanceSettings() {
         </div>
         
         <div className="space-y-2">
-          <Input placeholder="Input field" size="sm" />
+          <Input placeholder="Input field" />
         </div>
         
         <div className="flex flex-wrap gap-2">

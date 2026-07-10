@@ -44,7 +44,7 @@ interface Task {
     id: string;
     name: string;
   } | null;
-  dueDate?: string;
+  dueDate?: string | null;
   project?: {
     id: string;
     name: string;

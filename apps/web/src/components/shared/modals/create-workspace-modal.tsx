@@ -27,7 +27,7 @@ function CreateWorkspaceModal({ open, onClose }: CreateWorkspaceModalProps) {
     if (!name.trim()) return;
 
     try {
-      const createdWorkspace = await mutateAsync();
+      const createdWorkspace = (await mutateAsync()) as { id: string };
       toast.success("Workspace created successfully");
       
       // Set as active workspace
@@ -43,6 +43,7 @@ function CreateWorkspaceModal({ open, onClose }: CreateWorkspaceModalProps) {
       // Navigate to the projects page after creating workspace
       navigate({
         to: "/dashboard/projects",
+        search: { page: 1, ps: 12, q: undefined, archived: false },
       });
     } catch (error) {
       toast.error(

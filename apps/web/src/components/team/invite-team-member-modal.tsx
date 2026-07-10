@@ -30,20 +30,6 @@ type Props = {
   workspaceId: string;
 };
 
-// Current user roles from the system
-type UserRole = 
-  | "workspace-manager" 
-  | "department-head" 
-  | "workspace-viewer"
-  | "project-manager" 
-  | "project-viewer"
-  | "team-lead"
-  | "member"
-  | "client" 
-  | "contractor"
-  | "stakeholder"
-  | "guest";
-
 // @epic-1.1-rbac: Complete list of available roles for invitation
 const AVAILABLE_ROLES = [
   { value: "guest", label: "Guest", description: "Temporary access with limited permissions" },

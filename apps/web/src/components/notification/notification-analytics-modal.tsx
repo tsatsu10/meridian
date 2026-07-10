@@ -43,13 +43,16 @@ export default function NotificationAnalyticsModal({
   notifications,
 }: NotificationAnalyticsModalProps) {
   // Calculate type distribution
-  const typeDistribution = notifications.reduce((acc, notif) => {
-    acc[notif.type] = (acc[notif.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const typeDistribution: Record<string, number> = notifications.reduce(
+    (acc, notif) => {
+      acc[notif.type] = (acc[notif.type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   // Calculate read rate
-  const readRate = stats.total > 0 ? ((stats.read / stats.total) * 100).toFixed(1) : 0;
+  const readRate = stats.total > 0 ? ((stats.read / stats.total) * 100).toFixed(1) : "0";
 
   // Calculate average response time (time to mark as read)
   const calculateAverageResponseTime = () => {

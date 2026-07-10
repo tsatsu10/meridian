@@ -58,8 +58,6 @@ import DashboardPopup from "@/components/dashboard/dashboard-popup";
   import { useRBACAuth } from "@/lib/permissions";
   import LazyDashboardLayout, { StatsCardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/performance/lazy-dashboard-layout";
 import useWorkspaceStore from "@/store/workspace";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
-import type { Project } from "@/types/project";
 import { API_BASE_URL } from "@/constants/urls";
 import { logger } from "@/lib/logger";
 
@@ -173,7 +171,6 @@ function ProjectOverview() {
   const navigate = useNavigate();
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
-  const { data: projects = [] as Project[] } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateMilestoneOpen, setIsCreateMilestoneOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -551,7 +548,7 @@ function ProjectOverview() {
       
     } catch (error) {
       console.error('Export error:', error);
-      toast.error(error.message || "Failed to export project", { id: "export-loading" });
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to export project", { id: "export-loading" });
     }
   };
 
@@ -603,7 +600,7 @@ function ProjectOverview() {
 
     } catch (error) {
       console.error('Archive error:', error);
-      toast.error(error.message || "Failed to archive project", { id: "archive-loading" });
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to archive project", { id: "archive-loading" });
     }
   };
 
@@ -691,7 +688,7 @@ function ProjectOverview() {
 
     } catch (error) {
       console.error('Delete error:', error);
-      toast.error(error.message || "Failed to delete project", { id: "delete-loading" });
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to delete project", { id: "delete-loading" });
     }
   };
 
@@ -1100,7 +1097,7 @@ function ProjectOverview() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {users && users.length > 0 ? (
-                  users.slice(0, 5).map((user) => {
+                  users.slice(0, 5).map((user: any) => {
                     const userTasks = allTasks.filter((task: any) => task.userEmail === user.userEmail);
                     const completedTasks = userTasks.filter((task: any) => task.status === 'done').length;
                     const workloadPercentage = userTasks.length > 0 ? Math.round((completedTasks / userTasks.length) * 100) : 0;
@@ -1109,7 +1106,7 @@ function ProjectOverview() {
                       <div key={user.userEmail} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                         <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                           <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-medium text-white">
-                            {user.userName?.split(' ').map(n => n[0]).join('') || '?'}
+                            {user.userName?.split(' ').map((n: any) => n[0]).join('') || '?'}
                           </div>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -1226,9 +1223,6 @@ function ProjectOverview() {
           onClose={() => setIsCreateTaskOpen(false)}
           projectContext={project}
           hideProjectSelection={true}
-          filterOptions={{
-            projects: projects,
-          }}
         />
 
         <CreateMilestoneModal

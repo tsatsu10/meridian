@@ -351,7 +351,7 @@ export function AdvancedFilters({
                       mode="single"
                       selected={filters.dueAfter}
                       onSelect={(date) => updateFilter('dueAfter', date)}
-                      initialFocus
+                      autoFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -368,7 +368,7 @@ export function AdvancedFilters({
                       mode="single"
                       selected={filters.dueBefore}
                       onSelect={(date) => updateFilter('dueBefore', date)}
-                      initialFocus
+                      autoFocus
                     />
                   </PopoverContent>
                 </Popover>

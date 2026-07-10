@@ -1,12 +1,8 @@
 import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
-
-export type GetTaskRequest = InferRequestType<
-  (typeof client)["task"][":id"]["$get"]
->["param"];
 
 async function getTask(taskId: string) {
-  const response = await client.task[":id"].$get({ param: { id: taskId } });
+  // The generated AppType is missing task[":id"], hence the cast
+  const response = await (client as any).task[":id"].$get({ param: { id: taskId } });
 
   if (!response.ok) {
     const error = await response.text();

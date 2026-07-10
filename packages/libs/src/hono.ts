@@ -1,3 +1,7 @@
+// @meridian/api ships no types entry; resolving it would pull the whole API
+// source into the web tsc program (hundreds of node-side errors). AppType is
+// therefore `any` here and web fetchers type requests/responses locally.
+// @ts-ignore -- intentional unresolved type-only import
 import type { AppType } from "@meridian/api";
 import { hc } from "hono/client";
 

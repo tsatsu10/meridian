@@ -10,7 +10,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { QueryClient, } from '@tanstack/react-query';
 
 // Mock API responses
 const mockApi = {
@@ -23,14 +22,7 @@ const mockApi = {
 };
 
 describe('User Workflow Integration Tests', () => {
-    beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
-
+  beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
   });

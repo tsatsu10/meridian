@@ -152,27 +152,6 @@ const API_CONFIG = {
   USE_PRODUCTION: true, // Use production API with fallback
 };
 
-// Helper function to get auth headers
-function getAuthHeaders(): HeadersInit {
-  // Get the auth token from the authentication system
-  const token = localStorage.getItem('auth-token') || sessionStorage.getItem('auth-token');
-  const userEmail = localStorage.getItem('user-email') || sessionStorage.getItem('user-email');
-  
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-  
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
-  if (userEmail) {
-    headers["X-User-Email"] = userEmail;
-  }
-  
-  return headers;
-}
-
 // Enhanced fetch with retry logic and error handling
 async function apiRequest<T>(
   endpoint: string,

@@ -80,16 +80,19 @@ export default function TaskCardContextMenuContent({
   });
   const { mutateAsync: updateTask } = useUpdateTask();
   const { mutateAsync: createTask } = useCreateTask();
-  const { mutateAsync: deleteTask } = useDeleteTask();
+  const { mutateAsync: deleteTask } = useDeleteTask(taskCardContext.projectId);
+
+  // useGetProjects returns either a bare array or { projects, pagination }
+  const projectList = Array.isArray(projects) ? projects : (projects as any)?.projects;
 
   const projectsOptions = useMemo(() => {
-    return projects?.map((project) => {
+    return projectList?.map((project: any) => {
       return { label: project.name, value: project.id };
     });
-  }, [projects]);
+  }, [projectList]);
 
   const usersOptions = useMemo(() => {
-    return workspaceUsers?.map((user) => ({
+    return workspaceUsers?.map((user: any) => ({
       label: user.userName ?? user.userEmail,
       value: user.userEmail,
     }));
@@ -124,7 +127,7 @@ export default function TaskCardContextMenuContent({
 
   const handleDuplicateTask = async (projectId: string) => {
     const selectedProject = projectsOptions?.find(
-      (project) => project.value === projectId,
+      (project: any) => project.value === projectId,
     );
 
     const newTask = {
@@ -207,7 +210,7 @@ export default function TaskCardContextMenuContent({
         onOpenChange={setIsCreateSubtaskModalOpen}
         status={task.status}
         parentTaskId={task.id}
-        projectContext={projects?.find(p => p.id === taskCardContext.projectId)}
+        projectContext={projectList?.find((p: any) => p.id === taskCardContext.projectId)}
         hideProjectSelection={true}
       />
       
@@ -352,7 +355,7 @@ export default function TaskCardContextMenuContent({
 
         {usersOptions && (
           <ContextMenuSubContent>
-            {usersOptions.map((user) => (
+            {usersOptions.map((user: any) => (
               <ContextMenuCheckboxItem
                 key={user.value}
                 checked={task.userEmail === user.value}
@@ -388,7 +391,7 @@ export default function TaskCardContextMenuContent({
               selected={task.dueDate ? new Date(task.dueDate) : undefined}
               onSelect={(value) => handleChange("dueDate", String(value))}
               className="w-auto border-none"
-              initialFocus
+              autoFocus
             />
           </ContextMenuSubContent>
         )}
@@ -405,7 +408,7 @@ export default function TaskCardContextMenuContent({
 
         {projectsOptions && (
           <ContextMenuSubContent>
-            {projectsOptions.map((project) => (
+            {projectsOptions.map((project: any) => (
               <ContextMenuItem
                 key={project.value}
                 onClick={() => handleDuplicateTask(project.value)}

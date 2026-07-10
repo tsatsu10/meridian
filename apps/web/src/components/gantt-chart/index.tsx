@@ -220,7 +220,7 @@ function GanttChart({ tasks }: GanttChartProps) {
         const ganttTask: GanttTask = {
           id: scheduledTask.id,
           title: scheduledTask.title,
-          number: originalTask.number,
+          number: originalTask.number ?? 0,
           startDate: scheduledTask.scheduledStartDate,
           endDate: scheduledTask.scheduledEndDate,
           duration: scheduledTask.duration,
@@ -230,7 +230,7 @@ function GanttChart({ tasks }: GanttChartProps) {
           progress,
           hasSchedulingConflict: scheduledTask.hasSchedulingConflict,
           conflictReason: scheduledTask.conflictReason,
-          assignee: originalTask.userEmail,
+          assignee: originalTask.userEmail ?? undefined,
           priority: originalTask.priority || 'medium'
         };return ganttTask;
       }).filter(Boolean) as GanttTask[];if (converted.length === 0) {

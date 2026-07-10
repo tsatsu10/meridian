@@ -126,7 +126,7 @@ function ProjectListItem({
   const health = useProjectHealth(project);
 
   const completedTasks =
-    project.tasks?.filter((t) => {
+    project.tasks?.filter((t: any) => {
       const status = t.status?.toLowerCase();
       return status === "completed" || status === "done";
     }).length ?? 0;
@@ -199,7 +199,7 @@ function ProjectListItem({
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4 text-muted-foreground" />
             <div className="flex -space-x-2">
-              {members.slice(0, 3).map((member) => (
+              {members.slice(0, 3).map((member: any) => (
                 <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
                   <AvatarImage src={member.avatar ?? undefined} />
                   <AvatarFallback className="text-xs">{member.name?.charAt(0) ?? "?"}</AvatarFallback>

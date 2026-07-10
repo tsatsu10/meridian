@@ -1165,7 +1165,7 @@ function AnalyticsPage() {
                     color="bg-green-500"
                     subtitle="Successfully finished tasks"
                     tooltip="Number of tasks marked as complete within the selected time period"
-                    action={() => navigate({ to: "/dashboard/projects" })}
+                    action={() => navigate({ to: "/dashboard/projects", search: { page: 1, ps: 12, q: undefined, archived: false } })}
                   />
                   <EnhancedMetricCard
                     title="Team Productivity"
@@ -1314,9 +1314,9 @@ function AnalyticsPage() {
                   <ChartSkeleton key={i} height="h-48" />
                 ))}
               </div>
-            ) : enhancedAnalytics?.projectHealth?.length > 0 ? (
+            ) : (enhancedAnalytics?.projectHealth?.length ?? 0) > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {enhancedAnalytics.projectHealth.map((project) => (
+                {enhancedAnalytics?.projectHealth?.map((project) => (
                   <ProjectHealthCard 
                     key={project.id} 
                     project={project}
@@ -1338,14 +1338,14 @@ function AnalyticsPage() {
           <TabsContent value="teams" id="teams-panel" role="tabpanel" aria-labelledby="teams-tab" className="space-y-6">
             {isLoading ? (
               <ChartSkeleton height="h-96" />
-            ) : enhancedAnalytics?.resourceUtilization?.length > 0 ? (
+            ) : (enhancedAnalytics?.resourceUtilization?.length ?? 0) > 0 ? (
               <Card className="glass-card border-border/50">
                 <CardHeader>
                   <CardTitle>Team Resource Utilization</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {enhancedAnalytics.resourceUtilization.map((resource, index) => (
+                    {enhancedAnalytics?.resourceUtilization?.map((resource, index) => (
                       <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
                         <div className="flex-1">
                           <h4 className="font-medium">{resource.userName}</h4>

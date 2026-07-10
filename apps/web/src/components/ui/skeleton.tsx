@@ -47,7 +47,7 @@ export function StatsSkeleton({ count = 4 }: { count?: number }) {
 }
 
 // Chart skeleton
-export function ChartSkeleton({ height = 300 }: { height?: number }) {
+export function ChartSkeleton(_props: { height?: number } = {}) {
   return (
     <div className="rounded-lg border bg-card p-6">
       <div className="space-y-4">

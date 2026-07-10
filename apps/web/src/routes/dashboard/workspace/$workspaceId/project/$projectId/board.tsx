@@ -75,36 +75,33 @@ function RouteComponent() {
   );
 
   // 🎹 KEYBOARD SHORTCUTS: Enhance productivity with keyboard navigation
-  useKeyboardShortcuts({
-    shortcuts: [
-      {
-        key: "c",
-        description: "Create new task",
-        action: () => setIsTaskModalOpen(true),
+  useKeyboardShortcuts([
+    {
+      key: "c",
+      description: "Create new task",
+      action: () => setIsTaskModalOpen(true),
+    },
+    {
+      key: "v",
+      description: "Toggle board/list view",
+      action: () => setViewMode(viewMode === "board" ? "list" : "board"),
+    },
+    {
+      key: "/",
+      description: "Focus search",
+      action: () => {
+        const searchInput = document.querySelector('input[placeholder="Search tasks..."]') as HTMLInputElement;
+        searchInput?.focus();
       },
-      {
-        key: "v",
-        description: "Toggle board/list view",
-        action: () => setViewMode(viewMode === "board" ? "list" : "board"),
-      },
-      {
-        key: "/",
-        description: "Focus search",
-        action: () => {
-          const searchInput = document.querySelector('input[placeholder="Search tasks..."]') as HTMLInputElement;
-          searchInput?.focus();
-        },
-      },
-      {
-        key: "f",
-        metaKey: true,
-        shiftKey: true,
-        description: "Clear all filters",
-        action: clearAllFilters,
-      },
-    ] as KeyboardShortcut[],
-    enabled: true,
-  });
+    },
+    {
+      key: "f",
+      meta: true,
+      shift: true,
+      description: "Clear all filters",
+      action: clearAllFilters,
+    },
+  ]);
 
   const totalTasks = project?.columns?.reduce((acc: number, col: any) => acc + (col.tasks?.length || 0), 0) || 0;
   const activeFilterCount = [filters.assignee, filters.priority, filters.dueDate, filters.sortBy].filter(Boolean).length;

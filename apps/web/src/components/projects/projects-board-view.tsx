@@ -46,7 +46,7 @@ export function ProjectsBoardView({
 
     for (const p of projects) {
       if (!showArchived && p.isArchived) continue;
-      const key = p.isArchived ? "archived" : normalizeStatus(p.status);
+      const key = p.isArchived ? "archived" : normalizeStatus((p.status ?? undefined));
       const list = map.get(key) ?? map.get("other")!;
       list.push(p);
     }

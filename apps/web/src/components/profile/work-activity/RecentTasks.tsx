@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Circle, Clock, AlertCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import useWorkspaceStore from "@/store/workspace";
 import { getRecentTasks, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
@@ -126,10 +127,11 @@ function TaskItem({
   icon: any;
   isOverdue?: boolean;
 }) {
+  const workspaceId = useWorkspaceStore((s) => s.workspace?.id);
   return (
     <Link
-      to="/dashboard/projects/$projectId"
-      params={{ projectId: task.projectId }}
+      to="/dashboard/workspace/$workspaceId/project/$projectId/board"
+      params={{ workspaceId: workspaceId ?? "", projectId: task.projectId }}
       className="block"
     >
       <div

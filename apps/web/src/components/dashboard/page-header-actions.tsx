@@ -27,14 +27,12 @@ import {
   UserPlus
 } from "lucide-react";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import { useRBACAuth } from "@/lib/permissions";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/shared/notifications/notification-center";
 import useWorkspaceStore from "@/store/workspace";
 import useProjectStore from "@/store/project";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
@@ -44,10 +42,7 @@ interface PageHeaderActionsProps {
   showChat?: boolean;
 }
 
-export default function PageHeaderActions({
-  unreadNotifications = 3,
-  showChat = true,
-}: PageHeaderActionsProps) {
+export default function PageHeaderActions(_props: PageHeaderActionsProps = {}) {
   const [_isCreateProjectOpen, _setIsCreateProjectOpen] = useState(false);
   const [_isCreateTaskOpen, _setIsCreateTaskOpen] = useState(false);
   const [_isInviteTeamMemberOpen, _setIsInviteTeamMemberOpen] = useState(false);
@@ -55,11 +50,8 @@ export default function PageHeaderActions({
 
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
-  const { data: projects } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasPermission } = useRBACAuth();
-  const { workspace: workspaceStore } = useWorkspaceStore();
   
   // Modal states
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
@@ -223,9 +215,6 @@ export default function PageHeaderActions({
         onOpenChange={setIsCreateTaskModalOpen}
         projectContext={project}
         hideProjectSelection={false}
-        filterOptions={{
-          projects: projects,
-        }}
       />
 
       {workspace && (

@@ -46,7 +46,7 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
     }
 
     // Calculate completion rate
-    const completedTasks = tasks.filter((t) => {
+    const completedTasks = tasks.filter((t: any) => {
       const status = t.status?.toLowerCase();
       return status === "completed" || status === "done";
     }).length;
@@ -54,7 +54,7 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
 
     // Check for overdue tasks
     const now = new Date();
-    const overdueTasks = tasks.filter((t) => {
+    const overdueTasks = tasks.filter((t: any) => {
       if (!t.dueDate) return false;
       const dueDate = new Date(t.dueDate);
       const status = t.status?.toLowerCase();
@@ -114,9 +114,9 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
  * Pure helper for Projects hub filtering — matches filter chip values (on-track, at-risk, behind, ahead).
  */
 export function getProjectHealthFilterKey(project: {
-  tasks?: Array<{ status?: string; dueDate?: string | Date | null }>;
+  tasks?: Array<{ status?: string | null; dueDate?: string | Date | null }>;
   dueDate?: string | Date | null;
-  status?: string;
+  status?: string | null;
 }): "on-track" | "at-risk" | "behind" | "ahead" {
   const tasks = project.tasks ?? [];
   const totalTasks = tasks.length;

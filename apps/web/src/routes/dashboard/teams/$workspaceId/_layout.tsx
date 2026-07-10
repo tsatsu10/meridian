@@ -21,7 +21,6 @@ function RouteComponent() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { workspaceId } = Route.useParams();
 
   return (
     <>

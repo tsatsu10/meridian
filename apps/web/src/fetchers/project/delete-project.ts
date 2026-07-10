@@ -1,12 +1,10 @@
 import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
 
-export type DeleteProjectRequest = InferRequestType<
-  (typeof client)["project"][":id"]["$delete"]
->["param"];
+// The generated AppType is missing project[":id"], so type the request locally
+export type DeleteProjectRequest = { id: string };
 
 async function deleteProject({ id }: DeleteProjectRequest) {
-  const response = await client.project[":id"].$delete({ param: { id } });
+  const response = await (client as any).project[":id"].$delete({ param: { id } });
 
   if (!response.ok) {
     const error = await response.text();

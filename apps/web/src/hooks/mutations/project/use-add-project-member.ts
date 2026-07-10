@@ -12,7 +12,7 @@ interface AddProjectMemberData {
 
 async function addProjectMember(data: AddProjectMemberData) {
   const { projectId, ...memberData } = data;
-  const response = await client.project[":projectId"].members.$post({
+  const response = await (client as any).project[":projectId"].members.$post({
     param: { projectId },
     json: memberData,
   });

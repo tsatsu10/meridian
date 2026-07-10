@@ -59,13 +59,13 @@ interface Team {
   name: string;
   description: string;
   members: any[];
-  lead: string;
-  projectId: string;
-  projectName: string;
-  performance: number;
-  workload: number;
-  projects: number;
-  color: string;
+  lead?: string;
+  projectId?: string;
+  projectName?: string;
+  performance?: number;
+  workload?: number;
+  projects?: number;
+  color?: string;
 }
 
 interface Task {
@@ -121,8 +121,8 @@ export default function TeamDashboardModal({
   
   // Get timeline data for this team
   const { timelineData } = useProjectTimeline(allTeams);
-  const teamTimelineData = timelineData.find(tl => 
-    tl.teams.some(t => t.teamId === team?.id)
+  const teamTimelineData = timelineData.find((tl: any) => 
+    tl.teams.some((t: any) => t.teamId === team?.id)
   );
 
   // Update team when selectedTeam prop changes
@@ -428,7 +428,7 @@ export default function TeamDashboardModal({
                   <h3 className="font-semibold text-lg text-yellow-800 dark:text-yellow-200">Timeline Risks</h3>
                 </div>
                 <div className="space-y-2">
-                  {teamTimelineData.riskFactors.map((risk, index) => (
+                  {teamTimelineData.riskFactors.map((risk: any, index: any) => (
                     <div key={index} className="text-sm text-yellow-700 dark:text-yellow-300">
                       • {risk}
                     </div>
@@ -442,7 +442,7 @@ export default function TeamDashboardModal({
             )}
 
             {/* Critical Path Status */}
-            {teamTimelineData?.teams.find(t => t.teamId === team?.id)?.criticalPath && (
+            {teamTimelineData?.teams.find((t: any) => t.teamId === team?.id)?.criticalPath && (
               <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <TargetIcon className="h-5 w-5 text-red-600" />
