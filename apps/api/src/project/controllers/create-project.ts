@@ -93,7 +93,8 @@ async function createProject(data: CreateProjectData, ownerId: string) {
         icon,
         slug: sanitizedSlug,
       status, // Maps to schema status
-      priority, // Maps to schema priority
+      // request-boundary narrowing onto the enum column
+      priority: priority as "low" | "medium" | "high" | "urgent", // Maps to schema priority
       startDate: startDate ? new Date(startDate) : undefined,
       dueDate: endDate ? new Date(endDate) : undefined, // endDate -> dueDate
       // Store extra fields in settings JSON
@@ -113,6 +114,10 @@ async function createProject(data: CreateProjectData, ownerId: string) {
       },
     })
     .returning();
+
+  if (!newProject) {
+    throw new Error("Project insert returned no row");
+  }
 
   // Automatically create a team for this project
   const [newTeam] = await db

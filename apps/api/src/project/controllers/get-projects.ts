@@ -84,7 +84,8 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
     whereConditions.push(inArray(projectTable.status, options.status));
   }
   if (options?.priority?.length) {
-    whereConditions.push(inArray(projectTable.priority, options.priority));
+    // request-boundary narrowing onto the enum column
+    whereConditions.push(inArray(projectTable.priority, options.priority as ("low" | "medium" | "high" | "urgent")[]));
   }
   if (options?.ownerIds?.length) {
     whereConditions.push(inArray(projectTable.ownerId, options.ownerIds));
@@ -219,10 +220,17 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
         .where(eq(userTable.id, project.ownerId))
         .limit(1);
 
-      const allMembers = [...workspaceMembers];
-      if (owner.length > 0 && !workspaceMembers.find((m) => m.id === owner[0].id)) {
+      const allMembers: Array<{
+        id: string | null;
+        name: string | null;
+        email: string | null;
+        avatar: string | null;
+        role: string;
+      }> = [...workspaceMembers];
+      const [ownerRow] = owner;
+      if (ownerRow && !workspaceMembers.find((m) => m.id === ownerRow.id)) {
         allMembers.push({
-          ...owner[0],
+          ...ownerRow,
           role: "owner",
         });
       }

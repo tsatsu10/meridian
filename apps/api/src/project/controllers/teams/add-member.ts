@@ -27,6 +27,9 @@ async function addMember(c: Context) {
   const db = getDatabase();
   const { projectId, teamId } = c.req.param();
   const currentUserEmail = c.get("userEmail");
+  if (!currentUserEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
 
   if (!projectId || !teamId) {
     return c.json({ error: "Project ID and Team ID are required" }, 400);

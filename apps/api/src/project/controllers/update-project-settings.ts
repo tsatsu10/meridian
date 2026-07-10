@@ -20,21 +20,22 @@ async function updateProjectSettings(
       )
     );
 
+  // Only real project_settings columns (no lastModified/modifiedBy columns
+  // exist; settings is jsonb so no manual stringify)
   const settingsData = {
     projectId,
     category,
-    settings: JSON.stringify(settings),
-    lastModified: new Date(),
-    modifiedBy,
+    settings,
   };
 
   if (existingSettings) {
     // Update existing settings
     const updatedSettings = await db
       .update(projectSettingsTable)
+      // project_settings has no version column; updatedAt tracks changes
       .set({
         ...settingsData,
-        version: existingSettings.version + 1,
+        updatedAt: new Date(),
       })
       .where(
         and(
@@ -54,7 +55,6 @@ async function updateProjectSettings(
       .insert(projectSettingsTable)
       .values({
         ...settingsData,
-        version: 1,
       })
       .returning();
 

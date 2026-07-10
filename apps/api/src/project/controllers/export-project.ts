@@ -138,7 +138,7 @@ async function exportProject(
             role: userTable.role,
           })
           .from(userTable)
-          .where(eq(userTable.email, uniqueEmails[0])); // Get first user as example
+          .where(eq(userTable.email, uniqueEmails[0] ?? "")); // Get first user as example
         
         // For multiple users, we'd need a different query approach
         // For now, just get team members from task assignees

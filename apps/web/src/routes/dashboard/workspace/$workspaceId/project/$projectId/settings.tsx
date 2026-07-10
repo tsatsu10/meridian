@@ -699,7 +699,7 @@ function ProjectSettings() {
     }
 
     try {
-      await deleteProject({ id: project.id });
+      await deleteProject({ id: project.id, workspaceId });
 
       queryClient.invalidateQueries({
         queryKey: ["project", project.id],

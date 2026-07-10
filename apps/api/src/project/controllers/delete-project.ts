@@ -41,7 +41,7 @@ import { errorMessage, toError } from "../../utils/errors";
  */
 async function deleteProject(c: Context) {
   const db = getDatabase();
-  const projectId = c.req.param("id");
+  const projectId = c.req.param("projectId");
   const workspaceId = c.req.query("workspaceId");
   const userEmail = c.get("userEmail");
 

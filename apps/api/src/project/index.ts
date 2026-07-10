@@ -43,7 +43,7 @@ import { getDatabase } from "../database/connection";
 import { statusColumnTable, projectTable, workspaceUserTable, userTable } from "../database/schema";
 import rbacMiddleware from "../middlewares/rbac";
 import { requirePermission } from "../middlewares/rbac";
-import { CachePresets } from "../middlewares/cache-middleware";
+import { CachePresets, cacheMiddleware } from "../middlewares/cache-middleware";
 import { RateLimitPresets } from "../middlewares/rate-limit";
 import logger from '../utils/logger';
 import { errorMessage } from "../utils/errors";
@@ -279,9 +279,8 @@ const project = new Hono<{
         }
       }
 
-      const project = await deleteProject(projectId);
-
-      return c.json(project);
+      // deleteProject reads params from the context and builds the response
+      return await deleteProject(c);
     },
   )
   
@@ -489,8 +488,9 @@ const project = new Hono<{
         // Renumber positions sequentially
         for (let i = 0; i < columns.length; i++) {
           const column = columns[i];
+          if (!column) continue;
           const newPosition = i; // 0, 1, 2, 3, 4...
-          
+
           if (column.position !== newPosition) {
             logger.debug(`🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`);
             await db
@@ -699,7 +699,7 @@ const project = new Hono<{
       activityLimit: z.string().optional(),
       includeTeam: z.string().optional(),
     })),
-    CachePresets.projectOverview(), // 🔴 Cache for 5 minutes
+    cacheMiddleware(CachePresets.projectOverview()), // 🔴 Cache for 5 minutes
     getProjectOverview
   )
 

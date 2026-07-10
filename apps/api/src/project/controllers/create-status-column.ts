@@ -26,8 +26,9 @@ async function fixPositionConflicts(projectId: string) {
   // Renumber positions sequentially
   for (let i = 0; i < columns.length; i++) {
     const column = columns[i];
+    if (!column) continue;
     const newPosition = i; // 0, 1, 2, 3, 4...
-    
+
     if (column.position !== newPosition) {
       logger.debug(`🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`);
       await db
