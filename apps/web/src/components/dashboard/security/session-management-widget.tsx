@@ -29,23 +29,26 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+// The sessions table only stores id/userId/expiresAt, so the API reports
+// device/location/activity fields as null rather than fabricating them
 interface ActiveSession {
   id: string;
   userId: string;
   userEmail: string;
   deviceType: "desktop" | "mobile" | "tablet" | "unknown";
   deviceName: string;
-  browser: string;
-  os: string;
-  ipAddress: string;
+  browser: string | null;
+  os: string | null;
+  ipAddress: string | null;
   location: {
     city?: string;
     country?: string;
     coordinates?: { lat: number; lon: number };
-  };
+  } | null;
   isCurrentSession: boolean;
-  createdAt: Date;
-  lastActivity: Date;
+  createdAt: Date | null;
+  lastActivity: Date | null;
+  expiresAt?: Date;
   isSuspicious: boolean;
   status: "active" | "idle" | "expired";
 }
@@ -56,7 +59,7 @@ interface SessionStats {
   idleSessions: number;
   suspiciousSessions: number;
   uniqueLocations: number;
-  averageSessionDuration: string;
+  averageSessionDuration: string | null;
 }
 
 export function SessionManagementWidget() {
@@ -295,21 +298,23 @@ export function SessionManagementWidget() {
                           <div className="text-xs text-muted-foreground space-y-1">
                             <div className="flex items-center gap-1">
                               <Monitor className="h-3 w-3" />
-                              {session.browser} on {session.os}
+                              {session.browser && session.os
+                                ? `${session.browser} on ${session.os}`
+                                : "Unknown device"}
                             </div>
                             <div className="flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
-                              {session.location.city && session.location.country
+                              {session.location?.city && session.location?.country
                                 ? `${session.location.city}, ${session.location.country}`
                                 : "Unknown Location"}
                             </div>
                             <div className="flex items-center gap-1">
                               <Globe className="h-3 w-3" />
-                              {session.ipAddress}
+                              {session.ipAddress ?? "IP not recorded"}
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Last active: {formatTimeAgo(session.lastActivity)}
+                              Last active: {session.lastActivity ? formatTimeAgo(session.lastActivity) : "Unknown"}
                             </div>
                           </div>
                         </div>
