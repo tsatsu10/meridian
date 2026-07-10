@@ -66,7 +66,7 @@ export class UserStatusService {
             currentTaskId: params.currentTaskId,
             updatedAt: now,
           })
-          .where(eq(userStatus.id, existingStatus[0].id));
+          .where(eq(userStatus.id, existingStatus[0]?.id ?? ''));
       } else {
         // Create new status
         const statusId = createId();

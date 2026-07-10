@@ -230,7 +230,7 @@ class FileStorageService {
   validateFileType(mimeType: string, allowedTypes: string[]): boolean {
     return allowedTypes.some(type => {
       if (type.includes('*')) {
-        const category = type.split('/')[0];
+        const category = type.split('/')[0] ?? '';
         return mimeType.startsWith(category);
       }
       return mimeType === type;

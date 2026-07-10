@@ -433,12 +433,13 @@ export async function importTranslations(
       // CSV format
       const lines = data.split('\n');
       for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
+        const line = lines[i]?.trim();
         if (!line) continue;
 
         const match = line.match(/^([^,]+),"([^"]*(?:""[^"]*)*)",(.*)$/);
         if (match) {
-          const [, key, value, context] = match;
+          const [, key, value = "", context] = match;
+          if (!key) continue;
           translations[key] = {
             key,
             value: value.replace(/""/g, '"'),

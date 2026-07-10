@@ -98,7 +98,7 @@ export function createSlidingWindowRateLimiter(config: RateLimitConfig) {
       
       // Calculate when the oldest request will expire
       const oldestRequest = requests[0];
-      const resetTime = oldestRequest.timestamp + windowMs;
+      const resetTime = (oldestRequest?.timestamp ?? Date.now()) + windowMs;
       
       // Set rate limit headers
       c.header('X-RateLimit-Limit', maxRequests.toString());

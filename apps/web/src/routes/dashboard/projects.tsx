@@ -379,7 +379,7 @@ function ProjectsPage() {
 
     // Delete the project using the mutation
     try {
-      await deleteProjectMutation.mutateAsync({ id: project.id });
+      await deleteProjectMutation.mutateAsync({ id: project.id, workspaceId: project.workspaceId });
       toast.success(`${project.name} deleted successfully`);
       refetch(); // Refresh project list
     } catch (error) {

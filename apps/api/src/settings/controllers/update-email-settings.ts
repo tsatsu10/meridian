@@ -11,12 +11,16 @@ import crypto from "crypto";
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-in-production';
 
-// Simple encryption for SMTP password (use proper encryption in production)
+// Simple encryption for SMTP password (use a managed secret store in production).
+// NOTE: crypto.createCipher was removed from Node — this now uses
+// createCipheriv with a scrypt-derived key and a random IV (hex "iv:ciphertext").
 function encryptPassword(password: string): string {
-  const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+  const key = crypto.scryptSync(ENCRYPTION_KEY, 'meridian-smtp', 32);
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   let encrypted = cipher.update(password, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  return encrypted;
+  return `${iv.toString('hex')}:${encrypted}`;
 }
 
 export default async function updateEmailSettings(

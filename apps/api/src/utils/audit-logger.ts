@@ -302,7 +302,7 @@ export class AuditLogger {
    * Log rate limiting events
    */
   async logRateLimit(params: {
-    action: 'connection_limit' | 'message_limit' | 'typing_limit' | 'presence_limit';
+    action: 'connection_limit' | 'message_limit' | 'typing_limit' | 'presence_limit' | 'api_rate_limit';
     userEmail?: string;
     ipAddress: string;
     workspaceId?: string;
@@ -519,7 +519,7 @@ export class AuditLogger {
 
       const eventsBySeverity: Record<string, number> = {};
       severityResults.forEach(result => {
-        eventsBySeverity[result.severity] = result.count;
+        eventsBySeverity[result.severity ?? 'unknown'] = result.count;
       });
 
       // Events by outcome (category field as proxy)

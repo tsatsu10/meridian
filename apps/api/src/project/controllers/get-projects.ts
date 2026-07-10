@@ -225,7 +225,7 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
         name: string | null;
         email: string | null;
         avatar: string | null;
-        role: string;
+        role: string | null;
       }> = [...workspaceMembers];
       const [ownerRow] = owner;
       if (ownerRow && !workspaceMembers.find((m) => m.id === ownerRow.id)) {

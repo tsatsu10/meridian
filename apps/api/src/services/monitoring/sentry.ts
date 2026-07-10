@@ -66,7 +66,9 @@ export function initializeSentry(config: SentryConfig) {
       sampleRate: config.sampleRate || 1.0, // 100% of errors
       
       // Additional options
-      beforeSend(event, hint) {
+      // Sentry is an optional runtime require (typed any above), so its
+      // callback params have no importable types here
+      beforeSend(event: any, hint: any) {
         // Filter out sensitive data
         if (event.request) {
           delete event.request.cookies;
@@ -77,7 +79,7 @@ export function initializeSentry(config: SentryConfig) {
         return event;
       },
       
-      beforeBreadcrumb(breadcrumb) {
+      beforeBreadcrumb(breadcrumb: any) {
         // Filter sensitive breadcrumbs
         if (breadcrumb.category === 'http' && breadcrumb.data) {
           delete breadcrumb.data.Authorization;

@@ -396,15 +396,13 @@ export class SkillsService {
         const matrix: Record<string, any[]> = {};
 
         for (const skill of skills) {
-          if (!matrix[skill.skillName]) {
-            matrix[skill.skillName] = [];
-          }
-          matrix[skill.skillName].push(skill);
+          const bucket = matrix[skill.skillName] ?? (matrix[skill.skillName] = []);
+          bucket.push(skill);
         }
 
         // Sort by proficiency
         for (const skillName in matrix) {
-          matrix[skillName].sort((a, b) => b.proficiencyScore - a.proficiencyScore);
+          matrix[skillName]?.sort((a, b) => b.proficiencyScore - a.proficiencyScore);
         }
 
         return matrix;

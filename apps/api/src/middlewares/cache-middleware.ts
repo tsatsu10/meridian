@@ -71,7 +71,8 @@ export function cacheMiddleware(options: CacheOptions = {}): MiddlewareHandler {
       // Return cached response
       const age = Math.floor((Date.now() - cached.timestamp) / 1000);
       
-      return c.body(cached.body, cached.status, {
+      // cached.status was captured from a live response; narrow for hono
+      return c.body(cached.body, cached.status as 200, {
         ...cached.headers,
         'X-Cache': 'HIT',
         'X-Cache-Age': age.toString(),

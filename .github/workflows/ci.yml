@@ -42,9 +42,8 @@ jobs:
       - name: Install deps (no scripts)
         run: npm ci --ignore-scripts
 
-      # API typecheck is non-blocking until the pre-existing error backlog is cleared.
+      # Blocking: the error backlog was cleared to zero (was 973).
       - name: Typecheck api
-        continue-on-error: true
         run: npm run typecheck --workspace=@meridian/api
 
       # NOTE: apps/web/tsconfig.json is a solution-style config with files:[], so a bare

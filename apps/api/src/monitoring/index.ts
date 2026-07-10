@@ -49,15 +49,17 @@ monitoringRoutes.get("/metrics", authMiddleware, async (c) => {
     const errorRate = totalCalls > 0 ? (failedCalls / totalCalls) * 100 : 0;
 
     // Get rate limit info (get current user's rate limit)
-    const userId = c.get("userId") || 1; // Fallback to 1 if not set
+    // api_rate_limits.userId is an integer with no FK to the text user ids
+    // (schema drift); coerce and fall back to the shared bucket
+    const userId = Number(c.get("userId")) || 1;
     const rateLimitInfo = await db
       .select()
       .from(apiRateLimits)
       .where(eq(apiRateLimits.userId, userId))
       .limit(1);
 
-    const rateLimitTotal = rateLimitInfo[0]?.limitTotal || 10000;
-    const rateLimitRemaining = rateLimitInfo[0]?.limitRemaining || rateLimitTotal;
+    const rateLimitTotal = rateLimitInfo[0]?.limit ?? 10000;
+    const rateLimitRemaining = rateLimitTotal - (rateLimitInfo[0]?.currentUsage ?? 0);
     const rateLimitResetAt = rateLimitInfo[0]?.resetAt || new Date(now.getTime() + 60 * 60 * 1000);
 
     return c.json({

@@ -280,7 +280,8 @@ async function checkRedis(): Promise<HealthCheckResult> {
   
   try {
     // Try to import Redis client
-    const redisModule = await import('../../utils/redis').catch(() => null);
+    // Optional module — not present in this deployment; the catch degrades gracefully
+    const redisModule = await import('../../utils/redis' as string).catch(() => null);
     
     if (!redisModule) {
       return {

@@ -98,16 +98,17 @@ app.get("/projects/:projectId/notes", async (c) => {
   try {
     const db = getDatabase();
     
-    let query = db
-      .select()
-      .from(projectNotesTable)
-      .where(eq(projectNotesTable.projectId, projectId));
-
+    // Build conditions up front — drizzle builders can't be re-.where()d
+    const noteConditions = [eq(projectNotesTable.projectId, projectId)];
     if (!includeArchived) {
-      query = query.where(eq(projectNotesTable.isArchived, false));
+      noteConditions.push(eq(projectNotesTable.isArchived, false));
     }
 
-    let notes = await query.orderBy(
+    let notes = await db
+      .select()
+      .from(projectNotesTable)
+      .where(and(...noteConditions))
+      .orderBy(
       desc(projectNotesTable.isPinned),
       desc(projectNotesTable.updatedAt)
     );

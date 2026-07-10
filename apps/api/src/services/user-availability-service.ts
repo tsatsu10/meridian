@@ -152,7 +152,8 @@ export function isInWorkingHours(availability: any): boolean {
 
   try {
     const now = new Date();
-    const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "lowercase" });
+    // "lowercase" is not a valid weekday option (it threw RangeError at runtime)
+    const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
 
     // Check if today is a working day
     const workingDays = availability.workingDays || [];

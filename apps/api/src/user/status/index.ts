@@ -11,6 +11,9 @@ const statusRouter = new Hono();
 statusRouter.get("/me", authMiddleware, async (c) => {
   try {
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const status = await getUserStatus(userEmail);
     
     return c.json({
@@ -53,6 +56,9 @@ statusRouter.get("/:workspaceId", authMiddleware, async (c) => {
 statusRouter.post("/", authMiddleware, async (c) => {
   try {
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const body = await c.req.json();
     
     const schema = z.object({
@@ -107,6 +113,9 @@ statusRouter.post("/", authMiddleware, async (c) => {
 statusRouter.delete("/", authMiddleware, async (c) => {
   try {
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     await clearUserStatus(userEmail);
     
     return c.json({

@@ -13,7 +13,7 @@ import { getLoggingConfig } from '../config/logging';
 export type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
 export type LogCategory = 'SYSTEM' | 'AUTH' | 'DATABASE' | 'API' | 'WEBSOCKET' | 'ERROR' | 'VALIDATION' | 'PERFORMANCE' | 'RBAC';
 
-interface LoggerConfig {
+export interface LoggerConfig {
   level: LogLevel;
   enableConsole: boolean;
   enableFileLogging: boolean;
@@ -25,7 +25,7 @@ interface LoggerConfig {
   structuredOutput: boolean;
 }
 
-interface LogEntry {
+export interface LogEntry {
   timestamp: string;
   level: LogLevel;
   category: LogCategory;
@@ -38,7 +38,7 @@ interface LogEntry {
   };
 }
 
-class EnhancedLogger {
+export class EnhancedLogger {
   private config: LoggerConfig;
   private levels: Record<LogLevel, number> = {
     silent: -1,
