@@ -65,7 +65,7 @@ export function AssignUsersModal({
   });
   
   // Map API response to user list
-  const allUsers = workspaceUsersData?.users || [];
+  const allUsers = workspaceUsersData || [];
   
   // Assign users mutation
   const assignMutation = useMutation({
@@ -125,7 +125,7 @@ export function AssignUsersModal({
   };
   
   const handleSelectAll = () => {
-    const filtered = filteredUsers.map(u => u.id);
+    const filtered = filteredUsers.map((u: any) => u.id);
     setSelectedUsers(filtered);
   };
   

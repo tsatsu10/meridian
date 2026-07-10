@@ -193,7 +193,7 @@ export function VoiceControl() {
         setCurrentCommand(transcriptText);
 
         if (lastResult.isFinal) {
-          logger.debug("Final transcript:", transcriptText);
+          logger.debug("Final transcript:", { value: transcriptText });
           processCommand(transcriptText);
         }
       };
@@ -258,7 +258,7 @@ export function VoiceControl() {
     setTranscript(prev => [entry, ...prev].slice(0, 50)); // Keep last 50
 
     if (matchedCommand) {
-      logger.debug("Executing command:", matchedCommand.command);
+      logger.debug("Executing command:", { value: matchedCommand.command });
       matchedCommand.action();
     } else {
       speak("Command not recognized. Say 'help' for available commands.");

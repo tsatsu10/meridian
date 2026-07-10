@@ -1,7 +1,7 @@
 import { client } from "@meridian/libs";
 
 async function markAllNotificationsAsRead() {
-  const response = await client.notification["read-all"].$patch();
+  const response = await (client as any).notification["read-all"].$patch();
 
   if (!response.ok) {
     const error = await response.text();

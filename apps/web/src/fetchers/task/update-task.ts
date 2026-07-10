@@ -2,7 +2,7 @@ import type Task from "@/types/task";
 import { client } from "@meridian/libs";
 
 async function updateTask(taskId: string, task: Task) {
-  const response = await client.task[":id"].$put({
+  const response = await (client as any).task[":id"].$put({
     param: { id: taskId },
     json: {
       userEmail: task.userEmail || "",

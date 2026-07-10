@@ -10,7 +10,7 @@ export type TaskToImport = {
 };
 
 async function importTasks(projectId: string, tasks: TaskToImport[]) {
-  const response = await client.task.import[":projectId"].$post({
+  const response = await (client as any).task.import[":projectId"].$post({
     param: { projectId },
     json: { tasks },
   });

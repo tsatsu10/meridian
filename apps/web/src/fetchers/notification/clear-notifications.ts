@@ -1,7 +1,7 @@
 import { client } from "@meridian/libs";
 
 async function clearNotifications() {
-  const response = await client.notification["clear-all"].$delete();
+  const response = await (client as any).notification["clear-all"].$delete();
 
   if (!response.ok) {
     const error = await response.text();

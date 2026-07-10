@@ -33,10 +33,10 @@ interface EventFormData {
   date: string;
   time: string;
   duration: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   attendees: string[];
   estimatedHours: number;
-  recurring: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurring: 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
   reminderMinutes: number;
 }
 
@@ -58,7 +58,7 @@ const priorityOptions = [
   { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-800' },
   { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
   { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
-  { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-800' },
+  { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' },
 ];
 
 const recurringTypes = [
@@ -481,7 +481,7 @@ export default function CreateEventModal({
                 )}
 
                 <div className="text-sm text-muted-foreground p-2 bg-background rounded">
-                  <strong>Preview:</strong> {formData.recurring === 'none' ? 'Single event' : 
+                  <strong>Preview:</strong> { 
                     `Repeats ${formData.recurring}${
                       recurringOptions.endDate ? ` until ${new Date(recurringOptions.endDate).toLocaleDateString()}` :
                       ` for ${recurringOptions.occurrences} occurrences`

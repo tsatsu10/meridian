@@ -1,10 +1,16 @@
 import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
 
-export type CreateTaskRequest = InferRequestType<
-  (typeof client)["task"][":projectId"]["$post"]
->["json"] &
-  InferRequestType<(typeof client)["task"][":projectId"]["$post"]>["param"];
+// The generated AppType is missing task[":projectId"], so type the request locally
+export type CreateTaskRequest = {
+  title: string;
+  description: string;
+  projectId: string;
+  userEmail?: string | null;
+  status: string;
+  dueDate: string;
+  priority: string;
+  parentId?: string;
+};
 
 async function createTask(
   title: string,
@@ -16,7 +22,7 @@ async function createTask(
   priority: string,
   parentId?: string,
 ) {
-  const response = await client.task[":projectId"].$post({
+  const response = await (client as any).task[":projectId"].$post({
     json: {
       title,
       description,

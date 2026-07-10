@@ -209,6 +209,7 @@ export function validateDashboardData(data: unknown): DashboardData {
         dueTodayTasks: 0,
         teamMembers: 0,
       },
+      teamMembers: [],
       projects: [],
       activities: [],
       deadlines: [],

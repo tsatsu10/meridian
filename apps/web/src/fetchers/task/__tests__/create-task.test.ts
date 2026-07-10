@@ -36,7 +36,7 @@ describe('createTask', () => {
       json: async () => mockResponse,
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
     const result = await createTask(
@@ -77,7 +77,7 @@ describe('createTask', () => {
       json: async () => mockResponse,
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
     const result = await createTask(
@@ -108,7 +108,7 @@ describe('createTask', () => {
       json: async () => ({ id: 'task-123' }),
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
 
@@ -137,7 +137,7 @@ describe('createTask', () => {
       json: async () => ({ id: 'task-123' }),
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
 
@@ -166,7 +166,7 @@ describe('createTask', () => {
       json: async () => ({ id: 'task-123' }),
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-06-15T10:30:00');
 
@@ -195,7 +195,7 @@ describe('createTask', () => {
       text: async () => 'Task creation failed: Invalid project ID',
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
 
@@ -218,7 +218,7 @@ describe('createTask', () => {
       json: async () => ({ id: 'task-123' }),
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
 
@@ -253,7 +253,7 @@ describe('createTask', () => {
       json: async () => ({ id: 'task-123', description: longDescription }),
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
 
@@ -279,7 +279,7 @@ describe('createTask', () => {
       json: async () => ({ id: 'task-123' }),
     });
 
-    (client.task[':projectId'].$post as any) = mockPost;
+    ((client.task as any)[':projectId'].$post as any) = mockPost;
 
     const dueDate = new Date('2024-12-31');
 

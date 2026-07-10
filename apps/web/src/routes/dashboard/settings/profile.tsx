@@ -213,7 +213,7 @@ function ProfileSettings() {
   }
 
   const handleCancel = () => {
-    setLocalSettings(settings.profile)
+    setLocalSettings(normalizeProfileData(settings.profile))
     setProfileImage(settings.profile.avatar || null)
     setErrors({})
     setIsEditing(false)
@@ -545,7 +545,7 @@ function ProfileSettings() {
           {/* Notifications Tab - real API-backed preferences */}
           <TabsContent value="notifications" className="space-y-6">
             <NotificationPreferences
-              userId={user?.id || user?.userId || ''}
+              userId={user?.id || ''}
               workspaceId={workspace?.id || ''}
               onSave={() => toast.success('Notification preferences saved!')}
               className="border rounded-xl"

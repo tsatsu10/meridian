@@ -344,5 +344,4 @@ export default function NotificationPreferencesDialog({
 }
 
 export { DEFAULT_PREFERENCES };
-export type { NotificationPreferences };
 

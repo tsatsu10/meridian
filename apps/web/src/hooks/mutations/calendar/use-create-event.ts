@@ -20,6 +20,7 @@ interface CreateEventData {
   estimatedHours?: number;
   color?: string;
   attendees?: string[];
+  reminderMinutes?: number;
   isRecurring?: boolean;
   recurringPattern?: {
     frequency: 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
@@ -32,7 +33,6 @@ interface CreateEventData {
     customPattern?: Record<string, any>;
     exceptionDates?: string[];
   };
-  reminderMinutes?: number;
 }
 
 interface CreateEventResponse {

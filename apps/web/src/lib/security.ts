@@ -17,13 +17,16 @@ import DOMPurify from 'isomorphic-dompurify';
  * const userInput = '<script>alert("XSS")</script><p>Safe content</p>';
  * const safe = sanitizeHtml(userInput); // Returns: '<p>Safe content</p>'
  */
-export function sanitizeHtml(dirty: string, options?: DOMPurify.Config): string {
-  return DOMPurify.sanitize(dirty, {
+export function sanitizeHtml(
+  dirty: string,
+  options?: Parameters<typeof DOMPurify.sanitize>[1],
+): string {
+  return String(DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'hr'],
     ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id'],
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
     ...options
-  });
+  }));
 }
 
 /**

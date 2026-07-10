@@ -44,7 +44,6 @@ import { useDeleteTheme } from "@/hooks/mutations/theme/use-delete-theme";
 import {
   useBulkUpdateStatus,
   useBulkUpdatePriority,
-  useBulkAssignTasks,
   useBulkArchiveTasks,
   useBulkDeleteTasks,
 } from "@/hooks/mutations/task/use-bulk-operations";
@@ -110,7 +109,6 @@ function BacklogPage() {
   // ☑️ Bulk operation mutations
   const { mutate: bulkUpdateStatus } = useBulkUpdateStatus();
   const { mutate: bulkUpdatePriority } = useBulkUpdatePriority();
-  const { mutate: bulkAssign } = useBulkAssignTasks();
   const { mutate: bulkArchive } = useBulkArchiveTasks();
   const { mutate: bulkDelete } = useBulkDeleteTasks();
   
@@ -149,8 +147,7 @@ function BacklogPage() {
   }, [data, setProject]);
 
   // ⌨️ FEATURE: Keyboard shortcuts for productivity
-  useKeyboardShortcuts({
-    shortcuts: [
+  useKeyboardShortcuts([
       {
         key: 'n',
         action: () => {
@@ -203,12 +200,12 @@ function BacklogPage() {
       },
       {
         key: 'a',
-        ctrlKey: true,
+        ctrl: true,
         action: () => {
           // Select all visible tasks
           const allTaskIds = new Set([
-            ...(project?.plannedTasks || []).map(t => t.id),
-            ...(project?.archivedTasks || []).map(t => t.id),
+            ...(project?.plannedTasks || []).map((t: any) => t.id),
+            ...(project?.archivedTasks || []).map((t: any) => t.id),
           ]);
           setSelectedTasks(allTaskIds);
         },
@@ -216,15 +213,14 @@ function BacklogPage() {
       },
       {
         key: 'd',
-        ctrlKey: true,
+        ctrl: true,
         action: () => {
           setSelectedTasks(new Set());
         },
         description: 'Deselect all tasks',
       },
     ],
-    enabled: !isTaskModalOpen && !isCreateTaskOpen && !showHelp,
-  });
+    !isTaskModalOpen && !isCreateTaskOpen && !showHelp);
 
   // ✅ PRODUCTION: Real API theme handlers with validation and permission checks
   const handleThemeCreate = async (theme: Omit<TaskTheme, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -336,19 +332,27 @@ function BacklogPage() {
   };
 
   const handleTaskUpdate = async (taskId: string, updates: Partial<EnhancedTask>) => {
+    // The update endpoint needs the full task, so merge onto the existing one
+    const existing = [
+      ...(project?.plannedTasks ?? []),
+      ...(project?.archivedTasks ?? []),
+    ].find((t: Task) => t.id === taskId);
+
+    if (!existing) {
+      toast.error('Task not found');
+      return;
+    }
+
     try {
-      // Convert enhanced task updates to regular task updates
-      const taskUpdates: Partial<Task> = {
-        title: updates.title,
-        description: updates.description,
-        priority: updates.priority,
-        dueDate: updates.dueDate,
-        status: updates.status,
-        userEmail: updates.userEmail,
-        // Map other compatible fields as needed
-      };
-      
-      updateTask({ id: taskId, ...taskUpdates });
+      updateTask({
+        ...existing,
+        title: updates.title ?? existing.title,
+        description: updates.description ?? existing.description,
+        priority: updates.priority ?? existing.priority,
+        dueDate: updates.dueDate ?? existing.dueDate,
+        status: updates.status ?? existing.status,
+        userEmail: updates.userEmail ?? existing.userEmail,
+      });
       toast.success('Task updated successfully');
     } catch (error) {
       console.error('Failed to update task:', error);
@@ -372,7 +376,7 @@ function BacklogPage() {
     }
 
     // Move all planned tasks to the to-do column
-    plannedTasks.forEach((task) => {
+    plannedTasks.forEach((task: any) => {
       const taskUpdate = {
         ...task,
         status: "todo" as const,
@@ -455,22 +459,6 @@ function BacklogPage() {
     // Note: Success toast and query invalidation handled by the hook
   };
 
-  const handleBulkAssign = (assigneeId: string, assigneeEmail: string) => {
-    if (!canEditBacklog) {
-      toast.error('Permission denied');
-      return;
-    }
-
-    // ✅ Real API call
-    bulkAssign({
-      taskIds: Array.from(selectedTasks),
-      assigneeId,
-      assigneeEmail,
-      userId: user?.id || '',
-      projectId,
-    });
-    // Note: Success toast and query invalidation handled by the hook
-  };
 
   // 💀 Enhanced loading state with skeleton
   if (isLoading || isProjectLoading) {
@@ -500,7 +488,7 @@ function BacklogPage() {
       {
         id: "planned" as const,
         name: "Planned" as const,
-        tasks: (project.plannedTasks || []).map((task) => ({
+        tasks: (project.plannedTasks || []).map((task: any) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,
@@ -509,19 +497,19 @@ function BacklogPage() {
       {
         id: "archived" as const,
         name: "Archived" as const,
-        tasks: (project.archivedTasks || []).map((task) => ({
+        tasks: (project.archivedTasks || []).map((task: any) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,
         })),
       },
     ],
-    plannedTasks: (project.plannedTasks || []).map((task) => ({
+    plannedTasks: (project.plannedTasks || []).map((task: any) => ({
       ...task,
       assigneeName: null,
       assigneeEmail: null,
     })),
-    archivedTasks: (project.archivedTasks || []).map((task) => ({
+    archivedTasks: (project.archivedTasks || []).map((task: any) => ({
       ...task,
       assigneeName: null,
       assigneeEmail: null,
@@ -709,7 +697,7 @@ function BacklogPage() {
                   Ready to Start Sprint?
                 </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  You have {project.plannedTasks.length} planned tasks ready to move to active development
+                  You have {project?.plannedTasks?.length ?? 0} planned tasks ready to move to active development
                 </p>
               </div>
             </div>
@@ -731,11 +719,7 @@ function BacklogPage() {
               onTaskUpdate={handleTaskUpdate}
             />
           ) : backlogProject ? (
-            <BacklogListView
-              project={backlogProject}
-              onTaskClick={handleTaskClick}
-              onTaskUpdate={handleTaskUpdate}
-            />
+            <BacklogListView project={backlogProject} />
           ) : (
             <div className="flex flex-col items-center justify-center h-[400px] border-2 border-dashed border-muted-foreground/25 rounded-lg">
               <FolderKanban className="h-12 w-12 text-muted-foreground mb-4" />
@@ -773,7 +757,6 @@ function BacklogPage() {
           onBulkArchive={handleBulkArchive}
           onBulkMoveToSprint={handleBulkMoveToSprint}
           onBulkSetPriority={handleBulkSetPriority}
-          onBulkAssign={handleBulkAssign}
         />
 
         {/* ⌨️ Help Dialog */}

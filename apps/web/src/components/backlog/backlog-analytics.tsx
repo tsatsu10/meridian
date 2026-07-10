@@ -165,7 +165,8 @@ export default function BacklogAnalytics({
       .reduce((sum, t) => sum + (t.storyPoints || 0), 0);
     
     const priorityDistribution = tasks.reduce((acc, task) => {
-      acc[task.priority] = (acc[task.priority] || 0) + 1;
+      const priorityKey = task.priority ?? 'none';
+      acc[priorityKey] = (acc[priorityKey] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 

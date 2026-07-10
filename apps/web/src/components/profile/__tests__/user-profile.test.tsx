@@ -376,7 +376,7 @@ describe('User Profile Component', () => {
 
   it('should disable save button while saving', async () => {
     const user = userEvent.setup();
-    const onSave = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const onSave = vi.fn(() => new Promise<void>(resolve => setTimeout(() => resolve(), 100)));
 
     render(
       <UserProfile user={mockUser} isEditable={true} onSave={onSave} />,

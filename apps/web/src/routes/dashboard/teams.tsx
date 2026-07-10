@@ -52,7 +52,6 @@ import useWorkspaceStore from "@/store/workspace";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import { useTeams } from "@/hooks/use-teams";
-import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { useTeamMetrics } from "@/hooks/queries/team/use-team-metrics";
 import { useChangeUserRole } from "@/hooks/mutations/workspace-user/use-change-user-role";
@@ -194,6 +193,16 @@ interface EnhancedTeam {
   performance?: number;
   workload?: number;
   color?: string;
+  // Derived display metrics computed in the teams-page mapping
+  healthScore?: number;
+  healthStatus?: { label: string; color: string; bg: string };
+  completedTasks?: number;
+  currentTasks?: number;
+  productivity?: number;
+  activeProjects?: number;
+  projects?: number;
+  isActive?: boolean;
+  unreadCount?: number;
 }
 
 // Enhanced team role mapping
@@ -364,7 +373,7 @@ function TeamsPage() {
       // Get team members from the actual team.members array returned by API
       // Deduplicate members by ID to prevent duplicate key warnings
       const uniqueMembersMap = new Map();
-      (team.members || []).forEach(member => {
+      (team.members || []).forEach((member: any) => {
         const memberId = member.id || member.email;
         if (memberId && !uniqueMembersMap.has(memberId)) {
           uniqueMembersMap.set(memberId, member);
@@ -464,7 +473,7 @@ function TeamsPage() {
         performance: avgPerformance,
         workload: avgWorkload,
         color: teamColor,
-        projectName: team.projectName || (projects?.find(p => p.id === team.projectId)?.name),
+        projectName: team.projectName || ((Array.isArray(projects) ? projects : []).find((p: any) => p.id === team.projectId)?.name),
         healthScore,
         healthStatus,
         completedTasks,
@@ -746,7 +755,7 @@ function TeamsPage() {
       key: 'k',
       ctrl: true,
       description: 'Focus search',
-      callback: () => {
+      action: () => {
         const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
         searchInput?.focus();
       }
@@ -755,31 +764,31 @@ function TeamsPage() {
       key: 't',
       ctrl: true,
       description: 'Switch to Teams view',
-      callback: () => setViewMode('teams')
+      action: () => setViewMode('teams')
     },
     {
       key: 'm',
       ctrl: true,
       description: 'Switch to Members view',
-      callback: () => setViewMode('members')
+      action: () => setViewMode('members')
     },
     {
       key: 'd',
       ctrl: true,
       description: 'Switch to People Directory view',
-      callback: () => setViewMode('directory')
+      action: () => setViewMode('directory')
     },
     {
       key: 'u',
       ctrl: true,
       description: 'Switch to Users view',
-      callback: () => setViewMode('users')
+      action: () => setViewMode('users')
     },
     {
       key: 'n',
       ctrl: true,
       description: 'Create new team',
-      callback: () => {
+      action: () => {
         if (viewMode === 'teams' && globalPermissions.canCreateTeams) {
           setIsCreateTeamOpen(true);
         } else if (viewMode === 'users' && globalPermissions.canCreateUsers) {
@@ -791,7 +800,7 @@ function TeamsPage() {
       key: 'g',
       ctrl: true,
       description: 'Toggle grid/list view',
-      callback: () => {
+      action: () => {
         if (viewMode === 'teams') {
           setTeamsViewType(prev => prev === 'grid' ? 'list' : 'grid');
         } else if (viewMode === 'directory') {
@@ -804,13 +813,13 @@ function TeamsPage() {
       ctrl: true,
       shift: true,
       description: 'Clear all filters',
-      callback: clearFilters
+      action: clearFilters
     },
     {
       key: '?',
       shift: true,
       description: 'Show keyboard shortcuts',
-      callback: () => setShowShortcutsHelp(true)
+      action: () => setShowShortcutsHelp(true)
     }
   ], !isCreateTeamOpen && !isTeamSettingsOpen && !isTeamCalendarOpen && !isTeamDashboardOpen && !isRoleManagementOpen);
 
@@ -1756,7 +1765,7 @@ function TeamsPage() {
           <TeamDashboardModal
             open={isTeamDashboardOpen}
             onClose={() => setIsTeamDashboardOpen(false)}
-            team={selectedTeamForDashboard}
+            selectedTeam={selectedTeamForDashboard}
           />
         </Suspense>
       )}
@@ -1800,9 +1809,6 @@ function TeamsPage() {
             onViewFull={() => {
               // TODO: Navigate to full profile page
               toast.info("Full profile page coming soon!");
-            }}
-            onGiveKudos={() => {
-              toast.success("Kudos feature coming soon!");
             }}
           />
         </Suspense>
@@ -2031,7 +2037,9 @@ function TeamCard({
   onAction: (action: string, team: EnhancedTeam) => void;
   userPermissions: any;
 }) {
-  void (useTeamPermissions(team));
+  const workload = team.workload ?? 0;
+  const roleCounts: Record<string, number> = {};
+  for (const m of team.members) roleCounts[m.role] = (roleCounts[m.role] ?? 0) + 1;
 
   return (
     <motion.div
@@ -2049,23 +2057,16 @@ function TeamCard({
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-12 w-12 border-2 border-white/30">
-                  <AvatarImage src={team.lead?.avatar} />
                   <AvatarFallback className="bg-white/20 text-white text-sm font-semibold">
-                    {team.lead?.name.split(' ').map(n => n[0]).join('')}
+                    {(team.lead ?? '?').split(' ').map((n: string) => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="text-white font-bold text-lg">{team.name}</h3>
-                  <p className="text-white/80 text-sm">{team.lead?.name}</p>
+                  <p className="text-white/80 text-sm">{team.lead}</p>
                 </div>
               </div>
               
-              {team.lead?.online && (
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-white/80 text-xs">Online</span>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -2106,14 +2107,14 @@ function TeamCard({
             <div className={cn("p-4 rounded-lg border", team.healthStatus.bg)}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                  <Activity className={cn("h-4 w-4", team.healthStatus.color)} />
+                  <Activity className={cn("h-4 w-4", team.healthStatus?.color)} />
                   <span className="text-sm font-medium text-foreground">Team Health</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={cn("text-xs font-semibold px-2 py-1 rounded-full", team.healthStatus.bg, team.healthStatus.color)}>
+                  <span className={cn("text-xs font-semibold px-2 py-1 rounded-full", team.healthStatus.bg, team.healthStatus?.color)}>
                     {team.healthStatus.label}
                   </span>
-                  <span className={cn("text-2xl font-bold", team.healthStatus.color)}>{team.healthScore}</span>
+                  <span className={cn("text-2xl font-bold", team.healthStatus?.color)}>{team.healthScore}</span>
                 </div>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
@@ -2153,30 +2154,30 @@ function TeamCard({
           {/* Workload Balance Indicator */}
           <div className={cn(
             "p-3 rounded-lg border",
-            team.workload < 40 ? "bg-yellow-500/10 border-yellow-500/20" :
-            team.workload >= 40 && team.workload <= 80 ? "bg-green-500/10 border-green-500/20" :
+            workload < 40 ? "bg-yellow-500/10 border-yellow-500/20" :
+            workload >= 40 && workload <= 80 ? "bg-green-500/10 border-green-500/20" :
             "bg-red-500/10 border-red-500/20"
           )}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
                 <Target className={cn(
                   "h-4 w-4",
-                  team.workload < 40 ? "text-yellow-500" :
-                  team.workload >= 40 && team.workload <= 80 ? "text-green-500" :
+                  workload < 40 ? "text-yellow-500" :
+                  workload >= 40 && workload <= 80 ? "text-green-500" :
                   "text-red-500"
                 )} />
                 <span className="text-sm font-medium text-foreground">Workload Balance</span>
               </div>
               <div className="flex items-center space-x-1">
-                {team.workload < 40 && <AlertTriangle className="h-3 w-3 text-yellow-500" />}
-                {team.workload > 80 && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                {workload < 40 && <AlertTriangle className="h-3 w-3 text-yellow-500" />}
+                {workload > 80 && <AlertTriangle className="h-3 w-3 text-red-500" />}
                 <span className={cn(
                   "text-sm font-bold",
-                  team.workload < 40 ? "text-yellow-600" :
-                  team.workload >= 40 && team.workload <= 80 ? "text-green-600" :
+                  workload < 40 ? "text-yellow-600" :
+                  workload >= 40 && workload <= 80 ? "text-green-600" :
                   "text-red-600"
                 )}>
-                  {team.workload}%
+                  {workload}%
                 </span>
               </div>
             </div>
@@ -2186,23 +2187,23 @@ function TeamCard({
                   <div 
                     className={cn(
                       "h-full transition-all duration-500",
-                      team.workload < 40 ? "bg-gradient-to-r from-yellow-500 to-yellow-400" :
-                      team.workload >= 40 && team.workload <= 80 ? "bg-gradient-to-r from-green-500 to-green-400" :
+                      workload < 40 ? "bg-gradient-to-r from-yellow-500 to-yellow-400" :
+                      workload >= 40 && workload <= 80 ? "bg-gradient-to-r from-green-500 to-green-400" :
                       "bg-gradient-to-r from-red-500 to-red-400"
                     )}
-                    style={{ width: `${team.workload}%` }}
+                    style={{ width: `${workload}%` }}
                   />
                 </div>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span className={team.workload < 40 ? "text-yellow-600 font-medium" : ""}>
-                  {team.workload < 40 ? "Underutilized" : "0%"}
+                <span className={workload < 40 ? "text-yellow-600 font-medium" : ""}>
+                  {workload < 40 ? "Underutilized" : "0%"}
                 </span>
-                <span className={team.workload >= 40 && team.workload <= 80 ? "text-green-600 font-medium" : ""}>
-                  {team.workload >= 40 && team.workload <= 80 ? "Optimal" : "40-80%"}
+                <span className={workload >= 40 && workload <= 80 ? "text-green-600 font-medium" : ""}>
+                  {workload >= 40 && workload <= 80 ? "Optimal" : "40-80%"}
                 </span>
-                <span className={team.workload > 80 ? "text-red-600 font-medium" : ""}>
-                  {team.workload > 80 ? "Overloaded" : "100%"}
+                <span className={workload > 80 ? "text-red-600 font-medium" : ""}>
+                  {workload > 80 ? "Overloaded" : "100%"}
                 </span>
               </div>
             </div>
@@ -2211,42 +2212,18 @@ function TeamCard({
           {/* Performance Indicator */}
           <div className="p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Weekly Progress</span>
-              <div className="flex items-center space-x-1">
-                <TrendingUp className={cn(
-                  "h-4 w-4",
-                  team.performance?.trend > 0 ? "text-green-500" : "text-red-500"
-                )} />
-                <span className={cn(
-                  "text-sm font-medium",
-                  team.performance?.trend > 0 ? "text-green-500" : "text-red-500"
-                )}>
-                  {team.performance?.trend > 0 ? '+' : ''}{team.performance?.trend}%
-                </span>
-              </div>
+              <span className="text-sm font-medium text-foreground">Task Progress</span>
+              <span className="text-sm font-medium text-muted-foreground">
+                {team.completedTasks ?? 0}/{(team.completedTasks ?? 0) + (team.currentTasks ?? 0)} done
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
-                  style={{ width: `${(team.performance?.tasksCompleted / team.performance?.weeklyGoal) * 100}%` }}
+                  style={{ width: `${((team.completedTasks ?? 0) / Math.max(1, (team.completedTasks ?? 0) + (team.currentTasks ?? 0))) * 100}%` }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground">
-                {team.performance?.tasksCompleted}/{team.performance?.weeklyGoal}
-              </span>
-            </div>
-          </div>
-
-          {/* Technology Stack */}
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-foreground">Tech Stack</span>
-            <div className="flex flex-wrap gap-1">
-              {Array.isArray(team.technologies) ? team.technologies.map((tech, techIndex) => (
-                <Badge key={`${tech}-${techIndex}`} variant="secondary" className="text-xs glass-card">
-                  {tech}
-                </Badge>
-              )) : null}
             </div>
           </div>
 
@@ -2254,7 +2231,7 @@ function TeamCard({
           <div className="space-y-2">
             <span className="text-sm font-medium text-foreground">Team Composition</span>
             <div className="flex flex-wrap gap-1">
-              {Object.entries(team.roles || {}).map(([role, count]) => {
+              {Object.entries(roleCounts).map(([role, count]) => {
                 const roleInfo = ROLE_LABELS[role as keyof typeof ROLE_LABELS];
                 if (!roleInfo || count === 0) return null;
                 
@@ -2267,13 +2244,6 @@ function TeamCard({
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="flex items-start space-x-2 p-3 rounded-lg bg-muted/30">
-            <Activity className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">{team.recentActivity}</p>
-            </div>
-          </div>
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-2">
@@ -2356,7 +2326,7 @@ function MembersList({
                         </Avatar>
                         <div className={cn(
                           "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background",
-                          statusColors[member.status]
+                          statusColors[member.status as keyof typeof statusColors]
                         )} />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -2401,7 +2371,7 @@ function MembersList({
 
                   {/* Status */}
                   <td className="p-4">
-                    <Badge className={cn("text-xs", availabilityColors[member.availability])}>
+                    <Badge className={cn("text-xs", availabilityColors[member.availability as keyof typeof availabilityColors])}>
                       {member.availability}
                     </Badge>
                   </td>
@@ -2552,7 +2522,7 @@ function TeamListItem({
               <div className="text-xs text-muted-foreground">Members</div>
             </div>
             <div className="text-center">
-              <div className={cn("text-lg font-bold", team.healthStatus.color)}>{team.healthScore}</div>
+              <div className={cn("text-lg font-bold", team.healthStatus?.color)}>{team.healthScore}</div>
               <div className="text-xs text-muted-foreground">Health</div>
             </div>
             <div className="text-center">

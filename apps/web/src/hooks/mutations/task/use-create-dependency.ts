@@ -8,7 +8,7 @@ interface CreateDependencyParams {
 }
 
 async function createDependency({ taskId, requiredTaskId, type = 'blocks' }: CreateDependencyParams) {
-  const response = await client.task[":taskId"].dependencies.$post({
+  const response = await (client as any).task[":taskId"].dependencies.$post({
     param: { taskId },
     json: { requiredTaskId, type },
   });

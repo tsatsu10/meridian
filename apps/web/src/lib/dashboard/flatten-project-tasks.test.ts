@@ -14,8 +14,8 @@ describe("flattenTasksForProject", () => {
 
   it("includes tasks without id from both sources", () => {
     const project = {
-      tasks: [{ status: "pending" }],
-      columns: [{ tasks: [{ status: "done" }] }],
+      tasks: [{ status: "pending" } as { id?: string }],
+      columns: [{ tasks: [{ status: "done" } as { id?: string }] }],
     };
     expect(flattenTasksForProject(project)).toHaveLength(2);
   });

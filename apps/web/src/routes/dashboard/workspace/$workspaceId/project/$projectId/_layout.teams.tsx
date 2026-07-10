@@ -107,7 +107,7 @@ interface ProjectMember {
   email: string;
   avatar?: string;
   role: string;
-  workspaceRole: string;
+  workspaceRole?: string;
   activeTasks: number;
   completedTasks: number;
   hoursThisWeek?: number;

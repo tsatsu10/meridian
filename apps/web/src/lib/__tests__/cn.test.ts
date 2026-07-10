@@ -71,8 +71,8 @@ describe('cn utility', () => {
   });
 
   it('should handle complex component styling patterns', () => {
-    const variant = 'primary';
-    const size = 'lg';
+    const variant: string = 'primary';
+    const size: string = 'lg';
     const result = cn(
       'button',
       {

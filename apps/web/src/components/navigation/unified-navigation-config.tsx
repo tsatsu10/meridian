@@ -48,6 +48,7 @@ import useGetProjects from "@/hooks/queries/project/use-get-projects";
 export interface NavigationItem {
   id: string;
   label: string;
+  description?: string;
   icon: LucideIcon;
   href: string;
   category: "main" | "project" | "workspace" | "utility" | "development";
@@ -274,8 +275,6 @@ export const useSettingsNavigation = (): NavigationItem[] => {
 
 // Project-specific navigation items
 export const useProjectNavigation = (workspaceId: string, projectId: string): NavigationItem[] => {
-  const { hasPermission } = useRBACAuth();
-
   // Return empty array if no valid workspace or project ID
   if (!workspaceId || !projectId) {
     return [];

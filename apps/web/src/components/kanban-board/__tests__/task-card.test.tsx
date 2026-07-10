@@ -82,6 +82,8 @@ const mockTask = {
   status: 'todo' as const,
   priority: 'medium' as const,
   projectId: 'project-1',
+  parentId: null,
+  position: 0,
   number: 123,
   userEmail: 'john@meridian.app',
   createdAt: '2024-01-01T00:00:00.000Z',
@@ -259,9 +261,9 @@ describe('TaskCard', () => {
     const taskWithSubtasks = {
       ...mockTask,
       subtasks: [
-        { id: 'sub-1', title: 'Subtask 1', status: 'done', number: 124, priority: 'low' },
-        { id: 'sub-2', title: 'Subtask 2', status: 'todo', number: 125, priority: 'medium' },
-        { id: 'sub-3', title: 'Subtask 3', status: 'todo', number: 126, priority: 'high' },
+        { ...mockTask, id: 'sub-1', title: 'Subtask 1', status: 'done', number: 124, priority: 'low' },
+        { ...mockTask, id: 'sub-2', title: 'Subtask 2', status: 'todo', number: 125, priority: 'medium' },
+        { ...mockTask, id: 'sub-3', title: 'Subtask 3', status: 'todo', number: 126, priority: 'high' },
       ],
       subtaskProgress: { completed: 1, total: 3, percentage: 33 }
     }

@@ -66,7 +66,7 @@ function SearchFilters({
     onSearch?.(value)
   }
 
-  const handleFilterToggle = (groupId: string, optionValue: string, type: 'checkbox' | 'radio') => {
+  const handleFilterToggle = (groupId: string, optionValue: string, type: 'checkbox' | 'radio' | 'select') => {
     const currentValues = filters[groupId] || []
 
     let newValues: string[]

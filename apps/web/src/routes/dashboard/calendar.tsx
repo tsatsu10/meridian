@@ -52,7 +52,6 @@ import { useState, useMemo, } from "react";
 import { toast } from "sonner";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, isSameMonth, isToday, addDays, subDays, isAfter, isWithinInterval, addHours } from "date-fns";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
-import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import useWorkspaceStore from "@/store/workspace";
 
 export const Route = createFileRoute("/dashboard/calendar")({
@@ -145,7 +144,6 @@ void ({
 });
 
 function GlobalCalendar() {
-  const { user } = useAuth();
   const { workspace } = useWorkspaceStore();
   
   // Calendar state management

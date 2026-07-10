@@ -69,6 +69,8 @@ const projectManagerPreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,
@@ -141,6 +143,8 @@ const executivePreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: false,
@@ -213,6 +217,8 @@ const teamLeadPreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,
@@ -285,6 +291,8 @@ const developerPreset: SettingsPreset = {
       sessionTimeout: false,
       deviceTracking: false,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: false,
@@ -356,6 +364,8 @@ const designerPreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,

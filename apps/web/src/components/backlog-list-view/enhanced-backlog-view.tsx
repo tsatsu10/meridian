@@ -79,7 +79,7 @@ interface EnhancedBacklogViewProps {
     archivedTasks: Task[];
   };
   onTaskClick?: (task: EnhancedTask) => void;
-  onThemeCreate?: (theme: Omit<TaskTheme, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TaskTheme>;
+  onThemeCreate?: (theme: Omit<TaskTheme, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TaskTheme | void>;
   onThemeEdit?: (theme: TaskTheme) => void;
   onThemeDelete?: (themeId: string) => void;
   onTaskUpdate?: (taskId: string, updates: Partial<EnhancedTask>) => void;
@@ -189,27 +189,30 @@ export default function EnhancedBacklogView({
     try {
       if (onThemeCreate) {
         const createdTheme = await onThemeCreate(newThemeData);
-        
-        // Create theme with progress for local state
-        const themeWithProgress: ThemeWithProgress = {
-          ...createdTheme,
-          progress: {
-            totalTasks: 0,
-            completedTasks: 0,
-            inProgressTasks: 0,
-            plannedTasks: 0,
-            progressPercentage: 0,
-            storyPointsTotal: 0,
-            storyPointsCompleted: 0,
-            estimatedCompletion: undefined
-          },
-          health: 'excellent',
-          risks: []
-        };
-        
-        // Add to local state immediately for UI update
-        setThemes(prev => [...prev, themeWithProgress]);
-        
+
+        // Handlers that create via react-query invalidate and refetch;
+        // only add to local state when the created theme is returned
+        if (createdTheme) {
+          const themeWithProgress: ThemeWithProgress = {
+            ...createdTheme,
+            progress: {
+              totalTasks: 0,
+              completedTasks: 0,
+              inProgressTasks: 0,
+              plannedTasks: 0,
+              progressPercentage: 0,
+              storyPointsTotal: 0,
+              storyPointsCompleted: 0,
+              estimatedCompletion: undefined
+            },
+            health: 'excellent',
+            risks: []
+          };
+
+          // Add to local state immediately for UI update
+          setThemes(prev => [...prev, themeWithProgress]);
+        }
+
         setIsCreateThemeOpen(false);
         setThemeForm({
           name: '',
@@ -267,7 +270,7 @@ export default function EnhancedBacklogView({
         storyPoints: Math.floor(Math.random() * 8) + 1,
         businessValue: Math.floor(Math.random() * 10) + 1,
         effort: Math.floor(Math.random() * 10) + 1,
-        refinementStatus: ['draft', 'refined', 'ready'][Math.floor(Math.random() * 3)] as RefinementStatus,
+        refinementStatus: ['draft', 'refined', 'ready'][Math.floor(Math.random() * 3)] as 'draft' | 'refined' | 'ready',
         labels: ['frontend', 'backend', 'api'].slice(0, Math.floor(Math.random() * 3) + 1),
         acceptanceCriteria: ['User can login', 'Error handling works', 'UI is responsive'],
         ageInDays
@@ -321,7 +324,7 @@ export default function EnhancedBacklogView({
       filtered = filtered.filter(task => task.userEmail === filters.assignee);
     }
 
-    if (filters.refinementStatus && filters.refinementStatus !== 'all') {
+    if (filters.refinementStatus) {
       filtered = filtered.filter(task => task.refinementStatus === filters.refinementStatus);
     }
 

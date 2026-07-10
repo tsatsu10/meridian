@@ -26,7 +26,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
     // If we have an active workspace ID, try to find and set that workspace
     if (activeWorkspaceId) {
-      const selectedWorkspace = workspaces.find(w => w.id === activeWorkspaceId);
+      const selectedWorkspace = workspaces.find((w: any) => w.id === activeWorkspaceId);
       if (selectedWorkspace) {
         setWorkspace(selectedWorkspace);
         return;
