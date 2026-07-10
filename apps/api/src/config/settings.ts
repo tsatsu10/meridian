@@ -63,6 +63,11 @@ function loadSettings(): AppSettings {
   }
 
   if (!settings.jwtSecret || settings.jwtSecret === 'meridian-dev-secret') {
+    if (settings.nodeEnv === 'production') {
+      throw new Error(
+        'JWT_SECRET must be set to a strong value in production - refusing to start with the default secret'
+      );
+    }
     logger.warn('⚠️  Using default JWT_SECRET - not secure for production!');
   }
 

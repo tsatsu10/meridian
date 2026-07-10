@@ -5,7 +5,10 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
-import { users } from "./users";
+// Import the canonical users table from schema.ts (not the duplicate in ./users)
+// so drizzle-kit doesn't see two definitions of the "users" table when this
+// file is included in drizzle.config.ts.
+import { users } from "../schema";
 
 /**
  * Email Verification Tokens

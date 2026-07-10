@@ -205,7 +205,9 @@ if (!enableDemoAuthBypass) {
     const isPublicUserRoute =
       path === "/api/users/sign-in" ||
       path === "/api/users/sign-up" ||
-      path === "/api/users/me";
+      path === "/api/users/me" ||
+      // Liveness probe only — /api/health subpaths expose project data and stay gated.
+      path === "/api/health";
 
     // Allow unauthenticated access to auth bootstrap endpoints.
     if (isPublicUserRoute) {
