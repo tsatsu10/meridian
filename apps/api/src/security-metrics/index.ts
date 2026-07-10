@@ -55,7 +55,7 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
       .where(
         and(
           eq(settingsAuditLogTable.action, "sign_in_failed"),
-          gte(settingsAuditLogTable.timestamp, yesterday)
+          gte(settingsAuditLogTable.createdAt, yesterday)
         )
       );
 
@@ -63,7 +63,7 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
     const activeSessions = await db
       .select({ count: count() })
       .from(userTable)
-      .where(sql`${userTable.lastActiveAt} > NOW() - INTERVAL '15 minutes'`);
+      .where(sql`${userTable.lastSeen} > NOW() - INTERVAL '15 minutes'`);
 
     // Get 2FA adoption rate
     const totalUsers = await db.select({ count: count() }).from(userTable);
@@ -85,8 +85,8 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
       .from(settingsAuditLogTable)
       .where(
         and(
-          gte(settingsAuditLogTable.timestamp, yesterday),
-          sql`${settingsAuditLogTable.details}->>'suspicious' = 'true'`
+          gte(settingsAuditLogTable.createdAt, yesterday),
+          sql`${settingsAuditLogTable.metadata}->>'suspicious' = 'true'`
         )
       );
 
@@ -112,8 +112,8 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
       .from(settingsAuditLogTable)
       .where(
         and(
-          gte(settingsAuditLogTable.timestamp, yesterday),
-          sql`${settingsAuditLogTable.severity} IN ('critical', 'high')`
+          gte(settingsAuditLogTable.createdAt, yesterday),
+          sql`${settingsAuditLogTable.metadata}->>'severity' IN ('critical', 'high')`
         )
       );
 
@@ -150,24 +150,17 @@ securityMetrics.get("/alerts", authMiddleware, async (c) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Build query
-    let query = db
-      .select()
-      .from(securityAlerts)
-      .where(gte(securityAlerts.createdAt, startDate));
-
-    // Filter by status if specified
+    // Build conditions up front — drizzle builders can't be re-.where()d
+    const conditions = [gte(securityAlerts.createdAt, startDate)];
     if (status !== "all") {
-      query = query.where(
-        and(
-          gte(securityAlerts.createdAt, startDate),
-          eq(securityAlerts.status, status)
-        )
-      );
+      conditions.push(eq(securityAlerts.status, status));
     }
 
     // Fetch alerts
-    const alerts = await query
+    const alerts = await db
+      .select()
+      .from(securityAlerts)
+      .where(and(...conditions))
       .orderBy(desc(securityAlerts.createdAt))
       .limit(100);
 
@@ -233,8 +226,8 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
         .where(
           and(
             eq(settingsAuditLogTable.action, "sign_in_failed"),
-            gte(settingsAuditLogTable.timestamp, date),
-            sql`${settingsAuditLogTable.timestamp} < ${nextDate}`
+            gte(settingsAuditLogTable.createdAt, date),
+            sql`${settingsAuditLogTable.createdAt} < ${nextDate}`
           )
         );
 
@@ -244,9 +237,9 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
         .from(settingsAuditLogTable)
         .where(
           and(
-            sql`${settingsAuditLogTable.details}->>'suspicious' = 'true'`,
-            gte(settingsAuditLogTable.timestamp, date),
-            sql`${settingsAuditLogTable.timestamp} < ${nextDate}`
+            sql`${settingsAuditLogTable.metadata}->>'suspicious' = 'true'`,
+            gte(settingsAuditLogTable.createdAt, date),
+            sql`${settingsAuditLogTable.createdAt} < ${nextDate}`
           )
         );
 
@@ -257,8 +250,8 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
         .where(
           and(
             eq(settingsAuditLogTable.action, "ip_blocked"),
-            gte(settingsAuditLogTable.timestamp, date),
-            sql`${settingsAuditLogTable.timestamp} < ${nextDate}`
+            gte(settingsAuditLogTable.createdAt, date),
+            sql`${settingsAuditLogTable.createdAt} < ${nextDate}`
           )
         );
 
@@ -282,6 +275,9 @@ securityMetrics.post("/alerts/:id/resolve", authMiddleware, async (c) => {
   try {
     const alertId = c.req.param("id");
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const db = getDatabase();
 
     // TODO: Add resolved flag to audit log table
@@ -289,11 +285,13 @@ securityMetrics.post("/alerts/:id/resolve", authMiddleware, async (c) => {
     await db.insert(settingsAuditLogTable).values({
       id: crypto.randomUUID(),
       userEmail,
+      section: "security",
       action: "alert_resolved",
-      details: JSON.stringify({ alertId }),
-      ipAddress: c.req.header("x-forwarded-for") || "unknown",
-      timestamp: new Date(),
-      severity: "info",
+      metadata: {
+        alertId,
+        ipAddress: c.req.header("x-forwarded-for") || "unknown",
+        severity: "info",
+      },
     });
 
     return c.json({ success: true, message: "Alert marked as resolved" });
