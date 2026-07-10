@@ -7,6 +7,7 @@ import { logger } from './logger';
 import { getDatabase } from "../database/connection";
 import { auditLogTable } from '../database/schema';
 import { count, gte, desc, eq, and } from 'drizzle-orm';
+import { errorMessage } from "./errors";
 
 // Initialize database connection for audit logger
 let db: Awaited<ReturnType<typeof getDatabase>>;
@@ -697,10 +698,10 @@ export class AuditLogger {
 
       // Don't retry database connection errors to prevent infinite loops
       // Instead, log the error and drop the batch to prevent memory buildup
-      if (error.message?.includes('no such table') || error.code === '42P01') { // PostgreSQL relation does not exist
+      if (errorMessage(error).includes('no such table') || (error as { code?: string }).code === '42P01') { // PostgreSQL relation does not exist
         logger.warn('Dropping audit batch due to database schema error - audit logging disabled until fixed', {
           batchSize: batch.length,
-          errorCode: error.code
+          errorCode: (error as { code?: string }).code
         });
       } else {
         // For other errors, retry only once

@@ -369,3 +369,13 @@ export function getErrorDetails(error: unknown): {
 }
 
 
+
+/** Narrow an unknown catch value to a usable Error. */
+export function toError(err: unknown): Error {
+  return err instanceof Error ? err : new Error(String(err));
+}
+
+/** Extract a message from an unknown catch value. */
+export function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}

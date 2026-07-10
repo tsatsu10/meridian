@@ -17,6 +17,7 @@ import { eq, and } from "drizzle-orm";
 import { auditLogger } from "../../utils/audit-logger";
 import { CacheInvalidation } from "../../utils/cache-invalidation";
 import logger from '../../utils/logger';
+import { errorMessage } from "../../utils/errors";
 
 /**
  * 🔒 SECURITY: Archive a project with full audit trail
@@ -159,12 +160,12 @@ export async function archiveProject(c: Context) {
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: user?.role || 'unknown',
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
       }
     });
@@ -315,12 +316,12 @@ export async function restoreProject(c: Context) {
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: user?.role || 'unknown',
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
       }
     });

@@ -13,6 +13,7 @@ import { getDatabase } from "../../database/connection";
 import { projectTable, tasks, milestoneTable, userTable } from "../../database/schema";
 import { eq, and } from "drizzle-orm";
 import { auditLogger } from "../../utils/audit-logger";
+import { errorMessage } from "../../utils/errors";
 
 interface ExportOptions {
   format?: 'json' | 'csv' | 'markdown';
@@ -210,12 +211,12 @@ async function exportProject(
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: context.userRole,
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
       }
     });

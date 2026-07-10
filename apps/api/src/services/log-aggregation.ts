@@ -1,3 +1,5 @@
+import { errorMessage } from "../utils/errors";
+
 /**
  * Log Aggregation and Analytics Service
  * 
@@ -12,7 +14,6 @@
 import { EventEmitter } from 'events'
 import { createHash } from 'crypto'
 import logger from '../utils/logger'
-
 export interface LogMetrics {
   timestamp: number
   level: string
@@ -447,7 +448,7 @@ class LogAggregationService extends EventEmitter {
       } catch (error) {
         logger.error('❌ Error checking alert rule', {
           ruleId: rule.id,
-          error: error.message
+          error: errorMessage(error)
         })
       }
     }
@@ -471,7 +472,7 @@ class LogAggregationService extends EventEmitter {
         logger.error('❌ Failed to execute alert action', {
           ruleId: rule.id,
           actionType: action.type,
-          error: error.message
+          error: errorMessage(error)
         })
       }
     }

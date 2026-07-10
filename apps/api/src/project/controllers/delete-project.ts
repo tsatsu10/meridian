@@ -34,6 +34,7 @@ import { CacheInvalidation } from "../../utils/cache-invalidation";
 import logger from '../../utils/logger';
 import { ActivityTracker } from "../../services/team-awareness/activity-tracker";
 import { captureException, addBreadcrumb } from "../../services/monitoring/sentry";
+import { errorMessage, toError } from "../../utils/errors";
 
 /**
  * 🔒 SECURITY: Delete a project with full cascade and audit trail
@@ -242,13 +243,13 @@ async function deleteProject(c: Context) {
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: user?.role || 'unknown',
-        errorStack: error.stack,
+        errorStack: toError(error).stack,
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
       }
     });
@@ -265,7 +266,7 @@ async function deleteProject(c: Context) {
     
     return c.json({ 
       error: "Failed to delete project",
-      message: error.message 
+      message: errorMessage(error) 
     }, 500);
   }
 }

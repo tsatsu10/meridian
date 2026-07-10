@@ -27,7 +27,7 @@ async function getProjectSettings(projectId: string, category: string) {
 
   return {
     ...settings,
-    settings: JSON.parse(settings.settings),
+    settings: typeof settings.settings === "string" ? JSON.parse(settings.settings) : settings.settings,
   };
 }
 

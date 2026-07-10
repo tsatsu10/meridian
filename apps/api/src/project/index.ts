@@ -46,6 +46,7 @@ import { requirePermission } from "../middlewares/rbac";
 import { CachePresets } from "../middlewares/cache-middleware";
 import { RateLimitPresets } from "../middlewares/rate-limit";
 import logger from '../utils/logger';
+import { errorMessage } from "../utils/errors";
 
 // Enhanced validation schemas
 const projectStatusSchema = z.enum(["planning", "active", "on-hold", "completed", "archived"]);
@@ -793,7 +794,7 @@ const project = new Hono<{
         logger.error("Export error:", error);
         return c.json({ 
           error: "Export failed",
-          message: error.message 
+          message: errorMessage(error) 
         }, 500);
       }
     }

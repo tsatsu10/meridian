@@ -46,7 +46,7 @@ async function updateProjectSettings(
 
     return {
       ...updatedSettings[0],
-      settings: JSON.parse(updatedSettings[0].settings),
+      settings: typeof updatedSettings[0]?.settings === "string" ? JSON.parse(updatedSettings[0].settings) : updatedSettings[0]?.settings,
     };
   } else {
     // Create new settings
@@ -60,7 +60,7 @@ async function updateProjectSettings(
 
     return {
       ...newSettings[0],
-      settings: JSON.parse(newSettings[0].settings),
+      settings: typeof newSettings[0]?.settings === "string" ? JSON.parse(newSettings[0].settings) : newSettings[0]?.settings,
     };
   }
 }

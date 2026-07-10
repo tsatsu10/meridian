@@ -16,6 +16,7 @@
 
 import { createClient } from 'redis';
 import logger from '../utils/logger';
+import { errorMessage } from "./errors";
 
 type RedisClient = ReturnType<typeof createClient>;
 
@@ -74,7 +75,7 @@ export async function initRedis() {
     logger.debug('🔴 Redis: Connection test successful!');
 
   } catch (error) {
-    logger.error('🔴 Redis: Failed to connect:', error.message);
+    logger.error('🔴 Redis: Failed to connect:', errorMessage(error));
     logger.debug('🔴 Redis: Application will continue without caching');
     isRedisEnabled = false;
     redisClient = null;
@@ -95,7 +96,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
     
     return JSON.parse(data) as T;
   } catch (error) {
-    logger.error(`🔴 Redis GET error for key "${key}":`, error.message);
+    logger.error(`🔴 Redis GET error for key "${key}":`, errorMessage(error));
     return null;
   }
 }
@@ -117,7 +118,7 @@ export async function setCache(
     await redisClient.setEx(key, ttl, serialized);
     return true;
   } catch (error) {
-    logger.error(`🔴 Redis SET error for key "${key}":`, error.message);
+    logger.error(`🔴 Redis SET error for key "${key}":`, errorMessage(error));
     return false;
   }
 }
@@ -134,7 +135,7 @@ export async function deleteCache(key: string): Promise<boolean> {
     await redisClient.del(key);
     return true;
   } catch (error) {
-    logger.error(`🔴 Redis DEL error for key "${key}":`, error.message);
+    logger.error(`🔴 Redis DEL error for key "${key}":`, errorMessage(error));
     return false;
   }
 }
@@ -159,7 +160,7 @@ export async function deletePattern(pattern: string): Promise<number> {
     logger.debug(`🔴 Redis: Deleted ${keys.length} keys matching "${pattern}"`);
     return keys.length;
   } catch (error) {
-    logger.error(`🔴 Redis DEL pattern error for "${pattern}":`, error.message);
+    logger.error(`🔴 Redis DEL pattern error for "${pattern}":`, errorMessage(error));
     return 0;
   }
 }
@@ -176,7 +177,7 @@ export async function hasCache(key: string): Promise<boolean> {
     const exists = await redisClient.exists(key);
     return exists === 1;
   } catch (error) {
-    logger.error(`🔴 Redis EXISTS error for key "${key}":`, error.message);
+    logger.error(`🔴 Redis EXISTS error for key "${key}":`, errorMessage(error));
     return false;
   }
 }
@@ -192,7 +193,7 @@ export async function getTTL(key: string): Promise<number> {
   try {
     return await redisClient.ttl(key);
   } catch (error) {
-    logger.error(`🔴 Redis TTL error for key "${key}":`, error.message);
+    logger.error(`🔴 Redis TTL error for key "${key}":`, errorMessage(error));
     return -1;
   }
 }
@@ -210,7 +211,7 @@ export async function flushAll(): Promise<boolean> {
     logger.debug('🔴 Redis: Flushed all data');
     return true;
   } catch (error) {
-    logger.error('🔴 Redis FLUSHALL error:', error.message);
+    logger.error('🔴 Redis FLUSHALL error:', errorMessage(error));
     return false;
   }
 }

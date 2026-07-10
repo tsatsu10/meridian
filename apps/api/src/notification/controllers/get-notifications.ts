@@ -55,13 +55,14 @@ async function getNotifications(
   
   // Phase 2: Search functionality
   if (search && search.trim()) {
-    conditions.push(
-      or(
-        ilike(notificationTable.title, `%${search}%`),
-        ilike(notificationTable.content, `%${search}%`),
-        ilike(notificationTable.message, `%${search}%`)
-      )
+    const searchCondition = or(
+      ilike(notificationTable.title, `%${search}%`),
+      ilike(notificationTable.content, `%${search}%`),
+      ilike(notificationTable.message, `%${search}%`)
     );
+    if (searchCondition) {
+      conditions.push(searchCondition);
+    }
   }
 
   const whereConditions = and(...conditions);

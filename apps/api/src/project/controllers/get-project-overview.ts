@@ -29,6 +29,7 @@ import {
   users,
   activityTable,
 } from "../../database/schema";
+import { errorMessage } from "../../utils/errors";
 
 interface ProjectOverviewOptions {
   includeActivity?: boolean;
@@ -208,7 +209,7 @@ async function getProjectOverview(c: Context) {
     logger.error("Error fetching project overview:", error);
     return c.json({
       error: "Failed to fetch project overview",
-      message: error.message,
+      message: errorMessage(error),
     }, 500);
   }
 }
