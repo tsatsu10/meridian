@@ -11,6 +11,7 @@
  */
 
 import { createId } from '@paralleldrive/cuid2';
+import { eq, desc } from 'drizzle-orm';
 import { getDatabase } from '../../database/connection';
 import { roleAuditLog, roleHistoryTable, userTable } from '../../database/schema';
 import { winstonLog } from '../../utils/winston-logger';

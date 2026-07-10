@@ -54,9 +54,12 @@ async function deleteProject(c: Context) {
     return c.json({ error: "Workspace ID is required" }, 400);
   }
 
+  // Hoisted so the catch block's audit logging can see it
+  let user: typeof userTable.$inferSelect | undefined;
+
   try {
     // Get user context for audit logging
-    const [user] = await db
+    [user] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, userEmail))
