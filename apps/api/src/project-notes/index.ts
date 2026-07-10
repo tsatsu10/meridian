@@ -58,6 +58,10 @@ app.post(
         })
         .returning();
 
+      if (!note) {
+        throw new Error("note: write returned no row");
+      }
+
       // Create initial version
       await db.insert(noteVersionsTable).values({
         noteId: note.id,
@@ -216,6 +220,10 @@ app.patch(
         .where(eq(projectNotesTable.id, noteId))
         .returning();
 
+      if (!note) {
+        throw new Error("note: write returned no row");
+      }
+
       // Create new version if content changed
       if (updates.content !== undefined && updates.content !== currentNote.content) {
         // Get latest version number
@@ -309,6 +317,10 @@ app.patch("/notes/:noteId/pin", async (c) => {
       })
       .where(eq(projectNotesTable.id, noteId))
       .returning();
+
+    if (!note) {
+      throw new Error("note: write returned no row");
+    }
 
     return c.json({
       data: note,

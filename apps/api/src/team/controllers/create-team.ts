@@ -47,6 +47,10 @@ export async function createTeam(c: Context) {
       })
       .returning();
 
+    if (!newTeam) {
+      throw new Error("newTeam: write returned no row");
+    }
+
     // Add members if provided
     if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
       await db.insert(teamMemberTable).values(

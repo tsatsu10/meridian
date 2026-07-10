@@ -301,6 +301,10 @@ export async function createRole(
       updatedAt: now,
     })
     .returning();
+
+  if (!newRole) {
+    throw new Error("newRole: write returned no row");
+  }
   
   return {
     id: newRole.id,

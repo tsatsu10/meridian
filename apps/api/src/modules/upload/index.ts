@@ -152,6 +152,10 @@ upload.post('/', async (c) => {
           },
         }).returning();
 
+        if (!attachment) {
+          throw new Error("attachment: write returned no row");
+        }
+
         uploadedFiles.push({
           id: attachment.id,
           fileName: attachment.fileName,

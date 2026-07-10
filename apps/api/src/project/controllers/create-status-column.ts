@@ -135,6 +135,10 @@ async function createStatusColumn({
     })
     .returning();
 
+  if (!createdColumn) {
+    throw new Error("createdColumn: write returned no row");
+  }
+
   logger.debug('🔧 Created column:', { name: createdColumn.name, position: createdColumn.position });
 
   return createdColumn;

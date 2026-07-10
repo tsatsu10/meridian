@@ -109,7 +109,6 @@ async function createProject(data: CreateProjectData, ownerId: string) {
         enableBudgetTracking,
         budget,
         estimatedHours,
-        emailNotifications,
         slackNotifications,
       },
     })
@@ -131,6 +130,10 @@ async function createProject(data: CreateProjectData, ownerId: string) {
       },
     })
     .returning();
+
+  if (!newTeam) {
+    throw new Error("newTeam: write returned no row");
+  }
 
   // Add the project owner as the first team member with 'lead' role
   await db

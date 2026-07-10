@@ -99,6 +99,10 @@ async function addMember(c: Context) {
       })
       .returning();
 
+    if (!newMember) {
+      throw new Error("newMember: write returned no row");
+    }
+
     // Return member with user details
     return c.json({
       id: newMember.id,

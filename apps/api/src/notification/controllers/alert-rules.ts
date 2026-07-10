@@ -32,6 +32,10 @@ export async function createAlertRule(userEmail: string, data: {
         updatedAt: new Date(),
       })
       .returning();
+
+    if (!rule) {
+      throw new Error("rule: write returned no row");
+    }
     
     logger.info(`Alert rule created: ${rule.id} for ${userEmail}`);
     return rule;
