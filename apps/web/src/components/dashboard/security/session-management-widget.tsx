@@ -7,13 +7,11 @@ import {
   Monitor,
   Smartphone,
   Tablet,
-  MapPin,
   Clock,
   LogOut,
   AlertTriangle,
   Wifi,
   WifiOff,
-  Globe,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/cn";
@@ -147,19 +145,6 @@ export function SessionManagementWidget() {
     }
   };
 
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - new Date(date).getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
-  };
-
   if (sessionsLoading || statsLoading) {
     return (
       <Card className="glass-card">
@@ -197,30 +182,15 @@ export function SessionManagementWidget() {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Session Statistics */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* Session Statistics — the sessions schema only tracks unexpired
+            sessions, so location/duration breakdowns aren't available */}
+        <div className="grid grid-cols-1 gap-4">
           <div className="p-3 border border-border rounded-lg bg-background/50">
             <div className="flex items-center gap-2 mb-1">
               <Monitor className="h-4 w-4 text-blue-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Total Sessions</span>
+              <span className="text-xs text-muted-foreground">Total Active Sessions</span>
             </div>
             <div className="text-xl font-bold">{stats?.totalActiveSessions ?? 0}</div>
-          </div>
-
-          <div className="p-3 border border-border rounded-lg bg-background/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Globe className="h-4 w-4 text-green-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Locations</span>
-            </div>
-            <div className="text-xl font-bold">{stats?.uniqueLocations ?? 0}</div>
-          </div>
-
-          <div className="p-3 border border-border rounded-lg bg-background/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-purple-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Avg Duration</span>
-            </div>
-            <div className="text-sm font-bold">{stats?.averageSessionDuration ?? "N/A"}</div>
           </div>
         </div>
 
@@ -296,25 +266,13 @@ export function SessionManagementWidget() {
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground space-y-1">
-                            <div className="flex items-center gap-1">
-                              <Monitor className="h-3 w-3" />
-                              {session.browser && session.os
-                                ? `${session.browser} on ${session.os}`
-                                : "Unknown device"}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {session.location?.city && session.location?.country
-                                ? `${session.location.city}, ${session.location.country}`
-                                : "Unknown Location"}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Globe className="h-3 w-3" />
-                              {session.ipAddress ?? "IP not recorded"}
-                            </div>
+                            {/* Device/location/activity aren't captured by the
+                                sessions schema — expiry is the real signal */}
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Last active: {session.lastActivity ? formatTimeAgo(session.lastActivity) : "Unknown"}
+                              {session.expiresAt
+                                ? `Expires ${new Date(session.expiresAt).toLocaleString()}`
+                                : "Expiry unknown"}
                             </div>
                           </div>
                         </div>

@@ -19,13 +19,11 @@ sessionRoutes.get("/active", authMiddleware, async (c) => {
 
     // Fetch active sessions (in real app, filter by last activity timestamp)
     const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     // sessions only stores id/userId/expiresAt — device, location and activity
     // data is not captured. A previous revision FABRICATED those fields
     // (deterministic fake IPs/cities and index-based "suspicious" flags),
     // which is unacceptable on a security dashboard; unknowns are now unknowns.
-    void oneWeekAgo;
     const activeSessions = await db
       .select({
         id: sessionsTable.id,
@@ -69,10 +67,8 @@ sessionRoutes.get("/stats", authMiddleware, async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     // Count active (unexpired) sessions — that's the only signal the schema has
-    void oneWeekAgo;
     const activeSessions = await db
       .select({ count: count() })
       .from(sessionsTable)

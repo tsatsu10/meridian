@@ -247,8 +247,6 @@ export async function createRole(
     basedOn?: string;
   }
 ): Promise<CustomRole> {
-  void workspaceId;
-  void data;
   throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
@@ -263,16 +261,11 @@ export async function updateRole(
     color: string;
   }>
 ): Promise<CustomRole> {
-  void workspaceId;
-  void roleId;
-  void data;
   throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
 // Delete custom role
 export async function deleteRole(workspaceId: string, roleId: string): Promise<void> {
-  void workspaceId;
-  void roleId;
   throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
@@ -282,9 +275,6 @@ export async function cloneRole(
   sourceRoleId: string,
   newName: string
 ): Promise<CustomRole> {
-  void workspaceId;
-  void sourceRoleId;
-  void newName;
   throw new Error(CUSTOM_ROLES_UNSUPPORTED);
 }
 
