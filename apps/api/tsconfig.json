@@ -28,6 +28,7 @@
     "src/database/relations-introspected.ts",
     "src/database/seed*.ts",
     "src/database/seeds",
+    "src/scripts/**",
     "src/docs/**/*",
     "src-backup-*",
     "src/**/__tests__/**",
