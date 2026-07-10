@@ -66,7 +66,8 @@ export type AuditEventType =
   | 'rate_limit'
   | 'configuration_change'
   | 'data_access'
-  | 'admin_operation';
+  | 'admin_operation'
+  | 'role_change';
 
 export interface AuditQuery {
   eventTypes?: AuditEventType[];

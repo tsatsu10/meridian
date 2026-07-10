@@ -21,7 +21,7 @@ rbacStats.get("/stats", authMiddleware, async (c) => {
     const activeUsers = await db
       .select({ count: count() })
       .from(userTable)
-      .where(gte(userTable.lastActiveAt, last7Days));
+      .where(gte(userTable.lastSeen, last7Days));
 
     // Count unique roles
     const uniqueRoles = await db
@@ -36,7 +36,7 @@ rbacStats.get("/stats", authMiddleware, async (c) => {
       .where(
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%'`,
-          gte(settingsAuditLogTable.timestamp, last7Days)
+          gte(settingsAuditLogTable.createdAt, last7Days)
         )
       );
 
@@ -109,32 +109,33 @@ rbacStats.get("/recent-changes", authMiddleware, async (c) => {
       .where(
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%' OR ${settingsAuditLogTable.action} LIKE '%permission%'`,
-          gte(settingsAuditLogTable.timestamp, last30Days)
+          gte(settingsAuditLogTable.createdAt, last30Days)
         )
       )
-      .orderBy(desc(settingsAuditLogTable.timestamp))
+      .orderBy(desc(settingsAuditLogTable.createdAt))
       .limit(20);
 
     // Format changes
     const formattedChanges = changes.map((change) => {
-      let details: any = {};
-      try {
-        details = typeof change.details === 'string' 
-          ? JSON.parse(change.details) 
-          : change.details || {};
-      } catch (e) {
-        details = {};
-      }
+      // settings_audit_log stores before/after as JSON strings in oldValue/newValue
+      const parse = (value: string | null): any => {
+        if (!value) return undefined;
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      };
 
       return {
         id: change.id,
         userEmail: change.userEmail || "Unknown",
         userName: change.userEmail?.split("@")[0] || "Unknown User",
         action: change.action,
-        oldRole: details.oldRole,
-        newRole: details.newRole,
+        oldRole: parse(change.oldValue),
+        newRole: parse(change.newValue),
         performedBy: change.userEmail || "System",
-        timestamp: change.timestamp,
+        timestamp: change.createdAt,
       };
     });
 
