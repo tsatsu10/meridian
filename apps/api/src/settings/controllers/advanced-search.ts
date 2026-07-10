@@ -78,23 +78,25 @@ export async function performSearch(
     }
     
     if (filters.createdBy && filters.createdBy.length > 0) {
-      projectWhere.push(inArray(projectTable.ownerEmail, filters.createdBy));
+      // projects store ownerId, not an email — filter through the users join
+      projectWhere.push(inArray(userTable.email, filters.createdBy));
     }
-    
+
     const projects = await db
-      .select()
+      .select({ project: projectTable, ownerEmail: userTable.email })
       .from(projectTable)
+      .leftJoin(userTable, eq(projectTable.ownerId, userTable.id))
       .where(and(...projectWhere))
       .limit(limit);
-    
-    results.push(...projects.map(p => ({
+
+    results.push(...projects.map(({ project: p, ownerEmail }) => ({
       id: p.id,
       type: 'project' as const,
       title: p.name,
       description: p.description || undefined,
       metadata: {
         status: p.status,
-        owner: p.ownerEmail,
+        owner: ownerEmail,
         memberCount: 0, // Would need to join
       },
       createdAt: p.createdAt,
@@ -105,8 +107,9 @@ export async function performSearch(
   
   // Search Tasks
   if (searchTypes.includes('task')) {
-    const taskWhere: any[] = [eq(taskTable.workspaceId, workspaceId)];
-    
+    // tasks have no workspaceId — workspace scoping goes through the project join
+    const taskWhere: any[] = [eq(projectTable.workspaceId, workspaceId)];
+
     if (query) {
       taskWhere.push(
         or(
@@ -115,26 +118,29 @@ export async function performSearch(
         )
       );
     }
-    
+
     if (filters.status && filters.status.length > 0) {
-      taskWhere.push(inArray(taskTable.status, filters.status));
+      // request-boundary narrowing onto the enum column
+      taskWhere.push(inArray(taskTable.status, filters.status as ("todo" | "in_progress" | "done")[]));
     }
-    
+
     if (filters.priority && filters.priority.length > 0) {
-      taskWhere.push(inArray(taskTable.priority, filters.priority));
+      // request-boundary narrowing onto the enum column
+      taskWhere.push(inArray(taskTable.priority, filters.priority as ("low" | "medium" | "high" | "urgent")[]));
     }
-    
+
     if (filters.assignedTo && filters.assignedTo.length > 0) {
-      taskWhere.push(inArray(taskTable.assignee, filters.assignedTo));
+      taskWhere.push(inArray(taskTable.assigneeId, filters.assignedTo));
     }
-    
+
     const tasks = await db
-      .select()
+      .select({ task: taskTable })
       .from(taskTable)
+      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
       .where(and(...taskWhere))
       .limit(limit);
-    
-    results.push(...tasks.map(t => ({
+
+    results.push(...tasks.map(({ task: t }) => ({
       id: t.id,
       type: 'task' as const,
       title: t.title,
@@ -142,7 +148,7 @@ export async function performSearch(
       metadata: {
         status: t.status,
         priority: t.priority,
-        assignee: t.assignee,
+        assignee: t.assigneeId,
         projectId: t.projectId,
       },
       createdAt: t.createdAt,
@@ -177,7 +183,7 @@ export async function performSearch(
       description: u.email,
       metadata: {
         role: u.role,
-        avatarUrl: u.avatarUrl,
+        avatarUrl: u.avatar,
       },
       createdAt: u.createdAt,
       relevance: calculateRelevance(query, u.name, u.email),
@@ -250,12 +256,13 @@ export async function getSearchSuggestions(
   
   projects.forEach(p => suggestions.add(p.name));
   
-  // Task titles
+  // Task titles (workspace scoping via the project join — tasks have no workspaceId)
   const tasks = await db
     .select({ title: taskTable.title })
     .from(taskTable)
+    .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .where(and(
-      eq(taskTable.workspaceId, workspaceId),
+      eq(projectTable.workspaceId, workspaceId),
       like(taskTable.title, `%${query}%`)
     ))
     .limit(5);
