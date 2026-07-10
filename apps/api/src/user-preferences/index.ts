@@ -83,7 +83,7 @@ app.post('/', async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
     
-    logger.debug('[User Preferences] Found user:', user.id, user.email);
+    logger.debug('[User Preferences] Found user', { id: user.id, email: user.email });
     
     // Check if preferences exist
     const existing = await db.query.userPreferencesTable.findFirst({

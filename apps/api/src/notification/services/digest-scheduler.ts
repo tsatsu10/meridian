@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import { getDatabase } from '../../database/connection';
 import { digestSettings } from '../../database/schema';
 import { eq } from 'drizzle-orm';

@@ -131,7 +131,7 @@ export class RoleAuditService {
         error: error instanceof Error ? error.message : String(error),
         ctx,
         details,
-      }, { category: 'AUTH' });
+      }, 'AUTH');
       
       // Don't throw - audit logging failure shouldn't block the operation
     }

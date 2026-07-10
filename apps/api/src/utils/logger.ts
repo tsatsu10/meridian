@@ -11,7 +11,7 @@ import { getLogAggregationService, LogMetrics } from '../services/log-aggregatio
 import { getLoggingConfig } from '../config/logging';
 
 export type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
-export type LogCategory = 'SYSTEM' | 'AUTH' | 'DATABASE' | 'API' | 'WEBSOCKET' | 'ERROR' | 'VALIDATION' | 'PERFORMANCE';
+export type LogCategory = 'SYSTEM' | 'AUTH' | 'DATABASE' | 'API' | 'WEBSOCKET' | 'ERROR' | 'VALIDATION' | 'PERFORMANCE' | 'RBAC';
 
 interface LoggerConfig {
   level: LogLevel;

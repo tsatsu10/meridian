@@ -157,7 +157,7 @@ profile
     try {
       logger.debug("🔍 GET /profile/experience - Starting");
       const userId = c.get("userId");
-      logger.debug("🔍 UserId from context:", userId, typeof userId);
+      logger.debug("🔍 UserId from context", { userId, type: typeof userId });
       
       if (!userId) {
         logger.debug("❌ No userId in context");
@@ -166,7 +166,7 @@ profile
       
       logger.debug("🔍 Calling getExperience with userId:", userId);
       const experiences = await getExperience(userId);
-      logger.debug("✅ Experience retrieved successfully:", experiences.length, "items");
+      logger.debug("✅ Experience retrieved successfully", { items: experiences.length });
       return c.json({ success: true, data: experiences });
     } catch (error: any) {
       logger.error("❌ Error getting experience:", error);
@@ -204,7 +204,7 @@ profile
     try {
       logger.debug("🔍 GET /profile/education - Starting");
       const userId = c.get("userId");
-      logger.debug("🔍 UserId from context:", userId, typeof userId);
+      logger.debug("🔍 UserId from context", { userId, type: typeof userId });
       
       if (!userId) {
         logger.debug("❌ No userId in context");
@@ -213,7 +213,7 @@ profile
       
       logger.debug("🔍 Calling getEducation with userId:", userId);
       const education = await getEducation(userId);
-      logger.debug("✅ Education retrieved successfully:", education.length, "items");
+      logger.debug("✅ Education retrieved successfully", { items: education.length });
       return c.json({ success: true, data: education });
     } catch (error: any) {
       logger.error("❌ Error getting education:", error);
@@ -251,7 +251,7 @@ profile
     try {
       logger.debug("🔍 GET /profile/skills - Starting");
       const userId = c.get("userId");
-      logger.debug("🔍 UserId from context:", userId, typeof userId);
+      logger.debug("🔍 UserId from context", { userId, type: typeof userId });
       
       if (!userId) {
         logger.debug("❌ No userId in context");
@@ -260,7 +260,7 @@ profile
       
       logger.debug("🔍 Calling getSkills with userId:", userId);
       const skills = await getSkills(userId);
-      logger.debug("✅ Skills retrieved successfully:", skills.length, "items");
+      logger.debug("✅ Skills retrieved successfully", { items: skills.length });
       return c.json({ success: true, data: skills });
     } catch (error: any) {
       logger.error("❌ Error getting skills:", error);
@@ -298,7 +298,7 @@ profile
     try {
       logger.debug("🔍 GET /profile/connections - Starting");
       const userId = c.get("userId");
-      logger.debug("🔍 UserId from context:", userId, typeof userId);
+      logger.debug("🔍 UserId from context", { userId, type: typeof userId });
       
       if (!userId) {
         logger.debug("❌ No userId in context");
@@ -307,7 +307,7 @@ profile
       
       logger.debug("🔍 Calling getConnections with userId:", userId);
       const connections = await getConnections(userId);
-      logger.debug("✅ Connections retrieved successfully:", connections.length, "items");
+      logger.debug("✅ Connections retrieved successfully", { items: connections.length });
       return c.json({ success: true, data: connections });
     } catch (error: any) {
       logger.error("❌ Error getting connections:", error);
