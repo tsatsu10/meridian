@@ -214,7 +214,10 @@ export async function sanitizeRequest(c: Context, next: Next) {
 
       // Check for suspicious patterns
       const suspiciousPatterns = [
-        /<script[^>]*>.*?<\/script>/gi, // Script tags
+        // Any opening <script is suspicious in a JSON body — requiring a
+        // well-formed closing tag (the old pattern) let `</script >` and
+        // unterminated variants through (CodeQL js/bad-tag-filter).
+        /<script\b/gi,
         /javascript:/gi, // JavaScript protocol
         /on\w+\s*=/gi, // Event handlers (onclick, onerror, etc.)
         /\beval\s*\(/gi, // Eval function
@@ -324,7 +327,7 @@ export function ipFilter(options: {
       c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
 
     // Check blacklist first
-    if (options.blacklist && options.blacklist.includes(ip)) {
+    if (options.blacklist?.includes(ip)) {
       logger.warn("Blocked request from blacklisted IP", {
         ip,
         path: c.req.path,

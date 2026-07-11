@@ -120,10 +120,9 @@ export async function sendDigestEmail(digest: DigestData): Promise<boolean> {
 
       logger.info(`✅ Digest email sent to ${user.email}`);
       return true;
-    } else {
-      logger.warn(`⚠️ Failed to send digest email to ${user.email}`);
-      return false;
     }
+    logger.warn(`⚠️ Failed to send digest email to ${user.email}`);
+    return false;
   } catch (error) {
     logger.error("Failed to send digest email:", error);
     return false;

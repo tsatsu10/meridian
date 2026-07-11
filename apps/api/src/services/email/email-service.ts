@@ -83,7 +83,7 @@ export class EmailService {
         logger.debug("📧 [DEV] Email would be sent:", {
           to: options.to,
           subject: options.subject,
-          html: options.html.substring(0, 100) + "...",
+          html: `${options.html.substring(0, 100)}...`,
         });
       }
       return false;
@@ -123,7 +123,7 @@ export class EmailService {
 
         // Wait before retry (exponential backoff)
         await new Promise((resolve) =>
-          setTimeout(resolve, Math.pow(2, attempt) * 1000),
+          setTimeout(resolve, 2 ** attempt * 1000),
         );
       }
     }
@@ -135,10 +135,15 @@ export class EmailService {
    * Strip HTML tags for plain text version
    */
   private stripHtml(html: string): string {
-    return html
-      .replace(/<[^>]*>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
+    // Strip to a fixpoint — a single pass leaves reassembled tags behind
+    // (`<scr<x>ipt>` → `<scr ipt>`); optional `>` drops unterminated tags.
+    let text = html;
+    let previous: string;
+    do {
+      previous = text;
+      text = text.replace(/<[^>]*>?/g, "");
+    } while (text !== previous);
+    return text.replace(/\s+/g, " ").trim();
   }
 
   /**

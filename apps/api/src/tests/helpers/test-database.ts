@@ -104,6 +104,7 @@ export function createMockDb() {
       chain.innerJoin = vi.fn().mockReturnValue(chain); // Add innerJoin support
       chain.leftJoin = vi.fn().mockReturnValue(chain); // Add leftJoin support
       // Make chainable and await-able - return results for this specific select() call
+      // biome-ignore lint/suspicious/noThenProperty: the mock must be thenable so `await db.select()...` chains resolve like drizzle's query builder
       chain.then = (resolve: any) => {
         const results = selectResults[currentIndex] || [];
         return Promise.resolve(results).then(resolve);
@@ -165,18 +166,18 @@ export function resetMockDb(mockDb: ReturnType<typeof createMockDb>) {
   // Reset select results
   mockDb.__setSelectResults();
 
-  Object.values(mockDb).forEach((method) => {
+  for (const method of Object.values(mockDb)) {
     if (typeof method === "function" && "mockClear" in method) {
       method.mockClear();
     }
-  });
+  }
 
   // Reset query methods
-  Object.values(mockDb.query).forEach((table) => {
-    Object.values(table).forEach((method) => {
+  for (const table of Object.values(mockDb.query)) {
+    for (const method of Object.values(table)) {
       if (typeof method === "function" && "mockClear" in method) {
         method.mockClear();
       }
-    });
-  });
+    }
+  }
 }

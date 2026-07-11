@@ -194,12 +194,17 @@ function TeamSettings({
 
             <div className="form-actions">
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={isSaving || !teamName.trim()}
               >
                 {isSaving ? "Saving..." : "Save"}
               </button>
-              <button onClick={() => setIsEditing(false)} disabled={isSaving}>
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                disabled={isSaving}
+              >
                 Cancel
               </button>
             </div>
@@ -215,7 +220,9 @@ function TeamSettings({
               </div>
             )}
             {canManageTeam && (
-              <button onClick={() => setIsEditing(true)}>Edit</button>
+              <button type="button" onClick={() => setIsEditing(true)}>
+                Edit
+              </button>
             )}
           </div>
         )}
@@ -248,6 +255,7 @@ function TeamSettings({
                 <option value="admin">Admin</option>
               </select>
               <button
+                type="button"
                 onClick={handleAddMember}
                 disabled={isSaving || !newMemberEmail.trim()}
                 aria-label="Add member"
@@ -286,6 +294,7 @@ function TeamSettings({
 
                 {canManageTeam && (
                   <button
+                    type="button"
                     onClick={() => handleRemoveMember(member.id)}
                     disabled={isSaving}
                     aria-label={`Remove ${member.name}`}
@@ -316,6 +325,7 @@ function TeamSettings({
                 <p>Archive this team. It can be restored later.</p>
               </div>
               <button
+                type="button"
                 onClick={handleArchive}
                 disabled={isSaving}
                 className="archive-button"
@@ -334,6 +344,7 @@ function TeamSettings({
                 </p>
               </div>
               <button
+                type="button"
                 onClick={handleDelete}
                 disabled={isSaving}
                 className="delete-button"

@@ -323,22 +323,22 @@ export function useDashboardData(
         projectId?: string;
       };
       const allTasksWithContext: TaskWithProject[] = [];
-      filteredProjects.forEach((project: ApiProject) => {
-        flattenTasksForProject(project).forEach((task) => {
+      for (const project of filteredProjects) {
+        for (const task of flattenTasksForProject(project)) {
           allTasksWithContext.push({
             ...task,
             projectName: project.name,
             projectId: project.id,
           });
-        });
-      });
+        }
+      }
 
       // Generate upcoming deadlines from tasks
       const upcomingDeadlines: UpcomingDeadline[] = [];
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7); // Next 7 days
 
-      allTasksWithContext
+      for (const task of allTasksWithContext
         .filter((task) => {
           if (
             !task.dueDate ||
@@ -354,20 +354,18 @@ export function useDashboardData(
             new Date(a.dueDate as string).getTime() -
             new Date(b.dueDate as string).getTime(),
         )
-        .slice(0, 5)
-        .forEach((task) => {
-          if (!task.id || !task.dueDate || !task.title || !task.projectName)
-            return;
-          upcomingDeadlines.push({
-            id: task.id,
-            title: task.title,
-            project: task.projectName,
-            dueDate: new Date(task.dueDate).toLocaleDateString(),
-            priority:
-              (task.priority as UpcomingDeadline["priority"]) || "medium",
-            assignee: "Team Member",
-          });
+        .slice(0, 5)) {
+        if (!task.id || !task.dueDate || !task.title || !task.projectName)
+          continue;
+        upcomingDeadlines.push({
+          id: task.id,
+          title: task.title,
+          project: task.projectName,
+          dueDate: new Date(task.dueDate).toLocaleDateString(),
+          priority: (task.priority as UpcomingDeadline["priority"]) || "medium",
+          assignee: "Team Member",
         });
+      }
 
       const dashboardData: DashboardData = {
         stats: {
@@ -557,7 +555,6 @@ function transformProjects(
       transformedProjects = [...favouriteProjects, ...byProgress].slice(0, 5);
       break;
     }
-    case "custom":
     default: {
       transformedProjects = [...favouriteProjects, ...otherProjects];
     }
@@ -594,7 +591,6 @@ function transformActivities(
       return filtered.slice(0, Math.min(5, filtered.length));
     case "analytics":
       return filtered.slice(0, Math.min(8, filtered.length));
-    case "custom":
     default:
       return filtered;
   }
@@ -619,7 +615,6 @@ function transformDeadlines(
       return filtered.slice(0, Math.min(5, filtered.length));
     case "personal":
       return filtered.slice(0, Math.min(3, filtered.length));
-    case "custom":
     default:
       return filtered;
   }
@@ -648,7 +643,6 @@ function transformTeamMembers(
       return [...favouriteMembers, ...otherMembers].slice(0, 3);
     case "analytics":
       return [...favouriteMembers, ...otherMembers].slice(0, 6);
-    case "custom":
     default:
       return [...favouriteMembers, ...otherMembers];
   }

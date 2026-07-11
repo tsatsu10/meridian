@@ -111,6 +111,7 @@ function AcceptInvitationPage() {
             </div>
           </div>
           <button
+            type="button"
             onClick={() => navigate({ to: "/dashboard" })}
             className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
           >
@@ -159,6 +160,7 @@ function AcceptInvitationPage() {
           <div className="flex gap-3">
             {!isInvalid && (
               <button
+                type="button"
                 onClick={handleRetry}
                 className="flex-1 border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
               >
@@ -166,6 +168,7 @@ function AcceptInvitationPage() {
               </button>
             )}
             <button
+              type="button"
               onClick={handleGoHome}
               className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
             >

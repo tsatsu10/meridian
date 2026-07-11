@@ -66,11 +66,7 @@ export default function NotificationSection({
             <p className="text-sm">No recent activity</p>
           </div>
         ) : (
-          <ul
-            className="space-y-3"
-            role="list"
-            aria-label="Recent notifications"
-          >
+          <ul className="space-y-3" aria-label="Recent notifications">
             {recentNotifications.map((notification, index) => (
               <li
                 key={`${notification.id}-${index}`}
@@ -83,7 +79,6 @@ export default function NotificationSection({
                 role="article"
                 aria-labelledby={`notification-title-${index}`}
                 aria-describedby={`notification-content-${index}`}
-                tabIndex={0}
               >
                 <div className="mt-0.5" aria-hidden="true">
                   {notification.title.includes("🚨") ? (

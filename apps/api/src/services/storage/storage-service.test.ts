@@ -95,7 +95,7 @@ describe("StorageService", () => {
     });
 
     it("should handle long filenames", () => {
-      const longName = "a".repeat(100) + ".jpg";
+      const longName = `${"a".repeat(100)}.jpg`;
       const result = (storageService as any).generateSafeFileName(
         longName,
         "file-123",

@@ -76,7 +76,7 @@ function GlobalSearch({ onSearch, onResultClick }: GlobalSearchProps) {
         <ul>
           {results.map((result) => (
             <li key={result.id} data-testid={`result-${result.id}`}>
-              <button onClick={() => onResultClick?.(result)}>
+              <button type="button" onClick={() => onResultClick?.(result)}>
                 <span className="type">{result.type}</span>
                 <span className="title">{result.title}</span>
               </button>

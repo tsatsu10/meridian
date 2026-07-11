@@ -86,6 +86,7 @@ function Sidebar({
             }
           }}
           role="button"
+          tabIndex={0}
           aria-current={isActive ? "page" : undefined}
           aria-expanded={hasChildren ? isExpanded : undefined}
         >
@@ -97,8 +98,10 @@ function Sidebar({
         </div>
 
         {hasChildren && isExpanded && !isCollapsed && (
-          <ul className="nav-children" role="list">
-            {item.children!.map((child) => renderNavItem(child, depth + 1))}
+          <ul className="nav-children">
+            {(item.children ?? []).map((child) =>
+              renderNavItem(child, depth + 1),
+            )}
           </ul>
         )}
       </li>
@@ -123,6 +126,7 @@ function Sidebar({
         )}
 
         <button
+          type="button"
           onClick={onToggleCollapse}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="toggle-button"
@@ -133,7 +137,7 @@ function Sidebar({
 
       {/* Navigation */}
       <nav className="sidebar-nav">
-        <ul className="nav-list" role="list">
+        <ul className="nav-list">
           {navItems.map((item) => renderNavItem(item))}
         </ul>
       </nav>

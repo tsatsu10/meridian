@@ -275,7 +275,9 @@ export async function getSearchSuggestions(
     )
     .limit(5);
 
-  projects.forEach((p) => suggestions.add(p.name));
+  for (const p of projects) {
+    suggestions.add(p.name);
+  }
 
   // Task titles (workspace scoping via the project join — tasks have no workspaceId)
   const tasks = await db
@@ -290,7 +292,9 @@ export async function getSearchSuggestions(
     )
     .limit(5);
 
-  tasks.forEach((t) => suggestions.add(t.title));
+  for (const t of tasks) {
+    suggestions.add(t.title);
+  }
 
   // User names
   const users = await db
@@ -299,7 +303,9 @@ export async function getSearchSuggestions(
     .where(like(userTable.name, `%${query}%`))
     .limit(5);
 
-  users.forEach((u) => suggestions.add(u.name));
+  for (const u of users) {
+    suggestions.add(u.name);
+  }
 
   return Array.from(suggestions).slice(0, limit);
 }

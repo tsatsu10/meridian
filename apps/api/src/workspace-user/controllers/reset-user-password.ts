@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { users } from "../../database/schema";
-import * as crypto from "crypto";
+import * as crypto from "node:crypto";
 
 // @epic-3.4-teams: Reset user password
 async function resetUserPassword(userEmail: string) {

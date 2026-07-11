@@ -69,7 +69,7 @@ function DependencyCard({
           </div>
           <div className="flex items-center gap-2 mt-1">
             <span
-              className={`text-xs px-2 py-1 rounded-full ${statusColors[relatedTask.status as keyof typeof statusColors] || statusColors["todo"]}`}
+              className={`text-xs px-2 py-1 rounded-full ${statusColors[relatedTask.status as keyof typeof statusColors] || statusColors.todo}`}
             >
               {relatedTask.status}
             </span>
@@ -223,6 +223,7 @@ function AddDependency({
         ) : (
           availableTasks.map((task: any) => (
             <button
+              type="button"
               key={task.id}
               onClick={() => handleAddDependency(task.id)}
               disabled={isPending}

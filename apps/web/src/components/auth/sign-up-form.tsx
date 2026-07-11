@@ -212,12 +212,12 @@ export function SignUpForm() {
               className="text-sm text-gray-600 leading-relaxed"
             >
               I accept the{" "}
-              <a
-                href="#"
+              <button
+                type="button"
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
                 Terms
-              </a>
+              </button>
             </label>
           </div>
 

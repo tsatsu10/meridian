@@ -83,142 +83,151 @@ describe("Task Lifecycle Integration", () => {
   });
 
   describe("Complete task workflow", () => {
-    it("should create, retrieve, update, and delete a task", async () => {
-      // Import controllers
-      const createTask = (await import("../../task/controllers/create-task"))
-        .default;
-      const getTasks = (await import("../../task/controllers/get-tasks"))
-        .default;
-      const updateTask = (await import("../../task/controllers/update-task"))
-        .default;
-      const deleteTask = (await import("../../task/controllers/delete-task"))
-        .default;
+    // Four dynamic controller imports make this test slow to start under
+    // full-suite CPU contention (~2.6s in isolation) — needs extra headroom.
+    it(
+      "should create, retrieve, update, and delete a task",
+      { timeout: 30000 },
+      async () => {
+        // Import controllers
+        const createTask = (await import("../../task/controllers/create-task"))
+          .default;
+        const getTasks = (await import("../../task/controllers/get-tasks"))
+          .default;
+        const updateTask = (await import("../../task/controllers/update-task"))
+          .default;
+        const deleteTask = (await import("../../task/controllers/delete-task"))
+          .default;
 
-      const projectId = "project-1";
+        const projectId = "project-1";
 
-      // Step 1: Create task
-      mockDb.insert.mockReturnThis();
-      mockDb.values.mockReturnThis();
-      const taskData = {
-        id: "new-task-1",
-        projectId,
-        title: "New Feature",
-        status: "to-do", // Must match column id from DEFAULT_COLUMNS
-        priority: "high",
-        number: 1, // getTasks expects 'number' not 'taskNumber'
-        description: "",
-        dueDate: new Date(),
-        position: 0,
-        userEmail: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      mockDb.returning.mockResolvedValue([taskData]);
+        // Step 1: Create task
+        mockDb.insert.mockReturnThis();
+        mockDb.values.mockReturnThis();
+        const taskData = {
+          id: "new-task-1",
+          projectId,
+          title: "New Feature",
+          status: "todo", // Must match column id from DEFAULT_COLUMNS (task_status enum values)
+          priority: "high",
+          number: 1, // getTasks expects 'number' not 'taskNumber'
+          description: "",
+          dueDate: new Date(),
+          position: 0,
+          userEmail: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        mockDb.returning.mockResolvedValue([taskData]);
 
-      const createdTask = await createTask({
-        projectId,
-        title: "New Feature",
-        status: "to-do", // Must match column id from DEFAULT_COLUMNS
-        priority: "high",
-      });
+        const createdTask = await createTask({
+          projectId,
+          title: "New Feature",
+          status: "todo", // Must match column id from DEFAULT_COLUMNS (task_status enum values)
+          priority: "high",
+        });
 
-      expect(createdTask).toBeDefined();
-      expect(createdTask.id).toBe("new-task-1");
+        expect(createdTask).toBeDefined();
+        expect(createdTask.id).toBe("new-task-1");
 
-      // Step 2: Retrieve tasks
-      resetMockDb(mockDb); // Reset first
+        // Step 2: Retrieve tasks
+        resetMockDb(mockDb); // Reset first
 
-      // getTasks makes three queries:
-      // 1. db.query.projectTable.findFirst() - get project
-      // 2. db.select().from(taskTable).where(...) - get tasks
-      // 3. db.select().from(userTable).where(...) - get users
-      mockDb.query.projectTable.findFirst.mockResolvedValue(
-        mockProjects.activeProject,
-      );
+        // getTasks makes three queries:
+        // 1. db.query.projectTable.findFirst() - get project
+        // 2. db.select().from(taskTable).where(...) - get tasks
+        // 3. db.select().from(userTable).where(...) - get users
+        mockDb.query.projectTable.findFirst.mockResolvedValue(
+          mockProjects.activeProject,
+        );
 
-      // Setup mock for select() calls in getTasks
-      // __setSelectResults takes variadic arguments, not an array
-      mockDb.__setSelectResults(
-        [taskData], // First select() - tasks from taskTable
-        [], // Second select() - users (empty since no userEmail)
-      );
+        // Setup mock for select() calls in getTasks
+        // __setSelectResults takes variadic arguments, not an array
+        mockDb.__setSelectResults(
+          [taskData], // First select() - tasks from taskTable
+          [], // Second select() - users (empty since no userEmail)
+        );
 
-      // Debug: Check what taskData looks like
-      console.log("taskData being mocked:", JSON.stringify(taskData, null, 2));
+        // Debug: Check what taskData looks like
+        console.log(
+          "taskData being mocked:",
+          JSON.stringify(taskData, null, 2),
+        );
 
-      const tasks = await getTasks(projectId);
+        const tasks = await getTasks(projectId);
 
-      // Debug: Let's see what we actually got
-      console.log("Tasks result:", JSON.stringify(tasks, null, 2));
-      console.log(
-        "Columns:",
-        tasks.columns.map((c) => ({ id: c.id, taskCount: c.tasks.length })),
-      );
+        // Debug: Let's see what we actually got
+        console.log("Tasks result:", JSON.stringify(tasks, null, 2));
+        console.log(
+          "Columns:",
+          tasks.columns.map((c) => ({ id: c.id, taskCount: c.tasks.length })),
+        );
 
-      // getTasks returns {columns, archivedTasks, plannedTasks}
-      // Tasks are organized by status in columns
-      // Note: column id is 'to-do' not 'todo' (matches DEFAULT_COLUMNS in get-tasks.ts)
-      const todoColumn = tasks.columns.find((col) => col.id === "to-do");
-      expect(todoColumn).toBeDefined();
-      expect(todoColumn?.tasks).toHaveLength(1);
-      expect(todoColumn?.tasks[0].id).toBe("new-task-1");
+        // getTasks returns {columns, archivedTasks, plannedTasks}
+        // Tasks are organized by status in columns
+        // Column ids equal task_status enum values (todo|in_progress|done) since PR #35
+        const todoColumn = tasks.columns.find((col) => col.id === "todo");
+        expect(todoColumn).toBeDefined();
+        expect(todoColumn?.tasks).toHaveLength(1);
+        expect(todoColumn?.tasks[0].id).toBe("new-task-1");
 
-      // Step 3: Update task status
-      resetMockDb(mockDb);
-      // Mock query for existing task lookup
-      mockDb.query.taskTable.findFirst.mockResolvedValue({
-        ...createdTask,
-        dueDate: createdTask.dueDate || new Date(),
-        description: createdTask.description || "",
-        priority: createdTask.priority || "medium",
-        position: createdTask.position || 0,
-      });
-
-      mockDb.update.mockReturnThis();
-      mockDb.set.mockReturnThis();
-      mockDb.where.mockReturnThis();
-      mockDb.returning.mockResolvedValue([
-        {
+        // Step 3: Update task status
+        resetMockDb(mockDb);
+        // Mock query for existing task lookup
+        mockDb.query.taskTable.findFirst.mockResolvedValue({
           ...createdTask,
-          status: "in-progress",
           dueDate: createdTask.dueDate || new Date(),
           description: createdTask.description || "",
           priority: createdTask.priority || "medium",
           position: createdTask.position || 0,
-        },
-      ]);
+        });
 
-      const updatedTask = await updateTaskPartial("new-task-1", {
-        status: "in-progress",
-        projectId,
-        title: createdTask.title,
-        dueDate: createdTask.dueDate || new Date(),
-        description: createdTask.description || "",
-        priority: createdTask.priority || "medium",
-        position: createdTask.position || 0,
-      });
+        mockDb.update.mockReturnThis();
+        mockDb.set.mockReturnThis();
+        mockDb.where.mockReturnThis();
+        mockDb.returning.mockResolvedValue([
+          {
+            ...createdTask,
+            status: "in_progress",
+            dueDate: createdTask.dueDate || new Date(),
+            description: createdTask.description || "",
+            priority: createdTask.priority || "medium",
+            position: createdTask.position || 0,
+          },
+        ]);
 
-      expect(updatedTask.status).toBe("in-progress");
+        const updatedTask = await updateTaskPartial("new-task-1", {
+          status: "in_progress",
+          projectId,
+          title: createdTask.title,
+          dueDate: createdTask.dueDate || new Date(),
+          description: createdTask.description || "",
+          priority: createdTask.priority || "medium",
+          position: createdTask.position || 0,
+        });
 
-      // Step 4: Delete task
-      resetMockDb(mockDb);
-      // deleteTask uses db.delete().where().returning().execute()
-      // So we need to mock the chain properly
-      const deleteChain = {
-        returning: vi.fn().mockReturnThis(),
-        execute: vi.fn().mockResolvedValue([updatedTask]),
-      };
-      const deleteWithWhere = {
-        where: vi.fn().mockReturnValue(deleteChain),
-      };
-      mockDb.delete.mockReturnValue(deleteWithWhere);
+        expect(updatedTask.status).toBe("in_progress");
 
-      const deletedTask = await deleteTask("new-task-1");
+        // Step 4: Delete task
+        resetMockDb(mockDb);
+        // deleteTask uses db.delete().where().returning().execute()
+        // So we need to mock the chain properly
+        const deleteChain = {
+          returning: vi.fn().mockReturnThis(),
+          execute: vi.fn().mockResolvedValue([updatedTask]),
+        };
+        const deleteWithWhere = {
+          where: vi.fn().mockReturnValue(deleteChain),
+        };
+        mockDb.delete.mockReturnValue(deleteWithWhere);
 
-      // deleteTask now returns a single task object, not an array
-      expect(deletedTask).toBeDefined();
-      expect(deletedTask.id).toBe("new-task-1");
-    });
+        const deletedTask = await deleteTask("new-task-1");
+
+        // deleteTask now returns a single task object, not an array
+        expect(deletedTask).toBeDefined();
+        expect(deletedTask.id).toBe("new-task-1");
+      },
+    );
   });
 
   describe("Task assignment workflow", () => {
@@ -375,7 +384,7 @@ describe("Task Lifecycle Integration", () => {
         .default;
 
       const projectId = "project-1";
-      const statuses = ["todo", "in-progress", "in-review", "done"];
+      const statuses = ["todo", "in_progress", "done"];
 
       // Create task
       mockDb.insert.mockReturnThis();
@@ -573,7 +582,7 @@ describe("Task Lifecycle Integration", () => {
           id: "task-1",
           projectId,
           title: "Updated Event Task",
-          status: "in-progress",
+          status: "in_progress",
           number: 1,
           dueDate: new Date(),
           description: "",
@@ -586,7 +595,7 @@ describe("Task Lifecycle Integration", () => {
       await updateTaskPartial("task-1", {
         projectId,
         title: "Updated Event Task",
-        status: "in-progress",
+        status: "in_progress",
       });
 
       expect(publishEvent).toHaveBeenCalledWith(

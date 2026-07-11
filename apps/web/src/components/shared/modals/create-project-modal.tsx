@@ -419,6 +419,7 @@ export default function CreateProjectModal({
       >
         {/* Close button */}
         <button
+          type="button"
           onClick={handleClose}
           className="absolute right-4 top-4 z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
@@ -543,6 +544,7 @@ export default function CreateProjectModal({
                             <div className="p-4 space-y-1">
                               {/* Custom Project */}
                               <button
+                                type="button"
                                 onClick={() => setSelectedCategory("custom")}
                                 className={cn(
                                   "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
@@ -578,6 +580,7 @@ export default function CreateProjectModal({
 
                                 return (
                                   <button
+                                    type="button"
                                     key={profession}
                                     onClick={() => {
                                       setSelectedCategory(profession);

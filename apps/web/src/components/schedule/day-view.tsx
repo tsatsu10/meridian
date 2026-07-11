@@ -164,6 +164,7 @@ export default function DayView({
                           ];
                         return (
                           <button
+                            type="button"
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className={cn(

@@ -85,7 +85,7 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
 
   const milestones: Milestone[] = [];
 
-  projects.forEach((project) => {
+  for (const project of projects) {
     // Find milestone tasks (tasks marked as milestones or with specific priority)
     // Check both columns (Kanban) and direct tasks array
     const columnTasks =
@@ -151,7 +151,7 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
       });
     } else {
       // Create milestones from milestone tasks
-      milestoneTasks.forEach((task: any) => {
+      for (const task of milestoneTasks) {
         const relatedTasks = allTasks.filter(
           (t: any) =>
             t.title
@@ -217,9 +217,9 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
           progress,
           healthScore: Math.round(healthScore),
         });
-      });
+      }
     }
-  });
+  }
 
   return milestones;
 };

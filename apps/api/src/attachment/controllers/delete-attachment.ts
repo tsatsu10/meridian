@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { unlink } from "fs/promises";
-import { join } from "path";
+import { unlink } from "node:fs/promises";
+import { join } from "node:path";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable, userTable } from "../../database/schema";
 import logger from "../../utils/logger";

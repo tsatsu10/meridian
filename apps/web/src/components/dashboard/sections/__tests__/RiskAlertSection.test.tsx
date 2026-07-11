@@ -234,8 +234,8 @@ describe("RiskAlertSection", () => {
       .map((el) => el.closest('[class*="flex items-start gap-3 p-3"]'));
 
     expect(alertContainers).toHaveLength(3);
-    alertContainers.forEach((container) => {
+    for (const container of alertContainers) {
       expect(container).toBeInTheDocument();
-    });
+    }
   });
 });

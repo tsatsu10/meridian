@@ -100,7 +100,9 @@ export class UniversalErrorBoundary extends Component<Props, State> {
                     Try Again
                   </Button>
                   <Button
-                    onClick={() => (window.location.href = "/dashboard")}
+                    onClick={() => {
+                      window.location.href = "/dashboard";
+                    }}
                     variant="outline"
                   >
                     <Home className="h-4 w-4 mr-2" />

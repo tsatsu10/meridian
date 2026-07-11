@@ -40,21 +40,20 @@ async function deleteTeam(c: Context) {
         success: true,
         message: `Team "${existingTeam.name}" permanently deleted`,
       });
-    } else {
-      // Soft delete - set isActive to false
-      await db
-        .update(teams)
-        .set({
-          isActive: false,
-          updatedAt: new Date(),
-        })
-        .where(eq(teams.id, teamId));
-
-      return c.json({
-        success: true,
-        message: `Team "${existingTeam.name}" deactivated`,
-      });
     }
+    // Soft delete - set isActive to false
+    await db
+      .update(teams)
+      .set({
+        isActive: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(teams.id, teamId));
+
+    return c.json({
+      success: true,
+      message: `Team "${existingTeam.name}" deactivated`,
+    });
   } catch (error) {
     logger.error("Error deleting team:", error);
     return c.json({ error: "Failed to delete team" }, 500);

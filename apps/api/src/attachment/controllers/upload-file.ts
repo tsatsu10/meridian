@@ -1,5 +1,5 @@
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { writeFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { createId } from "@paralleldrive/cuid2";
 import logger from "../../utils/logger";
 

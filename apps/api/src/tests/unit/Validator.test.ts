@@ -419,10 +419,10 @@ describe("Validator", () => {
     });
 
     it("should have consistent schema structure", () => {
-      Object.values(Schemas).forEach((schemaGroup) => {
+      for (const schemaGroup of Object.values(Schemas)) {
         expect(typeof schemaGroup).toBe("object");
         expect(schemaGroup).not.toBeNull();
-      });
+      }
     });
   });
 

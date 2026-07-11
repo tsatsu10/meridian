@@ -55,7 +55,6 @@ const getStatusIcon = (status: string) => {
       return <CheckCircle2 className="h-5 w-5 text-green-500" />;
     case "missed":
       return <AlertTriangle className="h-5 w-5 text-red-500" />;
-    case "upcoming":
     default:
       return <Clock className="h-5 w-5 text-blue-500" />;
   }
@@ -67,7 +66,6 @@ const getStatusColor = (status: string) => {
       return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300";
     case "missed":
       return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-300";
-    case "upcoming":
     default:
       return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-300";
   }
@@ -81,7 +79,6 @@ const getRiskColor = (riskLevel: string) => {
       return "text-orange-600 bg-orange-50 border-orange-200 dark:bg-orange-900 dark:text-orange-300";
     case "medium":
       return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300";
-    case "low":
     default:
       return "text-green-600 bg-green-50 border-green-200 dark:bg-green-900 dark:text-green-300";
   }
@@ -192,7 +189,6 @@ export default function MilestoneDetailModal({
         return 100;
       case "missed":
         return 0;
-      case "upcoming":
       default:
         return 50; // Default for upcoming milestones
     }

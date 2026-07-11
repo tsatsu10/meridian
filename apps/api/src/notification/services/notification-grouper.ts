@@ -94,7 +94,7 @@ function generateGroupKey(notification: any): string {
     case "task_assigned":
     case "task_completed":
       // Group task notifications by project
-      return `task_updates`;
+      return "task_updates";
 
     case "kudos":
       // Group all kudos together
@@ -149,15 +149,14 @@ export async function findGroupForNotification(
         // Found a match! Use its group ID or create one
         if (existing.groupId) {
           return existing.groupId;
-        } else {
-          // Create a new group ID and update the existing notification
-          const newGroupId = createId();
-          await db
-            .update(notifications)
-            .set({ groupId: newGroupId, isGrouped: true })
-            .where(eq(notifications.id, existing.id));
-          return newGroupId;
         }
+        // Create a new group ID and update the existing notification
+        const newGroupId = createId();
+        await db
+          .update(notifications)
+          .set({ groupId: newGroupId, isGrouped: true })
+          .where(eq(notifications.id, existing.id));
+        return newGroupId;
       }
     }
 

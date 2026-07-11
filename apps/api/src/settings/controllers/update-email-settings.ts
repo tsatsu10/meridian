@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
 import type { EmailSettings } from "./get-email-settings";
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 const ENCRYPTION_KEY =
   process.env.ENCRYPTION_KEY || "default-encryption-key-change-in-production";

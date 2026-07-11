@@ -43,7 +43,7 @@ function CalendarView({
         <ul>
           {events.map((event) => (
             <li key={event.id} data-testid={`event-${event.id}`}>
-              <button onClick={() => onEventClick?.(event.id)}>
+              <button type="button" onClick={() => onEventClick?.(event.id)}>
                 <span className="title">{event.title}</span>
                 <span className="time">
                   {event.start.toLocaleTimeString()} -{" "}

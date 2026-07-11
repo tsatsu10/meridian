@@ -75,15 +75,14 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
             resolutionNotes: notes,
           }),
         });
-      } else {
-        return await fetchApi(`/risk-detection/alerts/${alertId}`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            status: action === "acknowledge" ? "acknowledged" : "dismissed",
-            notes,
-          }),
-        });
       }
+      return await fetchApi(`/risk-detection/alerts/${alertId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: action === "acknowledge" ? "acknowledged" : "dismissed",
+          notes,
+        }),
+      });
     },
     onSuccess: (_, variables) => {
       const actionLabels = {
@@ -260,9 +259,9 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
                         `Acknowledge all ${riskData.data.alerts.length} alerts?`,
                       )
                     ) {
-                      riskData.data.alerts.forEach((alert: any) => {
+                      for (const alert of riskData.data.alerts) {
                         handleAlertAction(alert.id, "acknowledge");
-                      });
+                      }
                     }
                   }}
                   className="text-xs h-6 px-2"
@@ -282,13 +281,13 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
                         `Resolve all ${riskData.data.alerts.length} alerts?`,
                       )
                     ) {
-                      riskData.data.alerts.forEach((alert: any) => {
+                      for (const alert of riskData.data.alerts) {
                         alertActionMutation.mutate({
                           alertId: alert.id,
                           action: "resolve",
                           notes,
                         });
-                      });
+                      }
                     }
                   }}
                   className="text-xs h-6 px-2"

@@ -8,8 +8,8 @@
 
 import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
-import path from "path";
-import fs from "fs";
+import path from "node:path";
+import fs from "node:fs";
 import { fileStorageService } from "../../services/file-storage.service.js";
 import logger from "../../utils/logger";
 

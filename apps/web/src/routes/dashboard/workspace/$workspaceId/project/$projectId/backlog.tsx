@@ -238,7 +238,7 @@ function BacklogPage() {
   // ✅ PRODUCTION: Real API theme handlers with validation and permission checks
   const handleThemeCreate = async (
     theme: Omit<TaskTheme, "id" | "createdAt" | "updatedAt">,
-  ) => {
+  ): Promise<TaskTheme | undefined> => {
     // Check permissions
     if (!canEditBacklog) {
       toast.error("Permission denied", {
@@ -401,13 +401,13 @@ function BacklogPage() {
     }
 
     // Move all planned tasks to the to-do column
-    plannedTasks.forEach((task: any) => {
+    for (const task of plannedTasks) {
       const taskUpdate = {
         ...task,
         status: "todo" as const,
       };
       updateTask(taskUpdate);
-    });
+    }
 
     toast.success(`Moved ${plannedTasks.length} tasks to To Do`);
   };
@@ -611,6 +611,7 @@ function BacklogPage() {
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   aria-label="Clear search"

@@ -302,21 +302,25 @@ export async function triggerAlert(
  */
 function generateAlertMessage(rule: AlertRule): string {
   switch (rule.conditionType) {
-    case "project_progress":
+    case "project_progress": {
       const { threshold, operator, projectId } = rule.conditionConfig;
       return `Project progress is ${operator} ${threshold}% (Project: ${projectId})`;
+    }
 
-    case "task_overdue":
+    case "task_overdue": {
       const { daysOverdue } = rule.conditionConfig;
       return `You have tasks overdue by ${daysOverdue} days`;
+    }
 
-    case "task_count":
+    case "task_count": {
       const { status, countThreshold, countOperator } = rule.conditionConfig;
       return `You have ${countOperator} ${countThreshold} ${status} tasks`;
+    }
 
-    case "no_activity":
+    case "no_activity": {
       const { inactivityDays } = rule.conditionConfig;
       return `No activity detected for ${inactivityDays} days`;
+    }
 
     case "mention":
       return "You were mentioned in a notification";

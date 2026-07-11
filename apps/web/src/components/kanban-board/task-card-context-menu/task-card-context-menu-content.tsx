@@ -264,7 +264,7 @@ export default function TaskCardContextMenuContent({
 
         {task.subtasks && task.subtasks.length > 0 && (
           <ContextMenuItem
-            onClick={() => selectAllSubtasks(task.id, task.subtasks!)}
+            onClick={() => selectAllSubtasks(task.id, task.subtasks ?? [])}
             className="flex items-center gap-2 cursor-pointer"
           >
             <CheckSquare className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />

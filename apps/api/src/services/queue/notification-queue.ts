@@ -12,7 +12,7 @@
  * @future: Can be upgraded to Redis/BullMQ for distributed systems
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import logger from "../../utils/logger";
 import {
   NotificationDeliveryService,
@@ -266,7 +266,7 @@ class NotificationQueue extends EventEmitter {
         job.error = error instanceof Error ? error.message : String(error);
 
         // Exponential backoff
-        const delay = Math.min(1000 * Math.pow(2, job.attempts), 30000);
+        const delay = Math.min(1000 * 2 ** job.attempts, 30000);
 
         logger.info("Retrying job after delay", {
           jobId,

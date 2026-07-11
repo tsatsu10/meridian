@@ -61,6 +61,7 @@ function ProgressBar({ progress, total }: ProgressBarProps) {
       aria-valuenow={percentage}
       aria-valuemin={0}
       aria-valuemax={100}
+      tabIndex={0}
     >
       <div className="progress-bar-fill" style={{ width: `${percentage}%` }} />
       <span>{Math.round(percentage)}%</span>

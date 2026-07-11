@@ -38,6 +38,7 @@ function WorkspaceSwitcher({
         {workspaces.map((workspace) => (
           <li key={workspace.id}>
             <button
+              type="button"
               onClick={() => onWorkspaceChange(workspace.id)}
               aria-current={
                 workspace.id === activeWorkspaceId ? "true" : undefined

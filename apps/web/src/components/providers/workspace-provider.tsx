@@ -33,13 +33,11 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
       if (selectedWorkspace) {
         setWorkspace(selectedWorkspace);
         return;
-      } else {
-        // Clear invalid workspace ID from localStorage
-        setActiveWorkspaceId(null);
-        setWorkspace(undefined);
-        useWorkspaceStore.getState().setWorkspace(undefined);
-        // Continue to set first available workspace
       }
+      // Clear invalid workspace ID from localStorage
+      setActiveWorkspaceId(null);
+      setWorkspace(undefined);
+      useWorkspaceStore.getState().setWorkspace(undefined);
     }
 
     // If no saved workspace or invalid workspace, set first available workspace

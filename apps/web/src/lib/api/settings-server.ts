@@ -384,11 +384,11 @@ export class SettingsAPI {
     } else {
       // Clear all Meridian settings from localStorage
       const keys = Object.keys(localStorage);
-      keys.forEach((key) => {
+      for (const key of keys) {
         if (key.startsWith("meridian-settings-")) {
           localStorage.removeItem(key);
         }
-      });
+      }
     }
   }
 

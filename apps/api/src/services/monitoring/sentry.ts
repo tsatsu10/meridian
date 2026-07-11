@@ -72,8 +72,8 @@ export function initializeSentry(config: SentryConfig) {
         // Filter out sensitive data
         if (event.request) {
           delete event.request.cookies;
-          delete event.request.headers?.["authorization"];
-          delete event.request.headers?.["cookie"];
+          delete event.request.headers?.authorization;
+          delete event.request.headers?.cookie;
         }
 
         return event;

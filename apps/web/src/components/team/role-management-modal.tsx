@@ -268,6 +268,7 @@ export default function RoleManagementModal({
         <div className="flex space-x-1 bg-muted p-1 rounded-lg flex-shrink-0">
           {views.map((view) => (
             <button
+              type="button"
               key={view.id}
               onClick={() => setActiveView(view.id)}
               className={cn(
@@ -510,6 +511,7 @@ export default function RoleManagementModal({
                                   <div className="absolute right-0 top-10 w-48 bg-background border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg z-10">
                                     <div className="py-1">
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleMemberAction("edit", member)
                                         }
@@ -519,6 +521,7 @@ export default function RoleManagementModal({
                                         <span>Edit Member</span>
                                       </button>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleMemberAction(
                                             "view-profile",
@@ -531,6 +534,7 @@ export default function RoleManagementModal({
                                         <span>View Profile</span>
                                       </button>
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleMemberAction("transfer", member)
                                         }
@@ -541,6 +545,7 @@ export default function RoleManagementModal({
                                       </button>
                                       <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           handleMemberAction("remove", member)
                                         }

@@ -141,7 +141,7 @@ async function verifyRollback() {
     }
 
     // Summary
-    log("info", "\n" + "=".repeat(60));
+    log("info", `\n${"=".repeat(60)}`);
     if (allPassed) {
       log("success", "✅ Rollback verification PASSED");
       log("success", "System is back to pre-migration state");
@@ -149,7 +149,7 @@ async function verifyRollback() {
       log("error", "❌ Rollback verification FAILED");
       log("error", "Manual intervention may be required");
     }
-    log("info", "=".repeat(60) + "\n");
+    log("info", `${"=".repeat(60)}\n`);
 
     process.exit(allPassed ? 0 : 1);
   } catch (error) {

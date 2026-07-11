@@ -1,4 +1,4 @@
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, isNull, desc, type SQL } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable } from "../../database/schema";
 import logger from "../../utils/logger";
@@ -9,7 +9,7 @@ async function getAttachments(
   commentId?: string | null,
 ) {
   try {
-    let whereCondition;
+    let whereCondition: SQL<unknown> | undefined;
 
     if (taskId) {
       whereCondition = and(

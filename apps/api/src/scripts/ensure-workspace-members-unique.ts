@@ -25,7 +25,7 @@ async function main() {
     : ((dupes as { rowCount?: number }).rowCount ?? 0);
   if (rowCount > 0) {
     console.log(
-      `Found duplicate (workspace_id, user_id) groups (see query result)`,
+      "Found duplicate (workspace_id, user_id) groups (see query result)",
     );
     console.log(dupes);
   }
@@ -55,7 +55,7 @@ async function main() {
       )
     `);
     await tx.execute(
-      sql.raw(`DROP INDEX IF EXISTS idx_workspace_members_workspace_user`),
+      sql.raw("DROP INDEX IF EXISTS idx_workspace_members_workspace_user"),
     );
     await tx.execute(
       sql.raw(`

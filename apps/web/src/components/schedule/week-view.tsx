@@ -185,6 +185,7 @@ export default function WeekView({
                             ];
                           return (
                             <button
+                              type="button"
                               key={event.id}
                               onClick={() => onEventClick?.(event)}
                               className={cn(
@@ -261,6 +262,7 @@ export default function WeekView({
                           ];
                         return (
                           <button
+                            type="button"
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className={cn(

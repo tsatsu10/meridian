@@ -92,16 +92,27 @@ export function AuthLayout({
           </div>
 
           {/* Footer Links */}
+          {/* Placeholder actions until these pages exist — buttons, not
+              href="#" anchors that hijack navigation */}
           <div className="flex items-center space-x-4 text-sm">
-            <a href="#" className="hover:text-white transition-colors">
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               Terms
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
+            </button>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               Plans
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
+            </button>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               Contact Us
-            </a>
+            </button>
           </div>
         </motion.div>
       </div>

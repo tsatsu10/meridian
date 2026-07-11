@@ -72,7 +72,7 @@ export class MoodTrackerService {
     try {
       const moodId = createId();
 
-      const [newMood] = await this.getDb()
+      const [newMood] = await MoodTrackerService.getDb()
         .insert(moodLog)
         .values({
           id: moodId,
@@ -138,7 +138,7 @@ export class MoodTrackerService {
           conditions.push(eq(moodLog.isAnonymous, filters.isAnonymous));
         }
 
-        const logs = await this.getDb()
+        const logs = await MoodTrackerService.getDb()
           .select()
           .from(moodLog)
           .where(and(...conditions))
@@ -167,7 +167,7 @@ export class MoodTrackerService {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
-        const logs = await this.getDb()
+        const logs = await MoodTrackerService.getDb()
           .select()
           .from(moodLog)
           .where(
@@ -198,7 +198,7 @@ export class MoodTrackerService {
         startDate.setDate(startDate.getDate() - days);
 
         // Average mood score
-        const [avgMood] = await this.getDb()
+        const [avgMood] = await MoodTrackerService.getDb()
           .select({
             average: sql<number>`AVG(${moodLog.moodScore})::float`,
             count: sql<number>`count(*)::int`,
@@ -212,7 +212,7 @@ export class MoodTrackerService {
           );
 
         // Mood distribution
-        const moodDistribution = await this.getDb()
+        const moodDistribution = await MoodTrackerService.getDb()
           .select({
             mood: moodLog.mood,
             count: sql<number>`count(*)::int`,
@@ -227,7 +227,7 @@ export class MoodTrackerService {
           .groupBy(moodLog.mood);
 
         // Workload distribution
-        const workloadDistribution = await this.getDb()
+        const workloadDistribution = await MoodTrackerService.getDb()
           .select({
             workloadLevel: moodLog.workloadLevel,
             count: sql<number>`count(*)::int`,
@@ -243,7 +243,7 @@ export class MoodTrackerService {
           .groupBy(moodLog.workloadLevel);
 
         // Common tags
-        const allTags = await this.getDb()
+        const allTags = await MoodTrackerService.getDb()
           .select({ tags: moodLog.tags })
           .from(moodLog)
           .where(
@@ -293,7 +293,7 @@ export class MoodTrackerService {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
-        const trend = await this.getDb()
+        const trend = await MoodTrackerService.getDb()
           .select({
             date: sql<string>`DATE(${moodLog.createdAt})`,
             averageMood: sql<number>`AVG(${moodLog.moodScore})::float`,
@@ -324,7 +324,7 @@ export class MoodTrackerService {
   ): Promise<boolean> {
     try {
       // Check user's mood reminder settings
-      const [settings] = await this.getDb()
+      const [settings] = await MoodTrackerService.getDb()
         .select()
         .from(activityFeedSettings)
         .where(
@@ -343,7 +343,7 @@ export class MoodTrackerService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [todayLog] = await this.getDb()
+      const [todayLog] = await MoodTrackerService.getDb()
         .select()
         .from(moodLog)
         .where(
@@ -407,7 +407,7 @@ export class MoodTrackerService {
       today.setHours(0, 0, 0, 0);
 
       // Get users with mood reminders enabled
-      const settings = await this.getDb()
+      const settings = await MoodTrackerService.getDb()
         .select()
         .from(activityFeedSettings)
         .where(
@@ -434,7 +434,7 @@ export class MoodTrackerService {
         }
 
         // Check if already logged today
-        const [todayLog] = await this.getDb()
+        const [todayLog] = await MoodTrackerService.getDb()
           .select()
           .from(moodLog)
           .where(
@@ -474,11 +474,17 @@ export class MoodTrackerService {
       cacheKey,
       async () => {
         // Get average mood for last 7 days
-        const stats = await this.getWorkspaceMoodStats(workspaceId, 7);
+        const stats = await MoodTrackerService.getWorkspaceMoodStats(
+          workspaceId,
+          7,
+        );
         const currentScore = stats.averageMood;
 
         // Get average mood for previous 7 days
-        const previousStats = await this.getWorkspaceMoodStats(workspaceId, 14);
+        const previousStats = await MoodTrackerService.getWorkspaceMoodStats(
+          workspaceId,
+          14,
+        );
         const previousScore = previousStats.averageMood;
 
         // Determine level

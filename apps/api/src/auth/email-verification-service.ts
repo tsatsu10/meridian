@@ -16,7 +16,7 @@ import {
 import { users } from "../database/schema";
 import { eq, and, lt, gt } from "drizzle-orm";
 import { emailService } from "../services/email/email-service";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import logger from "../utils/logger";
 
 export class EmailVerificationService {
@@ -133,10 +133,9 @@ export class EmailVerificationService {
       if (sent) {
         logger.debug(`✅ Verification email sent to ${email}`);
         return true;
-      } else {
-        logger.error(`❌ Failed to send verification email to ${email}`);
-        return false;
       }
+      logger.error(`❌ Failed to send verification email to ${email}`);
+      return false;
     } catch (error) {
       logger.error("❌ Error sending verification email:", error);
       return false;
@@ -271,9 +270,8 @@ export class EmailVerificationService {
 
       if (sent) {
         return { success: true, message: "Verification email sent" };
-      } else {
-        return { success: false, message: "Failed to send verification email" };
       }
+      return { success: false, message: "Failed to send verification email" };
     } catch (error) {
       logger.error("❌ Error resending verification email:", error);
       return { success: false, message: "Failed to resend verification email" };

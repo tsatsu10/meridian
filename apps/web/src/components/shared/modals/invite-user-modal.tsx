@@ -100,6 +100,7 @@ export function InviteUserModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={handleClose}
             disabled={sendInvitation.isPending}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"

@@ -171,7 +171,7 @@ async function sendCriticalErrorAlert(errorData: any) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: `🚨 Critical Error Alert`,
+          text: "🚨 Critical Error Alert",
           attachments: [
             {
               color: "danger",

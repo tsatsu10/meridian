@@ -123,6 +123,7 @@ function TeamMemberCard({
           aria-label="Member actions"
         >
           <button
+            type="button"
             onClick={() => onViewProfile?.(member.id)}
             aria-label="View profile"
           >
@@ -130,6 +131,7 @@ function TeamMemberCard({
           </button>
           {onRemove && (
             <button
+              type="button"
               onClick={() => onRemove(member.id)}
               aria-label="Remove member"
               className="danger"

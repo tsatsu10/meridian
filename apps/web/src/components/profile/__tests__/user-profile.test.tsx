@@ -184,10 +184,11 @@ function UserProfile({
         <div className="profile-actions">
           {isEditing ? (
             <>
-              <button onClick={handleSave} disabled={isSaving}>
+              <button type="button" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? "Saving..." : "Save"}
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setIsEditing(false);
                   setEditedUser(user);
@@ -198,7 +199,9 @@ function UserProfile({
               </button>
             </>
           ) : (
-            <button onClick={() => setIsEditing(true)}>Edit Profile</button>
+            <button type="button" onClick={() => setIsEditing(true)}>
+              Edit Profile
+            </button>
           )}
         </div>
       )}

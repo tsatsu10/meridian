@@ -44,7 +44,7 @@ export class UserStatusService {
    */
   static async updateStatus(params: UpdateStatusParams) {
     try {
-      const existingStatus = await this.getDb()
+      const existingStatus = await UserStatusService.getDb()
         .select()
         .from(userStatus)
         .where(
@@ -59,7 +59,7 @@ export class UserStatusService {
 
       if (existingStatus.length > 0) {
         // Update existing status
-        await this.getDb()
+        await UserStatusService.getDb()
           .update(userStatus)
           .set({
             status: params.status,
@@ -76,7 +76,7 @@ export class UserStatusService {
       } else {
         // Create new status
         const statusId = createId();
-        await this.getDb().insert(userStatus).values({
+        await UserStatusService.getDb().insert(userStatus).values({
           id: statusId,
           userId: params.userId,
           workspaceId: params.workspaceId,
@@ -118,7 +118,7 @@ export class UserStatusService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const status = await this.getDb()
+        const status = await UserStatusService.getDb()
           .select()
           .from(userStatus)
           .where(
@@ -153,7 +153,7 @@ export class UserStatusService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const statuses = await this.getDb()
+        const statuses = await UserStatusService.getDb()
           .select({
             id: userStatus.id,
             userId: userStatus.userId,
@@ -187,7 +187,7 @@ export class UserStatusService {
    */
   static async getUserStatuses(userIds: string[], workspaceId: string) {
     try {
-      const statuses = await this.getDb()
+      const statuses = await UserStatusService.getDb()
         .select()
         .from(userStatus)
         .where(
@@ -212,7 +212,7 @@ export class UserStatusService {
    */
   static async updateLastSeen(userId: string, workspaceId: string) {
     try {
-      await this.getDb()
+      await UserStatusService.getDb()
         .update(userStatus)
         .set({
           lastSeenAt: new Date(),
@@ -239,7 +239,7 @@ export class UserStatusService {
    * Set user offline
    */
   static async setOffline(userId: string, workspaceId: string) {
-    await this.updateStatus({
+    await UserStatusService.updateStatus({
       userId,
       workspaceId,
       status: "offline",
@@ -250,7 +250,7 @@ export class UserStatusService {
    * Set user online
    */
   static async setOnline(userId: string, workspaceId: string) {
-    await this.updateStatus({
+    await UserStatusService.updateStatus({
       userId,
       workspaceId,
       status: "online",
@@ -264,7 +264,7 @@ export class UserStatusService {
     try {
       const now = new Date();
 
-      await this.getDb()
+      await UserStatusService.getDb()
         .update(userStatus)
         .set({
           statusMessage: null,
@@ -293,7 +293,7 @@ export class UserStatusService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const result = await this.getDb()
+        const result = await UserStatusService.getDb()
           .select()
           .from(userStatus)
           .where(
@@ -318,7 +318,7 @@ export class UserStatusService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const allStatuses = await this.getDb()
+        const allStatuses = await UserStatusService.getDb()
           .select()
           .from(userStatus)
           .where(eq(userStatus.workspaceId, workspaceId));
@@ -355,11 +355,11 @@ export class UserStatusService {
     currentTaskId?: string,
   ) {
     try {
-      await this.updateLastSeen(userId, workspaceId);
+      await UserStatusService.updateLastSeen(userId, workspaceId);
 
       // Update current context if provided
       if (currentProjectId || currentTaskId) {
-        await this.getDb()
+        await UserStatusService.getDb()
           .update(userStatus)
           .set({
             currentProjectId,

@@ -42,10 +42,10 @@ export function WorkloadHeatmap({
 
     const data: Map<string, Map<string, HeatmapData>> = new Map();
 
-    memberSchedules.forEach((member) => {
+    for (const member of memberSchedules) {
       const memberData: Map<string, HeatmapData> = new Map();
 
-      dates.forEach((date) => {
+      for (const date of dates) {
         const dateKey = format(date, "yyyy-MM-dd");
 
         // Get events for this date
@@ -83,10 +83,10 @@ export function WorkloadHeatmap({
             workloadPercentage,
           ),
         });
-      });
+      }
 
       data.set(member.memberId, memberData);
-    });
+    }
 
     return {
       dateRange: dates,
@@ -210,6 +210,7 @@ export function WorkloadHeatmap({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
+                                type="button"
                                 onClick={() => onCellClick?.(date, member)}
                                 className={cn(
                                   "w-10 h-10 rounded-sm border border-border/50 transition-all hover:scale-110 hover:z-10 hover:shadow-lg",
@@ -312,9 +313,9 @@ function generateTooltip(
     events.length > 0 ? "Events:" : "No events",
   ];
 
-  events.slice(0, 3).forEach((event) => {
+  for (const event of events.slice(0, 3)) {
     lines.push(`• ${event.title}`);
-  });
+  }
 
   if (events.length > 3) {
     lines.push(`... and ${events.length - 3} more`);
@@ -336,12 +337,12 @@ function calculateTeamAverage(
   let totalWorkload = 0;
   let count = 0;
 
-  heatmapData.forEach((memberData) => {
-    memberData.forEach((cellData) => {
+  for (const memberData of heatmapData.values()) {
+    for (const cellData of memberData.values()) {
       totalWorkload += cellData.value;
       count++;
-    });
-  });
+    }
+  }
 
   return count > 0 ? Math.round(totalWorkload / count) : 0;
 }
@@ -351,11 +352,11 @@ function calculatePeakDays(
 ): number {
   let peakDays = 0;
 
-  heatmapData.forEach((memberData) => {
-    memberData.forEach((cellData) => {
+  for (const memberData of heatmapData.values()) {
+    for (const cellData of memberData.values()) {
       if (cellData.level === "critical") peakDays++;
-    });
-  });
+    }
+  }
 
   return peakDays;
 }
@@ -365,22 +366,20 @@ function calculateBalanceScore(
 ): number {
   const memberWorkloads: number[] = [];
 
-  heatmapData.forEach((memberData) => {
+  for (const memberData of heatmapData.values()) {
     const workloads = Array.from(memberData.values()).map((d) => d.value);
     const avgWorkload =
       workloads.reduce((sum, w) => sum + w, 0) / workloads.length;
     memberWorkloads.push(avgWorkload);
-  });
+  }
 
   if (memberWorkloads.length === 0) return 100;
 
   const avgTeamWorkload =
     memberWorkloads.reduce((sum, w) => sum + w, 0) / memberWorkloads.length;
   const variance =
-    memberWorkloads.reduce(
-      (sum, w) => sum + Math.pow(w - avgTeamWorkload, 2),
-      0,
-    ) / memberWorkloads.length;
+    memberWorkloads.reduce((sum, w) => sum + (w - avgTeamWorkload) ** 2, 0) /
+    memberWorkloads.length;
   const stdDev = Math.sqrt(variance);
 
   // Lower standard deviation = better balance

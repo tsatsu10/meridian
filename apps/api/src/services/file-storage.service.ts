@@ -9,10 +9,10 @@
  * @epic-3.1-messaging: File sharing and attachments for team collaboration
  */
 
-import fs from "fs";
-import path from "path";
-import { promisify } from "util";
-import crypto from "crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { promisify } from "node:util";
+import crypto from "node:crypto";
 import logger from "../utils/logger";
 
 const writeFile = promisify(fs.writeFile);
@@ -133,7 +133,8 @@ class FileStorageService {
         mimeType,
         subdir,
       );
-    } else if (this.config.provider === "s3") {
+    }
+    if (this.config.provider === "s3") {
       return this.uploadToS3(
         fileBuffer,
         fileName,
@@ -141,7 +142,8 @@ class FileStorageService {
         mimeType,
         subdir,
       );
-    } else if (this.config.provider === "r2") {
+    }
+    if (this.config.provider === "r2") {
       return this.uploadToR2(
         fileBuffer,
         fileName,

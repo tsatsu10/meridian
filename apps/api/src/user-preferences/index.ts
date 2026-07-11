@@ -144,27 +144,26 @@ app.post("/", async (c) => {
 
       logger.debug("[User Preferences] Successfully updated preferences");
       return c.json(updated[0]);
-    } else {
-      // Create new preferences
-      logger.debug(
-        "[User Preferences] Creating new preferences for user:",
-        user.id,
-      );
-      const created = await db
-        .insert(userPreferencesTable)
-        .values({
-          userId: user.id,
-          pinnedProjects: pinnedProjects || [],
-          dashboardLayout: dashboardLayout || {},
-          theme: theme || "system",
-          notifications: notifications || {},
-          settings: settings || {},
-        })
-        .returning();
-
-      logger.debug("[User Preferences] Successfully created preferences");
-      return c.json(created[0]);
     }
+    // Create new preferences
+    logger.debug(
+      "[User Preferences] Creating new preferences for user:",
+      user.id,
+    );
+    const created = await db
+      .insert(userPreferencesTable)
+      .values({
+        userId: user.id,
+        pinnedProjects: pinnedProjects || [],
+        dashboardLayout: dashboardLayout || {},
+        theme: theme || "system",
+        notifications: notifications || {},
+        settings: settings || {},
+      })
+      .returning();
+
+    logger.debug("[User Preferences] Successfully created preferences");
+    return c.json(created[0]);
   } catch (error) {
     logger.error("Error updating user preferences:", error);
     return c.json({ error: "Failed to update preferences" }, 500);
@@ -224,21 +223,20 @@ app.post("/toggle-pin", async (c) => {
         pinnedProjects: updated[0]?.pinnedProjects ?? newPinned,
         isPinned: newPinned.includes(projectId),
       });
-    } else {
-      // Create new
-      const created = await db
-        .insert(userPreferencesTable)
-        .values({
-          userId: user.id,
-          pinnedProjects: newPinned,
-        })
-        .returning();
-
-      return c.json({
-        pinnedProjects: created[0]?.pinnedProjects ?? newPinned,
-        isPinned: newPinned.includes(projectId),
-      });
     }
+    // Create new
+    const created = await db
+      .insert(userPreferencesTable)
+      .values({
+        userId: user.id,
+        pinnedProjects: newPinned,
+      })
+      .returning();
+
+    return c.json({
+      pinnedProjects: created[0]?.pinnedProjects ?? newPinned,
+      isPinned: newPinned.includes(projectId),
+    });
   } catch (error) {
     logger.error("Error toggling project pin:", error);
     return c.json({ error: "Failed to toggle pin" }, 500);
@@ -328,18 +326,17 @@ app.patch("/appearance/:userEmail", async (c) => {
 
       logger.debug("[Appearance] Updated settings for user:", userEmail);
       return c.json({ settings: updated[0]?.settings ?? {} });
-    } else {
-      const created = await db
-        .insert(userPreferencesTable)
-        .values({
-          userId: user.id,
-          settings: updatedSettings,
-        })
-        .returning();
-
-      logger.debug("[Appearance] Created settings for user:", userEmail);
-      return c.json({ settings: created[0]?.settings ?? {} });
     }
+    const created = await db
+      .insert(userPreferencesTable)
+      .values({
+        userId: user.id,
+        settings: updatedSettings,
+      })
+      .returning();
+
+    logger.debug("[Appearance] Created settings for user:", userEmail);
+    return c.json({ settings: created[0]?.settings ?? {} });
   } catch (error) {
     logger.error("Error updating appearance settings:", error);
     return c.json({ error: "Failed to update appearance settings" }, 500);
@@ -351,7 +348,7 @@ app.post("/background/upload", async (c) => {
   try {
     // Get the uploaded file
     const body = await c.req.parseBody();
-    const file = body["file"] as File;
+    const file = body.file as File;
 
     if (!file) {
       return c.json({ error: "No file uploaded" }, 400);
@@ -457,24 +454,23 @@ app.patch("/background/:userEmail", async (c) => {
         success: true,
         settings: updated[0]?.settings ?? {},
       });
-    } else {
-      const created = await db
-        .insert(userPreferencesTable)
-        .values({
-          userId: user.id,
-          settings: updatedSettings,
-        })
-        .returning();
-
-      logger.debug(
-        "[Background] Created background preferences for user:",
-        userEmail,
-      );
-      return c.json({
-        success: true,
-        settings: created[0]?.settings ?? {},
-      });
     }
+    const created = await db
+      .insert(userPreferencesTable)
+      .values({
+        userId: user.id,
+        settings: updatedSettings,
+      })
+      .returning();
+
+    logger.debug(
+      "[Background] Created background preferences for user:",
+      userEmail,
+    );
+    return c.json({
+      success: true,
+      settings: created[0]?.settings ?? {},
+    });
   } catch (error) {
     logger.error("Error updating background preferences:", error);
     return c.json({ error: "Failed to update background preferences" }, 500);
@@ -542,21 +538,20 @@ app.patch("/fonts/:userEmail", async (c) => {
         success: true,
         settings: updated[0]?.settings ?? {},
       });
-    } else {
-      const created = await db
-        .insert(userPreferencesTable)
-        .values({
-          userId: user.id,
-          settings: updatedSettings,
-        })
-        .returning();
-
-      logger.debug("[Fonts] Created font preferences for user:", userEmail);
-      return c.json({
-        success: true,
-        settings: created[0]?.settings ?? {},
-      });
     }
+    const created = await db
+      .insert(userPreferencesTable)
+      .values({
+        userId: user.id,
+        settings: updatedSettings,
+      })
+      .returning();
+
+    logger.debug("[Fonts] Created font preferences for user:", userEmail);
+    return c.json({
+      success: true,
+      settings: created[0]?.settings ?? {},
+    });
   } catch (error) {
     logger.error("Error updating font preferences:", error);
     return c.json({ error: "Failed to update font preferences" }, 500);

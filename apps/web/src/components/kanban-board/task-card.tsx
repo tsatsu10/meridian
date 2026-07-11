@@ -139,7 +139,7 @@ const TaskCard = React.memo(
               } ${
                 isSelected ? "ring-2 ring-blue-500 border-blue-500" : ""
               } cursor-pointer hover:shadow-sm`}
-              role="article"
+              role="button"
               tabIndex={0}
               aria-label={`Task: ${task.title}. Priority: ${task.priority}. Status: ${task.status}. ${task.userEmail ? `Assigned to ${task.userEmail}` : "Unassigned"}. ${task.dueDate ? `Due ${format(new Date(task.dueDate), "MMMM d, yyyy")}` : "No due date"}`}
               onKeyDown={(e) => {
@@ -157,6 +157,7 @@ const TaskCard = React.memo(
                 aria-label="Drag to reorder task"
               >
                 <svg
+                  aria-hidden="true"
                   className="w-3 h-3 text-muted-foreground"
                   fill="currentColor"
                   viewBox="0 0 20 20"
@@ -208,6 +209,7 @@ const TaskCard = React.memo(
                   <div className="flex items-center gap-2">
                     {task.subtasks && task.subtasks.length > 0 && (
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsExpanded(!isExpanded);
@@ -240,6 +242,7 @@ const TaskCard = React.memo(
                     <RequirePermission action="canCreateSubtasks">
                       {!isSubtask && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             // TODO: Open subtask creation modal
@@ -344,6 +347,7 @@ const TaskCard = React.memo(
                           <RequirePermission action="canEditSubtasks">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}
@@ -351,6 +355,7 @@ const TaskCard = React.memo(
                                 title="Edit Subtask (Team Lead)"
                               >
                                 <svg
+                                  aria-hidden="true"
                                   className="w-3 h-3"
                                   fill="none"
                                   stroke="currentColor"
@@ -370,6 +375,7 @@ const TaskCard = React.memo(
                           <RequirePermission action="canDeleteSubtasks">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}
@@ -377,6 +383,7 @@ const TaskCard = React.memo(
                                 title="Delete Subtask (Team Lead)"
                               >
                                 <svg
+                                  aria-hidden="true"
                                   className="w-3 h-3"
                                   fill="none"
                                   stroke="currentColor"
@@ -409,6 +416,7 @@ const TaskCard = React.memo(
                       title={`Blocks: ${(task.dependencies ?? []).map((dep) => dep.requiredTask?.title || "Unknown task").join(", ")}`}
                     >
                       <svg
+                        aria-hidden="true"
                         className="w-3 h-3 text-blue-500"
                         fill="none"
                         stroke="currentColor"
@@ -432,6 +440,7 @@ const TaskCard = React.memo(
                       title={`Blocked by: ${(task.blockedBy ?? []).map((dep) => dep.dependentTask?.title || "Unknown task").join(", ")}`}
                     >
                       <svg
+                        aria-hidden="true"
                         className="w-3 h-3 text-orange-500"
                         fill="none"
                         stroke="currentColor"

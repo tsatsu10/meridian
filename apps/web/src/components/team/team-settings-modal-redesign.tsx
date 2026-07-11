@@ -395,6 +395,7 @@ export default function TeamSettingsModalRedesign({
 
                         return (
                           <button
+                            type="button"
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
                             className={cn(
@@ -828,8 +829,9 @@ export default function TeamSettingsModalRedesign({
                               isEditing ? editedTeam?.name || "" : team.name
                             }
                             onChange={(e) =>
+                              editedTeam &&
                               setEditedTeam({
-                                ...editedTeam!,
+                                ...editedTeam,
                                 name: e.target.value,
                               })
                             }
@@ -857,8 +859,9 @@ export default function TeamSettingsModalRedesign({
                                 : team.description || ""
                             }
                             onChange={(e) =>
+                              editedTeam &&
                               setEditedTeam({
-                                ...editedTeam!,
+                                ...editedTeam,
                                 description: e.target.value,
                               })
                             }
@@ -1436,8 +1439,9 @@ export default function TeamSettingsModalRedesign({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => {
+                                    if (!initialTeam) return;
                                     updateAutomationMutation.mutate({
-                                      teamId: initialTeam!.id,
+                                      teamId: initialTeam.id,
                                       automationId: automation.id,
                                       enabled: !automation.enabled,
                                     });
@@ -1450,9 +1454,10 @@ export default function TeamSettingsModalRedesign({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => {
+                                    if (!initialTeam) return;
                                     if (confirm("Delete this automation?")) {
                                       deleteAutomationMutation.mutate({
-                                        teamId: initialTeam!.id,
+                                        teamId: initialTeam.id,
                                         automationId: automation.id,
                                       });
                                     }

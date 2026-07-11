@@ -27,12 +27,12 @@ const user = new Hono<{
       const authHeader = c.req.header("Authorization");
       if (authHeader?.startsWith("Bearer ")) {
         session = authHeader.substring(7);
-        console.log(`🔍 [/me] Using session from Authorization header`);
+        console.log("🔍 [/me] Using session from Authorization header");
       }
     }
 
     console.log(
-      `🔍 [/me] Session: ${session ? session.substring(0, 20) + "..." : "MISSING"}`,
+      `🔍 [/me] Session: ${session ? `${session.substring(0, 20)}...` : "MISSING"}`,
     );
 
     if (!session) {
@@ -69,7 +69,7 @@ const user = new Hono<{
       console.log(`🔑 [sign-in] Generated token: ${token.substring(0, 20)}...`);
 
       const session = await createSession(token, user.id);
-      console.log(`💾 [sign-in] Session created with hashed ID`);
+      console.log("💾 [sign-in] Session created with hashed ID");
 
       // For development, set domain to localhost (without port) to share across ports
       // For production, use SameSite=Lax for same-site requests

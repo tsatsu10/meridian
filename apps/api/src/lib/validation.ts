@@ -470,47 +470,7 @@ export function createQueryValidationMiddleware<T>(schema: z.ZodSchema<T>) {
   };
 }
 
-// Sanitization middleware
-export function createSanitizationMiddleware() {
-  return async (c: Context, next: Next) => {
-    // Sanitize request body
-    const body = await c.req.json();
-    const sanitizedBody = sanitizeObject(body);
-    c.set("sanitizedBody", sanitizedBody);
-
-    await next();
-  };
-}
-
-// Sanitize object recursively
-function sanitizeObject(obj: any): any {
-  if (typeof obj === "string") {
-    return sanitizeString(obj);
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.map(sanitizeObject);
-  }
-
-  if (obj && typeof obj === "object") {
-    const sanitized: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      sanitized[key] = sanitizeObject(value);
-    }
-    return sanitized;
-  }
-
-  return obj;
-}
-
-// Sanitize string
-function sanitizeString(str: string): string {
-  return str
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "")
-    .replace(/javascript:/gi, "")
-    .replace(/on\w+\s*=/gi, "")
-    .replace(/eval\s*\(/gi, "")
-    .replace(/expression\s*\(/gi, "")
-    .trim();
-}
+// NOTE: a regex-based createSanitizationMiddleware/sanitizeString trio used
+// to live here. It was never mounted anywhere, and its strip-based regexes
+// were bypassable (CodeQL js/bad-tag-filter, js/incomplete-multi-character-
+// sanitization). Use lib/universal-sanitization.ts for input sanitization.

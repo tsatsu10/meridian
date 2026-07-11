@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { stripHtml as realStripHtml } from "../../lib/universal-sanitization";
 
 describe("String Helpers", () => {
   describe("capitalize", () => {
@@ -180,9 +181,8 @@ describe("String Helpers", () => {
   });
 
   describe("stripHtml", () => {
-    const stripHtml = (str: string): string => {
-      return str.replace(/<[^>]*>/g, "");
-    };
+    // Test the real production sanitizer, not an inline regex copy of it.
+    const stripHtml = realStripHtml;
 
     it("should remove HTML tags", () => {
       expect(stripHtml("<p>Hello</p>")).toBe("Hello");
@@ -200,7 +200,7 @@ describe("String Helpers", () => {
   describe("ellipsis", () => {
     const ellipsis = (str: string, maxLength: number): string => {
       if (str.length <= maxLength) return str;
-      return str.substring(0, maxLength - 3) + "...";
+      return `${str.substring(0, maxLength - 3)}...`;
     };
 
     it("should add ellipsis to long text", () => {
@@ -219,7 +219,7 @@ describe("String Helpers", () => {
       plural?: string,
     ): string => {
       if (count === 1) return singular;
-      return plural || singular + "s";
+      return plural || `${singular}s`;
     };
 
     it("should return singular for 1", () => {

@@ -6,7 +6,7 @@
 
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
-import path from "path";
+import path from "node:path";
 
 const LOG_DIR = process.env.LOG_FILE_PATH || "./logs";
 const LOG_LEVEL = process.env.LOG_LEVEL || "info";

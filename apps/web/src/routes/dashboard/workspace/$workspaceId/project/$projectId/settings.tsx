@@ -966,6 +966,7 @@ function ProjectSettings() {
                 { id: "danger", label: "Danger Zone", icon: AlertTriangle },
               ].map((tab) => (
                 <button
+                  type="button"
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={cn(
@@ -2002,10 +2003,10 @@ function ProjectSettings() {
                   const user = workspaceUsers?.find(
                     (u: any) => u.userEmail === value,
                   );
-                  if (user && selectedTeam) {
+                  if (user?.userEmail && selectedTeam) {
                     handleAddMember(selectedTeam.id, {
-                      userEmail: user.userEmail!,
-                      userName: user.userName!,
+                      userEmail: user.userEmail,
+                      userName: user.userName ?? user.userEmail,
                       role: "member",
                     });
                   }
@@ -2158,6 +2159,7 @@ function ProjectSettings() {
                   },
                 ].map((role) => (
                   <button
+                    type="button"
                     key={role.value}
                     onClick={() => {
                       if (selectedTeam && selectedMember) {

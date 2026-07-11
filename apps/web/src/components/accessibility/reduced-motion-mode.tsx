@@ -112,9 +112,8 @@ export function ReducedMotionMode() {
                 <div className="text-sm text-blue-900 dark:text-blue-200">
                   <strong>System Preference Detected:</strong> Your operating
                   system is set to prefer reduced motion.
-                  {!isReducedMotion && (
-                    <> Would you like to enable reduced motion mode?</>
-                  )}
+                  {!isReducedMotion &&
+                    "Would you like to enable reduced motion mode?"}
                 </div>
                 {!isReducedMotion && (
                   <Button

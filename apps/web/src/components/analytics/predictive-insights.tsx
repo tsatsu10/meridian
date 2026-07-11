@@ -249,7 +249,7 @@ export function PredictiveInsights({
                 <p className="text-muted-foreground">
                   {resourcePrediction.recommendedIncrease > 0
                     ? `Consider adding ${resourcePrediction.recommendedIncrease} team member(s) to maintain productivity.`
-                    : `Team capacity may be under-utilized. Consider reallocation or project expansion.`}
+                    : "Team capacity may be under-utilized. Consider reallocation or project expansion."}
                 </p>
                 <p className="text-muted-foreground mt-1">
                   <span className="font-medium">Timeline:</span>{" "}

@@ -3,7 +3,7 @@ import { getDatabase } from "../database/connection";
 import { apiKeyTable, users } from "../database/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import logger from "../utils/logger";
 
 const app = new Hono();

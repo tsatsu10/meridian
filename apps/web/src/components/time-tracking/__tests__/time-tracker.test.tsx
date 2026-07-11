@@ -72,10 +72,9 @@ function TimeTracker({
         setElapsed(Math.floor((now - start) / 1000));
       }, 1000);
       return () => clearInterval(interval);
-    } else {
-      setIsRunning(false);
-      setElapsed(0);
     }
+    setIsRunning(false);
+    setElapsed(0);
   }, [currentTimer]);
 
   const formatTime = (seconds: number): string => {
@@ -159,6 +158,7 @@ function TimeTracker({
               {currentTimer?.description || "No description"}
             </p>
             <button
+              type="button"
               onClick={handleStop}
               aria-label="Stop timer"
               className="stop-button"
@@ -170,6 +170,7 @@ function TimeTracker({
           <div className="stopped-timer">
             <div className="timer-display">00:00:00</div>
             <button
+              type="button"
               onClick={handleStart}
               disabled={isRunning}
               aria-label="Start timer"
@@ -200,6 +201,7 @@ function TimeTracker({
           aria-label="Duration (HH:MM format)"
         />
         <button
+          type="button"
           onClick={handleAddManual}
           disabled={!description.trim() || !duration}
           aria-label="Add time entry"
@@ -224,9 +226,9 @@ function TimeTracker({
         {entries.length === 0 ? (
           <p className="no-entries">No time entries yet</p>
         ) : (
-          <ul role="list">
+          <ul>
             {entries.map((entry) => (
-              <li key={entry.id} className="time-entry" role="listitem">
+              <li key={entry.id} className="time-entry">
                 {editingId === entry.id ? (
                   <div className="edit-form">
                     <input
@@ -243,6 +245,7 @@ function TimeTracker({
                       aria-label="Edit duration"
                     />
                     <button
+                      type="button"
                       onClick={() => handleEdit(entry.id)}
                       disabled={!editDescription.trim() || !editDuration}
                       aria-label="Save edit"
@@ -250,6 +253,7 @@ function TimeTracker({
                       Save
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setEditingId(null);
                         setEditDescription("");
@@ -283,6 +287,7 @@ function TimeTracker({
                     </div>
                     <div className="entry-actions">
                       <button
+                        type="button"
                         onClick={() => {
                           setEditingId(entry.id);
                           const hours = Math.floor(entry.duration / 3600);
@@ -299,6 +304,7 @@ function TimeTracker({
                         Edit
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleDelete(entry.id)}
                         aria-label={`Delete entry ${entry.description}`}
                         className="delete-button"

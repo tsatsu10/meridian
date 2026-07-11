@@ -100,13 +100,13 @@ function ListView({ project }: ListViewProps) {
         });
       }
 
-      destinationColumn.tasks.forEach((t: any, index: any) => {
+      for (const [index, t] of destinationColumn.tasks.entries()) {
         updateTask({
           ...t,
           status: destinationColumn.id,
           position: index + 1,
         });
-      });
+      }
     });
 
     setProject(updatedProject);

@@ -138,8 +138,7 @@ export function VoiceControl() {
       description: "Show available commands",
       action: () => {
         speak(
-          "Here are the available commands: " +
-            commands.map((c) => c.command).join(", "),
+          `Here are the available commands: ${commands.map((c) => c.command).join(", ")}`,
         );
       },
       aliases: ["show commands", "what can you do"],
@@ -441,8 +440,7 @@ export function VoiceControl() {
               size="sm"
               onClick={() =>
                 speak(
-                  "Here are the available commands: " +
-                    commands.map((c) => c.command).join(", "),
+                  `Here are the available commands: ${commands.map((c) => c.command).join(", ")}`,
                 )
               }
               disabled={!isEnabled}

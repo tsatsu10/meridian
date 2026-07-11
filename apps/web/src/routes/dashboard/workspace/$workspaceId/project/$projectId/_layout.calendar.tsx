@@ -204,8 +204,16 @@ function ProjectCalendar() {
   const calendarEvents = useMemo((): CalendarEvent[] => {
     const events: CalendarEvent[] = [];
 
-    // Debug logging// Convert tasks to events
-    allTasks.forEach((task: any) => {
+    // Convert tasks to events. The board payload decorates tasks with an
+    // assignee object that TaskWithSubtasks doesn't declare (the old forEach
+    // callback hid this behind `task: any`).
+    type CalendarTask = (typeof allTasks)[number] & {
+      status?: string;
+      priority?: string;
+      description?: string | null;
+      assignee?: { id: string; name: string; avatar?: string };
+    };
+    for (const task of allTasks as CalendarTask[]) {
       if (task.dueDate) {
         try {
           const dueDate = parseISO(task.dueDate);
@@ -215,8 +223,8 @@ function ProjectCalendar() {
             start: dueDate,
             end: dueDate,
             type: "task",
-            status: task.status || "todo",
-            priority: task.priority || "medium",
+            status: (task.status || "todo") as CalendarEvent["status"],
+            priority: (task.priority || "medium") as CalendarEvent["priority"],
             assignee: task.assignee
               ? {
                   id: task.assignee.id,
@@ -224,7 +232,7 @@ function ProjectCalendar() {
                   avatar: task.assignee.avatar,
                 }
               : undefined,
-            description: task.description,
+            description: task.description ?? undefined,
             isAllDay: true, // Tasks are all-day events since they only have due dates
             color: eventTypeColors.task,
             originalTask: task,
@@ -238,7 +246,7 @@ function ProjectCalendar() {
         }
       } else {
       }
-    }); // Return events created from real task data only
+    } // Return events created from real task data only
     return events;
   }, [allTasks]);
 
@@ -423,7 +431,7 @@ function ProjectCalendar() {
                       key={event.id}
                       className="text-xs p-1 rounded truncate cursor-pointer hover:opacity-80"
                       style={{
-                        backgroundColor: event.color + "20",
+                        backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
                       }}
@@ -496,7 +504,7 @@ function ProjectCalendar() {
                     key={event.id}
                     className="text-xs p-1 rounded mb-1 truncate cursor-pointer hover:opacity-80"
                     style={{
-                      backgroundColor: event.color + "20",
+                      backgroundColor: `${event.color}20`,
                       color: event.color,
                       borderLeft: `3px solid ${event.color}`,
                     }}
@@ -544,7 +552,7 @@ function ProjectCalendar() {
                           key={event.id}
                           className="text-xs p-1 rounded mb-1 truncate cursor-pointer hover:opacity-80"
                           style={{
-                            backgroundColor: event.color + "20",
+                            backgroundColor: `${event.color}20`,
                             color: event.color,
                             borderLeft: `3px solid ${event.color}`,
                           }}
@@ -604,7 +612,7 @@ function ProjectCalendar() {
                     key={event.id}
                     className="text-sm p-2 rounded cursor-pointer hover:opacity-80"
                     style={{
-                      backgroundColor: event.color + "20",
+                      backgroundColor: `${event.color}20`,
                       color: event.color,
                       borderLeft: `3px solid ${event.color}`,
                     }}
@@ -643,7 +651,7 @@ function ProjectCalendar() {
                       key={event.id}
                       className="text-sm p-2 rounded mb-1 cursor-pointer hover:opacity-80"
                       style={{
-                        backgroundColor: event.color + "20",
+                        backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
                       }}

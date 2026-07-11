@@ -449,11 +449,11 @@ function TeamsPage() {
 
     // Deduplicate teams by ID to prevent duplicate key warnings
     const uniqueTeamsMap = new Map();
-    teamsData.forEach((team) => {
+    for (const team of teamsData) {
       if (team.id && !uniqueTeamsMap.has(team.id)) {
         uniqueTeamsMap.set(team.id, team);
       }
-    });
+    }
     const uniqueTeams = Array.from(uniqueTeamsMap.values());
 
     const teamColors = [
@@ -487,12 +487,12 @@ function TeamsPage() {
       // Get team members from the actual team.members array returned by API
       // Deduplicate members by ID to prevent duplicate key warnings
       const uniqueMembersMap = new Map();
-      (team.members || []).forEach((member: any) => {
+      for (const member of team.members || []) {
         const memberId = member.id || member.email;
         if (memberId && !uniqueMembersMap.has(memberId)) {
           uniqueMembersMap.set(memberId, member);
         }
-      });
+      }
       const uniqueMembers = Array.from(uniqueMembersMap.values());
 
       const teamMembers: EnhancedTeamMember[] = uniqueMembers.map((member) => {
@@ -586,7 +586,7 @@ function TeamsPage() {
       healthScore = Math.max(0, Math.min(100, Math.round(healthScore)));
 
       // Get health status
-      let healthStatus;
+      let healthStatus: { label: string; color: string; bg: string };
       if (healthScore >= 80) {
         healthStatus = {
           label: "Excellent",
@@ -649,12 +649,12 @@ function TeamsPage() {
       }
     >();
 
-    enhancedTeams.forEach((team) => {
-      team.members.forEach((member) => {
+    for (const team of enhancedTeams) {
+      for (const member of team.members) {
         const key = member.id || member.email;
-        if (memberMap.has(key)) {
+        const existing = memberMap.get(key);
+        if (existing) {
           // Member already exists, add this team to their teams list
-          const existing = memberMap.get(key)!;
           existing.teams.push({
             id: team.id,
             name: team.name,
@@ -673,8 +673,8 @@ function TeamsPage() {
             ],
           });
         }
-      });
-    });
+      }
+    }
 
     return Array.from(memberMap.values());
   }, [enhancedTeams]);
@@ -1527,6 +1527,7 @@ function TeamsPage() {
         {/* View Mode Tabs */}
         <div className="flex rounded-lg border border-input">
           <button
+            type="button"
             onClick={() => setViewMode("teams")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors flex items-center space-x-2",
@@ -1537,6 +1538,7 @@ function TeamsPage() {
             <span>Teams ({filteredAndSortedTeams.length})</span>
           </button>
           <button
+            type="button"
             onClick={() => setViewMode("members")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",
@@ -1547,6 +1549,7 @@ function TeamsPage() {
             <span>Members ({filteredMembers.length})</span>
           </button>
           <button
+            type="button"
             onClick={() => setViewMode("directory")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",
@@ -1557,6 +1560,7 @@ function TeamsPage() {
             <span>People Directory ({filteredDirectoryUsers.length})</span>
           </button>
           <button
+            type="button"
             onClick={() => setViewMode("users")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",

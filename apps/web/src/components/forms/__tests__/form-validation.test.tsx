@@ -50,9 +50,9 @@ function FormWithValidation({
 }: FormProps) {
   const [values, setValues] = React.useState<Record<string, any>>(() => {
     const initial: Record<string, any> = {};
-    fields.forEach((field) => {
+    for (const field of fields) {
       initial[field.name] = field.defaultValue || "";
-    });
+    }
     return initial;
   });
 
@@ -74,12 +74,13 @@ function FormWithValidation({
           }
           break;
 
-        case "email":
+        case "email": {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (value && !emailRegex.test(value)) {
             return rule.message;
           }
           break;
+        }
 
         case "minLength":
           if (value && value.length < rule.value) {
@@ -162,9 +163,9 @@ function FormWithValidation({
 
     // Mark all fields as touched
     const allTouched: Record<string, boolean> = {};
-    fields.forEach((field) => {
+    for (const field of fields) {
       allTouched[field.name] = true;
-    });
+    }
     setTouched(allTouched);
 
     // Validate all fields

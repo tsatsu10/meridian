@@ -32,8 +32,8 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   // Generate unique IDs for accessibility fallbacks
-  const fallbackTitleId = React.useId() + "-title";
-  const fallbackDescriptionId = React.useId() + "-description";
+  const fallbackTitleId = `${React.useId()}-title`;
+  const fallbackDescriptionId = `${React.useId()}-description`;
 
   // Check if children contain DialogTitle and DialogDescription
   const hasTitle = React.Children.toArray(children).some(

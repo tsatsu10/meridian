@@ -140,12 +140,13 @@ export default function TeamCalendarModal({
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
         break;
-      case "week":
+      case "week": {
         const dayOfWeek = currentDate.getDay();
         start.setDate(currentDate.getDate() - dayOfWeek);
         end.setDate(start.getDate() + 6);
         end.setHours(23, 59, 59, 999);
         break;
+      }
       case "month":
         start.setDate(1);
         start.setHours(0, 0, 0, 0);
@@ -612,9 +613,13 @@ export default function TeamCalendarModal({
   };
 
   const handleFindBestTime = () => {
-    if (suggestions.length > 0 && suggestions[0].type === "best-time") {
+    if (
+      suggestions.length > 0 &&
+      suggestions[0].type === "best-time" &&
+      suggestions[0].suggestedDate
+    ) {
       toast.success(
-        `Best time: ${suggestions[0].suggestedTime} on ${format(suggestions[0].suggestedDate!, "MMM d")}`,
+        `Best time: ${suggestions[0].suggestedTime} on ${format(suggestions[0].suggestedDate, "MMM d")}`,
       );
     } else {
       toast.info("No optimal time found. Try adjusting filters.");
@@ -684,7 +689,7 @@ export default function TeamCalendarModal({
       "METHOD:PUBLISH",
     ];
 
-    events.forEach((event) => {
+    for (const event of events) {
       const startDate = event.startDate;
       const endDate = event.endDate;
 
@@ -702,14 +707,14 @@ export default function TeamCalendarModal({
         `STATUS:${event.type === "deadline" ? "NEEDS-ACTION" : "CONFIRMED"}`,
         "END:VEVENT",
       );
-    });
+    }
 
     lines.push("END:VCALENDAR");
     return lines.filter((line) => line).join("\r\n");
   };
 
   const formatICSDate = (date: Date): string => {
-    return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    return `${date.toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
   };
 
   return (

@@ -191,11 +191,11 @@ export class MemoryMonitor {
         const memory = (performance as any).memory;
         const usage = memory.usedJSHeapSize / memory.totalJSHeapSize;
 
-        this.observers.forEach((observer) => {
+        for (const observer of this.observers) {
           if (usage >= observer.threshold) {
             observer.callback();
           }
-        });
+        }
       }
     }, 15000); // Check every 15 seconds instead of 5 seconds
   }
@@ -255,13 +255,13 @@ export function createCleanupManager(): {
       cleanupFunctions.push(cleanup);
     },
     cleanup: () => {
-      cleanupFunctions.forEach((fn) => {
+      for (const fn of cleanupFunctions) {
         try {
           fn();
         } catch (error) {
           console.warn("Cleanup function failed:", error);
         }
-      });
+      }
       cleanupFunctions.length = 0;
     },
   };

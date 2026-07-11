@@ -48,10 +48,12 @@ test.describe("Full system journey (signup → core features)", () => {
 
     // We need a workspace ID for API-based invite (DM user list comes from workspace members).
     const workspaceId = extractWorkspaceIdFromUrl(page.url());
-    expect(workspaceId).toBeTruthy();
+    if (!workspaceId) {
+      throw new Error(`could not extract workspace id from URL: ${page.url()}`);
+    }
 
     await inviteWorkspaceUserViaApi(page.request, {
-      workspaceId: workspaceId!,
+      workspaceId,
       userEmail: inviteeEmail,
     });
 

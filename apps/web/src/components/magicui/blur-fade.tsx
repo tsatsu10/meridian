@@ -59,7 +59,7 @@ const BlurFade = ({
     visible: {
       y: -yOffset,
       opacity: 1,
-      filter: `blur(0px)`,
+      filter: "blur(0px)",
     },
   };
   const combinedVariants = variant || defaultVariants;

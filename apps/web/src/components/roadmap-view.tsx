@@ -46,9 +46,9 @@ function RoadmapView({ tasks, milestones }: RoadmapViewProps) {
     if (!tasks.length) return [];
 
     // Get date range
-    const taskDates = tasks
-      .filter((task) => task.dueDate)
-      .map((task) => new Date(task.dueDate!));
+    const taskDates = tasks.flatMap((task) =>
+      task.dueDate ? [new Date(task.dueDate)] : [],
+    );
 
     if (taskDates.length === 0) return [];
 

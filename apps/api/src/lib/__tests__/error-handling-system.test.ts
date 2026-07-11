@@ -604,9 +604,9 @@ describe.skip("Error Handling System", () => {
         ErrorSeverity.CRITICAL,
       ];
 
-      validSeverities.forEach((severity) => {
+      for (const severity of validSeverities) {
         expect(Object.values(ErrorSeverity)).toContain(severity);
-      });
+      }
     });
 
     it("validates error types", () => {
@@ -618,9 +618,9 @@ describe.skip("Error Handling System", () => {
         ErrorType.AUTHORIZATION_ERROR,
       ];
 
-      validTypes.forEach((type) => {
+      for (const type of validTypes) {
         expect(Object.values(ErrorType)).toContain(type);
-      });
+      }
     });
 
     it("validates error context", () => {

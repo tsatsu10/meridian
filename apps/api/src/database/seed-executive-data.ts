@@ -299,7 +299,7 @@ export async function seedExecutiveData(options: SeedOptions = {}) {
     logger.debug(`✓ Created ${projects.length} projects with tasks`);
 
     // Step 4: Skipping milestones (table may not exist in schema yet)
-    logger.debug(`ℹ️  Skipping milestone creation (feature in development)`);
+    logger.debug("ℹ️  Skipping milestone creation (feature in development)");
 
     logger.debug("✅ Executive data seeding completed successfully!");
 

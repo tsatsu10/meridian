@@ -133,6 +133,7 @@ export function MobileFilterSheet({
 
                 return (
                   <button
+                    type="button"
                     key={option.value}
                     onClick={() => onStatusFilterChange(option.value)}
                     className={cn(
@@ -182,6 +183,7 @@ export function MobileFilterSheet({
 
                 return (
                   <button
+                    type="button"
                     key={option.value}
                     onClick={() => onPriorityFilterChange(option.value)}
                     className={cn(
@@ -231,6 +233,7 @@ export function MobileFilterSheet({
 
                 return (
                   <button
+                    type="button"
                     key={option.value}
                     onClick={() => onSortChange(option.value)}
                     className={cn(

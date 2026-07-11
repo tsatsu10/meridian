@@ -528,9 +528,9 @@ describe.skip("Logging System", () => {
         LogLevel.CRITICAL,
       ];
 
-      validLevels.forEach((level) => {
+      for (const level of validLevels) {
         expect(Object.values(LogLevel)).toContain(level);
-      });
+      }
     });
 
     it("validates log entries", () => {

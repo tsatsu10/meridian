@@ -260,14 +260,14 @@ function ProjectTimeline() {
     let totalWeight = 0;
     let completedWeight = 0;
 
-    allTasks.forEach((task: any) => {
+    for (const task of allTasks) {
       const weight =
         priorityWeights[task.priority as keyof typeof priorityWeights] || 2;
       totalWeight += weight;
       if (task.status === "done") {
         completedWeight += weight;
       }
-    });
+    }
 
     const weightedProgress =
       totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
@@ -348,7 +348,7 @@ function ProjectTimeline() {
       );
 
       // Add tasks
-      filteredTasks.forEach((task: any) => {
+      for (const task of filteredTasks) {
         const row = [
           "Task",
           task.number || task.id,
@@ -360,10 +360,10 @@ function ProjectTimeline() {
           `"${(task.description || "").replace(/"/g, '""')}"`,
         ];
         csvRows.push(row.join(","));
-      });
+      }
 
       // Add milestones
-      realMilestones.forEach((milestone: any) => {
+      for (const milestone of realMilestones) {
         const row = [
           "Milestone",
           milestone.id,
@@ -375,7 +375,7 @@ function ProjectTimeline() {
           `"${(milestone.description || "").replace(/"/g, '""')}"`,
         ];
         csvRows.push(row.join(","));
-      });
+      }
 
       // Create blob and download
       const csvContent = csvRows.join("\n");
@@ -544,7 +544,8 @@ function ProjectTimeline() {
     const stack = [...newDeps];
 
     while (stack.length > 0) {
-      const currentId = stack.pop()!;
+      const currentId = stack.pop();
+      if (currentId === undefined) break;
 
       if (visited.has(currentId)) continue;
       visited.add(currentId);
@@ -556,7 +557,7 @@ function ProjectTimeline() {
 
       // Check if current task has dependencies in other milestones
       const task = allTasks.find((t: any) => t.id === currentId);
-      if (task && task.dependencies) {
+      if (task?.dependencies) {
         stack.push(
           ...task.dependencies.map((d: any) =>
             typeof d === "string" ? d : d.requiredTaskId,
@@ -565,7 +566,7 @@ function ProjectTimeline() {
       }
 
       const milestone = realMilestones.find((m: any) => m.id === currentId);
-      if (milestone && milestone.dependencies) {
+      if (milestone?.dependencies) {
         stack.push(...milestone.dependencies);
       }
     }
@@ -694,10 +695,7 @@ function ProjectTimeline() {
     <LazyDashboardLayout>
       <div className="flex flex-col h-full bg-background">
         {/* Timeline Header */}
-        <header
-          className="flex flex-col gap-4 p-4 md:p-6 border-b border-border bg-card md:flex-row md:items-center md:justify-between"
-          role="banner"
-        >
+        <header className="flex flex-col gap-4 p-4 md:p-6 border-b border-border bg-card md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2 md:gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
@@ -898,7 +896,6 @@ function ProjectTimeline() {
         {/* Timeline Content */}
         <main
           className="flex-1 p-6 space-y-6 overflow-hidden"
-          role="main"
           aria-label="Timeline content"
         >
           {/* Enhanced Timeline Navigation - Now Functional */}

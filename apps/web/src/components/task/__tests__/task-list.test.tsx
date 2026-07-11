@@ -62,7 +62,7 @@ function TaskList({ tasks = [], onTaskClick }: TaskListProps) {
                 onChange={() => handleSelectTask(task.id)}
                 aria-label={`Select ${task.title}`}
               />
-              <button onClick={() => handleTaskClick(task.id)}>
+              <button type="button" onClick={() => handleTaskClick(task.id)}>
                 <span className="title">{task.title}</span>
                 <span className="status">{task.status}</span>
                 <span className="priority">{task.priority}</span>

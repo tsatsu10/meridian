@@ -65,20 +65,19 @@ const updateProfile = async (
         .returning();
 
       return result[0];
-    } else {
-      // Update existing profile
-      const result = await db
-        .update(userProfileTable)
-        .set({
-          ...profileData,
-          lastProfileUpdate: now,
-          updatedAt: now,
-        })
-        .where(eq(userProfileTable.userId, userId))
-        .returning();
-
-      return result[0];
     }
+    // Update existing profile
+    const result = await db
+      .update(userProfileTable)
+      .set({
+        ...profileData,
+        lastProfileUpdate: now,
+        updatedAt: now,
+      })
+      .where(eq(userProfileTable.userId, userId))
+      .returning();
+
+    return result[0];
   } catch (error) {
     logger.error("Error updating profile:", error);
     throw new Error("Failed to update profile");

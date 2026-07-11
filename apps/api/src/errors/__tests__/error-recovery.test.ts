@@ -16,7 +16,7 @@ describe("Error Recovery", () => {
       fn: () => Promise<any>,
       maxRetries = 3,
     ): Promise<any> => {
-      let lastError;
+      let lastError: unknown;
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
@@ -25,7 +25,7 @@ describe("Error Recovery", () => {
           lastError = error;
           if (attempt < maxRetries) {
             await new Promise((resolve) =>
-              setTimeout(resolve, Math.pow(2, attempt) * 100),
+              setTimeout(resolve, 2 ** attempt * 100),
             );
           }
         }
@@ -59,10 +59,10 @@ describe("Error Recovery", () => {
     it("should use exponential backoff", async () => {
       const delays = [100, 200, 400, 800];
 
-      delays.forEach((delay, index) => {
-        const expected = Math.pow(2, index) * 100;
+      for (const [index, delay] of delays.entries()) {
+        const expected = 2 ** index * 100;
         expect(delay).toBe(expected);
-      });
+      }
     });
   });
 

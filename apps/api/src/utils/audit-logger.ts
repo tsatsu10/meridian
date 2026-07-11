@@ -532,9 +532,9 @@ export class AuditLogger {
         .groupBy(auditLogTable.action);
 
       const eventsByType: Record<string, number> = {};
-      eventTypeResults.forEach((result) => {
+      for (const result of eventTypeResults) {
         eventsByType[result.eventType] = result.count;
-      });
+      }
 
       // Events by severity
       const severityResults = await database
@@ -547,9 +547,9 @@ export class AuditLogger {
         .groupBy(auditLogTable.severity);
 
       const eventsBySeverity: Record<string, number> = {};
-      severityResults.forEach((result) => {
+      for (const result of severityResults) {
         eventsBySeverity[result.severity ?? "unknown"] = result.count;
-      });
+      }
 
       // Events by outcome (category field as proxy)
       const outcomeResults = await database
@@ -562,11 +562,11 @@ export class AuditLogger {
         .groupBy(auditLogTable.category);
 
       const eventsByOutcome: Record<string, number> = {};
-      outcomeResults.forEach((result) => {
+      for (const result of outcomeResults) {
         if (result.outcome) {
           eventsByOutcome[result.outcome] = result.count;
         }
-      });
+      }
 
       // Top users
       const topUserResults = await database
@@ -748,9 +748,9 @@ export class AuditLogger {
       } else {
         // For other errors, retry only once
         if (!batch[0]?.retryAttempt) {
-          batch.forEach((event) => {
+          for (const event of batch) {
             event.retryAttempt = true;
-          });
+          }
           this.batchQueue.unshift(...batch);
         } else {
           logger.warn("Dropping audit batch after failed retry", {

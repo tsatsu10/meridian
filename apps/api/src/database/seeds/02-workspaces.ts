@@ -156,7 +156,7 @@ export async function seedWorkspaces() {
     // 1. CREATE WORKSPACE
     logger.info("🏢 Creating workspace...");
 
-    let workspace;
+    let workspace: typeof workspaces.$inferSelect;
     const existingWorkspace = await db
       .select()
       .from(workspaces)
@@ -363,7 +363,7 @@ export async function seedWorkspaces() {
     }
 
     logger.info("\n✅ Phase 2 complete: Created workspace organization");
-    logger.info(`   🏢 Workspaces: 1`);
+    logger.info("   🏢 Workspaces: 1");
     logger.info(`   👥 Workspace Members: ${allUsers.length}`);
     logger.info(`   🏢 Departments: ${createdDepartments.length}`);
     logger.info(`   👥 Teams: ${createdTeams.length}`);

@@ -545,9 +545,9 @@ describe.skip("Security System", () => {
         SecurityLevel.CRITICAL,
       ];
 
-      validLevels.forEach((level) => {
+      for (const level of validLevels) {
         expect(Object.values(SecurityLevel)).toContain(level);
-      });
+      }
     });
 
     it("validates security events", () => {

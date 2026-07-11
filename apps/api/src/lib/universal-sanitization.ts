@@ -26,9 +26,11 @@ import logger from "../utils/logger";
  * Comprehensive list of dangerous patterns
  */
 const DANGEROUS_PATTERNS = {
-  // Script execution
+  // Script execution. [\s\S] spans newlines and <\/script[^>]*> tolerates
+  // attribute/whitespace tricks in the closing tag; a trailing unterminated
+  // `<script` is caught by the opening-tag alternative.
   scripts: [
-    /<script[^>]*>.*?<\/script>/gi,
+    /<script\b[\s\S]*?<\/script[^>]*>|<script\b[^>]*>?/gi,
     /javascript:/gi,
     /vbscript:/gi,
     /data:text\/html/gi,
@@ -36,13 +38,13 @@ const DANGEROUS_PATTERNS = {
 
   // HTML elements that can execute code
   dangerousElements: [
-    /<iframe[^>]*>.*?<\/iframe>/gi,
+    /<iframe\b[\s\S]*?<\/iframe[^>]*>|<iframe\b[^>]*>?/gi,
     /<embed[^>]*>/gi,
     /<object[^>]*>/gi,
     /<applet[^>]*>/gi,
     /<link[^>]*>/gi,
     /<meta[^>]*>/gi,
-    /<style[^>]*>.*?<\/style>/gi,
+    /<style\b[\s\S]*?<\/style[^>]*>|<style\b[^>]*>?/gi,
   ],
 
   // Event handlers
@@ -97,8 +99,10 @@ export function escapeHtml(text: string): string {
 export function stripHtml(text: string): string {
   if (!text || typeof text !== "string") return "";
 
-  return text
-    .replace(/<[^>]*>/g, "") // Remove all HTML tags
+  // Decode entities BEFORE stripping — the old strip-then-decode order let
+  // encoded payloads rematerialize (`&lt;script&gt;` survived the tag strip,
+  // then decoded into a live `<script>`).
+  let result = text
     .replace(/&nbsp;/g, " ")
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
@@ -107,6 +111,17 @@ export function stripHtml(text: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
+
+  // Strip tags to a fixpoint: a single pass leaves reassembled tags behind
+  // (`<scr<x>ipt>` → `<scr ipt>`); the optional `>` also drops unterminated
+  // trailing tags, which browsers may still parse.
+  let previous: string;
+  do {
+    previous = result;
+    result = result.replace(/<[^>]*>?/g, "");
+  } while (result !== previous);
+
+  return result;
 }
 
 /**
@@ -123,13 +138,13 @@ export function containsDangerousContent(text: string): {
   const matchedPatterns: string[] = [];
 
   // Check all pattern categories
-  Object.entries(DANGEROUS_PATTERNS).forEach(([category, patterns]) => {
-    patterns.forEach((pattern, index) => {
+  for (const [category, patterns] of Object.entries(DANGEROUS_PATTERNS)) {
+    for (const [index, pattern] of patterns.entries()) {
       if (pattern.test(text)) {
         matchedPatterns.push(`${category}[${index}]`);
       }
-    });
-  });
+    }
+  }
 
   return {
     isDangerous: matchedPatterns.length > 0,
@@ -168,11 +183,9 @@ export function sanitizeText(
     });
 
     // Remove ALL dangerous patterns
-    Object.values(DANGEROUS_PATTERNS)
-      .flat()
-      .forEach((pattern) => {
-        sanitized = sanitized.replace(pattern, "[removed]");
-      });
+    for (const pattern of Object.values(DANGEROUS_PATTERNS).flat()) {
+      sanitized = sanitized.replace(pattern, "[removed]");
+    }
   }
 
   // Strip HTML if requested
@@ -224,11 +237,9 @@ export function sanitizeRichText(
     });
 
     // Remove dangerous patterns
-    Object.values(DANGEROUS_PATTERNS)
-      .flat()
-      .forEach((pattern) => {
-        sanitized = sanitized.replace(pattern, "[removed]");
-      });
+    for (const pattern of Object.values(DANGEROUS_PATTERNS).flat()) {
+      sanitized = sanitized.replace(pattern, "[removed]");
+    }
   }
 
   // For now, strip ALL HTML to be safe
@@ -273,6 +284,7 @@ export function sanitizeFileName(fileName: string): string {
   sanitized = sanitized
     .replace(/\.\./g, "") // Remove ../
     .replace(/[\/\\]/g, "") // Remove slashes
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: control chars are exactly what this filename sanitizer must remove
     .replace(/[<>:"|?*\x00-\x1f]/g, "") // Remove Windows-invalid chars and control chars
     .trim();
 
@@ -352,7 +364,7 @@ export function sanitizeNumber(
 
   const parsed = Number(value);
 
-  if (isNaN(parsed) || !isFinite(parsed)) {
+  if (isNaN(parsed) || !Number.isFinite(parsed)) {
     return defaultValue;
   }
 
@@ -418,16 +430,16 @@ export function sanitizeObject(
 
   const sanitized: any = {};
 
-  Object.keys(obj).forEach((key) => {
+  for (const key of Object.keys(obj)) {
     // Skip dangerous keys
     if (key.startsWith("__") || key.startsWith("$")) {
       logger.warn("Dangerous object key blocked", { key });
-      return;
+      continue;
     }
 
     // Check allowed keys if specified
     if (allowedKeys && !allowedKeys.includes(key)) {
-      return;
+      continue;
     }
 
     const value = obj[key];
@@ -442,7 +454,7 @@ export function sanitizeObject(
     } else {
       sanitized[key] = value;
     }
-  });
+  }
 
   return sanitized;
 }

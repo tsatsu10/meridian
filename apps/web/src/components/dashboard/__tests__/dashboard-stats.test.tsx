@@ -231,9 +231,9 @@ describe("Dashboard Stats Component", () => {
     const statCards = container.querySelectorAll(".stat-card");
     expect(statCards).toHaveLength(4);
 
-    statCards.forEach((card) => {
+    for (const card of statCards) {
       expect(card.querySelector("h3")).toBeInTheDocument();
       expect(card.querySelector(".stat-value")).toBeInTheDocument();
-    });
+    }
   });
 });

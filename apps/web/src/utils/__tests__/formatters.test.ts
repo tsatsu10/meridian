@@ -150,7 +150,7 @@ describe("Formatting Utilities", () => {
   describe("String Utilities", () => {
     const truncate = (str: string, length: number): string => {
       if (str.length <= length) return str;
-      return str.substring(0, length) + "...";
+      return `${str.substring(0, length)}...`;
     };
 
     it("should truncate long strings", () => {

@@ -108,9 +108,9 @@ export default function NotificationCenter({
   const groupedNotifications = useMemo(() => {
     const groups: { [key: string]: any[] } = {};
 
-    notifications.forEach((notification) => {
+    for (const notification of notifications) {
       const date = new Date(notification.timestamp);
-      let groupKey;
+      let groupKey: string;
 
       if (isToday(date)) {
         groupKey = "Today";
@@ -124,7 +124,7 @@ export default function NotificationCenter({
         groups[groupKey] = [];
       }
       groups[groupKey].push(notification);
-    });
+    }
 
     return groups;
   }, [notifications]);
@@ -154,11 +154,11 @@ export default function NotificationCenter({
   };
 
   const handleMarkAllRead = () => {
-    notifications.forEach((notification) => {
+    for (const notification of notifications) {
       if (!notification.isRead) {
         markNotificationAsRead(notification.id);
       }
-    });
+    }
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 

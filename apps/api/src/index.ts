@@ -59,7 +59,7 @@ import metricsRoutes from "./modules/metrics"; // Monitoring & metrics endpoint
 import fileVersionsRoutes from "./modules/file-versions"; // File versioning API
 // Removed old complex api-keys module - using simplified version
 import goalsRoutes from "./goals/routes"; // @epic-goal-setting: Goals & OKRs management
-import { createServer } from "http";
+import { createServer } from "node:http";
 import { userTable } from "./database/schema";
 import { eq } from "drizzle-orm";
 import favorites from "./favorites";
@@ -180,7 +180,7 @@ app.use(
       }
 
       // For development, allow localhost origins
-      if (origin && origin.startsWith("http://localhost:")) {
+      if (origin?.startsWith("http://localhost:")) {
         return origin;
       }
 
@@ -231,7 +231,7 @@ if (!enableDemoAuthBypass) {
     try {
       // Import database connection dynamically
       const { getDatabase } = await import("./database/connection");
-      let db;
+      let db: ReturnType<typeof getDatabase>;
       try {
         db = getDatabase();
       } catch (dbError) {
@@ -489,7 +489,8 @@ async function startServer() {
         )
           .then((response: Response) => {
             res.statusCode = response.status;
-            response.headers.forEach((value: string, key: string) => {
+            // biome-ignore lint/complexity/noForEach: Headers is not an Array and this TS lib has no Headers iterator
+            response.headers.forEach((value, key) => {
               res.setHeader(key, value);
             });
             return response.arrayBuffer();

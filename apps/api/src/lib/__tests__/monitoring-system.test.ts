@@ -640,9 +640,9 @@ describe.skip("Monitoring System", () => {
         MonitoringLevel.CRITICAL,
       ];
 
-      validLevels.forEach((level) => {
+      for (const level of validLevels) {
         expect(Object.values(MonitoringLevel)).toContain(level);
-      });
+      }
     });
 
     it("validates monitoring metrics", () => {

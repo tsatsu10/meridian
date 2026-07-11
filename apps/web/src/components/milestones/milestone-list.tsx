@@ -48,7 +48,6 @@ const getStatusIcon = (status: string) => {
       return <CheckCircle2 className="h-4 w-4 text-green-500" />;
     case "missed":
       return <AlertTriangle className="h-4 w-4 text-red-500" />;
-    case "upcoming":
     default:
       return <Clock className="h-4 w-4 text-blue-500" />;
   }
@@ -60,7 +59,6 @@ const getStatusColor = (status: string) => {
       return "bg-green-100 text-green-800 border-green-200";
     case "missed":
       return "bg-red-100 text-red-800 border-red-200";
-    case "upcoming":
     default:
       return "bg-blue-100 text-blue-800 border-blue-200";
   }
@@ -74,7 +72,6 @@ const getRiskColor = (riskLevel: string) => {
       return "text-orange-600";
     case "medium":
       return "text-yellow-600";
-    case "low":
     default:
       return "text-green-600";
   }
@@ -175,7 +172,7 @@ export default function MilestoneList({
       });
 
       // Convert tasks to milestone format
-      milestoneTasks.forEach((task: any) => {
+      for (const task of milestoneTasks) {
         derived.push({
           id: `derived_${task.id}`,
           title: task.title,
@@ -201,7 +198,7 @@ export default function MilestoneList({
           createdAt: task.createdAt || new Date().toISOString(),
           updatedAt: task.updatedAt || new Date().toISOString(),
         });
-      });
+      }
     }
 
     // Combine localStorage milestones with derived ones
@@ -306,7 +303,7 @@ export default function MilestoneList({
 
     const groups: Record<string, any[]> = {};
 
-    sortedMilestones.forEach((milestone) => {
+    for (const milestone of sortedMilestones) {
       let groupKey = "";
 
       switch (groupBy) {
@@ -316,10 +313,10 @@ export default function MilestoneList({
             milestone.status.slice(1);
           break;
         case "risk":
-          groupKey =
+          groupKey = `${
             milestone.riskLevel.charAt(0).toUpperCase() +
-            milestone.riskLevel.slice(1) +
-            " Risk";
+            milestone.riskLevel.slice(1)
+          } Risk`;
           break;
         case "type":
           groupKey = milestone.isDerived ? "Auto-detected" : "Manual";
@@ -338,7 +335,7 @@ export default function MilestoneList({
 
       if (!groups[groupKey]) groups[groupKey] = [];
       groups[groupKey].push(milestone);
-    });
+    }
 
     return groups;
   }, [sortedMilestones, groupBy]);
@@ -394,11 +391,11 @@ export default function MilestoneList({
         `Are you sure you want to delete ${selectedMilestones.size} milestones?`,
       )
     ) {
-      selectedMilestones.forEach((id) => {
+      for (const id of selectedMilestones) {
         if (!allMilestones.find((m) => m.id === id)?.isDerived) {
           deleteMilestone(id);
         }
-      });
+      }
       setSelectedMilestones(new Set());
       setSelectMode(false);
       toast.success(`${selectedMilestones.size} milestones deleted`);
@@ -408,12 +405,12 @@ export default function MilestoneList({
   const handleBulkStatusChange = (
     status: "upcoming" | "achieved" | "missed",
   ) => {
-    selectedMilestones.forEach((id) => {
+    for (const id of selectedMilestones) {
       const milestone = allMilestones.find((m) => m.id === id);
       if (milestone && !milestone.isDerived) {
         updateMilestone(id, { status });
       }
-    });
+    }
     setSelectedMilestones(new Set());
     setSelectMode(false);
     toast.success(`${selectedMilestones.size} milestones updated`);

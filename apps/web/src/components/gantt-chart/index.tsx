@@ -63,8 +63,9 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
   const earliestFinish = new Map<string, number>();
 
   function calculateEarliestTimes(taskId: string): number {
-    if (earliestFinish.has(taskId)) {
-      return earliestFinish.get(taskId)!;
+    const cached = earliestFinish.get(taskId);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const task = taskMap.get(taskId);
@@ -90,8 +91,9 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
   const latestFinish = new Map<string, number>();
 
   function calculateLatestTimes(taskId: string): number {
-    if (latestStart.has(taskId)) {
-      return latestStart.get(taskId)!;
+    const cached = latestStart.get(taskId);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const task = taskMap.get(taskId);
@@ -110,7 +112,7 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
 
     const finish =
       minDependentStart === Number.POSITIVE_INFINITY
-        ? earliestFinish.get(taskId)!
+        ? (earliestFinish.get(taskId) ?? 0)
         : minDependentStart;
     const start = finish - task.duration;
 
@@ -121,16 +123,16 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
   }
 
   // Calculate all times
-  tasks.forEach((task) => {
+  for (const task of tasks) {
     calculateEarliestTimes(task.id);
-  });
+  }
 
-  tasks.forEach((task) => {
+  for (const task of tasks) {
     calculateLatestTimes(task.id);
-  });
+  }
 
   // Identify critical path (tasks with zero slack)
-  tasks.forEach((task) => {
+  for (const task of tasks) {
     const early = earliestStart.get(task.id) || 0;
     const late = latestStart.get(task.id) || 0;
 
@@ -138,7 +140,7 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
       // Account for floating point precision
       criticalPath.add(task.id);
     }
-  });
+  }
 
   return criticalPath;
 }
@@ -261,9 +263,9 @@ function GanttChart({ tasks }: GanttChartProps) {
         }
 
         const critical = calculateCriticalPath(converted); // Mark critical path tasks
-        converted.forEach((task) => {
+        for (const task of converted) {
           task.isCriticalPath = critical.has(task.id);
-        });
+        }
 
         // Calculate timeline bounds based on view mode and current date
         let timelineStart: Date;
@@ -450,7 +452,7 @@ function GanttChart({ tasks }: GanttChartProps) {
         return `${baseClass} bg-blue-500 text-white`;
       case "todo":
         return `${baseClass} bg-gray-500 text-white`;
-      default:
+      default: {
         // Match the colors from the image
         const colors = [
           "bg-orange-500",
@@ -464,6 +466,7 @@ function GanttChart({ tasks }: GanttChartProps) {
         ];
         const colorIndex = task.title.charCodeAt(0) % colors.length;
         return `${baseClass} ${colors[colorIndex]} text-white`;
+      }
     }
   };
 
@@ -675,12 +678,14 @@ function GanttChart({ tasks }: GanttChartProps) {
                 <h3 className="font-semibold text-gray-900">Timeline View</h3>
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={handleTodayClick}
                     className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors font-medium"
                   >
                     Today
                   </button>
                   <button
+                    type="button"
                     onClick={handlePreviousPeriod}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Previous period"
@@ -688,6 +693,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                     <div className="w-3 h-3 border-l-2 border-b-2 border-current transform rotate-45"></div>
                   </button>
                   <button
+                    type="button"
                     onClick={handleNextPeriod}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Next period"
@@ -717,6 +723,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={handleZoomFit}
                     className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium"
                     title="Zoom to fit all tasks"
@@ -725,6 +732,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                   </button>
                   <div className="flex items-center gap-1">
                     <button
+                      type="button"
                       onClick={() =>
                         setZoomLevel(Math.max(0.5, zoomLevel - 0.25))
                       }
@@ -737,6 +745,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                       {Math.round(zoomLevel * 100)}%
                     </span>
                     <button
+                      type="button"
                       onClick={() =>
                         setZoomLevel(Math.min(3, zoomLevel + 0.25))
                       }
@@ -940,6 +949,7 @@ function GanttChart({ tasks }: GanttChartProps) {
 
                     {/* Professional Dependency arrows */}
                     <svg
+                      aria-hidden="true"
                       className="absolute top-0 left-0 w-full h-full pointer-events-none"
                       style={{ zIndex: 15 }}
                     >

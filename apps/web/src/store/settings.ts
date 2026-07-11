@@ -274,8 +274,9 @@ export const useSettingsStore = create<SettingsStore>()(
         pendingUpdates: 0,
       },
 
-      // Initialize with user data
-      initialize: async (userId: string, workspaceId?: string) => {
+      // Initialize with user data. _workspaceId is kept for interface
+      // compatibility; the realtime sync that consumed it was removed.
+      initialize: async (userId: string, _workspaceId?: string) => {
         // Prevent duplicate initialization
         if (isInitialized && currentUserId === userId) {
           return;
@@ -304,20 +305,9 @@ export const useSettingsStore = create<SettingsStore>()(
             isLoading: false,
             hasUnsavedChanges: false,
             lastSaved: new Date().toISOString(),
-          }); // Initialize sync service for real-time updates (optional feature)
-          if (workspaceId) {
-            try {
-              // const syncService = getSyncService(); // Removed getSyncService
-              // if (syncService) { // Removed getSyncService
-              //// Removed getSyncService
-              //   // Sync service integration can be enhanced later // Removed getSyncService
-              //   // For now, just ensure the store works without it // Removed getSyncService
-              // } // Removed getSyncService
-            } catch (error) {
-              console.warn("Sync service unavailable:", error);
-              // Continue without real-time sync - this is optional
-            }
-          }
+          });
+          // Real-time sync-service integration was removed with the offline/
+          // realtime feature cleanup; settings persist via the API only.
         } catch (error) {
           console.error("Failed to initialize settings:", error);
           // Fall back to local defaults - don't show error toast to avoid console spam
@@ -379,15 +369,14 @@ export const useSettingsStore = create<SettingsStore>()(
               }));
               toast.error(`Validation failed: ${errors[0].message}`);
               return;
-            } else {
-              // Clear validation errors for this section
-              set((state) => ({
-                validationErrors: {
-                  ...state.validationErrors,
-                  [section]: [],
-                },
-              }));
             }
+            // Clear validation errors for this section
+            set((state) => ({
+              validationErrors: {
+                ...state.validationErrors,
+                [section]: [],
+              },
+            }));
           } catch (error) {
             console.error("Validation failed:", error);
             // Continue with update but show warning
@@ -576,9 +565,8 @@ export const useSettingsStore = create<SettingsStore>()(
                 [section]: [],
               },
             };
-          } else {
-            return { validationErrors: {} };
           }
+          return { validationErrors: {} };
         });
       },
 

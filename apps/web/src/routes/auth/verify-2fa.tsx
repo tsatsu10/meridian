@@ -214,7 +214,7 @@ function Verify2FA() {
         <div className="mt-4 text-center">
           <p className="text-sm text-muted-foreground">
             Lost access to your authenticator?{" "}
-            <button className="text-primary hover:underline">
+            <button type="button" className="text-primary hover:underline">
               Contact support
             </button>
           </p>

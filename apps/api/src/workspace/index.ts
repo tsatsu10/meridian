@@ -44,7 +44,7 @@ workspace.get("/", async (c) => {
   logger.debug(`🔐 Workspace request - userEmail from context: ${userEmail}`);
 
   if (!userEmail) {
-    logger.debug(`❌ No userEmail in context`);
+    logger.debug("❌ No userEmail in context");
     return c.json({ error: "No user email in context" }, 400);
   }
 
@@ -353,7 +353,7 @@ workspace.post(
 
     try {
       const body = await c.req.parseBody();
-      const file = body["logo"];
+      const file = body.logo;
 
       if (!file || !(file instanceof File)) {
         return c.json({ error: "No file uploaded" }, 400);

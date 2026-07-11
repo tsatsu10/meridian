@@ -198,6 +198,7 @@ function FileUpload({
                       aria-valuemin={0}
                       aria-valuemax={100}
                       aria-label={`Upload progress: ${file.progress}%`}
+                      tabIndex={0}
                     />
                   </div>
                 )}
@@ -219,6 +220,7 @@ function FileUpload({
               </div>
 
               <button
+                type="button"
                 onClick={() => onRemove?.(file.id)}
                 aria-label={`Remove ${file.name}`}
                 className="remove-button"

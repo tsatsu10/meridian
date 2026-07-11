@@ -255,7 +255,7 @@ function convertToCSV(exportData: any): string {
     "ID,Title,Description,Status,Priority,Due Date,Assignee,Created At",
   );
 
-  exportData.tasks.forEach((task: any) => {
+  for (const task of exportData.tasks) {
     const row = [
       task.id,
       `"${task.title.replace(/"/g, '""')}"`,
@@ -267,7 +267,7 @@ function convertToCSV(exportData: any): string {
       task.createdAt,
     ].join(",");
     lines.push(row);
-  });
+  }
 
   // Stats
   lines.push("");
@@ -310,11 +310,11 @@ function convertToMarkdown(exportData: any): string {
   lines.push("| Title | Status | Priority | Due Date | Assignee |");
   lines.push("|-------|--------|----------|----------|----------|");
 
-  exportData.tasks.forEach((task: any) => {
+  for (const task of exportData.tasks) {
     lines.push(
       `| ${task.title} | ${task.status} | ${task.priority || "N/A"} | ${task.dueDate || "N/A"} | ${task.assignee || "Unassigned"} |`,
     );
-  });
+  }
 
   lines.push("");
 

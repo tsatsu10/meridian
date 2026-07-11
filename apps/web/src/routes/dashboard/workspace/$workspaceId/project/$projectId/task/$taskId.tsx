@@ -502,6 +502,7 @@ function Section({
     >
       <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
         <button
+          type="button"
           onClick={onToggle}
           className="flex-1 flex items-center gap-3 text-left"
           aria-expanded={isExpanded}
@@ -514,6 +515,7 @@ function Section({
         <div className="flex items-center gap-2 shrink-0">
           {actions}
           <button
+            type="button"
             onClick={onToggle}
             className="p-1 hover:bg-muted rounded transition-colors"
             aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title} section`}

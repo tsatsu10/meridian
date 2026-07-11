@@ -1,4 +1,15 @@
-import { desc, asc, and, or, like, gte, eq, sql, inArray } from "drizzle-orm";
+import {
+  desc,
+  asc,
+  and,
+  or,
+  like,
+  gte,
+  eq,
+  sql,
+  inArray,
+  type SQL,
+} from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import {
   projectTemplates,
@@ -76,7 +87,7 @@ export default async function listTemplates(
     whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
   // Build order by
-  let orderByClause;
+  let orderByClause: SQL<unknown>;
   const order = sortOrder === "asc" ? asc : desc;
 
   switch (sortBy) {

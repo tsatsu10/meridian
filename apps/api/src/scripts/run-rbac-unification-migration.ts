@@ -14,8 +14,8 @@
  * @phase Phase-1-Week-1
  */
 
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { getDatabase } from "../database/connection";
 import { sql } from "drizzle-orm";
 import logger from "../utils/logger";
@@ -181,10 +181,9 @@ async function createBackup(): Promise<boolean> {
         "  ✓ Backup will be created during migration (role_assignment → role_assignment_backup)",
       );
       return true;
-    } else {
-      logger.debug("  ℹ️  No existing role_assignment table to backup");
-      return true;
     }
+    logger.debug("  ℹ️  No existing role_assignment table to backup");
+    return true;
   } catch (error) {
     logger.error("❌ Backup failed:");
     logger.error(error);
@@ -245,9 +244,9 @@ async function runMigration() {
   logger.debug("═══════════════════════════════════════════════\n");
 
   logger.debug("Summary:");
-  results.forEach((result) => {
+  for (const result of results) {
     logger.debug(`  ✅ ${result.step}: ${result.message}`);
-  });
+  }
 
   logger.debug("\n📋 Next Steps:");
   logger.debug("  1. Verify data in new tables");

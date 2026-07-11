@@ -257,15 +257,15 @@ function NotificationsPanel() {
       if (!a.isPinned && b.isPinned) return 1;
 
       switch (sortBy) {
-        case "priority":
+        case "priority": {
           const priorityOrder = { error: 0, warning: 1, success: 2, info: 3 };
           return (
             (priorityOrder[a.type as keyof typeof priorityOrder] ?? 4) -
             (priorityOrder[b.type as keyof typeof priorityOrder] ?? 4)
           );
+        }
         case "type":
           return a.type.localeCompare(b.type);
-        case "date":
         default:
           return (
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -452,11 +452,11 @@ function NotificationsPanel() {
 
     const groups: Record<string, any[]> = {};
 
-    filteredNotifications.forEach((notification) => {
+    for (const notification of filteredNotifications) {
       let groupKey = "";
 
       switch (groupBy) {
-        case "date":
+        case "date": {
           const date = new Date(notification.createdAt);
           if (isToday(date)) {
             groupKey = "Today";
@@ -466,6 +466,7 @@ function NotificationsPanel() {
             groupKey = format(date, "MMMM d, yyyy");
           }
           break;
+        }
         case "type":
           groupKey =
             notification.type.charAt(0).toUpperCase() +
@@ -483,7 +484,7 @@ function NotificationsPanel() {
         groups[groupKey] = [];
       }
       groups[groupKey].push(notification);
-    });
+    }
 
     return Object.entries(groups).map(([title, notifications]) => ({
       title,
@@ -612,7 +613,7 @@ function NotificationsPanel() {
   };
 
   // Show error state if there's an authentication error
-  if (error && error.message?.includes("Forbidden")) {
+  if (error?.message?.includes("Forbidden")) {
     return (
       <LazyDashboardLayout>
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">

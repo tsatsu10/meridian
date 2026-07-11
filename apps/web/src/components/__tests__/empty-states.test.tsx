@@ -34,7 +34,9 @@ function EmptyState({
       <h3>{title}</h3>
       {description && <p>{description}</p>}
       {actionLabel && onAction && (
-        <button onClick={onAction}>{actionLabel}</button>
+        <button type="button" onClick={onAction}>
+          {actionLabel}
+        </button>
       )}
     </div>
   );

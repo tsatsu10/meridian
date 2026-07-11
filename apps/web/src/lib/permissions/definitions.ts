@@ -784,7 +784,7 @@ export function hasMinimumRole(
  * Get permissions for a specific role
  */
 export function getRolePermissions(role: UserRole): AllPermissions {
-  return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS["guest"];
+  return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.guest;
 }
 
 /**

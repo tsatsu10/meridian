@@ -241,6 +241,7 @@ export function SecurityDashboard() {
       <div className="flex gap-2">
         {["24h", "7d", "30d"].map((range) => (
           <button
+            type="button"
             key={range}
             onClick={() => setTimeRange(range)}
             className={`px-3 py-1 rounded text-sm ${

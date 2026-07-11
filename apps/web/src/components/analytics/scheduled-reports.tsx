@@ -304,15 +304,11 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
     ];
     if (report.frequency === "daily") {
       return `Daily at ${report.time}`;
-    } else if (
-      report.frequency === "weekly" &&
-      report.dayOfWeek !== undefined
-    ) {
+    }
+    if (report.frequency === "weekly" && report.dayOfWeek !== undefined) {
       return `Every ${days[report.dayOfWeek]} at ${report.time}`;
-    } else if (
-      report.frequency === "monthly" &&
-      report.dayOfMonth !== undefined
-    ) {
+    }
+    if (report.frequency === "monthly" && report.dayOfMonth !== undefined) {
       return `Monthly on day ${report.dayOfMonth} at ${report.time}`;
     }
     return report.frequency;

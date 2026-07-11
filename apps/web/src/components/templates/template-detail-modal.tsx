@@ -222,7 +222,7 @@ export function TemplateDetailModal({
                           >
                             <div className="flex items-start gap-3">
                               {hasSubtasks && (
-                                <button className="mt-0.5">
+                                <button type="button" className="mt-0.5">
                                   {isExpanded ? (
                                     <ChevronDown className="h-4 w-4" />
                                   ) : (

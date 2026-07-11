@@ -419,7 +419,7 @@ export async function getProjectAnalytics(c: Context) {
       },
     };
 
-    logger.debug(`📊 Sending analytics response:`, {
+    logger.debug("📊 Sending analytics response:", {
       taskMetrics,
       timeMetrics,
       teamMetrics: { activeMembers: teamMetrics.activeMembers },

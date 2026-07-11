@@ -28,16 +28,18 @@ export function useScheduleConflicts({
 
     // 1. Detect overlapping events for same members
     const memberEventMap = new Map<string, CalendarEvent[]>();
-    events.forEach((event) => {
-      event.attendees.forEach((memberId) => {
-        if (!memberEventMap.has(memberId)) {
-          memberEventMap.set(memberId, []);
+    for (const event of events) {
+      for (const memberId of event.attendees) {
+        let memberEvents = memberEventMap.get(memberId);
+        if (!memberEvents) {
+          memberEvents = [];
+          memberEventMap.set(memberId, memberEvents);
         }
-        memberEventMap.get(memberId)!.push(event);
-      });
-    });
+        memberEvents.push(event);
+      }
+    }
 
-    memberEventMap.forEach((memberEvents, memberId) => {
+    for (const [memberId, memberEvents] of memberEventMap.entries()) {
       for (let i = 0; i < memberEvents.length; i++) {
         for (let j = i + 1; j < memberEvents.length; j++) {
           const event1 = memberEvents[i];
@@ -61,10 +63,10 @@ export function useScheduleConflicts({
           }
         }
       }
-    });
+    }
 
     // 2. Detect workload overload
-    memberSchedules.forEach((schedule) => {
+    for (const schedule of memberSchedules) {
       if (schedule.workload > 90) {
         const overloadEvents = schedule.events.filter(
           (e) => e.startDate >= new Date(),
@@ -85,11 +87,11 @@ export function useScheduleConflicts({
           });
         }
       }
-    });
+    }
 
     // 3. Detect availability conflicts
-    events.forEach((event) => {
-      event.attendees.forEach((memberId) => {
+    for (const event of events) {
+      for (const memberId of event.attendees) {
         const schedule = memberSchedules.find((s) => s.memberId === memberId);
         if (
           schedule &&
@@ -109,8 +111,8 @@ export function useScheduleConflicts({
             ),
           });
         }
-      });
-    });
+      }
+    }
 
     return detectedConflicts;
   }, [events, memberSchedules, autoDetect]);
@@ -211,19 +213,19 @@ function generateOverloadResolutions(
 
   // Suggest reassigning lower priority events
   const reassignableEvents = events.filter((e) => e.priority !== "critical");
-  reassignableEvents.forEach((event) => {
+  for (const event of reassignableEvents) {
     resolutions.push({
       id: `reassign-${event.id}`,
       description: `Reassign "${event.title}" to another team member`,
       action: "reassign",
       autoApplicable: false,
     });
-  });
+  }
 
   // Suggest extending deadlines
   resolutions.push({
-    id: `extend-workload`,
-    description: `Extend deadlines to balance workload`,
+    id: "extend-workload",
+    description: "Extend deadlines to balance workload",
     action: "extend",
     autoApplicable: false,
   });

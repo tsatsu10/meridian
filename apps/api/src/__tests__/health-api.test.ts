@@ -145,9 +145,9 @@ describe.skip("Health System API", () => {
         ),
       ]);
 
-      responses.forEach((res) => {
+      for (const res of responses) {
         expect(res.status).toBeGreaterThanOrEqual(400);
-      });
+      }
     });
 
     it("should default to 30 days", async () => {
@@ -388,9 +388,9 @@ describe.skip("Health System API", () => {
         fetch(`${API_BASE}/api/health/projects//history`),
       ]);
 
-      responses.forEach((res) => {
+      for (const res of responses) {
         expect(res.status).toBeGreaterThanOrEqual(400);
-      });
+      }
     });
 
     it("should have consistent error response format", async () => {

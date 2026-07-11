@@ -418,32 +418,28 @@ export async function exportTranslations(
 
     if (format === "json") {
       return JSON.stringify(translations, null, 2);
-    } else {
-      // CSV format
-      const csvRows = [
-        ["Key", "Value", "Context"].join(","),
-        ...Object.values(translations).map((t) =>
-          [t.key, `"${t.value.replace(/"/g, '""')}"`, t.context || ""].join(
-            ",",
-          ),
-        ),
-      ];
-      return csvRows.join("\n");
     }
-  } else {
-    // Export all languages
-    const languages = await getLanguages(workspaceId);
-    const allTranslations: Record<string, Record<string, Translation>> = {};
-
-    for (const lang of languages) {
-      allTranslations[lang.languageCode] = await getTranslations(
-        workspaceId,
-        lang.languageCode,
-      );
-    }
-
-    return JSON.stringify(allTranslations, null, 2);
+    // CSV format
+    const csvRows = [
+      ["Key", "Value", "Context"].join(","),
+      ...Object.values(translations).map((t) =>
+        [t.key, `"${t.value.replace(/"/g, '""')}"`, t.context || ""].join(","),
+      ),
+    ];
+    return csvRows.join("\n");
   }
+  // Export all languages
+  const languages = await getLanguages(workspaceId);
+  const allTranslations: Record<string, Record<string, Translation>> = {};
+
+  for (const lang of languages) {
+    allTranslations[lang.languageCode] = await getTranslations(
+      workspaceId,
+      lang.languageCode,
+    );
+  }
+
+  return JSON.stringify(allTranslations, null, 2);
 }
 
 /**

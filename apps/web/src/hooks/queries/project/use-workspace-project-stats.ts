@@ -18,7 +18,7 @@ export function useWorkspaceProjectStats() {
       if (!workspace?.id) {
         throw new Error("No workspace selected");
       }
-      return fetchApi(`/project/stats`, {
+      return fetchApi("/project/stats", {
         params: { workspaceId: workspace.id },
       });
     },

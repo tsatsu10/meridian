@@ -65,7 +65,6 @@ export const BulkSelectCheckbox: React.FC<BulkSelectCheckboxProps> = ({
         "transition-all duration-200",
         className,
       )}
-      role="none"
     >
       <Checkbox
         checked={isSelected}
@@ -127,7 +126,7 @@ export const BulkSelectAllCheckbox: React.FC<BulkSelectAllCheckboxProps> = ({
     if (!isAllSelected) {
       announcement.textContent = `All ${totalProjects} projects selected`;
     } else {
-      announcement.textContent = `All projects deselected`;
+      announcement.textContent = "All projects deselected";
     }
 
     document.body.appendChild(announcement);
@@ -143,7 +142,6 @@ export const BulkSelectAllCheckbox: React.FC<BulkSelectAllCheckboxProps> = ({
         "transition-all duration-200",
         className,
       )}
-      role="none"
     >
       <Checkbox
         checked={isAllSelected || isIndeterminate}

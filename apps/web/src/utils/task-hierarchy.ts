@@ -89,9 +89,9 @@ export function findAllChildrenOfTask(
   children.push(...directChildren);
 
   // Recursively find nested children
-  directChildren.forEach((child) => {
+  for (const child of directChildren) {
     const nestedChildren = findAllChildrenOfTask(child.id, allTasks);
     children.push(...nestedChildren);
-  });
+  }
   return children;
 }

@@ -6,8 +6,8 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { writeFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { createId } from "@paralleldrive/cuid2";
 
 const UPLOAD_DIR = join(process.cwd(), "uploads", "workspace-logos");

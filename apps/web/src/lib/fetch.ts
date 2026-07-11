@@ -27,9 +27,9 @@ export async function fetchApi(endpoint: string, options: FetchOptions = {}) {
   // `new URL` requires a valid absolute base; API_URL is "" in dev (same-origin).
   const url = new URL(apiEndpoint, resolveFetchOrigin());
   if (params) {
-    Object.entries(params).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(params)) {
       url.searchParams.append(key, value);
-    });
+    }
   }
 
   // Add default headers

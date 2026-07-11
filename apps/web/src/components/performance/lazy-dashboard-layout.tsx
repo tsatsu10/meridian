@@ -149,7 +149,6 @@ export default function LazyDashboardLayout({
         return <ChartSkeleton />;
       case "table":
         return <TableSkeleton />;
-      case "stats":
       default:
         return <StatsCardSkeleton />;
     }

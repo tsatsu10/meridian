@@ -1217,6 +1217,7 @@ export default function LandingPage() {
                 className="bg-background rounded-xl border shadow-sm overflow-hidden"
               >
                 <button
+                  type="button"
                   onClick={() =>
                     setOpenFaqIndex(openFaqIndex === index ? null : index)
                   }
@@ -1390,12 +1391,12 @@ export default function LandingPage() {
                   "Changelog",
                 ].map((link) => (
                   <li key={link}>
-                    <a
-                      href="#"
+                    <button
+                      type="button"
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link}
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -1414,12 +1415,12 @@ export default function LandingPage() {
                   "Press Kit",
                 ].map((link) => (
                   <li key={link}>
-                    <a
-                      href="#"
+                    <button
+                      type="button"
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link}
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -1437,13 +1438,13 @@ export default function LandingPage() {
                 "Security",
                 "Cookie Policy",
               ].map((link) => (
-                <a
+                <button
                   key={link}
-                  href="#"
+                  type="button"
                   className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                 >
                   {link}
-                </a>
+                </button>
               ))}
             </div>
           </div>

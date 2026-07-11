@@ -473,7 +473,7 @@ describe("Security Audit Middleware", () => {
       const attemptCount = 5;
       const baseDelay = 1000; // 1 second
 
-      const delay = baseDelay * Math.pow(2, attemptCount - 1);
+      const delay = baseDelay * 2 ** (attemptCount - 1);
       expect(delay).toBe(16000); // 16 seconds
     });
 

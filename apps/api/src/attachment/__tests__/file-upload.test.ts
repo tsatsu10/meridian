@@ -95,7 +95,7 @@ describe("File Upload", () => {
     });
 
     it("should reject very long file names", () => {
-      const longName = "a".repeat(300) + ".txt";
+      const longName = `${"a".repeat(300)}.txt`;
       expect(validateFileName(longName)).toBe(false);
     });
   });

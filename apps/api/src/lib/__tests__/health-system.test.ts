@@ -594,9 +594,9 @@ describe.skip("Health System", () => {
         HealthStatus.MAINTENANCE,
       ];
 
-      validStatuses.forEach((status) => {
+      for (const status of validStatuses) {
         expect(Object.values(HealthStatus)).toContain(status);
-      });
+      }
     });
 
     it("validates health checks", () => {

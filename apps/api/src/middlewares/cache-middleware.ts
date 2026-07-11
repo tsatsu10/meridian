@@ -7,7 +7,7 @@
 import type { MiddlewareHandler } from "hono";
 import { CacheService, CacheTTL } from "../services/cache/cache-service";
 import { Logger } from "../services/logging/logger";
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 interface CacheOptions {
   ttl?: number;
@@ -34,7 +34,7 @@ export function cacheMiddleware(options: CacheOptions = {}): MiddlewareHandler {
     }
 
     // Skip if condition is met
-    if (skipIf && skipIf(c)) {
+    if (skipIf?.(c)) {
       return next();
     }
 
@@ -52,6 +52,7 @@ export function cacheMiddleware(options: CacheOptions = {}): MiddlewareHandler {
           // Get response
           const status = c.res.status;
           const headers: Record<string, string> = {};
+          // biome-ignore lint/complexity/noForEach: Headers is not an Array and this TS lib has no Headers iterator
           c.res.headers.forEach((value, key) => {
             headers[key] = value;
           });

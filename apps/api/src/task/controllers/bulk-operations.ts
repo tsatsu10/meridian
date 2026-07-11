@@ -250,7 +250,7 @@ export async function bulkArchiveTasks(taskIds: string[], userId: string) {
           type: "task",
           userId,
           content: {
-            text: `Archived task (bulk operation)`,
+            text: "Archived task (bulk operation)",
             bulkOperation: true,
           },
         });

@@ -86,7 +86,11 @@ function AnalyticsCharts({
         <div role="alert" className="error-message">
           {error}
         </div>
-        <button onClick={() => window.location.reload()} aria-label="Retry">
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          aria-label="Retry"
+        >
           Retry
         </button>
       </div>
@@ -125,6 +129,7 @@ function AnalyticsCharts({
       >
         {(["line", "bar", "pie", "doughnut"] as const).map((type) => (
           <button
+            type="button"
             key={type}
             role="tab"
             aria-selected={selectedType === type}
@@ -144,7 +149,12 @@ function AnalyticsCharts({
         role="img"
         aria-label={`${selectedType} chart showing ${title}`}
       >
-        <svg width="100%" height="100%" data-chart-type={selectedType}>
+        <svg
+          aria-hidden="true"
+          width="100%"
+          height="100%"
+          data-chart-type={selectedType}
+        >
           {/* Simplified SVG representation */}
           <rect width="100%" height="100%" fill="#f5f5f5" />
           <text x="50%" y="50%" textAnchor="middle" fill="#666">
@@ -197,6 +207,7 @@ function AnalyticsCharts({
       <div className="chart-actions">
         <div className="export-buttons">
           <button
+            type="button"
             onClick={() => handleExport("png")}
             aria-label="Export as PNG"
             className="export-button"
@@ -204,6 +215,7 @@ function AnalyticsCharts({
             PNG
           </button>
           <button
+            type="button"
             onClick={() => handleExport("csv")}
             aria-label="Export as CSV"
             className="export-button"
@@ -211,6 +223,7 @@ function AnalyticsCharts({
             CSV
           </button>
           <button
+            type="button"
             onClick={() => handleExport("pdf")}
             aria-label="Export as PDF"
             className="export-button"

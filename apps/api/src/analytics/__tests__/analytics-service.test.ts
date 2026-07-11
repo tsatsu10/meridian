@@ -446,7 +446,8 @@ describe.skip("Analytics Service", () => {
   });
 
   describe("Team Performance Analytics", () => {
-    let teamMember1: any, teamMember2: any;
+    let teamMember1: any;
+    let teamMember2: any;
 
     beforeEach(async () => {
       const hashedPassword = await hashPassword("TestPassword123!");

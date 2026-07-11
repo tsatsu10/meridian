@@ -92,7 +92,7 @@ export async function changeMemberRole(c: Context) {
       .limit(1);
 
     if (!currentUser) {
-      logger.debug(`❌ Current user not found in workspace`);
+      logger.debug("❌ Current user not found in workspace");
       return c.json({ error: "Unauthorized" }, 403);
     }
 
@@ -151,7 +151,7 @@ export async function changeMemberRole(c: Context) {
         {
           error: "Cannot assign a role equal to or higher than your own",
           yourRole: currentUser.role,
-          requiredRole: "Higher than " + role,
+          requiredRole: `Higher than ${role}`,
         },
         403,
       );
@@ -160,7 +160,7 @@ export async function changeMemberRole(c: Context) {
     // Must have higher role than the target member's current role
     if (currentUserHierarchy <= targetCurrentHierarchy) {
       logger.debug(
-        `❌ Insufficient permissions: cannot modify member with equal or higher role`,
+        "❌ Insufficient permissions: cannot modify member with equal or higher role",
       );
       return c.json(
         {
@@ -205,7 +205,7 @@ export async function changeMemberRole(c: Context) {
           performedByEmail: currentUserEmail,
         },
       });
-      logger.debug(`📝 Role change logged to history`);
+      logger.debug("📝 Role change logged to history");
     } catch (historyError) {
       // Don't fail the request if history logging fails
       logger.error("⚠️ Failed to log role history:", historyError);

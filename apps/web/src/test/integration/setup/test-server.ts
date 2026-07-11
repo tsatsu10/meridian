@@ -41,8 +41,7 @@ export async function waitForServer(maxRetries = MAX_RETRIES): Promise<void> {
   }
 
   throw new Error(
-    `API server is not running at ${API_BASE_URL}. ` +
-      `Please start the API server with 'npm run dev' in the apps/api directory.`,
+    `API server is not running at ${API_BASE_URL}. Please start the API server with 'npm run dev' in the apps/api directory.`,
   );
 }
 

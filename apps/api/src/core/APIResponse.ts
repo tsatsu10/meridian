@@ -41,7 +41,7 @@ export class APIResponseBuilder {
       data,
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: this.generateRequestId(),
+        requestId: APIResponseBuilder.generateRequestId(),
         version: process.env.API_VERSION || "1.0.0",
         ...meta,
       },
@@ -63,7 +63,7 @@ export class APIResponseBuilder {
       },
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: this.generateRequestId(),
+        requestId: APIResponseBuilder.generateRequestId(),
         version: process.env.API_VERSION || "1.0.0",
         ...meta,
       },
@@ -82,7 +82,7 @@ export class APIResponseBuilder {
       data,
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: this.generateRequestId(),
+        requestId: APIResponseBuilder.generateRequestId(),
         version: process.env.API_VERSION || "1.0.0",
         pagination: {
           page: pagination.page,

@@ -239,14 +239,14 @@ export async function seedTimeAndActivity() {
       });
     }
 
-    logger.info(`   ✅ Created 30 days of mood analytics`);
+    logger.info("   ✅ Created 30 days of mood analytics");
 
     logger.info("\n✅ Phase 7 complete: Created time tracking and activities");
     logger.info(`   ⏱️  Time Entries: ${timeEntryCount}`);
     logger.info(`   📊 Activities: ${activityCount}`);
     logger.info(`   🔄 Active Sessions: ${sessionCount}`);
     logger.info(`   😊 Mood Check-ins: ${moodCount}`);
-    logger.info(`   📊 Mood Analytics: 30 days`);
+    logger.info("   📊 Mood Analytics: 30 days");
 
     return {
       timeEntryCount,

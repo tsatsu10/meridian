@@ -4,10 +4,10 @@
  * Phase 0 - Day 4 Implementation
  */
 
-import crypto from "crypto";
-import path from "path";
-import fs from "fs";
-import { promisify } from "util";
+import crypto from "node:crypto";
+import path from "node:path";
+import fs from "node:fs";
+import { promisify } from "node:util";
 import logger from "../../utils/logger";
 
 const writeFile = promisify(fs.writeFile);

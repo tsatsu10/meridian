@@ -10,7 +10,7 @@ const me = async () => {
 
   // If we have a session token in localStorage, send it as a header
   if (sessionToken) {
-    headers["Authorization"] = `Bearer ${sessionToken}`;
+    headers.Authorization = `Bearer ${sessionToken}`;
   }
 
   const response = await fetch(`${API_BASE_URL}/users/me`, {

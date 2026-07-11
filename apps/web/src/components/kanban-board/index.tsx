@@ -186,7 +186,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
   ) => {
     if (!hasColumns(project)) return;
 
-    taskIds.forEach((taskId) => {
+    for (const taskId of taskIds) {
       const allTasks = (project as any).columns.flatMap((col: any) =>
         flattenTasks(col.tasks),
       );
@@ -194,13 +194,13 @@ function KanbanBoard({ project }: KanbanBoardProps) {
       if (task) {
         updateTask({ ...task, ...updates });
       }
-    });
+    }
   };
 
   const handleBulkDelete = (taskIds: string[]) => {
-    taskIds.forEach((taskId) => {
+    for (const taskId of taskIds) {
       deleteTask(taskId);
-    });
+    }
   };
 
   const sensors = useSensors(
@@ -282,7 +282,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
 
         // Show warnings if any
         if (validation.warnings && validation.warnings.length > 0) {
-          validation.warnings.forEach((warning) => {
+          for (const warning of validation.warnings) {
             toast.warning(warning, {
               duration: 4000,
               style: {
@@ -290,7 +290,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
                 fontSize: "14px",
               },
             });
-          });
+          }
         }
 
         // @epic-1.1-subtasks: When moving a parent task, move all its subtasks too
@@ -303,7 +303,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
         }
 
         // Update all tasks (parent + subtasks) to new column
-        tasksToUpdate.forEach((taskToUpdate, index) => {
+        for (const [index, taskToUpdate] of tasksToUpdate.entries()) {
           const updatedTask = {
             ...taskToUpdate,
             status: destinationColumn.id,
@@ -332,7 +332,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
               }
             },
           });
-        });
+        }
       } else {
       }
     } else {
@@ -538,6 +538,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
                     <div className="text-center space-y-4">
                       <div className="w-16 h-16 bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 rounded-full flex items-center justify-center mx-auto">
                         <svg
+                          aria-hidden="true"
                           className="w-8 h-8 text-zinc-400 dark:text-zinc-500"
                           fill="none"
                           stroke="currentColor"

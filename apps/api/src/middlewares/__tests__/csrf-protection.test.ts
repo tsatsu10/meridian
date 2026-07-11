@@ -16,7 +16,7 @@ describe("CSRF Protection Middleware", () => {
 
   describe("Token generation", () => {
     it("should generate CSRF token", () => {
-      const token = "csrf-token-" + Math.random().toString(36);
+      const token = `csrf-token-${Math.random().toString(36)}`;
       expect(token).toBeTruthy();
       expect(token.length).toBeGreaterThan(10);
     });
@@ -27,8 +27,8 @@ describe("CSRF Protection Middleware", () => {
     });
 
     it("should generate unique tokens", () => {
-      const token1 = "csrf-" + Date.now() + "-" + Math.random();
-      const token2 = "csrf-" + Date.now() + "-" + Math.random();
+      const token1 = `csrf-${Date.now()}-${Math.random()}`;
+      const token2 = `csrf-${Date.now()}-${Math.random()}`;
 
       expect(token1).not.toBe(token2);
     });
@@ -255,8 +255,10 @@ describe("CSRF Protection Middleware", () => {
         name === "referer" ? "https://example.com/page" : null,
       );
 
+      // Compare the parsed origin exactly — substring checks pass for
+      // attacker URLs like https://evil.com/example.com.
       const referer = mockContext.req.header("referer");
-      expect(referer).toContain("example.com");
+      expect(new URL(referer as string).origin).toBe("https://example.com");
     });
   });
 

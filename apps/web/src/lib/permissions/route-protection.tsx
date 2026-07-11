@@ -39,18 +39,19 @@ export function ProtectedPage({
  */
 export function RoleProtectedPage({
   children,
-  role,
+  requiredRole,
   minimum = true,
   fallbackPath = "/dashboard",
 }: {
   children: React.ReactNode;
-  role: UserRole;
+  // Named requiredRole (not "role") so a11y tooling doesn't mistake it for an ARIA role attribute.
+  requiredRole: UserRole;
   minimum?: boolean;
   fallbackPath?: string;
 }) {
   return (
     <RequireRole
-      role={role}
+      role={requiredRole}
       minimum={minimum}
       fallback={<RedirectToPath path={fallbackPath} />}
     >
@@ -126,6 +127,7 @@ function RedirectToPath({ path }: { path: string }) {
       <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg
+            aria-hidden="true"
             className="w-8 h-8 text-red-600"
             fill="none"
             stroke="currentColor"
@@ -146,7 +148,10 @@ function RedirectToPath({ path }: { path: string }) {
           You don't have permission to access this page.
         </p>
         <button
-          onClick={() => (window.location.href = path)}
+          type="button"
+          onClick={() => {
+            window.location.href = path;
+          }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
           Go to Dashboard
@@ -164,21 +169,21 @@ function RedirectToPath({ path }: { path: string }) {
 export const RouteProtections = {
   // Admin-only routes
   adminOnly: (children: React.ReactNode) => (
-    <RoleProtectedPage role="workspace-manager" minimum={true}>
+    <RoleProtectedPage requiredRole="workspace-manager" minimum={true}>
       {children}
     </RoleProtectedPage>
   ),
 
   // Manager-level routes
   managerOnly: (children: React.ReactNode) => (
-    <RoleProtectedPage role="department-head" minimum={true}>
+    <RoleProtectedPage requiredRole="department-head" minimum={true}>
       {children}
     </RoleProtectedPage>
   ),
 
   // Team lead routes
   teamLeadOnly: (children: React.ReactNode) => (
-    <RoleProtectedPage role="team-lead" minimum={true}>
+    <RoleProtectedPage requiredRole="team-lead" minimum={true}>
       {children}
     </RoleProtectedPage>
   ),
@@ -195,7 +200,7 @@ export const RouteProtections = {
 
   // Member-only routes (basic access)
   memberOnly: (children: React.ReactNode) => (
-    <RoleProtectedPage role="member" minimum={true}>
+    <RoleProtectedPage requiredRole="member" minimum={true}>
       {children}
     </RoleProtectedPage>
   ),
@@ -246,7 +251,7 @@ export const RouteExamples = {
   teamLeadRoute: `
     export const Route = createFileRoute('/team/manage')({
       component: () => (
-        <RoleProtectedPage role="team-lead" minimum={true}>
+        <RoleProtectedPage requiredRole="team-lead" minimum={true}>
           <TeamManagement />
         </RoleProtectedPage>
       ),

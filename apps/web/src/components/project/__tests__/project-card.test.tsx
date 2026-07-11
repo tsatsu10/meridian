@@ -130,6 +130,7 @@ function ProjectCard({
         aria-valuenow={project.progress}
         aria-valuemin={0}
         aria-valuemax={100}
+        tabIndex={0}
       >
         <div
           className="progress-bar"
@@ -157,12 +158,14 @@ function ProjectCard({
           aria-label="Project actions"
         >
           <button
+            type="button"
             onClick={() => onEdit?.(project.id)}
             aria-label="Edit project"
           >
             Edit
           </button>
           <button
+            type="button"
             onClick={() => onArchive?.(project.id)}
             aria-label="Archive project"
           >
@@ -301,9 +304,10 @@ describe("Project Card Component", () => {
     });
 
     const card = container.querySelector(".project-card");
+    if (!card) throw new Error("project card not rendered");
 
     // Simulate mouse enter
-    await user.hover(card!);
+    await user.hover(card);
 
     await waitFor(() => {
       expect(
@@ -326,7 +330,8 @@ describe("Project Card Component", () => {
     );
 
     // Note: Hover-triggered actions may not work reliably in jsdom
-    const card = container.querySelector(".project-card")!;
+    const card = container.querySelector(".project-card");
+    if (!card) throw new Error("project card not rendered");
     await user.hover(card);
 
     const editButton = await screen.findByRole("button", {
@@ -348,7 +353,8 @@ describe("Project Card Component", () => {
     );
 
     // Note: Hover-triggered actions may not work reliably in jsdom
-    const card = container.querySelector(".project-card")!;
+    const card = container.querySelector(".project-card");
+    if (!card) throw new Error("project card not rendered");
     await user.hover(card);
 
     const archiveButton = await screen.findByRole("button", {
@@ -419,7 +425,7 @@ describe("Project Card Component", () => {
   it("should apply correct priority colors", () => {
     const priorities = ["low", "medium", "high", "urgent"];
 
-    priorities.forEach((priority) => {
+    for (const priority of priorities) {
       const projectWithPriority = {
         ...mockProject,
         priority,
@@ -435,13 +441,13 @@ describe("Project Card Component", () => {
       expect(badge?.textContent).toBe(priority);
 
       unmount();
-    });
+    }
   });
 
   it("should apply correct status colors", () => {
     const statuses = ["active", "in_progress", "completed", "archived"];
 
-    statuses.forEach((status) => {
+    for (const status of statuses) {
       const projectWithStatus = {
         ...mockProject,
         status,
@@ -457,6 +463,6 @@ describe("Project Card Component", () => {
       expect(badge?.textContent).toBe(status);
 
       unmount();
-    });
+    }
   });
 });

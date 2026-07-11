@@ -11,8 +11,8 @@ import { errorMessage } from "../utils/errors";
  * - Integration with monitoring systems
  */
 
-import { EventEmitter } from "events";
-import { createHash } from "crypto";
+import { EventEmitter } from "node:events";
+import { createHash } from "node:crypto";
 import logger from "../utils/logger";
 export interface LogMetrics {
   timestamp: number;
@@ -309,32 +309,31 @@ class LogAggregationService extends EventEmitter {
 
     if (options.format === "json") {
       return JSON.stringify(filteredLogs, null, 2);
-    } else {
-      // CSV format
-      const headers = [
-        "timestamp",
-        "level",
-        "category",
-        "message",
-        "duration",
-        "userId",
-        "endpoint",
-        "statusCode",
-      ];
-      const csvRows = [headers.join(",")];
-
-      filteredLogs.forEach((log) => {
-        const row = headers.map((header) => {
-          const value = log[header as keyof LogMetrics];
-          return typeof value === "string"
-            ? `"${value.replace(/"/g, '""')}"`
-            : value || "";
-        });
-        csvRows.push(row.join(","));
-      });
-
-      return csvRows.join("\n");
     }
+    // CSV format
+    const headers = [
+      "timestamp",
+      "level",
+      "category",
+      "message",
+      "duration",
+      "userId",
+      "endpoint",
+      "statusCode",
+    ];
+    const csvRows = [headers.join(",")];
+
+    for (const log of filteredLogs) {
+      const row = headers.map((header) => {
+        const value = log[header as keyof LogMetrics];
+        return typeof value === "string"
+          ? `"${value.replace(/"/g, '""')}"`
+          : value || "";
+      });
+      csvRows.push(row.join(","));
+    }
+
+    return csvRows.join("\n");
   }
 
   /**

@@ -269,19 +269,19 @@ function SettingsIndex() {
           >
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Need help configuring something? Check out our{" "}
-              <a
-                href="#"
+              <button
+                type="button"
                 className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
               >
                 documentation
-              </a>{" "}
+              </button>{" "}
               or{" "}
-              <a
-                href="#"
+              <button
+                type="button"
                 className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
               >
                 contact support
-              </a>
+              </button>
               .
             </p>
           </motion.div>

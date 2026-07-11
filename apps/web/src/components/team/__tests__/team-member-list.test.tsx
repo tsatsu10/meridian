@@ -83,7 +83,7 @@ function TeamMemberList({
         />
       </div>
 
-      <ul className="member-list" role="list">
+      <ul className="member-list">
         {filteredMembers.map((member) => {
           const isCurrentUser = member.email === currentUserEmail;
 
@@ -91,7 +91,6 @@ function TeamMemberList({
             <li
               key={member.id}
               className="member-item"
-              role="listitem"
               aria-label={`Team member: ${member.name}`}
             >
               <div
@@ -136,12 +135,14 @@ function TeamMemberList({
               {!isCurrentUser && (
                 <div className="member-actions">
                   <button
+                    type="button"
                     onClick={() => onChangeRole?.(member.id, "admin")}
                     aria-label={`Change ${member.name}'s role`}
                   >
                     Change Role
                   </button>
                   <button
+                    type="button"
                     onClick={() => onRemoveMember?.(member.id)}
                     aria-label={`Remove ${member.name}`}
                     className="danger"
@@ -488,9 +489,9 @@ describe("Team Member List Component", () => {
     expect(roleBadges.length).toBe(3);
 
     // Each badge should have a color class
-    roleBadges.forEach((badge) => {
+    for (const badge of roleBadges) {
       expect(badge.className).toMatch(/bg-\w+-500/);
-    });
+    }
   });
 
   it("should clear search filter", async () => {

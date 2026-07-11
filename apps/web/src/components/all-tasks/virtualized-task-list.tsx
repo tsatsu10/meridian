@@ -809,9 +809,9 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
           onSelectAll={() => {}}
         />
         <TaskListSkeleton />
-        {shouldShowPagination && (
+        {shouldShowPagination && pagination && (
           <PaginationControls
-            pagination={pagination!}
+            pagination={pagination}
             pageSize={pageSize}
             onPageSizeChange={onPageSizeChange}
             onPageChange={onPageChange}
@@ -929,9 +929,9 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
           ) : null}
         </DragOverlay>
       </div>
-      {shouldShowPagination && (
+      {shouldShowPagination && pagination && (
         <PaginationControls
-          pagination={pagination!}
+          pagination={pagination}
           pageSize={pageSize}
           onPageSizeChange={onPageSizeChange}
           onPageChange={onPageChange}

@@ -191,8 +191,8 @@ const analyzeProjectRisks = async (
   }
 
   // 4. Project Deadline Risk
-  projects.forEach((project) => {
-    if (!project.deadline) return;
+  for (const project of projects) {
+    if (!project.deadline) continue;
 
     const projectTasks = tasks.filter((t) => t.projectId === project.id);
     const completedTasks = projectTasks.filter((t) => t.status === "done");
@@ -238,7 +238,7 @@ const analyzeProjectRisks = async (
         },
       });
     }
-  });
+  }
 
   // Calculate overall risk score
   const totalRiskScore = alerts.reduce(
@@ -338,27 +338,25 @@ export default function useRiskDetection(
     refetchInterval: queryEnabled ? 10 * 60 * 1000 : false,
     select: (data) => {
       // Add high/critical alerts to notification store
-      data.alerts
-        .filter(
-          (alert) => alert.severity === "high" || alert.severity === "critical",
-        )
-        .forEach((alert) => {
-          addNotificationToStore({
-            id: generateUniqueId("risk-"),
-            type: "auto-status-update", // Reuse existing type for now
-            title: `🚨 ${alert.title}`,
-            message: alert.description,
-            data: {
-              taskId: alert.affectedTasks[0] || "",
-              newStatus: "risk-detected",
-              reason: alert.title,
-              triggeredBy: "risk-analysis",
-            },
-            timestamp: alert.createdAt,
-            isRead: false,
-            priority: alert.severity === "critical" ? "high" : "medium",
-          });
+      for (const alert of data.alerts.filter(
+        (alert) => alert.severity === "high" || alert.severity === "critical",
+      )) {
+        addNotificationToStore({
+          id: generateUniqueId("risk-"),
+          type: "auto-status-update", // Reuse existing type for now
+          title: `🚨 ${alert.title}`,
+          message: alert.description,
+          data: {
+            taskId: alert.affectedTasks[0] || "",
+            newStatus: "risk-detected",
+            reason: alert.title,
+            triggeredBy: "risk-analysis",
+          },
+          timestamp: alert.createdAt,
+          isRead: false,
+          priority: alert.severity === "critical" ? "high" : "medium",
         });
+      }
 
       return data;
     },
