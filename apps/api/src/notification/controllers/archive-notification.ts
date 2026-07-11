@@ -30,5 +30,3 @@ async function archiveNotification(userEmail: string, notificationId: string) {
 }
 
 export default archiveNotification;
-
-

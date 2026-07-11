@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userExperienceTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface ExperienceData {
   title: string;
@@ -17,22 +17,32 @@ interface ExperienceData {
   order?: number;
 }
 
-const updateExperience = async (userId: string, experienceId: string, experienceData: ExperienceData) => {
+const updateExperience = async (
+  userId: string,
+  experienceId: string,
+  experienceData: ExperienceData,
+) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .update(userExperienceTable)
       .set({
         ...experienceData,
-        skills: experienceData.skills ? JSON.stringify(experienceData.skills) : null,
-        achievements: experienceData.achievements ? JSON.stringify(experienceData.achievements) : null,
+        skills: experienceData.skills
+          ? JSON.stringify(experienceData.skills)
+          : null,
+        achievements: experienceData.achievements
+          ? JSON.stringify(experienceData.achievements)
+          : null,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(userExperienceTable.id, experienceId),
-        eq(userExperienceTable.userId, userId)
-      ))
+      .where(
+        and(
+          eq(userExperienceTable.id, experienceId),
+          eq(userExperienceTable.userId, userId),
+        ),
+      )
       .returning();
 
     return result[0];
@@ -42,4 +52,4 @@ const updateExperience = async (userId: string, experienceId: string, experience
   }
 };
 
-export default updateExperience; 
+export default updateExperience;

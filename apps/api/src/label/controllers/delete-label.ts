@@ -24,4 +24,3 @@ async function deleteLabel(id: string) {
 }
 
 export default deleteLabel;
-

@@ -4,14 +4,14 @@
  * Single source of truth for all application configuration.
  * ALL configuration should come from environment variables defined here.
  */
-import logger from '../utils/logger';
-import { DEFAULT_API_PORT } from './default-api-port';
+import logger from "../utils/logger";
+import { DEFAULT_API_PORT } from "./default-api-port";
 
-import 'dotenv/config';
+import "dotenv/config";
 
 export interface AppSettings {
   // Environment
-  nodeEnv: 'development' | 'production' | 'test';
+  nodeEnv: "development" | "production" | "test";
   isDemoMode: boolean;
   apiPort: number;
   host: string;
@@ -21,7 +21,7 @@ export interface AppSettings {
   jwtSecret: string;
 
   // Database
-  databaseType: 'sqlite' | 'postgresql';
+  databaseType: "sqlite" | "postgresql";
   databaseUrl: string;
 
   // Security
@@ -37,21 +37,24 @@ export interface AppSettings {
 function loadSettings(): AppSettings {
   const settings: AppSettings = {
     // Environment
-    nodeEnv: (process.env.NODE_ENV as any) || 'development',
-    isDemoMode: process.env.DEMO_MODE === 'true',
-    apiPort: parseInt(process.env.API_PORT || String(DEFAULT_API_PORT), 10),
-    host: process.env.HOST || 'localhost',
+    nodeEnv: (process.env.NODE_ENV as any) || "development",
+    isDemoMode: process.env.DEMO_MODE === "true",
+    apiPort: Number.parseInt(
+      process.env.API_PORT || String(DEFAULT_API_PORT),
+      10,
+    ),
+    host: process.env.HOST || "localhost",
 
     // Authentication - SINGLE SOURCE OF TRUTH
-    adminEmail: process.env.ADMIN_EMAIL || 'admin@meridian.app',
-    jwtSecret: process.env.JWT_SECRET || 'meridian-dev-secret',
+    adminEmail: process.env.ADMIN_EMAIL || "admin@meridian.app",
+    jwtSecret: process.env.JWT_SECRET || "meridian-dev-secret",
 
     // Database
-    databaseType: (process.env.DATABASE_TYPE as any) || 'postgresql',
-    databaseUrl: process.env.DATABASE_URL || '',
+    databaseType: (process.env.DATABASE_TYPE as any) || "postgresql",
+    databaseUrl: process.env.DATABASE_URL || "",
 
     // Security
-    corsOrigins: (process.env.CORS_ORIGINS || '').split(',').filter(Boolean),
+    corsOrigins: (process.env.CORS_ORIGINS || "").split(",").filter(Boolean),
 
     // Features
     emailEnabled: !!(process.env.EMAIL_HOST && process.env.EMAIL_USER),
@@ -59,16 +62,16 @@ function loadSettings(): AppSettings {
 
   // Validate critical settings
   if (!settings.databaseUrl) {
-    logger.warn('⚠️  DATABASE_URL not set');
+    logger.warn("⚠️  DATABASE_URL not set");
   }
 
-  if (!settings.jwtSecret || settings.jwtSecret === 'meridian-dev-secret') {
-    if (settings.nodeEnv === 'production') {
+  if (!settings.jwtSecret || settings.jwtSecret === "meridian-dev-secret") {
+    if (settings.nodeEnv === "production") {
       throw new Error(
-        'JWT_SECRET must be set to a strong value in production - refusing to start with the default secret'
+        "JWT_SECRET must be set to a strong value in production - refusing to start with the default secret",
       );
     }
-    logger.warn('⚠️  Using default JWT_SECRET - not secure for production!');
+    logger.warn("⚠️  Using default JWT_SECRET - not secure for production!");
   }
 
   return settings;
@@ -88,4 +91,3 @@ export function getSettings() {
 }
 
 export default appSettings;
-

@@ -1,9 +1,9 @@
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { milestoneTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // @epic-1.3-milestones: Create new project milestones
 // @role-project-manager: PM needs to create and manage milestones
@@ -32,7 +32,7 @@ export async function createMilestone(c: Context) {
         {
           error: "Missing required fields",
         },
-        400
+        400,
       );
     }
 
@@ -48,7 +48,9 @@ export async function createMilestone(c: Context) {
         projectId,
         riskLevel: riskLevel || "low",
         riskDescription,
-        dependencyTaskIds: dependencyTaskIds ? JSON.stringify(dependencyTaskIds) : null,
+        dependencyTaskIds: dependencyTaskIds
+          ? JSON.stringify(dependencyTaskIds)
+          : null,
         stakeholderIds: stakeholderIds ? JSON.stringify(stakeholderIds) : null,
         createdBy: userId,
       })
@@ -66,7 +68,7 @@ export async function createMilestone(c: Context) {
       {
         error: "Failed to create milestone",
       },
-      500
+      500,
     );
   }
-} 
+}

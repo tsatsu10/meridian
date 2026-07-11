@@ -25,4 +25,3 @@ async function getTimeEntriesByTaskId(taskId: string) {
 }
 
 export default getTimeEntriesByTaskId;
-

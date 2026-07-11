@@ -8,8 +8,9 @@ import {
 } from "../../database/schema";
 import type { TemplateWithTasks } from "../../types/templates";
 
-export default async function getTemplate(templateId: string): Promise<TemplateWithTasks | null> {
-
+export default async function getTemplate(
+  templateId: string,
+): Promise<TemplateWithTasks | null> {
   // Get template
   const template = await getDatabase().query.projectTemplates.findFirst({
     where: eq(projectTemplates.id, templateId),
@@ -49,22 +50,28 @@ export default async function getTemplate(templateId: string): Promise<TemplateW
   }
 
   // Group subtasks by task
-  const subtasksByTask = subtasks.reduce((acc, subtask) => {
-    if (!acc[subtask.templateTaskId]) {
-      acc[subtask.templateTaskId] = [];
-    }
-    acc[subtask.templateTaskId].push(subtask);
-    return acc;
-  }, {} as Record<string, any[]>);
+  const subtasksByTask = subtasks.reduce(
+    (acc, subtask) => {
+      if (!acc[subtask.templateTaskId]) {
+        acc[subtask.templateTaskId] = [];
+      }
+      acc[subtask.templateTaskId].push(subtask);
+      return acc;
+    },
+    {} as Record<string, any[]>,
+  );
 
   // Group dependencies by task
-  const depsByTask = dependencies.reduce((acc, dep) => {
-    if (!acc[dep.dependentTaskId]) {
-      acc[dep.dependentTaskId] = [];
-    }
-    acc[dep.dependentTaskId].push(dep);
-    return acc;
-  }, {} as Record<string, any[]>);
+  const depsByTask = dependencies.reduce(
+    (acc, dep) => {
+      if (!acc[dep.dependentTaskId]) {
+        acc[dep.dependentTaskId] = [];
+      }
+      acc[dep.dependentTaskId].push(dep);
+      return acc;
+    },
+    {} as Record<string, any[]>,
+  );
 
   // Combine tasks with their subtasks and dependencies
   const tasksWithDetails = tasks.map((task) => ({
@@ -79,5 +86,3 @@ export default async function getTemplate(templateId: string): Promise<TemplateW
     tasks: tasksWithDetails,
   } as TemplateWithTasks;
 }
-
-

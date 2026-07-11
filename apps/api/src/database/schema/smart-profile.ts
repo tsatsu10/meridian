@@ -1,6 +1,6 @@
 /**
  * 🎯 Smart Profile Features Schema
- * 
+ *
  * Database schema for enhanced profile features:
  * - Profile views & analytics
  * - Optimization suggestions
@@ -28,7 +28,9 @@ import {
 import { users, workspaces, projects, teams } from "../schema";
 // 3. User Availability
 export const userAvailability = pgTable("user_availability", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .unique()
@@ -49,7 +51,9 @@ export const userAvailability = pgTable("user_availability", {
 export const frequentCollaborators = pgTable(
   "frequent_collaborators",
   {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -60,7 +64,10 @@ export const frequentCollaborators = pgTable(
     sharedProjects: jsonb("shared_projects"), // Array of project IDs
     sharedTasks: jsonb("shared_tasks"), // Array of task IDs
     lastCollaboration: timestamp("last_collaboration", { withTimezone: true }),
-    collaborationScore: numeric("collaboration_score", { precision: 5, scale: 2 }), // 0-100
+    collaborationScore: numeric("collaboration_score", {
+      precision: 5,
+      scale: 2,
+    }), // 0-100
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
@@ -69,18 +76,20 @@ export const frequentCollaborators = pgTable(
     // shape stably, keeping repeated pushes a no-op. Also covers pair lookups.
     uniquePair: uniqueIndex("idx_frequent_collaborators_pair_unique").on(
       table.userId,
-      table.collaboratorId
+      table.collaboratorId,
     ),
     userIdx: index("idx_frequent_collaborators_user").on(
       table.userId,
-      table.collaborationScore
+      table.collaborationScore,
     ),
-  })
+  }),
 );
 
 // 5. User Statistics
 export const userStatistics = pgTable("user_statistics", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .unique()
@@ -124,7 +133,9 @@ export const userStatistics = pgTable("user_statistics", {
   daysInWorkspace: integer("days_in_workspace").default(0),
 
   // Last updated
-  lastCalculated: timestamp("last_calculated", { withTimezone: true }).defaultNow(),
+  lastCalculated: timestamp("last_calculated", {
+    withTimezone: true,
+  }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -132,7 +143,9 @@ export const userStatistics = pgTable("user_statistics", {
 export const userWorkHistory = pgTable(
   "user_work_history",
   {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -147,7 +160,9 @@ export const userWorkHistory = pgTable(
     projectId: text("project_id").references(() => projects.id, {
       onDelete: "set null",
     }),
-    teamId: text("team_id").references(() => teams.id, { onDelete: "set null" }),
+    teamId: text("team_id").references(() => teams.id, {
+      onDelete: "set null",
+    }),
     eventDate: timestamp("event_date", { withTimezone: true }).defaultNow(),
     metadata: jsonb("metadata"),
   },
@@ -155,10 +170,13 @@ export const userWorkHistory = pgTable(
     userIdx: index("idx_work_history_user").on(table.userId, table.eventDate),
     workspaceIdx: index("idx_work_history_workspace").on(
       table.workspaceId,
-      table.eventDate
+      table.eventDate,
     ),
-    typeIdx: index("idx_work_history_type").on(table.eventType, table.eventDate),
-  })
+    typeIdx: index("idx_work_history_type").on(
+      table.eventType,
+      table.eventDate,
+    ),
+  }),
 );
 
 export type UserAvailability = typeof userAvailability.$inferSelect;
@@ -169,7 +187,6 @@ export type NewFrequentCollaborator = typeof frequentCollaborators.$inferInsert;
 
 export type UserStatistics = typeof userStatistics.$inferSelect;
 export type NewUserStatistics = typeof userStatistics.$inferInsert;
-
 
 export type UserWorkHistory = typeof userWorkHistory.$inferSelect;
 export type NewUserWorkHistory = typeof userWorkHistory.$inferInsert;

@@ -19,4 +19,3 @@ async function getTask(taskId: string) {
 }
 
 export default getTask;
-

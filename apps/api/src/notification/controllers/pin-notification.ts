@@ -20,4 +20,4 @@ async function pinNotification(id: string) {
   return notification;
 }
 
-export default pinNotification; 
+export default pinNotification;

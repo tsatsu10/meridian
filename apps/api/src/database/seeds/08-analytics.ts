@@ -1,6 +1,6 @@
 /**
  * 📊 Phase 8: Analytics & Historical Data Seed
- * 
+ *
  * Creates:
  * - Project health scores (30 days history)
  * - Health recommendations
@@ -26,12 +26,7 @@ import {
   workspaces,
 } from "../schema";
 import logger from "../../utils/logger";
-import {
-  randomInt,
-  randomElement,
-  randomBool,
-  daysAgo,
-} from "./seed-utils";
+import { randomInt, randomElement, randomBool, daysAgo } from "./seed-utils";
 
 // ==========================================
 // MAIN SEED FUNCTION
@@ -47,21 +42,30 @@ export async function seedAnalytics() {
     const allProjects = await db.select().from(projects).limit(20);
 
     if (!workspace || allUsers.length === 0 || allProjects.length === 0) {
-      throw new Error("Workspace, users, and projects required. Run phases 1-3 first.");
+      throw new Error(
+        "Workspace, users, and projects required. Run phases 1-3 first.",
+      );
     }
 
     // 1. CREATE PROJECT HEALTH
     logger.info("❤️ Creating project health scores...");
-    
+
     let healthCount = 0;
 
     for (const project of allProjects) {
       // Skip completed/archived projects
-      if (project.status === 'completed' || project.isArchived) continue;
+      if (project.status === "completed" || project.isArchived) continue;
 
       const score = randomInt(40, 95);
-      const status = score >= 80 ? 'excellent' : score >= 60 ? 'good' : score >= 40 ? 'fair' : 'critical';
-      const trend = randomElement(['improving', 'stable', 'declining']);
+      const status =
+        score >= 80
+          ? "excellent"
+          : score >= 60
+            ? "good"
+            : score >= 40
+              ? "fair"
+              : "critical";
+      const trend = randomElement(["improving", "stable", "declining"]);
 
       await db.insert(projectHealthTable).values({
         projectId: project.id,
@@ -86,11 +90,16 @@ export async function seedAnalytics() {
       // Create 30 days of health history
       for (let i = 0; i < 30; i++) {
         const historicalScore = Math.max(20, score + randomInt(-15, 15));
-        
+
         await db.insert(healthHistoryTable).values({
           projectId: project.id,
           score: historicalScore,
-          status: historicalScore >= 80 ? 'excellent' : historicalScore >= 60 ? 'good' : 'fair',
+          status:
+            historicalScore >= 80
+              ? "excellent"
+              : historicalScore >= 60
+                ? "good"
+                : "fair",
           completionRate: randomInt(30, 90),
           timelineHealth: randomInt(50, 100),
           taskHealth: randomInt(60, 95),
@@ -100,12 +109,14 @@ export async function seedAnalytics() {
         });
       }
 
-      logger.info(`   ✅ ${project.name}: Score ${score}/100 (${status}) + 30 days history`);
+      logger.info(
+        `   ✅ ${project.name}: Score ${score}/100 (${status}) + 30 days history`,
+      );
     }
 
     // 2. CREATE HEALTH RECOMMENDATIONS
     logger.info("\n💡 Creating health recommendations...");
-    
+
     let recommendationCount = 0;
 
     for (const project of allProjects.slice(0, 5)) {
@@ -127,8 +138,14 @@ export async function seedAnalytics() {
             "Some tasks are approaching deadlines - plan accordingly.",
             "Resource utilization is below optimal levels.",
           ]),
-          priority: randomElement(['high', 'medium', 'low']),
-          category: randomElement(['performance', 'timeline', 'resources', 'quality', 'risk']),
+          priority: randomElement(["high", "medium", "low"]),
+          category: randomElement([
+            "performance",
+            "timeline",
+            "resources",
+            "quality",
+            "risk",
+          ]),
           actionItems: [
             "Review current sprint capacity",
             "Reassign tasks if needed",
@@ -147,30 +164,41 @@ export async function seedAnalytics() {
 
     // 3. CREATE RISK ALERTS
     logger.info("\n⚠️ Creating risk alerts...");
-    
+
     let riskCount = 0;
 
     for (const project of allProjects.slice(0, 7)) {
       const alertCount = randomInt(1, 3);
 
       for (let i = 0; i < alertCount; i++) {
-        const severity = randomElement(['low', 'medium', 'high', 'critical']);
-        const alertType = randomElement(['overdue', 'blocked', 'resource_conflict', 'deadline_risk', 'dependency_chain', 'quality_risk']);
+        const severity = randomElement(["low", "medium", "high", "critical"]);
+        const alertType = randomElement([
+          "overdue",
+          "blocked",
+          "resource_conflict",
+          "deadline_risk",
+          "dependency_chain",
+          "quality_risk",
+        ]);
 
         await db.insert(riskAlerts).values({
           workspaceId: workspace.id,
           projectId: project.id,
           alertType,
           severity,
-          title: `${severity.toUpperCase()}: ${alertType.replace(/_/g, ' ')}`,
+          title: `${severity.toUpperCase()}: ${alertType.replace(/_/g, " ")}`,
           description: generateRiskDescription(alertType),
-          status: randomElement(['active', 'acknowledged', 'resolved']),
-          riskScore: severity === 'critical' ? randomInt(80, 100) : 
-                     severity === 'high' ? randomInt(60, 79) :
-                     severity === 'medium' ? randomInt(40, 59) :
-                     randomInt(20, 39),
+          status: randomElement(["active", "acknowledged", "resolved"]),
+          riskScore:
+            severity === "critical"
+              ? randomInt(80, 100)
+              : severity === "high"
+                ? randomInt(60, 79)
+                : severity === "medium"
+                  ? randomInt(40, 59)
+                  : randomInt(20, 39),
           affectedTaskCount: randomInt(1, 15),
-          metadata: { source: 'automated_detection' },
+          metadata: { source: "automated_detection" },
           resolvedAt: randomBool(0.4) ? daysAgo(randomInt(1, 10)) : null,
           acknowledgedAt: randomBool(0.6) ? hoursAgo(randomInt(1, 48)) : null,
           createdAt: daysAgo(randomInt(1, 20)),
@@ -184,7 +212,7 @@ export async function seedAnalytics() {
 
     // 4. CREATE NOTIFICATIONS
     logger.info("\n🔔 Creating notifications...");
-    
+
     let notificationCount = 0;
 
     for (const user of allUsers) {
@@ -192,15 +220,15 @@ export async function seedAnalytics() {
 
       for (let i = 0; i < notifCount; i++) {
         const type = randomElement([
-          'task_assigned',
-          'task_completed',
-          'mention',
-          'comment',
-          'deadline_approaching',
-          'achievement_unlocked',
-          'kudos_received',
-          'goal_progress',
-          'project_update',
+          "task_assigned",
+          "task_completed",
+          "mention",
+          "comment",
+          "deadline_approaching",
+          "achievement_unlocked",
+          "kudos_received",
+          "goal_progress",
+          "project_update",
         ]);
 
         await db.insert(notifications).values({
@@ -213,7 +241,7 @@ export async function seedAnalytics() {
           isRead: randomBool(0.6),
           isPinned: randomBool(0.05),
           isArchived: randomBool(0.1),
-          priority: randomElement(['low', 'normal', 'high', 'urgent']),
+          priority: randomElement(["low", "normal", "high", "urgent"]),
           createdAt: daysAgo(randomInt(0, 30)),
         });
 
@@ -224,7 +252,9 @@ export async function seedAnalytics() {
     }
 
     logger.info("\n✅ Phase 8 complete: Created analytics and historical data");
-    logger.info(`   ❤️ Project Health: ${healthCount} current + ${healthCount * 30} historical`);
+    logger.info(
+      `   ❤️ Project Health: ${healthCount} current + ${healthCount * 30} historical`,
+    );
     logger.info(`   💡 Recommendations: ${recommendationCount}`);
     logger.info(`   ⚠️  Risk Alerts: ${riskCount}`);
     logger.info(`   🔔 Notifications: ${notificationCount}`);
@@ -235,7 +265,6 @@ export async function seedAnalytics() {
       riskCount,
       notificationCount,
     };
-
   } catch (error) {
     logger.error("❌ Error seeding analytics:", error);
     throw error;
@@ -250,7 +279,8 @@ function generateRiskDescription(alertType: string): string {
   const descriptions: Record<string, string> = {
     overdue: "Multiple tasks are past their due dates and require attention.",
     blocked: "Tasks are blocked by dependencies that haven't been completed.",
-    resource_conflict: "Resource allocation conflicts detected across multiple projects.",
+    resource_conflict:
+      "Resource allocation conflicts detected across multiple projects.",
     deadline_risk: "Project deadline is at risk based on current velocity.",
     dependency_chain: "Complex dependency chain may cause delays.",
     quality_risk: "Quality metrics are below acceptable thresholds.",
@@ -277,11 +307,13 @@ function generateNotificationTitle(type: string): string {
 
 function generateNotificationContent(type: string): string {
   const contents: Record<string, string> = {
-    task_assigned: "A new task has been assigned to you. Check your dashboard for details.",
+    task_assigned:
+      "A new task has been assigned to you. Check your dashboard for details.",
     task_completed: "Great job! A task you were tracking has been completed.",
     mention: "Someone mentioned you in a conversation. Click to view.",
     comment: "Someone commented on a task you're following.",
-    deadline_approaching: "A task deadline is approaching in the next 24 hours.",
+    deadline_approaching:
+      "A task deadline is approaching in the next 24 hours.",
     achievement_unlocked: "Congratulations! You've unlocked a new achievement.",
     kudos_received: "A teammate recognized your great work!",
     goal_progress: "Your goal has been updated. Review your progress.",

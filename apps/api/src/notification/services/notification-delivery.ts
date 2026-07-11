@@ -11,10 +11,12 @@
 
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { userPreferencesExtendedTable,
-  userSettingsTable } from "../../database/schema";
-import logger from '../../utils/logger';
-import { DEFAULT_API_PORT } from '../../config/default-api-port';
+import {
+  userPreferencesExtendedTable,
+  userSettingsTable,
+} from "../../database/schema";
+import logger from "../../utils/logger";
+import { DEFAULT_API_PORT } from "../../config/default-api-port";
 import emailService from "../../services/email-service";
 import createNotification from "../controllers/create-notification";
 
@@ -23,7 +25,7 @@ export interface NotificationPayload {
   title: string;
   content: string;
   type: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  priority?: "low" | "medium" | "high" | "urgent";
   resourceId?: string;
   resourceType?: string;
   metadata?: Record<string, any>;
@@ -42,7 +44,7 @@ export class NotificationDeliveryService {
    */
   static async deliverNotification(
     payload: NotificationPayload,
-    workspaceId?: string
+    workspaceId?: string,
   ): Promise<{
     success: boolean;
     results: DeliveryResult[];
@@ -50,27 +52,31 @@ export class NotificationDeliveryService {
   }> {
     try {
       const results: DeliveryResult[] = [];
-      
+
       // Check if notification should be delivered based on time-based controls
       const timingValidation = await this.validateNotificationTiming(
         payload.userEmail,
-        payload.priority || 'medium'
+        payload.priority || "medium",
       );
-      
+
       if (!timingValidation.canSend) {
         return {
           success: false,
           results: [],
-          skippedReason: timingValidation.reasons.join(', ')
+          skippedReason: timingValidation.reasons.join(", "),
         };
       }
-      
+
       // Get user notification preferences
-      const preferences = await this.getUserNotificationPreferences(payload.userEmail);
-      
+      const preferences = await this.getUserNotificationPreferences(
+        payload.userEmail,
+      );
+
       // Get user notification settings (the enhanced settings)
-      const settings = await this.getUserNotificationSettings(payload.userEmail);
-      
+      const settings = await this.getUserNotificationSettings(
+        payload.userEmail,
+      );
+
       // Always create in-app notification if enabled
       if (preferences.channels?.inApp !== false && settings.inApp) {
         try {
@@ -83,78 +89,83 @@ export class NotificationDeliveryService {
             resourceId: payload.resourceId,
             resourceType: payload.resourceType,
           });
-          
+
           results.push({
-            channel: 'inApp',
+            channel: "inApp",
             success: true,
-            message: 'In-app notification created'
+            message: "In-app notification created",
           });
         } catch (error) {
           results.push({
-            channel: 'inApp',
+            channel: "inApp",
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
-      
+
       // Check if this notification type should be sent
       const shouldSendForType = this.shouldSendNotificationType(
         payload.type,
         preferences,
-        settings
+        settings,
       );
-      
+
       if (!shouldSendForType) {
         return {
           success: true,
           results,
-          skippedReason: `Notification type '${payload.type}' is disabled in user preferences`
+          skippedReason: `Notification type '${payload.type}' is disabled in user preferences`,
         };
       }
-      
+
       // Send email notification if enabled
       if (preferences.channels?.email !== false && settings.email) {
-        const emailResult = await this.sendEmailNotification(payload, workspaceId);
+        const emailResult = await this.sendEmailNotification(
+          payload,
+          workspaceId,
+        );
         results.push(emailResult);
       }
-      
+
       // Record analytics event
       await this.recordAnalyticsEvent(payload.userEmail, {
-        eventType: 'sent',
+        eventType: "sent",
         notificationType: payload.type,
-        channel: 'multi',
-        action: 'deliver',
+        channel: "multi",
+        action: "deliver",
         metadata: {
           channelsAttempted: results.length,
-          channelsSuccessful: results.filter(r => r.success).length,
-          priority: payload.priority
-        }
+          channelsSuccessful: results.filter((r) => r.success).length,
+          priority: payload.priority,
+        },
       });
-      
+
       return {
-        success: results.some(r => r.success),
-        results
+        success: results.some((r) => r.success),
+        results,
       };
     } catch (error) {
-      logger.error('Failed to deliver notification:', error);
+      logger.error("Failed to deliver notification:", error);
       return {
         success: false,
-        results: [{
-          channel: 'system',
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }]
+        results: [
+          {
+            channel: "system",
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+        ],
       };
     }
   }
-  
+
   /**
    * Validate notification timing against user's schedule
    */
   private static async validateNotificationTiming(
     userEmail: string,
-    priority: string
+    priority: string,
   ): Promise<{ canSend: boolean; reasons: string[] }> {
     try {
       const now = new Date();
@@ -163,76 +174,107 @@ export class NotificationDeliveryService {
 
       // Get quiet hours and work schedule
       const [quietHoursData, workScheduleData] = await Promise.all([
-        db.select()
+        db
+          .select()
           .from(userPreferencesExtendedTable)
           .where(
             and(
               eq(userPreferencesExtendedTable.userId, userEmail),
-              eq(userPreferencesExtendedTable.preferenceType, "quiet-hours")
-            )
+              eq(userPreferencesExtendedTable.preferenceType, "quiet-hours"),
+            ),
           )
           .limit(1),
-        db.select()
+        db
+          .select()
           .from(userPreferencesExtendedTable)
           .where(
             and(
               eq(userPreferencesExtendedTable.userId, userEmail),
-              eq(userPreferencesExtendedTable.preferenceType, "work-schedule")
-            )
+              eq(userPreferencesExtendedTable.preferenceType, "work-schedule"),
+            ),
           )
-          .limit(1)
+          .limit(1),
       ]);
-      
-      const quietHours = quietHoursData[0] 
+
+      const quietHours = quietHoursData[0]
         ? JSON.parse(quietHoursData[0].preferenceData)
         : null;
-      const workSchedule = workScheduleData[0] 
+      const workSchedule = workScheduleData[0]
         ? JSON.parse(workScheduleData[0].preferenceData)
         : null;
-      
+
       // Check quiet hours
       if (quietHours && quietHours.enabled) {
-        const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        const currentDay = now
+          .toLocaleDateString("en-US", { weekday: "long" })
+          .toLowerCase();
         const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-        
+
         const inQuietHoursDay = quietHours.weekdays.includes(currentDay);
-        const inQuietHoursTime = this.isTimeInRange(currentTime, quietHours.startTime, quietHours.endTime);
-        
+        const inQuietHoursTime = this.isTimeInRange(
+          currentTime,
+          quietHours.startTime,
+          quietHours.endTime,
+        );
+
         if (inQuietHoursDay && inQuietHoursTime) {
-          if (priority === 'urgent' && quietHours.allowUrgent) {
-            reasons.push('Sent during quiet hours (urgent notification allowed)');
+          if (priority === "urgent" && quietHours.allowUrgent) {
+            reasons.push(
+              "Sent during quiet hours (urgent notification allowed)",
+            );
           } else {
-            return { canSend: false, reasons: ['Currently in quiet hours'] };
+            return { canSend: false, reasons: ["Currently in quiet hours"] };
           }
         }
       }
-      
+
       // Check work schedule
-      if (workSchedule && workSchedule.enabled && !workSchedule.allowOutsideHours) {
-        const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      if (
+        workSchedule &&
+        workSchedule.enabled &&
+        !workSchedule.allowOutsideHours
+      ) {
+        const currentDay = now
+          .toLocaleDateString("en-US", { weekday: "long" })
+          .toLowerCase();
         const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-        
+
         const isWorkingDay = workSchedule.workingDays.includes(currentDay);
-        const isWorkingHours = this.isTimeInRange(currentTime, workSchedule.startTime, workSchedule.endTime);
-        
+        const isWorkingHours = this.isTimeInRange(
+          currentTime,
+          workSchedule.startTime,
+          workSchedule.endTime,
+        );
+
         // Check lunch break
         let isLunchBreak = false;
-        if (workSchedule.lunchBreak && workSchedule.lunchBreak.enabled && isWorkingDay) {
-          isLunchBreak = this.isTimeInRange(currentTime, workSchedule.lunchBreak.startTime, workSchedule.lunchBreak.endTime);
+        if (
+          workSchedule.lunchBreak &&
+          workSchedule.lunchBreak.enabled &&
+          isWorkingDay
+        ) {
+          isLunchBreak = this.isTimeInRange(
+            currentTime,
+            workSchedule.lunchBreak.startTime,
+            workSchedule.lunchBreak.endTime,
+          );
         }
-        
+
         if (!isWorkingDay || !isWorkingHours || isLunchBreak) {
-          return { canSend: false, reasons: ['Outside of work hours'] };
+          return { canSend: false, reasons: ["Outside of work hours"] };
         }
       }
-      
+
       return { canSend: true, reasons };
     } catch (error) {
-      logger.error('Error validating notification timing:', error);
-      return { canSend: true, reasons: ['Failed to validate timing - allowing delivery'] };
+      logger.error("Error validating notification timing:", error);
+      return {
+        canSend: true,
+        reasons: ["Failed to validate timing - allowing delivery"],
+      };
     }
   }
-  
+
   /**
    * Get user notification preferences
    */
@@ -245,31 +287,41 @@ export class NotificationDeliveryService {
         .where(
           and(
             eq(userPreferencesExtendedTable.userId, userEmail),
-            eq(userPreferencesExtendedTable.preferenceType, "notifications")
-          )
+            eq(userPreferencesExtendedTable.preferenceType, "notifications"),
+          ),
         )
         .limit(1);
-      
+
       const [prefsRow] = prefs;
       if (!prefsRow) {
         return {
           channels: { inApp: true, email: true, push: false, slack: false },
-          types: { task: true, mention: true, comment: true, 'project-update': true },
-          digestFrequency: 'immediate'
+          types: {
+            task: true,
+            mention: true,
+            comment: true,
+            "project-update": true,
+          },
+          digestFrequency: "immediate",
         };
       }
-      
+
       return JSON.parse(prefsRow.preferenceData);
     } catch (error) {
-      logger.error('Error getting notification preferences:', error);
+      logger.error("Error getting notification preferences:", error);
       return {
         channels: { inApp: true, email: true, push: false, slack: false },
-        types: { task: true, mention: true, comment: true, 'project-update': true },
-        digestFrequency: 'immediate'
+        types: {
+          task: true,
+          mention: true,
+          comment: true,
+          "project-update": true,
+        },
+        digestFrequency: "immediate",
       };
     }
   }
-  
+
   /**
    * Get user notification settings (enhanced settings)
    */
@@ -282,93 +334,95 @@ export class NotificationDeliveryService {
         .where(
           and(
             eq(userSettingsTable.userEmail, userEmail),
-            eq(userSettingsTable.section, "notifications")
-          )
+            eq(userSettingsTable.section, "notifications"),
+          ),
         )
         .limit(1);
-      
+
       const [settingsRow] = settings;
       if (!settingsRow) {
         return {
           email: { taskAssigned: true, taskCompleted: true, mentions: true },
           push: { taskAssigned: true, mentions: true },
           inApp: { taskAssigned: true, taskCompleted: true, mentions: true },
-          soundEnabled: true
+          soundEnabled: true,
         };
       }
-      
+
       return JSON.parse(settingsRow.settings);
     } catch (error) {
-      logger.error('Error getting notification settings:', error);
+      logger.error("Error getting notification settings:", error);
       return {
         email: { taskAssigned: true, taskCompleted: true, mentions: true },
         push: { taskAssigned: true, mentions: true },
         inApp: { taskAssigned: true, taskCompleted: true, mentions: true },
-        soundEnabled: true
+        soundEnabled: true,
       };
     }
   }
-  
+
   /**
    * Check if notification type should be sent based on preferences
    */
   private static shouldSendNotificationType(
     notificationType: string,
     preferences: any,
-    settings: any
+    settings: any,
   ): boolean {
     // Map notification types to settings keys
     const typeMapping: Record<string, string> = {
-      'task': 'taskAssigned',
-      'task.created': 'taskAssigned',
-      'task.assigned': 'taskAssigned',
-      'task.completed': 'taskCompleted',
-      'task.status_changed': 'taskCompleted',
-      'mention': 'mentions',
-      'comment': 'comments',
-      'project': 'projectUpdates',
-      'workspace': 'projectUpdates'
+      task: "taskAssigned",
+      "task.created": "taskAssigned",
+      "task.assigned": "taskAssigned",
+      "task.completed": "taskCompleted",
+      "task.status_changed": "taskCompleted",
+      mention: "mentions",
+      comment: "comments",
+      project: "projectUpdates",
+      workspace: "projectUpdates",
     };
-    
-    const settingKey = typeMapping[notificationType] || 'taskAssigned';
-    
+
+    const settingKey = typeMapping[notificationType] || "taskAssigned";
+
     // Check both preferences and settings
     const typeEnabled = preferences.types?.[notificationType] !== false;
     const settingEnabled = Object.values(settings || {}).some(
-      (channelSettings: any) => channelSettings[settingKey] === true
+      (channelSettings: any) => channelSettings[settingKey] === true,
     );
-    
+
     return typeEnabled && settingEnabled;
   }
-  
+
   /**
    * Send email notification
    */
   private static async sendEmailNotification(
     payload: NotificationPayload,
-    _workspaceId?: string
+    _workspaceId?: string,
   ): Promise<DeliveryResult> {
     try {
       const sent = await emailService.sendNotificationEmail(
         payload.userEmail,
         payload.title,
-        payload.content
+        payload.content,
       );
 
       return {
-        channel: 'email',
+        channel: "email",
         success: sent,
-        message: sent ? 'Email notification sent' : 'Email service not configured'
+        message: sent
+          ? "Email notification sent"
+          : "Email service not configured",
       };
     } catch (error) {
       return {
-        channel: 'email',
+        channel: "email",
         success: false,
-        error: error instanceof Error ? error.message : 'Email delivery failed'
+        error: error instanceof Error ? error.message : "Email delivery failed",
       };
     }
   }
-  
+
   /**
    * Record analytics event
    */
@@ -380,33 +434,37 @@ export class NotificationDeliveryService {
       channel: string;
       action: string;
       metadata?: Record<string, any>;
-    }
+    },
   ) {
     try {
       // This would call the analytics recording endpoint we created
       const baseUrl =
         process.env.API_BASE_URL || `http://localhost:${DEFAULT_API_PORT}`;
       await fetch(`${baseUrl}/api/settings/${userEmail}/analytics/record`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(event)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(event),
       });
     } catch (error) {
-      logger.error('Failed to record analytics event:', error);
+      logger.error("Failed to record analytics event:", error);
       // Don't throw error - analytics recording shouldn't fail notification delivery
     }
   }
-  
+
   // Helper methods
-  private static isTimeInRange(timeStr: string, startTime: string, endTime: string): boolean {
-    const [timeHour = 0, timeMin = 0] = timeStr.split(':').map(Number);
-    const [startHour = 0, startMin = 0] = startTime.split(':').map(Number);
-    const [endHour = 0, endMin = 0] = endTime.split(':').map(Number);
-    
+  private static isTimeInRange(
+    timeStr: string,
+    startTime: string,
+    endTime: string,
+  ): boolean {
+    const [timeHour = 0, timeMin = 0] = timeStr.split(":").map(Number);
+    const [startHour = 0, startMin = 0] = startTime.split(":").map(Number);
+    const [endHour = 0, endMin = 0] = endTime.split(":").map(Number);
+
     const timeMinutes = timeHour * 60 + timeMin;
     const startMinutes = startHour * 60 + startMin;
     const endMinutes = endHour * 60 + endMin;
-    
+
     // Handle overnight ranges (e.g., 22:00 to 08:00)
     if (startMinutes > endMinutes) {
       return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
@@ -414,6 +472,4 @@ export class NotificationDeliveryService {
       return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
     }
   }
-  
-
 }

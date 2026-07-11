@@ -2,9 +2,9 @@
  * Augment Hono context keys set by middleware and route helpers.
  * Merges with `ContextVariableMap` in `middlewares/redis-session.ts`.
  */
-import 'hono';
+import "hono";
 
-declare module 'hono' {
+declare module "hono" {
   interface ContextVariableMap {
     /** Workspace scope (optional; set by workspace middleware when present) */
     workspaceId?: string;

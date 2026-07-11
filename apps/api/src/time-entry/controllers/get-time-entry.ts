@@ -13,4 +13,3 @@ async function getTimeEntry(id: string) {
 }
 
 export default getTimeEntry;
-

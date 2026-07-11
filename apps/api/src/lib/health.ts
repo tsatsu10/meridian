@@ -4,33 +4,35 @@
  */
 
 // Re-export health route
-export { default as healthRoute } from '../health/index';
+export { default as healthRoute } from "../health/index";
 
 // Re-export health calculation functions
-export { calculateProjectHealth } from '../health/calculate-project-health';
-export type { ProjectHealthMetrics } from '../health/calculate-project-health';
+export { calculateProjectHealth } from "../health/calculate-project-health";
+export type { ProjectHealthMetrics } from "../health/calculate-project-health";
 
 // Re-export recommendation engine
-export { generateRecommendations } from '../health/recommendation-engine';
+export { generateRecommendations } from "../health/recommendation-engine";
 
 // Mock health service interface for tests
 export const healthService = {
   getHealth: async (projectId: string) => {
-    const { calculateProjectHealth } = await import('../health/calculate-project-health');
+    const { calculateProjectHealth } = await import(
+      "../health/calculate-project-health"
+    );
     return calculateProjectHealth(projectId);
   },
-  
+
   getSystemHealth: async () => {
     return {
-      status: 'healthy',
+      status: "healthy",
       timestamp: new Date().toISOString(),
       checks: {
         database: true,
         memory: true,
         cpu: true,
-      }
+      },
     };
-  }
+  },
 };
 
 // Mock types for tests
@@ -45,9 +47,9 @@ export interface HealthConfig {
 }
 
 export enum HealthStatus {
-  HEALTHY = 'healthy',
-  DEGRADED = 'degraded',
-  UNHEALTHY = 'unhealthy',
+  HEALTHY = "healthy",
+  DEGRADED = "degraded",
+  UNHEALTHY = "unhealthy",
 }
 
 export interface HealthCheck {
@@ -75,5 +77,3 @@ export function createHealthMiddleware(config?: Partial<HealthConfig>) {
     await next();
   };
 }
-
-

@@ -4,11 +4,11 @@
  * Handles email templates, queuing, and delivery tracking
  */
 
-import sgMail from '@sendgrid/mail';
-import logger from '../../utils/logger';
+import sgMail from "@sendgrid/mail";
+import logger from "../../utils/logger";
 
 interface EmailConfig {
-  provider: 'sendgrid' | 'ses' | 'smtp';
+  provider: "sendgrid" | "ses" | "smtp";
   apiKey?: string;
   from: string;
   fromName: string;
@@ -32,14 +32,14 @@ interface EmailTemplateData {
 
 export class EmailService {
   private config: EmailConfig;
-  private initialized: boolean = false;
+  private initialized = false;
 
   constructor() {
     this.config = {
-      provider: (process.env.EMAIL_PROVIDER as any) || 'sendgrid',
+      provider: (process.env.EMAIL_PROVIDER as any) || "sendgrid",
       apiKey: process.env.SENDGRID_API_KEY || process.env.AWS_SES_API_KEY,
-      from: process.env.FROM_EMAIL || 'noreply@meridian.app',
-      fromName: process.env.FROM_NAME || 'Meridian',
+      from: process.env.FROM_EMAIL || "noreply@meridian.app",
+      fromName: process.env.FROM_NAME || "Meridian",
     };
 
     this.initialize();
@@ -50,23 +50,25 @@ export class EmailService {
    */
   private initialize(): void {
     try {
-      if (this.config.provider === 'sendgrid') {
+      if (this.config.provider === "sendgrid") {
         if (!this.config.apiKey) {
-          logger.warn('⚠️  SendGrid API key not found. Email functionality will be disabled.');
+          logger.warn(
+            "⚠️  SendGrid API key not found. Email functionality will be disabled.",
+          );
           return;
         }
         sgMail.setApiKey(this.config.apiKey);
         this.initialized = true;
-        logger.debug('✅ Email service initialized with SendGrid');
-      } else if (this.config.provider === 'ses') {
+        logger.debug("✅ Email service initialized with SendGrid");
+      } else if (this.config.provider === "ses") {
         // TODO: Implement AWS SES
-        logger.warn('⚠️  AWS SES not implemented yet');
-      } else if (this.config.provider === 'smtp') {
+        logger.warn("⚠️  AWS SES not implemented yet");
+      } else if (this.config.provider === "smtp") {
         // TODO: Implement SMTP
-        logger.warn('⚠️  SMTP not implemented yet');
+        logger.warn("⚠️  SMTP not implemented yet");
       }
     } catch (error) {
-      logger.error('❌ Failed to initialize email service:', error);
+      logger.error("❌ Failed to initialize email service:", error);
     }
   }
 
@@ -75,13 +77,13 @@ export class EmailService {
    */
   private async send(options: EmailOptions, retries = 3): Promise<boolean> {
     if (!this.initialized) {
-      logger.warn('⚠️  Email service not initialized. Skipping email send.');
+      logger.warn("⚠️  Email service not initialized. Skipping email send.");
       // In development, log the email instead
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug('📧 [DEV] Email would be sent:', {
+      if (process.env.NODE_ENV === "development") {
+        logger.debug("📧 [DEV] Email would be sent:", {
           to: options.to,
           subject: options.subject,
-          html: options.html.substring(0, 100) + '...',
+          html: options.html.substring(0, 100) + "...",
         });
       }
       return false;
@@ -102,18 +104,27 @@ export class EmailService {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         await sgMail.send(msg);
-        logger.debug(`✅ Email sent successfully to ${options.to}: ${options.subject}`);
+        logger.debug(
+          `✅ Email sent successfully to ${options.to}: ${options.subject}`,
+        );
         return true;
       } catch (error: any) {
-        logger.error(`❌ Email send attempt ${attempt}/${retries} failed:`, error.message);
-        
+        logger.error(
+          `❌ Email send attempt ${attempt}/${retries} failed:`,
+          error.message,
+        );
+
         if (attempt === retries) {
-          logger.error('❌ All email send attempts failed. Email not delivered.');
+          logger.error(
+            "❌ All email send attempts failed. Email not delivered.",
+          );
           return false;
         }
-        
+
         // Wait before retry (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.pow(2, attempt) * 1000),
+        );
       }
     }
 
@@ -124,15 +135,22 @@ export class EmailService {
    * Strip HTML tags for plain text version
    */
   private stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    return html
+      .replace(/<[^>]*>/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   /**
    * Send email verification email
    */
-  async sendVerificationEmail(email: string, token: string, name: string): Promise<boolean> {
+  async sendVerificationEmail(
+    email: string,
+    token: string,
+    name: string,
+  ): Promise<boolean> {
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -191,7 +209,7 @@ export class EmailService {
 
     return this.send({
       to: email,
-      subject: 'Verify your Meridian account',
+      subject: "Verify your Meridian account",
       html,
     });
   }
@@ -199,9 +217,13 @@ export class EmailService {
   /**
    * Send password reset email
    */
-  async sendPasswordResetEmail(email: string, token: string, name: string): Promise<boolean> {
+  async sendPasswordResetEmail(
+    email: string,
+    token: string,
+    name: string,
+  ): Promise<boolean> {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -260,7 +282,7 @@ export class EmailService {
 
     return this.send({
       to: email,
-      subject: 'Reset your Meridian password',
+      subject: "Reset your Meridian password",
       html,
     });
   }
@@ -271,7 +293,7 @@ export class EmailService {
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     const loginUrl = `${process.env.FRONTEND_URL}/login`;
     const dashboardUrl = `${process.env.FRONTEND_URL}/dashboard`;
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -353,7 +375,7 @@ export class EmailService {
 
     return this.send({
       to: email,
-      subject: '🎉 Welcome to Meridian - Let\'s get started!',
+      subject: "🎉 Welcome to Meridian - Let's get started!",
       html,
     });
   }
@@ -369,7 +391,7 @@ export class EmailService {
       message: string;
       actionUrl?: string;
       actionText?: string;
-    }
+    },
   ): Promise<boolean> {
     const html = `
       <!DOCTYPE html>
@@ -395,11 +417,15 @@ export class EmailService {
             <div class="content">
               <p>Hi ${name},</p>
               <p>${notification.message}</p>
-              ${notification.actionUrl ? `
+              ${
+                notification.actionUrl
+                  ? `
                 <div style="text-align: center;">
-                  <a href="${notification.actionUrl}" class="button">${notification.actionText || 'View Details'}</a>
+                  <a href="${notification.actionUrl}" class="button">${notification.actionText || "View Details"}</a>
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
               <p>You can manage your notification preferences in your <a href="${process.env.FRONTEND_URL}/settings/notifications">account settings</a>.</p>
               <p>Best regards,<br>The Meridian Team</p>
             </div>
@@ -425,16 +451,16 @@ export class EmailService {
     email: string,
     name: string,
     digest: {
-      period: 'daily' | 'weekly';
+      period: "daily" | "weekly";
       tasksCompleted: number;
       tasksAssigned: number;
       mentions: number;
       comments: number;
       projects: Array<{ name: string; progress: number; url: string }>;
-    }
+    },
   ): Promise<boolean> {
-    const periodText = digest.period === 'daily' ? 'Daily' : 'Weekly';
-    
+    const periodText = digest.period === "daily" ? "Daily" : "Weekly";
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -459,7 +485,7 @@ export class EmailService {
           <div class="container">
             <div class="header">
               <h1>📊 Your ${periodText} Digest</h1>
-              <p style="margin: 0; opacity: 0.9;">Here's what happened ${digest.period === 'daily' ? 'today' : 'this week'}</p>
+              <p style="margin: 0; opacity: 0.9;">Here's what happened ${digest.period === "daily" ? "today" : "this week"}</p>
             </div>
             <div class="content" style="padding: 30px;">
               <p>Hi ${name},</p>
@@ -484,9 +510,13 @@ export class EmailService {
                 </div>
               </div>
               
-              ${digest.projects.length > 0 ? `
+              ${
+                digest.projects.length > 0
+                  ? `
                 <h3 style="color: #667eea; margin-top: 30px;">🚀 Project Updates</h3>
-                ${digest.projects.map(project => `
+                ${digest.projects
+                  .map(
+                    (project) => `
                   <div class="project-item">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                       <strong>${project.name}</strong>
@@ -497,8 +527,12 @@ export class EmailService {
                     </div>
                     <a href="${project.url}" style="font-size: 14px; color: #667eea; text-decoration: none;">View Project →</a>
                   </div>
-                `).join('')}
-              ` : ''}
+                `,
+                  )
+                  .join("")}
+              `
+                  : ""
+              }
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.FRONTEND_URL}/dashboard" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">View Dashboard</a>
@@ -516,7 +550,7 @@ export class EmailService {
 
     return this.send({
       to: email,
-      subject: `${periodText} Digest - ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+      subject: `${periodText} Digest - ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`,
       html,
     });
   }
@@ -524,5 +558,3 @@ export class EmailService {
 
 // Export singleton instance
 export const emailService = new EmailService();
-
-

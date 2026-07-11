@@ -54,11 +54,14 @@ function parseArgs(): {
 
   for (const arg of args) {
     if (arg.startsWith("--phase=")) {
-      options.startPhase = parseInt(arg.split("=")[1] || "1", 10);
+      options.startPhase = Number.parseInt(arg.split("=")[1] || "1", 10);
     } else if (arg.startsWith("--only=")) {
       options.only = arg.split("=")[1];
     } else if (arg.startsWith("--skip=")) {
-      options.skip = arg.split("=")[1]?.split(",").map((s) => s.trim());
+      options.skip = arg
+        .split("=")[1]
+        ?.split(",")
+        .map((s) => s.trim());
     }
   }
 

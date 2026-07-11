@@ -1,10 +1,15 @@
 // Global search API - searches tasks, projects, and users
-import { Hono } from 'hono';
-import { getDatabase } from '../../database/connection';
-import { taskTable, projectTable, users, workspaceUserTable } from '../../database/schema';
-import { sql, ilike, or, and, eq } from 'drizzle-orm';
-import { auth } from '../../middlewares/auth';
-import logger from '../../utils/logger';
+import { Hono } from "hono";
+import { getDatabase } from "../../database/connection";
+import {
+  taskTable,
+  projectTable,
+  users,
+  workspaceUserTable,
+} from "../../database/schema";
+import { sql, ilike, or, and, eq } from "drizzle-orm";
+import { auth } from "../../middlewares/auth";
+import logger from "../../utils/logger";
 
 const search = new Hono();
 
@@ -21,34 +26,34 @@ search.use("*", auth);
  * - type: Filter by result type (optional: 'task' | 'project' | 'user' | 'all')
  * - limit: Max results per type (optional, default: 10)
  */
-search.get('/', async (c) => {
+search.get("/", async (c) => {
   try {
-    const query = c.req.query('q');
-    const workspaceId = c.req.query('workspaceId');
-    const type = c.req.query('type');
-    const limit = parseInt(c.req.query('limit') || '10', 10);
-    const userEmail = c.get('userEmail');
+    const query = c.req.query("q");
+    const workspaceId = c.req.query("workspaceId");
+    const type = c.req.query("type");
+    const limit = Number.parseInt(c.req.query("limit") || "10", 10);
+    const userEmail = c.get("userEmail");
 
-    if (!query || query.trim() === '') {
-      return c.json({ error: 'Search query is required' }, 400);
+    if (!query || query.trim() === "") {
+      return c.json({ error: "Search query is required" }, 400);
     }
 
     if (!userEmail) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({ error: "Unauthorized" }, 401);
     }
 
     const db = getDatabase();
     const results: any[] = [];
     const searchPattern = `%${query}%`;
-    const wantsType = (t: string) => !type || type === 'all' || type === t;
+    const wantsType = (t: string) => !type || type === "all" || type === t;
 
     // Search tasks
-    if (wantsType('task')) {
+    if (wantsType("task")) {
       try {
         const taskWhere = [
           or(
             ilike(taskTable.title, searchPattern),
-            ilike(taskTable.description, searchPattern)
+            ilike(taskTable.description, searchPattern),
           ),
         ];
 
@@ -70,17 +75,17 @@ search.get('/', async (c) => {
 
         results.push(...taskResults);
       } catch (error) {
-        logger.error('Error searching tasks:', error);
+        logger.error("Error searching tasks:", error);
       }
     }
 
     // Search projects
-    if (wantsType('project') || type === 'projects') {
+    if (wantsType("project") || type === "projects") {
       try {
         const projectWhere = [
           or(
             ilike(projectTable.name, searchPattern),
-            ilike(projectTable.description, searchPattern)
+            ilike(projectTable.description, searchPattern),
           ),
         ];
 
@@ -104,12 +109,12 @@ search.get('/', async (c) => {
 
         results.push(...projectResults);
       } catch (error) {
-        logger.error('Error searching projects:', error);
+        logger.error("Error searching projects:", error);
       }
     }
 
     // Search users
-    if (wantsType('user')) {
+    if (wantsType("user")) {
       try {
         const userResults = workspaceId
           ? await db
@@ -121,15 +126,18 @@ search.get('/', async (c) => {
                 createdAt: users.createdAt,
               })
               .from(users)
-              .innerJoin(workspaceUserTable, eq(users.email, workspaceUserTable.userEmail))
+              .innerJoin(
+                workspaceUserTable,
+                eq(users.email, workspaceUserTable.userEmail),
+              )
               .where(
                 and(
                   eq(workspaceUserTable.workspaceId, workspaceId),
                   or(
                     ilike(users.name, searchPattern),
-                    ilike(users.email, searchPattern)
-                  )
-                )
+                    ilike(users.email, searchPattern),
+                  ),
+                ),
               )
               .limit(limit)
           : await db
@@ -144,14 +152,14 @@ search.get('/', async (c) => {
               .where(
                 or(
                   ilike(users.name, searchPattern),
-                  ilike(users.email, searchPattern)
-                )
+                  ilike(users.email, searchPattern),
+                ),
               )
               .limit(limit);
 
         results.push(...userResults);
       } catch (error) {
-        logger.error('Error searching users:', error);
+        logger.error("Error searching users:", error);
       }
     }
 
@@ -163,24 +171,32 @@ search.get('/', async (c) => {
       if (aExact !== bExact) return bExact - aExact;
 
       if (a.createdAt && b.createdAt) {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
 
       return 0;
     });
 
-    return c.json({
-      results: sortedResults,
-      query,
-      totalResults: sortedResults.length,
-      workspaceId: workspaceId || null,
-    }, 200);
+    return c.json(
+      {
+        results: sortedResults,
+        query,
+        totalResults: sortedResults.length,
+        workspaceId: workspaceId || null,
+      },
+      200,
+    );
   } catch (error: any) {
-    logger.error('Search API error:', error);
-    return c.json({
-      error: 'Failed to perform search',
-      message: error.message,
-    }, 500);
+    logger.error("Search API error:", error);
+    return c.json(
+      {
+        error: "Failed to perform search",
+        message: error.message,
+      },
+      500,
+    );
   }
 });
 
@@ -192,13 +208,13 @@ search.get('/', async (c) => {
  * - type: 'projects' | 'tasks' (optional, default: 'projects')
  * - limit: Max suggestions (optional, default: 5)
  */
-search.get('/suggestions', async (c) => {
+search.get("/suggestions", async (c) => {
   try {
-    const query = c.req.query('q');
-    const type = c.req.query('type') || 'projects';
-    const limit = parseInt(c.req.query('limit') || '5', 10);
+    const query = c.req.query("q");
+    const type = c.req.query("type") || "projects";
+    const limit = Number.parseInt(c.req.query("limit") || "5", 10);
 
-    if (!query || query.trim() === '') {
+    if (!query || query.trim() === "") {
       return c.json({ suggestions: [] }, 200);
     }
 
@@ -206,7 +222,7 @@ search.get('/suggestions', async (c) => {
     const searchPattern = `%${query}%`;
     const suggestions: string[] = [];
 
-    if (type === 'tasks') {
+    if (type === "tasks") {
       const tasks = await db
         .select({ title: taskTable.title })
         .from(taskTable)
@@ -222,9 +238,12 @@ search.get('/suggestions', async (c) => {
       suggestions.push(...projects.map((p) => p.name));
     }
 
-    return c.json({ suggestions: [...new Set(suggestions)].slice(0, limit) }, 200);
+    return c.json(
+      { suggestions: [...new Set(suggestions)].slice(0, limit) },
+      200,
+    );
   } catch (error: any) {
-    logger.error('Search suggestions error:', error);
+    logger.error("Search suggestions error:", error);
     return c.json({ suggestions: [] }, 200);
   }
 });

@@ -1,6 +1,6 @@
 /**
  * 🛠️ Seed Utilities
- * 
+ *
  * Helper functions for generating realistic seed data
  */
 
@@ -37,7 +37,7 @@ export function randomInt(min: number, max: number): number {
 /**
  * Random boolean with configurable probability
  */
-export function randomBool(probability: number = 0.5): boolean {
+export function randomBool(probability = 0.5): boolean {
   return Math.random() < probability;
 }
 
@@ -72,15 +72,59 @@ export function hoursAgo(hours: number): Date {
 // ==========================================
 
 const FIRST_NAMES = [
-  "Alex", "Blake", "Casey", "Drew", "Emerson", "Finley", "Gray", "Harper",
-  "Indigo", "Jordan", "Kelly", "Logan", "Morgan", "Noah", "Oakley", "Parker",
-  "Quinn", "Riley", "Sage", "Taylor", "Uma", "Val", "Winter", "Yael", "Zion"
+  "Alex",
+  "Blake",
+  "Casey",
+  "Drew",
+  "Emerson",
+  "Finley",
+  "Gray",
+  "Harper",
+  "Indigo",
+  "Jordan",
+  "Kelly",
+  "Logan",
+  "Morgan",
+  "Noah",
+  "Oakley",
+  "Parker",
+  "Quinn",
+  "Riley",
+  "Sage",
+  "Taylor",
+  "Uma",
+  "Val",
+  "Winter",
+  "Yael",
+  "Zion",
 ];
 
 const LAST_NAMES = [
-  "Anderson", "Bennett", "Carter", "Davis", "Evans", "Foster", "Garcia", "Harris",
-  "Ingram", "Johnson", "Kumar", "Lee", "Martinez", "Nelson", "O'Brien", "Patel",
-  "Quinn", "Rodriguez", "Smith", "Taylor", "Upton", "Vega", "Williams", "Xu", "Young"
+  "Anderson",
+  "Bennett",
+  "Carter",
+  "Davis",
+  "Evans",
+  "Foster",
+  "Garcia",
+  "Harris",
+  "Ingram",
+  "Johnson",
+  "Kumar",
+  "Lee",
+  "Martinez",
+  "Nelson",
+  "O'Brien",
+  "Patel",
+  "Quinn",
+  "Rodriguez",
+  "Smith",
+  "Taylor",
+  "Upton",
+  "Vega",
+  "Williams",
+  "Xu",
+  "Young",
 ];
 
 export function generateUserName(): string {
@@ -90,7 +134,7 @@ export function generateUserName(): string {
 }
 
 export function generateEmail(name: string): string {
-  const cleanName = name.toLowerCase().replace(/['\s]/g, '.');
+  const cleanName = name.toLowerCase().replace(/['\s]/g, ".");
   return `${cleanName}@meridian.app`;
 }
 
@@ -99,13 +143,34 @@ export function generateEmail(name: string): string {
 // ==========================================
 
 const PROJECT_PREFIXES = [
-  "Customer", "Product", "Platform", "Mobile", "Web", "API", "Infrastructure",
-  "Analytics", "Security", "Performance", "Integration", "Migration"
+  "Customer",
+  "Product",
+  "Platform",
+  "Mobile",
+  "Web",
+  "API",
+  "Infrastructure",
+  "Analytics",
+  "Security",
+  "Performance",
+  "Integration",
+  "Migration",
 ];
 
 const PROJECT_SUFFIXES = [
-  "Portal", "Dashboard", "System", "App", "Service", "Engine", "Framework",
-  "Platform", "Solution", "Suite", "Tools", "Upgrade", "Optimization"
+  "Portal",
+  "Dashboard",
+  "System",
+  "App",
+  "Service",
+  "Engine",
+  "Framework",
+  "Platform",
+  "Solution",
+  "Suite",
+  "Tools",
+  "Upgrade",
+  "Optimization",
 ];
 
 export function generateProjectName(): string {
@@ -115,17 +180,49 @@ export function generateProjectName(): string {
 }
 
 const TASK_VERBS = [
-  "Implement", "Design", "Refactor", "Optimize", "Debug", "Test", "Deploy",
-  "Configure", "Update", "Migrate", "Document", "Review", "Fix", "Add",
-  "Remove", "Improve", "Analyze", "Research", "Create", "Build"
+  "Implement",
+  "Design",
+  "Refactor",
+  "Optimize",
+  "Debug",
+  "Test",
+  "Deploy",
+  "Configure",
+  "Update",
+  "Migrate",
+  "Document",
+  "Review",
+  "Fix",
+  "Add",
+  "Remove",
+  "Improve",
+  "Analyze",
+  "Research",
+  "Create",
+  "Build",
 ];
 
 const TASK_SUBJECTS = [
-  "authentication system", "user interface", "API endpoints", "database schema",
-  "error handling", "form validation", "navigation menu", "search functionality",
-  "notification system", "payment integration", "analytics tracking", "mobile layout",
-  "dashboard widgets", "user permissions", "file upload", "real-time updates",
-  "email templates", "performance metrics", "security headers", "accessibility features"
+  "authentication system",
+  "user interface",
+  "API endpoints",
+  "database schema",
+  "error handling",
+  "form validation",
+  "navigation menu",
+  "search functionality",
+  "notification system",
+  "payment integration",
+  "analytics tracking",
+  "mobile layout",
+  "dashboard widgets",
+  "user permissions",
+  "file upload",
+  "real-time updates",
+  "email templates",
+  "performance metrics",
+  "security headers",
+  "accessibility features",
 ];
 
 export function generateTaskTitle(): string {
@@ -154,31 +251,40 @@ export function generateTaskDescription(): string {
 // STATUS & PRIORITY HELPERS
 // ==========================================
 
-export const TASK_STATUSES = ['todo', 'in_progress', 'done'] as const;
-export const PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
-export const PROJECT_STATUSES = ['planning', 'active', 'in_progress', 'on_hold', 'completed', 'archived'] as const;
+export const TASK_STATUSES = ["todo", "in_progress", "done"] as const;
+export const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+export const PROJECT_STATUSES = [
+  "planning",
+  "active",
+  "in_progress",
+  "on_hold",
+  "completed",
+  "archived",
+] as const;
 
 /**
  * Get realistic task status distribution
  */
-export function getTaskStatus(weights: { todo?: number; in_progress?: number; done?: number } = {}): typeof TASK_STATUSES[number] {
+export function getTaskStatus(
+  weights: { todo?: number; in_progress?: number; done?: number } = {},
+): (typeof TASK_STATUSES)[number] {
   const { todo = 30, in_progress = 40, done = 30 } = weights;
   const rand = Math.random() * 100;
-  
-  if (rand < todo) return 'todo';
-  if (rand < todo + in_progress) return 'in_progress';
-  return 'done';
+
+  if (rand < todo) return "todo";
+  if (rand < todo + in_progress) return "in_progress";
+  return "done";
 }
 
 /**
  * Get realistic priority distribution
  */
-export function getPriority(): typeof PRIORITIES[number] {
+export function getPriority(): (typeof PRIORITIES)[number] {
   const rand = Math.random() * 100;
-  if (rand < 15) return 'urgent';
-  if (rand < 40) return 'high';
-  if (rand < 75) return 'medium';
-  return 'low';
+  if (rand < 15) return "urgent";
+  if (rand < 40) return "high";
+  if (rand < 75) return "medium";
+  return "low";
 }
 
 // ==========================================
@@ -191,7 +297,7 @@ export function getPriority(): typeof PRIORITIES[number] {
 export function generateDueDate(createdAt: Date): Date | null {
   // 30% of tasks have no due date
   if (randomBool(0.3)) return null;
-  
+
   // Due dates between 1-30 days from creation
   const daysUntilDue = randomInt(1, 30);
   const dueDate = new Date(createdAt);
@@ -202,10 +308,13 @@ export function generateDueDate(createdAt: Date): Date | null {
 /**
  * Generate completed date for done tasks
  */
-export function generateCompletedDate(createdAt: Date, dueDate: Date | null): Date {
+export function generateCompletedDate(
+  createdAt: Date,
+  dueDate: Date | null,
+): Date {
   const startTime = createdAt.getTime();
   const endTime = dueDate ? dueDate.getTime() : Date.now();
-  
+
   // Completed somewhere between creation and due date
   const completedTime = startTime + Math.random() * (endTime - startTime);
   return new Date(completedTime);
@@ -218,11 +327,11 @@ export function generateCompletedDate(createdAt: Date, dueDate: Date | null): Da
 /**
  * Generate realistic streak data for a user
  */
-export function generateStreakData(baseStreak: number = 0) {
+export function generateStreakData(baseStreak = 0) {
   const currentStreak = baseStreak || randomInt(3, 20);
   const longestStreak = currentStreak + randomInt(0, 15);
   const totalActiveDays = longestStreak + randomInt(10, 50);
-  
+
   return {
     currentStreak,
     longestStreak,
@@ -259,7 +368,7 @@ export function calculateLeaderboardScore(activities: {
     streakDays = 0,
     achievementsUnlocked = 0,
   } = activities;
-  
+
   return (
     tasksCompleted * 10 +
     goalsCompleted * 100 +
@@ -280,17 +389,19 @@ export function calculateLeaderboardScore(activities: {
 export async function batchInsert<T extends { id: string }>(
   insertFn: (batch: T[]) => Promise<any>,
   items: T[],
-  batchSize: number = 100,
-  label: string = "items"
+  batchSize = 100,
+  label = "items",
 ): Promise<void> {
   const totalBatches = Math.ceil(items.length / batchSize);
-  
+
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     const batchNum = Math.floor(i / batchSize) + 1;
-    
+
     await insertFn(batch);
-    console.log(`  ✅ Batch ${batchNum}/${totalBatches}: Inserted ${batch.length} ${label}`);
+    console.log(
+      `  ✅ Batch ${batchNum}/${totalBatches}: Inserted ${batch.length} ${label}`,
+    );
   }
 }
 
@@ -299,9 +410,23 @@ export async function batchInsert<T extends { id: string }>(
 // ==========================================
 
 const COLORS = [
-  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
-  '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
-  '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#eab308",
+  "#84cc16",
+  "#22c55e",
+  "#10b981",
+  "#14b8a6",
+  "#06b6d4",
+  "#0ea5e9",
+  "#3b82f6",
+  "#6366f1",
+  "#8b5cf6",
+  "#a855f7",
+  "#d946ef",
+  "#ec4899",
+  "#f43f5e",
 ];
 
 export function randomColor(): string {
@@ -312,7 +437,7 @@ export function randomColor(): string {
 // TEXT GENERATORS
 // ==========================================
 
-export function generateDescription(type: 'project' | 'task' | 'goal'): string {
+export function generateDescription(type: "project" | "task" | "goal"): string {
   const projectDescriptions = [
     "Strategic initiative to enhance platform capabilities and user experience.",
     "Critical system upgrade to improve performance and scalability.",
@@ -320,7 +445,7 @@ export function generateDescription(type: 'project' | 'task' | 'goal'): string {
     "Internal tooling improvements for development team efficiency.",
     "Infrastructure modernization and technical debt reduction.",
   ];
-  
+
   const taskDescriptions = [
     "Implementation requires careful consideration of edge cases and error handling.",
     "Coordinate with design team for UI/UX approval before implementation.",
@@ -330,18 +455,21 @@ export function generateDescription(type: 'project' | 'task' | 'goal'): string {
     "Optimize for performance and minimize bundle size impact.",
     "Document changes in technical specification and update API docs.",
   ];
-  
+
   const goalDescriptions = [
     "Measurable objective aligned with quarterly business priorities.",
     "Personal development goal to enhance skills and capabilities.",
     "Team goal focused on collaboration and delivery excellence.",
     "Strategic initiative supporting long-term organizational growth.",
   ];
-  
+
   switch (type) {
-    case 'project': return randomElement(projectDescriptions);
-    case 'task': return randomElement(taskDescriptions);
-    case 'goal': return randomElement(goalDescriptions);
+    case "project":
+      return randomElement(projectDescriptions);
+    case "task":
+      return randomElement(taskDescriptions);
+    case "goal":
+      return randomElement(goalDescriptions);
   }
 }
 
@@ -375,4 +503,3 @@ export const seedUtils = {
 };
 
 export default seedUtils;
-

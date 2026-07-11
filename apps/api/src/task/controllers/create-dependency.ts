@@ -6,17 +6,25 @@ import { taskDependencyTable, taskTable } from "../../database/schema";
 async function createTaskDependency({
   dependentTaskId,
   requiredTaskId,
-  type = 'blocks'
+  type = "blocks",
 }: {
   dependentTaskId: string;
   requiredTaskId: string;
-  type?: 'blocks' | 'blocked_by';
+  type?: "blocks" | "blocked_by";
 }) {
   const db = getDatabase();
   // Validate that both tasks exist
   const [dependentTask, requiredTask] = await Promise.all([
-    db.select().from(taskTable).where(eq(taskTable.id, dependentTaskId)).limit(1),
-    db.select().from(taskTable).where(eq(taskTable.id, requiredTaskId)).limit(1)
+    db
+      .select()
+      .from(taskTable)
+      .where(eq(taskTable.id, dependentTaskId))
+      .limit(1),
+    db
+      .select()
+      .from(taskTable)
+      .where(eq(taskTable.id, requiredTaskId))
+      .limit(1),
   ]);
 
   if (!dependentTask.length || !requiredTask.length) {
@@ -39,8 +47,8 @@ async function createTaskDependency({
     .where(
       and(
         eq(taskDependencyTable.dependentTaskId, dependentTaskId),
-        eq(taskDependencyTable.requiredTaskId, requiredTaskId)
-      )
+        eq(taskDependencyTable.requiredTaskId, requiredTaskId),
+      ),
     )
     .limit(1);
 
@@ -53,7 +61,7 @@ async function createTaskDependency({
   // Check for circular dependencies
   const wouldCreateCircularDependency = await checkCircularDependency(
     dependentTaskId,
-    requiredTaskId
+    requiredTaskId,
   );
 
   if (wouldCreateCircularDependency) {
@@ -78,10 +86,10 @@ async function createTaskDependency({
 // Helper function to check for circular dependencies
 async function checkCircularDependency(
   dependentTaskId: string,
-  requiredTaskId: string
+  requiredTaskId: string,
 ): Promise<boolean> {
   const db = getDatabase();
-  
+
   // Get all dependencies where requiredTaskId is the dependent task
   const dependencies = await db
     .select()
@@ -93,13 +101,13 @@ async function checkCircularDependency(
     if (dep.requiredTaskId === dependentTaskId) {
       return true; // Direct circular dependency
     }
-    
+
     // Check for indirect circular dependency recursively
     const hasIndirectCircular = await checkCircularDependency(
       dependentTaskId,
-      dep.requiredTaskId
+      dep.requiredTaskId,
     );
-    
+
     if (hasIndirectCircular) {
       return true;
     }
@@ -108,4 +116,4 @@ async function checkCircularDependency(
   return false;
 }
 
-export default createTaskDependency; 
+export default createTaskDependency;

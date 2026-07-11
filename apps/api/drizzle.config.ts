@@ -25,7 +25,10 @@ export default defineConfig({
   // schema.ts is the main schema; email-verification.ts holds the auth token
   // tables that live code inserts into — they were invisible to drizzle-kit
   // (and therefore missing from the database) until wired in here.
-  schema: ["./src/database/schema.ts", "./src/database/schema/email-verification.ts"],
+  schema: [
+    "./src/database/schema.ts",
+    "./src/database/schema/email-verification.ts",
+  ],
   dialect: "postgresql",
   dbCredentials: {
     url: databaseUrl,

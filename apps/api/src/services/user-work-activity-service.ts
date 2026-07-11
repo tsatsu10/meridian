@@ -1,6 +1,6 @@
 /**
  * 💼 User Work & Activity Service
- * 
+ *
  * Manages user's active projects, recent tasks, activity feed, and workload
  */
 
@@ -61,9 +61,9 @@ export async function getUserActiveProjects(userId: string): Promise<any[]> {
           or(
             eq(projects.status, "active"),
             eq(projects.status, "in_progress"),
-            eq(projects.status, "planning")
-          )
-        )
+            eq(projects.status, "planning"),
+          ),
+        ),
       )
       .orderBy(desc(projects.priority));
 
@@ -85,10 +85,7 @@ export async function getUserActiveProjects(userId: string): Promise<any[]> {
           .select({ updatedAt: tasks.updatedAt })
           .from(tasks)
           .where(
-            and(
-              eq(tasks.projectId, project.id),
-              eq(tasks.assigneeId, userId)
-            )
+            and(eq(tasks.projectId, project.id), eq(tasks.assigneeId, userId)),
           )
           .orderBy(desc(tasks.updatedAt))
           .limit(1);
@@ -98,7 +95,7 @@ export async function getUserActiveProjects(userId: string): Promise<any[]> {
           taskCounts: taskCounts[0],
           lastContribution: lastActivity[0]?.updatedAt || project.assignedAt,
         };
-      })
+      }),
     );
 
     return projectsWithCounts;
@@ -113,7 +110,7 @@ export async function getUserActiveProjects(userId: string): Promise<any[]> {
  */
 export async function getUserRecentTasks(
   userId: string,
-  options?: { limit?: number }
+  options?: { limit?: number },
 ): Promise<any> {
   const db = getDatabase();
 
@@ -154,8 +151,8 @@ export async function getUserRecentTasks(
       .where(
         and(
           eq(tasks.assigneeId, userId),
-          or(eq(tasks.status, "in_progress"), eq(tasks.status, "todo"))
-        )
+          or(eq(tasks.status, "in_progress"), eq(tasks.status, "todo")),
+        ),
       )
       .orderBy(desc(tasks.priority), tasks.dueDate)
       .limit(10);
@@ -177,8 +174,8 @@ export async function getUserRecentTasks(
         and(
           eq(tasks.assigneeId, userId),
           sql`${tasks.status} != 'done'`,
-          sql`${tasks.dueDate} < NOW()`
-        )
+          sql`${tasks.dueDate} < NOW()`,
+        ),
       )
       .orderBy(tasks.dueDate);
 
@@ -208,7 +205,7 @@ export async function getUserRecentTasks(
  */
 export async function getUserActivityFeed(
   userId: string,
-  options?: { limit?: number; offset?: number }
+  options?: { limit?: number; offset?: number },
 ): Promise<any[]> {
   const db = getDatabase();
 
@@ -260,12 +257,7 @@ export async function getUserWorkload(userId: string): Promise<any> {
         totalEstimatedHours: sql<number>`SUM(COALESCE(${tasks.estimatedHours}, 0))`,
       })
       .from(tasks)
-      .where(
-        and(
-          eq(tasks.assigneeId, userId),
-          sql`${tasks.status} != 'done'`
-        )
-      )
+      .where(and(eq(tasks.assigneeId, userId), sql`${tasks.status} != 'done'`))
       .groupBy(tasks.status);
 
     // Get high priority tasks
@@ -276,8 +268,8 @@ export async function getUserWorkload(userId: string): Promise<any> {
         and(
           eq(tasks.assigneeId, userId),
           sql`${tasks.status} != 'done'`,
-          or(eq(tasks.priority, "high"), eq(tasks.priority, "urgent"))
-        )
+          or(eq(tasks.priority, "high"), eq(tasks.priority, "urgent")),
+        ),
       );
 
     // Get tasks due this week
@@ -292,20 +284,20 @@ export async function getUserWorkload(userId: string): Promise<any> {
           eq(tasks.assigneeId, userId),
           sql`${tasks.status} != 'done'`,
           sql`${tasks.dueDate} <= ${oneWeekFromNow}`,
-          sql`${tasks.dueDate} >= NOW()`
-        )
+          sql`${tasks.dueDate} >= NOW()`,
+        ),
       );
 
     const totalEstimatedHours = tasksByStatus.reduce(
       (sum, item) => sum + (Number(item.totalEstimatedHours) || 0),
-      0
+      0,
     );
 
     return {
       tasksByStatus,
       totalActiveTasks: tasksByStatus.reduce(
         (sum, item) => sum + Number(item.count),
-        0
+        0,
       ),
       totalEstimatedHours,
       highPriorityTasks: highPriorityCount[0]?.count || 0,
@@ -314,8 +306,8 @@ export async function getUserWorkload(userId: string): Promise<any> {
         totalEstimatedHours > 40
           ? "high"
           : totalEstimatedHours > 20
-          ? "medium"
-          : "low",
+            ? "medium"
+            : "low",
     };
   } catch (error) {
     logger.error("Error getting user workload:", error);
@@ -366,11 +358,11 @@ export async function getUserTeamCollaborations(userId: string): Promise<any> {
           tenureDays: team.joinedAt
             ? Math.floor(
                 (Date.now() - new Date(team.joinedAt).getTime()) /
-                  (1000 * 60 * 60 * 24)
+                  (1000 * 60 * 60 * 24),
               )
             : 0,
         };
-      })
+      }),
     );
 
     return {
@@ -380,7 +372,8 @@ export async function getUserTeamCollaborations(userId: string): Promise<any> {
       // No isPrimaryTeam flag exists in the schema; the longest-standing
       // membership is the closest real signal
       primaryTeam: [...teamsWithCounts].sort(
-        (a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
+        (a, b) =>
+          new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime(),
       )[0],
     };
   } catch (error) {
@@ -393,4 +386,3 @@ export async function getUserTeamCollaborations(userId: string): Promise<any> {
     };
   }
 }
-

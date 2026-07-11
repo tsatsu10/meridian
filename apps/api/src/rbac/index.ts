@@ -1,6 +1,6 @@
 /**
  * 🛡️ RBAC API Routes
- * 
+ *
  * Endpoints for managing role-based access control:
  * - Role assignment and removal
  * - Permission checking
@@ -14,18 +14,18 @@ import rbacStats from "./stats";
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
-import { 
-  roleAssignmentTable, 
-  roleHistoryTable, 
+import {
+  roleAssignmentTable,
+  roleHistoryTable,
   customPermissionTable,
   departmentTable,
   userTable,
-  workspaceTable
+  workspaceTable,
 } from "../database/schema";
 import { createId } from "@paralleldrive/cuid2";
 import { getRolePermissions } from "../constants/rbac";
 import type { UserRole } from "../types/rbac";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const rbac = new Hono<{
   Variables: {
@@ -39,7 +39,7 @@ const assignRoleSchema = z.object({
   userId: z.string(),
   role: z.enum([
     "workspace-manager",
-    "department-head", 
+    "department-head",
     "workspace-viewer",
     "project-manager",
     "project-viewer",
@@ -48,7 +48,7 @@ const assignRoleSchema = z.object({
     "client",
     "contractor",
     "stakeholder",
-    "guest"
+    "guest",
   ]),
   workspaceId: z.string().optional(),
   projectIds: z.array(z.string()).optional(),
@@ -85,11 +85,11 @@ rbac.get("/roles", async (c) => {
       "project-manager": getRolePermissions("project-manager"),
       "project-viewer": getRolePermissions("project-viewer"),
       "team-lead": getRolePermissions("team-lead"),
-      "member": getRolePermissions("member"),
-      "client": getRolePermissions("client"),
-      "contractor": getRolePermissions("contractor"),
-      "stakeholder": getRolePermissions("stakeholder"),
-      "guest": getRolePermissions("guest"),
+      member: getRolePermissions("member"),
+      client: getRolePermissions("client"),
+      contractor: getRolePermissions("contractor"),
+      stakeholder: getRolePermissions("stakeholder"),
+      guest: getRolePermissions("guest"),
     };
 
     return c.json(rolePermissions);
@@ -143,8 +143,8 @@ rbac.get("/assignments/:userId", async (c) => {
       .where(
         and(
           eq(roleAssignmentTable.userId, userId),
-          eq(roleAssignmentTable.isActive, true)
-        )
+          eq(roleAssignmentTable.isActive, true),
+        ),
       )
       .orderBy(desc(roleAssignmentTable.assignedAt));
 
@@ -152,100 +152,105 @@ rbac.get("/assignments/:userId", async (c) => {
   } catch (error) {
     logger.error("Failed to get user role assignments:", error);
     // Return empty assignments if table doesn't exist yet
-    if (error instanceof Error && error.message.includes('relation "role_assignment" does not exist')) {
+    if (
+      error instanceof Error &&
+      error.message.includes('relation "role_assignment" does not exist')
+    ) {
       return c.json({
         assignments: [],
-        warning: "RBAC tables not yet created in database. Run 'npm run db:push' to create them."
+        warning:
+          "RBAC tables not yet created in database. Run 'npm run db:push' to create them.",
       });
     }
-    return c.json({ error: "Failed to get user role assignments", details: error instanceof Error ? error.message : String(error) }, 500);
+    return c.json(
+      {
+        error: "Failed to get user role assignments",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
   }
 });
 
 /**
  * POST /roles/assign - Assign role to user
  */
-rbac.post(
-  "/assign",
-  zValidator("json", assignRoleSchema),
-  async (c) => {
-    try {
-      const db = getDatabase();
-      const data = c.req.valid("json");
-      const assignerEmail = c.get("userEmail");
-      
-      // Get assigner user ID
-      const assignerUser = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.email, assignerEmail))
-        .limit(1);
-      
-      const [assigner] = assignerUser;
-      if (!assigner) {
-        return c.json({ error: "Assigner not found" }, 400);
-      }
+rbac.post("/assign", zValidator("json", assignRoleSchema), async (c) => {
+  try {
+    const db = getDatabase();
+    const data = c.req.valid("json");
+    const assignerEmail = c.get("userEmail");
 
-      // TODO: Check if assigner has permission to assign this role
+    // Get assigner user ID
+    const assignerUser = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.email, assignerEmail))
+      .limit(1);
 
-      // Deactivate existing role assignments for this user
-      await db
-        .update(roleAssignmentTable)
-        .set({
-          isActive: false,
-        })
-        .where(
-          and(
-            eq(roleAssignmentTable.userId, data.userId),
-            eq(roleAssignmentTable.isActive, true)
-          )
-        );
-
-      // Create new role assignment (only columns role_assignment actually has;
-      // assigner/expiry/reason context is captured in role_history below)
-      const newAssignment = {
-        id: createId(),
-        userId: data.userId,
-        role: data.role,
-        assignedAt: new Date(),
-        isActive: true,
-        workspaceId: data.workspaceId || null,
-        projectIds: data.projectIds ?? null,
-      };
-
-      await db.insert(roleAssignmentTable).values(newAssignment);
-
-      // Record in role history
-      await db.insert(roleHistoryTable).values({
-        id: createId(),
-        userId: data.userId,
-        role: data.role,
-        action: "assigned",
-        performedBy: assigner.id,
-        reason: data.reason || "Role assigned",
-        workspaceId: data.workspaceId || null,
-        projectIds: data.projectIds ?? null,
-        departmentIds: data.departmentIds ?? null,
-        notes: data.notes || null,
-        metadata: {
-          ipAddress: c.req.header("x-forwarded-for") || "unknown",
-          userAgent: c.req.header("user-agent") || "unknown",
-          expiresAt: data.expiresAt ?? null,
-        },
-      });
-      
-      return c.json({ 
-        success: true, 
-        assignment: newAssignment,
-        message: `Role ${data.role} assigned successfully`
-      });
-      
-    } catch (error) {
-      logger.error("Failed to assign role:", error);
-      return c.json({ error: "Failed to assign role" }, 500);
+    const [assigner] = assignerUser;
+    if (!assigner) {
+      return c.json({ error: "Assigner not found" }, 400);
     }
+
+    // TODO: Check if assigner has permission to assign this role
+
+    // Deactivate existing role assignments for this user
+    await db
+      .update(roleAssignmentTable)
+      .set({
+        isActive: false,
+      })
+      .where(
+        and(
+          eq(roleAssignmentTable.userId, data.userId),
+          eq(roleAssignmentTable.isActive, true),
+        ),
+      );
+
+    // Create new role assignment (only columns role_assignment actually has;
+    // assigner/expiry/reason context is captured in role_history below)
+    const newAssignment = {
+      id: createId(),
+      userId: data.userId,
+      role: data.role,
+      assignedAt: new Date(),
+      isActive: true,
+      workspaceId: data.workspaceId || null,
+      projectIds: data.projectIds ?? null,
+    };
+
+    await db.insert(roleAssignmentTable).values(newAssignment);
+
+    // Record in role history
+    await db.insert(roleHistoryTable).values({
+      id: createId(),
+      userId: data.userId,
+      role: data.role,
+      action: "assigned",
+      performedBy: assigner.id,
+      reason: data.reason || "Role assigned",
+      workspaceId: data.workspaceId || null,
+      projectIds: data.projectIds ?? null,
+      departmentIds: data.departmentIds ?? null,
+      notes: data.notes || null,
+      metadata: {
+        ipAddress: c.req.header("x-forwarded-for") || "unknown",
+        userAgent: c.req.header("user-agent") || "unknown",
+        expiresAt: data.expiresAt ?? null,
+      },
+    });
+
+    return c.json({
+      success: true,
+      assignment: newAssignment,
+      message: `Role ${data.role} assigned successfully`,
+    });
+  } catch (error) {
+    logger.error("Failed to assign role:", error);
+    return c.json({ error: "Failed to assign role" }, 500);
   }
-);
+});
 
 /**
  * DELETE /roles/remove/:userId - Remove user's role assignment
@@ -255,14 +260,14 @@ rbac.delete("/remove/:userId", async (c) => {
     const db = getDatabase();
     const userId = c.req.param("userId");
     const removerEmail = c.get("userEmail");
-    
+
     // Get remover user ID
     const removerUser = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, removerEmail))
       .limit(1);
-    
+
     const [remover] = removerUser;
     if (!remover) {
       return c.json({ error: "User not found" }, 400);
@@ -277,8 +282,8 @@ rbac.delete("/remove/:userId", async (c) => {
       .where(
         and(
           eq(roleAssignmentTable.userId, userId),
-          eq(roleAssignmentTable.isActive, true)
-        )
+          eq(roleAssignmentTable.isActive, true),
+        ),
       )
       .limit(1);
 
@@ -309,12 +314,11 @@ rbac.delete("/remove/:userId", async (c) => {
         userAgent: c.req.header("user-agent") || "unknown",
       },
     });
-    
-    return c.json({ 
+
+    return c.json({
       success: true,
-      message: "Role removed successfully"
+      message: "Role removed successfully",
     });
-    
   } catch (error) {
     logger.error("Failed to remove role:", error);
     return c.json({ error: "Failed to remove role" }, 500);
@@ -328,20 +332,25 @@ rbac.delete("/remove/:userId", async (c) => {
  */
 rbac.post(
   "/permissions/check",
-  zValidator("json", z.object({
-    userId: z.string(),
-    permission: z.string(),
-    context: z.object({
-      workspaceId: z.string().optional(),
-      projectId: z.string().optional(),
-      departmentId: z.string().optional(),
-    }).optional(),
-  })),
+  zValidator(
+    "json",
+    z.object({
+      userId: z.string(),
+      permission: z.string(),
+      context: z
+        .object({
+          workspaceId: z.string().optional(),
+          projectId: z.string().optional(),
+          departmentId: z.string().optional(),
+        })
+        .optional(),
+    }),
+  ),
   async (c) => {
     try {
       const db = getDatabase();
       const data = c.req.valid("json");
-      
+
       // Get user's role assignment
       const assignment = await db
         .select()
@@ -349,16 +358,16 @@ rbac.post(
         .where(
           and(
             eq(roleAssignmentTable.userId, data.userId),
-            eq(roleAssignmentTable.isActive, true)
-          )
+            eq(roleAssignmentTable.isActive, true),
+          ),
         )
         .limit(1);
-      
+
       if (!assignment.length) {
-        return c.json({ 
-          allowed: false, 
+        return c.json({
+          allowed: false,
           role: "guest",
-          reason: "No active role assignment" 
+          reason: "No active role assignment",
         });
       }
 
@@ -396,9 +405,9 @@ rbac.post(
           userRole,
           data.permission,
           data.context,
-          roleAssignment
+          roleAssignment,
         );
-        
+
         if (!contextResult.allowed) {
           return c.json(contextResult);
         }
@@ -411,17 +420,19 @@ rbac.post(
         .where(
           and(
             eq(customPermissionTable.userId, data.userId),
-            eq(customPermissionTable.permission, data.permission)
-          )
+            eq(customPermissionTable.permission, data.permission),
+          ),
         );
 
       // Apply custom permission overrides (most recent takes precedence)
       let finalPermission: boolean = hasBasePermission;
       if (customPermissions.length > 0) {
-        const latestCustom = customPermissions.sort((a, b) => 
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        const latestCustom = customPermissions.sort(
+          (a, b) =>
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime(),
         )[0];
-        
+
         if (latestCustom) {
           // Check if custom permission has expired
           if (latestCustom.expiresAt && new Date() > latestCustom.expiresAt) {
@@ -439,14 +450,15 @@ rbac.post(
         assignment: roleAssignment,
         customPermissions: customPermissions,
         context: data.context,
-        reason: finalPermission ? undefined : "Permission denied by custom override"
+        reason: finalPermission
+          ? undefined
+          : "Permission denied by custom override",
       });
-      
     } catch (error) {
       logger.error("Failed to check permission:", error);
       return c.json({ error: "Failed to check permission" }, 500);
     }
-  }
+  },
 );
 
 /**
@@ -456,9 +468,13 @@ async function checkContextualPermissions(
   userRole: UserRole,
   permission: string,
   context: { workspaceId?: string; projectId?: string; departmentId?: string },
-  roleAssignment: any
-): Promise<{ allowed: boolean; role: UserRole; reason?: string; context?: any }> {
-  
+  roleAssignment: any,
+): Promise<{
+  allowed: boolean;
+  role: UserRole;
+  reason?: string;
+  context?: any;
+}> {
   if (!roleAssignment) {
     return {
       allowed: false,
@@ -467,17 +483,18 @@ async function checkContextualPermissions(
       context,
     };
   }
-  
+
   // Department Head - scoped to their departments
   if (userRole === "department-head") {
     if (context.departmentId && roleAssignment.departmentIds) {
       try {
-        const departmentIds = JSON.parse(roleAssignment.departmentIds || '[]');
+        const departmentIds = JSON.parse(roleAssignment.departmentIds || "[]");
         if (!departmentIds.includes(context.departmentId)) {
           return {
             allowed: false,
             role: userRole,
-            reason: "Department Head can only access their assigned departments",
+            reason:
+              "Department Head can only access their assigned departments",
             context,
           };
         }
@@ -497,7 +514,7 @@ async function checkContextualPermissions(
   if (userRole === "project-manager" || userRole === "project-viewer") {
     if (context.projectId && roleAssignment.projectIds) {
       try {
-        const projectIds = JSON.parse(roleAssignment.projectIds || '[]');
+        const projectIds = JSON.parse(roleAssignment.projectIds || "[]");
         if (!projectIds.includes(context.projectId)) {
           return {
             allowed: false,
@@ -516,9 +533,12 @@ async function checkContextualPermissions(
         };
       }
     }
-    
+
     // Project Managers cannot see workspace-level analytics
-    if (userRole === "project-manager" && permission === "canViewWorkspaceAnalytics") {
+    if (
+      userRole === "project-manager" &&
+      permission === "canViewWorkspaceAnalytics"
+    ) {
       return {
         allowed: false,
         role: userRole,
@@ -529,7 +549,11 @@ async function checkContextualPermissions(
   }
 
   // Workspace scoping - check if user has role assignment for specific workspace
-  if (context.workspaceId && roleAssignment.workspaceId && roleAssignment.workspaceId !== context.workspaceId) {
+  if (
+    context.workspaceId &&
+    roleAssignment.workspaceId &&
+    roleAssignment.workspaceId !== context.workspaceId
+  ) {
     return {
       allowed: false,
       role: userRole,
@@ -549,16 +573,16 @@ async function checkContextualPermissions(
         context,
       };
     }
-    
+
     // Additional restrictions for external users
     const restrictedActions = [
       "canManageWorkspace",
-      "canManageRoles", 
+      "canManageRoles",
       "canInviteUsers",
       "canRemoveUsers",
-      "canViewWorkspaceAnalytics"
+      "canViewWorkspaceAnalytics",
     ];
-    
+
     if (restrictedActions.includes(permission)) {
       return {
         allowed: false,
@@ -581,38 +605,43 @@ async function checkContextualPermissions(
  */
 rbac.post(
   "/permissions/bulk-update",
-  zValidator("json", z.object({
-    permissions: z.record(z.string(), z.record(z.string(), z.boolean()))
-  })),
+  zValidator(
+    "json",
+    z.object({
+      permissions: z.record(z.string(), z.record(z.string(), z.boolean())),
+    }),
+  ),
   async (c) => {
     try {
       const data = c.req.valid("json");
       const userEmail = c.get("userEmail");
-      
+
       // TODO: This is a placeholder endpoint for the UI
       // In a real implementation, you would update the role definitions
       // For now, we'll just log the changes and return success
-      
+
       logger.debug("Role permissions update requested by:", userEmail);
-      logger.debug("New permissions:", JSON.stringify(data.permissions, null, 2));
-      
+      logger.debug(
+        "New permissions:",
+        JSON.stringify(data.permissions, null, 2),
+      );
+
       // In a real system, you would:
       // 1. Validate the user has permission to update role definitions
       // 2. Update the role permission definitions in the database
       // 3. Invalidate cached permissions
       // 4. Notify affected users of permission changes
-      
-      return c.json({ 
-        success: true, 
+
+      return c.json({
+        success: true,
         message: "Role permissions updated successfully",
-        note: "This is a placeholder implementation. In production, this would update the role definitions."
+        note: "This is a placeholder implementation. In production, this would update the role definitions.",
       });
-      
     } catch (error) {
       logger.error("Failed to update role permissions:", error);
       return c.json({ error: "Failed to update role permissions" }, 500);
     }
-  }
+  },
 );
 
 // ===== CUSTOM PERMISSIONS ENDPOINTS =====
@@ -628,21 +657,21 @@ rbac.post(
       const db = getDatabase();
       const data = c.req.valid("json");
       const granterEmail = c.get("userEmail");
-      
+
       // Get granter user ID
       const granterUser = await db
         .select()
         .from(userTable)
         .where(eq(userTable.email, granterEmail))
         .limit(1);
-      
+
       const [granter] = granterUser;
       if (!granter) {
         return c.json({ error: "Granter not found" }, 400);
       }
-      
+
       // TODO: Check if granter has permission to modify custom permissions
-      
+
       // Create custom permission record
       const customPermission = {
         id: createId(),
@@ -659,20 +688,19 @@ rbac.post(
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      
+
       await db.insert(customPermissionTable).values(customPermission);
-      
-      return c.json({ 
-        success: true, 
+
+      return c.json({
+        success: true,
         permission: customPermission,
-        message: `Custom permission ${data.granted ? 'granted' : 'revoked'} successfully`
+        message: `Custom permission ${data.granted ? "granted" : "revoked"} successfully`,
       });
-      
     } catch (error) {
       logger.error("Failed to manage custom permission:", error);
       return c.json({ error: "Failed to manage custom permission" }, 500);
     }
-  }
+  },
 );
 
 // ===== AUDIT AND HISTORY ENDPOINTS =====
@@ -684,7 +712,7 @@ rbac.get("/history/:userId", async (c) => {
   try {
     const db = getDatabase();
     const userId = c.req.param("userId");
-    
+
     const history = await db
       .select({
         history: roleHistoryTable,
@@ -694,7 +722,7 @@ rbac.get("/history/:userId", async (c) => {
       .leftJoin(userTable, eq(roleHistoryTable.performedBy, userTable.id))
       .where(eq(roleHistoryTable.userId, userId))
       .orderBy(desc(roleHistoryTable.createdAt));
-    
+
     return c.json({ history });
   } catch (error) {
     logger.error("Failed to get role history:", error);
@@ -708,11 +736,17 @@ rbac.get("/history/:userId", async (c) => {
 rbac.get("/audit/:userId", async (c) => {
   try {
     const userId = c.req.param("userId");
-    const limit = parseInt(c.req.query("limit") || "100");
-    
-    const { RoleAuditService } = await import("../services/rbac/role-audit-service");
-    const trail = await RoleAuditService.getUserAuditTrail(userId, undefined, limit);
-    
+    const limit = Number.parseInt(c.req.query("limit") || "100");
+
+    const { RoleAuditService } = await import(
+      "../services/rbac/role-audit-service"
+    );
+    const trail = await RoleAuditService.getUserAuditTrail(
+      userId,
+      undefined,
+      limit,
+    );
+
     return c.json({ audit: trail, count: trail.length });
   } catch (error) {
     logger.error("Failed to get audit trail:", error);
@@ -726,11 +760,16 @@ rbac.get("/audit/:userId", async (c) => {
 rbac.get("/audit/workspace/:workspaceId", async (c) => {
   try {
     const workspaceId = c.req.param("workspaceId");
-    const limit = parseInt(c.req.query("limit") || "100");
-    
-    const { RoleAuditService } = await import("../services/rbac/role-audit-service");
-    const trail = await RoleAuditService.getWorkspaceAuditTrail(workspaceId, limit);
-    
+    const limit = Number.parseInt(c.req.query("limit") || "100");
+
+    const { RoleAuditService } = await import(
+      "../services/rbac/role-audit-service"
+    );
+    const trail = await RoleAuditService.getWorkspaceAuditTrail(
+      workspaceId,
+      limit,
+    );
+
     return c.json({ audit: trail, count: trail.length });
   } catch (error) {
     logger.error("Failed to get workspace audit trail:", error);
@@ -744,10 +783,12 @@ rbac.get("/audit/workspace/:workspaceId", async (c) => {
 rbac.get("/audit/stats", async (c) => {
   try {
     const workspaceId = c.req.query("workspaceId");
-    
-    const { RoleAuditService } = await import("../services/rbac/role-audit-service");
+
+    const { RoleAuditService } = await import(
+      "../services/rbac/role-audit-service"
+    );
     const stats = await RoleAuditService.getAuditStats(workspaceId);
-    
+
     return c.json(stats);
   } catch (error) {
     logger.error("Failed to get audit stats:", error);
@@ -769,7 +810,7 @@ rbac.get("/departments", async (c) => {
       .from(departmentTable)
       .leftJoin(userTable, eq(departmentTable.headId, userTable.id))
       .where(eq(departmentTable.isActive, true));
-    
+
     return c.json({ departments });
   } catch (error) {
     logger.error("Failed to get departments:", error);
@@ -785,14 +826,14 @@ rbac.post("/migrate/workspace-creators", async (c) => {
   try {
     const db = getDatabase();
     const userEmail = c.get("userEmail");
-    
+
     // Get user and check if they have permission to run migrations
     const user = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, userEmail))
       .limit(1);
-    
+
     const [migrationUser] = user;
     if (!migrationUser) {
       return c.json({ error: "User not found" }, 400);
@@ -806,25 +847,32 @@ rbac.post("/migrate/workspace-creators", async (c) => {
         and(
           eq(roleAssignmentTable.userId, migrationUser.id),
           eq(roleAssignmentTable.role, "workspace-manager"),
-          eq(roleAssignmentTable.isActive, true)
-        )
+          eq(roleAssignmentTable.isActive, true),
+        ),
       )
       .limit(1);
-    
+
     if (!hasPermission.length) {
-      return c.json({ error: "Insufficient permissions. Only workspace managers can run migrations." }, 403);
+      return c.json(
+        {
+          error:
+            "Insufficient permissions. Only workspace managers can run migrations.",
+        },
+        403,
+      );
     }
-    
+
     // Import and run the migration function
-    const assignWorkspaceManagerToCreators = await import("../workspace-user/controllers/assign-workspace-manager-to-creators");
+    const assignWorkspaceManagerToCreators = await import(
+      "../workspace-user/controllers/assign-workspace-manager-to-creators"
+    );
     const result = await assignWorkspaceManagerToCreators.default();
-    
+
     return c.json({
       message: "Workspace creator migration completed",
       ...result,
       success: true,
     });
-    
   } catch (error) {
     logger.error("Failed to run workspace creator migration:", error);
     return c.json({ error: "Failed to run migration" }, 500);
@@ -942,4 +990,4 @@ rbac.post("/auto-assign-role", async (c) => {
 // Mount stats routes
 rbac.route("/", rbacStats);
 
-export default rbac; 
+export default rbac;

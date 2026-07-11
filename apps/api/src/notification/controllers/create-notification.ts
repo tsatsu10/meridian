@@ -3,8 +3,11 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { notificationTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { findGroupForNotification, mergeSimilarNotifications } from "../services/notification-grouper";
-import logger from '../../utils/logger';
+import {
+  findGroupForNotification,
+  mergeSimilarNotifications,
+} from "../services/notification-grouper";
+import logger from "../../utils/logger";
 
 async function createNotification({
   userEmail,
@@ -32,7 +35,9 @@ async function createNotification({
     .limit(1);
 
   if (!user) {
-    logger.error(`❌ Cannot create notification: User not found for email ${userEmail}`);
+    logger.error(
+      `❌ Cannot create notification: User not found for email ${userEmail}`,
+    );
     return null;
   }
 
@@ -76,4 +81,3 @@ async function createNotification({
 }
 
 export default createNotification;
-

@@ -22,37 +22,74 @@ import { sql } from "drizzle-orm";
 
 // Enums
 export const userRole = pgEnum("user_role", [
-  'admin',
-  'manager', 
-  'member',
-  'viewer',
-  'workspace-manager',
-  'team-lead',
-  'project-manager',
-  'department-head',
-  'project-viewer',
-  'guest'
+  "admin",
+  "manager",
+  "member",
+  "viewer",
+  "workspace-manager",
+  "team-lead",
+  "project-manager",
+  "department-head",
+  "project-viewer",
+  "guest",
 ]);
-export const priority = pgEnum("priority", ['low', 'medium', 'high', 'urgent']);
-export const taskStatus = pgEnum("task_status", ['todo', 'in_progress', 'done']);
-export const eventType = pgEnum("event_type", ['meeting', 'deadline', 'time-off', 'workload', 'milestone', 'other']);
-export const eventStatus = pgEnum("event_status", ['scheduled', 'in-progress', 'completed', 'cancelled']);
-export const attendeeStatus = pgEnum("attendee_status", ['pending', 'accepted', 'declined', 'maybe']);
-export const recurringFrequency = pgEnum("recurring_frequency", ['none', 'daily', 'weekly', 'biweekly', 'monthly', 'quarterly', 'yearly', 'custom']);
-export const favoriteType = pgEnum("favorite_type", ['user', 'channel', 'project', 'task']);
+export const priority = pgEnum("priority", ["low", "medium", "high", "urgent"]);
+export const taskStatus = pgEnum("task_status", [
+  "todo",
+  "in_progress",
+  "done",
+]);
+export const eventType = pgEnum("event_type", [
+  "meeting",
+  "deadline",
+  "time-off",
+  "workload",
+  "milestone",
+  "other",
+]);
+export const eventStatus = pgEnum("event_status", [
+  "scheduled",
+  "in-progress",
+  "completed",
+  "cancelled",
+]);
+export const attendeeStatus = pgEnum("attendee_status", [
+  "pending",
+  "accepted",
+  "declined",
+  "maybe",
+]);
+export const recurringFrequency = pgEnum("recurring_frequency", [
+  "none",
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
+  "quarterly",
+  "yearly",
+  "custom",
+]);
+export const favoriteType = pgEnum("favorite_type", [
+  "user",
+  "channel",
+  "project",
+  "task",
+]);
 
 // Core tables
 export const users = pgTable(
   "users",
   {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
     email: text("email").notNull().unique(),
     name: text("name").notNull(),
     password: text("password").notNull(),
     avatar: text("avatar"),
-    timezone: text("timezone").default('UTC'),
-    language: text("language").default('en'),
-    role: userRole().default('member'),
+    timezone: text("timezone").default("UTC"),
+    language: text("language").default("en"),
+    role: userRole().default("member"),
     isEmailVerified: boolean("is_email_verified").default(false),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     lastSeen: timestamp("last_seen", { withTimezone: true }), // For presence tracking
@@ -60,13 +97,15 @@ export const users = pgTable(
     twoFactorEnabled: boolean("two_factor_enabled").default(false),
     twoFactorSecret: text("two_factor_secret"),
     twoFactorBackupCodes: text("two_factor_backup_codes"), // JSON string array
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => ({
     // Performance index for presence tracking queries
     lastSeenIdx: index("idx_users_last_seen").on(table.lastSeen),
-  })
+  }),
 );
 
 export const sessions = pgTable("sessions", {
@@ -78,7 +117,9 @@ export const sessions = pgTable("sessions", {
 });
 
 export const workspaces = pgTable("workspaces", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   ownerId: text("owner_id")
@@ -88,99 +129,133 @@ export const workspaces = pgTable("workspaces", {
   logo: text("logo"),
   settings: jsonb("settings").default({}),
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-export const workspaceMembers = pgTable("workspace_members", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  role: userRole().default('member'),
-  status: text("status").default('active'),
-  permissions: jsonb("permissions").default([]),
-  joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow(),
-  invitedBy: text("invited_by"),
-}, (table) => ({
-  // ⚡ Performance indexes for workspace member queries
-  workspaceIdIdx: index("idx_workspace_members_workspace_id").on(table.workspaceId),
-  userIdIdx: index("idx_workspace_members_user_id").on(table.userId),
-  userEmailIdx: index("idx_workspace_members_user_email").on(table.userEmail),
-  roleIdx: index("idx_workspace_members_role").on(table.role),
-  statusIdx: index("idx_workspace_members_status").on(table.status),
-  // One membership row per user per workspace (replaces non-unique composite index)
-  workspaceUserUnique: uniqueIndex("idx_workspace_members_workspace_user_unique").on(
-    table.workspaceId,
-    table.userId,
-  ),
-}));
+export const workspaceMembers = pgTable(
+  "workspace_members",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    userEmail: text("user_email")
+      .notNull()
+      .references(() => users.email, { onDelete: "cascade" }),
+    role: userRole().default("member"),
+    status: text("status").default("active"),
+    permissions: jsonb("permissions").default([]),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow(),
+    invitedBy: text("invited_by"),
+  },
+  (table) => ({
+    // ⚡ Performance indexes for workspace member queries
+    workspaceIdIdx: index("idx_workspace_members_workspace_id").on(
+      table.workspaceId,
+    ),
+    userIdIdx: index("idx_workspace_members_user_id").on(table.userId),
+    userEmailIdx: index("idx_workspace_members_user_email").on(table.userEmail),
+    roleIdx: index("idx_workspace_members_role").on(table.role),
+    statusIdx: index("idx_workspace_members_status").on(table.status),
+    // One membership row per user per workspace (replaces non-unique composite index)
+    workspaceUserUnique: uniqueIndex(
+      "idx_workspace_members_workspace_user_unique",
+    ).on(table.workspaceId, table.userId),
+  }),
+);
 
-export const workspaceInvites = pgTable("workspace_invites", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  inviteeEmail: text("invitee_email").notNull(),
-  inviterUserId: text("inviter_user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  roleToAssign: text("role_to_assign").notNull(),
-  token: text("token").notNull().unique(),
-  message: text("message"),
-  status: text("status").default('pending'), // pending, accepted, rejected, expired
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  workspaceIdIdx: index("idx_workspace_invites_workspace_id").on(table.workspaceId),
-  inviteeEmailIdx: index("idx_workspace_invites_email").on(table.inviteeEmail),
-  tokenIdx: index("idx_workspace_invites_token").on(table.token),
-  statusIdx: index("idx_workspace_invites_status").on(table.status),
-}));
+export const workspaceInvites = pgTable(
+  "workspace_invites",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    inviteeEmail: text("invitee_email").notNull(),
+    inviterUserId: text("inviter_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    roleToAssign: text("role_to_assign").notNull(),
+    token: text("token").notNull().unique(),
+    message: text("message"),
+    status: text("status").default("pending"), // pending, accepted, rejected, expired
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    workspaceIdIdx: index("idx_workspace_invites_workspace_id").on(
+      table.workspaceId,
+    ),
+    inviteeEmailIdx: index("idx_workspace_invites_email").on(
+      table.inviteeEmail,
+    ),
+    tokenIdx: index("idx_workspace_invites_token").on(table.token),
+    statusIdx: index("idx_workspace_invites_status").on(table.status),
+  }),
+);
 
-export const projects = pgTable("projects", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  workspaceId: text("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  ownerId: text("owner_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  slug: text("slug"),
-  color: text("color").default('#6366f1'),
-  icon: text("icon"),
-  status: text("status").default('active'),
-  priority: priority().default('medium'),
-  startDate: timestamp("start_date", { withTimezone: true }),
-  dueDate: timestamp("due_date", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  settings: jsonb("settings").default({}),
-  isArchived: boolean("is_archived").default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-}, (table) => ({
-  // ⚡ Performance indexes for frequently queried columns
-  workspaceIdIdx: index("idx_projects_workspace_id").on(table.workspaceId),
-  statusIdx: index("idx_projects_status").on(table.status),
-  ownerIdIdx: index("idx_projects_owner_id").on(table.ownerId),
-  isArchivedIdx: index("idx_projects_is_archived").on(table.isArchived),
-  createdAtIdx: index("idx_projects_created_at").on(table.createdAt),
-  // Composite index for common query pattern: workspace + status filtering
-  workspaceStatusIdx: index("idx_projects_workspace_status").on(table.workspaceId, table.status),
-}));
+export const projects = pgTable(
+  "projects",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    slug: text("slug"),
+    color: text("color").default("#6366f1"),
+    icon: text("icon"),
+    status: text("status").default("active"),
+    priority: priority().default("medium"),
+    startDate: timestamp("start_date", { withTimezone: true }),
+    dueDate: timestamp("due_date", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    settings: jsonb("settings").default({}),
+    isArchived: boolean("is_archived").default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    // ⚡ Performance indexes for frequently queried columns
+    workspaceIdIdx: index("idx_projects_workspace_id").on(table.workspaceId),
+    statusIdx: index("idx_projects_status").on(table.status),
+    ownerIdIdx: index("idx_projects_owner_id").on(table.ownerId),
+    isArchivedIdx: index("idx_projects_is_archived").on(table.isArchived),
+    createdAtIdx: index("idx_projects_created_at").on(table.createdAt),
+    // Composite index for common query pattern: workspace + status filtering
+    workspaceStatusIdx: index("idx_projects_workspace_status").on(
+      table.workspaceId,
+      table.status,
+    ),
+  }),
+);
 
 // Project members table for project-level team assignments
 export const projectMembers = pgTable("project_members", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -198,53 +273,77 @@ export const projectMembers = pgTable("project_members", {
 
 // Project settings table for project-specific configurations
 export const projectSettings = pgTable("project_settings", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   category: text("category").notNull(),
   settings: jsonb("settings").notNull().default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-export const tasks = pgTable("tasks", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  title: text("title").notNull(),
-  description: text("description"),
-  projectId: text("project_id")
-    .notNull()
-    .references(() => projects.id, { onDelete: "cascade" }),
-  assigneeId: text("assignee_id").references(() => users.id, { onDelete: "set null" }),
-  userEmail: text("user_email").references(() => users.email, { onDelete: "set null" }),
-  status: taskStatus().default('todo'),
-  priority: priority().default('medium'),
-  position: integer("position").default(0),
-  number: integer("number").default(1),
-  dueDate: timestamp("due_date", { withTimezone: true }),
-  startDate: timestamp("start_date", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  estimatedHours: integer("estimated_hours"),
-  actualHours: integer("actual_hours"),
-  parentTaskId: text("parent_task_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-}, (table) => ({
-  // ⚡ Performance indexes for frequently queried columns
-  projectIdIdx: index("idx_tasks_project_id").on(table.projectId),
-  statusIdx: index("idx_tasks_status").on(table.status),
-  assigneeIdIdx: index("idx_tasks_assignee_id").on(table.assigneeId),
-  userEmailIdx: index("idx_tasks_user_email").on(table.userEmail),
-  dueDateIdx: index("idx_tasks_due_date").on(table.dueDate),
-  priorityIdx: index("idx_tasks_priority").on(table.priority),
-  createdAtIdx: index("idx_tasks_created_at").on(table.createdAt),
-  // Composite indexes for common query patterns
-  projectStatusIdx: index("idx_tasks_project_status").on(table.projectId, table.status),
-  assigneeStatusIdx: index("idx_tasks_assignee_status").on(table.assigneeId, table.status),
-}));
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    title: text("title").notNull(),
+    description: text("description"),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    assigneeId: text("assignee_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    userEmail: text("user_email").references(() => users.email, {
+      onDelete: "set null",
+    }),
+    status: taskStatus().default("todo"),
+    priority: priority().default("medium"),
+    position: integer("position").default(0),
+    number: integer("number").default(1),
+    dueDate: timestamp("due_date", { withTimezone: true }),
+    startDate: timestamp("start_date", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    estimatedHours: integer("estimated_hours"),
+    actualHours: integer("actual_hours"),
+    parentTaskId: text("parent_task_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    // ⚡ Performance indexes for frequently queried columns
+    projectIdIdx: index("idx_tasks_project_id").on(table.projectId),
+    statusIdx: index("idx_tasks_status").on(table.status),
+    assigneeIdIdx: index("idx_tasks_assignee_id").on(table.assigneeId),
+    userEmailIdx: index("idx_tasks_user_email").on(table.userEmail),
+    dueDateIdx: index("idx_tasks_due_date").on(table.dueDate),
+    priorityIdx: index("idx_tasks_priority").on(table.priority),
+    createdAtIdx: index("idx_tasks_created_at").on(table.createdAt),
+    // Composite indexes for common query patterns
+    projectStatusIdx: index("idx_tasks_project_status").on(
+      table.projectId,
+      table.status,
+    ),
+    assigneeStatusIdx: index("idx_tasks_assignee_status").on(
+      table.assigneeId,
+      table.status,
+    ),
+  }),
+);
 
 export const activities = pgTable("activities", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   taskId: text("task_id").references(() => tasks.id, { onDelete: "cascade" }),
   userId: text("user_id")
     .notNull()
@@ -252,47 +351,62 @@ export const activities = pgTable("activities", {
   type: text("type").notNull(),
   content: jsonb("content"),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
-export const notifications = pgTable("notifications", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  userEmail: text("user_email")
-    .notNull()
-    .references(() => users.email, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  content: text("content"),
-  message: text("message"),
-  type: text("type").notNull(),
-  isRead: boolean("is_read").default(false),
-  isPinned: boolean("is_pinned").default(false),
-  isArchived: boolean("is_archived").default(false),
-  resourceId: text("resource_id"),
-  resourceType: text("resource_type"),
-  metadata: jsonb("metadata"),
-  // Phase 2: Notification grouping
-  groupId: text("group_id"),
-  isGrouped: boolean("is_grouped").default(false),
-  priority: text("priority").default("normal"), // 'low', 'normal', 'high', 'urgent'
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  // ⚡ Performance indexes for notification queries
-  userIdIdx: index("idx_notifications_user_id").on(table.userId),
-  userEmailIdx: index("idx_notifications_user_email").on(table.userEmail),
-  isReadIdx: index("idx_notifications_is_read").on(table.isRead),
-  isPinnedIdx: index("idx_notifications_is_pinned").on(table.isPinned),
-  isArchivedIdx: index("idx_notifications_is_archived").on(table.isArchived),
-  typeIdx: index("idx_notifications_type").on(table.type),
-  createdAtIdx: index("idx_notifications_created_at").on(table.createdAt),
-  // Composite index for user's unread notifications
-  userUnreadIdx: index("idx_notifications_user_unread").on(table.userId, table.isRead),
-}));
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    userEmail: text("user_email")
+      .notNull()
+      .references(() => users.email, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content"),
+    message: text("message"),
+    type: text("type").notNull(),
+    isRead: boolean("is_read").default(false),
+    isPinned: boolean("is_pinned").default(false),
+    isArchived: boolean("is_archived").default(false),
+    resourceId: text("resource_id"),
+    resourceType: text("resource_type"),
+    metadata: jsonb("metadata"),
+    // Phase 2: Notification grouping
+    groupId: text("group_id"),
+    isGrouped: boolean("is_grouped").default(false),
+    priority: text("priority").default("normal"), // 'low', 'normal', 'high', 'urgent'
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    // ⚡ Performance indexes for notification queries
+    userIdIdx: index("idx_notifications_user_id").on(table.userId),
+    userEmailIdx: index("idx_notifications_user_email").on(table.userEmail),
+    isReadIdx: index("idx_notifications_is_read").on(table.isRead),
+    isPinnedIdx: index("idx_notifications_is_pinned").on(table.isPinned),
+    isArchivedIdx: index("idx_notifications_is_archived").on(table.isArchived),
+    typeIdx: index("idx_notifications_type").on(table.type),
+    createdAtIdx: index("idx_notifications_created_at").on(table.createdAt),
+    // Composite index for user's unread notifications
+    userUnreadIdx: index("idx_notifications_user_unread").on(
+      table.userId,
+      table.isRead,
+    ),
+  }),
+);
 
 export const timeEntries = pgTable("time_entries", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   taskId: text("task_id").references(() => tasks.id, { onDelete: "cascade" }),
   userEmail: text("user_email")
     .notNull()
@@ -302,48 +416,66 @@ export const timeEntries = pgTable("time_entries", {
   endTime: timestamp("end_time", { withTimezone: true }),
   duration: integer("duration").default(0),
   isActive: boolean("is_active").default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const label = pgTable("label", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   name: text("name").notNull(),
   color: text("color").notNull(),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  projectId: text("project_id").references(() => projects.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const roleAssignment = pgTable("role_assignment", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
+  workspaceId: text("workspace_id").references(() => workspaces.id, {
+    onDelete: "cascade",
+  }),
   projectIds: jsonb("project_ids"),
   isActive: boolean("is_active").default(true),
   assignedAt: timestamp("assigned_at").defaultNow().notNull(),
 });
 
 export const teams = pgTable("teams", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   workspaceId: text("workspace_id")
     .notNull()
     .references(() => workspaces.id, { onDelete: "cascade" }),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  projectId: text("project_id").references(() => projects.id, {
+    onDelete: "cascade",
+  }),
   createdBy: text("created_by").references(() => users.id),
   leadId: text("lead_id").references(() => users.id), // Team lead
   color: text("color").default("#3B82F6"), // Team color for UI
   isActive: boolean("is_active").default(true),
   settings: jsonb("settings").default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const teamMembers = pgTable("team_members", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   teamId: text("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "cascade" }),
@@ -351,13 +483,16 @@ export const teamMembers = pgTable("team_members", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   role: text("role").default("member"), // member, lead, etc.
-  joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+  joinedAt: timestamp("joined_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   addedBy: text("added_by").references(() => users.id),
 });
 
-
 export const statusColumns = pgTable("status_columns", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -366,17 +501,23 @@ export const statusColumns = pgTable("status_columns", {
   color: text("color").default("#6b7280"),
   position: integer("position").notNull().default(0),
   isDefault: boolean("is_default").default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const roleHistory = pgTable("role_history", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
+  workspaceId: text("workspace_id").references(() => workspaces.id, {
+    onDelete: "cascade",
+  }),
   projectIds: jsonb("project_ids"),
   departmentIds: jsonb("department_ids"),
   action: text("action").notNull(), // 'assigned' | 'removed' | 'modified'
@@ -386,11 +527,15 @@ export const roleHistory = pgTable("role_history", {
   reason: text("reason"),
   notes: text("notes"),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const taskDependencies = pgTable("task_dependencies", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   dependentTaskId: text("dependent_task_id")
     .notNull()
     .references(() => tasks.id, { onDelete: "cascade" }),
@@ -398,28 +543,40 @@ export const taskDependencies = pgTable("task_dependencies", {
     .notNull()
     .references(() => tasks.id, { onDelete: "cascade" }),
   type: text("type").notNull().default("blocks"), // 'blocks' | 'blocked_by'
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const customPermissions = pgTable("custom_permissions", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   permission: text("permission").notNull(),
   granted: boolean("granted").notNull().default(true),
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  workspaceId: text("workspace_id").references(() => workspaces.id, {
+    onDelete: "cascade",
+  }),
+  projectId: text("project_id").references(() => projects.id, {
+    onDelete: "cascade",
+  }),
   resourceType: text("resource_type"),
   resourceId: text("resource_id"),
   reason: text("reason"),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const departments = pgTable("departments", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   workspaceId: text("workspace_id")
@@ -429,12 +586,16 @@ export const departments = pgTable("departments", {
   parentDepartmentId: text("parent_department_id"),
   settings: jsonb("settings").default({}),
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const attachments = pgTable("attachments", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   fileName: text("file_name").notNull(),
   fileSize: integer("file_size").notNull(),
   fileType: text("file_type").notNull(),
@@ -443,19 +604,27 @@ export const attachments = pgTable("attachments", {
   caption: text("caption"), // Optional description/message with file
   taskId: text("task_id").references(() => tasks.id, { onDelete: "cascade" }),
   commentId: text("comment_id"),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
+  projectId: text("project_id").references(() => projects.id, {
+    onDelete: "cascade",
+  }),
+  workspaceId: text("workspace_id").references(() => workspaces.id, {
+    onDelete: "cascade",
+  }),
   uploadedBy: text("uploaded_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // @epic-1.3-milestones: Project milestones for tracking key deliverables
 export const milestone = pgTable("milestone", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   type: text("type").notNull(), // 'phase', 'deadline', 'review', 'release', etc.
@@ -469,14 +638,20 @@ export const milestone = pgTable("milestone", {
   riskDescription: text("risk_description"),
   dependencyTaskIds: text("dependency_task_ids"), // JSON array of task IDs
   stakeholderIds: text("stakeholder_ids"), // JSON array of user IDs
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdBy: text("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // @epic-3.2-integrations: API keys for integration authentication
 export const apiKey = pgTable("api_key", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   name: text("name").notNull(),
   key: text("key").notNull().unique(), // The actual API key (hashed)
   provider: text("provider"), // Which service this key is for
@@ -488,31 +663,45 @@ export const apiKey = pgTable("api_key", {
   lastUsed: timestamp("last_used", { withTimezone: true }),
   isActive: boolean("is_active").default(true),
   metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdBy: text("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 // @epic-3.2-integrations: Email templates for notifications
 export const emailTemplates = pgTable("email_templates", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   name: text("name").notNull(),
   subject: text("subject").notNull(),
   htmlBody: text("html_body").notNull(),
   textBody: text("text_body"),
   category: text("category").notNull(), // 'notification', 'marketing', 'transactional', etc.
-  workspaceId: text("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
+  workspaceId: text("workspace_id").references(() => workspaces.id, {
+    onDelete: "cascade",
+  }),
   isGlobal: boolean("is_global").default(false),
   variables: jsonb("variables"), // Template variable definitions
   isActive: boolean("is_active").default(true),
   metadata: jsonb("metadata"),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdBy: text("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // General audit log table for security/operations auditing
 export const auditLogTable = pgTable("audit_log", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   action: text("action").notNull(),
   resourceType: text("resource_type").notNull(),
   resourceId: text("resource_id"),
@@ -534,13 +723,17 @@ export const auditLogTable = pgTable("audit_log", {
   metadata: text("metadata"),
   retentionPolicy: text("retention_policy").default("standard"),
   isSystemGenerated: boolean("is_system_generated").default(false),
-  timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow().notNull(),
+  timestamp: timestamp("timestamp", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   date: text("date"),
 });
 
 // Settings audit log for tracking settings changes
 export const settingsAuditLog = pgTable("settings_audit_log", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userEmail: text("user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
@@ -549,43 +742,57 @@ export const settingsAuditLog = pgTable("settings_audit_log", {
   oldValue: text("old_value"), // Previous value (JSON string)
   newValue: text("new_value"), // New value (JSON string)
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // User settings storage
 export const userSettings = pgTable("user_settings", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userEmail: text("user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
   section: text("section").notNull(), // 'general', 'notifications', 'appearance', etc.
   settings: text("settings").notNull(), // JSON string of settings
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // Settings presets for quick configuration
 export const settingsPreset = pgTable("settings_preset", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   category: text("category").notNull(), // 'user', 'workspace', 'project'
   settings: text("settings").notNull(), // JSON string of preset settings
   isPublic: boolean("is_public").default(false),
   isDefault: boolean("is_default").default(false),
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdBy: text("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // User profiles for extended user information
 export const userProfile = pgTable("user_profile", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
-  
+
   // Basic info
   bio: text("bio"),
   jobTitle: text("job_title"),
@@ -595,56 +802,60 @@ export const userProfile = pgTable("user_profile", {
   location: text("location"),
   timezone: text("timezone"),
   language: text("language"),
-  
+
   // Contact info
   phone: text("phone"),
   website: text("website"),
   linkedinUrl: text("linkedin_url"),
   githubUrl: text("github_url"),
   twitterUrl: text("twitter_url"),
-  
+
   // Media
   profilePicture: text("profile_picture"),
   coverImage: text("cover_image"),
-  
+
   // Privacy settings
   isPublic: boolean("is_public").default(true),
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   showOnlineStatus: boolean("show_online_status").default(true),
   showEmail: boolean("show_email").default(false),
   showPhone: boolean("show_phone").default(false),
-  
+
   // Verification
   emailVerified: boolean("email_verified").default(false),
   phoneVerified: boolean("phone_verified").default(false),
   profileVerified: boolean("profile_verified").default(false),
-  
+
   // Stats
   viewCount: integer("view_count").default(0),
   connectionCount: integer("connection_count").default(0),
   endorsementCount: integer("endorsement_count").default(0),
   completenessScore: integer("completeness_score").default(0),
-  
+
   // Legacy fields from original schema (JSONB in database)
   socialLinks: jsonb("social_links"),
   skills: jsonb("skills"),
   metadata: jsonb("metadata"),
-  
+
   // Legacy fields from original schema (TEXT)
   title: text("title"),
   department: text("department"),
   phoneNumber: text("phone_number"),
   avatar: text("avatar"),
-  
+
   // Timestamps
   lastProfileUpdate: timestamp("last_profile_update", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // User work experience
 export const userExperience = pgTable("user_experience", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -660,13 +871,17 @@ export const userExperience = pgTable("user_experience", {
   companyLogo: text("company_logo"),
   order: integer("order").default(0),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // User education
 export const userEducation = pgTable("user_education", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -683,13 +898,17 @@ export const userEducation = pgTable("user_education", {
   schoolLogo: text("school_logo"),
   order: integer("order").default(0),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // User skills and expertise
 export const userSkill = pgTable("user_skill", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -702,13 +921,17 @@ export const userSkill = pgTable("user_skill", {
   verified: boolean("verified").default(false),
   order: integer("order").default(0),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // User connections/network
 export const userConnection = pgTable("user_connection", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   followerId: text("follower_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -723,39 +946,48 @@ export const userConnection = pgTable("user_connection", {
   connectionType: text("connection_type"),
   connectedAt: timestamp("connected_at", { withTimezone: true }),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // @epic-5.1-project-notes: Project Notes for collaborative documentation
 export const projectNotes = pgTable("project_notes", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   content: text("content"), // Rich text JSON (TipTap/ProseMirror format)
-  
+
   // Metadata
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "set null" }),
-  lastEditedBy: text("last_edited_by")
-    .references(() => users.id, { onDelete: "set null" }),
-  
+  lastEditedBy: text("last_edited_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+
   // Organization
   isPinned: boolean("is_pinned").default(false),
   isArchived: boolean("is_archived").default(false),
   tags: jsonb("tags"), // Array of tag strings
-  
+
   // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // @epic-5.1-project-notes: Note Version History for tracking changes
 export const noteVersions = pgTable("note_versions", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   noteId: text("note_id")
     .notNull()
     .references(() => projectNotes.id, { onDelete: "cascade" }),
@@ -765,12 +997,16 @@ export const noteVersions = pgTable("note_versions", {
     .references(() => users.id, { onDelete: "set null" }),
   versionNumber: integer("version_number").notNull(),
   changeDescription: text("change_description"), // Optional description of what changed
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // @epic-5.1-project-notes: Note Comments for discussions
 export const noteComments = pgTable("note_comments", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   noteId: text("note_id")
     .notNull()
     .references(() => projectNotes.id, { onDelete: "cascade" }),
@@ -779,14 +1015,18 @@ export const noteComments = pgTable("note_comments", {
     .references(() => users.email, { onDelete: "cascade" }),
   comment: text("comment").notNull(),
   isEdited: boolean("is_edited").default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // 🎨 Backlog Themes Table - For organizing backlog tasks by theme/category
 export const backlogThemes = pgTable("backlog_themes", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
+
   // Relations
   projectId: text("project_id")
     .notNull()
@@ -794,35 +1034,47 @@ export const backlogThemes = pgTable("backlog_themes", {
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "set null" }),
-  
+
   // Theme Info
   name: text("name").notNull(), // e.g., "User Authentication", "Payment Integration"
   description: text("description"), // Optional description
   color: text("color").default("#6366f1"), // Hex color code
-  
+
   // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // Phase 1: Team Awareness - User Activity Sessions
 export const userActivitySessions = pgTable("user_activity_sessions", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userEmail: text("user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
   workspaceId: text("workspace_id")
     .notNull()
     .references(() => workspaces.id, { onDelete: "cascade" }),
-  currentTaskId: text("current_task_id")
-    .references(() => tasks.id, { onDelete: "set null" }),
-  currentProjectId: text("current_project_id")
-    .references(() => projects.id, { onDelete: "set null" }),
+  currentTaskId: text("current_task_id").references(() => tasks.id, {
+    onDelete: "set null",
+  }),
+  currentProjectId: text("current_project_id").references(() => projects.id, {
+    onDelete: "set null",
+  }),
   activityType: text("activity_type"), // 'editing', 'viewing', 'commenting'
-  startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
-  lastActive: timestamp("last_active", { withTimezone: true }).defaultNow().notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  lastActive: timestamp("last_active", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -835,12 +1087,16 @@ export const userStatus = pgTable("user_status", {
   statusMessage: text("status_message"),
   emoji: text("emoji"),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // Phase 1: Kudos/Recognition System
 export const kudos = pgTable("kudos", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   fromUserEmail: text("from_user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
@@ -854,12 +1110,16 @@ export const kudos = pgTable("kudos", {
   emoji: text("emoji"),
   category: text("category"), // 'helpful', 'great_work', 'team_player', 'creative', 'leadership'
   isPublic: boolean("is_public").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // Phase 1: Team Mood Tracker
 export const moodCheckins = pgTable("mood_checkins", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userEmail: text("user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
@@ -869,11 +1129,15 @@ export const moodCheckins = pgTable("mood_checkins", {
   mood: text("mood").notNull(), // 'great', 'good', 'okay', 'bad', 'stressed'
   notes: text("notes"),
   isAnonymous: boolean("is_anonymous").default(false).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const moodAnalytics = pgTable("mood_analytics", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   workspaceId: text("workspace_id")
     .notNull()
     .references(() => workspaces.id, { onDelete: "cascade" }),
@@ -881,13 +1145,17 @@ export const moodAnalytics = pgTable("mood_analytics", {
   moodDistribution: jsonb("mood_distribution").notNull(), // { great: 5, good: 10, okay: 3, bad: 1, stressed: 2 }
   averageScore: numeric("average_score", { precision: 3, scale: 2 }), // 1.00 to 5.00
   totalCheckins: integer("total_checkins").default(0).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // Phase 1: Skill Matrix
 export const userSkills = pgTable("user_skills", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userEmail: text("user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
@@ -897,7 +1165,9 @@ export const userSkills = pgTable("user_skills", {
   endorsedBy: jsonb("endorsed_by").$type<string[]>().default([]), // Array of user emails
   yearsOfExperience: integer("years_of_experience"),
   lastUsed: timestamp("last_used", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -910,13 +1180,19 @@ export const digestSettings = pgTable("digest_settings", {
   dailyTime: text("daily_time").default("09:00"), // HH:MM format
   weeklyEnabled: boolean("weekly_enabled").default(true).notNull(),
   weeklyDay: integer("weekly_day").default(1), // 0=Sunday, 1=Monday, etc.
-  digestSections: jsonb("digest_sections").$type<string[]>().default(["tasks", "mentions", "comments", "kudos"]),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  digestSections: jsonb("digest_sections")
+    .$type<string[]>()
+    .default(["tasks", "mentions", "comments", "kudos"]),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const digestMetrics = pgTable("digest_metrics", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userEmail: text("user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
@@ -928,42 +1204,64 @@ export const digestMetrics = pgTable("digest_metrics", {
   kudosReceived: integer("kudos_received").default(0),
   content: jsonb("content"), // Full digest content
   emailSent: boolean("email_sent").default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // Phase 2: Smart Notifications - Alert Rules
 export const alertRules = pgTable("alert_rules", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   userEmail: text("user_email")
     .notNull()
     .references(() => users.email, { onDelete: "cascade" }),
   name: text("name").notNull(),
   conditionType: text("condition_type").notNull(), // 'project_progress', 'task_overdue', 'mention', 'keyword'
   conditionConfig: jsonb("condition_config").notNull(), // Condition parameters
-  notificationChannels: jsonb("notification_channels").$type<string[]>().default(["in_app"]), // ['in_app', 'email', 'slack', 'teams']
+  notificationChannels: jsonb("notification_channels")
+    .$type<string[]>()
+    .default(["in_app"]), // ['in_app', 'email', 'slack', 'teams']
   isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-export const favorites = pgTable("favorites", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  type: favoriteType().default("user").notNull(),
-  favoriteUserId: text("favorite_user_id").references(() => users.id, { onDelete: "cascade" }),
-  metadata: jsonb("metadata").default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-}, (table) => ({
-  userIdx: index("idx_favorites_user_id").on(table.userId),
-  favoriteUserIdx: index("idx_favorites_favorite_user_id").on(table.favoriteUserId),
-}));
+export const favorites = pgTable(
+  "favorites",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: favoriteType().default("user").notNull(),
+    favoriteUserId: text("favorite_user_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    metadata: jsonb("metadata").default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    userIdx: index("idx_favorites_user_id").on(table.userId),
+    favoriteUserIdx: index("idx_favorites_favorite_user_id").on(
+      table.favoriteUserId,
+    ),
+  }),
+);
 
 // Health System Tables - Phase 2.3.8
 export const projectHealthTable = pgTable("project_health", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -978,11 +1276,15 @@ export const projectHealthTable = pgTable("project_health", {
   metadata: jsonb("metadata").default({}), // additional metrics
   cachedAt: timestamp("cached_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const healthHistoryTable = pgTable("health_history", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -994,12 +1296,18 @@ export const healthHistoryTable = pgTable("health_history", {
   resourceAllocation: integer("resource_allocation"),
   riskLevel: integer("risk_level"),
   metadata: jsonb("metadata").default({}),
-  recordedAt: timestamp("recorded_at", { withTimezone: true }).defaultNow().notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  recordedAt: timestamp("recorded_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const healthRecommendationsTable = pgTable("health_recommendations", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -1012,12 +1320,16 @@ export const healthRecommendationsTable = pgTable("health_recommendations", {
   isResolved: boolean("is_resolved").default(false),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   metadata: jsonb("metadata").default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const healthAlertsTable = pgTable("health_alerts", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -1028,7 +1340,9 @@ export const healthAlertsTable = pgTable("health_alerts", {
   isResolved: boolean("is_resolved").default(false),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   metadata: jsonb("metadata").default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -1041,38 +1355,46 @@ export const healthAlertsTable = pgTable("health_alerts", {
 export const notificationPreferencesTable = pgTable(
   "notification_preferences",
   {
-    id: text("id").$defaultFn(() => createId()).primaryKey(),
-    
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+
     // Relations
     userId: text("user_id")
       .notNull()
       .unique()
       .references(() => users.id, { onDelete: "cascade" }),
-    
+
     // Message notifications
     mentionsEnabled: boolean("mentions_enabled").default(true).notNull(),
-    directMessagesEnabled: boolean("direct_messages_enabled").default(true).notNull(),
-    conversationUpdatesEnabled: boolean("conversation_updates_enabled").default(false).notNull(),
-    
+    directMessagesEnabled: boolean("direct_messages_enabled")
+      .default(true)
+      .notNull(),
+    conversationUpdatesEnabled: boolean("conversation_updates_enabled")
+      .default(false)
+      .notNull(),
+
     // Activity notifications
     activityEnabled: boolean("activity_enabled").default(true).notNull(),
     dailyDigestEnabled: boolean("daily_digest_enabled").default(true).notNull(),
-    
+
     // Frequency settings
     notificationFrequency: text("notification_frequency")
       .default("instant")
       .notNull(), // instant | daily | weekly | never
-    
+
     // Quiet hours (HH:MM format, 24-hour)
     quietHoursStart: text("quiet_hours_start"), // e.g., "22:00"
     quietHoursEnd: text("quiet_hours_end"), // e.g., "08:00"
-    
+
     // Timestamps
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     userIdx: sql`create index notification_pref_user_idx on notification_preferences(user_id)`,
-  })
+  }),
 );
 
 // Compatibility aliases
@@ -1131,35 +1453,41 @@ export const notificationPreferenceTable = notificationPreferencesTable;
  * Stores reusable project templates for different professions and industries
  */
 export const projectTemplates = pgTable("project_templates", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
+
   // Template Info
   name: text("name").notNull(),
   description: text("description").notNull(),
   profession: text("profession").notNull(), // e.g., "Software Engineer", "Marketing Manager"
   industry: text("industry").notNull(), // e.g., "Technology & Software Development", "Marketing & Communications"
   category: text("category"), // For grouping related templates
-  
+
   // Template Configuration
   icon: text("icon"), // Icon identifier for UI
-  color: text("color").default('#6366f1'),
+  color: text("color").default("#6366f1"),
   estimatedDuration: integer("estimated_duration"), // in days
-  difficulty: text("difficulty").default('intermediate'), // beginner | intermediate | advanced
-  
+  difficulty: text("difficulty").default("intermediate"), // beginner | intermediate | advanced
+
   // Usage & Popularity
   usageCount: integer("usage_count").default(0),
   rating: integer("rating").default(0), // average rating * 10 (e.g., 45 = 4.5)
   ratingCount: integer("rating_count").default(0),
-  
+
   // Metadata
   tags: jsonb("tags").default([]), // array of tag strings for search/filtering
   settings: jsonb("settings").default({}), // template-specific settings
   isPublic: boolean("is_public").default(true),
   isOfficial: boolean("is_official").default(false), // created by Meridian team
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  
+  createdBy: text("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+
   // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -1168,33 +1496,37 @@ export const projectTemplates = pgTable("project_templates", {
  * Stores tasks that belong to project templates
  */
 export const templateTasks = pgTable("template_tasks", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
+
   // Relations
   templateId: text("template_id")
     .notNull()
     .references(() => projectTemplates.id, { onDelete: "cascade" }),
-  
+
   // Task Info
   title: text("title").notNull(),
   description: text("description"),
   position: integer("position").default(0).notNull(), // order in the template
-  
+
   // Task Configuration
-  priority: priority().default('medium'),
+  priority: priority().default("medium"),
   estimatedHours: integer("estimated_hours"),
   suggestedAssigneeRole: text("suggested_assignee_role"), // e.g., "Team Lead", "Member"
-  
+
   // Timing (relative to project start)
   relativeStartDay: integer("relative_start_day"), // days after project start
   relativeDueDay: integer("relative_due_day"), // days after project start
-  
+
   // Metadata
   tags: jsonb("tags").default([]),
   metadata: jsonb("metadata").default({}),
-  
+
   // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -1203,27 +1535,31 @@ export const templateTasks = pgTable("template_tasks", {
  * Stores subtasks that belong to template tasks
  */
 export const templateSubtasks = pgTable("template_subtasks", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
+
   // Relations
   templateTaskId: text("template_task_id")
     .notNull()
     .references(() => templateTasks.id, { onDelete: "cascade" }),
-  
+
   // Subtask Info
   title: text("title").notNull(),
   description: text("description"),
   position: integer("position").default(0).notNull(), // order within parent task
-  
+
   // Subtask Configuration
   estimatedHours: integer("estimated_hours"),
   suggestedAssigneeRole: text("suggested_assignee_role"),
-  
+
   // Metadata
   metadata: jsonb("metadata").default({}),
-  
+
   // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -1232,8 +1568,10 @@ export const templateSubtasks = pgTable("template_subtasks", {
  * Stores task dependencies within templates
  */
 export const templateDependencies = pgTable("template_dependencies", {
-  id: text("id").$defaultFn(() => createId()).primaryKey(),
-  
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
+
   // Relations
   dependentTaskId: text("dependent_task_id")
     .notNull()
@@ -1241,12 +1579,14 @@ export const templateDependencies = pgTable("template_dependencies", {
   requiredTaskId: text("required_task_id")
     .notNull()
     .references(() => templateTasks.id, { onDelete: "cascade" }),
-  
+
   // Dependency Configuration
   type: text("type").notNull().default("blocks"), // 'blocks' | 'blocked_by'
-  
+
   // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // Template Aliases
@@ -1259,132 +1599,174 @@ export const projectSettingsTable = projectSettings;
 // userPreferencesExtendedTable export moved below after definition
 
 // User Preferences Table - Store user-specific settings like pinned projects
-export const userPreferencesTable = pgTable('user_preferences', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
-  workspaceId: text('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }),
-  pinnedProjects: jsonb('pinned_projects').default([]), // Array of project IDs
-  dashboardLayout: jsonb('dashboard_layout').default({}), // User's custom dashboard layout
-  theme: text('theme').default('system'), // light, dark, system
-  notifications: jsonb('notifications').default({}), // Notification preferences
-  settings: jsonb('settings').default({}), // Other user settings
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+export const userPreferencesTable = pgTable("user_preferences", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  workspaceId: text("workspace_id").references(() => workspaces.id, {
+    onDelete: "cascade",
+  }),
+  pinnedProjects: jsonb("pinned_projects").default([]), // Array of project IDs
+  dashboardLayout: jsonb("dashboard_layout").default({}), // User's custom dashboard layout
+  theme: text("theme").default("system"), // light, dark, system
+  notifications: jsonb("notifications").default({}), // Notification preferences
+  settings: jsonb("settings").default({}), // Other user settings
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // Extended User Preferences Table - Store additional user preferences by type
-export const userPreferencesExtended = pgTable('user_preferences_extended', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  preferenceType: text('preference_type').notNull(), // 'calendar', 'notification-channels', 'quiet-hours', 'work-schedule', etc.
-  preferenceData: text('preference_data').notNull(), // JSON string of preference data
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-}, (table) => ({
-  userPreferenceIdx: index("user_preferences_extended_user_preference_idx").on(table.userId, table.preferenceType),
-}));
+export const userPreferencesExtended = pgTable(
+  "user_preferences_extended",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    preferenceType: text("preference_type").notNull(), // 'calendar', 'notification-channels', 'quiet-hours', 'work-schedule', etc.
+    preferenceData: text("preference_data").notNull(), // JSON string of preference data
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    userPreferenceIdx: index(
+      "user_preferences_extended_user_preference_idx",
+    ).on(table.userId, table.preferenceType),
+  }),
+);
 
 // Export alias for userPreferencesExtended
 export const userPreferencesExtendedTable = userPreferencesExtended;
 
 // @epic-3.4-teams: Calendar Events Table
-export const calendarEvents = pgTable('calendar_events', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  title: text('title').notNull(),
-  description: text('description'),
-  type: eventType().notNull().default('meeting'),
-  status: eventStatus().notNull().default('scheduled'),
-  
+export const calendarEvents = pgTable("calendar_events", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: eventType().notNull().default("meeting"),
+  status: eventStatus().notNull().default("scheduled"),
+
   // Timing
-  startTime: timestamp('start_time', { withTimezone: true }).notNull(),
-  endTime: timestamp('end_time', { withTimezone: true }),
-  allDay: boolean('all_day').default(false),
-  timezone: text('timezone').default('UTC'),
-  
+  startTime: timestamp("start_time", { withTimezone: true }).notNull(),
+  endTime: timestamp("end_time", { withTimezone: true }),
+  allDay: boolean("all_day").default(false),
+  timezone: text("timezone").default("UTC"),
+
   // Relationships
-  teamId: text('team_id'), // Optional: link to team/project
-  projectId: text('project_id').references(() => projects.id, { onDelete: 'cascade' }),
-  workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
-  createdBy: text('created_by').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  
+  teamId: text("team_id"), // Optional: link to team/project
+  projectId: text("project_id").references(() => projects.id, {
+    onDelete: "cascade",
+  }),
+  workspaceId: text("workspace_id")
+    .notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
   // Event details
-  priority: priority().default('medium'),
-  location: text('location'), // Physical or virtual location
-  meetingLink: text('meeting_link'), // Video conference link
-  estimatedHours: integer('estimated_hours'),
-  actualHours: integer('actual_hours'),
-  
+  priority: priority().default("medium"),
+  location: text("location"), // Physical or virtual location
+  meetingLink: text("meeting_link"), // Video conference link
+  estimatedHours: integer("estimated_hours"),
+  actualHours: integer("actual_hours"),
+
   // Metadata
-  color: text('color').default('#3b82f6'),
-  attachments: jsonb('attachments').default([]), // File attachments
-  metadata: jsonb('metadata').default({}), // Additional custom data
-  
+  color: text("color").default("#3b82f6"),
+  attachments: jsonb("attachments").default([]), // File attachments
+  metadata: jsonb("metadata").default({}), // Additional custom data
+
   // Recurring
-  isRecurring: boolean('is_recurring').default(false),
-  recurringEventId: text('recurring_event_id'), // Link to parent recurring event
-  
+  isRecurring: boolean("is_recurring").default(false),
+  recurringEventId: text("recurring_event_id"), // Link to parent recurring event
+
   // Reminders
-  reminderMinutes: integer('reminder_minutes').default(15), // Minutes before event to remind
-  
+  reminderMinutes: integer("reminder_minutes").default(15), // Minutes before event to remind
+
   // Timestamps
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }), // Soft delete
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }), // Soft delete
 });
 
 // @epic-3.4-teams: Event Attendees (Many-to-Many)
-export const eventAttendees = pgTable('event_attendees', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  eventId: text('event_id').notNull().references(() => calendarEvents.id, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  
+export const eventAttendees = pgTable("event_attendees", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  eventId: text("event_id")
+    .notNull()
+    .references(() => calendarEvents.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
   // Attendee status
-  status: attendeeStatus().notNull().default('pending'),
-  isOrganizer: boolean('is_organizer').default(false),
-  isOptional: boolean('is_optional').default(false),
-  
+  status: attendeeStatus().notNull().default("pending"),
+  isOrganizer: boolean("is_organizer").default(false),
+  isOptional: boolean("is_optional").default(false),
+
   // Notifications
-  notified: boolean('notified').default(false),
-  notifiedAt: timestamp('notified_at', { withTimezone: true }),
-  
+  notified: boolean("notified").default(false),
+  notifiedAt: timestamp("notified_at", { withTimezone: true }),
+
   // Response tracking
-  respondedAt: timestamp('responded_at', { withTimezone: true }),
-  responseNote: text('response_note'),
-  
+  respondedAt: timestamp("responded_at", { withTimezone: true }),
+  responseNote: text("response_note"),
+
   // Timestamps
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // @epic-3.4-teams: Recurring Event Patterns
-export const recurringPatterns = pgTable('recurring_patterns', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  eventId: text('event_id').notNull().references(() => calendarEvents.id, { onDelete: 'cascade' }).unique(),
-  
+export const recurringPatterns = pgTable("recurring_patterns", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  eventId: text("event_id")
+    .notNull()
+    .references(() => calendarEvents.id, { onDelete: "cascade" })
+    .unique(),
+
   // Pattern configuration
-  frequency: recurringFrequency().notNull().default('weekly'),
-  interval: integer('interval').default(1), // Every N days/weeks/months
-  
+  frequency: recurringFrequency().notNull().default("weekly"),
+  interval: integer("interval").default(1), // Every N days/weeks/months
+
   // End conditions
-  endDate: timestamp('end_date', { withTimezone: true }),
-  occurrences: integer('occurrences'), // Total number of occurrences
-  
+  endDate: timestamp("end_date", { withTimezone: true }),
+  occurrences: integer("occurrences"), // Total number of occurrences
+
   // Weekly specific
-  weekdays: jsonb('weekdays').default([]), // Array of weekday numbers (0-6, Sunday=0)
-  
+  weekdays: jsonb("weekdays").default([]), // Array of weekday numbers (0-6, Sunday=0)
+
   // Monthly specific
-  dayOfMonth: integer('day_of_month'), // Specific day of month (1-31)
-  weekOfMonth: integer('week_of_month'), // First, second, third, fourth, last week
-  
+  dayOfMonth: integer("day_of_month"), // Specific day of month (1-31)
+  weekOfMonth: integer("week_of_month"), // First, second, third, fourth, last week
+
   // Custom pattern
-  customPattern: jsonb('custom_pattern').default({}), // For custom recurring patterns
-  
+  customPattern: jsonb("custom_pattern").default({}), // For custom recurring patterns
+
   // Exceptions
-  exceptionDates: jsonb('exception_dates').default([]), // Dates to skip
-  
+  exceptionDates: jsonb("exception_dates").default([]), // Dates to skip
+
   // Timestamps
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // Export all feature tables (Security, Executive, Automation)
@@ -1398,7 +1780,6 @@ export * from "./schema/files";
 
 // Export goal setting & OKR tables
 export * from "./schema/goals";
-
 
 // Export billing tables
 

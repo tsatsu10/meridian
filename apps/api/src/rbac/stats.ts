@@ -3,7 +3,7 @@ import { getDatabase } from "../database/connection";
 import { userTable, settingsAuditLogTable } from "../database/schema";
 import { eq, and, gte, desc, sql, count } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const rbacStats = new Hono();
 
@@ -36,8 +36,8 @@ rbacStats.get("/stats", authMiddleware, async (c) => {
       .where(
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%'`,
-          gte(settingsAuditLogTable.createdAt, last7Days)
-        )
+          gte(settingsAuditLogTable.createdAt, last7Days),
+        ),
       );
 
     return c.json({
@@ -67,7 +67,10 @@ rbacStats.get("/distribution", authMiddleware, async (c) => {
       .groupBy(userTable.role);
 
     // Get total users for percentage calculation
-    const totalUsers = roleDistribution.reduce((sum, item) => sum + (item.count || 0), 0);
+    const totalUsers = roleDistribution.reduce(
+      (sum, item) => sum + (item.count || 0),
+      0,
+    );
 
     // Define colors for each role
     const roleColors: Record<string, string> = {
@@ -85,7 +88,8 @@ rbacStats.get("/distribution", authMiddleware, async (c) => {
     const formattedDistribution = roleDistribution.map((item) => ({
       role: item.role || "member",
       count: item.count || 0,
-      percentage: totalUsers > 0 ? Math.round(((item.count || 0) / totalUsers) * 100) : 0,
+      percentage:
+        totalUsers > 0 ? Math.round(((item.count || 0) / totalUsers) * 100) : 0,
       color: roleColors[item.role || "member"] || "#8b5cf6",
     }));
 
@@ -109,8 +113,8 @@ rbacStats.get("/recent-changes", authMiddleware, async (c) => {
       .where(
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%' OR ${settingsAuditLogTable.action} LIKE '%permission%'`,
-          gte(settingsAuditLogTable.createdAt, last30Days)
-        )
+          gte(settingsAuditLogTable.createdAt, last30Days),
+        ),
       )
       .orderBy(desc(settingsAuditLogTable.createdAt))
       .limit(20);
@@ -147,5 +151,3 @@ rbacStats.get("/recent-changes", authMiddleware, async (c) => {
 });
 
 export default rbacStats;
-
-

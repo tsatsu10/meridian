@@ -1,13 +1,17 @@
 /**
  * ➕ Create Theme Controller
- * 
+ *
  * Creates a new backlog theme/category for a project
  */
 
 import { getDatabase } from "../../database/connection";
-import { backlogThemesTable, activityTable, userTable } from "../../database/schema";
+import {
+  backlogThemesTable,
+  activityTable,
+  userTable,
+} from "../../database/schema";
 import { eq } from "drizzle-orm";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface CreateThemeInput {
   projectId: string;
@@ -50,7 +54,7 @@ export async function createTheme(input: CreateThemeInput) {
           taskId: null,
           type: "theme",
           userId: input.createdBy,
-          content: { 
+          content: {
             text: `Created theme: ${newTheme.name}`,
             themeId: newTheme.id,
             themeName: newTheme.name,
@@ -68,5 +72,3 @@ export async function createTheme(input: CreateThemeInput) {
     throw new Error("Failed to create theme");
   }
 }
-
-

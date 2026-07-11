@@ -4,10 +4,7 @@ import { z } from "zod";
 import { and, desc, eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { getDatabase } from "../database/connection";
-import {
-  favoritesTable,
-  users,
-} from "../database/schema";
+import { favoritesTable, users } from "../database/schema";
 import { auth } from "../middlewares/auth";
 import logger from "../utils/logger";
 
@@ -55,63 +52,59 @@ app.get("/", async (c) => {
   }
 });
 
-app.post(
-  "/",
-  zValidator("json", createFavoriteSchema),
-  async (c) => {
-    const userId = c.get("userId");
-    if (!userId) {
-      return c.json({ error: "Unauthorized" }, 401);
+app.post("/", zValidator("json", createFavoriteSchema), async (c) => {
+  const userId = c.get("userId");
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { favoriteUserId, metadata } = c.req.valid("json");
+
+  try {
+    const db = getDatabase();
+
+    const targetUser = await db.query.users.findFirst({
+      where: eq(users.id, favoriteUserId),
+    });
+
+    if (!targetUser) {
+      return c.json({ error: "Target user not found" }, 404);
     }
 
-    const { favoriteUserId, metadata } = c.req.valid("json");
+    // Prevent duplicates
+    const duplicateExists = await db
+      .select({ id: favoritesTable.id })
+      .from(favoritesTable)
+      .where(
+        and(
+          eq(favoritesTable.userId, userId),
+          eq(favoritesTable.type, "user"),
+          eq(favoritesTable.favoriteUserId, favoriteUserId),
+        ),
+      )
+      .limit(1);
 
-    try {
-      const db = getDatabase();
-
-      const targetUser = await db.query.users.findFirst({
-        where: eq(users.id, favoriteUserId),
-      });
-
-      if (!targetUser) {
-        return c.json({ error: "Target user not found" }, 404);
-      }
-
-      // Prevent duplicates
-      const duplicateExists = await db
-        .select({ id: favoritesTable.id })
-        .from(favoritesTable)
-        .where(
-          and(
-            eq(favoritesTable.userId, userId),
-            eq(favoritesTable.type, "user"),
-            eq(favoritesTable.favoriteUserId, favoriteUserId),
-          ),
-        )
-        .limit(1);
-
-      if (duplicateExists.length > 0) {
-        return c.json({ error: "Favorite already exists" }, 409);
-      }
-
-      const [favorite] = await db
-        .insert(favoritesTable)
-        .values({
-          id: createId(),
-          userId,
-          type: "user",
-          favoriteUserId,
-          metadata: metadata ?? {},
-        })
-        .returning();
-
-      return c.json({ favorite }, 201);
-    } catch (error) {
-      logger.error("Error creating favorite:", error);
-      return c.json({ error: "Failed to create favorite" }, 500);
+    if (duplicateExists.length > 0) {
+      return c.json({ error: "Favorite already exists" }, 409);
     }
-  },
-);
+
+    const [favorite] = await db
+      .insert(favoritesTable)
+      .values({
+        id: createId(),
+        userId,
+        type: "user",
+        favoriteUserId,
+        metadata: metadata ?? {},
+      })
+      .returning();
+
+    return c.json({ favorite }, 201);
+  } catch (error) {
+    logger.error("Error creating favorite:", error);
+    return c.json({ error: "Failed to create favorite" }, 500);
+  }
+});
 
 app.delete("/:favoriteId", async (c) => {
   const userId = c.get("userId");
@@ -141,9 +134,7 @@ app.delete("/:favoriteId", async (c) => {
       return c.json({ error: "Favorite not found" }, 404);
     }
 
-    await db
-      .delete(favoritesTable)
-      .where(eq(favoritesTable.id, favoriteId));
+    await db.delete(favoritesTable).where(eq(favoritesTable.id, favoriteId));
 
     return c.json({ success: true });
   } catch (error) {

@@ -24,4 +24,3 @@ async function createLabel(name: string, color: string, taskId: string) {
 }
 
 export default createLabel;
-

@@ -5,7 +5,7 @@ import { logger } from "../../utils/logger";
 
 export async function getUserStatus(userEmail: string) {
   const db = getDatabase();
-  
+
   try {
     const [status] = await db
       .select({
@@ -19,35 +19,33 @@ export async function getUserStatus(userEmail: string) {
       .from(userStatus)
       .where(eq(userStatus.userEmail, userEmail))
       .limit(1);
-    
+
     if (!status) {
       return {
         userEmail,
-        status: 'available',
+        status: "available",
         statusMessage: null,
         emoji: null,
         expiresAt: null,
         updatedAt: new Date(),
       };
     }
-    
+
     // Check if status expired
     if (status.expiresAt && new Date() > new Date(status.expiresAt)) {
       // Clear expired status
-      await db
-        .delete(userStatus)
-        .where(eq(userStatus.userEmail, userEmail));
-      
+      await db.delete(userStatus).where(eq(userStatus.userEmail, userEmail));
+
       return {
         userEmail,
-        status: 'available',
+        status: "available",
         statusMessage: null,
         emoji: null,
         expiresAt: null,
         updatedAt: new Date(),
       };
     }
-    
+
     return status;
   } catch (error) {
     logger.error("Failed to get user status:", error);
@@ -57,7 +55,7 @@ export async function getUserStatus(userEmail: string) {
 
 export async function getWorkspaceStatuses(workspaceId: string) {
   const db = getDatabase();
-  
+
   try {
     // Get all workspace users with their statuses
     const statuses = await db
@@ -76,17 +74,17 @@ export async function getWorkspaceStatuses(workspaceId: string) {
       .innerJoin(workspaceMembers, eq(workspaceMembers.userId, users.id))
       .leftJoin(userStatus, eq(userStatus.userEmail, users.email))
       .where(eq(workspaceMembers.workspaceId, workspaceId));
-    
+
     // Filter out expired statuses and set defaults
     const now = new Date();
     return statuses.map((s) => {
       const expired = s.expiresAt && now > new Date(s.expiresAt);
-      
+
       return {
         userEmail: s.userEmail,
         userName: s.userName,
         userAvatar: s.userAvatar,
-        status: expired || !s.status ? 'available' : s.status,
+        status: expired || !s.status ? "available" : s.status,
         statusMessage: expired ? null : s.statusMessage,
         emoji: expired ? null : s.emoji,
         expiresAt: expired ? null : s.expiresAt,
@@ -98,5 +96,3 @@ export async function getWorkspaceStatuses(workspaceId: string) {
     throw new Error("Failed to fetch workspace statuses");
   }
 }
-
-

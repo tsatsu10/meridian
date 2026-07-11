@@ -1,6 +1,6 @@
 /**
  * 📊 Profile Analytics Service
- * 
+ *
  * Handles profile views tracking, analytics calculation,
  * optimization suggestions, and statistics management
  */
@@ -19,7 +19,10 @@ import logger from "../utils/logger";
 /**
  * Calculate user statistics
  */
-export async function calculateUserStatistics(userId: string, workspaceId: string): Promise<any> {
+export async function calculateUserStatistics(
+  userId: string,
+  workspaceId: string,
+): Promise<any> {
   const db = getDatabase();
 
   try {
@@ -37,8 +40,8 @@ export async function calculateUserStatistics(userId: string, workspaceId: strin
         and(
           eq(tasks.assigneeId, userId),
           eq(tasks.status, "done"),
-          gte(tasks.completedAt, oneWeekAgo)
-        )
+          gte(tasks.completedAt, oneWeekAgo),
+        ),
       );
 
     const tasksCompletedMonth = await db
@@ -48,8 +51,8 @@ export async function calculateUserStatistics(userId: string, workspaceId: strin
         and(
           eq(tasks.assigneeId, userId),
           eq(tasks.status, "done"),
-          gte(tasks.completedAt, oneMonthAgo)
-        )
+          gte(tasks.completedAt, oneMonthAgo),
+        ),
       );
 
     const tasksCompletedAllTime = await db
@@ -64,8 +67,8 @@ export async function calculateUserStatistics(userId: string, workspaceId: strin
         and(
           eq(tasks.assigneeId, userId),
           sql`${tasks.status} != 'done'`,
-          lte(tasks.dueDate, now)
-        )
+          lte(tasks.dueDate, now),
+        ),
       );
 
     // Project stats
@@ -75,8 +78,8 @@ export async function calculateUserStatistics(userId: string, workspaceId: strin
       .where(
         and(
           eq(projectMembers.userEmail, userId), // Using userId for now
-          eq(projectMembers.isActive, true)
-        )
+          eq(projectMembers.isActive, true),
+        ),
       );
 
     // Team stats
@@ -145,4 +148,3 @@ export async function getUserStatistics(userId: string): Promise<any> {
     return null;
   }
 }
-

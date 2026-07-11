@@ -1,13 +1,13 @@
 /**
  * 📋 Get Project Themes Controller
- * 
+ *
  * Retrieves all themes for a specific project
  */
 
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { backlogThemesTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 export async function getProjectThemes(projectId: string, userId: string) {
   const db = getDatabase();
@@ -28,5 +28,3 @@ export async function getProjectThemes(projectId: string, userId: string) {
     throw new Error("Failed to fetch themes");
   }
 }
-
-

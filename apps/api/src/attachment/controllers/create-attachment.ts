@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface CreateAttachmentData {
   name: string;
@@ -36,14 +36,15 @@ async function createAttachment(data: CreateAttachmentData) {
       await db
         .insert(attachmentTable)
         .values({
-          fileName: data.name,          // Use fileName instead of name
-          fileUrl: data.url,            // Use fileUrl instead of url
-          fileType: data.type,          // Use fileType instead of type
-          fileSize: data.size,          // Use fileSize instead of size
+          fileName: data.name, // Use fileName instead of name
+          fileUrl: data.url, // Use fileUrl instead of url
+          fileType: data.type, // Use fileType instead of type
+          fileSize: data.size, // Use fileSize instead of size
           taskId: data.taskId,
           commentId: data.commentId,
-          uploadedBy: user.id,          // Use uploadedBy (user ID) instead of userEmail
-          metadata: {                   // Store extra fields in metadata JSONB
+          uploadedBy: user.id, // Use uploadedBy (user ID) instead of userEmail
+          metadata: {
+            // Store extra fields in metadata JSONB
             description: data.description,
             version: data.version || "1.0",
             parentId: data.parentId,
@@ -53,7 +54,7 @@ async function createAttachment(data: CreateAttachmentData) {
     ).at(0);
 
     if (!attachment) {
-      throw new Error('Failed to create attachment');
+      throw new Error("Failed to create attachment");
     }
 
     // @epic-2.1-files: Publish file upload event for notifications
@@ -69,12 +70,16 @@ async function createAttachment(data: CreateAttachmentData) {
       version: data.version || "1.0",
     });
 
-    logger.debug(`📎 Attachment created: ${attachment.fileName} (${attachment.id})`);
+    logger.debug(
+      `📎 Attachment created: ${attachment.fileName} (${attachment.id})`,
+    );
     return attachment;
   } catch (error) {
-    logger.error('❌ Create attachment error:', error);
-    throw new Error(`Failed to create attachment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error("❌ Create attachment error:", error);
+    throw new Error(
+      `Failed to create attachment: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
-export default createAttachment; 
+export default createAttachment;

@@ -3,7 +3,7 @@ import { getDatabase } from "../database/connection";
 import { userTable, settingsAuditLogTable } from "../database/schema";
 import { eq, and, gte, count, sql } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const twoFactorRoutes = new Hono();
 
@@ -26,7 +26,8 @@ twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
     const total = totalUsers[0]?.count ?? 0;
     const withTwoFactor = usersWithTwoFactor[0]?.count ?? 0;
     const withoutTwoFactor = total - withTwoFactor;
-    const adoptionPercentage = total > 0 ? Math.round((withTwoFactor / total) * 100) : 0;
+    const adoptionPercentage =
+      total > 0 ? Math.round((withTwoFactor / total) * 100) : 0;
 
     // Calculate trend (users who enabled 2FA in the last 30 days)
     const recentEnablements = await db
@@ -35,12 +36,13 @@ twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
       .where(
         and(
           eq(settingsAuditLogTable.action, "two_factor_enabled"),
-          gte(settingsAuditLogTable.createdAt, lastMonth)
-        )
+          gte(settingsAuditLogTable.createdAt, lastMonth),
+        ),
       );
 
     const recentCount = recentEnablements[0]?.count ?? 0;
-    const trendPercentage = total > 0 ? Math.round((recentCount / total) * 100) : 0;
+    const trendPercentage =
+      total > 0 ? Math.round((recentCount / total) * 100) : 0;
 
     // Check if enforcement is enabled (stored in settings or environment)
     // For now, we'll return a placeholder
@@ -114,7 +116,9 @@ twoFactorRoutes.post("/enforcement", authMiddleware, async (c) => {
       id: crypto.randomUUID(),
       userEmail,
       section: "security",
-      action: enabled ? "two_factor_enforcement_enabled" : "two_factor_enforcement_disabled",
+      action: enabled
+        ? "two_factor_enforcement_enabled"
+        : "two_factor_enforcement_disabled",
       metadata: {
         enabled,
         ipAddress: c.req.header("x-forwarded-for") || "unknown",
@@ -170,5 +174,3 @@ twoFactorRoutes.post("/send-reminder", authMiddleware, async (c) => {
 });
 
 export default twoFactorRoutes;
-
-

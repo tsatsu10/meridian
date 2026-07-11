@@ -1,6 +1,6 @@
 /**
  * 👥 Phase 1: Users & Authentication Seed
- * 
+ *
  * Creates:
  * - 8 users representing all role types
  * - User profiles with extended information
@@ -110,15 +110,39 @@ export const TEST_USERS = [
 // ==========================================
 
 const TECHNICAL_SKILLS = [
-  "JavaScript", "TypeScript", "React", "Node.js", "Python", "Go", "Rust",
-  "PostgreSQL", "MongoDB", "Redis", "Docker", "Kubernetes", "AWS", "GCP",
-  "GraphQL", "REST APIs", "WebSockets", "Git", "CI/CD", "Testing"
+  "JavaScript",
+  "TypeScript",
+  "React",
+  "Node.js",
+  "Python",
+  "Go",
+  "Rust",
+  "PostgreSQL",
+  "MongoDB",
+  "Redis",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "GCP",
+  "GraphQL",
+  "REST APIs",
+  "WebSockets",
+  "Git",
+  "CI/CD",
+  "Testing",
 ];
 
 const SOFT_SKILLS = [
-  "Leadership", "Communication", "Problem Solving", "Team Collaboration",
-  "Project Management", "Agile Methodologies", "Mentoring", "Negotiation",
-  "Strategic Planning", "Conflict Resolution"
+  "Leadership",
+  "Communication",
+  "Problem Solving",
+  "Team Collaboration",
+  "Project Management",
+  "Agile Methodologies",
+  "Mentoring",
+  "Negotiation",
+  "Strategic Planning",
+  "Conflict Resolution",
 ];
 
 // ==========================================
@@ -135,7 +159,7 @@ export async function seedUsers() {
 
     // 1. CREATE USERS
     logger.info("👥 Creating test users...");
-    
+
     for (const userData of TEST_USERS) {
       // Check if user exists
       const existing = await db
@@ -176,7 +200,7 @@ export async function seedUsers() {
 
     // 2. CREATE USER PROFILES
     logger.info("\n📝 Creating user profiles...");
-    
+
     for (let i = 0; i < createdUsers.length; i++) {
       const user = createdUsers[i]!;
       const userData = TEST_USERS[i]!;
@@ -197,12 +221,18 @@ export async function seedUsers() {
         bio: userData.bio,
         jobTitle: userData.jobTitle,
         headline: `${userData.jobTitle} at Meridian`,
-        location: randomElement(["New York, NY", "San Francisco, CA", "Austin, TX", "Seattle, WA", "Remote"]),
+        location: randomElement([
+          "New York, NY",
+          "San Francisco, CA",
+          "Austin, TX",
+          "Seattle, WA",
+          "Remote",
+        ]),
         timezone: "America/New_York",
         language: "en",
-        website: `https://${user.name.toLowerCase().replace(/\s/g, '')}.dev`,
-        linkedinUrl: `https://linkedin.com/in/${user.name.toLowerCase().replace(/\s/g, '')}`,
-        githubUrl: `https://github.com/${user.name.toLowerCase().replace(/\s/g, '')}`,
+        website: `https://${user.name.toLowerCase().replace(/\s/g, "")}.dev`,
+        linkedinUrl: `https://linkedin.com/in/${user.name.toLowerCase().replace(/\s/g, "")}`,
+        githubUrl: `https://github.com/${user.name.toLowerCase().replace(/\s/g, "")}`,
         profilePicture: userData.avatar,
         isPublic: true,
         allowDirectMessages: true,
@@ -219,15 +249,17 @@ export async function seedUsers() {
 
     // 3. CREATE USER SKILLS
     logger.info("\n🎯 Creating user skills...");
-    
+
     for (const user of createdUsers) {
       // Technical skills (3-8 per user)
       const techSkillCount = randomInt(3, 8);
-      const userTechSkills = randomElement(TECHNICAL_SKILLS.slice(0, techSkillCount));
-      
+      const userTechSkills = randomElement(
+        TECHNICAL_SKILLS.slice(0, techSkillCount),
+      );
+
       for (let i = 0; i < techSkillCount; i++) {
         const skillName = TECHNICAL_SKILLS[i]!;
-        
+
         await db.insert(userSkill).values({
           userId: user.id,
           name: skillName,
@@ -239,13 +271,13 @@ export async function seedUsers() {
           order: i,
         });
       }
-      
+
       // Soft skills (2-4 per user)
       const softSkillCount = randomInt(2, 4);
-      
+
       for (let i = 0; i < softSkillCount; i++) {
         const skillName = SOFT_SKILLS[i]!;
-        
+
         await db.insert(userSkill).values({
           userId: user.id,
           name: skillName,
@@ -258,27 +290,46 @@ export async function seedUsers() {
         });
       }
 
-      logger.info(`   ✅ Created ${techSkillCount + softSkillCount} skills for ${user.name}`);
+      logger.info(
+        `   ✅ Created ${techSkillCount + softSkillCount} skills for ${user.name}`,
+      );
     }
 
     // 4. CREATE USER EXPERIENCE
     logger.info("\n💼 Creating work experience...");
-    
+
     for (const user of createdUsers) {
       // 1-3 previous experiences
       const expCount = randomInt(1, 3);
-      
+
       for (let i = 0; i < expCount; i++) {
         const isCurrent = i === 0;
         const startYear = 2025 - (expCount - i) * 3;
         const endYear = isCurrent ? null : startYear + randomInt(1, 3);
-        
+
         await db.insert(userExperience).values({
           userId: user.id,
-          title: randomElement(["Software Engineer", "Senior Developer", "Tech Lead", "Product Manager", "Designer"]),
-          company: randomElement(["TechCorp", "StartupXYZ", "BigTech Inc", "InnovateCo", "FutureSoft"]),
-          location: randomElement(["New York, NY", "San Francisco, CA", "Remote"]),
-          description: "Led development of key features and mentored junior team members.",
+          title: randomElement([
+            "Software Engineer",
+            "Senior Developer",
+            "Tech Lead",
+            "Product Manager",
+            "Designer",
+          ]),
+          company: randomElement([
+            "TechCorp",
+            "StartupXYZ",
+            "BigTech Inc",
+            "InnovateCo",
+            "FutureSoft",
+          ]),
+          location: randomElement([
+            "New York, NY",
+            "San Francisco, CA",
+            "Remote",
+          ]),
+          description:
+            "Led development of key features and mentored junior team members.",
           startDate: `${startYear}-01`,
           endDate: endYear ? `${endYear}-12` : null,
           isCurrent,
@@ -286,20 +337,39 @@ export async function seedUsers() {
         });
       }
 
-      logger.info(`   ✅ Created ${expCount} experience entries for ${user.name}`);
+      logger.info(
+        `   ✅ Created ${expCount} experience entries for ${user.name}`,
+      );
     }
 
     // 5. CREATE USER EDUCATION
     logger.info("\n🎓 Creating education records...");
-    
+
     for (const user of createdUsers) {
       await db.insert(userEducation).values({
         userId: user.id,
         degree: randomElement(["Bachelor's", "Master's", "PhD"]),
-        fieldOfStudy: randomElement(["Computer Science", "Software Engineering", "Information Technology", "Business Administration"]),
-        school: randomElement(["MIT", "Stanford", "UC Berkeley", "Carnegie Mellon", "Georgia Tech"]),
-        location: randomElement(["Cambridge, MA", "Stanford, CA", "Berkeley, CA", "Pittsburgh, PA"]),
-        description: "Focused on software engineering, algorithms, and system design.",
+        fieldOfStudy: randomElement([
+          "Computer Science",
+          "Software Engineering",
+          "Information Technology",
+          "Business Administration",
+        ]),
+        school: randomElement([
+          "MIT",
+          "Stanford",
+          "UC Berkeley",
+          "Carnegie Mellon",
+          "Georgia Tech",
+        ]),
+        location: randomElement([
+          "Cambridge, MA",
+          "Stanford, CA",
+          "Berkeley, CA",
+          "Pittsburgh, PA",
+        ]),
+        description:
+          "Focused on software engineering, algorithms, and system design.",
         startDate: "2015-09",
         endDate: "2019-05",
         isCurrent: false,
@@ -312,9 +382,9 @@ export async function seedUsers() {
 
     // 6. CREATE ACTIVE SESSIONS (for some users)
     logger.info("\n🔐 Creating active sessions...");
-    
+
     const activeUsers = createdUsers.slice(0, 4); // First 4 users have active sessions
-    
+
     for (const user of activeUsers) {
       const sessionToken = createId();
       const expiresAt = new Date();
@@ -338,7 +408,6 @@ export async function seedUsers() {
     logger.info(`   🔐 Sessions: ${activeUsers.length}`);
 
     return { users: createdUsers };
-
   } catch (error) {
     logger.error("❌ Error seeding users:", error);
     throw error;
@@ -355,4 +424,3 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-

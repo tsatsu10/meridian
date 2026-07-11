@@ -1,8 +1,8 @@
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { milestoneTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // @epic-1.3-milestones: Delete project milestones
 // @role-project-manager: PM needs to remove outdated or cancelled milestones
@@ -27,7 +27,7 @@ export async function deleteMilestone(c: Context) {
         {
           error: "Milestone not found",
         },
-        404
+        404,
       );
     }
 
@@ -41,7 +41,7 @@ export async function deleteMilestone(c: Context) {
       {
         error: "Failed to delete milestone",
       },
-      500
+      500,
     );
   }
-} 
+}

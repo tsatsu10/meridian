@@ -14,12 +14,12 @@ async function getNotifications(
     isRead?: boolean; // Filter by read/unread
     priority?: string; // Filter by priority
     search?: string; // Search in title/content
-  } = {}
+  } = {},
 ) {
   const db = getDatabase();
-  const { 
-    limit = 50, 
-    offset = 0, 
+  const {
+    limit = 50,
+    offset = 0,
     includeArchived = false,
     type,
     types,
@@ -30,35 +30,35 @@ async function getNotifications(
 
   // Build where conditions
   const conditions = [eq(notificationTable.userEmail, userEmail)];
-  
+
   // Archive filter
   if (!includeArchived) {
     conditions.push(eq(notificationTable.isArchived, false));
   }
-  
+
   // Phase 2: Type filtering
   if (type) {
     conditions.push(eq(notificationTable.type, type));
   } else if (types && types.length > 0) {
     conditions.push(inArray(notificationTable.type, types));
   }
-  
+
   // Phase 2: Read/Unread filtering
   if (isRead !== undefined) {
     conditions.push(eq(notificationTable.isRead, isRead));
   }
-  
+
   // Phase 2: Priority filtering
   if (priority) {
     conditions.push(eq(notificationTable.priority, priority));
   }
-  
+
   // Phase 2: Search functionality
   if (search && search.trim()) {
     const searchCondition = or(
       ilike(notificationTable.title, `%${search}%`),
       ilike(notificationTable.content, `%${search}%`),
-      ilike(notificationTable.message, `%${search}%`)
+      ilike(notificationTable.message, `%${search}%`),
     );
     if (searchCondition) {
       conditions.push(searchCondition);
@@ -90,8 +90,8 @@ async function getNotifications(
       and(
         eq(notificationTable.userEmail, userEmail),
         eq(notificationTable.isRead, false),
-        eq(notificationTable.isArchived, false)
-      )
+        eq(notificationTable.isArchived, false),
+      ),
     );
 
   return {
@@ -100,11 +100,10 @@ async function getNotifications(
       total: totalResult?.count || 0,
       limit,
       offset,
-      hasMore: (offset + notifications.length) < (totalResult?.count || 0),
+      hasMore: offset + notifications.length < (totalResult?.count || 0),
     },
     unreadCount: unreadResult?.count || 0,
   };
 }
 
 export default getNotifications;
-

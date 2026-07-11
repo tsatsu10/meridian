@@ -1,8 +1,12 @@
 import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { workspaceUserTable, roleAssignmentTable, userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import {
+  workspaceUserTable,
+  roleAssignmentTable,
+  userTable,
+} from "../../database/schema";
+import logger from "../../utils/logger";
 
 async function createRootWorkspaceUser(workspaceId: string, userEmail: string) {
   const db = getDatabase();
@@ -14,7 +18,9 @@ async function createRootWorkspaceUser(workspaceId: string, userEmail: string) {
     .limit(1);
 
   if (!user) {
-    logger.error(`❌ Cannot create workspace user: User not found for email ${userEmail}`);
+    logger.error(
+      `❌ Cannot create workspace user: User not found for email ${userEmail}`,
+    );
     return null;
   }
 
@@ -33,7 +39,7 @@ async function createRootWorkspaceUser(workspaceId: string, userEmail: string) {
   if (workspaceUser) {
     // Assign workspace-manager role in RBAC system
     const assignmentId = createId();
-    
+
     await db.insert(roleAssignmentTable).values({
       id: assignmentId,
       userId: user.id,
@@ -46,11 +52,12 @@ async function createRootWorkspaceUser(workspaceId: string, userEmail: string) {
     // TODO: Record in role history when roleHistoryTable is created
     // Role history table doesn't exist in schema yet
 
-    logger.debug(`🛡️ Auto-assigned workspace-manager role to workspace creator: ${userEmail}`);
+    logger.debug(
+      `🛡️ Auto-assigned workspace-manager role to workspace creator: ${userEmail}`,
+    );
   }
 
   return workspaceUser;
 }
 
 export default createRootWorkspaceUser;
-

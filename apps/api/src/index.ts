@@ -67,9 +67,9 @@ import favorites from "./favorites";
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
 import { DEFAULT_API_PORT } from "./config/default-api-port";
 // 🔒 Import security middleware
-import { 
-  securityHeaders, 
-  generalRateLimiter, 
+import {
+  securityHeaders,
+  generalRateLimiter,
   authRateLimiter,
   sanitizeRequest,
   requestLogger,
@@ -80,19 +80,21 @@ import {
 
 // Types are defined inline in the Hono context, no need to import User/Session
 
-const app = new Hono<{ 
-  Variables: { 
+const app = new Hono<{
+  Variables: {
     userEmail: string;
     userId?: string;
     workspaceId?: string;
-    user?: { email: string; id: string; name?: string; }; 
-  } 
+    user?: { email: string; id: string; name?: string };
+  };
 }>();
 const { isDemoMode, adminEmail } = appSettings;
-const isDevelopmentEnv = (process.env.NODE_ENV || "development") === "development";
+const isDevelopmentEnv =
+  (process.env.NODE_ENV || "development") === "development";
 const isTestEnv = process.env.NODE_ENV === "test";
 const allowDemoBypass = process.env.ALLOW_DEMO_AUTH_BYPASS === "true";
-const enableDemoAuthBypass = isDemoMode && allowDemoBypass && (isDevelopmentEnv || isTestEnv);
+const enableDemoAuthBypass =
+  isDemoMode && allowDemoBypass && (isDevelopmentEnv || isTestEnv);
 // 🛡️ Register global error handler
 app.onError(errorHandler);
 
@@ -129,27 +131,27 @@ app.use("*", compress());
 // ⚡ Add caching headers for better performance
 app.use("*", async (c, next) => {
   await next();
-  
+
   // Only add caching to successful GET requests
-  if (c.req.method === 'GET' && c.res.status === 200) {
+  if (c.req.method === "GET" && c.res.status === 200) {
     const path = c.req.path;
-    
+
     // Static assets - aggressive caching
-    if (path.includes('/uploads/') || path.includes('/assets/')) {
-      c.header('Cache-Control', 'public, max-age=31536000, immutable');
+    if (path.includes("/uploads/") || path.includes("/assets/")) {
+      c.header("Cache-Control", "public, max-age=31536000, immutable");
     }
     // API responses - short-term caching with revalidation
-    else if (path.startsWith('/api/')) {
-      c.header('Cache-Control', 'private, max-age=60, must-revalidate');
-      
+    else if (path.startsWith("/api/")) {
+      c.header("Cache-Control", "private, max-age=60, must-revalidate");
+
       // Add ETag for conditional requests and return 304 when matched
       const body = await c.res.clone().text();
       if (body) {
-        const hash = Buffer.from(body).toString('base64').substring(0, 27);
+        const hash = Buffer.from(body).toString("base64").substring(0, 27);
         const etag = `"${hash}"`;
-        c.header('ETag', etag);
+        c.header("ETag", etag);
 
-        const ifNoneMatch = c.req.header('if-none-match');
+        const ifNoneMatch = c.req.header("if-none-match");
         if (ifNoneMatch && ifNoneMatch === etag) {
           // Short-circuit with 304 Not Modified
           c.res = new Response(null, { status: 304, headers: c.res.headers });
@@ -170,7 +172,7 @@ app.use(
         "http://localhost:5174",
         "http://localhost:5200",
         "https://meridian.app",
-        "https://www.meridian.app"
+        "https://www.meridian.app",
       ];
 
       if (allowedOrigins.includes(origin || "")) {
@@ -265,17 +267,21 @@ if (!enableDemoAuthBypass) {
 // Database readiness middleware
 const databaseMiddleware = async (c: any, next: any) => {
   if (!databaseReady) {
-    logger.debug('⏳ Database not ready yet, waiting...');
+    logger.debug("⏳ Database not ready yet, waiting...");
     // Wait for database to be ready
     let attempts = 0;
-    while (!databaseReady && attempts < 30) { // Wait up to 30 seconds
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    while (!databaseReady && attempts < 30) {
+      // Wait up to 30 seconds
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       attempts++;
     }
 
     if (!databaseReady) {
-      logger.error('❌ Database initialization timeout');
-      return c.json({ error: 'Database not ready. Please try again later.' }, 503);
+      logger.error("❌ Database initialization timeout");
+      return c.json(
+        { error: "Database not ready. Please try again later." },
+        503,
+      );
     }
   }
 
@@ -294,11 +300,14 @@ app.use("/api/*", slowDown.middleware);
 // Define route handlers with consistent /api/ prefix
 const userRoute = app.route("/api/users", user);
 const twoFactorRoute = app.route("/api/auth/two-factor", twoFactor); // 2FA endpoints
-const authEmailVerificationRoute = app.route("/api/auth", emailVerificationRoutes); // Email verification endpoints
+const authEmailVerificationRoute = app.route(
+  "/api/auth",
+  emailVerificationRoutes,
+); // Email verification endpoints
 const workspaceRoute = app.route("/api/workspaces", workspace);
 const workspaceUserRoute = app.route("/api/workspace-user", workspaceUser);
 const projectRoute = app.route("/api/projects", project);
-const taskRoute = app.route("/api/tasks", task)
+const taskRoute = app.route("/api/tasks", task);
 const teamAwarenessRoute = app.route("/api/team-awareness", teamAwareness);
 const attachmentRoute = app.route("/api/attachment", attachment);
 const timeEntryRoute = app.route("/api/time-entry", timeEntry);
@@ -315,25 +324,40 @@ const rbacRoute = app.route("/api/rbac", rbac);
 const milestoneRoute = app.route("/api/milestone", milestone);
 const reportsRoute = app.route("/api/reports", reports);
 // Removed old integrations route (duplicate) - using newer simple version above
-const backlogCategoryRoute = app.route("/api/backlog-categories", backlogCategory); // Backlog categories
+const backlogCategoryRoute = app.route(
+  "/api/backlog-categories",
+  backlogCategory,
+); // Backlog categories
 const backlogThemeRoute = app.route("/api/backlog-themes", backlogCategory); // Backward compatibility alias
 const profileRoute = app.route("/api/profile", profile); // Profile management
 const smartProfileRoute = app.route("/api/smart-profile", smartProfile); // Smart profile features
 const analyticsRoute = app.route("/api/analytics", analytics); // @epic-3.1-analytics: Project and workspace analytics
 const healthRoute = app.route("/api/health", health); // Phase 2.3.8: Health system API
 const templatesRoute = app.route("/api/templates", templates); // Project templates for professions
-const userPreferencesRoute = app.route("/api/user-preferences", userPreferences); // User preferences (pinned projects, settings, etc.)
+const userPreferencesRoute = app.route(
+  "/api/user-preferences",
+  userPreferences,
+); // User preferences (pinned projects, settings, etc.)
 const apiKeysRoute = app.route("/api/api-keys", apiKeys); // API key management
 const errorReportingRoute = app.route("/api/errors", errorReportingRoutes);
 const uploadRoute = app.route("/api/upload", upload); // @epic-3.1-messaging: File upload
 const filesRoute = app.route("/api/files", files); // @epic-3.1-messaging: File serving
 const searchRoute = app.route("/api/search", search); // @epic-3.1-messaging: Global search
-const workspaceSettingsRoute = app.route("/api/workspace/settings", workspaceSettings);
-const workspaceInvitesRoute = app.route("/api/workspace/invites", workspaceInvites);
+const workspaceSettingsRoute = app.route(
+  "/api/workspace/settings",
+  workspaceSettings,
+);
+const workspaceInvitesRoute = app.route(
+  "/api/workspace/invites",
+  workspaceInvites,
+);
 const systemHealthRoute = app.route("/api/system-health", systemHealth); // System health/readiness/liveness probes
 const securityMetricsRoute = app.route("/api/security", securityMetrics);
 const monitoringRoute = app.route("/api/monitoring", monitoringRoutes);
-const quickCaptureRoute = app.route("/api/tasks/quick-capture", quickCaptureRoutes); // Security metrics and monitoring
+const quickCaptureRoute = app.route(
+  "/api/tasks/quick-capture",
+  quickCaptureRoutes,
+); // Security metrics and monitoring
 const metricsRoute = app.route("/api/metrics", metricsRoutes); // Monitoring & metrics (Prometheus compatible)
 const fileVersionsRoute = app.route("/api/file-versions", fileVersionsRoutes); // File versioning API
 // Removed duplicate api-keys route - using /api/settings/api-keys instead
@@ -363,7 +387,9 @@ async function initializeDatabase() {
     logger.debug("🗄️  Initializing database...");
 
     // Import and initialize the database connection
-    const { initializeDatabase: initDb } = await import("./database/connection");
+    const { initializeDatabase: initDb } = await import(
+      "./database/connection"
+    );
 
     // Initialize the database connection first
     logger.debug("⏳ Calling initDb()...");
@@ -371,7 +397,9 @@ async function initializeDatabase() {
     logger.debug("✅ initDb() completed");
 
     // Skip migrations - schema is managed with drizzle-kit push
-    logger.debug("ℹ️  Using drizzle-kit push for schema management (no migrations)");
+    logger.debug(
+      "ℹ️  Using drizzle-kit push for schema management (no migrations)",
+    );
 
     // Ensure admin user exists in demo mode
     if (isDemoMode) {
@@ -391,8 +419,14 @@ async function initializeDatabase() {
     logger.info("Database initialization complete, ready to serve requests");
   } catch (error) {
     logger.error("❌ Database initialization failed:", error);
-    logger.error("Error details:", error instanceof Error ? error.message : String(error));
-    logger.error("Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
+    logger.error(
+      "Error details:",
+      error instanceof Error ? error.message : String(error),
+    );
+    logger.error(
+      "Stack trace:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
     throw error;
   }
 }
@@ -407,23 +441,34 @@ async function startServer() {
     // Create HTTP server for both Hono and WebSocket
     const httpServer = createServer((req, res) => {
       // Buffer request body for POST/PUT/PATCH
-      if ((req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') && 
-          req.headers['content-type']?.includes('application/json')) {
-        
-        let bodyData = '';
-        req.on('data', (chunk) => {
+      if (
+        (req.method === "POST" ||
+          req.method === "PUT" ||
+          req.method === "PATCH") &&
+        req.headers["content-type"]?.includes("application/json")
+      ) {
+        let bodyData = "";
+        req.on("data", (chunk) => {
           bodyData += chunk.toString();
         });
-        
-        req.on('end', () => {
-          logger.debug(`[HTTP Server] Body received for ${req.method} ${req.url ?? ""}`);
-          logger.debug('[HTTP Server] Body length:', { length: bodyData.length });
-          logger.debug('[HTTP Server] Body preview:', { preview: bodyData.substring(0, 100) });
-          
-          if (!bodyData || bodyData.trim() === '') {
-            logger.warn(`[HTTP Server] ⚠️ WARNING: Empty body received for ${req.method} ${req.url ?? ""}`);
+
+        req.on("end", () => {
+          logger.debug(
+            `[HTTP Server] Body received for ${req.method} ${req.url ?? ""}`,
+          );
+          logger.debug("[HTTP Server] Body length:", {
+            length: bodyData.length,
+          });
+          logger.debug("[HTTP Server] Body preview:", {
+            preview: bodyData.substring(0, 100),
+          });
+
+          if (!bodyData || bodyData.trim() === "") {
+            logger.warn(
+              `[HTTP Server] ⚠️ WARNING: Empty body received for ${req.method} ${req.url ?? ""}`,
+            );
           }
-          
+
           // Now handle with Hono, passing the buffered body
           handleHonoRequest(req, res, bodyData);
         });
@@ -431,7 +476,7 @@ async function startServer() {
         // No body buffering needed
         handleHonoRequest(req, res);
       }
-      
+
       function handleHonoRequest(req: any, res: any, body?: string) {
         void Promise.resolve(
           app.fetch(
@@ -453,9 +498,9 @@ async function startServer() {
             res.end(Buffer.from(responseBody));
           })
           .catch((error: unknown) => {
-            logger.error('❌ Request handling error:', error);
+            logger.error("❌ Request handling error:", error);
             res.statusCode = 500;
-            res.end('Internal Server Error');
+            res.end("Internal Server Error");
           });
       }
     });
@@ -466,23 +511,26 @@ async function startServer() {
 
       // Phase 2: Start digest schedulers
       try {
-        const { digestScheduler } = require('./notification/services/digest-scheduler');
+        const {
+          digestScheduler,
+        } = require("./notification/services/digest-scheduler");
         digestScheduler.start();
-        logger.debug('📅 Digest schedulers initialized');
+        logger.debug("📅 Digest schedulers initialized");
       } catch (error) {
-        logger.error('⚠️ Failed to start digest schedulers:', error);
+        logger.error("⚠️ Failed to start digest schedulers:", error);
       }
-      
+
       // Phase 2: Start alert rule scheduler
       try {
-        const { ruleScheduler } = require('./notification/services/rules/rule-scheduler');
+        const {
+          ruleScheduler,
+        } = require("./notification/services/rules/rule-scheduler");
         ruleScheduler.start();
-        logger.debug('🔔 Alert rule scheduler initialized');
+        logger.debug("🔔 Alert rule scheduler initialized");
       } catch (error) {
-        logger.error('⚠️ Failed to start alert rule scheduler:', error);
+        logger.error("⚠️ Failed to start alert rule scheduler:", error);
       }
     });
-
   } catch (error) {
     logger.error("❌ Failed to start server:", error);
     process.exit(1);
@@ -503,7 +551,7 @@ app.get("/api/user/me", (c) => {
     timezone: "UTC",
     language: "en",
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   });
 });
 
@@ -552,10 +600,10 @@ app.get("/api/user/me", (c) => {
 
 // Backward compatibility aliases for old singular routes
 // These ensure existing frontend code continues to work
-app.route("/api/project", project);  // Alias for /api/projects
-app.route("/api/task", task);        // Alias for /api/tasks
+app.route("/api/project", project); // Alias for /api/projects
+app.route("/api/task", task); // Alias for /api/tasks
 app.route("/api/workspace", workspace); // Alias for /api/workspaces
-app.route("/api/user", user);        // Alias for /api/users
+app.route("/api/user", user); // Alias for /api/users
 app.route("/api/workspace-users", workspaceUser); // Alias for /api/workspace-user (plural support)
 app.route("/api/teams", team); // Alias for /api/team (plural support)
 app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls
@@ -563,38 +611,45 @@ app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls
 // Initialize database and start the server
 (async () => {
   try {
-    logger.debug('🚀 Starting server initialization...');
-    
+    logger.debug("🚀 Starting server initialization...");
+
     // 🔒 CRITICAL SECURITY: Guard demo auth bypass.
     if (isDemoMode && !enableDemoAuthBypass) {
       logger.warn(
-        "⚠️ DEMO_MODE is true, but auth bypass is disabled. Set ALLOW_DEMO_AUTH_BYPASS=true in development/test to enable bypass."
+        "⚠️ DEMO_MODE is true, but auth bypass is disabled. Set ALLOW_DEMO_AUTH_BYPASS=true in development/test to enable bypass.",
       );
     }
-    if (process.env.NODE_ENV === 'production' && isDemoMode) {
-      logger.error('❌ FATAL SECURITY ERROR: DEMO_MODE cannot be enabled in production');
-      logger.error('SECURITY VIOLATION: Attempted to start production server with DEMO_MODE=true');
+    if (process.env.NODE_ENV === "production" && isDemoMode) {
+      logger.error(
+        "❌ FATAL SECURITY ERROR: DEMO_MODE cannot be enabled in production",
+      );
+      logger.error(
+        "SECURITY VIOLATION: Attempted to start production server with DEMO_MODE=true",
+      );
       process.exit(1);
     }
-    if (process.env.NODE_ENV === 'production' && allowDemoBypass) {
-      logger.error('❌ FATAL SECURITY ERROR: ALLOW_DEMO_AUTH_BYPASS cannot be enabled in production');
+    if (process.env.NODE_ENV === "production" && allowDemoBypass) {
+      logger.error(
+        "❌ FATAL SECURITY ERROR: ALLOW_DEMO_AUTH_BYPASS cannot be enabled in production",
+      );
       process.exit(1);
     }
-    
+
     await initializeDatabase();
-    logger.debug('✅ Database initialized');
-    
+    logger.debug("✅ Database initialized");
+
     await startServer();
-    logger.debug('✅ Server started successfully');
+    logger.debug("✅ Server started successfully");
   } catch (error) {
-    logger.error('❌ Failed to initialize application:', error);
-    logger.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+    logger.error("❌ Failed to initialize application:", error);
+    logger.error(
+      "Stack trace:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
     process.exit(1);
   }
 })();
 
 export default app;
 
-export type AppType =
-  | typeof userRoute
-
+export type AppType = typeof userRoute;

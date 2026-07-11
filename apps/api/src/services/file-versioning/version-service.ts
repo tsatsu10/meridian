@@ -1,6 +1,6 @@
 /**
  * 📁 File Versioning Service
- * 
+ *
  * Handles file version management:
  * - Create new versions
  * - Get version history
@@ -9,12 +9,16 @@
  * - Version cleanup
  */
 
-import { createId } from '@paralleldrive/cuid2';
-import { getDatabase } from '../../database/connection';
-import { files, fileVersions, fileActivityLog } from '../../database/schema';
-import { eq, desc, and } from 'drizzle-orm';
-import { winstonLog } from '../../utils/winston-logger';
-import { NotFoundError, ValidationError, ForbiddenError } from '../../utils/errors';
+import { createId } from "@paralleldrive/cuid2";
+import { getDatabase } from "../../database/connection";
+import { files, fileVersions, fileActivityLog } from "../../database/schema";
+import { eq, desc, and } from "drizzle-orm";
+import { winstonLog } from "../../utils/winston-logger";
+import {
+  NotFoundError,
+  ValidationError,
+  ForbiddenError,
+} from "../../utils/errors";
 
 export interface CreateVersionOptions {
   fileId: string;
@@ -43,7 +47,9 @@ export class FileVersioningService {
   /**
    * Create a new version of a file
    */
-  static async createVersion(options: CreateVersionOptions): Promise<VersionInfo> {
+  static async createVersion(
+    options: CreateVersionOptions,
+  ): Promise<VersionInfo> {
     const db = getDatabase();
 
     try {
@@ -53,11 +59,11 @@ export class FileVersioningService {
       });
 
       if (!currentFile) {
-        throw new NotFoundError('File', { fileId: options.fileId });
+        throw new NotFoundError("File", { fileId: options.fileId });
       }
 
       if (currentFile.isDeleted) {
-        throw new ValidationError('Cannot version deleted file', {
+        throw new ValidationError("Cannot version deleted file", {
           fileId: options.fileId,
         });
       }
@@ -73,20 +79,24 @@ export class FileVersioningService {
       const newVersionNumber = (latestVersion[0]?.version ?? 0) + 1;
 
       // Create version snapshot
-      const [version] = await db.insert(fileVersions).values({
-        id: createId(),
-        fileId: options.fileId,
-        version: newVersionNumber,
-        fileName: currentFile.fileName,
-        url: currentFile.url,
-        size: currentFile.size,
-        changeDescription: options.changeDescription || `Version ${newVersionNumber}`,
-        changedBy: options.changedBy,
-        createdAt: new Date(),
-      }).returning();
+      const [version] = await db
+        .insert(fileVersions)
+        .values({
+          id: createId(),
+          fileId: options.fileId,
+          version: newVersionNumber,
+          fileName: currentFile.fileName,
+          url: currentFile.url,
+          size: currentFile.size,
+          changeDescription:
+            options.changeDescription || `Version ${newVersionNumber}`,
+          changedBy: options.changedBy,
+          createdAt: new Date(),
+        })
+        .returning();
 
       if (!version) {
-        throw new Error('Version insert returned no row');
+        throw new Error("Version insert returned no row");
       }
 
       // Update file's version number
@@ -102,7 +112,7 @@ export class FileVersioningService {
       await db.insert(fileActivityLog).values({
         id: createId(),
         fileId: options.fileId,
-        activityType: 'version_created',
+        activityType: "version_created",
         activityDetails: {
           version: newVersionNumber,
           description: options.changeDescription,
@@ -111,7 +121,7 @@ export class FileVersioningService {
         createdAt: new Date(),
       });
 
-      winstonLog.info('File version created', {
+      winstonLog.info("File version created", {
         fileId: options.fileId,
         version: newVersionNumber,
         changedBy: options.changedBy,
@@ -128,9 +138,8 @@ export class FileVersioningService {
         changedBy: version.changedBy,
         createdAt: version.createdAt,
       };
-
     } catch (error) {
-      winstonLog.error('Failed to create file version', {
+      winstonLog.error("Failed to create file version", {
         fileId: options.fileId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -143,7 +152,7 @@ export class FileVersioningService {
    */
   static async getVersionHistory(
     fileId: string,
-    limit: number = 50
+    limit = 50,
   ): Promise<VersionInfo[]> {
     const db = getDatabase();
 
@@ -168,9 +177,8 @@ export class FileVersioningService {
         changedBy: v.changedBy,
         createdAt: v.createdAt,
       }));
-
     } catch (error) {
-      winstonLog.error('Failed to get version history', {
+      winstonLog.error("Failed to get version history", {
         fileId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -204,9 +212,8 @@ export class FileVersioningService {
         changedBy: version.changedBy,
         createdAt: version.createdAt,
       };
-
     } catch (error) {
-      winstonLog.error('Failed to get version', {
+      winstonLog.error("Failed to get version", {
         versionId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -220,7 +227,7 @@ export class FileVersioningService {
   static async restoreVersion(
     versionId: string,
     restoredBy: string,
-    reason?: string
+    reason?: string,
   ): Promise<VersionInfo> {
     const db = getDatabase();
 
@@ -231,7 +238,7 @@ export class FileVersioningService {
       });
 
       if (!versionToRestore) {
-        throw new NotFoundError('Version', { versionId });
+        throw new NotFoundError("Version", { versionId });
       }
 
       // Get current file
@@ -240,7 +247,7 @@ export class FileVersioningService {
       });
 
       if (!currentFile) {
-        throw new NotFoundError('File', { fileId: versionToRestore.fileId });
+        throw new NotFoundError("File", { fileId: versionToRestore.fileId });
       }
 
       // Create version snapshot of current state (before restore)
@@ -271,27 +278,31 @@ export class FileVersioningService {
         .where(eq(files.id, currentFile.id));
 
       // Create new version entry for restored state
-      const [restoredVersion] = await db.insert(fileVersions).values({
-        id: createId(),
-        fileId: currentFile.id,
-        version: newVersionNumber,
-        fileName: versionToRestore.fileName,
-        url: versionToRestore.url,
-        size: versionToRestore.size,
-        changeDescription: reason || `Restored from version ${versionToRestore.version}`,
-        changedBy: restoredBy,
-        createdAt: new Date(),
-      }).returning();
+      const [restoredVersion] = await db
+        .insert(fileVersions)
+        .values({
+          id: createId(),
+          fileId: currentFile.id,
+          version: newVersionNumber,
+          fileName: versionToRestore.fileName,
+          url: versionToRestore.url,
+          size: versionToRestore.size,
+          changeDescription:
+            reason || `Restored from version ${versionToRestore.version}`,
+          changedBy: restoredBy,
+          createdAt: new Date(),
+        })
+        .returning();
 
       if (!restoredVersion) {
-        throw new Error('Version restore insert returned no row');
+        throw new Error("Version restore insert returned no row");
       }
 
       // Log activity
       await db.insert(fileActivityLog).values({
         id: createId(),
         fileId: currentFile.id,
-        activityType: 'version_restored',
+        activityType: "version_restored",
         activityDetails: {
           fromVersion: versionToRestore.version,
           toVersion: newVersionNumber,
@@ -301,7 +312,7 @@ export class FileVersioningService {
         createdAt: new Date(),
       });
 
-      winstonLog.info('File version restored', {
+      winstonLog.info("File version restored", {
         fileId: currentFile.id,
         fromVersion: versionToRestore.version,
         toVersion: newVersionNumber,
@@ -319,9 +330,8 @@ export class FileVersioningService {
         changedBy: restoredVersion.changedBy,
         createdAt: restoredVersion.createdAt,
       };
-
     } catch (error) {
-      winstonLog.error('Failed to restore version', {
+      winstonLog.error("Failed to restore version", {
         versionId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -334,7 +344,7 @@ export class FileVersioningService {
    */
   static async deleteOldVersions(
     fileId: string,
-    keepCount: number = 10
+    keepCount = 10,
   ): Promise<number> {
     const db = getDatabase();
 
@@ -354,24 +364,21 @@ export class FileVersioningService {
       }
 
       // Delete old versions
-      const idsToDelete = versionsToDelete.map(v => v.id);
-      
+      const idsToDelete = versionsToDelete.map((v) => v.id);
+
       for (const id of idsToDelete) {
-        await db
-          .delete(fileVersions)
-          .where(eq(fileVersions.id, id));
+        await db.delete(fileVersions).where(eq(fileVersions.id, id));
       }
 
-      winstonLog.info('Old file versions deleted', {
+      winstonLog.info("Old file versions deleted", {
         fileId,
         deletedCount: idsToDelete.length,
         keepCount,
       });
 
       return idsToDelete.length;
-
     } catch (error) {
-      winstonLog.error('Failed to delete old versions', {
+      winstonLog.error("Failed to delete old versions", {
         fileId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -384,7 +391,7 @@ export class FileVersioningService {
    */
   static async compareVersions(
     versionId1: string,
-    versionId2: string
+    versionId2: string,
   ): Promise<{
     version1: VersionInfo;
     version2: VersionInfo;
@@ -403,7 +410,7 @@ export class FileVersioningService {
       ]);
 
       if (!v1 || !v2) {
-        throw new NotFoundError('Version not found');
+        throw new NotFoundError("Version not found");
       }
 
       return {
@@ -415,9 +422,8 @@ export class FileVersioningService {
           timeDiff: v2.createdAt.getTime() - v1.createdAt.getTime(),
         },
       };
-
     } catch (error) {
-      winstonLog.error('Failed to compare versions', {
+      winstonLog.error("Failed to compare versions", {
         versionId1,
         versionId2,
         error: error instanceof Error ? error.message : String(error),
@@ -428,5 +434,3 @@ export class FileVersioningService {
 }
 
 export default FileVersioningService;
-
-

@@ -1,14 +1,16 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 async function getProjectMembers(projectId: string) {
   // TODO: projectMemberTable doesn't exist in schema yet
   // Return empty array for now to prevent 500 errors
   // This feature needs proper database schema migration
 
-  logger.debug(`⚠️ getProjectMembers called for project ${projectId} - table not implemented yet`);
+  logger.debug(
+    `⚠️ getProjectMembers called for project ${projectId} - table not implemented yet`,
+  );
 
   return [];
 
@@ -40,4 +42,4 @@ async function getProjectMembers(projectId: string) {
   */
 }
 
-export default getProjectMembers; 
+export default getProjectMembers;

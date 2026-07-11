@@ -107,7 +107,11 @@ const workspaceUser = new Hono<{
       const { userEmail } = c.req.valid("json");
       const inviterEmail = c.get("userEmail");
 
-      const workspaceUser = await inviteWorkspaceUser(workspaceId, userEmail, inviterEmail);
+      const workspaceUser = await inviteWorkspaceUser(
+        workspaceId,
+        userEmail,
+        inviterEmail,
+      );
 
       return c.json(workspaceUser);
     },
@@ -129,13 +133,17 @@ const workspaceUser = new Hono<{
       return c.json(deletedWorkspaceUser);
     },
   )
-  .get("/user/:id", zValidator("param", z.object({ id: z.string() })), async (c) => {
-    const { id } = c.req.valid("param");
+  .get(
+    "/user/:id",
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.valid("param");
 
-    const workspaceUser = await getWorkspaceUser(id);
+      const workspaceUser = await getWorkspaceUser(id);
 
-    return c.json(workspaceUser);
-  })
+      return c.json(workspaceUser);
+    },
+  )
   .put(
     "/:userEmail",
     zValidator("param", z.object({ userEmail: z.string() })),
@@ -152,7 +160,10 @@ const workspaceUser = new Hono<{
   // @epic-3.4-teams: Change user role (legacy - by email)
   .patch(
     "/:workspaceId/:userEmail/role",
-    zValidator("param", z.object({ workspaceId: z.string(), userEmail: z.string() })),
+    zValidator(
+      "param",
+      z.object({ workspaceId: z.string(), userEmail: z.string() }),
+    ),
     zValidator("json", z.object({ role: z.string() })),
     async (c) => {
       const { workspaceId, userEmail } = c.req.valid("param");
@@ -166,26 +177,38 @@ const workspaceUser = new Hono<{
   // @epic-3.4-teams: Change member role (new - by memberId)
   .patch(
     "/:workspaceId/members/:memberId/role",
-    zValidator("param", z.object({ workspaceId: z.string(), memberId: z.string() })),
+    zValidator(
+      "param",
+      z.object({ workspaceId: z.string(), memberId: z.string() }),
+    ),
     zValidator("json", z.object({ role: z.string() })),
-    changeMemberRole
+    changeMemberRole,
   )
   // @epic-3.4-teams: Remove member (new - by memberId)
   .delete(
     "/:workspaceId/members/:memberId",
-    zValidator("param", z.object({ workspaceId: z.string(), memberId: z.string() })),
-    removeMember
+    zValidator(
+      "param",
+      z.object({ workspaceId: z.string(), memberId: z.string() }),
+    ),
+    removeMember,
   )
   // @epic-3.4-teams: Get member activity and performance data
   .get(
     "/:workspaceId/members/:memberId/activity",
-    zValidator("param", z.object({ workspaceId: z.string(), memberId: z.string() })),
-    getMemberActivity
+    zValidator(
+      "param",
+      z.object({ workspaceId: z.string(), memberId: z.string() }),
+    ),
+    getMemberActivity,
   )
   // @epic-3.4-teams: Toggle user status
   .post(
     "/:workspaceId/:userEmail/toggle-status",
-    zValidator("param", z.object({ workspaceId: z.string(), userEmail: z.string() })),
+    zValidator(
+      "param",
+      z.object({ workspaceId: z.string(), userEmail: z.string() }),
+    ),
     async (c) => {
       const { workspaceId, userEmail } = c.req.valid("param");
 
@@ -230,4 +253,3 @@ subscribeToEvent(
 );
 
 export default workspaceUser;
-

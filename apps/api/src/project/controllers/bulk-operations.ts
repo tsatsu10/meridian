@@ -2,7 +2,7 @@ import { getDatabase } from "../../database/connection";
 import { projectTable } from "../../database/schema";
 import { inArray } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 /**
  * Bulk Operations Controller
@@ -60,7 +60,7 @@ export interface BulkOperationResult {
  * @returns BulkOperationResult with success status and details
  */
 export async function bulkUpdateProjects(
-  payload: BulkUpdatePayload
+  payload: BulkUpdatePayload,
 ): Promise<BulkOperationResult> {
   const startTime = Date.now();
   const operationId = createId();
@@ -183,7 +183,7 @@ export async function bulkUpdateProjects(
  * @returns BulkOperationResult with deletion details
  */
 export async function bulkDeleteProjects(
-  payload: BulkDeletePayload
+  payload: BulkDeletePayload,
 ): Promise<BulkOperationResult> {
   const startTime = Date.now();
   const operationId = createId();
@@ -276,7 +276,7 @@ export async function bulkDeleteProjects(
  * @returns BulkOperationResult with created project details
  */
 export async function bulkCreateProjects(
-  payload: BulkCreatePayload
+  payload: BulkCreatePayload,
 ): Promise<BulkOperationResult> {
   const startTime = Date.now();
   const operationId = createId();
@@ -366,7 +366,7 @@ export async function bulkCreateProjects(
  * Get operation history for undo/redo support
  * Returns recent operations with reversibility status
  */
-export async function getOperationHistory(limit: number = 50) {
+export async function getOperationHistory(limit = 50) {
   // This would be implemented with an operations_history table
   // For now, returning stub for integration
   return {
@@ -389,4 +389,3 @@ export async function revertOperation(operationId: string) {
     newOperationId: createId(),
   };
 }
-

@@ -2,7 +2,10 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { notifications as notificationTable } from "../../database/schema";
 
-async function unarchiveNotification(userEmail: string, notificationId: string) {
+async function unarchiveNotification(
+  userEmail: string,
+  notificationId: string,
+) {
   const db = getDatabase();
 
   // Update the notification's archived status
@@ -30,5 +33,3 @@ async function unarchiveNotification(userEmail: string, notificationId: string) 
 }
 
 export default unarchiveNotification;
-
-

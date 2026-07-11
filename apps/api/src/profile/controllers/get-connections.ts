@@ -1,11 +1,11 @@
 import { eq, desc, or, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userConnectionTable, userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 const getConnections = async (userId: string) => {
   const db = getDatabase();
-  
+
   try {
     // Get connections where user is either follower or following
     const connections = await db
@@ -21,16 +21,19 @@ const getConnections = async (userId: string) => {
         connectionEmail: userTable.email,
       })
       .from(userConnectionTable)
-      .leftJoin(userTable, 
+      .leftJoin(
+        userTable,
         or(
           eq(userConnectionTable.followerId, userTable.id),
-          eq(userConnectionTable.followingId, userTable.id)
-        )
+          eq(userConnectionTable.followingId, userTable.id),
+        ),
       )
-      .where(or(
-        eq(userConnectionTable.followerId, userId),
-        eq(userConnectionTable.followingId, userId)
-      ))
+      .where(
+        or(
+          eq(userConnectionTable.followerId, userId),
+          eq(userConnectionTable.followingId, userId),
+        ),
+      )
       .orderBy(desc(userConnectionTable.createdAt));
 
     return connections;
@@ -40,4 +43,4 @@ const getConnections = async (userId: string) => {
   }
 };
 
-export default getConnections; 
+export default getConnections;

@@ -21,29 +21,33 @@ const user = new Hono<{
   .get("/me", async (c) => {
     // Try to get session from cookie first
     let session = getCookie(c, "session");
-    
+
     // Fallback: Try Authorization header (for cross-port development)
     if (!session) {
-      const authHeader = c.req.header('Authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = c.req.header("Authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         session = authHeader.substring(7);
         console.log(`🔍 [/me] Using session from Authorization header`);
       }
     }
 
-    console.log(`🔍 [/me] Session: ${session ? session.substring(0, 20) + '...' : 'MISSING'}`);
+    console.log(
+      `🔍 [/me] Session: ${session ? session.substring(0, 20) + "..." : "MISSING"}`,
+    );
 
     if (!session) {
-      console.log('❌ [/me] No session token found (cookie or header)');
+      console.log("❌ [/me] No session token found (cookie or header)");
       return c.json({ user: null });
     }
 
     const { user } = await validateSessionToken(session);
 
-    console.log(`🔍 [/me] Validation result: ${user ? `User ${user.email}` : 'NULL'}`);
+    console.log(
+      `🔍 [/me] Validation result: ${user ? `User ${user.email}` : "NULL"}`,
+    );
 
     if (user === null) {
-      console.log('❌ [/me] Session validation returned null user');
+      console.log("❌ [/me] Session validation returned null user");
       return c.json({ user: null });
     }
 
@@ -63,13 +67,13 @@ const user = new Hono<{
 
       const token = generateSessionToken();
       console.log(`🔑 [sign-in] Generated token: ${token.substring(0, 20)}...`);
-      
+
       const session = await createSession(token, user.id);
       console.log(`💾 [sign-in] Session created with hashed ID`);
 
       // For development, set domain to localhost (without port) to share across ports
       // For production, use SameSite=Lax for same-site requests
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = process.env.NODE_ENV === "production";
       setCookie(c, "session", token, {
         path: "/",
         domain: "localhost", // Share cookie across all localhost ports
@@ -77,13 +81,16 @@ const user = new Hono<{
         sameSite: "lax", // Lax works for same-domain requests
         expires: session.expiresAt,
       });
-      
-      console.log(`🍪 [sign-in] Cookie set: session=${token.substring(0, 20)}... (Domain=localhost, SameSite=lax)`);
+
+      console.log(
+        `🍪 [sign-in] Cookie set: session=${token.substring(0, 20)}... (Domain=localhost, SameSite=lax)`,
+      );
 
       return c.json({
         ...user,
         // Include session token in response for development fallback (WebSocket auth)
-        sessionToken: process.env.NODE_ENV === 'development' ? token : undefined,
+        sessionToken:
+          process.env.NODE_ENV === "development" ? token : undefined,
       });
     },
   )
@@ -104,7 +111,7 @@ const user = new Hono<{
 
       // For development, set domain to localhost (without port) to share across ports
       // For production, use SameSite=Lax for same-site requests
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = process.env.NODE_ENV === "production";
       setCookie(c, "session", token, {
         path: "/",
         domain: "localhost", // Share cookie across all localhost ports
@@ -136,4 +143,3 @@ const user = new Hono<{
 user.route("/status", statusRouter);
 
 export default user;
-

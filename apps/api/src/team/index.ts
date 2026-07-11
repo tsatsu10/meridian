@@ -1,20 +1,23 @@
 import { Hono } from "hono";
 import { and, eq, sql, desc, inArray, gte } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
-import logger from '../utils/logger';
-import { 
-  workspaceUserTable, 
-  userTable, 
-  projectTable, 
-  teamTable, 
-  teamMemberTable, 
+import logger from "../utils/logger";
+import {
+  workspaceUserTable,
+  userTable,
+  projectTable,
+  teamTable,
+  teamMemberTable,
   taskTable,
 } from "../database/schema";
 import { userActivity as userActivityTable } from "../database/schema/team-awareness";
-import { createTeam } from './controllers/create-team';
-import { updateTeam } from './controllers/update-team';
-import { deleteTeam } from './controllers/delete-team';
-import { createSlidingWindowRateLimiter, RateLimitPresets } from '../middlewares/sliding-window-rate-limiter';
+import { createTeam } from "./controllers/create-team";
+import { updateTeam } from "./controllers/update-team";
+import { deleteTeam } from "./controllers/delete-team";
+import {
+  createSlidingWindowRateLimiter,
+  RateLimitPresets,
+} from "../middlewares/sliding-window-rate-limiter";
 
 const app = new Hono<{ Variables: { userEmail: string } }>();
 
@@ -39,7 +42,9 @@ app.get("/:workspaceId", async (c) => {
   const userEmail = c.get("userEmail");
 
   // Ensure database is initialized
-  const { initializeDatabase, getDatabase } = await import("../database/connection");
+  const { initializeDatabase, getDatabase } = await import(
+    "../database/connection"
+  );
   await initializeDatabase();
   const db = getDatabase();
 
@@ -55,64 +60,69 @@ app.get("/:workspaceId", async (c) => {
       .where(
         and(
           eq(teamTable.workspaceId, workspaceId),
-          eq(teamTable.isActive, true)
-        )
+          eq(teamTable.isActive, true),
+        ),
       );
 
     // Get all team members for all teams in ONE query (prevents N+1 problem)
     const teamIds = dbTeams.map(({ team }) => team.id);
-    const allTeamMembers = teamIds.length > 0
-      ? await db
-          .select({
-            teamId: teamMemberTable.teamId,
-            userId: userTable.id,
-            userEmail: userTable.email,
-            userName: userTable.name,
-            teamRole: teamMemberTable.role,
-            workspaceRole: workspaceUserTable.role,
-            status: workspaceUserTable.status,
-            joinedAt: teamMemberTable.joinedAt,
-          })
-          .from(teamMemberTable)
-          .leftJoin(userTable, eq(teamMemberTable.userId, userTable.id))
-          .leftJoin(workspaceUserTable,
-            and(
-              eq(workspaceUserTable.userEmail, userTable.email),
-              eq(workspaceUserTable.workspaceId, workspaceId)
+    const allTeamMembers =
+      teamIds.length > 0
+        ? await db
+            .select({
+              teamId: teamMemberTable.teamId,
+              userId: userTable.id,
+              userEmail: userTable.email,
+              userName: userTable.name,
+              teamRole: teamMemberTable.role,
+              workspaceRole: workspaceUserTable.role,
+              status: workspaceUserTable.status,
+              joinedAt: teamMemberTable.joinedAt,
+            })
+            .from(teamMemberTable)
+            .leftJoin(userTable, eq(teamMemberTable.userId, userTable.id))
+            .leftJoin(
+              workspaceUserTable,
+              and(
+                eq(workspaceUserTable.userEmail, userTable.email),
+                eq(workspaceUserTable.workspaceId, workspaceId),
+              ),
             )
-          )
-          .where(inArray(teamMemberTable.teamId, teamIds))
-      : [];
+            .where(inArray(teamMemberTable.teamId, teamIds))
+        : [];
 
     // Group team members by team ID and deduplicate by userId within each team
-    const membersByTeam = allTeamMembers.reduce((acc, member) => {
-      const teamMembers = acc[member.teamId] ?? (acc[member.teamId] = []);
-      // Only add member if not already in the team (prevent duplicates from JOIN issues)
-      const isDuplicate = teamMembers.some(m => m.userId === member.userId);
-      if (!isDuplicate) {
-        teamMembers.push(member);
-      }
-      return acc;
-    }, {} as Record<string, typeof allTeamMembers>);
+    const membersByTeam = allTeamMembers.reduce(
+      (acc, member) => {
+        const teamMembers = acc[member.teamId] ?? (acc[member.teamId] = []);
+        // Only add member if not already in the team (prevent duplicates from JOIN issues)
+        const isDuplicate = teamMembers.some((m) => m.userId === member.userId);
+        if (!isDuplicate) {
+          teamMembers.push(member);
+        }
+        return acc;
+      },
+      {} as Record<string, typeof allTeamMembers>,
+    );
 
     // Map teams with their members
     const teams = dbTeams.map(({ team, project }) => {
       const teamMembers = membersByTeam[team.id] || [];
-      
+
       return {
         id: team.id,
         name: team.name,
-        description: team.description || '',
-        type: team.projectId ? 'project' as const : 'general' as const,
+        description: team.description || "",
+        type: team.projectId ? ("project" as const) : ("general" as const),
         workspaceId: team.workspaceId,
         projectId: team.projectId,
         projectName: project?.name || null,
-        members: teamMembers.map(member => ({
+        members: teamMembers.map((member) => ({
           id: member.userId,
           name: member.userName,
           email: member.userEmail,
-          role: member.teamRole || member.workspaceRole || 'member',
-          status: 'online' as const,
+          role: member.teamRole || member.workspaceRole || "member",
+          status: "online" as const,
           joinedAt: member.joinedAt,
         })),
         memberCount: teamMembers.length,
@@ -131,7 +141,9 @@ app.get("/:workspaceId", async (c) => {
 app.get("/:workspaceId/metrics", async (c) => {
   const workspaceId = c.req.param("workspaceId");
 
-  const { initializeDatabase, getDatabase } = await import("../database/connection");
+  const { initializeDatabase, getDatabase } = await import(
+    "../database/connection"
+  );
   await initializeDatabase();
   const db = getDatabase();
 
@@ -166,20 +178,29 @@ app.get("/:workspaceId/metrics", async (c) => {
           .where(
             and(
               eq(taskTable.assigneeId, member.userId),
-              eq(projectTable.workspaceId, workspaceId)
-            )
+              eq(projectTable.workspaceId, workspaceId),
+            ),
           );
 
-        const stats = taskStats[0] || { total: 0, completed: 0, inProgress: 0, todo: 0 };
-        
+        const stats = taskStats[0] || {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          todo: 0,
+        };
+
         // Calculate workload (current active tasks as percentage, max 100%)
         const activeTasks = Number(stats.inProgress) + Number(stats.todo);
-        const workload = Math.min(Math.round((activeTasks / Math.max(activeTasks, 10)) * 100), 100);
-        
+        const workload = Math.min(
+          Math.round((activeTasks / Math.max(activeTasks, 10)) * 100),
+          100,
+        );
+
         // Calculate performance (completion rate)
-        const completionRate = stats.total > 0 
-          ? Math.round((Number(stats.completed) / Number(stats.total)) * 100)
-          : 100;
+        const completionRate =
+          stats.total > 0
+            ? Math.round((Number(stats.completed) / Number(stats.total)) * 100)
+            : 100;
 
         return {
           userId: member.userId,
@@ -189,7 +210,7 @@ app.get("/:workspaceId/metrics", async (c) => {
           tasksCompleted: Number(stats.completed),
           currentTasks: activeTasks,
         };
-      })
+      }),
     );
 
     return c.json({ metrics: metricsWithStats });
@@ -211,7 +232,7 @@ app.delete("/:teamId", deleteTeam);
 // @epic-3.4-teams: Add member to team
 app.post("/:teamId/members", async (c) => {
   const teamId = c.req.param("teamId");
-  
+
   try {
     const body = await c.req.json();
     const { userId, role = "member" } = body;
@@ -220,7 +241,9 @@ app.post("/:teamId/members", async (c) => {
       return c.json({ error: "Missing userId" }, 400);
     }
 
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -244,9 +267,11 @@ app.post("/:teamId/members", async (c) => {
 app.delete("/:teamId/members/:userId", async (c) => {
   const teamId = c.req.param("teamId");
   const userId = c.req.param("userId");
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -255,8 +280,8 @@ app.delete("/:teamId/members/:userId", async (c) => {
       .where(
         and(
           eq(teamMemberTable.teamId, teamId),
-          eq(teamMemberTable.userId, userId)
-        )
+          eq(teamMemberTable.userId, userId),
+        ),
       )
       .returning();
 
@@ -275,7 +300,7 @@ app.delete("/:teamId/members/:userId", async (c) => {
 app.patch("/:teamId/members/:userId", async (c) => {
   const teamId = c.req.param("teamId");
   const userId = c.req.param("userId");
-  
+
   try {
     const body = await c.req.json();
     const { role } = body;
@@ -284,7 +309,9 @@ app.patch("/:teamId/members/:userId", async (c) => {
       return c.json({ error: "Missing role" }, 400);
     }
 
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -294,8 +321,8 @@ app.patch("/:teamId/members/:userId", async (c) => {
       .where(
         and(
           eq(teamMemberTable.teamId, teamId),
-          eq(teamMemberTable.userId, userId)
-        )
+          eq(teamMemberTable.userId, userId),
+        ),
       )
       .returning();
 
@@ -313,17 +340,19 @@ app.patch("/:teamId/members/:userId", async (c) => {
 // @epic-3.4-teams: Archive team (soft delete)
 app.post("/:teamId/archive", async (c) => {
   const teamId = c.req.param("teamId");
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
     const [archivedTeam] = await db
       .update(teamTable)
-      .set({ 
+      .set({
         isActive: false,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(teamTable.id, teamId))
       .returning();
@@ -342,17 +371,19 @@ app.post("/:teamId/archive", async (c) => {
 // @epic-3.4-teams: Restore archived team
 app.post("/:teamId/restore", async (c) => {
   const teamId = c.req.param("teamId");
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
     const [restoredTeam] = await db
       .update(teamTable)
-      .set({ 
+      .set({
         isActive: true,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(teamTable.id, teamId))
       .returning();
@@ -371,9 +402,11 @@ app.post("/:teamId/restore", async (c) => {
 // @epic-3.4-teams: Get team statistics and overview
 app.get("/:teamId/statistics", async (c) => {
   const teamId = c.req.param("teamId");
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -404,23 +437,29 @@ app.get("/:teamId/statistics", async (c) => {
       })
       .from(taskTable)
       .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id));
-    
+
     // Apply appropriate filter based on team's project assignment
     const taskStats = team[0].projectId
       ? await taskStatsQuery.where(eq(projectTable.id, team[0].projectId))
-      : await taskStatsQuery.where(eq(projectTable.workspaceId, team[0].workspaceId));
+      : await taskStatsQuery.where(
+          eq(projectTable.workspaceId, team[0].workspaceId),
+        );
 
     // Get recent activity count (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
+
     const activityConditions = [gte(userActivityTable.createdAt, sevenDaysAgo)];
     if (team[0].projectId) {
-      activityConditions.push(eq(userActivityTable.projectId, team[0].projectId));
+      activityConditions.push(
+        eq(userActivityTable.projectId, team[0].projectId),
+      );
     } else {
-      activityConditions.push(eq(userActivityTable.workspaceId, team[0].workspaceId));
+      activityConditions.push(
+        eq(userActivityTable.workspaceId, team[0].workspaceId),
+      );
     }
-    
+
     const recentActivity = await db
       .select({ count: sql<number>`count(*)` })
       .from(userActivityTable)
@@ -434,17 +473,25 @@ app.get("/:teamId/statistics", async (c) => {
           completed: Number(taskStats[0]?.completed ?? 0),
           inProgress: Number(taskStats[0]?.inProgress ?? 0),
           todo: Number(taskStats[0]?.todo ?? 0),
-          completionRate: Number(taskStats[0]?.total ?? 0) > 0
-            ? Math.round((Number(taskStats[0]?.completed ?? 0) / Number(taskStats[0]?.total ?? 1)) * 100)
-            : 0,
+          completionRate:
+            Number(taskStats[0]?.total ?? 0) > 0
+              ? Math.round(
+                  (Number(taskStats[0]?.completed ?? 0) /
+                    Number(taskStats[0]?.total ?? 1)) *
+                    100,
+                )
+              : 0,
         },
         recentActivityCount: Number(recentActivity[0]?.count || 0),
         createdAt: team[0].createdAt,
-      }
+      },
     });
   } catch (error) {
     logger.error("Error fetching team statistics:", error);
-    logger.error("Error details:", error instanceof Error ? error.message : String(error));
+    logger.error(
+      "Error details:",
+      error instanceof Error ? error.message : String(error),
+    );
     // Return empty statistics instead of 500 error (graceful degradation)
     return c.json({
       statistics: {
@@ -458,7 +505,7 @@ app.get("/:teamId/statistics", async (c) => {
         },
         recentActivityCount: 0,
         createdAt: new Date().toISOString(),
-      }
+      },
     });
   }
 });
@@ -466,11 +513,13 @@ app.get("/:teamId/statistics", async (c) => {
 // @epic-3.4-teams: Get team activity log
 app.get("/:teamId/activity", async (c) => {
   const teamId = c.req.param("teamId");
-  const limit = parseInt(c.req.query("limit") || "50");
-  const offset = parseInt(c.req.query("offset") || "0");
-  
+  const limit = Number.parseInt(c.req.query("limit") || "50");
+  const offset = Number.parseInt(c.req.query("offset") || "0");
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -500,9 +549,9 @@ app.get("/:teamId/activity", async (c) => {
       .from(userActivityTable)
       .leftJoin(userTable, eq(userActivityTable.userId, userTable.id))
       .where(
-        team[0].projectId 
+        team[0].projectId
           ? eq(userActivityTable.projectId, team[0].projectId)
-          : eq(userActivityTable.workspaceId, team[0].workspaceId)
+          : eq(userActivityTable.workspaceId, team[0].workspaceId),
       )
       .orderBy(desc(userActivityTable.createdAt))
       .limit(limit)
@@ -513,9 +562,9 @@ app.get("/:teamId/activity", async (c) => {
       .select({ count: sql<number>`count(*)` })
       .from(userActivityTable)
       .where(
-        team[0].projectId 
+        team[0].projectId
           ? eq(userActivityTable.projectId, team[0].projectId)
-          : eq(userActivityTable.workspaceId, team[0].workspaceId)
+          : eq(userActivityTable.workspaceId, team[0].workspaceId),
       );
 
     return c.json({
@@ -525,11 +574,14 @@ app.get("/:teamId/activity", async (c) => {
         limit,
         offset,
         hasMore: offset + activities.length < Number(totalCount[0]?.count || 0),
-      }
+      },
     });
   } catch (error) {
     logger.error("Error fetching team activity:", error);
-    logger.error("Error details:", error instanceof Error ? error.message : String(error));
+    logger.error(
+      "Error details:",
+      error instanceof Error ? error.message : String(error),
+    );
     // Return empty data instead of 500 error (graceful degradation)
     return c.json({
       activities: [],
@@ -538,7 +590,7 @@ app.get("/:teamId/activity", async (c) => {
         limit,
         offset,
         hasMore: false,
-      }
+      },
     });
   }
 });
@@ -547,9 +599,11 @@ app.get("/:teamId/activity", async (c) => {
 app.get("/:teamId/notifications", async (c) => {
   const teamId = c.req.param("teamId");
   const userId = c.req.query("userId");
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -567,7 +621,7 @@ app.get("/:teamId/notifications", async (c) => {
         emailNotifications: true,
         pushNotifications: true,
         digest: "daily", // "realtime", "hourly", "daily", "weekly", "never"
-      }
+      },
     });
   } catch (error) {
     logger.error("Error fetching notification preferences:", error);
@@ -578,7 +632,7 @@ app.get("/:teamId/notifications", async (c) => {
 // @epic-3.4-teams: Update team notification preferences
 app.put("/:teamId/notifications", async (c) => {
   const teamId = c.req.param("teamId");
-  
+
   try {
     const body = await c.req.json();
     const { preferences } = body;
@@ -595,7 +649,6 @@ app.put("/:teamId/notifications", async (c) => {
   }
 });
 
-
 // ============================================================================
 // Phase 3: Advanced Features
 // ============================================================================
@@ -604,9 +657,11 @@ app.put("/:teamId/notifications", async (c) => {
 app.get("/:teamId/analytics", async (c) => {
   const teamId = c.req.param("teamId");
   const timeRange = c.req.query("range") || "7d"; // 7d, 30d, 90d, all
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -644,7 +699,7 @@ app.get("/:teamId/analytics", async (c) => {
     if (team[0].projectId) {
       trendConditions.push(eq(projectTable.id, team[0].projectId));
     }
-    
+
     const taskTrend = await db
       .select({
         date: sql<string>`DATE(${taskTable.updatedAt})`,
@@ -664,7 +719,7 @@ app.get("/:teamId/analytics", async (c) => {
       taskJoinConditions.push(eq(taskTable.projectId, team[0].projectId));
     }
     taskJoinConditions.push(gte(taskTable.createdAt, startDate));
-    
+
     const memberProductivity = await db
       .select({
         memberId: teamMemberTable.userId,
@@ -684,7 +739,7 @@ app.get("/:teamId/analytics", async (c) => {
     if (team[0].projectId) {
       statusConditions.push(eq(projectTable.id, team[0].projectId));
     }
-    
+
     const statusDistribution = await db
       .select({
         status: taskTable.status,
@@ -700,7 +755,7 @@ app.get("/:teamId/analytics", async (c) => {
     if (team[0].projectId) {
       priorityConditions.push(eq(projectTable.id, team[0].projectId));
     }
-    
+
     const priorityDistribution = await db
       .select({
         priority: taskTable.priority,
@@ -718,11 +773,14 @@ app.get("/:teamId/analytics", async (c) => {
         memberProductivity,
         statusDistribution,
         priorityDistribution,
-      }
+      },
     });
   } catch (error) {
     logger.error("Error fetching team analytics:", error);
-    logger.error("Error details:", error instanceof Error ? error.message : String(error));
+    logger.error(
+      "Error details:",
+      error instanceof Error ? error.message : String(error),
+    );
     // Return empty analytics instead of 500 error (graceful degradation)
     return c.json({
       analytics: {
@@ -731,7 +789,7 @@ app.get("/:teamId/analytics", async (c) => {
         memberProductivity: [],
         statusDistribution: [],
         priorityDistribution: [],
-      }
+      },
     });
   }
 });
@@ -739,9 +797,11 @@ app.get("/:teamId/analytics", async (c) => {
 // @epic-3.4-teams: Get advanced permissions for team
 app.get("/:teamId/permissions/advanced", async (c) => {
   const teamId = c.req.param("teamId");
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
@@ -760,7 +820,7 @@ app.get("/:teamId/permissions/advanced", async (c) => {
 
     // Define permission matrix
     const permissionMatrix = {
-      "Admin": {
+      Admin: {
         canManageMembers: true,
         canManageTasks: true,
         canManageProjects: true,
@@ -778,7 +838,7 @@ app.get("/:teamId/permissions/advanced", async (c) => {
         canDeleteTeam: false,
         canChangePermissions: false,
       },
-      "Member": {
+      Member: {
         canManageMembers: false,
         canManageTasks: false,
         canManageProjects: false,
@@ -789,9 +849,11 @@ app.get("/:teamId/permissions/advanced", async (c) => {
       },
     };
 
-    const membersWithPermissions = members.map(member => ({
+    const membersWithPermissions = members.map((member) => ({
       ...member,
-      permissions: permissionMatrix[member.role as keyof typeof permissionMatrix] || permissionMatrix["Member"],
+      permissions:
+        permissionMatrix[member.role as keyof typeof permissionMatrix] ||
+        permissionMatrix["Member"],
     }));
 
     return c.json({
@@ -808,7 +870,7 @@ app.get("/:teamId/permissions/advanced", async (c) => {
 app.put("/:teamId/permissions/:userId", async (c) => {
   const teamId = c.req.param("teamId");
   const userId = c.req.param("userId");
-  
+
   try {
     const body = await c.req.json();
     const { permissions } = body;
@@ -825,7 +887,6 @@ app.put("/:teamId/permissions/:userId", async (c) => {
   }
 });
 
-
 // @epic-3.4-teams: Advanced member search and filtering
 app.get("/:teamId/members/search", async (c) => {
   const teamId = c.req.param("teamId");
@@ -833,14 +894,16 @@ app.get("/:teamId/members/search", async (c) => {
   const role = c.req.query("role");
   const sortBy = c.req.query("sortBy") || "name"; // name, joinedAt, tasksCompleted
   const order = c.req.query("order") || "asc"; // asc, desc
-  
+
   try {
-    const { initializeDatabase, getDatabase } = await import("../database/connection");
+    const { initializeDatabase, getDatabase } = await import(
+      "../database/connection"
+    );
     await initializeDatabase();
     const db = getDatabase();
 
     // Build query
-    let membersQuery = db
+    const membersQuery = db
       .select({
         userId: teamMemberTable.userId,
         userName: userTable.name,
@@ -853,8 +916,11 @@ app.get("/:teamId/members/search", async (c) => {
       .innerJoin(userTable, eq(teamMemberTable.userId, userTable.id))
       .where(
         role
-          ? and(eq(teamMemberTable.teamId, teamId), eq(teamMemberTable.role, role))
-          : eq(teamMemberTable.teamId, teamId)
+          ? and(
+              eq(teamMemberTable.teamId, teamId),
+              eq(teamMemberTable.role, role),
+            )
+          : eq(teamMemberTable.teamId, teamId),
       );
 
     let members = await membersQuery;
@@ -865,7 +931,7 @@ app.get("/:teamId/members/search", async (c) => {
       members = members.filter(
         (m) =>
           m.userName.toLowerCase().includes(searchLower) ||
-          m.userEmail.toLowerCase().includes(searchLower)
+          m.userEmail.toLowerCase().includes(searchLower),
       );
     }
 
@@ -877,7 +943,8 @@ app.get("/:teamId/members/search", async (c) => {
           comparison = a.userName.localeCompare(b.userName);
           break;
         case "joinedAt":
-          comparison = new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
+          comparison =
+            new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
           break;
         default:
           comparison = 0;
@@ -896,4 +963,4 @@ app.get("/:teamId/members/search", async (c) => {
   }
 });
 
-export default app; 
+export default app;
