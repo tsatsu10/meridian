@@ -146,7 +146,9 @@ const sampleTimelineEvents: TimelineEvent[] = [
   },
 ];
 
-export function useProjectTimeline(teams: any[] = []) {
+export function useProjectTimeline(
+  teams: Array<{ id: string; name: string; workload?: number }> = [],
+) {
   const { workspace } = useWorkspaceStore();
   const { data: projects } = useGetProjects({
     workspaceId: workspace?.id || "",
@@ -157,7 +159,7 @@ export function useProjectTimeline(teams: any[] = []) {
     const projectList = Array.isArray(projects) ? projects : projects?.projects;
     if (!projectList || teams.length === 0) return [];
 
-    return projectList.map((project: any) => {
+    return projectList.map((project: { id: string; name: string }) => {
       // Filter events for this project
       const projectEvents = sampleTimelineEvents.filter(
         (event) => event.projectId === project.id,
@@ -181,7 +183,7 @@ export function useProjectTimeline(teams: any[] = []) {
           .reduce((total, event) => total + (event.estimatedHours || 0), 0);
 
         const projectedWorkload = Math.min(
-          team.workload + (upcomingHours / 40) * 10, // Assume 40 hours per week
+          (team.workload || 0) + (upcomingHours / 40) * 10, // Assume 40 hours per week
           100,
         );
 
@@ -203,7 +205,7 @@ export function useProjectTimeline(teams: any[] = []) {
         return {
           teamId: team.id,
           teamName: team.name,
-          currentWorkload: team.workload,
+          currentWorkload: team.workload || 0,
           projectedWorkload,
           capacityRisk,
           upcomingDeadlines,
