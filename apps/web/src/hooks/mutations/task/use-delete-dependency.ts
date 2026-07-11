@@ -1,8 +1,8 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 async function deleteDependency(dependencyId: string) {
-  const response = await (client as any).task.dependencies[
+  const response = await looseClient.task.dependencies[
     ":dependencyId"
   ].$delete({
     param: { dependencyId },

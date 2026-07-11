@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
 
 function useBatchMarkRead() {
@@ -7,7 +7,7 @@ function useBatchMarkRead() {
 
   return useMutation({
     mutationFn: async (notificationIds: string[]) => {
-      const response = await (client as any).notification.batch[
+      const response = await looseClient.notification.batch[
         "mark-read"
       ].$post({
         json: { ids: notificationIds },

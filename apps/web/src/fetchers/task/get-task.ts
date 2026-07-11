@@ -1,8 +1,8 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 async function getTask(taskId: string) {
   // The generated AppType is missing task[":id"], hence the cast
-  const response = await (client as any).task[":id"].$get({
+  const response = await looseClient.task[":id"].$get({
     param: { id: taskId },
   });
 

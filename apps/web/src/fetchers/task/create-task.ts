@@ -1,4 +1,4 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 // The generated AppType is missing task[":projectId"], so type the request locally
 export type CreateTaskRequest = {
@@ -22,7 +22,7 @@ async function createTask(
   priority: string,
   parentId?: string,
 ) {
-  const response = await (client as any).task[":projectId"].$post({
+  const response = await looseClient.task[":projectId"].$post({
     json: {
       title,
       description,

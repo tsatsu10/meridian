@@ -1,8 +1,8 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { useQuery } from "@tanstack/react-query";
 
 async function getTaskDependencies(taskId: string) {
-  const response = await (client as any).task[":taskId"].dependencies.$get({
+  const response = await looseClient.task[":taskId"].dependencies.$get({
     param: { taskId },
   });
 

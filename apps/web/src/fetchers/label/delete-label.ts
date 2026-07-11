@@ -1,10 +1,10 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 // The generated AppType is missing label[":id"], so type the request locally
 export type DeleteLabelRequest = { id: string };
 
 async function deleteLabel({ id }: DeleteLabelRequest) {
-  const response = await (client as any).label[":id"].$delete({
+  const response = await looseClient.label[":id"].$delete({
     param: { id },
   });
 

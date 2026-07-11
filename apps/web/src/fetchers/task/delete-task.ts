@@ -1,8 +1,8 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 async function deleteTask(taskId: string) {
   // The generated AppType is missing task[":id"], hence the cast
-  const response = await (client as any).task[":id"].$delete({
+  const response = await looseClient.task[":id"].$delete({
     param: { id: taskId },
   });
 
