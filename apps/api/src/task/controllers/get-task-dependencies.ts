@@ -25,10 +25,10 @@ async function getTaskDependencies(taskId: string) {
 
   // Get all related task IDs
   const relatedTaskIds = new Set<string>();
-  dependencies.forEach((dep) => {
+  for (const dep of dependencies) {
     relatedTaskIds.add(dep.dependentTaskId);
     relatedTaskIds.add(dep.requiredTaskId);
-  });
+  }
 
   // Remove the current task ID
   relatedTaskIds.delete(taskId);

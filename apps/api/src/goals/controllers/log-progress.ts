@@ -83,64 +83,64 @@ export async function logProgress(c: Context) {
         201,
       );
     }
-      // Logging progress for a key result
-      const keyResult = await db.query.goalKeyResults.findFirst({
-        where: eq(goalKeyResults.id, body.keyResultId),
-      });
+    // Logging progress for a key result
+    const keyResult = await db.query.goalKeyResults.findFirst({
+      where: eq(goalKeyResults.id, body.keyResultId),
+    });
 
-      if (!keyResult) {
-        return c.json({ error: "Key result not found" }, 404);
-      }
+    if (!keyResult) {
+      return c.json({ error: "Key result not found" }, 404);
+    }
 
-      const goalForKr = await db.query.goals.findFirst({
-        where: eq(goals.id, keyResult.goalId),
-      });
+    const goalForKr = await db.query.goals.findFirst({
+      where: eq(goals.id, keyResult.goalId),
+    });
 
-      if (!goalForKr) {
-        return c.json({ error: "Goal not found" }, 404);
-      }
+    if (!goalForKr) {
+      return c.json({ error: "Goal not found" }, 404);
+    }
 
-      if (goalForKr.userId !== userId) {
-        return c.json({ error: "Access denied" }, 403);
-      }
+    if (goalForKr.userId !== userId) {
+      return c.json({ error: "Access denied" }, 403);
+    }
 
-      const previousValue = Number.parseFloat(keyResult.currentValue as string);
+    const previousValue = Number.parseFloat(keyResult.currentValue as string);
 
-      // Log key result progress
-      const [progressEntry] = await db
-        .insert(goalProgress)
-        .values({
-          id: createId(),
-          keyResultId: body.keyResultId,
-          goalId: keyResult.goalId,
-          value: body.value.toString(),
-          previousValue: previousValue.toString(),
-          note: body.note,
-          recordedBy: userId,
-          recordedAt: new Date(),
-        })
-        .returning();
+    // Log key result progress
+    const [progressEntry] = await db
+      .insert(goalProgress)
+      .values({
+        id: createId(),
+        keyResultId: body.keyResultId,
+        goalId: keyResult.goalId,
+        value: body.value.toString(),
+        previousValue: previousValue.toString(),
+        note: body.note,
+        recordedBy: userId,
+        recordedAt: new Date(),
+      })
+      .returning();
 
-      // Update key result current value
-      await db
-        .update(goalKeyResults)
-        .set({
-          currentValue: body.value.toString(),
-          updatedAt: new Date(),
-        })
-        .where(eq(goalKeyResults.id, body.keyResultId));
+    // Update key result current value
+    await db
+      .update(goalKeyResults)
+      .set({
+        currentValue: body.value.toString(),
+        updatedAt: new Date(),
+      })
+      .where(eq(goalKeyResults.id, body.keyResultId));
 
-      // Recalculate goal progress
-      await recalculateGoalProgress(keyResult.goalId);
+    // Recalculate goal progress
+    await recalculateGoalProgress(keyResult.goalId);
 
-      return c.json(
-        {
-          success: true,
-          data: progressEntry,
-          message: "Progress logged successfully",
-        },
-        201,
-      );
+    return c.json(
+      {
+        success: true,
+        data: progressEntry,
+        message: "Progress logged successfully",
+      },
+      201,
+    );
   } catch (error) {
     logger.error("Log progress error:", error);
     return c.json(

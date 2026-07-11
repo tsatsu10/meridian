@@ -33,7 +33,7 @@ interface PermissionBuilderProps {
 function categorizePermissions(permissions: string[]) {
   const categories: Record<string, string[]> = {};
 
-  permissions.forEach((permission) => {
+  for (const permission of permissions) {
     const parts = permission.split(".");
     const category = parts[0] || "other";
 
@@ -41,7 +41,7 @@ function categorizePermissions(permissions: string[]) {
       categories[category] = [];
     }
     categories[category].push(permission);
-  });
+  }
 
   return categories;
 }
@@ -91,14 +91,14 @@ export function PermissionBuilder({
     const searchLower = search.toLowerCase();
     const filtered: Record<string, string[]> = {};
 
-    Object.entries(categories).forEach(([category, perms]) => {
+    for (const [category, perms] of Object.entries(categories)) {
       const matchingPerms = perms.filter((p) =>
         p.toLowerCase().includes(searchLower),
       );
       if (matchingPerms.length > 0) {
         filtered[category] = matchingPerms;
       }
-    });
+    }
 
     return filtered;
   }, [categories, search]);

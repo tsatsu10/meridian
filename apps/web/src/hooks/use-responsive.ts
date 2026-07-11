@@ -207,11 +207,11 @@ export function useMediaQuery(query: string): boolean {
       media.addEventListener("change", updateMatches);
       return () => media.removeEventListener("change", updateMatches);
     }
-      // Legacy browsers
-      // @ts-ignore
-      media.addListener(updateMatches);
-      // @ts-ignore
-      return () => media.removeListener(updateMatches);
+    // Legacy browsers
+    // @ts-ignore
+    media.addListener(updateMatches);
+    // @ts-ignore
+    return () => media.removeListener(updateMatches);
   }, [query]);
 
   return matches;

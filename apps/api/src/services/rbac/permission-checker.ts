@@ -323,9 +323,9 @@ export class PermissionChecker {
       const rolePerms = getRolePermissions(role.id as UserRole);
       return rolePerms[permission] === true;
     }
-      // Load from database
-      if (!role.permissions) return false;
-      return (role.permissions as string[]).includes(permission);
+    // Load from database
+    if (!role.permissions) return false;
+    return (role.permissions as string[]).includes(permission);
   }
 
   /**
@@ -389,7 +389,9 @@ export class PermissionChecker {
           permissions,
         });
 
-        permissions.forEach((p) => allPermissions.add(p));
+        for (const p of permissions) {
+          allPermissions.add(p);
+        }
       }
 
       // Get permission overrides
@@ -419,13 +421,13 @@ export class PermissionChecker {
       }));
 
       // Apply overrides to computed permissions
-      overrides.forEach((override) => {
+      for (const override of overrides) {
         if (override.granted) {
           allPermissions.add(override.permission);
         } else {
           allPermissions.delete(override.permission);
         }
-      });
+      }
 
       return {
         userId,

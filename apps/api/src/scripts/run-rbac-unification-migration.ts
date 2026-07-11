@@ -182,8 +182,8 @@ async function createBackup(): Promise<boolean> {
       );
       return true;
     }
-      logger.debug("  ℹ️  No existing role_assignment table to backup");
-      return true;
+    logger.debug("  ℹ️  No existing role_assignment table to backup");
+    return true;
   } catch (error) {
     logger.error("❌ Backup failed:");
     logger.error(error);
@@ -244,9 +244,9 @@ async function runMigration() {
   logger.debug("═══════════════════════════════════════════════\n");
 
   logger.debug("Summary:");
-  results.forEach((result) => {
+  for (const result of results) {
     logger.debug(`  ✅ ${result.step}: ${result.message}`);
-  });
+  }
 
   logger.debug("\n📋 Next Steps:");
   logger.debug("  1. Verify data in new tables");

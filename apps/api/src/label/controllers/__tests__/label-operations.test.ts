@@ -43,9 +43,9 @@ describe("Label Operations", () => {
       const validColors = ["#ff0000", "#00ff00", "#0000ff"];
       const invalidColor = "red";
 
-      validColors.forEach((color) => {
+      for (const color of validColors) {
         expect(color).toMatch(/^#[0-9a-f]{6}$/i);
-      });
+      }
       expect(invalidColor).not.toMatch(/^#[0-9a-f]{6}$/i);
     });
 
@@ -301,16 +301,15 @@ describe("Label Operations", () => {
       ];
 
       expect(palette).toHaveLength(6);
-      palette.forEach((color) => {
+      for (const color of palette) {
         expect(color).toMatch(/^#[0-9a-f]{6}$/i);
-      });
+      }
     });
 
     it("should generate random color", () => {
-      const color =
-        `#${Math.floor(Math.random() * 16777215)
-          .toString(16)
-          .padStart(6, "0")}`;
+      const color = `#${Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, "0")}`;
       expect(color).toMatch(/^#[0-9a-f]{6}$/i);
     });
   });

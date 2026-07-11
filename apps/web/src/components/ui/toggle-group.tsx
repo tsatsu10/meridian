@@ -54,7 +54,7 @@ const ToggleGroupItem = React.forwardRef<
     if (context.type === "single") {
       return context.value === value;
     }
-      return Array.isArray(context.value) && context.value.includes(value);
+    return Array.isArray(context.value) && context.value.includes(value);
   }, [context.value, value, context.type]);
 
   const handleClick = () => {

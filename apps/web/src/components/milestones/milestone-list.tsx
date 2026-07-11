@@ -172,7 +172,7 @@ export default function MilestoneList({
       });
 
       // Convert tasks to milestone format
-      milestoneTasks.forEach((task: any) => {
+      for (const task of milestoneTasks) {
         derived.push({
           id: `derived_${task.id}`,
           title: task.title,
@@ -198,7 +198,7 @@ export default function MilestoneList({
           createdAt: task.createdAt || new Date().toISOString(),
           updatedAt: task.updatedAt || new Date().toISOString(),
         });
-      });
+      }
     }
 
     // Combine localStorage milestones with derived ones
@@ -303,7 +303,7 @@ export default function MilestoneList({
 
     const groups: Record<string, any[]> = {};
 
-    sortedMilestones.forEach((milestone) => {
+    for (const milestone of sortedMilestones) {
       let groupKey = "";
 
       switch (groupBy) {
@@ -313,9 +313,10 @@ export default function MilestoneList({
             milestone.status.slice(1);
           break;
         case "risk":
-          groupKey =
-            `${milestone.riskLevel.charAt(0).toUpperCase() +
-            milestone.riskLevel.slice(1)} Risk`;
+          groupKey = `${
+            milestone.riskLevel.charAt(0).toUpperCase() +
+            milestone.riskLevel.slice(1)
+          } Risk`;
           break;
         case "type":
           groupKey = milestone.isDerived ? "Auto-detected" : "Manual";
@@ -334,7 +335,7 @@ export default function MilestoneList({
 
       if (!groups[groupKey]) groups[groupKey] = [];
       groups[groupKey].push(milestone);
-    });
+    }
 
     return groups;
   }, [sortedMilestones, groupBy]);
@@ -390,11 +391,11 @@ export default function MilestoneList({
         `Are you sure you want to delete ${selectedMilestones.size} milestones?`,
       )
     ) {
-      selectedMilestones.forEach((id) => {
+      for (const id of selectedMilestones) {
         if (!allMilestones.find((m) => m.id === id)?.isDerived) {
           deleteMilestone(id);
         }
-      });
+      }
       setSelectedMilestones(new Set());
       setSelectMode(false);
       toast.success(`${selectedMilestones.size} milestones deleted`);
@@ -404,12 +405,12 @@ export default function MilestoneList({
   const handleBulkStatusChange = (
     status: "upcoming" | "achieved" | "missed",
   ) => {
-    selectedMilestones.forEach((id) => {
+    for (const id of selectedMilestones) {
       const milestone = allMilestones.find((m) => m.id === id);
       if (milestone && !milestone.isDerived) {
         updateMilestone(id, { status });
       }
-    });
+    }
     setSelectedMilestones(new Set());
     setSelectMode(false);
     toast.success(`${selectedMilestones.size} milestones updated`);

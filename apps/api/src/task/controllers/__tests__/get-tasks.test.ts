@@ -293,11 +293,11 @@ describe("GetTasks Controller", () => {
       const result = await getTasks(projectId);
 
       // Assert
-      result.columns.forEach((column: any) => {
-        expect(column).toHaveProperty("color");
-        expect(typeof column.color).toBe("string");
-        expect(column.color).toMatch(/^#[0-9a-f]{6}$/i);
-      });
+      for (const column of result.columns) {
+                expect(column).toHaveProperty("color");
+                expect(typeof column.color).toBe("string");
+                expect(column.color).toMatch(/^#[0-9a-f]{6}$/i);
+              }
     });
 
     it("should include position for each status column", async () => {
@@ -313,10 +313,10 @@ describe("GetTasks Controller", () => {
       const result = await getTasks(projectId);
 
       // Assert
-      result.columns.forEach((column: any) => {
-        expect(column).toHaveProperty("position");
-        expect(typeof column.position).toBe("number");
-      });
+      for (const column of result.columns) {
+                expect(column).toHaveProperty("position");
+                expect(typeof column.position).toBe("number");
+              }
     });
   });
 });

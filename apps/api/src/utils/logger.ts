@@ -574,17 +574,23 @@ export class EnhancedLogger {
 
     if (results.errors.length > 0) {
       console.error("\n❌ Errors:");
-      results.errors.forEach((error) => console.error("   • ${error}"));
+      for (const error of results.errors) {
+        console.error("   • ${error}");
+      }
     }
 
     if (results.warnings.length > 0) {
       console.warn("\n⚠️  Warnings:");
-      results.warnings.forEach((warning) => console.warn("   • ${warning}"));
+      for (const warning of results.warnings) {
+        console.warn("   • ${warning}");
+      }
     }
 
     if (results.recommendations.length > 0) {
       console.info("\n💡 Recommendations:");
-      results.recommendations.forEach((rec) => console.info("   • ${rec}"));
+      for (const rec of results.recommendations) {
+        console.info("   • ${rec}");
+      }
     }
 
     console.info(

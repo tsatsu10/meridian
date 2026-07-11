@@ -144,14 +144,16 @@ function CommentThread({
                 aria-label="Edit comment"
                 disabled={isSubmitting}
               />
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => handleEditComment(comment.id)}
                 disabled={isSubmitting || !editContent.trim()}
                 aria-label="Save edit"
               >
                 Save
               </button>
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => {
                   setEditingId(null);
                   setEditContent("");
@@ -168,7 +170,8 @@ function CommentThread({
         </div>
 
         <div className="comment-actions">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => {
               setReplyingToId(comment.id);
               setReplyContent("");
@@ -180,7 +183,8 @@ function CommentThread({
           </button>
 
           {isOwner && canEdit && !isEditing && (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => {
                 setEditingId(comment.id);
                 setEditContent(comment.content);
@@ -193,7 +197,8 @@ function CommentThread({
           )}
 
           {isOwner && canDelete && (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => handleDeleteComment(comment.id)}
               disabled={isSubmitting}
               aria-label="Delete comment"
@@ -206,7 +211,8 @@ function CommentThread({
           {comment.reactions && Object.keys(comment.reactions).length > 0 && (
             <div className="reactions" role="group" aria-label="Reactions">
               {Object.entries(comment.reactions).map(([emoji, count]) => (
-                <button type="button"
+                <button
+                  type="button"
                   key={emoji}
                   onClick={() => onReact?.(comment.id, emoji)}
                   className="reaction"
@@ -228,14 +234,16 @@ function CommentThread({
               aria-label="Reply content"
               disabled={isSubmitting}
             />
-            <button type="button"
+            <button
+              type="button"
               onClick={() => handleAddReply(comment.id)}
               disabled={isSubmitting || !replyContent.trim()}
               aria-label="Submit reply"
             >
               Reply
             </button>
-            <button type="button"
+            <button
+              type="button"
               onClick={() => {
                 setReplyingToId(null);
                 setReplyContent("");
@@ -269,7 +277,8 @@ function CommentThread({
           aria-label="New comment"
           disabled={isSubmitting}
         />
-        <button type="button"
+        <button
+          type="button"
           onClick={handleAddComment}
           disabled={isSubmitting || !newComment.trim()}
           aria-label="Submit comment"

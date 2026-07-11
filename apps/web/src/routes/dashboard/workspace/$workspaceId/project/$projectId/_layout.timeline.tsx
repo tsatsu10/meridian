@@ -260,14 +260,14 @@ function ProjectTimeline() {
     let totalWeight = 0;
     let completedWeight = 0;
 
-    allTasks.forEach((task: any) => {
+    for (const task of allTasks) {
       const weight =
         priorityWeights[task.priority as keyof typeof priorityWeights] || 2;
       totalWeight += weight;
       if (task.status === "done") {
         completedWeight += weight;
       }
-    });
+    }
 
     const weightedProgress =
       totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
@@ -348,7 +348,7 @@ function ProjectTimeline() {
       );
 
       // Add tasks
-      filteredTasks.forEach((task: any) => {
+      for (const task of filteredTasks) {
         const row = [
           "Task",
           task.number || task.id,
@@ -360,10 +360,10 @@ function ProjectTimeline() {
           `"${(task.description || "").replace(/"/g, '""')}"`,
         ];
         csvRows.push(row.join(","));
-      });
+      }
 
       // Add milestones
-      realMilestones.forEach((milestone: any) => {
+      for (const milestone of realMilestones) {
         const row = [
           "Milestone",
           milestone.id,
@@ -375,7 +375,7 @@ function ProjectTimeline() {
           `"${(milestone.description || "").replace(/"/g, '""')}"`,
         ];
         csvRows.push(row.join(","));
-      });
+      }
 
       // Create blob and download
       const csvContent = csvRows.join("\n");

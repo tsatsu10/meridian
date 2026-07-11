@@ -236,11 +236,11 @@ describe("Security Middleware", () => {
         "javascript:alert(1)",
       ];
 
-      vectors.forEach((vector) => {
+      for (const vector of vectors) {
         const sanitized = sanitizeHTML(vector);
         expect(sanitized).not.toContain("<script");
         expect(sanitized).not.toContain("javascript:");
-      });
+      }
     });
   });
 
@@ -408,9 +408,9 @@ describe("Security Middleware", () => {
         "Content-Security-Policy",
       ];
 
-      requiredHeaders.forEach((header) => {
+      for (const header of requiredHeaders) {
         expect(securityHeaders).toHaveProperty(header);
-      });
+      }
     });
   });
 

@@ -123,16 +123,16 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
   }
 
   // Calculate all times
-  tasks.forEach((task) => {
+  for (const task of tasks) {
     calculateEarliestTimes(task.id);
-  });
+  }
 
-  tasks.forEach((task) => {
+  for (const task of tasks) {
     calculateLatestTimes(task.id);
-  });
+  }
 
   // Identify critical path (tasks with zero slack)
-  tasks.forEach((task) => {
+  for (const task of tasks) {
     const early = earliestStart.get(task.id) || 0;
     const late = latestStart.get(task.id) || 0;
 
@@ -140,7 +140,7 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
       // Account for floating point precision
       criticalPath.add(task.id);
     }
-  });
+  }
 
   return criticalPath;
 }
@@ -263,9 +263,9 @@ function GanttChart({ tasks }: GanttChartProps) {
         }
 
         const critical = calculateCriticalPath(converted); // Mark critical path tasks
-        converted.forEach((task) => {
+        for (const task of converted) {
           task.isCriticalPath = critical.has(task.id);
-        });
+        }
 
         // Calculate timeline bounds based on view mode and current date
         let timelineStart: Date;
@@ -677,20 +677,23 @@ function GanttChart({ tasks }: GanttChartProps) {
               <div className="flex items-center gap-4">
                 <h3 className="font-semibold text-gray-900">Timeline View</h3>
                 <div className="flex items-center gap-2">
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={handleTodayClick}
                     className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors font-medium"
                   >
                     Today
                   </button>
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={handlePreviousPeriod}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Previous period"
                   >
                     <div className="w-3 h-3 border-l-2 border-b-2 border-current transform rotate-45"></div>
                   </button>
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={handleNextPeriod}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Next period"
@@ -719,7 +722,8 @@ function GanttChart({ tasks }: GanttChartProps) {
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={handleZoomFit}
                     className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium"
                     title="Zoom to fit all tasks"
@@ -727,7 +731,8 @@ function GanttChart({ tasks }: GanttChartProps) {
                     Zoom Fit
                   </button>
                   <div className="flex items-center gap-1">
-                    <button type="button"
+                    <button
+                      type="button"
                       onClick={() =>
                         setZoomLevel(Math.max(0.5, zoomLevel - 0.25))
                       }
@@ -739,7 +744,8 @@ function GanttChart({ tasks }: GanttChartProps) {
                     <span className="text-xs text-gray-600 min-w-[3rem] text-center">
                       {Math.round(zoomLevel * 100)}%
                     </span>
-                    <button type="button"
+                    <button
+                      type="button"
                       onClick={() =>
                         setZoomLevel(Math.min(3, zoomLevel + 0.25))
                       }
@@ -942,7 +948,8 @@ function GanttChart({ tasks }: GanttChartProps) {
                     </div>
 
                     {/* Professional Dependency arrows */}
-                    <svg aria-hidden="true"
+                    <svg
+                      aria-hidden="true"
                       className="absolute top-0 left-0 w-full h-full pointer-events-none"
                       style={{ zIndex: 15 }}
                     >

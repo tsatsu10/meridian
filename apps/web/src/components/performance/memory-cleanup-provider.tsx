@@ -58,9 +58,9 @@ export function MemoryCleanupProvider({
             query.state.dataUpdatedAt < Date.now() - 10 * 60 * 1000, // 10min old
         );
 
-        staleQueries.forEach((query) => {
+        for (const query of staleQueries) {
           cache.remove(query);
-        });
+        }
 
         if (staleQueries.length > 0) {
           logger.debug(`🧹 Cleaned up ${staleQueries.length} stale queries`);
@@ -87,7 +87,9 @@ export function MemoryCleanupProvider({
           }
 
           if (itemsToRemove.length > 0) {
-            itemsToRemove.forEach((key) => localStorage.removeItem(key));
+            for (const key of itemsToRemove) {
+              localStorage.removeItem(key);
+            }
             logger.debug(
               `🧹 Cleaned up ${itemsToRemove.length} localStorage cache items`,
             );

@@ -98,7 +98,7 @@ function Sidebar({
         </div>
 
         {hasChildren && isExpanded && !isCollapsed && (
-          <ul className="nav-children" >
+          <ul className="nav-children">
             {(item.children ?? []).map((child) =>
               renderNavItem(child, depth + 1),
             )}
@@ -125,7 +125,8 @@ function Sidebar({
           </div>
         )}
 
-        <button type="button"
+        <button
+          type="button"
           onClick={onToggleCollapse}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="toggle-button"
@@ -136,7 +137,7 @@ function Sidebar({
 
       {/* Navigation */}
       <nav className="sidebar-nav">
-        <ul className="nav-list" >
+        <ul className="nav-list">
           {navItems.map((item) => renderNavItem(item))}
         </ul>
       </nav>

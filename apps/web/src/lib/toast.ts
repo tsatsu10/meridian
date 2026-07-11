@@ -29,9 +29,9 @@ const createToastFunction = (
     if (typeof window !== "undefined" && (window as any).toast) {
       return (window as any).toast[type](message);
     }
-      // Fallback to console for server-side rendering
-      logger.info(`Toast ${type}: ${message}`);
-      return `toast-${Date.now()}`;
+    // Fallback to console for server-side rendering
+    logger.info(`Toast ${type}: ${message}`);
+    return `toast-${Date.now()}`;
   };
 };
 

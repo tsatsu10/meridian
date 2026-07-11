@@ -707,7 +707,7 @@ export default function AllTasksPage() {
       if (prev.includes(taskId)) {
         return prev.filter((id) => id !== taskId);
       }
-        return [...prev, taskId];
+      return [...prev, taskId];
     });
   };
 

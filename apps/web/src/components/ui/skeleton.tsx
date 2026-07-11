@@ -237,7 +237,12 @@ export function ErrorState({
   return (
     <div className="text-center py-12">
       <div className="mx-auto h-12 w-12 text-red-400">
-        <svg aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          aria-hidden="true"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -253,7 +258,8 @@ export function ErrorState({
       {(onRetry || action) && (
         <div className="mt-6">
           {onRetry && (
-            <button type="button"
+            <button
+              type="button"
               onClick={onRetry}
               className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >

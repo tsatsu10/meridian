@@ -88,9 +88,9 @@ export function createSecurityMiddleware() {
     c.header("X-Request-ID", requestId);
 
     // Add security headers
-    Object.entries(securityConfig.headers).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(securityConfig.headers)) {
       c.header(key, value);
-    });
+    }
 
     // Add CORS headers
     const origin = c.req.header("origin");

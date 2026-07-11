@@ -310,30 +310,30 @@ class LogAggregationService extends EventEmitter {
     if (options.format === "json") {
       return JSON.stringify(filteredLogs, null, 2);
     }
-      // CSV format
-      const headers = [
-        "timestamp",
-        "level",
-        "category",
-        "message",
-        "duration",
-        "userId",
-        "endpoint",
-        "statusCode",
-      ];
-      const csvRows = [headers.join(",")];
+    // CSV format
+    const headers = [
+      "timestamp",
+      "level",
+      "category",
+      "message",
+      "duration",
+      "userId",
+      "endpoint",
+      "statusCode",
+    ];
+    const csvRows = [headers.join(",")];
 
-      filteredLogs.forEach((log) => {
-        const row = headers.map((header) => {
-          const value = log[header as keyof LogMetrics];
-          return typeof value === "string"
-            ? `"${value.replace(/"/g, '""')}"`
-            : value || "";
-        });
-        csvRows.push(row.join(","));
+    for (const log of filteredLogs) {
+      const row = headers.map((header) => {
+        const value = log[header as keyof LogMetrics];
+        return typeof value === "string"
+          ? `"${value.replace(/"/g, '""')}"`
+          : value || "";
       });
+      csvRows.push(row.join(","));
+    }
 
-      return csvRows.join("\n");
+    return csvRows.join("\n");
   }
 
   /**

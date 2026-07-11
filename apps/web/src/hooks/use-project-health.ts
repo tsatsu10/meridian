@@ -91,7 +91,8 @@ export function useProjectHealth(
         label: "On Track",
         score,
       };
-    }if (score >= 40 && overdueRate < 30) {
+    }
+    if (score >= 40 && overdueRate < 30) {
       return {
         health: "at-risk" as ProjectHealth,
         color: "text-yellow-600 dark:text-yellow-400",
@@ -101,14 +102,14 @@ export function useProjectHealth(
         score,
       };
     }
-      return {
-        health: "delayed" as ProjectHealth,
-        color: "text-red-600 dark:text-red-400",
-        bgColor: "bg-red-100 dark:bg-red-900/20",
-        icon: "!",
-        label: "Delayed",
-        score,
-      };
+    return {
+      health: "delayed" as ProjectHealth,
+      color: "text-red-600 dark:text-red-400",
+      bgColor: "bg-red-100 dark:bg-red-900/20",
+      icon: "!",
+      label: "Delayed",
+      score,
+    };
   }, [project]);
 }
 

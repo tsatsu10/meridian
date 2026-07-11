@@ -120,7 +120,9 @@ class SettingsCache {
       0,
       this.cache.size - CACHE_CONFIG.MAX_ENTRIES,
     );
-    toRemove.forEach(([key]) => this.cache.delete(key));
+    for (const [key] of toRemove) {
+      this.cache.delete(key);
+    }
   }
 
   private saveToStorage(): void {
@@ -487,11 +489,11 @@ export class SettingsAPI {
     } = {},
   ): Promise<{ logs: SettingsAuditLog[]; total: number }> {
     const params = new URLSearchParams();
-    Object.entries(options).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(options)) {
       if (value !== undefined) {
         params.append(key, String(value));
       }
-    });
+    }
 
     const response = await apiRequest<{
       logs: SettingsAuditLog[];

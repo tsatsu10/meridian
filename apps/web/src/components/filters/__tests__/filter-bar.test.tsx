@@ -95,7 +95,11 @@ function FilterBar({
       )}
 
       {hasActiveFilters && (
-        <button type="button" onClick={clearFilters} aria-label="Clear all filters">
+        <button
+          type="button"
+          onClick={clearFilters}
+          aria-label="Clear all filters"
+        >
           Clear Filters
         </button>
       )}
@@ -266,9 +270,9 @@ describe("Filter Bar Component", () => {
 
     // All checkboxes should have labels
     const checkboxes = screen.getAllByRole("checkbox");
-    checkboxes.forEach((checkbox) => {
+    for (const checkbox of checkboxes) {
       expect(checkbox).toHaveAccessibleName();
-    });
+    }
   });
 
   it("should handle rapid filter changes", async () => {

@@ -126,13 +126,13 @@ describe.skipIf(!dbAvailable)("Authentication Flow", () => {
         "user name@example.com",
       ];
 
-      validEmails.forEach((email) => {
+      for (const email of validEmails) {
         expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-      });
+      }
 
-      invalidEmails.forEach((email) => {
+      for (const email of invalidEmails) {
         expect(email).not.toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-      });
+      }
     });
   });
 

@@ -29,7 +29,7 @@ export default function TimelineView({
       unscheduled: [] as EnhancedTask[],
     };
 
-    tasks.forEach((task) => {
+    for (const task of tasks) {
       const dueDate = task.dueDate ? new Date(task.dueDate) : null;
 
       if (!dueDate) {
@@ -45,7 +45,7 @@ export default function TimelineView({
       } else {
         groups.future.push(task);
       }
-    });
+    }
 
     return groups;
   }, [tasks]);

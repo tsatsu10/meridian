@@ -47,7 +47,7 @@ async function getTasks(projectId: string) {
   const allColumns: StatusColumn[] = [...DEFAULT_COLUMNS];
 
   // Add custom columns that aren't defaults
-  customColumns.forEach((customCol) => {
+  for (const customCol of customColumns) {
     if (!customCol.isDefault) {
       allColumns.push({
         id: customCol.id,
@@ -58,7 +58,7 @@ async function getTasks(projectId: string) {
         isDefault: false,
       });
     }
-  });
+  }
 
   // Sort by position
   allColumns.sort((a, b) => a.position - b.position);
@@ -119,9 +119,9 @@ async function getTasks(projectId: string) {
   >();
 
   // Initialize dependency arrays for all tasks
-  taskIds.forEach((taskId) => {
+  for (const taskId of taskIds) {
     dependencyMap.set(taskId, { dependencies: [], blockedBy: [] });
-  });
+  }
 
   // Populate dependency relationships with related task information (temporarily disabled)
   // Will be re-enabled once TypeScript issues are resolved
@@ -132,7 +132,7 @@ async function getTasks(projectId: string) {
     const rootTasks: any[] = [];
 
     // First pass: create task map with dependencies
-    taskList.forEach((task: any) => {
+    for (const task of taskList) {
       const taskDeps = dependencyMap.get(task.id) || {
         dependencies: [],
         blockedBy: [],
@@ -143,10 +143,10 @@ async function getTasks(projectId: string) {
         dependencies: taskDeps.dependencies,
         blockedBy: taskDeps.blockedBy,
       });
-    });
+    }
 
     // Second pass: build hierarchy
-    taskList.forEach((task: any) => {
+    for (const task of taskList) {
       const taskWithSubtasks = taskMap.get(task.id);
       if (task.parentId && taskMap.has(task.parentId)) {
         const parent = taskMap.get(task.parentId);
@@ -154,7 +154,7 @@ async function getTasks(projectId: string) {
       } else {
         rootTasks.push(taskWithSubtasks);
       }
-    });
+    }
 
     // Third pass: calculate progress for parent tasks
     const calculateProgress = (task: any): any => {

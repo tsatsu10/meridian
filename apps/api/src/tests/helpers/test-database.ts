@@ -166,18 +166,18 @@ export function resetMockDb(mockDb: ReturnType<typeof createMockDb>) {
   // Reset select results
   mockDb.__setSelectResults();
 
-  Object.values(mockDb).forEach((method) => {
+  for (const method of Object.values(mockDb)) {
     if (typeof method === "function" && "mockClear" in method) {
       method.mockClear();
     }
-  });
+  }
 
   // Reset query methods
-  Object.values(mockDb.query).forEach((table) => {
-    Object.values(table).forEach((method) => {
+  for (const table of Object.values(mockDb.query)) {
+    for (const method of Object.values(table)) {
       if (typeof method === "function" && "mockClear" in method) {
         method.mockClear();
       }
-    });
-  });
+    }
+  }
 }

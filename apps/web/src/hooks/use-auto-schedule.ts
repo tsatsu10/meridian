@@ -22,7 +22,7 @@ export function useAutoSchedule(tasks: TaskWithSubtasks[]) {
     const scheduledMap = new Map<string, ScheduledTask>();
 
     // Convert tasks to schedulable format
-    tasks.forEach((task) => {
+    for (const task of tasks) {
       const defaultDuration =
         task.priority === "urgent"
           ? 1
@@ -57,7 +57,7 @@ export function useAutoSchedule(tasks: TaskWithSubtasks[]) {
       };
 
       taskMap.set(task.id, scheduledTask);
-    });
+    }
 
     // Topological sort to handle dependencies
     const visited = new Set<string>();

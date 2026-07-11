@@ -150,13 +150,13 @@ export async function findGroupForNotification(
         if (existing.groupId) {
           return existing.groupId;
         }
-          // Create a new group ID and update the existing notification
-          const newGroupId = createId();
-          await db
-            .update(notifications)
-            .set({ groupId: newGroupId, isGrouped: true })
-            .where(eq(notifications.id, existing.id));
-          return newGroupId;
+        // Create a new group ID and update the existing notification
+        const newGroupId = createId();
+        await db
+          .update(notifications)
+          .set({ groupId: newGroupId, isGrouped: true })
+          .where(eq(notifications.id, existing.id));
+        return newGroupId;
       }
     }
 

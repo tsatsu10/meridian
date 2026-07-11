@@ -522,9 +522,9 @@ describe.skip("Performance Monitoring System", () => {
         PerformanceLevel.CRITICAL,
       ];
 
-      validLevels.forEach((level) => {
+      for (const level of validLevels) {
         expect(Object.values(PerformanceLevel)).toContain(level);
-      });
+      }
     });
 
     it("validates performance metrics", () => {

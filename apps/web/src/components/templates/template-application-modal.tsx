@@ -70,16 +70,16 @@ export function TemplateApplicationModal({
   // Extract unique roles from template
   const roles = useMemo(() => {
     const roleSet = new Set<string>();
-    template.tasks.forEach((task) => {
+    for (const task of template.tasks) {
       if (task.suggestedAssigneeRole) {
         roleSet.add(task.suggestedAssigneeRole);
       }
-      task.subtasks.forEach((subtask) => {
+      for (const subtask of task.subtasks) {
         if (subtask.suggestedAssigneeRole) {
           roleSet.add(subtask.suggestedAssigneeRole);
         }
-      });
-    });
+      }
+    }
     return Array.from(roleSet);
   }, [template]);
 

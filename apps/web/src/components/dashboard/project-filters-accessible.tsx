@@ -124,7 +124,8 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 
   return (
     <section className="border-b border-slate-200 dark:border-slate-700 last:border-b-0">
-      <button type="button"
+      <button
+        type="button"
         onClick={handleToggle}
         aria-expanded={expanded}
         aria-controls={`${id}-content`}
@@ -327,10 +328,7 @@ export const ProjectFiltersAccessible: React.FC<
   );
 
   return (
-    <nav
-      className="flex items-center gap-2"
-      aria-label="Project filters"
-    >
+    <nav className="flex items-center gap-2" aria-label="Project filters">
       {/* Live region for screen reader announcements */}
       <div
         ref={liveRegionRef}
@@ -542,7 +540,8 @@ export const ProjectFiltersAccessible: React.FC<
                 </div>
 
                 <div className="flex gap-2">
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={() => handleSortChange(sortBy, "asc")}
                     aria-pressed={sortOrder === "asc"}
                     className={cn(
@@ -554,7 +553,8 @@ export const ProjectFiltersAccessible: React.FC<
                   >
                     Ascending
                   </button>
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={() => handleSortChange(sortBy, "desc")}
                     aria-pressed={sortOrder === "desc"}
                     className={cn(

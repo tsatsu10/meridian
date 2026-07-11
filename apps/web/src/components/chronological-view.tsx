@@ -57,7 +57,7 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
     const items: TimelineItem[] = [];
 
     // Add tasks
-    tasks.forEach((task) => {
+    for (const task of tasks) {
       if (task.dueDate) {
         const date = parseISO(task.dueDate);
         if (isValid(date)) {
@@ -75,10 +75,10 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
           });
         }
       }
-    });
+    }
 
     // Add milestones
-    milestones.forEach((milestone) => {
+    for (const milestone of milestones) {
       const date = parseISO(milestone.date);
       if (isValid(date)) {
         items.push({
@@ -91,7 +91,7 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
           data: milestone,
         });
       }
-    });
+    }
 
     // Sort by date
     return items.sort((a, b) => compareAsc(a.date, b.date));
@@ -102,7 +102,7 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
     const groups: DayGroup[] = [];
     const today = new Date();
 
-    timelineItems.forEach((item) => {
+    for (const item of timelineItems) {
       const dayStart = startOfDay(item.date);
       let dayGroup = groups.find((group) => isSameDay(group.date, dayStart));
 
@@ -119,7 +119,7 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
       }
 
       dayGroup.items.push(item);
-    });
+    }
 
     return groups.sort((a, b) => compareAsc(a.date, b.date));
   }, [timelineItems]);

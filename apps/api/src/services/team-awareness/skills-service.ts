@@ -390,7 +390,9 @@ export class SkillsService {
         throw new Error("Only the skill owner can delete");
       }
 
-      await SkillsService.getDb().delete(userSkills).where(eq(userSkills.id, skillId));
+      await SkillsService.getDb()
+        .delete(userSkills)
+        .where(eq(userSkills.id, skillId));
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);

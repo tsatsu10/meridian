@@ -187,7 +187,8 @@ function UserProfile({
               <button type="button" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? "Saving..." : "Save"}
               </button>
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => {
                   setIsEditing(false);
                   setEditedUser(user);
@@ -198,7 +199,9 @@ function UserProfile({
               </button>
             </>
           ) : (
-            <button type="button" onClick={() => setIsEditing(true)}>Edit Profile</button>
+            <button type="button" onClick={() => setIsEditing(true)}>
+              Edit Profile
+            </button>
           )}
         </div>
       )}

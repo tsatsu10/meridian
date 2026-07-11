@@ -52,6 +52,7 @@ export function cacheMiddleware(options: CacheOptions = {}): MiddlewareHandler {
           // Get response
           const status = c.res.status;
           const headers: Record<string, string> = {};
+          // biome-ignore lint/complexity/noForEach: Headers is not an Array and this TS lib has no Headers iterator
           c.res.headers.forEach((value, key) => {
             headers[key] = value;
           });

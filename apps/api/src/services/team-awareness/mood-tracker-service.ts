@@ -474,11 +474,17 @@ export class MoodTrackerService {
       cacheKey,
       async () => {
         // Get average mood for last 7 days
-        const stats = await MoodTrackerService.getWorkspaceMoodStats(workspaceId, 7);
+        const stats = await MoodTrackerService.getWorkspaceMoodStats(
+          workspaceId,
+          7,
+        );
         const currentScore = stats.averageMood;
 
         // Get average mood for previous 7 days
-        const previousStats = await MoodTrackerService.getWorkspaceMoodStats(workspaceId, 14);
+        const previousStats = await MoodTrackerService.getWorkspaceMoodStats(
+          workspaceId,
+          14,
+        );
         const previousScore = previousStats.averageMood;
 
         // Determine level

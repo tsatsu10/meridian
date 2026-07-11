@@ -193,9 +193,9 @@ describe("ErrorCodes", () => {
 
   it("should have consistent error code format", () => {
     const errorCodes = Object.values(ErrorCodes);
-    errorCodes.forEach((code) => {
+    for (const code of errorCodes) {
       expect(code).toMatch(/^[A-Z_]+$/);
-    });
+    }
   });
 });
 

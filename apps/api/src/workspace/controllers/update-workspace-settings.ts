@@ -136,12 +136,12 @@ export default async function updateWorkspaceSettings(
     "customDomain",
   ];
 
-  settingsFields.forEach((field) => {
+  for (const field of settingsFields) {
     if (updates[field as keyof UpdateWorkspaceSettingsInput] !== undefined) {
       settingsUpdates[field] =
         updates[field as keyof UpdateWorkspaceSettingsInput];
     }
-  });
+  }
 
   // Get current workspace to merge settings
   const [currentWorkspace] = await db

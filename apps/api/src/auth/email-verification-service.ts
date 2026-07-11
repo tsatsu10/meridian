@@ -134,8 +134,8 @@ export class EmailVerificationService {
         logger.debug(`✅ Verification email sent to ${email}`);
         return true;
       }
-        logger.error(`❌ Failed to send verification email to ${email}`);
-        return false;
+      logger.error(`❌ Failed to send verification email to ${email}`);
+      return false;
     } catch (error) {
       logger.error("❌ Error sending verification email:", error);
       return false;
@@ -271,7 +271,7 @@ export class EmailVerificationService {
       if (sent) {
         return { success: true, message: "Verification email sent" };
       }
-        return { success: false, message: "Failed to send verification email" };
+      return { success: false, message: "Failed to send verification email" };
     } catch (error) {
       logger.error("❌ Error resending verification email:", error);
       return { success: false, message: "Failed to resend verification email" };

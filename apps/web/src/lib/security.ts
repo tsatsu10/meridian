@@ -307,11 +307,11 @@ export const secureStorage = {
    */
   clear() {
     const keys = Object.keys(localStorage);
-    keys.forEach((key) => {
+    for (const key of keys) {
       if (key.startsWith("_sec_")) {
         localStorage.removeItem(key);
       }
-    });
+    }
   },
 };
 

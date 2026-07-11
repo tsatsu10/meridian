@@ -80,10 +80,10 @@ describe("Health Calculator Functions", () => {
     it("should always produce scores between 0-100", () => {
       const validScores = [0, 25, 50, 75, 100, 42, 88, 15];
 
-      validScores.forEach((score) => {
+      for (const score of validScores) {
         expect(score).toBeGreaterThanOrEqual(0);
         expect(score).toBeLessThanOrEqual(100);
-      });
+      }
     });
 
     it("should handle extreme values", () => {

@@ -73,23 +73,25 @@ export function DependencyGraph({
     };
 
     // Calculate levels for all items
-    allItems.forEach((item) => calculateLevel(item.id));
+    for (const item of allItems) {
+      calculateLevel(item.id);
+    }
 
     // Group nodes by level
     const levelGroups = new Map<number, string[]>();
-    allItems.forEach((item) => {
+    for (const item of allItems) {
       const level = levels.get(item.id) || 0;
       if (!levelGroups.has(level)) {
         levelGroups.set(level, []);
       }
       levelGroups.get(level)?.push(item.id);
-    });
+    }
 
     // Position nodes
     const levelWidth = 250;
     const levelHeight = 100;
 
-    allItems.forEach((item) => {
+    for (const item of allItems) {
       const level = levels.get(item.id) || 0;
       const itemsInLevel = levelGroups.get(level) || [];
       const indexInLevel = itemsInLevel.indexOf(item.id);
@@ -104,17 +106,17 @@ export function DependencyGraph({
         x: level * levelWidth,
         y: indexInLevel * levelHeight,
       });
-    });
+    }
 
     // Build edges
     const edges: Array<{ from: string; to: string }> = [];
-    allItems.forEach((item) => {
+    for (const item of allItems) {
       if (item.dependencies) {
-        item.dependencies.forEach((depId: string) => {
+        for (const depId of item.dependencies) {
           edges.push({ from: depId, to: item.id });
-        });
+        }
       }
-    });
+    }
 
     // Find focus node and its related nodes
     let focusNode: DependencyNode | null = null;
@@ -130,24 +132,22 @@ export function DependencyGraph({
         const addAncestors = (id: string) => {
           const node = nodeMap.get(id);
           if (node) {
-            node.dependencies.forEach((depId) => {
+            for (const depId of node.dependencies) {
               if (!relatedIds.has(depId)) {
                 relatedIds.add(depId);
                 addAncestors(depId);
               }
-            });
+            }
           }
         };
 
         const addDescendants = (id: string) => {
-          edges
-            .filter((e) => e.from === id)
-            .forEach((edge) => {
-              if (!relatedIds.has(edge.to)) {
-                relatedIds.add(edge.to);
-                addDescendants(edge.to);
-              }
-            });
+          for (const edge of edges.filter((e) => e.from === id)) {
+            if (!relatedIds.has(edge.to)) {
+              relatedIds.add(edge.to);
+              addDescendants(edge.to);
+            }
+          }
         };
 
         addAncestors(focusId);
@@ -244,7 +244,8 @@ export function DependencyGraph({
           className="relative overflow-auto border rounded-lg bg-muted/20"
           style={{ maxHeight: "600px" }}
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             width="100%"
             height="600"
             viewBox={`0 0 ${maxX} ${maxY}`}

@@ -389,7 +389,7 @@ function ProjectOverview() {
   const teamMembers: TeamMember[] = useMemo(() => {
     if (!allTasks.length) return [];
     const memberMap = new Map();
-    allTasks.forEach((task: any) => {
+    for (const task of allTasks) {
       if (task.userEmail) {
         const memberEmail = task.userEmail;
         const user = users?.find((u: any) => u.userEmail === memberEmail);
@@ -412,7 +412,7 @@ function ProjectOverview() {
           member.completedTasks++;
         }
       }
-    });
+    }
 
     return Array.from(memberMap.values())
       .map((member: any) => ({

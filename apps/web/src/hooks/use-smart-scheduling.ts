@@ -24,7 +24,7 @@ export function useSmartScheduling({
 
     // 1. Find best meeting times
     const bestMeetingTimes = findBestMeetingTimes(memberSchedules);
-    bestMeetingTimes.forEach((time, index) => {
+    for (const [index, time] of bestMeetingTimes.entries()) {
       smartSuggestions.push({
         id: `best-time-${index}`,
         type: "best-time",
@@ -37,11 +37,11 @@ export function useSmartScheduling({
         confidence: (time.availableCount / teamSize) * 100,
         reasoning: `Based on team availability and workload patterns. ${time.availableCount} out of ${teamSize} members are free with optimal energy levels.`,
       });
-    });
+    }
 
     // 2. Detect workload imbalance
     const imbalances = detectWorkloadImbalance(memberSchedules);
-    imbalances.forEach((imbalance, index) => {
+    for (const [index, imbalance] of imbalances.entries()) {
       smartSuggestions.push({
         id: `balance-${index}`,
         type: "load-balance",
@@ -55,10 +55,10 @@ export function useSmartScheduling({
         confidence: 85,
         reasoning: imbalance.reasoning,
       });
-    });
+    }
 
     // 3. Break reminders for overworked members
-    memberSchedules.forEach((schedule) => {
+    for (const schedule of memberSchedules) {
       if (schedule.workload > 85 && schedule.hoursScheduled > 6) {
         const breakSuggestion = findBreakTime(schedule);
         if (breakSuggestion) {
@@ -77,7 +77,7 @@ export function useSmartScheduling({
           });
         }
       }
-    });
+    }
 
     // 4. Deadline risk warnings
     const upcomingDeadlines = events.filter(
@@ -87,7 +87,7 @@ export function useSmartScheduling({
         e.startDate <= addDays(new Date(), 7),
     );
 
-    upcomingDeadlines.forEach((deadline) => {
+    for (const deadline of upcomingDeadlines) {
       const assignees = memberSchedules.filter((s) =>
         deadline.attendees.includes(s.memberId),
       );
@@ -106,11 +106,11 @@ export function useSmartScheduling({
           reasoning: `${highWorkloadAssignees.length} assigned members are already at >80% capacity. Consider reassigning or extending the deadline.`,
         });
       }
-    });
+    }
 
     // 5. Resource conflicts
     const resourceConflicts = detectResourceConflicts(events, memberSchedules);
-    resourceConflicts.forEach((conflict, index) => {
+    for (const [index, conflict] of resourceConflicts.entries()) {
       smartSuggestions.push({
         id: `resource-${index}`,
         type: "resource-conflict",
@@ -121,7 +121,7 @@ export function useSmartScheduling({
         confidence: 95,
         reasoning: conflict.reasoning,
       });
-    });
+    }
 
     // Sort by priority and confidence
     return smartSuggestions.sort((a, b) => {
@@ -178,7 +178,7 @@ function findBestMeetingTimes(memberSchedules: MemberSchedule[]) {
     const checkDate = addDays(new Date(), dayOffset);
 
     // Check common meeting times: 9 AM, 10 AM, 2 PM, 3 PM
-    ["09:00", "10:00", "14:00", "15:00"].forEach((timeSlot) => {
+    for (const timeSlot of ["09:00", "10:00", "14:00", "15:00"]) {
       const [hours, minutes] = timeSlot.split(":").map(Number);
       const checkDateTime = new Date(checkDate);
       checkDateTime.setHours(hours, minutes, 0, 0);
@@ -203,7 +203,7 @@ function findBestMeetingTimes(memberSchedules: MemberSchedule[]) {
           availableMembers: availableMembers.map((m) => m.memberId),
         });
       }
-    });
+    }
   }
 
   // Return top 3 times with most availability
@@ -222,7 +222,7 @@ function detectWorkloadImbalance(memberSchedules: MemberSchedule[]) {
   const overloaded = memberSchedules.filter((s) => s.workload > 85);
   const underutilized = memberSchedules.filter((s) => s.workload < 50);
 
-  overloaded.forEach((over) => {
+  for (const over of overloaded) {
     const under = underutilized[0]; // Pick first underutilized member
     if (under) {
       imbalances.push({
@@ -233,7 +233,7 @@ function detectWorkloadImbalance(memberSchedules: MemberSchedule[]) {
         reasoning: `Consider redistributing some tasks from ${over.memberName} to ${under.memberName} to balance team workload.`,
       });
     }
-  });
+  }
 
   return imbalances;
 }
@@ -272,7 +272,7 @@ function detectResourceConflicts(
   }> = [];
 
   // Check for key members being double-booked
-  memberSchedules.forEach((schedule) => {
+  for (const schedule of memberSchedules) {
     if (schedule.role.includes("lead") || schedule.role.includes("manager")) {
       const overlappingEvents = schedule.events.filter((e1, i, arr) =>
         arr.some(
@@ -293,7 +293,7 @@ function detectResourceConflicts(
         });
       }
     }
-  });
+  }
 
   return conflicts;
 }

@@ -157,12 +157,14 @@ function getStatusColumnsFromProjects(
   ];
 
   // Add default columns
-  defaultColumns.forEach((col) => columnMap.set(col.id, col));
+  for (const col of defaultColumns) {
+    columnMap.set(col.id, col);
+  }
 
   // Add custom columns from projects with their positions
   let customColumnCounter = 0;
-  projects?.forEach((project) => {
-    project.columns?.forEach((column) => {
+  for (const project of projects ?? []) {
+    for (const column of project.columns ?? []) {
       if (!column.isDefault && !columnMap.has(column.id)) {
         // also check if column already exists
         columnMap.set(column.id, {
@@ -173,13 +175,13 @@ function getStatusColumnsFromProjects(
           position: 4 + customColumnCounter++, // Incrementing position
         });
       }
-    });
-  });
+    }
+  }
 
   // Add any status found in tasks that's not in columns (for data consistency)
   const taskStatuses = new Set(tasks.map((task) => task.status));
   let unknownStatusCounter = 0;
-  taskStatuses.forEach((status) => {
+  for (const status of taskStatuses) {
     if (!columnMap.has(status)) {
       columnMap.set(status, {
         id: status,
@@ -192,7 +194,7 @@ function getStatusColumnsFromProjects(
         position: 100 + unknownStatusCounter++, // Put unknown statuses at the end
       });
     }
-  });
+  }
 
   return Array.from(columnMap.values()).sort((a, b) => {
     // Sort by position, with defaults first

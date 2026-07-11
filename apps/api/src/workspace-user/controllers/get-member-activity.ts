@@ -153,7 +153,7 @@ export async function getMemberActivity(c: Context) {
     }
 
     // Count activities per day
-    activities.forEach((activity) => {
+    for (const activity of activities) {
       if (activity.createdAt) {
         const dateKey =
           new Date(activity.createdAt).toISOString().split("T")[0] ?? "";
@@ -161,10 +161,10 @@ export async function getMemberActivity(c: Context) {
           contributionMap.set(dateKey, contributionMap.get(dateKey)! + 1);
         }
       }
-    });
+    }
 
     // Count time entries per day
-    timeEntries.forEach((entry) => {
+    for (const entry of timeEntries) {
       if (entry.startTime) {
         const dateKey =
           new Date(entry.startTime).toISOString().split("T")[0] ?? "";
@@ -173,7 +173,7 @@ export async function getMemberActivity(c: Context) {
           contributionMap.set(dateKey, contributionMap.get(dateKey)! + hours);
         }
       }
-    });
+    }
 
     const contributionGraph = Array.from(contributionMap.entries())
       .map(([date, count]) => ({ date, count }))

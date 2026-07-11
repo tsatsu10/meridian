@@ -66,10 +66,7 @@ export default function NotificationSection({
             <p className="text-sm">No recent activity</p>
           </div>
         ) : (
-          <ul
-            className="space-y-3"
-            aria-label="Recent notifications"
-          >
+          <ul className="space-y-3" aria-label="Recent notifications">
             {recentNotifications.map((notification, index) => (
               <li
                 key={`${notification.id}-${index}`}

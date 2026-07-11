@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
+// layout-shift entries aren't in TypeScript's DOM lib yet.
+interface LayoutShiftEntry extends PerformanceEntry {
+  hadRecentInput: boolean;
+  value: number;
+}
+
 export interface PerformanceMetrics {
   // Core Web Vitals
   lcp?: number; // Largest Contentful Paint
@@ -72,10 +78,10 @@ export function usePerformanceMonitoring(
       // First Input Delay
       try {
         const fidObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach((entry: any) => {
+          const entries = list.getEntries() as PerformanceEventTiming[];
+          for (const entry of entries) {
             updateMetrics({ fid: entry.processingStart - entry.startTime });
-          });
+          }
         });
         fidObserver.observe({ entryTypes: ["first-input"] });
       } catch (e) {
@@ -86,12 +92,12 @@ export function usePerformanceMonitoring(
       try {
         const clsObserver = new PerformanceObserver((list) => {
           let clsValue = 0;
-          const entries = list.getEntries();
-          entries.forEach((entry: any) => {
+          const entries = list.getEntries() as LayoutShiftEntry[];
+          for (const entry of entries) {
             if (!entry.hadRecentInput) {
               clsValue += entry.value;
             }
-          });
+          }
           updateMetrics({ cls: clsValue });
         });
         clsObserver.observe({ entryTypes: ["layout-shift"] });
@@ -103,11 +109,11 @@ export function usePerformanceMonitoring(
       try {
         const fcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          entries.forEach((entry: any) => {
+          for (const entry of entries) {
             if (entry.name === "first-contentful-paint") {
               updateMetrics({ fcp: entry.startTime });
             }
-          });
+          }
         });
         fcpObserver.observe({ entryTypes: ["paint"] });
       } catch (e) {
@@ -119,8 +125,8 @@ export function usePerformanceMonitoring(
     if (enableResourceTiming) {
       try {
         const resourceObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach((entry: any) => {
+          const entries = list.getEntries() as PerformanceResourceTiming[];
+          for (const entry of entries) {
             const loadTime = entry.responseEnd - entry.requestStart;
 
             if (entry.name.endsWith(".js")) {
@@ -130,7 +136,7 @@ export function usePerformanceMonitoring(
             } else if (entry.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
               updateMetrics({ imageLoadTime: loadTime });
             }
-          });
+          }
         });
         resourceObserver.observe({ entryTypes: ["resource"] });
       } catch (e) {

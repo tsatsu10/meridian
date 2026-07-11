@@ -140,12 +140,12 @@ function RouteComponent() {
     const rootTasks: Task[] = [];
 
     // First pass: create task map
-    flatTasks.forEach((task) => {
+    for (const task of flatTasks) {
       taskMap.set(task.id, { ...task, subtasks: [] });
-    });
+    }
 
     // Second pass: build hierarchy
-    flatTasks.forEach((task) => {
+    for (const task of flatTasks) {
       const taskWithSubtasks = taskMap.get(task.id);
       if (task.parentId && taskMap.has(task.parentId)) {
         const parent = taskMap.get(task.parentId);
@@ -153,7 +153,7 @@ function RouteComponent() {
       } else {
         rootTasks.push(taskWithSubtasks);
       }
-    });
+    }
 
     return rootTasks;
   };
@@ -344,7 +344,8 @@ function RouteComponent() {
                 size="sm"
                 className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
               >
-                <svg aria-hidden="true"
+                <svg
+                  aria-hidden="true"
                   className="w-3 h-3 sm:w-4 sm:h-4"
                   fill="none"
                   stroke="currentColor"
@@ -371,10 +372,7 @@ function RouteComponent() {
         {/* @mcp-future: Context7 for smart search, TaskMaster AI for quick actions, Exa for global search */}
 
         {/* 🔊 ACCESSIBILITY: Main content area with proper ARIA labels */}
-        <main
-          className="flex-1 overflow-hidden"
-          aria-label="Task board view"
-        >
+        <main className="flex-1 overflow-hidden" aria-label="Task board view">
           {/* Show empty state when appropriate */}
           {totalTasks === 0 ? (
             <BoardEmptyState

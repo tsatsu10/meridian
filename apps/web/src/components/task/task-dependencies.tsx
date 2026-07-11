@@ -222,7 +222,8 @@ function AddDependency({
           </div>
         ) : (
           availableTasks.map((task: any) => (
-            <button type="button"
+            <button
+              type="button"
               key={task.id}
               onClick={() => handleAddDependency(task.id)}
               disabled={isPending}

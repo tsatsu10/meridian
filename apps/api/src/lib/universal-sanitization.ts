@@ -138,13 +138,13 @@ export function containsDangerousContent(text: string): {
   const matchedPatterns: string[] = [];
 
   // Check all pattern categories
-  Object.entries(DANGEROUS_PATTERNS).forEach(([category, patterns]) => {
-    patterns.forEach((pattern, index) => {
+  for (const [category, patterns] of Object.entries(DANGEROUS_PATTERNS)) {
+    for (const [index, pattern] of patterns.entries()) {
       if (pattern.test(text)) {
         matchedPatterns.push(`${category}[${index}]`);
       }
-    });
-  });
+    }
+  }
 
   return {
     isDangerous: matchedPatterns.length > 0,
@@ -183,11 +183,9 @@ export function sanitizeText(
     });
 
     // Remove ALL dangerous patterns
-    Object.values(DANGEROUS_PATTERNS)
-      .flat()
-      .forEach((pattern) => {
-        sanitized = sanitized.replace(pattern, "[removed]");
-      });
+    for (const pattern of Object.values(DANGEROUS_PATTERNS).flat()) {
+      sanitized = sanitized.replace(pattern, "[removed]");
+    }
   }
 
   // Strip HTML if requested
@@ -239,11 +237,9 @@ export function sanitizeRichText(
     });
 
     // Remove dangerous patterns
-    Object.values(DANGEROUS_PATTERNS)
-      .flat()
-      .forEach((pattern) => {
-        sanitized = sanitized.replace(pattern, "[removed]");
-      });
+    for (const pattern of Object.values(DANGEROUS_PATTERNS).flat()) {
+      sanitized = sanitized.replace(pattern, "[removed]");
+    }
   }
 
   // For now, strip ALL HTML to be safe
@@ -434,16 +430,16 @@ export function sanitizeObject(
 
   const sanitized: any = {};
 
-  Object.keys(obj).forEach((key) => {
+  for (const key of Object.keys(obj)) {
     // Skip dangerous keys
     if (key.startsWith("__") || key.startsWith("$")) {
       logger.warn("Dangerous object key blocked", { key });
-      return;
+      continue;
     }
 
     // Check allowed keys if specified
     if (allowedKeys && !allowedKeys.includes(key)) {
-      return;
+      continue;
     }
 
     const value = obj[key];
@@ -458,7 +454,7 @@ export function sanitizeObject(
     } else {
       sanitized[key] = value;
     }
-  });
+  }
 
   return sanitized;
 }

@@ -21,9 +21,9 @@ describe("Validation Middleware", () => {
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      validEmails.forEach((email) => {
+      for (const email of validEmails) {
         expect(emailRegex.test(email)).toBe(true);
-      });
+      }
     });
 
     it("should reject invalid email addresses", () => {
@@ -36,9 +36,9 @@ describe("Validation Middleware", () => {
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      invalidEmails.forEach((email) => {
+      for (const email of invalidEmails) {
         expect(emailRegex.test(email)).toBe(false);
-      });
+      }
     });
   });
 
@@ -98,10 +98,10 @@ describe("Validation Middleware", () => {
     it("should accept valid workspace names", () => {
       const validNames = ["My Workspace", "Team-2025", "Project_Alpha"];
 
-      validNames.forEach((name) => {
+      for (const name of validNames) {
         expect(name.length).toBeGreaterThan(0);
         expect(name.length).toBeLessThanOrEqual(100);
-      });
+      }
     });
 
     it("should reject empty names", () => {

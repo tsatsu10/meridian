@@ -645,9 +645,9 @@ describe.skip("Authentication Flow Integration Tests", () => {
         .where(eq(sessionTable.userId, testUserId));
 
       // All remaining sessions should be valid
-      remainingSessions.forEach((session) => {
+      for (const session of remainingSessions) {
         expect(session.expiresAt.getTime()).toBeGreaterThanOrEqual(Date.now());
-      });
+      }
     });
   });
 

@@ -235,7 +235,8 @@ export function TimelineView({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <button type="button"
+                            <button
+                              type="button"
                               className={cn(
                                 "absolute top-1/2 -translate-y-1/2 rounded-lg border-2 transition-all",
                                 "flex items-center justify-between px-3 py-2",

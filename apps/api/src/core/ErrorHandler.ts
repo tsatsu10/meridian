@@ -160,7 +160,7 @@ export class ErrorHandler {
     // Handle network errors
     if (
       error.name === "NetworkError" ||
-      (error.message?.includes("ECONNREFUSED"))
+      error.message?.includes("ECONNREFUSED")
     ) {
       return APIResponseBuilder.error(
         ErrorCodes.EXTERNAL_SERVICE_ERROR,

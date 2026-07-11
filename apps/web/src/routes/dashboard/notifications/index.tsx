@@ -452,7 +452,7 @@ function NotificationsPanel() {
 
     const groups: Record<string, any[]> = {};
 
-    filteredNotifications.forEach((notification) => {
+    for (const notification of filteredNotifications) {
       let groupKey = "";
 
       switch (groupBy) {
@@ -484,7 +484,7 @@ function NotificationsPanel() {
         groups[groupKey] = [];
       }
       groups[groupKey].push(notification);
-    });
+    }
 
     return Object.entries(groups).map(([title, notifications]) => ({
       title,

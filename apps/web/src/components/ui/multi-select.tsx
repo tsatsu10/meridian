@@ -95,7 +95,8 @@ export function MultiSelect({
                 >
                   {OptionIcon && <OptionIcon className="h-3 w-3" />}
                   {option.label}
-                  <button type="button"
+                  <button
+                    type="button"
                     className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {

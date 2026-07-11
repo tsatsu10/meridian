@@ -57,7 +57,7 @@ function analyzeBundle() {
   function getFiles(dir, fileList = []) {
     const files = readdirSync(dir);
 
-    files.forEach((file) => {
+    for (const file of files) {
       const filePath = join(dir, file);
       const stat = statSync(filePath);
 
@@ -91,7 +91,7 @@ function analyzeBundle() {
 
         fileList.push(fileData);
       }
-    });
+    }
 
     return fileList;
   }
@@ -121,9 +121,9 @@ function analyzeBundle() {
     console.log(
       `🔴 CRITICAL (>${THRESHOLDS.CRITICAL}KB): ${results.chunks.critical.length} files`,
     );
-    results.chunks.critical.forEach((file) => {
+    for (const file of results.chunks.critical) {
       console.log(`   ${file.path.substring(1)}: ${file.sizeKB} KB`);
-    });
+    }
     console.log("");
   }
 
@@ -132,9 +132,9 @@ function analyzeBundle() {
     console.log(
       `🟡 WARNING (${THRESHOLDS.OK}-${THRESHOLDS.CRITICAL}KB): ${results.chunks.warning.length} files`,
     );
-    results.chunks.warning.slice(0, 10).forEach((file) => {
+    for (const file of results.chunks.warning.slice(0, 10)) {
       console.log(`   ${file.path.substring(1)}: ${file.sizeKB} KB`);
-    });
+    }
     if (results.chunks.warning.length > 10) {
       console.log(`   ... and ${results.chunks.warning.length - 10} more`);
     }

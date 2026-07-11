@@ -90,7 +90,8 @@ function KanbanColumn({
         >
           {column.tasks.length}
         </span>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setIsAddingTask(true)}
           aria-label={`Add task to ${column.title}`}
         >
@@ -108,8 +109,12 @@ function KanbanColumn({
             placeholder="Enter task title..."
             aria-label="New task title"
           />
-          <button type="button" onClick={handleAddTask}>Add</button>
-          <button type="button" onClick={() => setIsAddingTask(false)}>Cancel</button>
+          <button type="button" onClick={handleAddTask}>
+            Add
+          </button>
+          <button type="button" onClick={() => setIsAddingTask(false)}>
+            Cancel
+          </button>
         </div>
       )}
 

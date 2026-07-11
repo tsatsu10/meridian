@@ -366,21 +366,21 @@ export class Validator {
         },
       ]);
     }
-      return data.map((item, index) => {
-        try {
-          return itemSchema.parse(item);
-        } catch (error) {
-          if (error instanceof z.ZodError) {
-            const details = error.errors.map((err) => ({
-              field: `[${index}].${err.path.join(".")}`,
-              message: err.message,
-              code: err.code,
-            }));
-            throw new ValidationError("Validation failed", details);
-          }
-          throw error;
+    return data.map((item, index) => {
+      try {
+        return itemSchema.parse(item);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const details = error.errors.map((err) => ({
+            field: `[${index}].${err.path.join(".")}`,
+            message: err.message,
+            code: err.code,
+          }));
+          throw new ValidationError("Validation failed", details);
         }
-      });
+        throw error;
+      }
+    });
   }
 
   static validateObject<T>(
@@ -401,22 +401,22 @@ export class Validator {
     // Validate each value in the object
     const obj = data as Record<string, unknown>;
     const result: Record<string, T> = {};
-      for (const [key, value] of Object.entries(obj)) {
-        try {
-          result[key] = valueSchema.parse(value);
-        } catch (error) {
-          if (error instanceof z.ZodError) {
-            const details = error.errors.map((err) => ({
-              field: `${key}.${err.path.join(".")}`,
-              message: err.message,
-              code: err.code,
-            }));
-            throw new ValidationError("Validation failed", details);
-          }
-          throw error;
+    for (const [key, value] of Object.entries(obj)) {
+      try {
+        result[key] = valueSchema.parse(value);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const details = error.errors.map((err) => ({
+            field: `${key}.${err.path.join(".")}`,
+            message: err.message,
+            code: err.code,
+          }));
+          throw new ValidationError("Validation failed", details);
         }
+        throw error;
       }
-      return result;
+    }
+    return result;
   }
 }
 

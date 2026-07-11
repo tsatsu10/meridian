@@ -1216,7 +1216,8 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="bg-background rounded-xl border shadow-sm overflow-hidden"
               >
-                <button type="button"
+                <button
+                  type="button"
                   onClick={() =>
                     setOpenFaqIndex(openFaqIndex === index ? null : index)
                   }

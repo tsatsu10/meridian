@@ -219,7 +219,8 @@ function FileUpload({
                 )}
               </div>
 
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => onRemove?.(file.id)}
                 aria-label={`Remove ${file.name}`}
                 className="remove-button"

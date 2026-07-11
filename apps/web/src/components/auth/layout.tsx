@@ -95,13 +95,22 @@ export function AuthLayout({
           {/* Placeholder actions until these pages exist — buttons, not
               href="#" anchors that hijack navigation */}
           <div className="flex items-center space-x-4 text-sm">
-            <button type="button" className="hover:text-white transition-colors">
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               Terms
             </button>
-            <button type="button" className="hover:text-white transition-colors">
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               Plans
             </button>
-            <button type="button" className="hover:text-white transition-colors">
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               Contact Us
             </button>
           </div>

@@ -370,13 +370,13 @@ export const useSettingsStore = create<SettingsStore>()(
               toast.error(`Validation failed: ${errors[0].message}`);
               return;
             }
-              // Clear validation errors for this section
-              set((state) => ({
-                validationErrors: {
-                  ...state.validationErrors,
-                  [section]: [],
-                },
-              }));
+            // Clear validation errors for this section
+            set((state) => ({
+              validationErrors: {
+                ...state.validationErrors,
+                [section]: [],
+              },
+            }));
           } catch (error) {
             console.error("Validation failed:", error);
             // Continue with update but show warning
@@ -566,7 +566,7 @@ export const useSettingsStore = create<SettingsStore>()(
               },
             };
           }
-            return { validationErrors: {} };
+          return { validationErrors: {} };
         });
       },
 

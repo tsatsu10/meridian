@@ -54,10 +54,11 @@ export class NotificationDeliveryService {
       const results: DeliveryResult[] = [];
 
       // Check if notification should be delivered based on time-based controls
-      const timingValidation = await NotificationDeliveryService.validateNotificationTiming(
-        payload.userEmail,
-        payload.priority || "medium",
-      );
+      const timingValidation =
+        await NotificationDeliveryService.validateNotificationTiming(
+          payload.userEmail,
+          payload.priority || "medium",
+        );
 
       if (!timingValidation.canSend) {
         return {
@@ -68,14 +69,16 @@ export class NotificationDeliveryService {
       }
 
       // Get user notification preferences
-      const preferences = await NotificationDeliveryService.getUserNotificationPreferences(
-        payload.userEmail,
-      );
+      const preferences =
+        await NotificationDeliveryService.getUserNotificationPreferences(
+          payload.userEmail,
+        );
 
       // Get user notification settings (the enhanced settings)
-      const settings = await NotificationDeliveryService.getUserNotificationSettings(
-        payload.userEmail,
-      );
+      const settings =
+        await NotificationDeliveryService.getUserNotificationSettings(
+          payload.userEmail,
+        );
 
       // Always create in-app notification if enabled
       if (preferences.channels?.inApp !== false && settings.inApp) {
@@ -105,11 +108,12 @@ export class NotificationDeliveryService {
       }
 
       // Check if this notification type should be sent
-      const shouldSendForType = NotificationDeliveryService.shouldSendNotificationType(
-        payload.type,
-        preferences,
-        settings,
-      );
+      const shouldSendForType =
+        NotificationDeliveryService.shouldSendNotificationType(
+          payload.type,
+          preferences,
+          settings,
+        );
 
       if (!shouldSendForType) {
         return {
@@ -121,25 +125,29 @@ export class NotificationDeliveryService {
 
       // Send email notification if enabled
       if (preferences.channels?.email !== false && settings.email) {
-        const emailResult = await NotificationDeliveryService.sendEmailNotification(
-          payload,
-          workspaceId,
-        );
+        const emailResult =
+          await NotificationDeliveryService.sendEmailNotification(
+            payload,
+            workspaceId,
+          );
         results.push(emailResult);
       }
 
       // Record analytics event
-      await NotificationDeliveryService.recordAnalyticsEvent(payload.userEmail, {
-        eventType: "sent",
-        notificationType: payload.type,
-        channel: "multi",
-        action: "deliver",
-        metadata: {
-          channelsAttempted: results.length,
-          channelsSuccessful: results.filter((r) => r.success).length,
-          priority: payload.priority,
+      await NotificationDeliveryService.recordAnalyticsEvent(
+        payload.userEmail,
+        {
+          eventType: "sent",
+          notificationType: payload.type,
+          channel: "multi",
+          action: "deliver",
+          metadata: {
+            channelsAttempted: results.length,
+            channelsSuccessful: results.filter((r) => r.success).length,
+            priority: payload.priority,
+          },
         },
-      });
+      );
 
       return {
         success: results.some((r) => r.success),
@@ -229,10 +237,7 @@ export class NotificationDeliveryService {
       }
 
       // Check work schedule
-      if (
-        workSchedule?.enabled &&
-        !workSchedule.allowOutsideHours
-      ) {
+      if (workSchedule?.enabled && !workSchedule.allowOutsideHours) {
         const currentDay = now
           .toLocaleDateString("en-US", { weekday: "long" })
           .toLowerCase();
@@ -247,10 +252,7 @@ export class NotificationDeliveryService {
 
         // Check lunch break
         let isLunchBreak = false;
-        if (
-          workSchedule.lunchBreak?.enabled &&
-          isWorkingDay
-        ) {
+        if (workSchedule.lunchBreak?.enabled && isWorkingDay) {
           isLunchBreak = NotificationDeliveryService.isTimeInRange(
             currentTime,
             workSchedule.lunchBreak.startTime,
@@ -467,6 +469,6 @@ export class NotificationDeliveryService {
     if (startMinutes > endMinutes) {
       return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
     }
-      return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+    return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
   }
 }

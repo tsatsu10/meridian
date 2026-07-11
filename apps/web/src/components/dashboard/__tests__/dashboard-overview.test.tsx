@@ -73,7 +73,9 @@ function DashboardOverview({
     return (
       <div className="dashboard-error" role="alert">
         <p>{error}</p>
-        <button type="button" onClick={handleRefresh}>Retry</button>
+        <button type="button" onClick={handleRefresh}>
+          Retry
+        </button>
       </div>
     );
   }
@@ -97,7 +99,8 @@ function DashboardOverview({
     <div className="dashboard-overview" data-testid="dashboard-overview">
       <header className="dashboard-header">
         <h1>Dashboard</h1>
-        <button type="button"
+        <button
+          type="button"
           onClick={handleRefresh}
           disabled={refreshing}
           aria-label="Refresh dashboard"
@@ -184,7 +187,8 @@ function DashboardOverview({
               >
                 <div className="widget-header">
                   <h3>{widget.title}</h3>
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={() => onWidgetToggle?.(widget.id)}
                     aria-label={`Hide ${widget.title}`}
                   >
@@ -206,8 +210,13 @@ function DashboardOverview({
       {visibleWidgets.length === 0 && widgets.length > 0 && (
         <div className="no-widgets">
           <p>All widgets are hidden</p>
-          <button type="button"
-            onClick={() => widgets.forEach((w) => onWidgetToggle?.(w.id))}
+          <button
+            type="button"
+            onClick={() => {
+              for (const w of widgets) {
+                onWidgetToggle?.(w.id);
+              }
+            }}
           >
             Show All Widgets
           </button>

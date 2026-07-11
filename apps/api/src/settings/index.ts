@@ -259,9 +259,9 @@ app.get("/:userId", async (c) => {
       privacy: {},
     };
 
-    settings.forEach((setting) => {
+    for (const setting of settings) {
       settingsObject[setting.section] = JSON.parse(setting.settings);
-    });
+    }
 
     return c.json({
       data: settingsObject,
@@ -312,14 +312,14 @@ app.patch("/:userId/:section", async (c) => {
 
     // Create audit trail
     const changes: Record<string, any> = {};
-    Object.keys(updates).forEach((key) => {
+    for (const key of Object.keys(updates)) {
       if (currentData[key] !== updates[key]) {
         changes[key] = {
           from: currentData[key],
           to: updates[key],
         };
       }
-    });
+    }
 
     // Update or insert settings
     if (currentSettings[0]) {
@@ -360,9 +360,9 @@ app.patch("/:userId/:section", async (c) => {
       privacy: {},
     };
 
-    allSettings.forEach((setting) => {
+    for (const setting of allSettings) {
       settingsObject[setting.section] = JSON.parse(setting.settings);
-    });
+    }
 
     return c.json({
       data: {
@@ -489,12 +489,12 @@ app.post("/:userId/:section/reset", async (c) => {
 
     // Create audit trail
     const changes: Record<string, any> = {};
-    Object.keys(currentData).forEach((key) => {
+    for (const key of Object.keys(currentData)) {
       changes[key] = {
         from: currentData[key],
         to: resetData[key] || null,
       };
-    });
+    }
 
     // Update settings
     if (currentSettings[0]) {
@@ -535,9 +535,9 @@ app.post("/:userId/:section/reset", async (c) => {
       privacy: {},
     };
 
-    allSettings.forEach((setting) => {
+    for (const setting of allSettings) {
       settingsObject[setting.section] = JSON.parse(setting.settings);
-    });
+    }
 
     return c.json({
       data: settingsObject,
@@ -751,14 +751,14 @@ app.post("/:userId/preset/:presetId", async (c) => {
 
       // Create audit trail
       const changes: Record<string, any> = {};
-      Object.keys(sectionSettings as any).forEach((key) => {
+      for (const key of Object.keys(sectionSettings as any)) {
         if (currentData[key] !== (sectionSettings as any)[key]) {
           changes[key] = {
             from: currentData[key],
             to: (sectionSettings as any)[key],
           };
         }
-      });
+      }
 
       // Update settings
       if (currentSettings[0]) {
@@ -806,9 +806,9 @@ app.post("/:userId/preset/:presetId", async (c) => {
       privacy: {},
     };
 
-    allSettings.forEach((setting: any) => {
+    for (const setting of allSettings) {
       settingsObject[setting.section] = JSON.parse(setting.settings);
-    });
+    }
 
     return c.json({
       data: {
@@ -862,9 +862,9 @@ app.post("/:userId/export", async (c) => {
       );
 
     const settingsObject: any = {};
-    settings.forEach((setting: any) => {
+    for (const setting of settings) {
       settingsObject[setting.section] = JSON.parse(setting.settings);
-    });
+    }
 
     // Add metadata if requested
     if (includeMetadata) {
@@ -890,13 +890,13 @@ app.post("/:userId/export", async (c) => {
       case "csv": {
         // Convert to CSV format
         const csvRows = ["Section,Key,Value"];
-        Object.entries(settingsObject).forEach(([section, sectionData]) => {
+        for (const [section, sectionData] of Object.entries(settingsObject)) {
           if (section !== "_metadata") {
-            Object.entries(sectionData as any).forEach(([key, value]) => {
+            for (const [key, value] of Object.entries(sectionData as any)) {
               csvRows.push(`${section},${key},"${JSON.stringify(value)}"`);
-            });
+            }
           }
-        });
+        }
         data = csvRows.join("\n");
         mimeType = "text/csv";
         extension = ".csv";

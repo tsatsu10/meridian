@@ -493,10 +493,10 @@ describe("Recommendation Engine", () => {
       ];
 
       // Each should be specific and actionable
-      actionItems.forEach((item) => {
+      for (const item of actionItems) {
         expect(item.length).toBeGreaterThan(10);
         expect(item).toMatch(/^[A-Z]/); // Starts with capital letter
-      });
+      }
     });
 
     it("should have 3-4 action items per recommendation", () => {

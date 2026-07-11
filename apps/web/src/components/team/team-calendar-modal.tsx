@@ -689,7 +689,7 @@ export default function TeamCalendarModal({
       "METHOD:PUBLISH",
     ];
 
-    events.forEach((event) => {
+    for (const event of events) {
       const startDate = event.startDate;
       const endDate = event.endDate;
 
@@ -707,7 +707,7 @@ export default function TeamCalendarModal({
         `STATUS:${event.type === "deadline" ? "NEEDS-ACTION" : "CONFIRMED"}`,
         "END:VEVENT",
       );
-    });
+    }
 
     lines.push("END:VCALENDAR");
     return lines.filter((line) => line).join("\r\n");

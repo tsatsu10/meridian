@@ -71,10 +71,11 @@ export default function NotificationAnalyticsModal({
 
     if (avgMinutes < 60) {
       return `${Math.round(avgMinutes)} minutes`;
-    }if (avgMinutes < 1440) {
+    }
+    if (avgMinutes < 1440) {
       return `${Math.round(avgMinutes / 60)} hours`;
     }
-      return `${Math.round(avgMinutes / 1440)} days`;
+    return `${Math.round(avgMinutes / 1440)} days`;
   };
 
   // Get most common notification type

@@ -84,9 +84,9 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
         return age > 120000 && !(query as any).isFetching; // 2 minutes
       });
 
-      staleQueries.forEach((query) => {
+      for (const query of staleQueries) {
         cache.remove(query);
-      });
+      }
 
       console.log(`🧹 Cleaned up ${staleQueries.length} stale queries`);
     }

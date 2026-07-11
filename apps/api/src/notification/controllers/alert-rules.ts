@@ -183,7 +183,7 @@ export async function testAlertRule(
         message: "Alert condition met and notification sent",
       };
     }
-      return { triggered: false, message: "Alert condition not met" };
+    return { triggered: false, message: "Alert condition not met" };
   } catch (error) {
     logger.error("Failed to test alert rule:", error);
     throw error;

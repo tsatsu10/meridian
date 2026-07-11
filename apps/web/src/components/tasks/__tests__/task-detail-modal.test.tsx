@@ -104,16 +104,25 @@ function TaskDetailModal({
 
         <div className="modal-actions">
           {canEdit && !isEditing && (
-            <button type="button" onClick={() => setIsEditing(true)} aria-label="Edit task">
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              aria-label="Edit task"
+            >
               Edit
             </button>
           )}
           {isEditing && (
             <>
-              <button type="button" onClick={handleSave} aria-label="Save changes">
+              <button
+                type="button"
+                onClick={handleSave}
+                aria-label="Save changes"
+              >
                 Save
               </button>
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => setIsEditing(false)}
                 aria-label="Cancel editing"
               >
@@ -237,7 +246,8 @@ function TaskDetailModal({
                 aria-label="New comment"
                 rows={3}
               />
-              <button type="button"
+              <button
+                type="button"
                 onClick={handleAddComment}
                 disabled={!newComment.trim()}
                 aria-label="Add comment"
@@ -267,7 +277,8 @@ function TaskDetailModal({
 
         {canEdit && onDelete && (
           <div className="danger-zone">
-            <button type="button"
+            <button
+              type="button"
               onClick={() => onDelete(task.id)}
               className="delete-button"
               aria-label="Delete task"

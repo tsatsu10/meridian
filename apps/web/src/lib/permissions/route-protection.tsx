@@ -126,7 +126,8 @@ function RedirectToPath({ path }: { path: string }) {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             className="w-8 h-8 text-red-600"
             fill="none"
             stroke="currentColor"
@@ -146,7 +147,8 @@ function RedirectToPath({ path }: { path: string }) {
         <p className="text-gray-600 mb-4">
           You don't have permission to access this page.
         </p>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             window.location.href = path;
           }}

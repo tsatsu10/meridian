@@ -111,14 +111,14 @@ export async function updateUserAvailability(
 
       return created[0];
     }
-      // Update existing
-      const updated = await db
-        .update(userAvailability)
-        .set(updateData)
-        .where(eq(userAvailability.userId, userId))
-        .returning();
+    // Update existing
+    const updated = await db
+      .update(userAvailability)
+      .set(updateData)
+      .where(eq(userAvailability.userId, userId))
+      .returning();
 
-      return updated[0];
+    return updated[0];
   } catch (error) {
     logger.error("Error updating user availability:", error);
     throw error;

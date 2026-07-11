@@ -165,13 +165,13 @@ export async function exportWorkspaceData(
       mimeType: "application/json",
     };
   }
-    // CSV format
-    const csv = convertToCSV(exportData);
-    return {
-      data: csv,
-      filename: `workspace-export-${timestamp}.csv`,
-      mimeType: "text/csv",
-    };
+  // CSV format
+  const csv = convertToCSV(exportData);
+  return {
+    data: csv,
+    filename: `workspace-export-${timestamp}.csv`,
+    mimeType: "text/csv",
+  };
 }
 
 // Convert data to CSV format
@@ -362,9 +362,9 @@ function parseCSV(csvData: string): any {
       const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
       const record: any = {};
 
-      headers.forEach((header, index) => {
+      for (const [index, header] of headers.entries()) {
         record[header] = values[index] || "";
-      });
+      }
 
       if (type.includes("project")) {
         result.projects.push(record);

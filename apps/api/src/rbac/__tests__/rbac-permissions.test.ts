@@ -559,10 +559,10 @@ describe.skip("RBAC Permission System", () => {
       // System roles (type='system') should not be deletable
       const systemRoles = ["member", "admin", "workspace-manager"];
 
-      systemRoles.forEach((roleName) => {
+      for (const roleName of systemRoles) {
         const user = testUsers[roleName];
         expect(user.role).toBe(roleName);
-      });
+      }
     });
   });
 });

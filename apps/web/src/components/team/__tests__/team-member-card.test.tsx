@@ -122,14 +122,16 @@ function TeamMemberCard({
           role="group"
           aria-label="Member actions"
         >
-          <button type="button"
+          <button
+            type="button"
             onClick={() => onViewProfile?.(member.id)}
             aria-label="View profile"
           >
             View Profile
           </button>
           {onRemove && (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => onRemove(member.id)}
               aria-label="Remove member"
               className="danger"

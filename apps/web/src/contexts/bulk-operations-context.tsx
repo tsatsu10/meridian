@@ -58,12 +58,12 @@ export function BulkOperationsProvider({
     setSelectedTasks((prev) => {
       const newSet = new Set(prev);
       const addSubtasks = (tasks: TaskWithSubtasks[]) => {
-        tasks.forEach((task) => {
+        for (const task of tasks) {
           newSet.add(task.id);
           if (task.subtasks) {
             addSubtasks(task.subtasks);
           }
-        });
+        }
       };
       addSubtasks(subtasks);
       return newSet;

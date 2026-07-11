@@ -181,7 +181,8 @@ function SearchFilters({
           aria-label="Search"
         />
         {searchQuery && (
-          <button type="button"
+          <button
+            type="button"
             onClick={() => handleSearchChange("")}
             aria-label="Clear search"
             className="clear-search"
@@ -195,7 +196,11 @@ function SearchFilters({
       {activeFilterCount > 0 && (
         <div className="filter-summary" aria-live="polite">
           <span>{activeFilterCount} active filters</span>
-          <button type="button" onClick={handleClearAll} aria-label="Clear all filters">
+          <button
+            type="button"
+            onClick={handleClearAll}
+            aria-label="Clear all filters"
+          >
             Clear all
           </button>
         </div>
@@ -215,7 +220,8 @@ function SearchFilters({
       {activeFilterCount > 0 && (
         <div className="save-filter">
           {!showSaveDialog ? (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => setShowSaveDialog(true)}
               aria-label="Save current filters"
             >
@@ -230,14 +236,16 @@ function SearchFilters({
                 onChange={(e) => setFilterName(e.target.value)}
                 aria-label="Filter name"
               />
-              <button type="button"
+              <button
+                type="button"
                 onClick={handleSaveFilter}
                 disabled={!filterName.trim()}
                 aria-label="Confirm save filter"
               >
                 Save
               </button>
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => setShowSaveDialog(false)}
                 aria-label="Cancel save filter"
               >

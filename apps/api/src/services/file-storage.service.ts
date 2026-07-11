@@ -133,7 +133,8 @@ class FileStorageService {
         mimeType,
         subdir,
       );
-    }if (this.config.provider === "s3") {
+    }
+    if (this.config.provider === "s3") {
       return this.uploadToS3(
         fileBuffer,
         fileName,
@@ -141,7 +142,8 @@ class FileStorageService {
         mimeType,
         subdir,
       );
-    }if (this.config.provider === "r2") {
+    }
+    if (this.config.provider === "r2") {
       return this.uploadToR2(
         fileBuffer,
         fileName,

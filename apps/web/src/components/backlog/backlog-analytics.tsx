@@ -106,13 +106,13 @@ export default function BacklogAnalytics({
       stale: 0, // 60+ days
     };
 
-    tasks.forEach((task) => {
+    for (const task of tasks) {
       const age = differenceInDays(now, new Date(task.createdAt));
       if (age <= 7) distribution.new++;
       else if (age <= 30) distribution.recent++;
       else if (age <= 60) distribution.aging++;
       else distribution.stale++;
-    });
+    }
 
     return distribution;
   }, [tasks]);
@@ -126,10 +126,10 @@ export default function BacklogAnalytics({
       low: 0,
     };
 
-    tasks.forEach((task) => {
+    for (const task of tasks) {
       const priority = (task.priority as keyof typeof distribution) || "medium";
       distribution[priority] = (distribution[priority] || 0) + 1;
-    });
+    }
 
     return distribution;
   }, [tasks]);

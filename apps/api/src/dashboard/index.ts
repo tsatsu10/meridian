@@ -355,129 +355,128 @@ const dashboard = new Hono()
           const analytics = await getEnhancedAnalytics(options);
           return c.json(analytics);
         }
-          // Use simple analytics for backward compatibility
-          const simpleTimeRange =
-            timeRange === "custom" ? "30d" : (timeRange ?? "30d");
-          const options = {
-            workspaceId,
-            timeRange: simpleTimeRange,
-            projectIds: projectIds ? projectIds.split(",") : undefined,
-          };
+        // Use simple analytics for backward compatibility
+        const simpleTimeRange =
+          timeRange === "custom" ? "30d" : (timeRange ?? "30d");
+        const options = {
+          workspaceId,
+          timeRange: simpleTimeRange,
+          projectIds: projectIds ? projectIds.split(",") : undefined,
+        };
 
-          logger.debug(
-            "📊 Using simple analytics (enhanced analytics temporarily disabled)",
-          );
-          const simpleAnalytics = await getAnalyticsSimple(options);
+        logger.debug(
+          "📊 Using simple analytics (enhanced analytics temporarily disabled)",
+        );
+        const simpleAnalytics = await getAnalyticsSimple(options);
 
-          // Helper to create comparative data format
-          const toComparative = (value: number) => ({
-            current: value,
-            comparison: value,
-            change: {
-              absolute: 0,
-              percentage: 0,
-              trend: "stable" as const,
-            },
-          });
+        // Helper to create comparative data format
+        const toComparative = (value: number) => ({
+          current: value,
+          comparison: value,
+          change: {
+            absolute: 0,
+            percentage: 0,
+            trend: "stable" as const,
+          },
+        });
 
-          // Transform simple analytics to match enhanced analytics format expected by frontend
-          const enhancedFormat = {
-            projectMetrics: {
-              totalProjects: toComparative(
-                simpleAnalytics.projectMetrics.totalProjects,
-              ),
-              activeProjects: toComparative(
-                simpleAnalytics.projectMetrics.activeProjects,
-              ),
-              completedProjects: toComparative(
-                simpleAnalytics.projectMetrics.completedProjects,
-              ),
-              projectsAtRisk: toComparative(
-                simpleAnalytics.projectMetrics.projectsAtRisk,
-              ),
-              avgHealthScore: toComparative(
-                simpleAnalytics.summary.overallHealth || 0,
-              ),
-            },
-            taskMetrics: {
-              totalTasks: toComparative(simpleAnalytics.taskMetrics.totalTasks),
-              completedTasks: toComparative(
-                simpleAnalytics.taskMetrics.completedTasks,
-              ),
-              inProgressTasks: toComparative(
-                simpleAnalytics.taskMetrics.inProgressTasks,
-              ),
-              overdueTasks: toComparative(
-                simpleAnalytics.taskMetrics.overdueTasks,
-              ),
-              avgCycleTime: toComparative(
-                simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0,
-              ),
-              throughput: toComparative(
-                simpleAnalytics.performanceBenchmarks?.teamVelocity || 0,
-              ),
-            },
-            teamMetrics: {
-              totalMembers: toComparative(
-                simpleAnalytics.teamMetrics.totalMembers,
-              ),
-              activeMembers: toComparative(
-                simpleAnalytics.teamMetrics.activeMembers,
-              ),
-              avgProductivity: toComparative(
-                simpleAnalytics.teamMetrics.avgProductivity,
-              ),
-              teamEfficiency: toComparative(
-                simpleAnalytics.teamMetrics.teamEfficiency,
-              ),
-              collaborationIndex: toComparative(0),
-              retentionRate: toComparative(100),
-            },
-            timeMetrics: {
-              totalHours: toComparative(simpleAnalytics.timeMetrics.totalHours),
-              billableHours: toComparative(
-                simpleAnalytics.timeMetrics.billableHours,
-              ),
-              avgTimePerTask: toComparative(
-                simpleAnalytics.timeMetrics.avgTimePerTask,
-              ),
-              timeUtilization: toComparative(
-                simpleAnalytics.timeMetrics.timeUtilization,
-              ),
-              overtime: toComparative(0),
-            },
-            projectHealth: (simpleAnalytics.projectHealth || []).map((p) => ({
-              id: p.id,
-              name: p.name,
-              slug: p.slug,
-              completion: p.completion,
-              health:
-                p.health === "critical"
-                  ? "critical"
-                  : p.health === "warning"
-                    ? "warning"
-                    : "good",
-              healthScore:
-                p.health === "good" ? 85 : p.health === "warning" ? 60 : 35,
-              tasksCompleted: p.tasksCompleted,
-              totalTasks: p.totalTasks,
-              teamSize: p.teamSize,
-              daysRemaining: null,
-              overdueTasks: p.overdueTasks,
-              avgTimePerTask: 0,
-              velocity: 0,
-              burndownTrend:
-                p.completion > 75
-                  ? "on_track"
-                  : p.completion > 50
-                    ? "behind"
-                    : "critical",
-              riskFactors: [],
-              predictedCompletion: null,
-            })),
-            resourceUtilization: (
-              simpleAnalytics.resourceUtilization || []
-            ).map((r) => ({
+        // Transform simple analytics to match enhanced analytics format expected by frontend
+        const enhancedFormat = {
+          projectMetrics: {
+            totalProjects: toComparative(
+              simpleAnalytics.projectMetrics.totalProjects,
+            ),
+            activeProjects: toComparative(
+              simpleAnalytics.projectMetrics.activeProjects,
+            ),
+            completedProjects: toComparative(
+              simpleAnalytics.projectMetrics.completedProjects,
+            ),
+            projectsAtRisk: toComparative(
+              simpleAnalytics.projectMetrics.projectsAtRisk,
+            ),
+            avgHealthScore: toComparative(
+              simpleAnalytics.summary.overallHealth || 0,
+            ),
+          },
+          taskMetrics: {
+            totalTasks: toComparative(simpleAnalytics.taskMetrics.totalTasks),
+            completedTasks: toComparative(
+              simpleAnalytics.taskMetrics.completedTasks,
+            ),
+            inProgressTasks: toComparative(
+              simpleAnalytics.taskMetrics.inProgressTasks,
+            ),
+            overdueTasks: toComparative(
+              simpleAnalytics.taskMetrics.overdueTasks,
+            ),
+            avgCycleTime: toComparative(
+              simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0,
+            ),
+            throughput: toComparative(
+              simpleAnalytics.performanceBenchmarks?.teamVelocity || 0,
+            ),
+          },
+          teamMetrics: {
+            totalMembers: toComparative(
+              simpleAnalytics.teamMetrics.totalMembers,
+            ),
+            activeMembers: toComparative(
+              simpleAnalytics.teamMetrics.activeMembers,
+            ),
+            avgProductivity: toComparative(
+              simpleAnalytics.teamMetrics.avgProductivity,
+            ),
+            teamEfficiency: toComparative(
+              simpleAnalytics.teamMetrics.teamEfficiency,
+            ),
+            collaborationIndex: toComparative(0),
+            retentionRate: toComparative(100),
+          },
+          timeMetrics: {
+            totalHours: toComparative(simpleAnalytics.timeMetrics.totalHours),
+            billableHours: toComparative(
+              simpleAnalytics.timeMetrics.billableHours,
+            ),
+            avgTimePerTask: toComparative(
+              simpleAnalytics.timeMetrics.avgTimePerTask,
+            ),
+            timeUtilization: toComparative(
+              simpleAnalytics.timeMetrics.timeUtilization,
+            ),
+            overtime: toComparative(0),
+          },
+          projectHealth: (simpleAnalytics.projectHealth || []).map((p) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            completion: p.completion,
+            health:
+              p.health === "critical"
+                ? "critical"
+                : p.health === "warning"
+                  ? "warning"
+                  : "good",
+            healthScore:
+              p.health === "good" ? 85 : p.health === "warning" ? 60 : 35,
+            tasksCompleted: p.tasksCompleted,
+            totalTasks: p.totalTasks,
+            teamSize: p.teamSize,
+            daysRemaining: null,
+            overdueTasks: p.overdueTasks,
+            avgTimePerTask: 0,
+            velocity: 0,
+            burndownTrend:
+              p.completion > 75
+                ? "on_track"
+                : p.completion > 50
+                  ? "behind"
+                  : "critical",
+            riskFactors: [],
+            predictedCompletion: null,
+          })),
+          resourceUtilization: (simpleAnalytics.resourceUtilization || []).map(
+            (r) => ({
               userEmail: r.userEmail,
               userName: r.userName,
               department: undefined,
@@ -501,45 +500,44 @@ const dashboard = new Hono()
               skillUtilization: 75,
               collaborationScore: 80,
               recentPerformance: toComparative(r.productivity),
-            })),
-            performanceBenchmarks: {
-              avgProjectCompletion: toComparative(
-                simpleAnalytics.performanceBenchmarks?.avgProjectCompletion ||
-                  0,
-              ),
-              avgTaskCycleTime: toComparative(
-                simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0,
-              ),
-              teamVelocity: toComparative(
-                simpleAnalytics.performanceBenchmarks?.teamVelocity || 0,
-              ),
-              qualityScore: toComparative(
-                simpleAnalytics.performanceBenchmarks?.qualityScore || 0,
-              ),
-              onTimeDelivery: toComparative(
-                simpleAnalytics.performanceBenchmarks?.onTimeDelivery || 100,
-              ),
-            },
-            timeSeriesData: [],
-            departmentBreakdown: [],
-            skillGapAnalysis: [],
-            capacityPlanning: [],
-            riskAssessment: [],
-            forecasting: null,
-            industryBenchmarks: null,
-            summary: {
-              timeRange:
-                simpleAnalytics.summary.timeRange || timeRange || "30d",
-              comparisonPeriod: "previous_period",
-              generatedAt:
-                simpleAnalytics.summary.generatedAt || new Date().toISOString(),
-              dataQuality: 85,
-              recommendations: [],
-              alerts: [],
-            },
-          };
+            }),
+          ),
+          performanceBenchmarks: {
+            avgProjectCompletion: toComparative(
+              simpleAnalytics.performanceBenchmarks?.avgProjectCompletion || 0,
+            ),
+            avgTaskCycleTime: toComparative(
+              simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0,
+            ),
+            teamVelocity: toComparative(
+              simpleAnalytics.performanceBenchmarks?.teamVelocity || 0,
+            ),
+            qualityScore: toComparative(
+              simpleAnalytics.performanceBenchmarks?.qualityScore || 0,
+            ),
+            onTimeDelivery: toComparative(
+              simpleAnalytics.performanceBenchmarks?.onTimeDelivery || 100,
+            ),
+          },
+          timeSeriesData: [],
+          departmentBreakdown: [],
+          skillGapAnalysis: [],
+          capacityPlanning: [],
+          riskAssessment: [],
+          forecasting: null,
+          industryBenchmarks: null,
+          summary: {
+            timeRange: simpleAnalytics.summary.timeRange || timeRange || "30d",
+            comparisonPeriod: "previous_period",
+            generatedAt:
+              simpleAnalytics.summary.generatedAt || new Date().toISOString(),
+            dataQuality: 85,
+            recommendations: [],
+            alerts: [],
+          },
+        };
 
-          return c.json(enhancedFormat);
+        return c.json(enhancedFormat);
       } catch (error) {
         logger.error("❌ Analytics error:", error);
         const message = error instanceof Error ? error.message : String(error);

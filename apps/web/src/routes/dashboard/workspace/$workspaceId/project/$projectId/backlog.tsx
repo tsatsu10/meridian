@@ -401,13 +401,13 @@ function BacklogPage() {
     }
 
     // Move all planned tasks to the to-do column
-    plannedTasks.forEach((task: any) => {
+    for (const task of plannedTasks) {
       const taskUpdate = {
         ...task,
         status: "todo" as const,
       };
       updateTask(taskUpdate);
-    });
+    }
 
     toast.success(`Moved ${plannedTasks.length} tasks to To Do`);
   };
@@ -610,7 +610,8 @@ function BacklogPage() {
                 className="pl-10 pr-10"
               />
               {searchQuery && (
-                <button type="button"
+                <button
+                  type="button"
                   onClick={() => setSearchQuery("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   aria-label="Clear search"

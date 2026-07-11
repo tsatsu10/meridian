@@ -205,10 +205,10 @@ function calculateResourceAllocation(tasks: any[]): number {
 
     // Look for workload imbalance
     const taskCountByAssignee: { [key: string]: number } = {};
-    assignedTasks.forEach((t) => {
+    for (const t of assignedTasks) {
       taskCountByAssignee[t.assigneeId] =
         (taskCountByAssignee[t.assigneeId] || 0) + 1;
-    });
+    }
 
     const taskCounts = Object.values(taskCountByAssignee);
     const maxLoad = Math.max(...taskCounts);

@@ -248,9 +248,9 @@ function RoleDetailsPage() {
 
             {!isSystem && (
               <Button variant="outline" onClick={handleEdit}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
             )}
 
             <Button variant="outline" onClick={handleClone}>

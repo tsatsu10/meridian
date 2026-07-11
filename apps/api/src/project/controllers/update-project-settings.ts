@@ -53,21 +53,21 @@ async function updateProjectSettings(
           : updatedSettings[0]?.settings,
     };
   }
-    // Create new settings
-    const newSettings = await db
-      .insert(projectSettingsTable)
-      .values({
-        ...settingsData,
-      })
-      .returning();
+  // Create new settings
+  const newSettings = await db
+    .insert(projectSettingsTable)
+    .values({
+      ...settingsData,
+    })
+    .returning();
 
-    return {
-      ...newSettings[0],
-      settings:
-        typeof newSettings[0]?.settings === "string"
-          ? JSON.parse(newSettings[0].settings)
-          : newSettings[0]?.settings,
-    };
+  return {
+    ...newSettings[0],
+    settings:
+      typeof newSettings[0]?.settings === "string"
+        ? JSON.parse(newSettings[0].settings)
+        : newSettings[0]?.settings,
+  };
 }
 
 export default updateProjectSettings;

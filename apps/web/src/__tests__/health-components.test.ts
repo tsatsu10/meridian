@@ -56,16 +56,16 @@ describe("Health Component Rendering", () => {
         "critical",
       ];
 
-      statuses.forEach((status) => {
+      for (const status of statuses) {
         expect(statusColors[status]).toBeDefined();
         expect(statusColors[status]).toMatch(/^#[0-9a-f]{6}$/i);
-      });
+      }
     });
 
     it("should handle all size variants", () => {
       const sizes = ["small", "medium", "large"];
 
-      sizes.forEach((size) => {
+      for (const size of sizes) {
         const props: HealthGaugeProps = {
           score: 75,
           status: "good",
@@ -73,7 +73,7 @@ describe("Health Component Rendering", () => {
         };
 
         expect(sizes).toContain(props.size);
-      });
+      }
     });
 
     it("should support animation toggle", () => {
@@ -108,7 +108,7 @@ describe("Health Component Rendering", () => {
     it("should support custom day ranges", () => {
       const dayRanges = [7, 14, 30, 60, 90];
 
-      dayRanges.forEach((days) => {
+      for (const days of dayRanges) {
         const props: HealthTrendChartProps = {
           projectId: "proj_123",
           days,
@@ -116,7 +116,7 @@ describe("Health Component Rendering", () => {
 
         expect(props.days).toBeGreaterThan(0);
         expect(props.days).toBeLessThanOrEqual(365);
-      });
+      }
     });
 
     it("should show loading state", () => {
@@ -174,9 +174,9 @@ describe("Health Component Rendering", () => {
         "low",
       ];
 
-      priorities.forEach((priority) => {
+      for (const priority of priorities) {
         expect(priorityColors[priority]).toBeDefined();
-      });
+      }
     });
 
     it("should display category tag", () => {
@@ -188,7 +188,7 @@ describe("Health Component Rendering", () => {
         "risk",
       ];
 
-      categories.forEach((category) => {
+      for (const category of categories) {
         const props: RecommendationCardProps = {
           title: "Test",
           description: "Test",
@@ -197,7 +197,7 @@ describe("Health Component Rendering", () => {
         };
 
         expect(categories).toContain(props.category);
-      });
+      }
     });
 
     it("should render action items as list", () => {
@@ -354,18 +354,18 @@ describe("Component Accessibility", () => {
       "recommendation-card": "Health recommendation",
     };
 
-    Object.values(ariaLabels).forEach((label) => {
+    for (const label of Object.values(ariaLabels)) {
       expect(label).toBeDefined();
       expect(label.length).toBeGreaterThan(0);
-    });
+    }
   });
 
   it("should support keyboard navigation", () => {
     const keyboardKeys = ["Enter", "Space", "ArrowUp", "ArrowDown", "Tab"];
 
-    keyboardKeys.forEach((key) => {
+    for (const key of keyboardKeys) {
       expect(key).toBeDefined();
-    });
+    }
   });
 
   it("should have sufficient color contrast", () => {
@@ -376,10 +376,10 @@ describe("Component Accessibility", () => {
       critical: 7.5,
     };
 
-    Object.values(contrastRatios).forEach((ratio) => {
+    for (const ratio of Object.values(contrastRatios)) {
       // WCAG AA requires 4.5:1 for text
       expect(ratio).toBeGreaterThanOrEqual(4.5);
-    });
+    }
   });
 
   it("should support screen readers", () => {

@@ -157,13 +157,15 @@ function ProjectCard({
           role="group"
           aria-label="Project actions"
         >
-          <button type="button"
+          <button
+            type="button"
             onClick={() => onEdit?.(project.id)}
             aria-label="Edit project"
           >
             Edit
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => onArchive?.(project.id)}
             aria-label="Archive project"
           >
@@ -423,7 +425,7 @@ describe("Project Card Component", () => {
   it("should apply correct priority colors", () => {
     const priorities = ["low", "medium", "high", "urgent"];
 
-    priorities.forEach((priority) => {
+    for (const priority of priorities) {
       const projectWithPriority = {
         ...mockProject,
         priority,
@@ -439,13 +441,13 @@ describe("Project Card Component", () => {
       expect(badge?.textContent).toBe(priority);
 
       unmount();
-    });
+    }
   });
 
   it("should apply correct status colors", () => {
     const statuses = ["active", "in_progress", "completed", "archived"];
 
-    statuses.forEach((status) => {
+    for (const status of statuses) {
       const projectWithStatus = {
         ...mockProject,
         status,
@@ -461,6 +463,6 @@ describe("Project Card Component", () => {
       expect(badge?.textContent).toBe(status);
 
       unmount();
-    });
+    }
   });
 });

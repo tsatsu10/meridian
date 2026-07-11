@@ -73,11 +73,19 @@ function NotificationList({
       {notifications.length > 0 && (
         <div className="notification-actions">
           {unreadCount > 0 && (
-            <button type="button" onClick={onMarkAllAsRead} aria-label="Mark all as read">
+            <button
+              type="button"
+              onClick={onMarkAllAsRead}
+              aria-label="Mark all as read"
+            >
               Mark all as read
             </button>
           )}
-          <button type="button" onClick={onClearAll} aria-label="Clear all notifications">
+          <button
+            type="button"
+            onClick={onClearAll}
+            aria-label="Clear all notifications"
+          >
             Clear all
           </button>
         </div>
@@ -101,14 +109,16 @@ function NotificationList({
 
             <div className="notification-actions-item">
               {!notification.isRead && (
-                <button type="button"
+                <button
+                  type="button"
                   onClick={() => onMarkAsRead?.(notification.id)}
                   aria-label={`Mark ${notification.title} as read`}
                 >
                   Mark as read
                 </button>
               )}
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => onClear?.(notification.id)}
                 aria-label={`Clear ${notification.title}`}
               >

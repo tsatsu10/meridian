@@ -90,7 +90,7 @@ export default function PriorityMatrix({
       "low-value-high-effort": [],
     };
 
-    tasks.forEach((task) => {
+    for (const task of tasks) {
       // Default values if not set
       const businessValue = task.businessValue || 5;
       const effort = task.effort || 5;
@@ -108,7 +108,7 @@ export default function PriorityMatrix({
       } else {
         quadrants["low-value-high-effort"].push(task);
       }
-    });
+    }
 
     return quadrants;
   }, [tasks]);

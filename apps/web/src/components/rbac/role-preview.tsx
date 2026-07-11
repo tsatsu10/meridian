@@ -56,7 +56,7 @@ function analyzePermissions(selected: string[], all: string[]) {
 function categorizePermissions(permissions: string[]) {
   const categories: Record<string, string[]> = {};
 
-  permissions.forEach((permission) => {
+  for (const permission of permissions) {
     const parts = permission.split(".");
     const category = parts[0] || "other";
 
@@ -64,7 +64,7 @@ function categorizePermissions(permissions: string[]) {
       categories[category] = [];
     }
     categories[category].push(permission);
-  });
+  }
 
   return Object.entries(categories).sort((a, b) => a[0].localeCompare(b[0]));
 }

@@ -366,17 +366,17 @@ export async function seedRBACData() {
 
     if (assignedUsers.length > 0) {
       logger.debug("\n🎯 Workspace Owners with Automatic Access:");
-      assignedUsers.forEach((owner) => {
+      for (const owner of assignedUsers) {
         logger.debug(`  👑 ${owner.name} (${owner.email}) - ${owner.role}`);
-      });
+      }
     }
 
     const nonOwners = demoUsers.filter((u) => !assignedUsers.includes(u));
     if (nonOwners.length > 0) {
       logger.debug("\n🔐 Users Requiring Workspace Invitations:");
-      nonOwners.forEach((user) => {
+      for (const user of nonOwners) {
         logger.debug(`  👤 ${user.name} (${user.email}) - ${user.role}`);
-      });
+      }
     }
 
     logger.debug("\n✅ SECURITY STATUS:");

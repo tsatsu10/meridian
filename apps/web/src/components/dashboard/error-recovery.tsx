@@ -110,9 +110,9 @@ export function ErrorRecovery({
         }, 1000);
         return () => clearTimeout(timer);
       }
-        // Countdown reached 0, trigger retry
-        handleRetry();
-        setCountdown(autoRetryDelay);
+      // Countdown reached 0, trigger retry
+      handleRetry();
+      setCountdown(autoRetryDelay);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRetry/autoRetryDelay omitted to preserve countdown behavior
   }, [countdown, autoRetry, canRetry, isRetrying]);

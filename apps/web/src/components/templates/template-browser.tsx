@@ -39,12 +39,12 @@ export function TemplateBrowser() {
     if (!data?.templates) return {};
 
     const grouped: Record<string, ProjectTemplate[]> = {};
-    data.templates.forEach((template) => {
+    for (const template of data.templates) {
       if (!grouped[template.industry]) {
         grouped[template.industry] = [];
       }
       grouped[template.industry].push(template);
-    });
+    }
 
     return grouped;
   }, [data?.templates]);

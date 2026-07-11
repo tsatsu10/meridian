@@ -39,20 +39,20 @@ export async function setUserStatus(
       logger.info(`Status updated for ${userEmail}: ${data.status}`);
       return updated;
     }
-      // Insert new status
-      const [created] = await db
-        .insert(userStatus)
-        .values({
-          userEmail,
-          status: data.status,
-          statusMessage: data.statusMessage || null,
-          emoji: data.emoji || null,
-          expiresAt: data.expiresAt || null,
-        })
-        .returning();
+    // Insert new status
+    const [created] = await db
+      .insert(userStatus)
+      .values({
+        userEmail,
+        status: data.status,
+        statusMessage: data.statusMessage || null,
+        emoji: data.emoji || null,
+        expiresAt: data.expiresAt || null,
+      })
+      .returning();
 
-      logger.info(`Status created for ${userEmail}: ${data.status}`);
-      return created;
+    logger.info(`Status created for ${userEmail}: ${data.status}`);
+    return created;
   } catch (error) {
     logger.error("Failed to set user status:", error);
     throw new Error("Failed to update user status");

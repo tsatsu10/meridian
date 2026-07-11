@@ -146,13 +146,13 @@ export function useUndo<T extends { id: string }>(
    * Cancels all pending deletes
    */
   const cancelAllDeletes = useCallback(() => {
-    pendingDeletes.forEach((pending) => {
+    for (const pending of pendingDeletes.values()) {
       clearTimeout(pending.timeoutId);
       const toastId = toastIds.current.get(pending.deleteId);
       if (toastId) {
         toast.dismiss(toastId);
       }
-    });
+    }
     setPendingDeletes(new Map());
     toastIds.current.clear();
   }, [pendingDeletes]);

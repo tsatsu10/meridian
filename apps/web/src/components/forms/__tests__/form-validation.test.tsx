@@ -50,9 +50,9 @@ function FormWithValidation({
 }: FormProps) {
   const [values, setValues] = React.useState<Record<string, any>>(() => {
     const initial: Record<string, any> = {};
-    fields.forEach((field) => {
+    for (const field of fields) {
       initial[field.name] = field.defaultValue || "";
-    });
+    }
     return initial;
   });
 
@@ -163,9 +163,9 @@ function FormWithValidation({
 
     // Mark all fields as touched
     const allTouched: Record<string, boolean> = {};
-    fields.forEach((field) => {
+    for (const field of fields) {
       allTouched[field.name] = true;
-    });
+    }
     setTouched(allTouched);
 
     // Validate all fields

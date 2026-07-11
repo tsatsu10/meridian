@@ -27,10 +27,10 @@ describe("TwoFactorVerify", () => {
       const inputs = screen.getAllByRole("textbox");
       expect(inputs).toHaveLength(6);
 
-      inputs.forEach((input) => {
+      for (const input of inputs) {
         expect(input).toHaveAttribute("maxLength", "1");
         expect(input).toHaveAttribute("inputMode", "numeric");
-      });
+      }
     });
 
     it("should render title and description", () => {
@@ -193,9 +193,9 @@ describe("TwoFactorVerify", () => {
       const updatedInputs = screen.getAllByRole("textbox");
 
       // Should clear inputs
-      updatedInputs.forEach((input) => {
+      for (const input of updatedInputs) {
         expect(input).toHaveValue("");
-      });
+      }
 
       // Should focus first input (check that SOME input has focus)
       const focusedElement = document.activeElement;

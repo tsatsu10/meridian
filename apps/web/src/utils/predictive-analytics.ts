@@ -264,19 +264,19 @@ export function detectSeasonalPatterns(
 
   // Check for weekly patterns (day of week)
   const dayOfWeekData: { [key: number]: number[] } = {};
-  dates.forEach((date, i) => {
+  for (const [i, date] of dates.entries()) {
     const dayOfWeek = date.getDay();
     if (!dayOfWeekData[dayOfWeek]) dayOfWeekData[dayOfWeek] = [];
     dayOfWeekData[dayOfWeek].push(values[i]);
-  });
+  }
 
   const dayOfWeekAvgs: { [key: number]: number } = {};
-  Object.keys(dayOfWeekData).forEach((day) => {
+  for (const day of Object.keys(dayOfWeekData)) {
     const dayNum = Number.parseInt(day);
     dayOfWeekAvgs[dayNum] =
       dayOfWeekData[dayNum].reduce((a, b) => a + b, 0) /
       dayOfWeekData[dayNum].length;
-  });
+  }
 
   const avgValues = Object.values(dayOfWeekAvgs);
   const overallAvg = avgValues.reduce((a, b) => a + b, 0) / avgValues.length;
@@ -307,13 +307,13 @@ export function detectSeasonalPatterns(
   const peakDays: string[] = [];
   const lowDays: string[] = [];
 
-  Object.entries(dayOfWeekAvgs).forEach(([day, avg]) => {
+  for (const [day, avg] of Object.entries(dayOfWeekAvgs)) {
     if (avg > overallAvg * 1.1) {
       peakDays.push(dayNames[Number.parseInt(day)]);
     } else if (avg < overallAvg * 0.9) {
       lowDays.push(dayNames[Number.parseInt(day)]);
     }
-  });
+  }
 
   return {
     hasPattern: true,
