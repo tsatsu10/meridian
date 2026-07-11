@@ -93,95 +93,112 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {projects.map((project: any) => {
-            const progress =
-              project.taskCounts.total > 0
-                ? Math.round(
-                    (project.taskCounts.completed / project.taskCounts.total) *
-                      100,
-                  )
-                : 0;
+          {projects.map(
+            (project: {
+              id: string;
+              name: string;
+              color?: string;
+              description?: string;
+              icon?: string;
+              lastContribution?: string;
+              role?: string;
+              taskCounts: {
+                completed: number;
+                inProgress: number;
+                overdue: number;
+                total: number;
+              };
+            }) => {
+              const progress =
+                project.taskCounts.total > 0
+                  ? Math.round(
+                      (project.taskCounts.completed /
+                        project.taskCounts.total) *
+                        100,
+                    )
+                  : 0;
 
-            return (
-              <Link
-                key={project.id}
-                to="/dashboard/workspace/$workspaceId/project/$projectId/board"
-                params={{
-                  workspaceId: workspaceId ?? "",
-                  projectId: project.id,
-                }}
-                className="block"
-              >
-                <div className="p-4 rounded-lg border hover:border-primary transition-colors">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
-                        style={{ backgroundColor: `${project.color}20` }}
+              return (
+                <Link
+                  key={project.id}
+                  to="/dashboard/workspace/$workspaceId/project/$projectId/board"
+                  params={{
+                    workspaceId: workspaceId ?? "",
+                    projectId: project.id,
+                  }}
+                  className="block"
+                >
+                  <div className="p-4 rounded-lg border hover:border-primary transition-colors">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
+                          style={{ backgroundColor: `${project.color}20` }}
+                        >
+                          {project.icon || "📁"}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{project.name}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {project.description || "No description"}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-xs",
+                          roleColors[project.role || "member"],
+                        )}
                       >
-                        {project.icon || "📁"}
+                        {project.role || "member"}
+                      </Badge>
+                    </div>
+
+                    {/* Progress */}
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                        <span>Progress</span>
+                        <span>{progress}%</span>
                       </div>
-                      <div>
-                        <h4 className="font-semibold">{project.name}</h4>
-                        <p className="text-xs text-muted-foreground">
-                          {project.description || "No description"}
-                        </p>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        <span>{project.taskCounts.total} tasks</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{project.taskCounts.inProgress} in progress</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          {project.lastContribution
+                            ? formatDistanceToNow(
+                                new Date(project.lastContribution),
+                                {
+                                  addSuffix: true,
+                                },
+                              )
+                            : "No activity"}
+                        </span>
                       </div>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-xs",
-                        roleColors[project.role || "member"],
-                      )}
-                    >
-                      {project.role || "member"}
-                    </Badge>
-                  </div>
 
-                  {/* Progress */}
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                      <span>Progress</span>
-                      <span>{progress}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
+                    {project.taskCounts.overdue > 0 && (
+                      <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                        {project.taskCounts.overdue} overdue task(s)
+                      </div>
+                    )}
                   </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <span>{project.taskCounts.total} tasks</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{project.taskCounts.inProgress} in progress</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>
-                        {project.lastContribution
-                          ? formatDistanceToNow(
-                              new Date(project.lastContribution),
-                              {
-                                addSuffix: true,
-                              },
-                            )
-                          : "No activity"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {project.taskCounts.overdue > 0 && (
-                    <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                      {project.taskCounts.overdue} overdue task(s)
-                    </div>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            },
+          )}
         </div>
       </CardContent>
     </Card>
