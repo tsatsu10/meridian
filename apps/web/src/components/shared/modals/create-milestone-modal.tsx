@@ -30,6 +30,9 @@ import {
 import { toast } from "sonner";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import { flattenTasks } from "@/utils/task-hierarchy";
+import type { TaskWithSubtasks } from "@/types/task";
+
+type TaskColumn = { tasks?: TaskWithSubtasks[] };
 
 // @epic-1.3-milestones: Sarah (PM) and Jennifer (Exec) need milestone tracking
 // @epic-2.1-dashboard: Milestone creation across different views
@@ -148,15 +151,16 @@ export default function CreateMilestoneModal({
   }, [editingMilestone, open]);
 
   // Handle both array and object-with-columns cases for tasks
-  const columnArray = Array.isArray(tasksData)
-    ? tasksData
-    : tasksData && Array.isArray((tasksData as any).columns)
-      ? (tasksData as any).columns
+  const columnArray: TaskColumn[] = Array.isArray(tasksData)
+    ? (tasksData as TaskColumn[])
+    : tasksData &&
+        Array.isArray((tasksData as { columns?: TaskColumn[] }).columns)
+      ? (tasksData as { columns: TaskColumn[] }).columns
       : [];
 
   // Get all available tasks for dependencies
   const allTasks = flattenTasks(
-    columnArray.flatMap((col: any) => col.tasks || []),
+    columnArray.flatMap((col) => col.tasks || []),
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -325,10 +329,11 @@ export default function CreateMilestoneModal({
                       <Label htmlFor="milestoneType">Type</Label>
                       <Select
                         value={formData.milestoneType}
-                        onValueChange={(value: any) =>
+                        onValueChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            milestoneType: value,
+                            milestoneType:
+                              value as MilestoneFormData["milestoneType"],
                           }))
                         }
                       >
@@ -352,8 +357,11 @@ export default function CreateMilestoneModal({
                       <Label htmlFor="status">Status</Label>
                       <Select
                         value={formData.status}
-                        onValueChange={(value: any) =>
-                          setFormData((prev) => ({ ...prev, status: value }))
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            status: value as MilestoneFormData["status"],
+                          }))
                         }
                       >
                         <SelectTrigger>
@@ -413,8 +421,11 @@ export default function CreateMilestoneModal({
                     <Label htmlFor="riskLevel">Risk Level</Label>
                     <Select
                       value={formData.riskLevel}
-                      onValueChange={(value: any) =>
-                        setFormData((prev) => ({ ...prev, riskLevel: value }))
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          riskLevel: value as MilestoneFormData["riskLevel"],
+                        }))
                       }
                     >
                       <SelectTrigger>
@@ -449,7 +460,7 @@ export default function CreateMilestoneModal({
                       <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
                         {allTasks
                           .filter(
-                            (task: any) =>
+                            (task) =>
                               task.title
                                 .toLowerCase()
                                 .includes(taskSearchTerm.toLowerCase()) ||
@@ -458,7 +469,7 @@ export default function CreateMilestoneModal({
                                 .includes(taskSearchTerm.toLowerCase()),
                           )
                           .slice(0, 50)
-                          .map((task: any) => (
+                          .map((task) => (
                             <div
                               key={task.id}
                               className="flex items-center space-x-2"
@@ -489,7 +500,7 @@ export default function CreateMilestoneModal({
                             </div>
                           ))}
                         {allTasks.filter(
-                          (task: any) =>
+                          (task) =>
                             task.title
                               .toLowerCase()
                               .includes(taskSearchTerm.toLowerCase()) ||
@@ -502,7 +513,7 @@ export default function CreateMilestoneModal({
                           </div>
                         )}
                         {allTasks.filter(
-                          (task: any) =>
+                          (task) =>
                             task.title
                               .toLowerCase()
                               .includes(taskSearchTerm.toLowerCase()) ||
