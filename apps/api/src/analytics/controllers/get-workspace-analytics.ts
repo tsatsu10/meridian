@@ -52,7 +52,8 @@ export async function getWorkspaceAnalytics(c: Context) {
       .where(eq(workspaceTable.id, workspaceId))
       .limit(1);
 
-    if (!workspace.length) {
+    const [workspaceRow] = workspace;
+    if (!workspaceRow) {
       return c.json({ error: "Workspace not found" }, 404);
     }
 
@@ -197,9 +198,9 @@ export async function getWorkspaceAnalytics(c: Context) {
       success: true,
       data: {
         workspace: {
-          id: workspace[0]!.id,
-          name: workspace[0]!.name,
-          description: workspace[0]!.description,
+          id: workspaceRow.id,
+          name: workspaceRow.name,
+          description: workspaceRow.description,
         },
         timeRange,
         projectMetrics,

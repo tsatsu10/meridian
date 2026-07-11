@@ -53,12 +53,13 @@ export async function getProjectAnalytics(c: Context) {
       .where(eq(projectTable.id, projectId))
       .limit(1);
 
-    if (!project.length) {
+    const [projectRow] = project;
+    if (!projectRow) {
       logger.debug(`❌ Project not found: ${projectId}`);
       return c.json({ error: "Project not found" }, 404);
     }
 
-    logger.debug(`✅ Found project: ${project[0]!.name} (${project[0]!.id})`);
+    logger.debug(`✅ Found project: ${projectRow.name} (${projectRow.id})`);
 
     // Get task metrics
     const allTasks = await db
@@ -127,7 +128,7 @@ export async function getProjectAnalytics(c: Context) {
       })
       .from(workspaceUserTable)
       .leftJoin(userTable, eq(workspaceUserTable.userEmail, userTable.email))
-      .where(eq(workspaceUserTable.workspaceId, project[0]!.workspaceId));
+      .where(eq(workspaceUserTable.workspaceId, projectRow.workspaceId));
 
     // Get per-member task completion data
     const memberPerformance = await Promise.all(
@@ -401,9 +402,9 @@ export async function getProjectAnalytics(c: Context) {
       success: true,
       data: {
         project: {
-          id: project[0]!.id,
-          name: project[0]!.name,
-          description: project[0]!.description,
+          id: projectRow.id,
+          name: projectRow.name,
+          description: projectRow.description,
         },
         timeRange,
         taskMetrics,
