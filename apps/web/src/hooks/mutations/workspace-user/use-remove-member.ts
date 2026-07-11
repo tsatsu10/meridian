@@ -77,16 +77,22 @@ export function useRemoveMember() {
       ]);
 
       // Optimistically remove from project members
-      queryClient.setQueryData(["project-members"], (old: any) => {
-        if (!old) return old;
-        return old.filter((member: any) => member.id !== memberId);
-      });
+      queryClient.setQueryData(
+        ["project-members"],
+        (old: Array<{ id: string }> | undefined) => {
+          if (!old) return old;
+          return old.filter((member) => member.id !== memberId);
+        },
+      );
 
       // Optimistically remove from workspace users
-      queryClient.setQueryData(["workspace-users", workspaceId], (old: any) => {
-        if (!old) return old;
-        return old.filter((user: any) => user.id !== memberId);
-      });
+      queryClient.setQueryData(
+        ["workspace-users", workspaceId],
+        (old: Array<{ id: string }> | undefined) => {
+          if (!old) return old;
+          return old.filter((user) => user.id !== memberId);
+        },
+      );
 
       return { previousMembers, previousWorkspaceUsers };
     },
