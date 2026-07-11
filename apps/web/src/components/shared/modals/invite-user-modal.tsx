@@ -154,7 +154,9 @@ export function InviteUserModal({
                     name="role"
                     value={role.value}
                     checked={selectedRole === role.value}
-                    onChange={(e) => setSelectedRole(e.target.value as any)}
+                    onChange={(e) =>
+                      setSelectedRole(e.target.value as typeof selectedRole)
+                    }
                     className="mt-1 text-blue-600 focus:ring-blue-500"
                     disabled={sendInvitation.isPending}
                   />
