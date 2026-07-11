@@ -48,7 +48,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
     }
 
     // Get user role from context or default to 'member'
-    const userRole = (user as any).role || "member";
+    const userRole = (user as { role?: string }).role || "member";
 
     // Project access check - everyone with valid user has basic access
     // Backend should enforce workspace membership
