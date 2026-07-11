@@ -176,8 +176,9 @@ describe.skip("Performance Monitoring", () => {
       );
 
       expect(logCall).toBeDefined();
-      expect(logCall![1].durationMs).toBeGreaterThanOrEqual(100);
-      expect(logCall![1].durationMs).toBeLessThan(200);
+      if (!logCall) throw new Error("logCall expected to be set");
+      expect(logCall[1].durationMs).toBeGreaterThanOrEqual(100);
+      expect(logCall[1].durationMs).toBeLessThan(200);
 
       consoleSpy.mockRestore();
     });
