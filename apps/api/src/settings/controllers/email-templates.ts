@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { emailTemplates } from "../../database/schema";
 import { createId } from "@paralleldrive/cuid2";
+import { getErrorMessage } from "../../utils/error-utils";
 
 export interface EmailTemplate {
   id: string;
@@ -195,10 +196,10 @@ export async function testSMTPConnection(config: {
       success: true,
       message: "SMTP connection successful",
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      message: error.message || "Failed to connect to SMTP server",
+      message: getErrorMessage(error) || "Failed to connect to SMTP server",
     };
   }
 }
@@ -241,10 +242,10 @@ export async function sendTestEmail(
       success: true,
       message: "Test email sent successfully",
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      message: error.message || "Failed to send test email",
+      message: getErrorMessage(error) || "Failed to send test email",
     };
   }
 }
