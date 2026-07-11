@@ -7,6 +7,7 @@
   },
   "files": {
     "ignore": [
+      "**/routeTree.gen.ts",
       "**/node_modules",
       "**/dist",
       "**/.next",
