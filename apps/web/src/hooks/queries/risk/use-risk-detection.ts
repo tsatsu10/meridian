@@ -44,6 +44,24 @@ interface RiskAlert {
   };
 }
 
+export interface RiskTask {
+  id: string;
+  status: string;
+  dueDate?: string | null;
+  projectId?: string;
+  // Real Task/TaskWithSubtasks.dependencies is TaskDependency[] (objects), not
+  // string IDs; kept as unknown[] so the shape-detection below matches
+  // whatever a given caller actually passes without lying about it.
+  dependencies?: unknown[];
+  assigneeId?: string;
+}
+
+export interface RiskProject {
+  id: string;
+  name: string;
+  deadline?: string | null;
+}
+
 interface RiskAnalysisResult {
   overallRiskScore: number;
   riskLevel: "low" | "medium" | "high" | "critical";
@@ -62,11 +80,19 @@ interface RiskAnalysisResult {
   };
 }
 
+function definedProjectIds(tasks: RiskTask[]): string[] {
+  return [
+    ...new Set(
+      tasks.map((t) => t.projectId).filter((id): id is string => !!id),
+    ),
+  ];
+}
+
 // Mock function to analyze project risks
 const analyzeProjectRisks = async (
-  tasks: any[],
-  projects: any[],
-  _teamMembers: any[],
+  tasks: RiskTask[],
+  projects: RiskProject[],
+  _teamMembers: unknown[],
 ): Promise<RiskAnalysisResult> => {
   await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -74,10 +100,12 @@ const analyzeProjectRisks = async (
   const now = new Date();
 
   // 1. Overdue Task Detection
-  const overdueTasks = tasks.filter((task) => {
-    if (!task.dueDate || task.status === "done") return false;
-    return new Date(task.dueDate) < now;
-  });
+  const overdueTasks = tasks.filter(
+    (task): task is RiskTask & { dueDate: string } => {
+      if (!task.dueDate || task.status === "done") return false;
+      return new Date(task.dueDate) < now;
+    },
+  );
 
   if (overdueTasks.length > 0) {
     const daysOverdue = Math.max(
@@ -97,7 +125,7 @@ const analyzeProjectRisks = async (
       recommendation:
         "Immediately reassign resources or adjust project timeline. Review task priorities and consider scope reduction.",
       affectedTasks: overdueTasks.map((t) => t.id),
-      affectedProjects: [...new Set(overdueTasks.map((t) => t.projectId))],
+      affectedProjects: definedProjectIds(overdueTasks),
       estimatedImpact:
         daysOverdue > 7
           ? "Project timeline at risk, stakeholder confidence affected"
@@ -115,8 +143,9 @@ const analyzeProjectRisks = async (
   // 2. Blocked Dependencies Detection
   const blockedTasks = tasks.filter((task) => {
     if (task.status === "done" || !task.dependencies) return false;
-    return task.dependencies.some((depId: string) => {
-      const depTask = tasks.find((t) => t.id === depId);
+    return task.dependencies.some((dep) => {
+      const depId = typeof dep === "string" ? dep : undefined;
+      const depTask = depId ? tasks.find((t) => t.id === depId) : undefined;
       return depTask && depTask.status !== "done";
     });
   });
@@ -131,7 +160,7 @@ const analyzeProjectRisks = async (
       recommendation:
         "Review dependency chains and consider parallel execution where possible. Prioritize blocking tasks.",
       affectedTasks: blockedTasks.map((t) => t.id),
-      affectedProjects: [...new Set(blockedTasks.map((t) => t.projectId))],
+      affectedProjects: definedProjectIds(blockedTasks),
       estimatedImpact: "Workflow bottlenecks, potential cascade delays",
       timeToResolve: "1-2 weeks",
       createdAt: new Date().toISOString(),
@@ -144,21 +173,24 @@ const analyzeProjectRisks = async (
   }
 
   // 3. Resource Conflict Detection
-  const tasksByAssignee = tasks.reduce((acc: any, task) => {
-    if (task.assigneeId && task.status !== "done") {
-      if (!acc[task.assigneeId]) acc[task.assigneeId] = [];
-      acc[task.assigneeId].push(task);
-    }
-    return acc;
-  }, {});
+  const tasksByAssignee = tasks.reduce<Record<string, RiskTask[]>>(
+    (acc, task) => {
+      if (task.assigneeId && task.status !== "done") {
+        if (!acc[task.assigneeId]) acc[task.assigneeId] = [];
+        acc[task.assigneeId]?.push(task);
+      }
+      return acc;
+    },
+    {},
+  );
 
   const overloadedAssignees = Object.entries(tasksByAssignee).filter(
-    ([_, tasksArray]: [string, any]) => (tasksArray as any[]).length > 8,
+    ([_, tasksArray]) => tasksArray.length > 8,
   );
 
   if (overloadedAssignees.length > 0) {
     const totalOverloadedTasks = overloadedAssignees.reduce(
-      (sum, [_, tasks]) => sum + (tasks as any[]).length,
+      (sum, [_, tasks]) => sum + tasks.length,
       0,
     );
 
@@ -171,12 +203,12 @@ const analyzeProjectRisks = async (
       recommendation:
         "Redistribute workload, consider hiring, or adjust project scope. Schedule one-on-ones with overloaded team members.",
       affectedTasks: overloadedAssignees.flatMap(([_, tasks]) =>
-        (tasks as any[]).map((t) => t.id),
+        tasks.map((t) => t.id),
       ),
       affectedProjects: [
         ...new Set(
           overloadedAssignees.flatMap(([_, tasks]) =>
-            (tasks as any[]).map((t) => t.projectId),
+            tasks.map((t) => t.projectId).filter((id): id is string => !!id),
           ),
         ),
       ],
@@ -322,9 +354,9 @@ function useIdleReady(deferUntilIdle: boolean | undefined): boolean {
 }
 
 export default function useRiskDetection(
-  tasks: any[] = [],
-  projects: any[] = [],
-  teamMembers: any[] = [],
+  tasks: RiskTask[] = [],
+  projects: RiskProject[] = [],
+  teamMembers: unknown[] = [],
   options?: RiskDetectionOptions,
 ) {
   const queryEnabled =
@@ -373,8 +405,8 @@ export type UseRiskMonitorOptions = {
 
 // Hook for real-time risk monitoring
 export const useRiskMonitor = (
-  tasks: any[],
-  projects: any[],
+  tasks: RiskTask[],
+  projects: RiskProject[],
   options?: UseRiskMonitorOptions,
 ) => {
   const idleReady = useIdleReady(options?.deferUntilIdle);

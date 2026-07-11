@@ -10,7 +10,11 @@ import {
 import { logger } from "@/lib/logger";
 import useWorkspaceStore from "@/store/workspace";
 import { useDashboardData } from "@/hooks/queries/dashboard/use-dashboard-data";
-import { useRiskMonitor } from "@/hooks/queries/risk/use-risk-detection";
+import {
+  useRiskMonitor,
+  type RiskTask,
+  type RiskProject,
+} from "@/hooks/queries/risk/use-risk-detection";
 import {
   useOptionalRBACAuth,
   type RBACAuthContextType,
@@ -63,12 +67,19 @@ export function DashboardOverviewPage() {
 
   const allTasks = useMemo(() => {
     if (!dashboardData?.projects?.length) return [];
-    return flattenTasksFromProjects(dashboardData.projects).slice(0, 2000);
+    return flattenTasksFromProjects<RiskTask>(dashboardData.projects).slice(
+      0,
+      2000,
+    );
   }, [dashboardData]);
 
-  const riskData = useRiskMonitor(allTasks, dashboardData?.projects || [], {
-    deferUntilIdle: true,
-  });
+  const riskData = useRiskMonitor(
+    allTasks,
+    (dashboardData?.projects || []) as RiskProject[],
+    {
+      deferUntilIdle: true,
+    },
+  );
 
   const activityFeedWindow = useDashboardActivityFeed(
     dashboardData?.activities,

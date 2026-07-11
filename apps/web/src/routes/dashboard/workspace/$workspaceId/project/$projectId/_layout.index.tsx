@@ -357,7 +357,7 @@ function ProjectOverview() {
       inProgressTasks,
       overdueTasks,
       teamMembers: new Set(
-        allTasks.map((task) => task.assigneeId).filter(Boolean),
+        allTasks.map((task) => task.userEmail).filter(Boolean),
       ).size,
       daysRemaining: 0,
       velocity,
@@ -377,7 +377,8 @@ function ProjectOverview() {
       .slice()
       .sort(
         (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+          new Date(b.updatedAt || b.createdAt).getTime() -
+          new Date(a.updatedAt || a.createdAt).getTime(),
       )
       .slice(0, 5)
       .map((task) => {
@@ -453,7 +454,8 @@ function ProjectOverview() {
       .slice()
       .sort(
         (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+          new Date(b.updatedAt || b.createdAt).getTime() -
+          new Date(a.updatedAt || a.createdAt).getTime(),
       )
       .slice(0, 3)
       .map((task) => ({
@@ -467,7 +469,9 @@ function ProjectOverview() {
         user:
           teamMembers.find((m) => m.email === task.userEmail)?.name ||
           "Team Member",
-        timestamp: new Date(task.updatedAt).toLocaleTimeString(),
+        timestamp: new Date(
+          task.updatedAt || task.createdAt,
+        ).toLocaleTimeString(),
         priority: task.priority || ("medium" as ActivityItem["priority"]),
         icon: task.status === "done" ? "✅" : "📝",
       }));
