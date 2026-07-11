@@ -127,7 +127,7 @@ export function ClickableUserProfile({
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
-            handleClick(e as any);
+            handleClick(e as unknown as React.MouseEvent);
           }
         }}
       >
