@@ -291,7 +291,9 @@ describe('TaskDetailModal', () => {
       name: 'John Doe',
       email: 'john@example.com',
     },
-    dueDate: '2024-12-31',
+    // Midday local time — a bare date parses as UTC midnight and can render
+    // as a different calendar day depending on the machine's timezone
+    dueDate: '2024-12-31T12:00:00',
     tags: ['backend', 'security'],
     comments: [
       {
@@ -352,7 +354,11 @@ describe('TaskDetailModal', () => {
       { wrapper: TestWrapper }
     )
 
-    expect(screen.getByText(/12\/31\/2024/)).toBeInTheDocument()
+    // The component renders toLocaleDateString(), whose format depends on the
+    // machine's locale — compute the expected string the same way
+    expect(
+      screen.getByText(new Date('2024-12-31T12:00:00').toLocaleDateString())
+    ).toBeInTheDocument()
   })
 
   it('should show all tags', () => {

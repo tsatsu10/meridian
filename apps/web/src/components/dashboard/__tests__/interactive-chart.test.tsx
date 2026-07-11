@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InteractiveChart, ProductivityChart, TaskCompletionChart, ProjectHealthChart } from '@/components/dashboard/interactive-chart';
 
@@ -109,76 +110,74 @@ describe('InteractiveChart', () => {
     expect(onTimeRangeChange).toHaveBeenCalledWith('7d');
   });
 
-  it('shows chart type options in dropdown when onChartTypeChange is provided', () => {
+  // The chart menu is a Radix DropdownMenu — it opens on real pointer event
+  // sequences, so these tests use userEvent instead of fireEvent.click.
+  it('shows chart type options in dropdown when onChartTypeChange is provided', async () => {
+    const user = userEvent.setup();
     const onChartTypeChange = vi.fn();
     render(
-      <InteractiveChart 
-        title="Test Chart" 
-        data={mockData} 
-        onChartTypeChange={onChartTypeChange} 
+      <InteractiveChart
+        title="Test Chart"
+        data={mockData}
+        onChartTypeChange={onChartTypeChange}
       />
     );
-    
-    // Click the dropdown trigger
-    const dropdownTrigger = screen.getByRole('button');
-    fireEvent.click(dropdownTrigger);
-    
-    expect(screen.getByText('Line Chart')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button'));
+
+    expect(await screen.findByText('Line Chart')).toBeInTheDocument();
     expect(screen.getByText('Bar Chart')).toBeInTheDocument();
     expect(screen.getByText('Area Chart')).toBeInTheDocument();
     expect(screen.getByText('Pie Chart')).toBeInTheDocument();
   });
 
-  it('calls onChartTypeChange when chart type is selected', () => {
+  it('calls onChartTypeChange when chart type is selected', async () => {
+    const user = userEvent.setup();
     const onChartTypeChange = vi.fn();
     render(
-      <InteractiveChart 
-        title="Test Chart" 
-        data={mockData} 
-        onChartTypeChange={onChartTypeChange} 
+      <InteractiveChart
+        title="Test Chart"
+        data={mockData}
+        onChartTypeChange={onChartTypeChange}
       />
     );
-    
-    // Click the dropdown trigger
-    const dropdownTrigger = screen.getByRole('button');
-    fireEvent.click(dropdownTrigger);
-    
-    fireEvent.click(screen.getByText('Bar Chart'));
+
+    await user.click(screen.getByRole('button'));
+    await user.click(await screen.findByText('Bar Chart'));
+
     expect(onChartTypeChange).toHaveBeenCalledWith('bar');
   });
 
-  it('shows export option when onExport is provided', () => {
+  it('shows export option when onExport is provided', async () => {
+    const user = userEvent.setup();
     const onExport = vi.fn();
     render(
-      <InteractiveChart 
-        title="Test Chart" 
-        data={mockData} 
-        onExport={onExport} 
+      <InteractiveChart
+        title="Test Chart"
+        data={mockData}
+        onExport={onExport}
       />
     );
-    
-    // Click the dropdown trigger
-    const dropdownTrigger = screen.getByRole('button');
-    fireEvent.click(dropdownTrigger);
-    
-    expect(screen.getByText('Export Data')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button'));
+
+    expect(await screen.findByText('Export Data')).toBeInTheDocument();
   });
 
-  it('calls onExport when export option is clicked', () => {
+  it('calls onExport when export option is clicked', async () => {
+    const user = userEvent.setup();
     const onExport = vi.fn();
     render(
-      <InteractiveChart 
-        title="Test Chart" 
-        data={mockData} 
-        onExport={onExport} 
+      <InteractiveChart
+        title="Test Chart"
+        data={mockData}
+        onExport={onExport}
       />
     );
-    
-    // Click the dropdown trigger
-    const dropdownTrigger = screen.getByRole('button');
-    fireEvent.click(dropdownTrigger);
-    
-    fireEvent.click(screen.getByText('Export Data'));
+
+    await user.click(screen.getByRole('button'));
+    await user.click(await screen.findByText('Export Data'));
+
     expect(onExport).toHaveBeenCalled();
   });
 

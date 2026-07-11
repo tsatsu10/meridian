@@ -90,10 +90,11 @@ describe('RiskAlertSection', () => {
 
   it('renders the section when alerts are present', () => {
     const Wrapper = createWrapper();
-    render(<RiskAlertSection riskData={mockRiskDataWithAlerts} />, { wrapper: Wrapper });
+    const { container } = render(<RiskAlertSection riskData={mockRiskDataWithAlerts} />, { wrapper: Wrapper });
 
     expect(screen.getByText('Risk Detection System')).toBeInTheDocument();
-    expect(screen.getAllByTestId('mock-icon').length).toBeGreaterThan(0);
+    // lucide-react icons render as inline SVGs
+    expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
     expect(screen.getByText('4 risks')).toBeInTheDocument();
   });
 
@@ -112,7 +113,7 @@ describe('RiskAlertSection', () => {
 
   it('displays correct alert information', () => {
     const Wrapper = createWrapper();
-    render(<RiskAlertSection riskData={mockRiskDataWithAlerts} />, { wrapper: Wrapper });
+    const { container } = render(<RiskAlertSection riskData={mockRiskDataWithAlerts} />, { wrapper: Wrapper });
 
     // Check first alert details
     expect(screen.getByText('High CPU Usage')).toBeInTheDocument();
@@ -120,9 +121,8 @@ describe('RiskAlertSection', () => {
     expect(screen.getByText('high')).toBeInTheDocument();
     expect(screen.getByText('3 tasks affected')).toBeInTheDocument();
 
-    // Check shield icons are present
-    const shieldIcons = screen.getAllByTestId('mock-icon');
-    expect(shieldIcons.length).toBeGreaterThan(0); // At least one icon should be present
+    // Check icons are present (lucide-react renders inline SVGs)
+    expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
   });
 
   it('displays severity badges correctly', () => {
@@ -164,11 +164,11 @@ describe('RiskAlertSection', () => {
     };
 
     const Wrapper = createWrapper();
-    render(<RiskAlertSection riskData={singleAlertData} />, { wrapper: Wrapper });
+    const { container } = render(<RiskAlertSection riskData={singleAlertData} />, { wrapper: Wrapper });
 
     expect(screen.getByText('1 risks')).toBeInTheDocument();
     expect(screen.getByText('High CPU Usage')).toBeInTheDocument();
-    expect(screen.getAllByTestId('mock-icon').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
   });
 
   it('handles alerts with empty affected tasks array', () => {

@@ -399,7 +399,10 @@ describe('CreateProjectModal', () => {
 
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith('Project created successfully!')
-        expect(mockNavigate).toHaveBeenCalledWith({ to: '/dashboard/projects' })
+        expect(mockNavigate).toHaveBeenCalledWith({
+          to: '/dashboard/projects',
+          search: { page: 1, ps: 12, q: undefined, archived: false },
+        })
         expect(mockOnClose).toHaveBeenCalled()
       })
     })

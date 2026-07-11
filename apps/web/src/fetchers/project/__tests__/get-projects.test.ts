@@ -11,13 +11,14 @@ vi.mock('@meridian/libs', () => ({
 }));
 
 import { client } from '@meridian/libs';
+import { logger } from '@/lib/logger';
 
 describe('getProjects', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Clear console spies
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    // The fetcher reports through the app logger, not console directly
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'error').mockImplementation(() => {});
   });
 
   it('should fetch projects successfully', async () => {
@@ -172,14 +173,14 @@ describe('getProjects', () => {
     const result = await getProjects({ workspaceId: '' });
 
     expect(result).toEqual([]);
-    expect(console.warn).toHaveBeenCalledWith('⚠️ No workspaceId provided to getProjects');
+    expect(logger.warn).toHaveBeenCalledWith('getProjects called without workspaceId');
   });
 
   it('should return empty array when workspaceId is undefined', async () => {
     const result = await getProjects({ workspaceId: undefined as any });
 
     expect(result).toEqual([]);
-    expect(console.warn).toHaveBeenCalledWith('⚠️ No workspaceId provided to getProjects');
+    expect(logger.warn).toHaveBeenCalledWith('getProjects called without workspaceId');
   });
 
   it('should throw error when response is not ok', async () => {
@@ -194,10 +195,9 @@ describe('getProjects', () => {
       getProjects({ workspaceId: 'invalid-workspace' })
     ).rejects.toThrow('Failed to fetch projects: Workspace not found');
 
-    expect(console.error).toHaveBeenCalledWith(
-      '❌ API Error:',
-      'Failed to fetch projects: Workspace not found'
-    );
+    expect(logger.error).toHaveBeenCalledWith('getProjects API error', {
+      error: 'Failed to fetch projects: Workspace not found',
+    });
   });
 
   it('should handle empty project list', async () => {

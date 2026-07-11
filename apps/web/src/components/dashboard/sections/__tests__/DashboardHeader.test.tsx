@@ -13,11 +13,6 @@ vi.mock('@/components/dashboard/universal-header', () => ({
   )
 }));
 
-// Mock the OfflineStatusIndicator
-vi.mock('@/components/pwa/OfflineStatusIndicator', () => ({
-  default: () => <div data-testid="offline-status-indicator" />
-}));
-
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   RefreshCw: ({ className, ...props }: any) => (
@@ -56,12 +51,6 @@ describe('DashboardHeader', () => {
 
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText("Welcome back! Here's what's happening with your projects.")).toBeInTheDocument();
-  });
-
-  it('renders offline status indicator', () => {
-    render(<DashboardHeader {...defaultProps} />);
-
-    expect(screen.getByTestId('offline-status-indicator')).toBeInTheDocument();
   });
 
   it('renders refresh button', () => {
@@ -134,7 +123,6 @@ describe('DashboardHeader', () => {
     render(<DashboardHeader {...defaultProps} riskData={undefined as any} />);
 
     expect(screen.queryByText('Risks Detected')).not.toBeInTheDocument();
-    expect(screen.getByTestId('offline-status-indicator')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /refresh/i })).toBeInTheDocument();
   });
 
@@ -150,10 +138,8 @@ describe('DashboardHeader', () => {
     render(<DashboardHeader {...defaultProps} riskData={mockRiskDataWithRisks} />);
 
     void (screen.getByTestId('custom-actions'));
-    
-    // Check that offline indicator, risk indicator, and refresh button are present
-    const offlineIndicator = screen.getByTestId('offline-status-indicator');
-    expect(offlineIndicator).toBeInTheDocument();
+
+    // Check that risk indicator and refresh button are present
     expect(screen.getByText('Risks Detected')).toBeInTheDocument();
     expect(screen.getByText('Refresh')).toBeInTheDocument();
   });

@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import signIn from '../sign-in';
 
-// Mock the constants
+// Mock the constants — the fetcher imports API_BASE_URL (URL + /api prefix)
 vi.mock('@/constants/urls', () => ({
   API_URL: 'http://localhost:3000',
+  API_BASE_URL: 'http://localhost:3000/api',
 }));
 
 describe('signIn', () => {
@@ -43,6 +44,7 @@ describe('signIn', () => {
           email: 'user@example.com',
           password: 'password123',
         }),
+        signal: expect.any(AbortSignal),
       }
     );
 

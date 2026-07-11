@@ -11,6 +11,17 @@ export default defineConfig({
     css: true,
     testTimeout: 10000, // Increase timeout for integration tests
     hookTimeout: 10000,
+    // The jsdom suites leak memory across test files within a worker, so runs
+    // die with "Ineffective mark-compacts near heap limit" mid-suite. Keep the
+    // default fork-per-CPU spread (fewer files per worker = less accumulation)
+    // and raise each fork's old-space ceiling for headroom. Do NOT cap
+    // maxForks low — concentrating files in fewer workers makes the leak worse.
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        execArgv: ['--max-old-space-size=4096'],
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

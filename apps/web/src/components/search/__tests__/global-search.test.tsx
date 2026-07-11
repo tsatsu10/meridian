@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TestWrapper } from '../../../test-utils/test-wrapper';
 import React from 'react';
@@ -43,8 +43,9 @@ function GlobalSearch({ onSearch, onResultClick }: GlobalSearchProps) {
     // Simulate search delay
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Mock results
-    if (searchQuery) {
+    // Mock results — only queries containing "test" match, so searches like
+    // "nonexistent" exercise the empty state
+    if (searchQuery.toLowerCase().includes('test')) {
       setResults([
         {
           id: 'task-1',
@@ -141,10 +142,9 @@ describe('Global Search Component', () => {
 
     await user.type(screen.getByLabelText(/search input/i), 'test');
 
-    await waitFor(async () => {
-      const result = await screen.findByTestId('result-task-1');
-      await user.click(result);
-    });
+    // The click handler lives on the button inside the result item
+    const result = await screen.findByTestId('result-task-1');
+    await user.click(within(result).getByRole('button'));
 
     expect(onResultClick).toHaveBeenCalled();
   });

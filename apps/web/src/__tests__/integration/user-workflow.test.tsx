@@ -343,15 +343,18 @@ describe('User Workflow Integration Tests', () => {
 
   describe('Performance and Optimization', () => {
     it('should handle concurrent operations', async () => {
+      // Set the implementation BEFORE invoking — clearAllMocks() only clears
+      // call history, so the rejecting mock from an earlier test would
+      // otherwise still be active for these calls.
+      mockApi.createTask.mockImplementation((data) =>
+        Promise.resolve({ taskId: `task-${data.title}`, ...data })
+      );
+
       const tasks = [
         mockApi.createTask({ title: 'Task 1', projectId: 'p1' }),
         mockApi.createTask({ title: 'Task 2', projectId: 'p1' }),
         mockApi.createTask({ title: 'Task 3', projectId: 'p1' }),
       ];
-
-      mockApi.createTask.mockImplementation((data) =>
-        Promise.resolve({ taskId: `task-${data.title}`, ...data })
-      );
 
       const results = await Promise.all(tasks);
 

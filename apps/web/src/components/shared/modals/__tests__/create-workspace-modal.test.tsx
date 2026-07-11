@@ -184,7 +184,10 @@ describe('CreateWorkspaceModal', () => {
       expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['workspaces'] })
 
       // Should navigate to projects page
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/dashboard/projects' })
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: '/dashboard/projects',
+        search: { page: 1, ps: 12, q: undefined, archived: false },
+      })
 
       // Should close modal
       expect(mockOnClose).toHaveBeenCalled()

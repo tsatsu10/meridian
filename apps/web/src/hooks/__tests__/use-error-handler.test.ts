@@ -37,6 +37,8 @@ describe('useErrorHandler', () => {
   });
 
   it('retries operation successfully', async () => {
+    // retry() performs ONE attempt per call (after retryDelay) and rethrows on
+    // failure — callers re-invoke it for another attempt.
     const onRetry = vi.fn();
     const { result } = renderHook(() => useErrorHandler({ onRetry }));
 
@@ -44,21 +46,30 @@ describe('useErrorHandler', () => {
       .mockRejectedValueOnce(new Error('First attempt failed'))
       .mockResolvedValueOnce('Success');
 
-    let retryPromise: Promise<any>;
-
+    // First attempt fails
+    let firstAttempt: Promise<any>;
     act(() => {
-      retryPromise = result.current.retry(mockOperation);
+      firstAttempt = result.current.retry(mockOperation);
     });
 
     expect(result.current.isRetrying).toBe(true);
 
-    // Fast-forward timers
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(1000);
+      await expect(firstAttempt!).rejects.toThrow('First attempt failed');
+    });
+
+    expect(result.current.retryCount).toBe(1);
+
+    // Second attempt succeeds and resets the error state
+    let secondAttempt: Promise<any>;
+    act(() => {
+      secondAttempt = result.current.retry(mockOperation);
     });
 
     await act(async () => {
-      await retryPromise!;
+      vi.advanceTimersByTime(1000);
+      await secondAttempt!;
     });
 
     expect(result.current.error).toBeNull();
@@ -66,6 +77,7 @@ describe('useErrorHandler', () => {
     expect(result.current.hasRetried).toBe(true);
     expect(mockOperation).toHaveBeenCalledTimes(2);
     expect(onRetry).toHaveBeenCalledWith(1);
+    expect(onRetry).toHaveBeenCalledWith(2);
   });
 
   it('exhausts retries after max attempts', async () => {
@@ -73,30 +85,28 @@ describe('useErrorHandler', () => {
 
     const mockOperation = vi.fn().mockRejectedValue(new Error('Always fails'));
 
-    let retryPromise: Promise<any>;
-
-    act(() => {
-      retryPromise = result.current.retry(mockOperation);
-    });
-
-    // Fast-forward through all retries
-    for (let i = 0; i < 3; i++) {
+    // Each retry() call is one attempt; two failures reach maxRetries
+    for (let i = 0; i < 2; i++) {
+      let attempt: Promise<any>;
       act(() => {
+        attempt = result.current.retry(mockOperation);
+      });
+      await act(async () => {
         vi.advanceTimersByTime(1000);
+        await attempt!.catch(() => {
+          // Expected to throw
+        });
       });
     }
 
-    await act(async () => {
-      try {
-        await retryPromise!;
-      } catch (error) {
-        // Expected to throw
-      }
-    });
-
     expect(result.current.retryCount).toBe(2);
     expect(result.current.canRetry).toBe(false);
-    expect(mockOperation).toHaveBeenCalledTimes(3); // Initial + 2 retries
+
+    // A further retry is refused without invoking the operation again
+    await act(async () => {
+      await result.current.retry(mockOperation);
+    });
+    expect(mockOperation).toHaveBeenCalledTimes(2);
   });
 
   it('clears error state', () => {
@@ -182,23 +192,30 @@ describe('useApiCall', () => {
 
     const { result } = renderHook(() => useApiCall(mockApiCall));
 
-    let retryPromise: Promise<any>;
-
+    // First retry attempt fails (retry() runs one attempt per call)
+    let firstAttempt: Promise<any>;
     act(() => {
-      retryPromise = result.current.retry();
+      firstAttempt = result.current.retry();
     });
-
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
     await act(async () => {
-      await retryPromise!;
+      vi.advanceTimersByTime(1000);
+      await expect(firstAttempt!).rejects.toThrow('First attempt failed');
+    });
+
+    // Second retry attempt succeeds
+    let secondAttempt: Promise<any>;
+    act(() => {
+      secondAttempt = result.current.retry();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      await secondAttempt!;
     });
 
     expect(result.current.data).toBe('Success');
     expect(result.current.error).toBeNull();
     expect(result.current.retryCount).toBe(0);
+    expect(mockApiCall).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -322,18 +339,24 @@ describe('useFormSubmission', () => {
 
     const formData = { name: 'John' };
 
-    let retryPromise: Promise<any>;
-
+    // First retry attempt fails (retry() runs one attempt per call)
+    let firstAttempt: Promise<any>;
     act(() => {
-      retryPromise = result.current.retry(formData);
+      firstAttempt = result.current.retry(formData);
     });
-
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
     await act(async () => {
-      await retryPromise!;
+      vi.advanceTimersByTime(1000);
+      await expect(firstAttempt!).rejects.toThrow('First attempt failed');
+    });
+
+    // Second retry attempt succeeds
+    let secondAttempt: Promise<any>;
+    act(() => {
+      secondAttempt = result.current.retry(formData);
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      await secondAttempt!;
     });
 
     expect(result.current.isSuccess).toBe(true);

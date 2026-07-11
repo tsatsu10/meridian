@@ -44,7 +44,9 @@ function TestForm({ onSubmit }: { onSubmit: (data: TestFormData) => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      {/* noValidate: let zod/react-hook-form validate — otherwise the browser's
+          native type="email" constraint blocks the submit event before RHF runs */}
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FormField
           control={form.control}
           name="email"
@@ -87,7 +89,7 @@ function TestForm({ onSubmit }: { onSubmit: (data: TestFormData) => void }) {
           )}
         />
 
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={form.formState.isSubmitting}>Submit</Button>
       </form>
     </Form>
   );
@@ -168,11 +170,15 @@ describe('Form Validation', () => {
     await user.click(screen.getByRole('button', { name: /submit/i }));
 
     await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'ValidPassword123!',
-        confirmPassword: 'ValidPassword123!',
-      });
+      // react-hook-form passes (data, event)
+      expect(onSubmit).toHaveBeenCalledWith(
+        {
+          email: 'test@example.com',
+          password: 'ValidPassword123!',
+          confirmPassword: 'ValidPassword123!',
+        },
+        expect.anything(),
+      );
     });
   });
 

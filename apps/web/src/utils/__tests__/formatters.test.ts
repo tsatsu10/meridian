@@ -181,7 +181,8 @@ describe('Formatting Utilities', () => {
 
     it('should create URL-friendly slugs', () => {
       expect(slugify('Hello World')).toBe('hello-world');
-      expect(slugify('Test & Demo')).toBe('test--demo');
+      // '&' is stripped, then the surrounding run of whitespace collapses to one hyphen
+      expect(slugify('Test & Demo')).toBe('test-demo');
       expect(slugify('Multiple   Spaces')).toBe('multiple-spaces');
     });
   });

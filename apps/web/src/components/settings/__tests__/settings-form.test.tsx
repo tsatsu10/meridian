@@ -160,7 +160,8 @@ describe('Settings Form Component', () => {
     expect(screen.getByDisplayValue('Test User')).toBeInTheDocument();
     expect(screen.getByDisplayValue('test@example.com')).toBeInTheDocument();
     expect(screen.getByDisplayValue('UTC')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('en')).toBeInTheDocument();
+    // For a <select>, the display value is the selected option's text
+    expect(screen.getByDisplayValue('English')).toBeInTheDocument();
   });
 
   it('should update name field', async () => {
@@ -186,7 +187,8 @@ describe('Settings Form Component', () => {
       { wrapper: TestWrapper }
     );
 
-    const emailInput = screen.getByLabelText(/email/i);
+    // Anchored so it doesn't also match the "Email Notifications" checkbox label
+    const emailInput = screen.getByLabelText(/^email$/i);
     await user.clear(emailInput);
     await user.type(emailInput, 'newemail@example.com');
 
@@ -328,7 +330,7 @@ describe('Settings Form Component', () => {
 
     // All inputs should have labels
     expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/timezone/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/language/i)).toBeInTheDocument();
 
