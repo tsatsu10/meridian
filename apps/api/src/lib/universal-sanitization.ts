@@ -368,7 +368,7 @@ export function sanitizeNumber(
 
   const parsed = Number(value);
 
-  if (isNaN(parsed) || !isFinite(parsed)) {
+  if (isNaN(parsed) || !Number.isFinite(parsed)) {
     return defaultValue;
   }
 

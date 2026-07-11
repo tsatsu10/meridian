@@ -257,12 +257,13 @@ function NotificationsPanel() {
       if (!a.isPinned && b.isPinned) return 1;
 
       switch (sortBy) {
-        case "priority":
+        case "priority": {
           const priorityOrder = { error: 0, warning: 1, success: 2, info: 3 };
           return (
             (priorityOrder[a.type as keyof typeof priorityOrder] ?? 4) -
             (priorityOrder[b.type as keyof typeof priorityOrder] ?? 4)
           );
+        }
         case "type":
           return a.type.localeCompare(b.type);
         default:
@@ -455,7 +456,7 @@ function NotificationsPanel() {
       let groupKey = "";
 
       switch (groupBy) {
-        case "date":
+        case "date": {
           const date = new Date(notification.createdAt);
           if (isToday(date)) {
             groupKey = "Today";
@@ -465,6 +466,7 @@ function NotificationsPanel() {
             groupKey = format(date, "MMMM d, yyyy");
           }
           break;
+        }
         case "type":
           groupKey =
             notification.type.charAt(0).toUpperCase() +

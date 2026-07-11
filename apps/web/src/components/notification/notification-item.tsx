@@ -424,7 +424,7 @@ const NotificationItem = memo(
           onClick={handleClick}
         >
           {selectionMode && (
-            <button
+            <button type="button"
               onClick={handleCheckboxClick}
               className="flex items-center justify-center h-8 w-8 hover:bg-muted rounded transition-colors"
             >
@@ -576,7 +576,7 @@ const NotificationItem = memo(
         }}
       >
         {selectionMode && (
-          <button
+          <button type="button"
             onClick={handleCheckboxClick}
             className="flex items-center justify-center h-10 w-10 hover:bg-muted rounded transition-colors"
           >

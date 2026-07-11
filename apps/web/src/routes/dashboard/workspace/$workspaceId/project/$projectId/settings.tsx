@@ -965,7 +965,7 @@ function ProjectSettings() {
                 { id: "data", label: "Data", icon: FileText },
                 { id: "danger", label: "Danger Zone", icon: AlertTriangle },
               ].map((tab) => (
-                <button
+                <button type="button"
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={cn(
@@ -2157,7 +2157,7 @@ function ProjectSettings() {
                     category: "external",
                   },
                 ].map((role) => (
-                  <button
+                  <button type="button"
                     key={role.value}
                     onClick={() => {
                       if (selectedTeam && selectedMember) {

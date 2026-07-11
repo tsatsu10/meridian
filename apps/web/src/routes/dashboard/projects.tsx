@@ -767,7 +767,7 @@ function ProjectsPage() {
                       {Array.from(
                         { length: Math.min(5, pagination.pages) },
                         (_, i) => {
-                          let pageNum;
+                          let pageNum: number;
                           if (pagination.pages <= 5) {
                             pageNum = i + 1;
                           } else if (currentPage <= 3) {

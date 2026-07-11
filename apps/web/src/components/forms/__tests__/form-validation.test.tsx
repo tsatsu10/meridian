@@ -74,12 +74,13 @@ function FormWithValidation({
           }
           break;
 
-        case "email":
+        case "email": {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (value && !emailRegex.test(value)) {
             return rule.message;
           }
           break;
+        }
 
         case "minLength":
           if (value && value.length < rule.value) {

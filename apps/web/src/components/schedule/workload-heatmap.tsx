@@ -209,7 +209,7 @@ export function WorkloadHeatmap({
                         <TooltipProvider key={index}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <button
+                              <button type="button"
                                 onClick={() => onCellClick?.(date, member)}
                                 className={cn(
                                   "w-10 h-10 rounded-sm border border-border/50 transition-all hover:scale-110 hover:z-10 hover:shadow-lg",

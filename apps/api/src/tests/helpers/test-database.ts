@@ -104,6 +104,7 @@ export function createMockDb() {
       chain.innerJoin = vi.fn().mockReturnValue(chain); // Add innerJoin support
       chain.leftJoin = vi.fn().mockReturnValue(chain); // Add leftJoin support
       // Make chainable and await-able - return results for this specific select() call
+      // biome-ignore lint/suspicious/noThenProperty: the mock must be thenable so `await db.select()...` chains resolve like drizzle's query builder
       chain.then = (resolve: any) => {
         const results = selectResults[currentIndex] || [];
         return Promise.resolve(results).then(resolve);

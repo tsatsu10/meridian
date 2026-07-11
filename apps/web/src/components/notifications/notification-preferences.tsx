@@ -217,7 +217,7 @@ export const NotificationPreferences: React.FC<
             { id: "digests", label: "Digests", icon: "📧" },
             { id: "advanced", label: "Advanced", icon: "⚙️" },
           ].map((tab) => (
-            <button
+            <button type="button"
               key={tab.id}
               onClick={() => setActiveSection(tab.id as any)}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
@@ -617,13 +617,13 @@ export const NotificationPreferences: React.FC<
 
       {/* Footer */}
       <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
-        <button
+        <button type="button"
           onClick={fetchPreferences}
           className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
         >
           Reset
         </button>
-        <button
+        <button type="button"
           onClick={savePreferences}
           disabled={saving}
           className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"

@@ -43,6 +43,15 @@ function KanbanColumn({
 }: KanbanColumnProps) {
   const [isAddingTask, setIsAddingTask] = React.useState(false);
   const [newTaskTitle, setNewTaskTitle] = React.useState("");
+  const newTaskInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Focus the input when the user opens the add-task form (imperative focus
+  // instead of autoFocus, which lint rejects for page-load misuse).
+  React.useEffect(() => {
+    if (isAddingTask) {
+      newTaskInputRef.current?.focus();
+    }
+  }, [isAddingTask]);
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && onAddTask) {
@@ -81,7 +90,7 @@ function KanbanColumn({
         >
           {column.tasks.length}
         </span>
-        <button
+        <button type="button"
           onClick={() => setIsAddingTask(true)}
           aria-label={`Add task to ${column.title}`}
         >
@@ -91,17 +100,16 @@ function KanbanColumn({
 
       {isAddingTask && (
         <div className="add-task-form">
-          {/* biome-ignore lint/a11y/noAutofocus: user-initiated disclosure — focusing the just-revealed input is the expected UX */}
           <input
+            ref={newTaskInputRef}
             type="text"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="Enter task title..."
             aria-label="New task title"
-            autoFocus
           />
-          <button onClick={handleAddTask}>Add</button>
-          <button onClick={() => setIsAddingTask(false)}>Cancel</button>
+          <button type="button" onClick={handleAddTask}>Add</button>
+          <button type="button" onClick={() => setIsAddingTask(false)}>Cancel</button>
         </div>
       )}
 

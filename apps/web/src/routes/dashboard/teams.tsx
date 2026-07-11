@@ -586,7 +586,7 @@ function TeamsPage() {
       healthScore = Math.max(0, Math.min(100, Math.round(healthScore)));
 
       // Get health status
-      let healthStatus;
+      let healthStatus: { label: string; color: string; bg: string };
       if (healthScore >= 80) {
         healthStatus = {
           label: "Excellent",
@@ -1526,7 +1526,7 @@ function TeamsPage() {
 
         {/* View Mode Tabs */}
         <div className="flex rounded-lg border border-input">
-          <button
+          <button type="button"
             onClick={() => setViewMode("teams")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors flex items-center space-x-2",
@@ -1536,7 +1536,7 @@ function TeamsPage() {
             <Users className="h-4 w-4" />
             <span>Teams ({filteredAndSortedTeams.length})</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => setViewMode("members")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",
@@ -1546,7 +1546,7 @@ function TeamsPage() {
             <UserPlus className="h-4 w-4" />
             <span>Members ({filteredMembers.length})</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => setViewMode("directory")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",
@@ -1556,7 +1556,7 @@ function TeamsPage() {
             <Users className="h-4 w-4" />
             <span>People Directory ({filteredDirectoryUsers.length})</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => setViewMode("users")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",

@@ -110,7 +110,7 @@ export default function NotificationCenter({
 
     notifications.forEach((notification) => {
       const date = new Date(notification.timestamp);
-      let groupKey;
+      let groupKey: string;
 
       if (isToday(date)) {
         groupKey = "Today";

@@ -99,7 +99,7 @@ export function InviteUserModal({
               <p className="text-sm text-gray-500">to {workspaceName}</p>
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={handleClose}
             disabled={sendInvitation.isPending}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"

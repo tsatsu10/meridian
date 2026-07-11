@@ -95,7 +95,7 @@ function FilterBar({
       )}
 
       {hasActiveFilters && (
-        <button onClick={clearFilters} aria-label="Clear all filters">
+        <button type="button" onClick={clearFilters} aria-label="Clear all filters">
           Clear Filters
         </button>
       )}

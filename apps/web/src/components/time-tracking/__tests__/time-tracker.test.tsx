@@ -157,7 +157,7 @@ function TimeTracker({
             <p className="timer-description">
               {currentTimer?.description || "No description"}
             </p>
-            <button
+            <button type="button"
               onClick={handleStop}
               aria-label="Stop timer"
               className="stop-button"
@@ -168,7 +168,7 @@ function TimeTracker({
         ) : (
           <div className="stopped-timer">
             <div className="timer-display">00:00:00</div>
-            <button
+            <button type="button"
               onClick={handleStart}
               disabled={isRunning}
               aria-label="Start timer"
@@ -198,7 +198,7 @@ function TimeTracker({
           pattern="\d{1,2}:\d{2}"
           aria-label="Duration (HH:MM format)"
         />
-        <button
+        <button type="button"
           onClick={handleAddManual}
           disabled={!description.trim() || !duration}
           aria-label="Add time entry"
@@ -241,14 +241,14 @@ function TimeTracker({
                       pattern="\d{1,2}:\d{2}"
                       aria-label="Edit duration"
                     />
-                    <button
+                    <button type="button"
                       onClick={() => handleEdit(entry.id)}
                       disabled={!editDescription.trim() || !editDuration}
                       aria-label="Save edit"
                     >
                       Save
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => {
                         setEditingId(null);
                         setEditDescription("");
@@ -281,7 +281,7 @@ function TimeTracker({
                       )}
                     </div>
                     <div className="entry-actions">
-                      <button
+                      <button type="button"
                         onClick={() => {
                           setEditingId(entry.id);
                           const hours = Math.floor(entry.duration / 3600);
@@ -297,7 +297,7 @@ function TimeTracker({
                       >
                         Edit
                       </button>
-                      <button
+                      <button type="button"
                         onClick={() => handleDelete(entry.id)}
                         aria-label={`Delete entry ${entry.description}`}
                         className="delete-button"

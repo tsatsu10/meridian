@@ -82,7 +82,6 @@ export default function NotificationSection({
                 role="article"
                 aria-labelledby={`notification-title-${index}`}
                 aria-describedby={`notification-content-${index}`}
-                tabIndex={0}
               >
                 <div className="mt-0.5" aria-hidden="true">
                   {notification.title.includes("🚨") ? (

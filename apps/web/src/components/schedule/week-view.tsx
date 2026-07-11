@@ -184,7 +184,7 @@ export default function WeekView({
                               event.type as keyof typeof eventTypeIcons
                             ];
                           return (
-                            <button
+                            <button type="button"
                               key={event.id}
                               onClick={() => onEventClick?.(event)}
                               className={cn(
@@ -260,7 +260,7 @@ export default function WeekView({
                             event.type as keyof typeof eventTypeIcons
                           ];
                         return (
-                          <button
+                          <button type="button"
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className={cn(

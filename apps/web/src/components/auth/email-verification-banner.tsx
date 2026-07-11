@@ -94,7 +94,7 @@ export function EmailVerificationBanner({
               )}
 
               <div className="mt-3 flex flex-wrap gap-2">
-                <button
+                <button type="button"
                   onClick={handleResend}
                   disabled={isResending || countdown > 0}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-amber-900 dark:text-amber-100 bg-amber-100 dark:bg-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -118,7 +118,7 @@ export function EmailVerificationBanner({
           </div>
 
           {onDismiss && (
-            <button
+            <button type="button"
               onClick={onDismiss}
               className="flex-shrink-0 ml-3 p-1 text-amber-600 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-100 transition-colors"
               aria-label="Dismiss"

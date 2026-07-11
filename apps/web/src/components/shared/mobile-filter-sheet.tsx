@@ -132,7 +132,7 @@ export function MobileFilterSheet({
                 const isSelected = statusFilter === option.value;
 
                 return (
-                  <button
+                  <button type="button"
                     key={option.value}
                     onClick={() => onStatusFilterChange(option.value)}
                     className={cn(
@@ -181,7 +181,7 @@ export function MobileFilterSheet({
                 const isSelected = priorityFilter === option.value;
 
                 return (
-                  <button
+                  <button type="button"
                     key={option.value}
                     onClick={() => onPriorityFilterChange(option.value)}
                     className={cn(
@@ -230,7 +230,7 @@ export function MobileFilterSheet({
                 const isSelected = sortBy === option.value;
 
                 return (
-                  <button
+                  <button type="button"
                     key={option.value}
                     onClick={() => onSortChange(option.value)}
                     className={cn(

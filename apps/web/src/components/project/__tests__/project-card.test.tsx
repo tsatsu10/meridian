@@ -156,13 +156,13 @@ function ProjectCard({
           role="group"
           aria-label="Project actions"
         >
-          <button
+          <button type="button"
             onClick={() => onEdit?.(project.id)}
             aria-label="Edit project"
           >
             Edit
           </button>
-          <button
+          <button type="button"
             onClick={() => onArchive?.(project.id)}
             aria-label="Archive project"
           >

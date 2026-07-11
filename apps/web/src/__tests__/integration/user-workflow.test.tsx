@@ -326,7 +326,7 @@ describe("User Workflow Integration Tests", () => {
       });
 
       // Simulate retry logic
-      let result;
+      let result: unknown;
       for (let i = 0; i < 3; i++) {
         try {
           result = await mockApi.sendMessage({ content: "Test" });

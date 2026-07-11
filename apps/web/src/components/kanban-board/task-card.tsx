@@ -139,7 +139,7 @@ const TaskCard = React.memo(
               } ${
                 isSelected ? "ring-2 ring-blue-500 border-blue-500" : ""
               } cursor-pointer hover:shadow-sm`}
-              role="article"
+              role="button"
               tabIndex={0}
               aria-label={`Task: ${task.title}. Priority: ${task.priority}. Status: ${task.status}. ${task.userEmail ? `Assigned to ${task.userEmail}` : "Unassigned"}. ${task.dueDate ? `Due ${format(new Date(task.dueDate), "MMMM d, yyyy")}` : "No due date"}`}
               onKeyDown={(e) => {
@@ -207,7 +207,7 @@ const TaskCard = React.memo(
                   </h3>
                   <div className="flex items-center gap-2">
                     {task.subtasks && task.subtasks.length > 0 && (
-                      <button
+                      <button type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsExpanded(!isExpanded);
@@ -239,7 +239,7 @@ const TaskCard = React.memo(
                     {/* 🛡️ RBAC: Team Lead Subtask Management Controls */}
                     <RequirePermission action="canCreateSubtasks">
                       {!isSubtask && (
-                        <button
+                        <button type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             // TODO: Open subtask creation modal
@@ -343,7 +343,7 @@ const TaskCard = React.memo(
                           {/* 🛡️ RBAC: Team Lead Subtask Controls */}
                           <RequirePermission action="canEditSubtasks">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                              <button
+                              <button type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}
@@ -369,7 +369,7 @@ const TaskCard = React.memo(
 
                           <RequirePermission action="canDeleteSubtasks">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
+                              <button type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}

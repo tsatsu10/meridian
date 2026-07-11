@@ -450,7 +450,7 @@ function GanttChart({ tasks }: GanttChartProps) {
         return `${baseClass} bg-blue-500 text-white`;
       case "todo":
         return `${baseClass} bg-gray-500 text-white`;
-      default:
+      default: {
         // Match the colors from the image
         const colors = [
           "bg-orange-500",
@@ -464,6 +464,7 @@ function GanttChart({ tasks }: GanttChartProps) {
         ];
         const colorIndex = task.title.charCodeAt(0) % colors.length;
         return `${baseClass} ${colors[colorIndex]} text-white`;
+      }
     }
   };
 
@@ -674,20 +675,20 @@ function GanttChart({ tasks }: GanttChartProps) {
               <div className="flex items-center gap-4">
                 <h3 className="font-semibold text-gray-900">Timeline View</h3>
                 <div className="flex items-center gap-2">
-                  <button
+                  <button type="button"
                     onClick={handleTodayClick}
                     className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors font-medium"
                   >
                     Today
                   </button>
-                  <button
+                  <button type="button"
                     onClick={handlePreviousPeriod}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Previous period"
                   >
                     <div className="w-3 h-3 border-l-2 border-b-2 border-current transform rotate-45"></div>
                   </button>
-                  <button
+                  <button type="button"
                     onClick={handleNextPeriod}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Next period"
@@ -716,7 +717,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
+                  <button type="button"
                     onClick={handleZoomFit}
                     className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium"
                     title="Zoom to fit all tasks"
@@ -724,7 +725,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                     Zoom Fit
                   </button>
                   <div className="flex items-center gap-1">
-                    <button
+                    <button type="button"
                       onClick={() =>
                         setZoomLevel(Math.max(0.5, zoomLevel - 0.25))
                       }
@@ -736,7 +737,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                     <span className="text-xs text-gray-600 min-w-[3rem] text-center">
                       {Math.round(zoomLevel * 100)}%
                     </span>
-                    <button
+                    <button type="button"
                       onClick={() =>
                         setZoomLevel(Math.min(3, zoomLevel + 0.25))
                       }

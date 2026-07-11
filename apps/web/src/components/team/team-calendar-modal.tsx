@@ -140,12 +140,13 @@ export default function TeamCalendarModal({
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
         break;
-      case "week":
+      case "week": {
         const dayOfWeek = currentDate.getDay();
         start.setDate(currentDate.getDate() - dayOfWeek);
         end.setDate(start.getDate() + 6);
         end.setHours(23, 59, 59, 999);
         break;
+      }
       case "month":
         start.setDate(1);
         start.setHours(0, 0, 0, 0);

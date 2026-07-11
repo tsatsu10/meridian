@@ -394,7 +394,7 @@ export default function TeamSettingsModalRedesign({
                         const isActive = activeTab === item.id;
 
                         return (
-                          <button
+                          <button type="button"
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
                             className={cn(

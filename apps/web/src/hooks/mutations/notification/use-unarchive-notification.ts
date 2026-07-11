@@ -7,9 +7,7 @@ function useUnarchiveNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await (client as any).notification[":id"][
-        "unarchive"
-      ].$patch({
+      const response = await (client as any).notification[":id"].unarchive.$patch({
         param: { id: notificationId },
       });
 

@@ -190,7 +190,7 @@ const MeridianBadge = React.forwardRef<HTMLDivElement, MeridianBadgeProps>(
 
         {/* Close button */}
         {closeable && onClose && (
-          <button
+          <button type="button"
             onClick={onClose}
             className="flex-shrink-0 ml-1 hover:bg-black/10 rounded-full p-0.5 transition-colors"
             aria-label="Remove badge"

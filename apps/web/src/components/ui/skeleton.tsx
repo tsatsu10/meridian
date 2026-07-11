@@ -253,7 +253,7 @@ export function ErrorState({
       {(onRetry || action) && (
         <div className="mt-6">
           {onRetry && (
-            <button
+            <button type="button"
               onClick={onRetry}
               className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >

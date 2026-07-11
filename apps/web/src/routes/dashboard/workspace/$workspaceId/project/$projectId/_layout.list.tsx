@@ -222,16 +222,18 @@ function ProjectListView() {
             return a.title.localeCompare(b.title);
           case "status":
             return a.status.localeCompare(b.status);
-          case "priority":
+          case "priority": {
             const priorityOrder = { low: 1, medium: 2, high: 3, urgent: 4 };
             return (
               (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) -
               (priorityOrder[a.priority as keyof typeof priorityOrder] || 0)
             );
-          case "dueDate":
+          }
+          case "dueDate": {
             const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0;
             const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0;
             return dateA - dateB;
+          }
           case "created":
             return (
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

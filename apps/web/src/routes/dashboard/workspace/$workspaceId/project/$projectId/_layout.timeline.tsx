@@ -694,10 +694,7 @@ function ProjectTimeline() {
     <LazyDashboardLayout>
       <div className="flex flex-col h-full bg-background">
         {/* Timeline Header */}
-        <header
-          className="flex flex-col gap-4 p-4 md:p-6 border-b border-border bg-card md:flex-row md:items-center md:justify-between"
-          role="banner"
-        >
+        <header className="flex flex-col gap-4 p-4 md:p-6 border-b border-border bg-card md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2 md:gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />

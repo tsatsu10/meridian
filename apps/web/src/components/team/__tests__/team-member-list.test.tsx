@@ -134,13 +134,13 @@ function TeamMemberList({
 
               {!isCurrentUser && (
                 <div className="member-actions">
-                  <button
+                  <button type="button"
                     onClick={() => onChangeRole?.(member.id, "admin")}
                     aria-label={`Change ${member.name}'s role`}
                   >
                     Change Role
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => onRemoveMember?.(member.id)}
                     aria-label={`Remove ${member.name}`}
                     className="danger"

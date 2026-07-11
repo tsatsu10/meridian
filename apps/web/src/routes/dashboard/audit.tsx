@@ -131,7 +131,7 @@ function AuditPage() {
                       Data processing activities and user rights
                     </p>
                   </div>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Generate
                   </button>
                 </div>
@@ -142,7 +142,7 @@ function AuditPage() {
                       Financial controls and access logs
                     </p>
                   </div>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Generate
                   </button>
                 </div>
@@ -153,7 +153,7 @@ function AuditPage() {
                       Healthcare data access and security
                     </p>
                   </div>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Generate
                   </button>
                 </div>

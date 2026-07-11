@@ -122,7 +122,7 @@ function Sidebar({
           </div>
         )}
 
-        <button
+        <button type="button"
           onClick={onToggleCollapse}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="toggle-button"

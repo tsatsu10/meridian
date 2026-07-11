@@ -237,7 +237,7 @@ function UserPreferencesComponent({
 
       {/* Actions */}
       <div className="preference-actions">
-        <button
+        <button type="button"
           onClick={handleSave}
           disabled={!hasChanges || isSaving}
           aria-label="Save preferences"
@@ -245,7 +245,7 @@ function UserPreferencesComponent({
           {isSaving ? "Saving..." : "Save Changes"}
         </button>
 
-        <button
+        <button type="button"
           onClick={handleReset}
           disabled={!hasChanges || isSaving}
           aria-label="Reset to defaults"

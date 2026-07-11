@@ -99,7 +99,7 @@ export function NoteEditor({
     try {
       setSaving(true);
 
-      let response;
+      let response: Response;
       if (note) {
         // Update existing note
         response = await fetch(

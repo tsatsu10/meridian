@@ -127,7 +127,7 @@ function ProfileSettings() {
 
   // Update profile data when API data is loaded or store changes
   useEffect(() => {
-    let newSettings;
+    let newSettings: ReturnType<typeof normalizeProfileData> | undefined;
 
     if (profileData && !profileLoading) {
       newSettings = normalizeProfileData(profileData);

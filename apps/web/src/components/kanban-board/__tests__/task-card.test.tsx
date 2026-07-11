@@ -176,7 +176,8 @@ describe("TaskCard", () => {
   it("opens task details on click", async () => {
     render(<TaskCard task={mockTask} />, { wrapper: TestWrapper });
 
-    const taskCard = screen.getByRole("article");
+    // The card is a clickable, keyboard-operable element — role="button"
+    const taskCard = screen.getByRole("button", { name: /task: test task/i });
 
     // Click the task card
     fireEvent.click(taskCard);

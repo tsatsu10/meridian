@@ -88,14 +88,15 @@ function determineInitialRole(user: any): UserRole {
   // For now, assign default roles based on demo scenarios
   const email = user.email?.toLowerCase() || "";
 
-  // 🚀 TEMPORARY: Grant full permissions to current user// Specific workspace managers (includes your email)
+  // Specific workspace managers. The old `|| true` short-circuit granted
+  // EVERY user workspace-manager in the UI — removed; the allowlisted email
+  // also had a typo (elidegbotse@ → elikemdegbotse@).
   if (
     email.includes("admin") ||
     email.includes("manager") ||
     email.includes("owner") ||
-    email === "elidegbotse@gmail.com" ||
-    email === "sarah@meridian.app" ||
-    true
+    email === "elikemdegbotse@gmail.com" ||
+    email === "sarah@meridian.app"
   ) {
     return "workspace-manager";
   }
