@@ -117,7 +117,7 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
                     <div className="flex items-center gap-3">
                       <div
                         className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
-                        style={{ backgroundColor: project.color + "20" }}
+                        style={{ backgroundColor: `${project.color}20` }}
                       >
                         {project.icon || "📁"}
                       </div>

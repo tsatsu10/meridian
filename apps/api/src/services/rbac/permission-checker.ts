@@ -322,11 +322,10 @@ export class PermissionChecker {
       // Load from constant
       const rolePerms = getRolePermissions(role.id as UserRole);
       return rolePerms[permission] === true;
-    } else {
+    }
       // Load from database
       if (!role.permissions) return false;
       return (role.permissions as string[]).includes(permission);
-    }
   }
 
   /**

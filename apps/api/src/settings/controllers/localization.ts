@@ -418,7 +418,7 @@ export async function exportTranslations(
 
     if (format === "json") {
       return JSON.stringify(translations, null, 2);
-    } else {
+    }
       // CSV format
       const csvRows = [
         ["Key", "Value", "Context"].join(","),
@@ -429,8 +429,7 @@ export async function exportTranslations(
         ),
       ];
       return csvRows.join("\n");
-    }
-  } else {
+  }
     // Export all languages
     const languages = await getLanguages(workspaceId);
     const allTranslations: Record<string, Record<string, Translation>> = {};
@@ -443,7 +442,6 @@ export async function exportTranslations(
     }
 
     return JSON.stringify(allTranslations, null, 2);
-  }
 }
 
 /**

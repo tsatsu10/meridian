@@ -68,7 +68,6 @@ export default function NotificationSection({
         ) : (
           <ul
             className="space-y-3"
-            role="list"
             aria-label="Recent notifications"
           >
             {recentNotifications.map((notification, index) => (

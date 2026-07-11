@@ -893,8 +893,6 @@ const project = new Hono<{
             contentType = "text/markdown";
             filename = `${exportData.project.name.replace(/[^a-z0-9]/gi, "_")}_export.md`;
             break;
-
-          case "json":
           default:
             responseData = JSON.stringify(exportData, null, 2);
             contentType = "application/json";

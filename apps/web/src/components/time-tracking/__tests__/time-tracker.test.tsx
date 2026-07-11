@@ -72,10 +72,9 @@ function TimeTracker({
         setElapsed(Math.floor((now - start) / 1000));
       }, 1000);
       return () => clearInterval(interval);
-    } else {
+    }
       setIsRunning(false);
       setElapsed(0);
-    }
   }, [currentTimer]);
 
   const formatTime = (seconds: number): string => {
@@ -224,9 +223,9 @@ function TimeTracker({
         {entries.length === 0 ? (
           <p className="no-entries">No time entries yet</p>
         ) : (
-          <ul role="list">
+          <ul >
             {entries.map((entry) => (
-              <li key={entry.id} className="time-entry" role="listitem">
+              <li key={entry.id} className="time-entry" >
                 {editingId === entry.id ? (
                   <div className="edit-form">
                     <input

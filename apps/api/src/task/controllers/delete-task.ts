@@ -41,7 +41,7 @@ async function deleteTask(taskId: string, deleterId?: string) {
           .from(projectTable)
           .where(eq(projectTable.id, deletedTask.projectId));
 
-        if (project && project.workspaceId) {
+        if (project?.workspaceId) {
           const actorUserId = deleterId || deletedTask.assigneeId || "";
 
           if (actorUserId) {

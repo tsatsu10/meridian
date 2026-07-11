@@ -42,11 +42,11 @@ const signIn = async ({ email, password }: SignInFormValues) => {
         throw new Error(
           "Too many sign-in attempts. Please wait a moment and try again.",
         );
-      } else if (response.status === 404) {
+      }if (response.status === 404) {
         throw new Error(
           "Sign-in endpoint not found. Please check if the API server is running.",
         );
-      } else if (response.status === 500) {
+      }if (response.status === 500) {
         throw new Error("Server error. Please try again later.");
       }
 

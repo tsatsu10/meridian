@@ -308,7 +308,7 @@ export async function seedRBACData() {
           `    🔒 Skipped role assignment for ${userData.name} - not a workspace owner`,
         );
         logger.debug(
-          `        💡 This user must be invited to workspaces they want to access`,
+          "        💡 This user must be invited to workspaces they want to access",
         );
       }
     }

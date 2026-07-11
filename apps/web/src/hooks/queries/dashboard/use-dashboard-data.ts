@@ -557,7 +557,6 @@ function transformProjects(
       transformedProjects = [...favouriteProjects, ...byProgress].slice(0, 5);
       break;
     }
-    case "custom":
     default: {
       transformedProjects = [...favouriteProjects, ...otherProjects];
     }
@@ -594,7 +593,6 @@ function transformActivities(
       return filtered.slice(0, Math.min(5, filtered.length));
     case "analytics":
       return filtered.slice(0, Math.min(8, filtered.length));
-    case "custom":
     default:
       return filtered;
   }
@@ -619,7 +617,6 @@ function transformDeadlines(
       return filtered.slice(0, Math.min(5, filtered.length));
     case "personal":
       return filtered.slice(0, Math.min(3, filtered.length));
-    case "custom":
     default:
       return filtered;
   }
@@ -648,7 +645,6 @@ function transformTeamMembers(
       return [...favouriteMembers, ...otherMembers].slice(0, 3);
     case "analytics":
       return [...favouriteMembers, ...otherMembers].slice(0, 6);
-    case "custom":
     default:
       return [...favouriteMembers, ...otherMembers];
   }

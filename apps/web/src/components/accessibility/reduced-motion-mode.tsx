@@ -113,7 +113,7 @@ export function ReducedMotionMode() {
                   <strong>System Preference Detected:</strong> Your operating
                   system is set to prefer reduced motion.
                   {!isReducedMotion && (
-                    <> Would you like to enable reduced motion mode?</>
+                    "Would you like to enable reduced motion mode?"
                   )}
                 </div>
                 {!isReducedMotion && (

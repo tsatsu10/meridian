@@ -145,6 +145,7 @@ describe("Database Helpers", () => {
 
     it("should remove null bytes", () => {
       const input = "test\x00value";
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: the test exists to assert null-byte removal
       const sanitized = input.replace(/\x00/g, "");
 
       expect(sanitized).toBe("testvalue");

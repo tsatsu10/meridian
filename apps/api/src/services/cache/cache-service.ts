@@ -145,7 +145,7 @@ export class CacheService {
    */
   static async invalidateUser(userId: string): Promise<void> {
     const key = CacheKeys.user(userId);
-    await this.invalidate(key);
+    await CacheService.invalidate(key);
   }
 
   /**
@@ -170,8 +170,8 @@ export class CacheService {
    * Invalidate workspace and related caches
    */
   static async invalidateWorkspace(workspaceId: string): Promise<void> {
-    await this.invalidatePattern(`workspace:${workspaceId}*`);
-    await this.invalidatePattern(`project:*:workspace:${workspaceId}*`);
+    await CacheService.invalidatePattern(`workspace:${workspaceId}*`);
+    await CacheService.invalidatePattern(`project:*:workspace:${workspaceId}*`);
   }
 
   /**
@@ -196,9 +196,9 @@ export class CacheService {
    * Invalidate project and related caches
    */
   static async invalidateProject(projectId: string): Promise<void> {
-    await this.invalidate(CacheKeys.project(projectId));
-    await this.invalidate(CacheKeys.taskList(projectId));
-    await this.invalidatePattern(`task:*:project:${projectId}*`);
+    await CacheService.invalidate(CacheKeys.project(projectId));
+    await CacheService.invalidate(CacheKeys.taskList(projectId));
+    await CacheService.invalidatePattern(`task:*:project:${projectId}*`);
   }
 
   /**

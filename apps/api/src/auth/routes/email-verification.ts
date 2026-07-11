@@ -39,7 +39,7 @@ app.post(
           },
           200,
         );
-      } else {
+      }
         return c.json(
           {
             success: false,
@@ -47,7 +47,6 @@ app.post(
           },
           400,
         );
-      }
     } catch (error: any) {
       logger.error("❌ Email verification error:", error);
       return c.json(
@@ -85,11 +84,10 @@ app.get("/verify-email", async (c) => {
       // Redirect to frontend success page
       const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=true`;
       return c.redirect(redirectUrl);
-    } else {
+    }
       // Redirect to frontend error page
       const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=${encodeURIComponent(result.message)}`;
       return c.redirect(redirectUrl);
-    }
   } catch (error: any) {
     logger.error("❌ Email verification error:", error);
     const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=Verification%20failed`;
@@ -242,7 +240,7 @@ app.post(
           },
           200,
         );
-      } else {
+      }
         return c.json(
           {
             success: false,
@@ -250,7 +248,6 @@ app.post(
           },
           400,
         );
-      }
     } catch (error: any) {
       logger.error("❌ Reset password error:", error);
       return c.json(
@@ -291,7 +288,7 @@ app.post(
           },
           200,
         );
-      } else {
+      }
         return c.json(
           {
             success: false,
@@ -299,7 +296,6 @@ app.post(
           },
           400,
         );
-      }
     } catch (error: any) {
       logger.error("❌ Verify reset token error:", error);
       return c.json(

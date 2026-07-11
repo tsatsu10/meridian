@@ -401,7 +401,7 @@ export function DashboardRecentActivity({
                   {group.label}
                 </span>
               </div>
-              <ul className="space-y-3 list-none p-0 m-0" role="list">
+              <ul className="space-y-3 list-none p-0 m-0" >
                 {group.items.map((notification) => {
                   const Icon =
                     activityIcons[

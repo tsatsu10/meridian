@@ -260,7 +260,9 @@ describe.skip("Task Management", () => {
   });
 
   describe("Task Dependencies", () => {
-    let task1: any, task2: any, task3: any;
+    let task1: any;
+    let task2: any;
+    let task3: any;
 
     beforeEach(async () => {
       [task1] = await db

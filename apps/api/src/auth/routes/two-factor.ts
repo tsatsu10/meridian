@@ -5,7 +5,7 @@
 
 import { Hono } from "hono";
 import { authenticator } from "otplib";
-import { randomBytes } from "crypto";
+import { randomBytes } from "node:crypto";
 import { getDatabase } from "../../database/connection";
 import { users as userTable } from "../../database/schema";
 import { eq } from "drizzle-orm";

@@ -161,7 +161,7 @@ export function predictFutureTrends(
  */
 function calculateVariance(data: number[]): number {
   const mean = data.reduce((a, b) => a + b, 0) / data.length;
-  const squaredDiffs = data.map((value) => Math.pow(value - mean, 2));
+  const squaredDiffs = data.map((value) => (value - mean) ** 2);
   return squaredDiffs.reduce((a, b) => a + b, 0) / data.length;
 }
 

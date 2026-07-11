@@ -65,7 +65,7 @@ export async function updateDigestSettings(
 
       logger.info(`Digest settings updated for ${userEmail}`);
       return updated;
-    } else {
+    }
       // Create new settings
       const [created] = await db
         .insert(digestSettings)
@@ -88,7 +88,6 @@ export async function updateDigestSettings(
 
       logger.info(`Digest settings created for ${userEmail}`);
       return created;
-    }
   } catch (error) {
     logger.error("Failed to update digest settings:", error);
     throw new Error("Failed to update digest settings");

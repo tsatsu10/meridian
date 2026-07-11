@@ -327,7 +327,7 @@ export function ipFilter(options: {
       c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
 
     // Check blacklist first
-    if (options.blacklist && options.blacklist.includes(ip)) {
+    if (options.blacklist?.includes(ip)) {
       logger.warn("Blocked request from blacklisted IP", {
         ip,
         path: c.req.path,

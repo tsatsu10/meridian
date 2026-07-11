@@ -382,7 +382,7 @@ export async function withRetry<T>(
 
       // Calculate delay with exponential backoff
       const delay = Math.min(
-        baseDelay * Math.pow(backoffFactor, attempt),
+        baseDelay * backoffFactor ** attempt,
         maxDelay,
       );
 

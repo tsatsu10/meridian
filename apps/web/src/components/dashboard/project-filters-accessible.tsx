@@ -330,7 +330,6 @@ export const ProjectFiltersAccessible: React.FC<
     <nav
       className="flex items-center gap-2"
       aria-label="Project filters"
-      role="navigation"
     >
       {/* Live region for screen reader announcements */}
       <div

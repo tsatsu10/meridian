@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userProfileTable } from "../../database/schema";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { writeFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import logger from "../../utils/logger";
 import { HTTPException } from "hono/http-exception";
 import sharp from "sharp";
@@ -74,7 +74,7 @@ const uploadProfilePicture = async (c: any, userId: string) => {
     // Ensure upload directory exists (using async fs)
     const uploadDir = join(process.cwd(), "uploads", "profile-pictures");
     try {
-      const { access } = await import("fs/promises");
+      const { access } = await import("node:fs/promises");
       await access(uploadDir);
     } catch {
       // Directory doesn't exist, create it

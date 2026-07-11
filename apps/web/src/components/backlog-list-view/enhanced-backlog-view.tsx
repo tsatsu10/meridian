@@ -81,7 +81,7 @@ interface EnhancedBacklogViewProps {
   onTaskClick?: (task: EnhancedTask) => void;
   onThemeCreate?: (
     theme: Omit<TaskTheme, "id" | "createdAt" | "updatedAt">,
-  ) => Promise<TaskTheme | void>;
+  ) => Promise<TaskTheme | undefined>;
   onThemeEdit?: (theme: TaskTheme) => void;
   onThemeDelete?: (themeId: string) => void;
   onTaskUpdate?: (taskId: string, updates: Partial<EnhancedTask>) => void;
@@ -319,7 +319,7 @@ export default function EnhancedBacklogView({
     let filtered = enhancedTasks;
 
     // Improved search functionality
-    if (filters.search && filters.search.trim()) {
+    if (filters.search?.trim()) {
       const searchTerm = filters.search.toLowerCase().trim();
       filtered = filtered.filter((task) => {
         const titleMatch = task.title?.toLowerCase().includes(searchTerm);

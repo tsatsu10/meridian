@@ -556,7 +556,7 @@ function ProjectTimeline() {
 
       // Check if current task has dependencies in other milestones
       const task = allTasks.find((t: any) => t.id === currentId);
-      if (task && task.dependencies) {
+      if (task?.dependencies) {
         stack.push(
           ...task.dependencies.map((d: any) =>
             typeof d === "string" ? d : d.requiredTaskId,
@@ -565,7 +565,7 @@ function ProjectTimeline() {
       }
 
       const milestone = realMilestones.find((m: any) => m.id === currentId);
-      if (milestone && milestone.dependencies) {
+      if (milestone?.dependencies) {
         stack.push(...milestone.dependencies);
       }
     }
@@ -898,7 +898,6 @@ function ProjectTimeline() {
         {/* Timeline Content */}
         <main
           className="flex-1 p-6 space-y-6 overflow-hidden"
-          role="main"
           aria-label="Timeline content"
         >
           {/* Enhanced Timeline Navigation - Now Functional */}

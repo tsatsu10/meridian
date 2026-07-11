@@ -94,7 +94,11 @@ app.get("/:workspaceId", async (c) => {
     // Group team members by team ID and deduplicate by userId within each team
     const membersByTeam = allTeamMembers.reduce(
       (acc, member) => {
-        const teamMembers = acc[member.teamId] ?? (acc[member.teamId] = []);
+        let teamMembers = acc[member.teamId];
+        if (!teamMembers) {
+          teamMembers = [];
+          acc[member.teamId] = teamMembers;
+        }
         // Only add member if not already in the team (prevent duplicates from JOIN issues)
         const isDuplicate = teamMembers.some((m) => m.userId === member.userId);
         if (!isDuplicate) {
@@ -853,7 +857,7 @@ app.get("/:teamId/permissions/advanced", async (c) => {
       ...member,
       permissions:
         permissionMatrix[member.role as keyof typeof permissionMatrix] ||
-        permissionMatrix["Member"],
+        permissionMatrix.Member,
     }));
 
     return c.json({

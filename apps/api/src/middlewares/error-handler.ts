@@ -163,7 +163,7 @@ export async function errorHandler(err: Error, c: Context) {
  * Wrapper to handle async errors in route handlers
  */
 export function asyncHandler<T extends Context>(
-  fn: (c: T) => Promise<Response | void>,
+  fn: (c: T) => Promise<Response | undefined>,
 ) {
   return async (c: T) => {
     try {

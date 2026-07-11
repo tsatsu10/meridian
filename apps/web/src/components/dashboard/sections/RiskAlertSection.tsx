@@ -75,7 +75,7 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
             resolutionNotes: notes,
           }),
         });
-      } else {
+      }
         return await fetchApi(`/risk-detection/alerts/${alertId}`, {
           method: "PATCH",
           body: JSON.stringify({
@@ -83,7 +83,6 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
             notes,
           }),
         });
-      }
     },
     onSuccess: (_, variables) => {
       const actionLabels = {

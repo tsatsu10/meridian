@@ -390,8 +390,8 @@ subscribeToEvent(
           // For now, just create a simple notification
           // TODO: Implement proper workspace member filtering
           const title = isNewVersion
-            ? `New File Version Uploaded`
-            : `New File Attached`;
+            ? "New File Version Uploaded"
+            : "New File Attached";
 
           const content = isNewVersion
             ? `${uploaderEmail.split("@")[0]} uploaded version ${version} of "${fileName}" to task "${task.title}"`

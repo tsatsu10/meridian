@@ -92,8 +92,8 @@ async function getAllTasks({
   if (search) {
     conditions.push(
       or(
-        sql`${taskTable.title} LIKE ${"%" + search + "%"}`,
-        sql`${taskTable.description} LIKE ${"%" + search + "%"}`,
+        sql`${taskTable.title} LIKE ${`%${search}%`}`,
+        sql`${taskTable.description} LIKE ${`%${search}%`}`,
       )!,
     );
   }

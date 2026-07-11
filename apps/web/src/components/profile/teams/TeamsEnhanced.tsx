@@ -114,7 +114,7 @@ export function TeamsEnhanced({ userId, className }: TeamsEnhancedProps) {
                   <div
                     className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold"
                     style={{
-                      backgroundColor: team.color + "30",
+                      backgroundColor: `${team.color}30`,
                       color: team.color,
                     }}
                   >

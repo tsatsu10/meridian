@@ -10,7 +10,7 @@
  * Integrates with external services like DataDog, Prometheus, CloudWatch
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import logger from "../../utils/logger";
 import { winstonLog } from "../../utils/winston-logger";
 
@@ -34,10 +34,6 @@ class MonitoringService extends EventEmitter {
   private isRunning = false;
   private metricsInterval: NodeJS.Timeout | null = null;
   private startTime: number = Date.now();
-
-  constructor() {
-    super();
-  }
 
   /**
    * Start monitoring service

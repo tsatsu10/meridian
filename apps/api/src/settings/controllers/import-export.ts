@@ -164,7 +164,7 @@ export async function exportWorkspaceData(
       filename: `workspace-export-${timestamp}.json`,
       mimeType: "application/json",
     };
-  } else {
+  }
     // CSV format
     const csv = convertToCSV(exportData);
     return {
@@ -172,7 +172,6 @@ export async function exportWorkspaceData(
       filename: `workspace-export-${timestamp}.csv`,
       mimeType: "text/csv",
     };
-  }
 }
 
 // Convert data to CSV format

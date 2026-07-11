@@ -111,7 +111,7 @@ async function updateTask(
             .from(projectTable)
             .where(eq(projectTable.id, projectId));
 
-          if (project && project.workspaceId) {
+          if (project?.workspaceId) {
             const actorUserId = updaterId || updatedTask.assigneeId || "";
 
             if (actorUserId) {
@@ -136,7 +136,7 @@ async function updateTask(
             .from(projectTable)
             .where(eq(projectTable.id, projectId));
 
-          if (project && project.workspaceId) {
+          if (project?.workspaceId) {
             const actorUserId = updaterId || updatedTask.assigneeId || "";
 
             if (actorUserId) {

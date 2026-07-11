@@ -636,12 +636,7 @@ function ProjectOverview() {
   const handleArchiveProject = async () => {
     // 🔒 SECURITY: Confirm archive action before proceeding
     const confirmed = window.confirm(
-      `Are you sure you want to archive "${projectData?.name}"?\n\n` +
-        `This will:\n` +
-        `• Hide the project from active project lists\n` +
-        `• Prevent new tasks from being created\n` +
-        `• Keep all data intact for future restoration\n\n` +
-        `You can restore the project later from the archived projects view.`,
+      `Are you sure you want to archive "${projectData?.name}"?\n\nThis will:\n• Hide the project from active project lists\n• Prevent new tasks from being created\n• Keep all data intact for future restoration\n\nYou can restore the project later from the archived projects view.`,
     );
 
     if (!confirmed) {
@@ -697,15 +692,7 @@ function ProjectOverview() {
 
     // Step 1: Initial confirmation
     const initialConfirm = window.confirm(
-      `⚠️ WARNING: You are about to DELETE "${projectName}"\n\n` +
-        `This will PERMANENTLY delete:\n` +
-        `• The project and all its settings\n` +
-        `• All tasks and subtasks\n` +
-        `• All milestones and deadlines\n` +
-        `• All project members and permissions\n` +
-        `• All attachments and files\n\n` +
-        `THIS CANNOT BE UNDONE!\n\n` +
-        `Are you absolutely sure you want to continue?`,
+      `⚠️ WARNING: You are about to DELETE "${projectName}"\n\nThis will PERMANENTLY delete:\n• The project and all its settings\n• All tasks and subtasks\n• All milestones and deadlines\n• All project members and permissions\n• All attachments and files\n\nTHIS CANNOT BE UNDONE!\n\nAre you absolutely sure you want to continue?`,
     );
 
     if (!initialConfirm) {
@@ -714,10 +701,7 @@ function ProjectOverview() {
 
     // Step 2: Type project name confirmation
     const typedName = window.prompt(
-      `⚠️ FINAL CONFIRMATION\n\n` +
-        `To confirm deletion, please type the project name exactly:\n\n` +
-        `"${projectName}"\n\n` +
-        `Type the project name to confirm:`,
+      `⚠️ FINAL CONFIRMATION\n\nTo confirm deletion, please type the project name exactly:\n\n"${projectName}"\n\nType the project name to confirm:`,
     );
 
     if (typedName !== projectName) {

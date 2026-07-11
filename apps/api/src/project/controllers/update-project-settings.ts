@@ -52,7 +52,7 @@ async function updateProjectSettings(
           ? JSON.parse(updatedSettings[0].settings)
           : updatedSettings[0]?.settings,
     };
-  } else {
+  }
     // Create new settings
     const newSettings = await db
       .insert(projectSettingsTable)
@@ -68,7 +68,6 @@ async function updateProjectSettings(
           ? JSON.parse(newSettings[0].settings)
           : newSettings[0]?.settings,
     };
-  }
 }
 
 export default updateProjectSettings;

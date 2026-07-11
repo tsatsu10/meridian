@@ -81,7 +81,7 @@ export class SkillsService {
     try {
       const skillId = createId();
 
-      const [newSkill] = await this.getDb()
+      const [newSkill] = await SkillsService.getDb()
         .insert(userSkills)
         .values({
           id: skillId,
@@ -126,7 +126,7 @@ export class SkillsService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const skills = await this.getDb()
+        const skills = await SkillsService.getDb()
           .select()
           .from(userSkills)
           .where(
@@ -186,7 +186,7 @@ export class SkillsService {
           conditions.push(eq(userSkills.isPublic, filters.isPublic));
         }
 
-        const skills = await this.getDb()
+        const skills = await SkillsService.getDb()
           .select({
             id: userSkills.id,
             userId: userSkills.userId,
@@ -227,7 +227,7 @@ export class SkillsService {
    */
   static async endorseSkill(params: EndorseSkillParams) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, params.skillId))
@@ -260,7 +260,7 @@ export class SkillsService {
         });
       }
 
-      await this.getDb()
+      await SkillsService.getDb()
         .update(userSkills)
         .set({
           endorsements,
@@ -292,7 +292,7 @@ export class SkillsService {
    */
   static async verifySkill(skillId: string, verifierId: string) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, skillId))
@@ -302,7 +302,7 @@ export class SkillsService {
         throw new Error("Skill not found");
       }
 
-      await this.getDb()
+      await SkillsService.getDb()
         .update(userSkills)
         .set({
           isVerified: true,
@@ -339,7 +339,7 @@ export class SkillsService {
     }>,
   ) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, skillId))
@@ -349,7 +349,7 @@ export class SkillsService {
         throw new Error("Skill not found");
       }
 
-      await this.getDb()
+      await SkillsService.getDb()
         .update(userSkills)
         .set({
           ...updates,
@@ -375,7 +375,7 @@ export class SkillsService {
    */
   static async deleteSkill(skillId: string, userId: string) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, skillId))
@@ -390,7 +390,7 @@ export class SkillsService {
         throw new Error("Only the skill owner can delete");
       }
 
-      await this.getDb().delete(userSkills).where(eq(userSkills.id, skillId));
+      await SkillsService.getDb().delete(userSkills).where(eq(userSkills.id, skillId));
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
@@ -414,7 +414,7 @@ export class SkillsService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const skills = await this.searchSkills({
+        const skills = await SkillsService.searchSkills({
           workspaceId,
           isPublic: true,
         });
@@ -423,8 +423,11 @@ export class SkillsService {
         const matrix: Record<string, any[]> = {};
 
         for (const skill of skills) {
-          const bucket =
-            matrix[skill.skillName] ?? (matrix[skill.skillName] = []);
+          let bucket = matrix[skill.skillName];
+          if (!bucket) {
+            bucket = [];
+            matrix[skill.skillName] = bucket;
+          }
           bucket.push(skill);
         }
 
@@ -450,7 +453,7 @@ export class SkillsService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const popularSkills = await this.getDb()
+        const popularSkills = await SkillsService.getDb()
           .select({
             skillName: userSkills.skillName,
             count: sql<number>`count(*)::int`,
@@ -477,7 +480,7 @@ export class SkillsService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const experts = await this.searchSkills({
+        const experts = await SkillsService.searchSkills({
           workspaceId,
           skillName,
           minProficiencyScore: 3, // Advanced or Expert
@@ -499,7 +502,7 @@ export class SkillsService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const skillCounts = await this.getDb()
+        const skillCounts = await SkillsService.getDb()
           .select({
             skillName: userSkills.skillName,
             count: sql<number>`count(*)::int`,

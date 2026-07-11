@@ -95,7 +95,7 @@ describe("PasswordStrengthIndicator", () => {
     it("should handle very long password", () => {
       // Password: 100 A's + 1 + ! = length(102), uppercase, no lowercase, numbers, special
       // Score: 1 (length) + 1 (uppercase) + 1 (numbers) + 1 (special) = 4 = "Good"
-      const longPassword = "A".repeat(100) + "1!";
+      const longPassword = `${"A".repeat(100)}1!`;
       render(<PasswordStrengthIndicator password={longPassword} />);
 
       expect(screen.getByText("Good")).toBeInTheDocument();

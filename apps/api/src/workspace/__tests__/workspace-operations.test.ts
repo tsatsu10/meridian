@@ -471,7 +471,8 @@ describe.skip("Workspace Operations", () => {
   });
 
   describe("Workspace Queries", () => {
-    let workspace1: any, workspace2: any;
+    let workspace1: any;
+    let workspace2: any;
 
     beforeEach(async () => {
       [workspace1] = await db

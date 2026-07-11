@@ -288,6 +288,7 @@ export function sanitizeFileName(fileName: string): string {
   sanitized = sanitized
     .replace(/\.\./g, "") // Remove ../
     .replace(/[\/\\]/g, "") // Remove slashes
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: control chars are exactly what this filename sanitizer must remove
     .replace(/[<>:"|?*\x00-\x1f]/g, "") // Remove Windows-invalid chars and control chars
     .trim();
 

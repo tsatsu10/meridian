@@ -7,7 +7,7 @@
 import type { MiddlewareHandler } from "hono";
 import { CacheService, CacheTTL } from "../services/cache/cache-service";
 import { Logger } from "../services/logging/logger";
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 interface CacheOptions {
   ttl?: number;
@@ -34,7 +34,7 @@ export function cacheMiddleware(options: CacheOptions = {}): MiddlewareHandler {
     }
 
     // Skip if condition is met
-    if (skipIf && skipIf(c)) {
+    if (skipIf?.(c)) {
       return next();
     }
 

@@ -222,8 +222,8 @@ function generateOverloadResolutions(
 
   // Suggest extending deadlines
   resolutions.push({
-    id: `extend-workload`,
-    description: `Extend deadlines to balance workload`,
+    id: "extend-workload",
+    description: "Extend deadlines to balance workload",
     action: "extend",
     autoApplicable: false,
   });

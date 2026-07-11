@@ -206,13 +206,12 @@ export function useMediaQuery(query: string): boolean {
     if (media.addEventListener) {
       media.addEventListener("change", updateMatches);
       return () => media.removeEventListener("change", updateMatches);
-    } else {
+    }
       // Legacy browsers
       // @ts-ignore
       media.addListener(updateMatches);
       // @ts-ignore
       return () => media.removeListener(updateMatches);
-    }
   }, [query]);
 
   return matches;

@@ -587,7 +587,7 @@ function GlobalCalendar() {
                       key={event.id}
                       className="text-xs p-1 rounded truncate cursor-pointer hover:opacity-80"
                       style={{
-                        backgroundColor: event.color + "20",
+                        backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
                       }}

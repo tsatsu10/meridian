@@ -82,7 +82,7 @@ export async function logProgress(c: Context) {
         },
         201,
       );
-    } else {
+    }
       // Logging progress for a key result
       const keyResult = await db.query.goalKeyResults.findFirst({
         where: eq(goalKeyResults.id, body.keyResultId),
@@ -141,7 +141,6 @@ export async function logProgress(c: Context) {
         },
         201,
       );
-    }
   } catch (error) {
     logger.error("Log progress error:", error);
     return c.json(

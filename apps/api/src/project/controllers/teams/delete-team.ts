@@ -40,7 +40,7 @@ async function deleteTeam(c: Context) {
         success: true,
         message: `Team "${existingTeam.name}" permanently deleted`,
       });
-    } else {
+    }
       // Soft delete - set isActive to false
       await db
         .update(teams)
@@ -54,7 +54,6 @@ async function deleteTeam(c: Context) {
         success: true,
         message: `Team "${existingTeam.name}" deactivated`,
       });
-    }
   } catch (error) {
     logger.error("Error deleting team:", error);
     return c.json({ error: "Failed to delete team" }, 500);

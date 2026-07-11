@@ -264,7 +264,7 @@ function ProjectsPage() {
               projectId: project.id,
             },
           });
-          toast.success(`Navigating to project tasks...`);
+          toast.success("Navigating to project tasks...");
           break;
 
         case "board":
@@ -371,7 +371,7 @@ function ProjectsPage() {
       // Try to use the Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(shareUrl);
-        toast.success(`Share link copied to clipboard!`, {
+        toast.success("Share link copied to clipboard!", {
           description: `Anyone with access can view ${project.name}`,
         });
       } else {
@@ -384,7 +384,7 @@ function ProjectsPage() {
         textArea.select();
         try {
           document.execCommand("copy");
-          toast.success(`Share link copied to clipboard!`, {
+          toast.success("Share link copied to clipboard!", {
             description: `Anyone with access can view ${project.name}`,
           });
         } catch (err) {

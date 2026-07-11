@@ -166,14 +166,14 @@ function ProfileSettings() {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (localSettings.phone && localSettings.phone.trim()) {
+    if (localSettings.phone?.trim()) {
       const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
       if (!phoneRegex.test(localSettings.phone.replace(/[\s\-\(\)]/g, ""))) {
         newErrors.phone = "Please enter a valid phone number";
       }
     }
 
-    if (localSettings.website && localSettings.website.trim()) {
+    if (localSettings.website?.trim()) {
       try {
         new URL(localSettings.website);
       } catch {

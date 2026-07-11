@@ -54,7 +54,7 @@ async function getNotifications(
   }
 
   // Phase 2: Search functionality
-  if (search && search.trim()) {
+  if (search?.trim()) {
     const searchCondition = or(
       ilike(notificationTable.title, `%${search}%`),
       ilike(notificationTable.content, `%${search}%`),

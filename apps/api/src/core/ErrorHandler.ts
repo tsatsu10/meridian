@@ -113,7 +113,7 @@ export class WebSocketError extends CustomError {
 export class ErrorHandler {
   static handle(error: Error | AppError): APIResponse {
     // Log the error
-    this.logError(error);
+    ErrorHandler.logError(error);
 
     // Handle known custom errors
     if (error instanceof CustomError) {
@@ -160,7 +160,7 @@ export class ErrorHandler {
     // Handle network errors
     if (
       error.name === "NetworkError" ||
-      (error.message && error.message.includes("ECONNREFUSED"))
+      (error.message?.includes("ECONNREFUSED"))
     ) {
       return APIResponseBuilder.error(
         ErrorCodes.EXTERNAL_SERVICE_ERROR,
@@ -198,7 +198,7 @@ export class ErrorHandler {
           fallbackMessage,
         );
       }
-      return this.handle(error as Error);
+      return ErrorHandler.handle(error as Error);
     }
   }
 

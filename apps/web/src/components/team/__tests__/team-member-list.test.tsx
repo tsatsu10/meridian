@@ -83,7 +83,7 @@ function TeamMemberList({
         />
       </div>
 
-      <ul className="member-list" role="list">
+      <ul className="member-list" >
         {filteredMembers.map((member) => {
           const isCurrentUser = member.email === currentUserEmail;
 
@@ -91,7 +91,6 @@ function TeamMemberList({
             <li
               key={member.id}
               className="member-item"
-              role="listitem"
               aria-label={`Team member: ${member.name}`}
             >
               <div

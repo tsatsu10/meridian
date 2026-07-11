@@ -297,7 +297,7 @@ export async function seedGoals() {
       `   🎯 Goals: ${createdGoals.length} (personal, team, strategic)`,
     );
     logger.info(`   📊 Key Results: ${createdKeyResults.length}`);
-    logger.info(`   📈 Progress Snapshots: 0 (skipped - table not in schema)`);
+    logger.info("   📈 Progress Snapshots: 0 (skipped - table not in schema)");
     logger.info(
       `   💭 Reflections: ${reflectionCount} (skipped - schema mismatch)`,
     );

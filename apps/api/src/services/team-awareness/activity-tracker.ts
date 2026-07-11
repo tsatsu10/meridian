@@ -259,7 +259,7 @@ export class ActivityTracker {
     taskTitle: string,
     metadata?: any,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,
@@ -283,7 +283,7 @@ export class ActivityTracker {
     projectTitle: string,
     metadata?: any,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,
@@ -308,7 +308,7 @@ export class ActivityTracker {
     entityTitle: string,
     commentText: string,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,
@@ -333,7 +333,7 @@ export class ActivityTracker {
     fileName: string,
     metadata?: any,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,

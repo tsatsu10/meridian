@@ -158,7 +158,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200" role="none" />
+        <div className="w-px h-6 bg-gray-200" />
 
         {/* Bulk Actions */}
         <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200" role="none" />
+        <div className="w-px h-6 bg-gray-200" />
 
         {/* Undo/Redo */}
         <div className="flex items-center gap-2">
@@ -248,7 +248,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200" role="none" />
+        <div className="w-px h-6 bg-gray-200" />
 
         {/* Clear Selection */}
         <Button

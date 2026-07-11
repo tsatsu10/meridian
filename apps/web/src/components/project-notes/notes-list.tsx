@@ -158,7 +158,7 @@ export function NotesList({
       ALLOWED_ATTR: [],
     }).replace(/\n/g, " ");
     return stripped.length > maxLength
-      ? stripped.substring(0, maxLength) + "..."
+      ? `${stripped.substring(0, maxLength)}...`
       : stripped;
   };
 
@@ -242,7 +242,7 @@ export function NotesList({
               className={`hover:shadow-lg transition-shadow cursor-pointer ${
                 note.isPinned ? "border-primary" : ""
               }`}
-              onClick={() => onSelectNote && onSelectNote(note)}
+              onClick={() => onSelectNote?.(note)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -311,7 +311,7 @@ export function NotesList({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onSelectNote && onSelectNote(note)}
+                      onClick={() => onSelectNote?.(note)}
                     >
                       <Edit className="w-4 h-4" />
                     </Button>

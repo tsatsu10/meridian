@@ -38,7 +38,7 @@ export async function setUserStatus(
 
       logger.info(`Status updated for ${userEmail}: ${data.status}`);
       return updated;
-    } else {
+    }
       // Insert new status
       const [created] = await db
         .insert(userStatus)
@@ -53,7 +53,6 @@ export async function setUserStatus(
 
       logger.info(`Status created for ${userEmail}: ${data.status}`);
       return created;
-    }
   } catch (error) {
     logger.error("Failed to set user status:", error);
     throw new Error("Failed to update user status");

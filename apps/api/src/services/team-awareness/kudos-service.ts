@@ -57,7 +57,7 @@ export class KudosService {
     try {
       const kudosId = createId();
 
-      const [newKudos] = await this.getDb()
+      const [newKudos] = await KudosService.getDb()
         .insert(kudos)
         .values({
           id: kudosId,
@@ -121,7 +121,7 @@ export class KudosService {
           conditions.push(eq(kudos.isPublic, filters.isPublic));
         }
 
-        const result = await this.getDb()
+        const result = await KudosService.getDb()
           .select({
             id: kudos.id,
             workspaceId: kudos.workspaceId,
@@ -151,7 +151,7 @@ export class KudosService {
 
         // Fetch receiver data separately
         const receiverIds = result.map((k) => k.receiverId);
-        const receivers = await this.getDb()
+        const receivers = await KudosService.getDb()
           .select({
             id: users.id,
             username: users.name,
@@ -185,7 +185,7 @@ export class KudosService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const result = await this.getDb()
+        const result = await KudosService.getDb()
           .select({
             id: kudos.id,
             workspaceId: kudos.workspaceId,
@@ -233,7 +233,7 @@ export class KudosService {
       cacheKey,
       async () => {
         // Count received kudos
-        const [receivedCount] = await this.getDb()
+        const [receivedCount] = await KudosService.getDb()
           .select({ count: sql<number>`count(*)::int` })
           .from(kudos)
           .where(
@@ -244,7 +244,7 @@ export class KudosService {
           );
 
         // Count given kudos
-        const [givenCount] = await this.getDb()
+        const [givenCount] = await KudosService.getDb()
           .select({ count: sql<number>`count(*)::int` })
           .from(kudos)
           .where(
@@ -252,7 +252,7 @@ export class KudosService {
           );
 
         // Count by type received
-        const typeBreakdown = await this.getDb()
+        const typeBreakdown = await KudosService.getDb()
           .select({
             type: kudos.type,
             count: sql<number>`count(*)::int`,
@@ -281,7 +281,7 @@ export class KudosService {
    */
   static async addReaction(kudosId: string, userId: string, emoji: string) {
     try {
-      const [existingKudos] = await this.getDb()
+      const [existingKudos] = await KudosService.getDb()
         .select()
         .from(kudos)
         .where(eq(kudos.id, kudosId))
@@ -308,7 +308,7 @@ export class KudosService {
         reactions[emoji].push(userId);
       }
 
-      await this.getDb()
+      await KudosService.getDb()
         .update(kudos)
         .set({ reactions })
         .where(eq(kudos.id, kudosId));
@@ -340,7 +340,7 @@ export class KudosService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const topReceivers = await this.getDb()
+        const topReceivers = await KudosService.getDb()
           .select({
             receiverId: kudos.receiverId,
             count: sql<number>`count(*)::int`,
@@ -375,7 +375,7 @@ export class KudosService {
    */
   static async deleteKudos(kudosId: string, userId: string) {
     try {
-      const [existingKudos] = await this.getDb()
+      const [existingKudos] = await KudosService.getDb()
         .select()
         .from(kudos)
         .where(eq(kudos.id, kudosId))
@@ -390,7 +390,7 @@ export class KudosService {
         throw new Error("Only the kudos giver can delete");
       }
 
-      await this.getDb().delete(kudos).where(eq(kudos.id, kudosId));
+      await KudosService.getDb().delete(kudos).where(eq(kudos.id, kudosId));
 
       // Invalidate cache
       await CacheService.invalidatePattern(
@@ -413,7 +413,7 @@ export class KudosService {
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        return this.getKudos({
+        return KudosService.getKudos({
           workspaceId,
           isPublic: true,
           limit,

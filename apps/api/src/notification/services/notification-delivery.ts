@@ -54,7 +54,7 @@ export class NotificationDeliveryService {
       const results: DeliveryResult[] = [];
 
       // Check if notification should be delivered based on time-based controls
-      const timingValidation = await this.validateNotificationTiming(
+      const timingValidation = await NotificationDeliveryService.validateNotificationTiming(
         payload.userEmail,
         payload.priority || "medium",
       );
@@ -68,12 +68,12 @@ export class NotificationDeliveryService {
       }
 
       // Get user notification preferences
-      const preferences = await this.getUserNotificationPreferences(
+      const preferences = await NotificationDeliveryService.getUserNotificationPreferences(
         payload.userEmail,
       );
 
       // Get user notification settings (the enhanced settings)
-      const settings = await this.getUserNotificationSettings(
+      const settings = await NotificationDeliveryService.getUserNotificationSettings(
         payload.userEmail,
       );
 
@@ -105,7 +105,7 @@ export class NotificationDeliveryService {
       }
 
       // Check if this notification type should be sent
-      const shouldSendForType = this.shouldSendNotificationType(
+      const shouldSendForType = NotificationDeliveryService.shouldSendNotificationType(
         payload.type,
         preferences,
         settings,
@@ -121,7 +121,7 @@ export class NotificationDeliveryService {
 
       // Send email notification if enabled
       if (preferences.channels?.email !== false && settings.email) {
-        const emailResult = await this.sendEmailNotification(
+        const emailResult = await NotificationDeliveryService.sendEmailNotification(
           payload,
           workspaceId,
         );
@@ -129,7 +129,7 @@ export class NotificationDeliveryService {
       }
 
       // Record analytics event
-      await this.recordAnalyticsEvent(payload.userEmail, {
+      await NotificationDeliveryService.recordAnalyticsEvent(payload.userEmail, {
         eventType: "sent",
         notificationType: payload.type,
         channel: "multi",
@@ -204,14 +204,14 @@ export class NotificationDeliveryService {
         : null;
 
       // Check quiet hours
-      if (quietHours && quietHours.enabled) {
+      if (quietHours?.enabled) {
         const currentDay = now
           .toLocaleDateString("en-US", { weekday: "long" })
           .toLowerCase();
         const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
 
         const inQuietHoursDay = quietHours.weekdays.includes(currentDay);
-        const inQuietHoursTime = this.isTimeInRange(
+        const inQuietHoursTime = NotificationDeliveryService.isTimeInRange(
           currentTime,
           quietHours.startTime,
           quietHours.endTime,
@@ -230,8 +230,7 @@ export class NotificationDeliveryService {
 
       // Check work schedule
       if (
-        workSchedule &&
-        workSchedule.enabled &&
+        workSchedule?.enabled &&
         !workSchedule.allowOutsideHours
       ) {
         const currentDay = now
@@ -240,7 +239,7 @@ export class NotificationDeliveryService {
         const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
 
         const isWorkingDay = workSchedule.workingDays.includes(currentDay);
-        const isWorkingHours = this.isTimeInRange(
+        const isWorkingHours = NotificationDeliveryService.isTimeInRange(
           currentTime,
           workSchedule.startTime,
           workSchedule.endTime,
@@ -249,11 +248,10 @@ export class NotificationDeliveryService {
         // Check lunch break
         let isLunchBreak = false;
         if (
-          workSchedule.lunchBreak &&
-          workSchedule.lunchBreak.enabled &&
+          workSchedule.lunchBreak?.enabled &&
           isWorkingDay
         ) {
-          isLunchBreak = this.isTimeInRange(
+          isLunchBreak = NotificationDeliveryService.isTimeInRange(
             currentTime,
             workSchedule.lunchBreak.startTime,
             workSchedule.lunchBreak.endTime,
@@ -468,8 +466,7 @@ export class NotificationDeliveryService {
     // Handle overnight ranges (e.g., 22:00 to 08:00)
     if (startMinutes > endMinutes) {
       return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
-    } else {
-      return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
     }
+      return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
   }
 }

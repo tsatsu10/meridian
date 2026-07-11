@@ -128,7 +128,7 @@ async function createTask({
         .from(projectTable)
         .where(eq(projectTable.id, projectId));
 
-      if (project && project.workspaceId) {
+      if (project?.workspaceId) {
         const actorUserId = creatorId || createdTask.assigneeId || "";
 
         if (actorUserId) {

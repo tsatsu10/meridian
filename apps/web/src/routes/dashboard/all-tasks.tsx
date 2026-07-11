@@ -706,9 +706,8 @@ export default function AllTasksPage() {
     setSelectedTasks((prev) => {
       if (prev.includes(taskId)) {
         return prev.filter((id) => id !== taskId);
-      } else {
-        return [...prev, taskId];
       }
+        return [...prev, taskId];
     });
   };
 

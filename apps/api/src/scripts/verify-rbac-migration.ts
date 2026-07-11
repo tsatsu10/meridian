@@ -96,7 +96,7 @@ async function verifyTable(
       return false;
     }
 
-    addResult(`Table: ${tableName}`, true, `Exists with all expected columns`);
+    addResult(`Table: ${tableName}`, true, "Exists with all expected columns");
     return true;
   } catch (error) {
     addResult(
@@ -158,7 +158,7 @@ async function verifySystemRoles(): Promise<boolean> {
         "warning",
       );
     } else {
-      addResult("System roles", true, `All 11 system roles present`);
+      addResult("System roles", true, "All 11 system roles present");
     }
 
     return missingRoles.length === 0;
@@ -458,13 +458,13 @@ function generateReport() {
     logger.debug("  3. Monitor application logs");
     logger.debug("  4. Begin Phase 2 development\n");
     return true;
-  } else if (criticalIssues.length === 0) {
+  }if (criticalIssues.length === 0) {
     logger.debug("⚠️  MIGRATION COMPLETED WITH WARNINGS");
     logger.debug("═══════════════════════════════════════════════\n");
     logger.debug("The migration completed but has some warnings.");
     logger.debug("Review the warnings above and address if necessary.\n");
     return true;
-  } else {
+  }
     logger.debug("❌ MIGRATION VERIFICATION FAILED!");
     logger.debug("═══════════════════════════════════════════════\n");
     logger.debug("Critical issues found. Do NOT proceed to production.");
@@ -474,7 +474,6 @@ function generateReport() {
       "  tsx src/scripts/run-rbac-unification-migration.ts --rollback\n",
     );
     return false;
-  }
 }
 
 /**

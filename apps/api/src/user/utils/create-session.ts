@@ -25,7 +25,7 @@ async function createSession(token: string, userId: string) {
 
   try {
     await db.insert(sessionTable).values(session);
-    console.log(`✅ [createSession] Session created successfully in database`);
+    console.log("✅ [createSession] Session created successfully in database");
   } catch (error) {
     console.error("❌ [createSession] Database insert failed:", error);
     throw error;

@@ -126,7 +126,7 @@ export function TeamMemberProfileModal({
               <Users className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground">
-              {error ? `Error loading profile` : "Unable to load profile data"}
+              {error ? "Error loading profile" : "Unable to load profile data"}
             </p>
             <Button onClick={onClose} variant="outline">
               Close

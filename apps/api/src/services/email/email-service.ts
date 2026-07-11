@@ -83,7 +83,7 @@ export class EmailService {
         logger.debug("📧 [DEV] Email would be sent:", {
           to: options.to,
           subject: options.subject,
-          html: options.html.substring(0, 100) + "...",
+          html: `${options.html.substring(0, 100)}...`,
         });
       }
       return false;
@@ -123,7 +123,7 @@ export class EmailService {
 
         // Wait before retry (exponential backoff)
         await new Promise((resolve) =>
-          setTimeout(resolve, Math.pow(2, attempt) * 1000),
+          setTimeout(resolve, 2 ** attempt * 1000),
         );
       }
     }

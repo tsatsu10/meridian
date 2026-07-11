@@ -229,7 +229,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
             // Log at most once per minute
             console.warn(
               "🧠 Critical memory usage detected:",
-              Math.round(memoryUsage * 100) + "%",
+              `${Math.round(memoryUsage * 100)}%`,
             );
             lastMemoryCleanupRef.current = Date.now();
           }
@@ -319,14 +319,14 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
     if (currentMetrics.avgQueryTime > 1000) {
       console.warn(
         "🐌 Slow query performance detected:",
-        currentMetrics.avgQueryTime + "ms average",
+        `${currentMetrics.avgQueryTime}ms average`,
       );
     }
 
     if (currentMetrics.clickLatency > 100) {
       console.warn(
         "🐌 High interaction latency detected:",
-        currentMetrics.clickLatency + "ms average",
+        `${currentMetrics.clickLatency}ms average`,
       );
     }
 
@@ -342,7 +342,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
         // Reduced from 120s to 60s
         console.error(
           "🧠 High memory usage detected:",
-          Math.round(currentMetrics.memoryUsage * 100) + "%",
+          `${Math.round(currentMetrics.memoryUsage * 100)}%`,
         );
         lastMemoryWarning.current = now;
         // Trigger immediate cleanup for high memory usage

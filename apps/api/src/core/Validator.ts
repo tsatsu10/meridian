@@ -316,43 +316,43 @@ export class Validator {
       }),
     );
 
-    return this.validate(schema, processedQuery);
+    return Validator.validate(schema, processedQuery);
   }
 
   static validateId(id: string): string {
-    return this.validate(CommonSchemas.id, id);
+    return Validator.validate(CommonSchemas.id, id);
   }
 
   static validatePagination(query: Record<string, any>) {
-    return this.validateQuery(CommonSchemas.pagination, query);
+    return Validator.validateQuery(CommonSchemas.pagination, query);
   }
 
   static validateSearch(query: Record<string, any>) {
-    return this.validateQuery(CommonSchemas.search, query);
+    return Validator.validateQuery(CommonSchemas.search, query);
   }
 
   static validateDateRange(data: {
     startDate: string | Date;
     endDate: string | Date;
   }) {
-    return this.validate(CommonSchemas.dateRange, data);
+    return Validator.validate(CommonSchemas.dateRange, data);
   }
 
   static validateEmail(email: string): string {
-    return this.validate(CommonSchemas.email, email);
+    return Validator.validate(CommonSchemas.email, email);
   }
 
   static validatePassword(password: string): string {
-    return this.validate(CommonSchemas.password, password);
+    return Validator.validate(CommonSchemas.password, password);
   }
 
   static validateDate(date: string | Date): Date {
-    return this.validate(z.coerce.date(), date);
+    return Validator.validate(z.coerce.date(), date);
   }
 
   static validateEnum<T extends string>(value: string, allowedValues: T[]): T {
     const enumSchema = z.enum(allowedValues as [T, ...T[]]);
-    return this.validate(enumSchema, value);
+    return Validator.validate(enumSchema, value);
   }
 
   static validateArray<T>(data: unknown, itemSchema: z.ZodSchema<T>): T[] {
@@ -366,9 +366,6 @@ export class Validator {
         },
       ]);
     }
-
-    // Validate each item in the array
-    try {
       return data.map((item, index) => {
         try {
           return itemSchema.parse(item);
@@ -384,9 +381,6 @@ export class Validator {
           throw error;
         }
       });
-    } catch (error) {
-      throw error;
-    }
   }
 
   static validateObject<T>(
@@ -407,8 +401,6 @@ export class Validator {
     // Validate each value in the object
     const obj = data as Record<string, unknown>;
     const result: Record<string, T> = {};
-
-    try {
       for (const [key, value] of Object.entries(obj)) {
         try {
           result[key] = valueSchema.parse(value);
@@ -425,9 +417,6 @@ export class Validator {
         }
       }
       return result;
-    } catch (error) {
-      throw error;
-    }
   }
 }
 

@@ -97,7 +97,7 @@ function Sidebar({
         </div>
 
         {hasChildren && isExpanded && !isCollapsed && (
-          <ul className="nav-children" role="list">
+          <ul className="nav-children" >
             {item.children!.map((child) => renderNavItem(child, depth + 1))}
           </ul>
         )}
@@ -133,7 +133,7 @@ function Sidebar({
 
       {/* Navigation */}
       <nav className="sidebar-nav">
-        <ul className="nav-list" role="list">
+        <ul className="nav-list" >
           {navItems.map((item) => renderNavItem(item))}
         </ul>
       </nav>

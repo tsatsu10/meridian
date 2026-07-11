@@ -378,7 +378,7 @@ function calculateBalanceScore(
     memberWorkloads.reduce((sum, w) => sum + w, 0) / memberWorkloads.length;
   const variance =
     memberWorkloads.reduce(
-      (sum, w) => sum + Math.pow(w - avgTeamWorkload, 2),
+      (sum, w) => sum + (w - avgTeamWorkload) ** 2,
       0,
     ) / memberWorkloads.length;
   const stdDev = Math.sqrt(variance);

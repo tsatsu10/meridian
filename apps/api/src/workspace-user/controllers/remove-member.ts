@@ -67,7 +67,7 @@ export async function removeMember(c: Context) {
       .limit(1);
 
     if (!currentUser) {
-      logger.debug(`❌ Current user not found in workspace`);
+      logger.debug("❌ Current user not found in workspace");
       return c.json({ error: "Unauthorized" }, 403);
     }
 
@@ -98,7 +98,7 @@ export async function removeMember(c: Context) {
 
     // Cannot remove yourself
     if (targetMember.userEmail === currentUserEmail) {
-      logger.debug(`❌ Cannot remove yourself`);
+      logger.debug("❌ Cannot remove yourself");
       return c.json(
         {
           error: "Cannot remove yourself from the workspace",
@@ -205,7 +205,7 @@ export async function removeMember(c: Context) {
           removedByName: currentUser.name,
         },
       });
-      logger.debug(`📝 Removal logged to activity`);
+      logger.debug("📝 Removal logged to activity");
     } catch (activityError) {
       // Don't fail the request if activity logging fails
       logger.error("⚠️ Failed to log activity:", activityError);
@@ -216,7 +216,7 @@ export async function removeMember(c: Context) {
       .delete(workspaceUserTable)
       .where(eq(workspaceUserTable.id, memberId));
 
-    logger.debug(`✅ Member removed successfully`);
+    logger.debug("✅ Member removed successfully");
 
     // TODO: Broadcast via WebSocket for real-time updates
     // const io = c.get('io');

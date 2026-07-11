@@ -354,7 +354,7 @@ const dashboard = new Hono()
           logger.debug("📊 Enhanced analytics options:", options);
           const analytics = await getEnhancedAnalytics(options);
           return c.json(analytics);
-        } else {
+        }
           // Use simple analytics for backward compatibility
           const simpleTimeRange =
             timeRange === "custom" ? "30d" : (timeRange ?? "30d");
@@ -540,7 +540,6 @@ const dashboard = new Hono()
           };
 
           return c.json(enhancedFormat);
-        }
       } catch (error) {
         logger.error("❌ Analytics error:", error);
         const message = error instanceof Error ? error.message : String(error);

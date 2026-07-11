@@ -37,7 +37,7 @@ export async function ensureAdminUser() {
 
     if (!workspaceMembership) {
       logger.debug(
-        `⚠️  Existing admin user has no workspace membership, creating one...`,
+        "⚠️  Existing admin user has no workspace membership, creating one...",
       );
 
       // Get or create a workspace
@@ -97,9 +97,9 @@ export async function ensureAdminUser() {
             isActive: true,
             workspaceId: workspace.id,
           });
-          logger.debug(`✅ Created role_assignment for WebSocket access`);
+          logger.debug("✅ Created role_assignment for WebSocket access");
         } else {
-          logger.debug(`ℹ️  Role assignment already exists for workspace`);
+          logger.debug("ℹ️  Role assignment already exists for workspace");
         }
 
         logger.debug(

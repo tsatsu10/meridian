@@ -11,8 +11,8 @@ import { errorMessage } from "../utils/errors";
  * - Integration with monitoring systems
  */
 
-import { EventEmitter } from "events";
-import { createHash } from "crypto";
+import { EventEmitter } from "node:events";
+import { createHash } from "node:crypto";
 import logger from "../utils/logger";
 export interface LogMetrics {
   timestamp: number;
@@ -309,7 +309,7 @@ class LogAggregationService extends EventEmitter {
 
     if (options.format === "json") {
       return JSON.stringify(filteredLogs, null, 2);
-    } else {
+    }
       // CSV format
       const headers = [
         "timestamp",
@@ -334,7 +334,6 @@ class LogAggregationService extends EventEmitter {
       });
 
       return csvRows.join("\n");
-    }
   }
 
   /**

@@ -308,10 +308,9 @@ describe("Label Operations", () => {
 
     it("should generate random color", () => {
       const color =
-        "#" +
-        Math.floor(Math.random() * 16777215)
+        `#${Math.floor(Math.random() * 16777215)
           .toString(16)
-          .padStart(6, "0");
+          .padStart(6, "0")}`;
       expect(color).toMatch(/^#[0-9a-f]{6}$/i);
     });
   });

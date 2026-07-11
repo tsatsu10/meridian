@@ -5,8 +5,8 @@
  * enforcement, structured output, and environment-specific configurations.
  */
 
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
   getLogAggregationService,
   type LogMetrics,
@@ -214,8 +214,8 @@ export class EnhancedLogger {
     if (!this.config.enableFileLogging) return;
 
     try {
-      const logFile = path.join(this.config.logDirectory, `app.log`);
-      const logLine = JSON.stringify(entry) + "\n";
+      const logFile = path.join(this.config.logDirectory, "app.log");
+      const logLine = `${JSON.stringify(entry)}\n`;
       await fs.appendFile(logFile, logLine);
     } catch (error) {
       // Silently fail file logging to avoid recursion
@@ -505,7 +505,7 @@ export class EnhancedLogger {
     context?: { userId?: string; operation?: string },
   ): Promise<void> {
     const truncatedQuery =
-      query.length > 200 ? query.substring(0, 200) + "..." : query;
+      query.length > 200 ? `${query.substring(0, 200)}...` : query;
     await this.log(
       "debug",
       `DB Query: ${truncatedQuery}`,

@@ -202,7 +202,7 @@ async function apiRequest<T>(
 
       if (isRetryableError) {
         await new Promise((resolve) =>
-          setTimeout(resolve, API_CONFIG.RETRY_DELAY * Math.pow(2, retryCount)),
+          setTimeout(resolve, API_CONFIG.RETRY_DELAY * 2 ** retryCount),
         );
         return apiRequest<T>(endpoint, options, retryCount + 1);
       }

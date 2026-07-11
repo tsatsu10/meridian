@@ -127,8 +127,7 @@ export const checkDependenciesAndUpdate = async (
   // Find tasks that depend on the completed task
   const dependentTasks = allTasks.filter(
     (task) =>
-      task.dependencies &&
-      task.dependencies.includes(completedTaskId) &&
+      task.dependencies?.includes(completedTaskId) &&
       task.status !== "done",
   );
 

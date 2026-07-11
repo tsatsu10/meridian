@@ -119,7 +119,7 @@ export async function seedUsersWithRoles() {
       (u) => u.email === "admin@meridian.app",
     );
 
-    let workspace;
+    let workspace: typeof workspaces.$inferSelect;
     const existingWorkspace = await db
       .select()
       .from(workspaces)
@@ -442,7 +442,7 @@ export async function seedUsersWithRoles() {
     logger.debug("\n📊 Seeding Summary:");
     logger.debug("═".repeat(60));
     logger.debug(`✅ Users created: ${createdUsers.length}`);
-    logger.debug(`✅ Workspace created: 1`);
+    logger.debug("✅ Workspace created: 1");
     logger.debug(`✅ Projects created: ${createdProjects.length}`);
     logger.debug(`✅ Teams created: ${createdTeams.length}`);
     logger.debug(`✅ Sample tasks created: ${tasksData.length}`);

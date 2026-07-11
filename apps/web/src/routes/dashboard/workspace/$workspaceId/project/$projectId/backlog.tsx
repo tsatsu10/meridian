@@ -238,7 +238,7 @@ function BacklogPage() {
   // ✅ PRODUCTION: Real API theme handlers with validation and permission checks
   const handleThemeCreate = async (
     theme: Omit<TaskTheme, "id" | "createdAt" | "updatedAt">,
-  ) => {
+  ): Promise<TaskTheme | undefined> => {
     // Check permissions
     if (!canEditBacklog) {
       toast.error("Permission denied", {

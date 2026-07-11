@@ -709,7 +709,7 @@ export default function TeamCalendarModal({
   };
 
   const formatICSDate = (date: Date): string => {
-    return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    return `${date.toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
   };
 
   return (

@@ -97,7 +97,7 @@ export async function invalidateMultipleProjects(
     logger.debug(`🔴 Cache invalidated: ${projectIds.length} projects`);
   } catch (error) {
     logger.error(
-      `🔴 Failed to batch invalidate projects:`,
+      "🔴 Failed to batch invalidate projects:",
       errorMessage(error),
     );
   }

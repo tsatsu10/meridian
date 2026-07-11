@@ -145,7 +145,7 @@ describe.skip("RBAC Permission System", () => {
     });
 
     it("admin should manage users but not delete workspace", () => {
-      const admin = testUsers["admin"];
+      const admin = testUsers.admin;
 
       const canManageUsers = true;
       const canDeleteWorkspace = false; // Only workspace-manager can delete
@@ -183,7 +183,7 @@ describe.skip("RBAC Permission System", () => {
     });
 
     it("member should have standard task access", () => {
-      const member = testUsers["member"];
+      const member = testUsers.member;
 
       const permissions = [
         "tasks.create",
@@ -197,7 +197,7 @@ describe.skip("RBAC Permission System", () => {
     });
 
     it("guest should have limited temporary access", () => {
-      const guest = testUsers["guest"];
+      const guest = testUsers.guest;
 
       const permissions = [
         "tasks.view.assigned",
@@ -309,15 +309,15 @@ describe.skip("RBAC Permission System", () => {
         .insert(roleAssignments)
         .values({
           id: createId(),
-          userId: testUsers["member"].id,
+          userId: testUsers.member.id,
           roleId: role.id,
           workspaceId: testWorkspace.id,
-          assignedBy: testUsers["admin"].id,
+          assignedBy: testUsers.admin.id,
           reason: "Promoted to team lead",
         })
         .returning();
 
-      expect(assignment.userId).toBe(testUsers["member"].id);
+      expect(assignment.userId).toBe(testUsers.member.id);
       expect(assignment.roleId).toBe(role.id);
       expect(assignment.workspaceId).toBe(testWorkspace.id);
       expect(assignment.isActive).toBe(true);
@@ -340,11 +340,11 @@ describe.skip("RBAC Permission System", () => {
         .insert(roleAssignments)
         .values({
           id: createId(),
-          userId: testUsers["member"].id,
+          userId: testUsers.member.id,
           roleId: role.id,
           workspaceId: testWorkspace.id,
           projectIds: [projectId],
-          assignedBy: testUsers["admin"].id,
+          assignedBy: testUsers.admin.id,
         })
         .returning();
 
@@ -367,10 +367,10 @@ describe.skip("RBAC Permission System", () => {
         .insert(roleAssignments)
         .values({
           id: createId(),
-          userId: testUsers["member"].id,
+          userId: testUsers.member.id,
           roleId: role.id,
           workspaceId: testWorkspace.id,
-          assignedBy: testUsers["admin"].id,
+          assignedBy: testUsers.admin.id,
           expiresAt,
         })
         .returning();
@@ -386,11 +386,11 @@ describe.skip("RBAC Permission System", () => {
         .insert(permissionOverrides)
         .values({
           id: createId(),
-          userId: testUsers["member"].id,
+          userId: testUsers.member.id,
           permission: "projects.delete",
           granted: true,
           workspaceId: testWorkspace.id,
-          grantedBy: testUsers["admin"].id,
+          grantedBy: testUsers.admin.id,
           reason: "Special project cleanup access",
         })
         .returning();
@@ -404,7 +404,7 @@ describe.skip("RBAC Permission System", () => {
         .insert(permissionOverrides)
         .values({
           id: createId(),
-          userId: testUsers["admin"].id,
+          userId: testUsers.admin.id,
           permission: "workspace.delete",
           granted: false, // Revoke
           workspaceId: testWorkspace.id,
@@ -424,13 +424,13 @@ describe.skip("RBAC Permission System", () => {
         .insert(permissionOverrides)
         .values({
           id: createId(),
-          userId: testUsers["member"].id,
+          userId: testUsers.member.id,
           permission: "project.settings",
           granted: true,
           workspaceId: testWorkspace.id,
           resourceType: "project",
           resourceId: projectId,
-          grantedBy: testUsers["admin"].id,
+          grantedBy: testUsers.admin.id,
         })
         .returning();
 
@@ -445,11 +445,11 @@ describe.skip("RBAC Permission System", () => {
         .insert(permissionOverrides)
         .values({
           id: createId(),
-          userId: testUsers["member"].id,
+          userId: testUsers.member.id,
           permission: "analytics.executive",
           granted: true,
           workspaceId: testWorkspace.id,
-          grantedBy: testUsers["admin"].id,
+          grantedBy: testUsers.admin.id,
           expiresAt,
           reason: "Temporary access for quarterly report",
         })
@@ -540,7 +540,7 @@ describe.skip("RBAC Permission System", () => {
         .update(roles)
         .set({
           deletedAt: new Date(),
-          deletedBy: testUsers["admin"].id,
+          deletedBy: testUsers.admin.id,
           isActive: false,
         })
         .where(eq(roles.id, role.id));
@@ -551,7 +551,7 @@ describe.skip("RBAC Permission System", () => {
         .where(eq(roles.id, role.id));
 
       expect(deleted.deletedAt).toBeDefined();
-      expect(deleted.deletedBy).toBe(testUsers["admin"].id);
+      expect(deleted.deletedBy).toBe(testUsers.admin.id);
       expect(deleted.isActive).toBe(false);
     });
 

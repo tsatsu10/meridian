@@ -242,7 +242,7 @@ export async function generateDigestsForAllUsers(
     logger.info(`Generated ${generatedCount} ${type} digests`);
     return generatedCount;
   } catch (error) {
-    logger.error(`Failed to generate digests:`, error);
+    logger.error("Failed to generate digests:", error);
     throw error;
   }
 }

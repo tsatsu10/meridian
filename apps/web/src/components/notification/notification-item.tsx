@@ -129,7 +129,7 @@ const NotificationItem = memo(
             if (notification.metadata) {
               const meta = parseMetadata(notification.metadata);
 
-              if (meta && meta.workspaceId && meta.projectId) {
+              if (meta?.workspaceId && meta.projectId) {
                 navigate({
                   to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
                   params: {
@@ -152,7 +152,7 @@ const NotificationItem = memo(
             if (notification.metadata) {
               const meta = parseMetadata(notification.metadata);
 
-              if (meta && meta.workspaceId) {
+              if (meta?.workspaceId) {
                 navigate({
                   to: "/dashboard/workspace/$workspaceId/project/$projectId",
                   params: {
@@ -172,7 +172,7 @@ const NotificationItem = memo(
             if (notification.metadata) {
               const meta = parseMetadata(notification.metadata);
 
-              if (meta && meta.workspaceId && meta.projectId && meta.taskId) {
+              if (meta?.workspaceId && meta.projectId && meta.taskId) {
                 navigate({
                   to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
                   params: {
@@ -194,7 +194,7 @@ const NotificationItem = memo(
             if (notification.metadata) {
               const meta = parseMetadata(notification.metadata);
 
-              if (meta && meta.workspaceId && meta.projectId && meta.taskId) {
+              if (meta?.workspaceId && meta.projectId && meta.taskId) {
                 navigate({
                   to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
                   params: {

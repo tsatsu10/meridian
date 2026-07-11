@@ -887,7 +887,7 @@ app.post("/:userId/export", async (c) => {
         mimeType = "application/json";
         extension = ".json";
         break;
-      case "csv":
+      case "csv": {
         // Convert to CSV format
         const csvRows = ["Section,Key,Value"];
         Object.entries(settingsObject).forEach(([section, sectionData]) => {
@@ -901,6 +901,7 @@ app.post("/:userId/export", async (c) => {
         mimeType = "text/csv";
         extension = ".csv";
         break;
+      }
       case "yaml":
         // Simple YAML conversion (you might want to use a proper YAML library)
         data = Object.entries(settingsObject)

@@ -26,7 +26,12 @@ export async function updateTeam(c: Context) {
 
   try {
     // Parse request body
-    let body;
+    let body: {
+      name?: string;
+      description?: string;
+      projectId?: string;
+      settings?: Record<string, unknown>;
+    };
     try {
       body = await c.req.json();
     } catch (jsonError) {

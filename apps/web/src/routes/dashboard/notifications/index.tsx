@@ -265,7 +265,6 @@ function NotificationsPanel() {
           );
         case "type":
           return a.type.localeCompare(b.type);
-        case "date":
         default:
           return (
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -612,7 +611,7 @@ function NotificationsPanel() {
   };
 
   // Show error state if there's an authentication error
-  if (error && error.message?.includes("Forbidden")) {
+  if (error?.message?.includes("Forbidden")) {
     return (
       <LazyDashboardLayout>
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">

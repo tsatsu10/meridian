@@ -91,6 +91,7 @@ function KanbanColumn({
 
       {isAddingTask && (
         <div className="add-task-form">
+          {/* biome-ignore lint/a11y/noAutofocus: user-initiated disclosure — focusing the just-revealed input is the expected UX */}
           <input
             type="text"
             value={newTaskTitle}

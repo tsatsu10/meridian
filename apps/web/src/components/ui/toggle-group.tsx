@@ -53,9 +53,8 @@ const ToggleGroupItem = React.forwardRef<
   const isSelected = React.useMemo(() => {
     if (context.type === "single") {
       return context.value === value;
-    } else {
-      return Array.isArray(context.value) && context.value.includes(value);
     }
+      return Array.isArray(context.value) && context.value.includes(value);
   }, [context.value, value, context.type]);
 
   const handleClick = () => {

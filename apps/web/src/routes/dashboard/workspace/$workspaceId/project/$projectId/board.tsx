@@ -373,7 +373,6 @@ function RouteComponent() {
         {/* 🔊 ACCESSIBILITY: Main content area with proper ARIA labels */}
         <main
           className="flex-1 overflow-hidden"
-          role="main"
           aria-label="Task board view"
         >
           {/* Show empty state when appropriate */}

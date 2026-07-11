@@ -405,8 +405,8 @@ export class FileVersioningService {
 
     try {
       const [v1, v2] = await Promise.all([
-        this.getVersion(versionId1),
-        this.getVersion(versionId2),
+        FileVersioningService.getVersion(versionId1),
+        FileVersioningService.getVersion(versionId2),
       ]);
 
       if (!v1 || !v2) {

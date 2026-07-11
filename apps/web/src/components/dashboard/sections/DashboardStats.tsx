@@ -117,7 +117,6 @@ export default function DashboardStats({
   return (
     <section
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-      role="region"
       aria-labelledby="dashboard-stats-heading"
     >
       <h2 id="dashboard-stats-heading" className="sr-only">

@@ -204,7 +204,6 @@ export const Pagination = forwardRef<
 >(({ className, ...props }, ref) => (
   <nav
     ref={ref}
-    role="navigation"
     aria-label="pagination"
     className={cn("mx-auto flex w-full justify-center", className)}
     {...props}

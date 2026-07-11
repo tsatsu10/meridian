@@ -423,7 +423,7 @@ function ProjectCalendar() {
                       key={event.id}
                       className="text-xs p-1 rounded truncate cursor-pointer hover:opacity-80"
                       style={{
-                        backgroundColor: event.color + "20",
+                        backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
                       }}
@@ -496,7 +496,7 @@ function ProjectCalendar() {
                     key={event.id}
                     className="text-xs p-1 rounded mb-1 truncate cursor-pointer hover:opacity-80"
                     style={{
-                      backgroundColor: event.color + "20",
+                      backgroundColor: `${event.color}20`,
                       color: event.color,
                       borderLeft: `3px solid ${event.color}`,
                     }}
@@ -544,7 +544,7 @@ function ProjectCalendar() {
                           key={event.id}
                           className="text-xs p-1 rounded mb-1 truncate cursor-pointer hover:opacity-80"
                           style={{
-                            backgroundColor: event.color + "20",
+                            backgroundColor: `${event.color}20`,
                             color: event.color,
                             borderLeft: `3px solid ${event.color}`,
                           }}
@@ -604,7 +604,7 @@ function ProjectCalendar() {
                     key={event.id}
                     className="text-sm p-2 rounded cursor-pointer hover:opacity-80"
                     style={{
-                      backgroundColor: event.color + "20",
+                      backgroundColor: `${event.color}20`,
                       color: event.color,
                       borderLeft: `3px solid ${event.color}`,
                     }}
@@ -643,7 +643,7 @@ function ProjectCalendar() {
                       key={event.id}
                       className="text-sm p-2 rounded mb-1 cursor-pointer hover:opacity-80"
                       style={{
-                        backgroundColor: event.color + "20",
+                        backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
                       }}
