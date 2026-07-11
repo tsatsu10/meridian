@@ -55,6 +55,13 @@ interface Team {
   color: string;
 }
 
+type EnrichedMember = Member & {
+  teamId: string;
+  teamName: string;
+  teamColor: string;
+  projectName: string;
+};
+
 interface RoleManagementModalProps {
   open: boolean;
   onClose: () => void;
@@ -162,7 +169,8 @@ export default function RoleManagementModal({
   );
   const [editingRoles, setEditingRoles] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
-  const [_selectedMember, setSelectedMember] = useState<any>(null);
+  const [_selectedMember, setSelectedMember] =
+    useState<EnrichedMember | null>(null);
   const [showMemberActions, setShowMemberActions] = useState<string | null>(
     null,
   );
@@ -232,7 +240,7 @@ export default function RoleManagementModal({
     }
   };
 
-  const handleMemberAction = (action: string, member: any) => {
+  const handleMemberAction = (action: string, member: EnrichedMember) => {
     setShowMemberActions(null);
 
     switch (action) {
@@ -446,18 +454,18 @@ export default function RoleManagementModal({
                               <div
                                 className={cn(
                                   "w-3 h-3 rounded-full",
-                                  (member as any).teamColor,
+                                  member.teamColor,
                                 )}
                               />
                               <span className="text-sm">
-                                {(member as any).teamName}
+                                {member.teamName}
                               </span>
                             </div>
                           </td>
 
                           <td className="p-4">
                             <div className="text-sm">
-                              {(member as any).projectName}
+                              {member.projectName}
                             </div>
                           </td>
 
