@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import bcrypt from "bcrypt";
 import signIn from "../sign-in";
+import { getErrorMessage } from "../../../utils/error-utils";
 import {
   createMockDb,
   mockUsers,
@@ -234,9 +235,10 @@ describe("SignIn Controller", () => {
       // Act & Assert
       try {
         await signIn(email, password);
-      } catch (error: any) {
-        expect(error.message).not.toContain(hashedPassword);
-        expect(error.message).not.toContain("$2b$");
+      } catch (error) {
+        const message = getErrorMessage(error);
+        expect(message).not.toContain(hashedPassword);
+        expect(message).not.toContain("$2b$");
       }
     });
   });

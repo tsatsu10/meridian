@@ -11,6 +11,7 @@ config();
 import { sql } from "drizzle-orm";
 import { getDatabase, initializeDatabase } from "../connection";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 async function fixEnum() {
   logger.info("🔧 Fixing user_role enum...\n");
@@ -48,11 +49,12 @@ async function fixEnum() {
         `),
         );
         logger.info(`   ✅ '${value}' added or already exists`);
-      } catch (err: any) {
-        if (err.message.includes("already exists")) {
+      } catch (err) {
+        const message = getErrorMessage(err);
+        if (message.includes("already exists")) {
           logger.info(`   ⏭️  '${value}' already exists`);
         } else {
-          logger.error(`   ❌ Failed to add '${value}': ${err.message}`);
+          logger.error(`   ❌ Failed to add '${value}': ${message}`);
         }
       }
     }

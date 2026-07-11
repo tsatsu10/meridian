@@ -2,6 +2,7 @@ import { getDatabase } from "../../database/connection";
 import { workspaces } from "../../database/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 import { createId } from "@paralleldrive/cuid2";
 
 // ===================================
@@ -486,8 +487,8 @@ export async function importTranslations(
 
     await updateTranslations(workspaceId, languageCode, translations);
     imported = Object.keys(translations).length;
-  } catch (error: any) {
-    errors.push(error.message);
+  } catch (error) {
+    errors.push(getErrorMessage(error));
   }
 
   return { imported, errors };

@@ -13,6 +13,7 @@ import {
   roleAssignmentTable,
 } from "../../database/schema";
 import { createId } from "@paralleldrive/cuid2";
+import { getErrorMessage } from "../../utils/error-utils";
 
 export interface ExportOptions {
   format: "json" | "csv";
@@ -327,11 +328,11 @@ export async function validateImportData(
     }
 
     result.success = result.errors.length === 0;
-  } catch (error: any) {
+  } catch (error) {
     result.success = false;
     result.errors.push({
       row: 0,
-      message: `Failed to parse import data: ${error.message}`,
+      message: `Failed to parse import data: ${getErrorMessage(error)}`,
     });
   }
 
@@ -511,13 +512,16 @@ export async function importWorkspaceData(
           });
 
           result.importedRecords++;
-        } catch (error: any) {
-          if (options.skipDuplicates && error.message.includes("duplicate")) {
+        } catch (error) {
+          if (
+            options.skipDuplicates &&
+            getErrorMessage(error).includes("duplicate")
+          ) {
             result.skippedRecords++;
           } else {
             result.errors.push({
               row: result.totalRecords,
-              message: error.message,
+              message: getErrorMessage(error),
             });
           }
         }
@@ -555,13 +559,16 @@ export async function importWorkspaceData(
           });
 
           result.importedRecords++;
-        } catch (error: any) {
-          if (options.skipDuplicates && error.message.includes("duplicate")) {
+        } catch (error) {
+          if (
+            options.skipDuplicates &&
+            getErrorMessage(error).includes("duplicate")
+          ) {
             result.skippedRecords++;
           } else {
             result.errors.push({
               row: result.totalRecords,
-              message: error.message,
+              message: getErrorMessage(error),
             });
           }
         }
@@ -571,11 +578,11 @@ export async function importWorkspaceData(
     }
 
     result.success = result.errors.length === 0;
-  } catch (error: any) {
+  } catch (error) {
     result.success = false;
     result.errors.push({
       row: 0,
-      message: `Import failed: ${error.message}`,
+      message: `Import failed: ${getErrorMessage(error)}`,
     });
   }
 

@@ -11,6 +11,7 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
 
 const app = new Hono();
 
@@ -85,9 +86,9 @@ app.post(
         message: "Note created successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to create note:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -136,9 +137,9 @@ app.get("/projects/:projectId/notes", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch notes:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -168,9 +169,9 @@ app.get("/notes/:noteId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch note:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -268,9 +269,9 @@ app.patch(
         message: "Note updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update note:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -294,9 +295,9 @@ app.delete("/notes/:noteId", async (c) => {
       message: "Note deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete note:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -343,9 +344,9 @@ app.patch("/notes/:noteId/pin", async (c) => {
       message: note.isPinned ? "Note pinned" : "Note unpinned",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to pin/unpin note:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -375,9 +376,9 @@ app.get("/notes/:noteId/versions", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch versions:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -407,9 +408,9 @@ app.get("/notes/:noteId/comments", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch comments:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -449,9 +450,9 @@ app.post(
         message: "Comment added successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to add comment:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -502,9 +503,9 @@ app.patch(
         message: "Comment updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update comment:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -535,9 +536,9 @@ app.delete("/notes/:noteId/comments/:commentId", async (c) => {
       message: "Comment deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete comment:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 

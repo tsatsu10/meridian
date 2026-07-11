@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
+import { getErrorMessage } from "@/lib/error-utils";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TestWrapper } from "../../../test-utils/test-wrapper";
@@ -71,8 +72,8 @@ function LoginForm({ onSubmit, onForgotPassword, onSignUp }: LoginFormProps) {
       if (onSubmit) {
         await onSubmit({ email, password });
       }
-    } catch (err: any) {
-      setError(err.message || "Invalid credentials");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Invalid credentials");
     } finally {
       setIsLoading(false);
     }

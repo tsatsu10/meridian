@@ -41,6 +41,7 @@ import {
   exportAuditLogs,
 } from "./controllers/audit-log-settings";
 import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
 
 // Import backup controllers
 import {
@@ -192,7 +193,8 @@ app.get("/", async (c) => {
     return c.json(
       {
         error: "Failed to retrieve settings",
-        details: error instanceof Error ? error.message : "Unknown error",
+        details:
+          error instanceof Error ? getErrorMessage(error) : "Unknown error",
       },
       500,
     );
@@ -971,9 +973,9 @@ app.get("/email/:workspaceId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get email settings:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1045,9 +1047,9 @@ app.patch(
         message: "Email settings updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update email settings:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1076,9 +1078,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("SMTP connection test failed:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1109,9 +1111,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to send test email:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1131,9 +1133,9 @@ app.get("/email/:workspaceId/templates", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get email templates:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1152,9 +1154,9 @@ app.get("/email/:workspaceId/templates/:templateId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get email template:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1198,9 +1200,9 @@ app.post(
         message: "Email template created successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to create email template:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1238,9 +1240,9 @@ app.patch(
         message: "Email template updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update email template:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1257,9 +1259,9 @@ app.delete("/email/:workspaceId/templates/:templateId", async (c) => {
       message: "Email template deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete email template:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1278,9 +1280,9 @@ app.get("/calendar/:workspaceId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get calendar settings:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1348,9 +1350,9 @@ app.patch(
         message: "Calendar settings updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update calendar settings:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1381,9 +1383,9 @@ app.get("/audit/:workspaceId/logs", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get audit logs:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1404,9 +1406,9 @@ app.get("/audit/:workspaceId/stats", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get audit stats:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1422,9 +1424,9 @@ app.get("/audit/:workspaceId/filters", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get filter options:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1440,9 +1442,9 @@ app.get("/audit/:workspaceId/settings", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get audit log settings:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1493,9 +1495,9 @@ app.patch(
         message: "Audit log settings updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update audit log settings:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1528,9 +1530,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to export audit logs:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1551,9 +1553,9 @@ app.get("/backup/:workspaceId/settings", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get backup settings:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1624,9 +1626,9 @@ app.patch(
         message: "Backup settings updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update backup settings:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1644,9 +1646,9 @@ app.get("/backup/:workspaceId/history", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get backup history:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1671,9 +1673,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to create backup:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1691,9 +1693,9 @@ app.post("/backup/:workspaceId/:backupId/restore", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to restore backup:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1710,9 +1712,9 @@ app.get("/backup/:workspaceId/:backupId/download", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to download backup:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1729,9 +1731,9 @@ app.delete("/backup/:workspaceId/:backupId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete backup:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1748,9 +1750,9 @@ app.post("/backup/:workspaceId/:backupId/verify", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to verify backup:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1768,9 +1770,9 @@ app.get("/roles/permissions", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get permissions:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1784,9 +1786,9 @@ app.get("/roles/templates", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get templates:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1802,9 +1804,9 @@ app.get("/roles/:workspaceId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get roles:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1825,9 +1827,9 @@ app.get("/roles/:workspaceId/:roleId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get role:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1860,9 +1862,9 @@ app.post(
         message: "Role created successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to create role:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1896,9 +1898,9 @@ app.patch(
         message: "Role updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update role:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1916,9 +1918,9 @@ app.delete("/roles/:workspaceId/:roleId", async (c) => {
       message: "Role deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete role:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -1945,9 +1947,9 @@ app.post(
         message: "Role cloned successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to clone role:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -1986,9 +1988,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to perform search:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2007,9 +2009,9 @@ app.get("/search/:workspaceId/suggestions", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get suggestions:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2026,9 +2028,9 @@ app.get("/search/:workspaceId/saved", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get saved searches:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2073,9 +2075,9 @@ app.post(
         message: "Search saved successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to save search:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2123,9 +2125,9 @@ app.patch(
         message: "Search updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update saved search:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2144,9 +2146,9 @@ app.delete("/search/:workspaceId/saved/:searchId", async (c) => {
       message: "Search deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete saved search:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2163,9 +2165,9 @@ app.post("/search/:workspaceId/saved/:searchId/use", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to record search usage:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2183,9 +2185,9 @@ app.get("/import-export/templates", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get templates:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2221,9 +2223,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to export data:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2250,9 +2252,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to validate import data:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2289,9 +2291,9 @@ app.post(
           : `Import failed with ${result.errors.length} errors`,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to import data:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2342,9 +2344,9 @@ app.post("/background/upload", async (c) => {
       imageUrl: dataUrl,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to upload background image:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2382,9 +2384,9 @@ app.get("/background/:userEmail", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get background preferences:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2458,9 +2460,9 @@ app.patch(
         message: "Background preferences updated",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update background preferences:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2502,9 +2504,9 @@ app.get("/appearance/:userEmail", async (c) => {
       settings: settings.settings,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch appearance settings:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2547,9 +2549,9 @@ app.get("/fonts/:userEmail", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get font preferences:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2622,9 +2624,9 @@ app.patch(
         message: "Font preferences updated",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update font preferences:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2641,9 +2643,9 @@ app.get("/localization/supported", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get supported languages:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2659,9 +2661,9 @@ app.get("/localization/:workspaceId/languages", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get languages:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2682,9 +2684,9 @@ app.get("/localization/:workspaceId/languages/:langCode", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get language:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2710,9 +2712,9 @@ app.post(
         message: "Language added successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to add language:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2742,9 +2744,9 @@ app.patch(
         message: "Language updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update language:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2762,9 +2764,9 @@ app.delete("/localization/:workspaceId/languages/:langCode", async (c) => {
       message: "Language deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete language:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2781,9 +2783,9 @@ app.get("/localization/:workspaceId/translations/:langCode", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get translations:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2814,9 +2816,9 @@ app.patch(
         message: "Translations updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update translations:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2847,9 +2849,9 @@ app.post(
         success: true,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to export translations:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2883,9 +2885,9 @@ app.post(
         message: `Imported ${result.imported} translations`,
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to import translations:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2902,9 +2904,9 @@ app.get("/localization/:workspaceId/settings", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get localization settings:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -2960,9 +2962,9 @@ app.patch(
         message: "Localization settings updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update localization settings:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -2981,9 +2983,9 @@ app.get("/shortcuts/presets", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get shortcut presets:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3000,9 +3002,9 @@ app.get("/shortcuts/:workspaceId/shortcuts", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get shortcuts:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3024,9 +3026,9 @@ app.get("/shortcuts/:workspaceId/shortcuts/:shortcutId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get shortcut:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3058,9 +3060,9 @@ app.patch(
         message: "Shortcuts updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update shortcuts:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -3096,9 +3098,9 @@ app.patch(
         message: "Shortcut updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update shortcut:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -3117,9 +3119,9 @@ app.delete("/shortcuts/:workspaceId/shortcuts/:shortcutId", async (c) => {
       message: "Shortcut disabled successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete shortcut:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3137,9 +3139,9 @@ app.post("/shortcuts/:workspaceId/reset", async (c) => {
       message: "Shortcuts reset to defaults",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to reset shortcuts:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3158,9 +3160,9 @@ app.post("/shortcuts/:workspaceId/presets/:presetId/apply", async (c) => {
       message: "Preset applied successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to apply preset:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3180,9 +3182,9 @@ app.get("/filters/templates", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get filter templates:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3200,9 +3202,9 @@ app.get("/filters/:workspaceId/filters", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get saved filters:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3224,9 +3226,9 @@ app.get("/filters/:workspaceId/filters/:filterId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to get saved filter:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3282,9 +3284,9 @@ app.post(
         message: "Filter saved successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to create saved filter:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -3322,9 +3324,9 @@ app.patch(
         message: "Filter updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update saved filter:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -3343,9 +3345,9 @@ app.delete("/filters/:workspaceId/filters/:filterId", async (c) => {
       message: "Filter deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete saved filter:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -3378,9 +3380,9 @@ app.post(
         message: "Filter cloned successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to clone filter:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -3399,9 +3401,9 @@ app.post("/filters/:workspaceId/filters/:filterId/use", async (c) => {
       message: "Filter usage recorded",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to record filter usage:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 

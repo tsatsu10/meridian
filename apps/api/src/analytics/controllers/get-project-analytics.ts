@@ -426,7 +426,7 @@ export async function getProjectAnalytics(c: Context) {
     });
 
     return c.json(response);
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error fetching project analytics:", error);
     return c.json({ error: "Failed to fetch project analytics" }, 500);
   }

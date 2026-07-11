@@ -20,6 +20,7 @@ import { attachments } from "../../database/schema.js";
 import { fileStorageService } from "../../services/file-storage.service.js";
 import { z } from "zod";
 import logger from "../../utils/logger.js";
+import { getErrorMessage, toError } from "../../utils/error-utils.js";
 import { sanitizeFileName } from "../../lib/universal-sanitization";
 import {
   checkRateLimit,
@@ -196,18 +197,21 @@ upload.post("/", async (c) => {
       },
       200,
     );
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Upload error:", error);
 
     // 📊 SENTRY: Capture file upload errors
-    captureException(error, {
+    captureException(toError(error), {
       feature: "file_upload",
       action: "upload_files",
       userId: c.get("user")?.id,
       fileCount: files?.length,
     });
 
-    return c.json({ error: error.message || "Failed to upload files" }, 500);
+    return c.json(
+      { error: getErrorMessage(error) || "Failed to upload files" },
+      500,
+    );
   }
 });
 
@@ -234,7 +238,7 @@ upload.get("/:id", async (c) => {
     }
 
     return c.json({ attachment }, 200);
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Get attachment error:", error);
     return c.json({ error: "Failed to get attachment" }, 500);
   }
@@ -282,7 +286,7 @@ upload.delete("/:id", async (c) => {
     await db.delete(attachments).where(eq(attachments.id, id));
 
     return c.json({ message: "Attachment deleted successfully" }, 200);
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Delete attachment error:", error);
     return c.json({ error: "Failed to delete attachment" }, 500);
   }

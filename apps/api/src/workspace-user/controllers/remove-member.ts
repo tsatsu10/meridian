@@ -18,6 +18,7 @@ import {
 } from "../../database/schema";
 import { eq, and } from "drizzle-orm";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 // Role hierarchy for permission validation
 const ROLE_HIERARCHY: Record<string, number> = {
@@ -245,12 +246,12 @@ export async function removeMember(c: Context) {
       },
       removedAt: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("❌ Error removing member:", error);
     return c.json(
       {
         error: "Failed to remove member",
-        details: error.message,
+        details: getErrorMessage(error),
       },
       500,
     );

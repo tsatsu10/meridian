@@ -18,6 +18,7 @@ import {
 } from "../../database/schema";
 import { eq, and, desc, gte, sql } from "drizzle-orm";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 export async function getMemberActivity(c: Context) {
   const db = getDatabase();
@@ -270,12 +271,12 @@ export async function getMemberActivity(c: Context) {
         timeEntriesCount: timeEntries.length,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("❌ Error fetching member activity:", error);
     return c.json(
       {
         error: "Failed to fetch member activity",
-        details: error.message,
+        details: getErrorMessage(error),
       },
       500,
     );

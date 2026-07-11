@@ -10,6 +10,7 @@ import {
 import { sql, ilike, or, and, eq } from "drizzle-orm";
 import { auth } from "../../middlewares/auth";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 const search = new Hono();
 
@@ -188,12 +189,12 @@ search.get("/", async (c) => {
       },
       200,
     );
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Search API error:", error);
     return c.json(
       {
         error: "Failed to perform search",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       500,
     );
@@ -242,7 +243,7 @@ search.get("/suggestions", async (c) => {
       { suggestions: [...new Set(suggestions)].slice(0, limit) },
       200,
     );
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Search suggestions error:", error);
     return c.json({ suggestions: [] }, 200);
   }

@@ -14,6 +14,7 @@ import {
   deleteTheme,
 } from "./controllers";
 import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
 
 const theme = new Hono<{
   Variables: {
@@ -62,12 +63,12 @@ theme.get("/:projectId", async (c) => {
       success: true,
       data: themes,
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error fetching themes:", error);
     return c.json(
       {
         success: false,
-        error: error.message || "Failed to fetch themes",
+        error: getErrorMessage(error) || "Failed to fetch themes",
       },
       500,
     );
@@ -102,12 +103,12 @@ theme.post("/:projectId", zValidator("json", themeSchema), async (c) => {
       },
       201,
     );
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error creating theme:", error);
     return c.json(
       {
         success: false,
-        error: error.message || "Failed to create theme",
+        error: getErrorMessage(error) || "Failed to create theme",
       },
       500,
     );
@@ -134,14 +135,14 @@ theme.put("/:themeId", zValidator("json", themeSchema.partial()), async (c) => {
       data: updatedTheme,
       message: "Theme updated successfully",
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error updating theme:", error);
     return c.json(
       {
         success: false,
-        error: error.message || "Failed to update theme",
+        error: getErrorMessage(error) || "Failed to update theme",
       },
-      error.message.includes("not found") ? 404 : 500,
+      getErrorMessage(error).includes("not found") ? 404 : 500,
     );
   }
 });
@@ -164,14 +165,14 @@ theme.delete("/:themeId", async (c) => {
       success: true,
       message: "Theme deleted successfully",
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error deleting theme:", error);
     return c.json(
       {
         success: false,
-        error: error.message || "Failed to delete theme",
+        error: getErrorMessage(error) || "Failed to delete theme",
       },
-      error.message.includes("not found") ? 404 : 500,
+      getErrorMessage(error).includes("not found") ? 404 : 500,
     );
   }
 });

@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
+import { getErrorMessage } from "@/lib/error-utils";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TestWrapper } from "../../../test-utils/test-wrapper";
@@ -46,8 +47,8 @@ function WorkspaceSettings({ workspace, onSave }: WorkspaceSettingsProps) {
       if (onSave) {
         await onSave({ name, description });
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to save settings");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Failed to save settings");
     } finally {
       setIsLoading(false);
     }

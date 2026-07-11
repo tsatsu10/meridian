@@ -95,7 +95,7 @@ files.get("/:subdir/:filename", async (c) => {
     }
 
     return c.body(fileBuffer);
-  } catch (error: any) {
+  } catch (error) {
     logger.error("File serving error:", error);
     return c.json({ error: "Failed to serve file" }, 500);
   }
@@ -141,7 +141,7 @@ files.get("/download/:subdir/:filename", async (c) => {
     c.header("Content-Length", fileBuffer.length.toString());
 
     return c.body(fileBuffer);
-  } catch (error: any) {
+  } catch (error) {
     logger.error("File download error:", error);
     return c.json({ error: "Failed to download file" }, 500);
   }

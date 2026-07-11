@@ -4,6 +4,7 @@ import { userProfileTable } from "../../database/schema";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 import { HTTPException } from "hono/http-exception";
 import sharp from "sharp";
 
@@ -148,7 +149,7 @@ const uploadProfilePicture = async (c: any, userId: string) => {
       url: fileUrl, // Support both field names
       message: "Profile picture uploaded successfully",
     };
-  } catch (error: any) {
+  } catch (error) {
     logger.error("❌ Error uploading profile picture:", error);
 
     // Re-throw HTTPExceptions (they have proper status codes)
@@ -158,7 +159,7 @@ const uploadProfilePicture = async (c: any, userId: string) => {
 
     // Wrap other errors
     throw new HTTPException(500, {
-      message: error.message || "Failed to upload profile picture",
+      message: getErrorMessage(error) || "Failed to upload profile picture",
     });
   }
 };

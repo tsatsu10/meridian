@@ -211,7 +211,7 @@ export async function getWorkspaceAnalytics(c: Context) {
     };
 
     return c.json(response);
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error fetching workspace analytics:", error);
     return c.json({ error: "Failed to fetch workspace analytics" }, 500);
   }

@@ -309,9 +309,8 @@ describe("User Workflow Integration Tests", () => {
           title: "",
           priority: "invalid",
         });
-      } catch (error: any) {
-        expect(error.errors).toBeDefined();
-        expect(error.errors.title).toBe("Title is required");
+      } catch (error) {
+        expect(error).toMatchObject({ errors: { title: "Title is required" } });
       }
     });
 

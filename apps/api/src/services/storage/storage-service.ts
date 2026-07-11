@@ -9,6 +9,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { promisify } from "node:util";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -245,11 +246,11 @@ export class StorageService {
         default:
           throw new Error("No storage provider configured");
       }
-    } catch (error: any) {
+    } catch (error) {
       logger.error("❌ Upload error:", error);
       return {
         success: false,
-        error: error.message || "Upload failed",
+        error: getErrorMessage(error) || "Upload failed",
       } as UploadResult;
     }
   }

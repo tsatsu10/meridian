@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { getErrorMessage } from "@/lib/error-utils";
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -337,8 +338,8 @@ function WorkspaceSettings() {
 
       toast.success("Workspace deleted successfully");
       navigate({ to: "/dashboard" });
-    } catch (error: any) {
-      toast.error(`Failed to delete workspace: ${error.message}`);
+    } catch (error) {
+      toast.error(`Failed to delete workspace: ${getErrorMessage(error)}`);
     }
   };
 
@@ -397,7 +398,9 @@ function WorkspaceSettings() {
               </p>
               {error && (
                 <div className="mt-2 space-y-1">
-                  <p className="text-sm text-destructive">{error.message}</p>
+                  <p className="text-sm text-destructive">
+                    {getErrorMessage(error)}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     Workspace ID: {currentWorkspace?.id}
                   </p>

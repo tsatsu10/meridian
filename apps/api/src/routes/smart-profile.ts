@@ -43,6 +43,7 @@ import {
   getUserTeamCollaborations,
 } from "../services/user-work-activity-service";
 import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
 
 const smartProfileRoutes = new Hono<{
   Variables: {
@@ -74,9 +75,9 @@ smartProfileRoutes.get("/:userId/availability", async (c) => {
         inWorkingHours,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting availability:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -112,9 +113,9 @@ smartProfileRoutes.put(
       });
 
       return c.json({ success: true, data: updated });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Error updating availability:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -132,9 +133,9 @@ smartProfileRoutes.get("/:userId/collaborators", async (c) => {
     const collaborators = await getFrequentCollaborators(userId, limit);
 
     return c.json({ success: true, data: collaborators });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting collaborators:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -152,9 +153,9 @@ smartProfileRoutes.post("/:userId/collaborators/recalculate", async (c) => {
     await calculateFrequentCollaborators(userId);
 
     return c.json({ success: true, message: "Collaborators recalculated" });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error recalculating collaborators:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -170,9 +171,9 @@ smartProfileRoutes.get("/:userId/statistics", async (c) => {
     const stats = await getUserStatistics(userId);
 
     return c.json({ success: true, data: stats });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting statistics:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -195,9 +196,9 @@ smartProfileRoutes.post("/:userId/statistics/recalculate", async (c) => {
     const stats = await calculateUserStatistics(userId, workspaceId);
 
     return c.json({ success: true, data: stats });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error recalculating statistics:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -218,9 +219,9 @@ smartProfileRoutes.get("/:userId/work-history", async (c) => {
     });
 
     return c.json({ success: true, data: history });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting work history:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -241,9 +242,9 @@ smartProfileRoutes.get("/:userId/milestones", async (c) => {
         daysInWorkspace,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting milestones:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -280,9 +281,9 @@ smartProfileRoutes.post(
       );
 
       return c.json({ success: true, data: contribution });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Error recording contribution:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
   },
 );
@@ -299,9 +300,9 @@ smartProfileRoutes.get("/:userId/active-projects", async (c) => {
     const projects = await getUserActiveProjects(userId);
 
     return c.json({ success: true, data: projects });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting active projects:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -313,9 +314,9 @@ smartProfileRoutes.get("/:userId/recent-tasks", async (c) => {
     const tasksData = await getUserRecentTasks(userId);
 
     return c.json({ success: true, data: tasksData });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting recent tasks:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -329,9 +330,9 @@ smartProfileRoutes.get("/:userId/activity", async (c) => {
     const activities = await getUserActivityFeed(userId, { limit, offset });
 
     return c.json({ success: true, data: activities });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting activity feed:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -343,9 +344,9 @@ smartProfileRoutes.get("/:userId/workload", async (c) => {
     const workload = await getUserWorkload(userId);
 
     return c.json({ success: true, data: workload });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting workload:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -357,9 +358,9 @@ smartProfileRoutes.get("/:userId/teams", async (c) => {
     const teamsData = await getUserTeamCollaborations(userId);
 
     return c.json({ success: true, data: teamsData });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting team collaborations:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -396,9 +397,9 @@ smartProfileRoutes.get("/:userId/analytics", async (c) => {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Error getting analytics:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 

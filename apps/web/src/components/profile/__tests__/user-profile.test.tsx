@@ -14,6 +14,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TestWrapper } from "../../../test-utils/test-wrapper";
 import React from "react";
+import { getErrorMessage } from "@/lib/error-utils";
 
 interface UserProfileProps {
   user: {
@@ -51,8 +52,8 @@ function UserProfile({
         await onSave(editedUser);
         setIsEditing(false);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to save profile");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Failed to save profile");
     } finally {
       setIsSaving(false);
     }
@@ -64,7 +65,7 @@ function UserProfile({
       try {
         const avatarUrl = await onAvatarUpload(file);
         setEditedUser({ ...editedUser, avatar: avatarUrl });
-      } catch (err: any) {
+      } catch {
         setError("Failed to upload avatar");
       }
     }

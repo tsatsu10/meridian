@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/error-utils";
+
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -341,9 +343,9 @@ export default function CreateProjectModal({
         to: "/dashboard/projects",
         search: { page: 1, ps: 12, q: undefined, archived: false },
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to create project:", error);
-      toast.error(error?.message || "Failed to create project");
+      toast.error(getErrorMessage(error) || "Failed to create project");
     }
   };
 

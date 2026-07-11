@@ -6,6 +6,7 @@
 
 import sgMail from "@sendgrid/mail";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 interface EmailConfig {
   provider: "sendgrid" | "ses" | "smtp";
@@ -108,10 +109,10 @@ export class EmailService {
           `✅ Email sent successfully to ${options.to}: ${options.subject}`,
         );
         return true;
-      } catch (error: any) {
+      } catch (error) {
         logger.error(
           `❌ Email send attempt ${attempt}/${retries} failed:`,
-          error.message,
+          getErrorMessage(error),
         );
 
         if (attempt === retries) {
