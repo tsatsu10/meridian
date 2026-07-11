@@ -10,6 +10,7 @@ import {
   lte,
   between,
   inArray,
+  type SQL,
 } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import logger from "../../utils/logger";
@@ -46,13 +47,32 @@ interface EnhancedAnalyticsOptions {
 }
 
 interface ComparativeData {
-  current: any;
-  comparison: any;
+  // Usually a number (from calculateComparativeData), but recentPerformance
+  // below constructs these literals directly with `{ value: number }` shapes.
+  current: unknown;
+  comparison: unknown;
   change: {
     absolute: number;
     percentage: number;
     trend: "up" | "down" | "stable";
   };
+}
+
+interface Period {
+  start: string;
+  end: string;
+  startTs: number;
+  endTs: number;
+}
+
+interface FilterConditionsInput {
+  workspaceId: string;
+  projectIds?: string[];
+  userEmails?: string[];
+  departments?: string[];
+  priorities?: string[];
+  statuses?: string[];
+  includeArchived?: boolean;
 }
 
 interface AdvancedProjectHealth {
@@ -186,16 +206,16 @@ interface AdvancedAnalyticsResponse {
   timeSeriesData: TimeSeriesDataPoint[];
 
   // Advanced features
-  departmentBreakdown?: any[];
-  skillGapAnalysis?: any[];
-  capacityPlanning?: any[];
-  riskAssessment?: any[];
+  departmentBreakdown?: unknown[];
+  skillGapAnalysis?: unknown[];
+  capacityPlanning?: unknown[];
+  riskAssessment?: unknown[];
 
   // Forecasting (if enabled)
   forecasting?: ForecastingData;
 
   // Benchmarking (if enabled)
-  industryBenchmarks?: any;
+  industryBenchmarks?: unknown;
 
   // Metadata
   summary: {
@@ -516,23 +536,35 @@ function calculateDateRanges(
   };
 }
 
-function buildFilterConditions(filters: any) {
-  const conditions = [eq(projectTable.workspaceId, filters.workspaceId)];
+function buildFilterConditions(filters: FilterConditionsInput) {
+  const conditions: SQL<unknown>[] = [
+    eq(projectTable.workspaceId, filters.workspaceId),
+  ];
 
-  if (filters.projectIds?.length > 0) {
+  if (filters.projectIds && filters.projectIds.length > 0) {
     conditions.push(inArray(projectTable.id, filters.projectIds));
   }
 
-  if (filters.userEmails?.length > 0) {
+  if (filters.userEmails && filters.userEmails.length > 0) {
     conditions.push(inArray(taskTable.userEmail, filters.userEmails));
   }
 
-  if (filters.priorities?.length > 0) {
-    conditions.push(inArray(taskTable.priority, filters.priorities));
+  if (filters.priorities && filters.priorities.length > 0) {
+    conditions.push(
+      inArray(
+        taskTable.priority,
+        filters.priorities as ("low" | "medium" | "high" | "urgent")[],
+      ),
+    );
   }
 
-  if (filters.statuses?.length > 0) {
-    conditions.push(inArray(taskTable.status, filters.statuses));
+  if (filters.statuses && filters.statuses.length > 0) {
+    conditions.push(
+      inArray(
+        taskTable.status,
+        filters.statuses as ("todo" | "in_progress" | "done")[],
+      ),
+    );
   }
 
   if (!filters.includeArchived) {
@@ -544,9 +576,9 @@ function buildFilterConditions(filters: any) {
 }
 
 async function getMetricsForPeriod(
-  baseConditions: any[],
+  baseConditions: SQL<unknown>[],
   workspaceId: string,
-  period: any,
+  period: Period,
 ) {
   const db = getDatabase();
 
@@ -657,9 +689,11 @@ async function getMetricsForPeriod(
   };
 }
 
+type PeriodMetrics = Awaited<ReturnType<typeof getMetricsForPeriod>>;
+
 async function getAdvancedProjectHealth(
-  baseConditions: any[],
-  period: any,
+  baseConditions: SQL<unknown>[],
+  period: Period,
 ): Promise<AdvancedProjectHealth[]> {
   const db = getDatabase();
 
@@ -722,11 +756,8 @@ async function getAdvancedProjectHealth(
     else if (completion > 30 && overdueRatio < 0.3) burndownTrend = "behind";
     else burndownTrend = "critical";
 
-    // Project age in weeks - safely convert to timestamp
-    const projectCreatedTimestamp =
-      project.createdAt && (project.createdAt as any).getTime
-        ? (project.createdAt as any).getTime()
-        : new Date(project.createdAt).getTime();
+    // Project age in weeks
+    const projectCreatedTimestamp = project.createdAt.getTime();
     const projectAge = Math.max(
       1,
       (period.endTs - projectCreatedTimestamp) / (1000 * 60 * 60 * 24 * 7),
@@ -755,10 +786,10 @@ async function getAdvancedProjectHealth(
 }
 
 async function getEnhancedResourceUtilization(
-  baseConditions: any[],
+  baseConditions: SQL<unknown>[],
   workspaceId: string,
-  currentPeriod: any,
-  comparisonPeriod: any,
+  currentPeriod: Period,
+  comparisonPeriod: Period,
 ): Promise<EnhancedResourceUtilization[]> {
   const db = getDatabase();
 
@@ -833,8 +864,8 @@ async function getEnhancedResourceUtilization(
 }
 
 async function getTimeSeriesData(
-  baseConditions: any[],
-  period: any,
+  baseConditions: SQL<unknown>[],
+  period: Period,
   granularity: string,
 ): Promise<TimeSeriesDataPoint[]> {
   const db = getDatabase();
@@ -949,40 +980,38 @@ async function getTimeSeriesData(
   return timeSeriesData;
 }
 
-async function getDepartmentBreakdown(baseConditions: any[], period: any) {
+async function getDepartmentBreakdown(
+  baseConditions: SQL<unknown>[],
+  period: Period,
+) {
   // This would require department information in the schema
   // For now, return empty array
   return [];
 }
 
+function extractComparativeNumber(value: unknown): number {
+  if (typeof value === "object" && value !== null) {
+    return (Object.values(value as Record<string, unknown>)[0] as number) || 0;
+  }
+  return Number(value) || 0;
+}
+
 function calculateComparativeData(
-  current: any,
-  comparison: any | null,
+  current: unknown,
+  comparison: unknown,
 ): ComparativeData {
   // Handle null/undefined comparison
   if (comparison === null || comparison === undefined) {
-    const currentValue =
-      typeof current === "object" && current !== null
-        ? (Object.values(current)[0] as number) || 0
-        : Number(current) || 0;
-
     return {
-      current: currentValue,
+      current: extractComparativeNumber(current),
       comparison: null,
       change: { absolute: 0, percentage: 0, trend: "stable" },
     };
   }
 
   // Extract numeric values from objects or use as-is
-  const currentValue =
-    typeof current === "object" && current !== null
-      ? (Object.values(current)[0] as number) || 0
-      : Number(current) || 0;
-
-  const comparisonValue =
-    typeof comparison === "object" && comparison !== null
-      ? (Object.values(comparison)[0] as number) || 0
-      : Number(comparison) || 0;
+  const currentValue = extractComparativeNumber(current);
+  const comparisonValue = extractComparativeNumber(comparison);
 
   // Calculate changes
   const absolute = currentValue - comparisonValue;
@@ -1013,8 +1042,8 @@ function calculateComparativeData(
 }
 
 function calculateAdvancedBenchmarks(
-  currentMetrics: any,
-  comparisonMetrics: any,
+  currentMetrics: PeriodMetrics,
+  comparisonMetrics: PeriodMetrics | null,
   projectHealth: AdvancedProjectHealth[],
 ): AdvancedPerformanceBenchmarks {
   const avgProjectCompletion =
@@ -1175,7 +1204,7 @@ function generateInsights(
 }
 
 function calculateDataQualityScore(
-  metrics: any,
+  metrics: PeriodMetrics,
   timeSeriesData: TimeSeriesDataPoint[],
 ): number {
   let score = 100;
