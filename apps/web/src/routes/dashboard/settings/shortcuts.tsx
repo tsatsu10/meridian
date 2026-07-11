@@ -131,7 +131,7 @@ function ShortcutsSettingsPage() {
     mutationFn: async ({
       shortcutId,
       updates,
-    }: { shortcutId: string; updates: any }) => {
+    }: { shortcutId: string; updates: unknown }) => {
       if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/shortcuts/${currentWorkspace.id}/shortcuts/${shortcutId}`,
@@ -209,8 +209,8 @@ function ShortcutsSettingsPage() {
   });
 
   // Group shortcuts by category
-  const groupedShortcuts = shortcuts.reduce(
-    (acc: any, shortcut: KeyboardShortcut) => {
+  const groupedShortcuts: Record<string, KeyboardShortcut[]> = shortcuts.reduce(
+    (acc: Record<string, KeyboardShortcut[]>, shortcut: KeyboardShortcut) => {
       const category = shortcut.category || "other";
       if (!acc[category]) {
         acc[category] = [];
@@ -218,13 +218,13 @@ function ShortcutsSettingsPage() {
       acc[category].push(shortcut);
       return acc;
     },
-    {},
+    {} as Record<string, KeyboardShortcut[]>,
   );
 
   // Filter shortcuts
   const filteredGroups = Object.entries(groupedShortcuts).reduce(
-    (acc: any, [category, items]) => {
-      const filtered = (items as KeyboardShortcut[]).filter((shortcut) => {
+    (acc: Record<string, KeyboardShortcut[]>, [category, items]) => {
+      const filtered = items.filter((shortcut) => {
         const matchesSearch =
           searchTerm === "" ||
           shortcut.description
@@ -246,7 +246,7 @@ function ShortcutsSettingsPage() {
       }
       return acc;
     },
-    {},
+    {} as Record<string, KeyboardShortcut[]>,
   );
 
   const handleEditShortcut = (shortcut: KeyboardShortcut) => {
@@ -384,7 +384,7 @@ function ShortcutsSettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-4">
-              {presets.map((preset: any) => (
+              {presets.map((preset: { id: string; name: string }) => (
                 <Button
                   key={preset.id}
                   onClick={() => applyPresetMutation.mutate(preset.id)}
