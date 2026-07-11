@@ -26,7 +26,7 @@ export function useResetPassword() {
         logger.debug("Temporary password:", data.tempPassword);
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to reset password");
     },
   });
