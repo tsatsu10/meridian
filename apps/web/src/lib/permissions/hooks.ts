@@ -230,7 +230,7 @@ export function useRoleHierarchy() {
  * Hook for role-based component rendering
  */
 export function useRoleBasedComponent<
-  T extends Record<UserRole, React.ComponentType<any>>,
+  T extends Record<UserRole, React.ComponentType<Record<string, unknown>>>,
 >(roleComponents: Partial<T>) {
   const { user } = useRBACAuth();
 
@@ -367,14 +367,14 @@ export function useTeamLeadActions() {
       // Subtask management actions
       createSubtask: {
         canExecute: hasPermission("canCreateSubtasks"),
-        action: (_parentTaskId: string, _subtaskData: any) => {
+        action: (_parentTaskId: string, _subtaskData: unknown) => {
           // TODO: Implement subtask creation
         },
       },
 
       editSubtask: {
         canExecute: hasPermission("canEditSubtasks"),
-        action: (_subtaskId: string, _updates: any) => {
+        action: (_subtaskId: string, _updates: unknown) => {
           // TODO: Implement subtask editing
         },
       },
@@ -403,7 +403,7 @@ export function useTeamLeadActions() {
       // Team management actions
       manageTeam: {
         canExecute: hasPermission("canCreateTeams"),
-        action: (_teamId: string, _action: string, _data: any) => {
+        action: (_teamId: string, _action: string, _data: unknown) => {
           // TODO: Implement team management
         },
       },
