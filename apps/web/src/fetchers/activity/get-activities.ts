@@ -15,7 +15,7 @@ export interface Activity {
   entityId?: string;
   entityTitle?: string;
   description?: string;
-  metadata?: any;
+  metadata?: { projectName?: string; [key: string]: unknown };
   isPublic: boolean;
   createdAt: string;
   user?: {

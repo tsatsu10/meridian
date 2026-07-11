@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { FolderOpen, MoreHorizontal, Users, User } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { format, isBefore } from "date-fns";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 // @epic-1.1-subtasks: Sarah (PM) needs visual task organization across all projects
 // @epic-3.2-time: David (Team Lead) needs workload visualization
@@ -424,7 +424,7 @@ export function AllTasksKanbanView({
     if (task.status === newStatus) return;
 
     try {
-      await (client.task as any)[":id"].$put({
+      await looseClient.task[":id"].$put({
         param: { id: taskId },
         json: {
           id: task.id,
