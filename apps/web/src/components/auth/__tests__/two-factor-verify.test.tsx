@@ -17,7 +17,7 @@ describe("TwoFactorVerify", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockClear();
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockClear();
   });
 
   describe("Rendering", () => {
@@ -111,7 +111,9 @@ describe("TwoFactorVerify", () => {
       const inputs = screen.getAllByRole("textbox");
 
       // Mock successful verification
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
       });
@@ -137,7 +139,9 @@ describe("TwoFactorVerify", () => {
 
   describe("Verification", () => {
     it("should verify code successfully", async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
       });
@@ -170,7 +174,9 @@ describe("TwoFactorVerify", () => {
     });
 
     it("should handle verification error", async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ error: "Invalid code" }),
       });
@@ -219,7 +225,9 @@ describe("TwoFactorVerify", () => {
     });
 
     it("should verify backup code successfully", async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true, usedBackupCode: true }),
       });
