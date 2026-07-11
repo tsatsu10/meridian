@@ -74,7 +74,7 @@ export async function seedExecutiveData(options: SeedOptions = {}) {
       .where(eq(workspaceUserTable.workspaceId, workspaceId))
       .limit(1);
 
-    let ownerId: string;
+    let ownerId: string | undefined;
 
     if (workspaceUser) {
       // Get the user ID from their email
@@ -83,11 +83,11 @@ export async function seedExecutiveData(options: SeedOptions = {}) {
         .from(userTable)
         .where(eq(userTable.email, workspaceUser.userEmail))
         .limit(1);
-      ownerId = user?.id!;
+      ownerId = user?.id;
     } else {
       // Get any user from the database
       const [anyUser] = await db.select().from(userTable).limit(1);
-      ownerId = anyUser?.id!;
+      ownerId = anyUser?.id;
     }
 
     if (!ownerId) {

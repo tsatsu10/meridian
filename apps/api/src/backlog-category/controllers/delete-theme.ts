@@ -20,11 +20,10 @@ export async function deleteTheme(themeId: string, userId: string) {
       .where(eq(backlogThemesTable.id, themeId))
       .limit(1);
 
-    if (existing.length === 0) {
+    const [theme] = existing;
+    if (!theme) {
       throw new Error("Theme not found");
     }
-
-    const theme = existing[0]!;
 
     // TODO: Add permission check
     // Ensure user has permission to delete this theme
