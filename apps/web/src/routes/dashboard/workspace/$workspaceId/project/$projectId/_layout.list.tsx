@@ -19,7 +19,13 @@ import {
   Layout,
   CheckSquare,
 } from "lucide-react";
-import { useState, useMemo, useCallback, useRef } from "react";
+import {
+  type ComponentProps,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { debounce, throttle } from "lodash";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog";
@@ -172,7 +178,7 @@ function ProjectListView() {
 
     // Use optimized flattening for large datasets
     const flattened = columnArray.flatMap((col) => col.tasks || []);
-    const result = optimizedFlattenTasks(flattened);
+    const result = optimizedFlattenTasks(flattened as Task[]);
 
     // Transform to match VirtualizedTaskList format
     return result.map((task) => ({
@@ -294,7 +300,7 @@ function ProjectListView() {
             ...task,
             position: newPosition,
             dueDate: task.dueDate ? task.dueDate.toISOString() : null,
-          });
+          } as unknown as Task);
 
           toast.success("Task reordered successfully");
         } catch (error) {
@@ -324,7 +330,7 @@ function ProjectListView() {
           ...task,
           status,
           dueDate: task.dueDate ? task.dueDate.toISOString() : null,
-        });
+        } as unknown as Task);
       });
 
       await Promise.all(updatePromises);
@@ -351,7 +357,7 @@ function ProjectListView() {
           ...task,
           priority,
           dueDate: task.dueDate ? task.dueDate.toISOString() : null,
-        });
+        } as unknown as Task);
       });
 
       await Promise.all(updatePromises);
@@ -717,7 +723,11 @@ function ProjectListView() {
         {/* Virtualized Task List - SAME AS ALL TASKS PAGE */}
         {filteredAndSortedTasks.length > 0 && (
           <VirtualizedTaskList
-            tasks={paginatedTasks}
+            tasks={
+              paginatedTasks as unknown as ComponentProps<
+                typeof VirtualizedTaskList
+              >["tasks"]
+            }
             selectedTasks={selectedTasks}
             onTaskSelect={handleTaskSelect}
             onSelectAll={handleSelectAll}
@@ -734,7 +744,7 @@ function ProjectListView() {
                         dueDate: task.dueDate
                           ? task.dueDate.toISOString()
                           : null,
-                      });
+                      } as unknown as Task);
                       toast.success("Task updated successfully");
                     } catch (error) {
                       toast.error("Failed to update task");
