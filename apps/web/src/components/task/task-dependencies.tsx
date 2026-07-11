@@ -119,7 +119,9 @@ function AddDependency({
   const { mutateAsync: createDependency, isPending } = useCreateDependency();
 
   // Get all tasks and filter out current task and existing dependencies
-  const allTasks = tasksData?.columns?.flatMap((col: any) => col.tasks) || [];
+  const allTasks: Task[] =
+    tasksData?.columns?.flatMap((col: { tasks?: Task[] }) => col.tasks || []) ||
+    [];
   const existingTaskIds = new Set([
     taskId,
     ...existingDependencies.map((dep) =>
@@ -128,9 +130,9 @@ function AddDependency({
   ]);
 
   const availableTasks = allTasks
-    .filter((task: any) => !existingTaskIds.has(task.id))
+    .filter((task) => !existingTaskIds.has(task.id))
     .filter(
-      (task: any) =>
+      (task) =>
         searchQuery === "" ||
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         `${project?.slug}-${task.number}`
@@ -221,7 +223,7 @@ function AddDependency({
             {searchQuery ? "No tasks found" : "No available tasks"}
           </div>
         ) : (
-          availableTasks.map((task: any) => (
+          availableTasks.map((task) => (
             <button
               type="button"
               key={task.id}
