@@ -73,6 +73,13 @@ interface SavedFilter {
   lastUsed?: Date;
 }
 
+interface FilterTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  filterType: string;
+}
+
 function FiltersSettingsPage() {
   const navigate = useNavigate();
   // Fix: Use workspace directly instead of broken currentWorkspace getter
@@ -132,7 +139,7 @@ function FiltersSettingsPage() {
 
   // Create filter mutation
   const createFilterMutation = useMutation({
-    mutationFn: async (filterData: any) => {
+    mutationFn: async (filterData: unknown) => {
       if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/filters/${currentWorkspace.id}/filters`,
@@ -164,7 +171,7 @@ function FiltersSettingsPage() {
     mutationFn: async ({
       filterId,
       updates,
-    }: { filterId: string; updates: any }) => {
+    }: { filterId: string; updates: unknown }) => {
       if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/filters/${currentWorkspace.id}/filters/${filterId}`,
@@ -297,7 +304,7 @@ function FiltersSettingsPage() {
     }
   };
 
-  const handleUseTemplate = (template: any) => {
+  const handleUseTemplate = (template: FilterTemplate) => {
     toast.info(`Using template "${template.name}" - Full builder coming soon!`);
   };
 
@@ -522,7 +529,7 @@ function FiltersSettingsPage() {
               </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {templates.map((template: any) => (
+                {templates.map((template: FilterTemplate) => (
                   <Card key={template.id}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -588,7 +595,9 @@ function FiltersSettingsPage() {
                 <Label htmlFor="filterType">Filter Type *</Label>
                 <Select
                   value={filterType}
-                  onValueChange={(value: any) => setFilterType(value)}
+                  onValueChange={(value) =>
+                    setFilterType(value as typeof filterType)
+                  }
                 >
                   <SelectTrigger id="filterType">
                     <SelectValue />
