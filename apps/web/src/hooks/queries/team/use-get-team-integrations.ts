@@ -6,12 +6,12 @@ export interface Integration {
   name: string;
   provider: string;
   workspaceId: string;
-  config: any;
+  config: Record<string, unknown>;
   status: string;
   lastSync: Date | null;
   syncStatus: string | null;
   errorMessage: string | null;
-  metadata: any;
+  metadata: Record<string, unknown>;
   createdBy: string | null;
   createdAt: Date;
   updatedAt: Date | null;
