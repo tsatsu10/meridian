@@ -153,7 +153,10 @@ function CalendarSettings() {
     },
   });
 
-  const handleChange = (field: keyof CalendarSettingsData, value: any) => {
+  const handleChange = (
+    field: keyof CalendarSettingsData,
+    value: CalendarSettingsData[keyof CalendarSettingsData],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
