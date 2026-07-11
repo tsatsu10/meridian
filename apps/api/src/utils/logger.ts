@@ -48,7 +48,7 @@ export interface LogEntry {
   level: LogLevel;
   category: LogCategory;
   message: string;
-  data?: any;
+  data?: unknown;
   context?: {
     userId?: string;
     endpoint?: string;
@@ -82,6 +82,20 @@ export function redactSensitive(value: unknown, depth = 0): unknown {
       : redactSensitive(entry, depth + 1);
   }
   return result;
+}
+
+/** Reads a string-typed field off an unknown log payload, if present. */
+function getStringField(value: unknown, key: string): string | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" ? field : undefined;
+}
+
+/** Reads a number-typed field off an unknown log payload, if present. */
+function getNumberField(value: unknown, key: string): number | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "number" ? field : undefined;
 }
 
 export class EnhancedLogger {
@@ -225,9 +239,9 @@ export class EnhancedLogger {
   private async log(
     level: LogLevel,
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "SYSTEM",
-    context?: any,
+    context?: unknown,
   ): Promise<void> {
     if (!this.shouldLog(level, category)) return;
 
@@ -280,11 +294,12 @@ export class EnhancedLogger {
         level,
         category,
         message,
-        duration: data?.duration,
-        userId: context?.userId,
-        endpoint: context?.endpoint,
-        statusCode: context?.statusCode,
-        errorCode: data?.code || data?.errorCode,
+        duration: getNumberField(data, "duration"),
+        userId: getStringField(context, "userId"),
+        endpoint: getStringField(context, "endpoint"),
+        statusCode: getNumberField(context, "statusCode"),
+        errorCode:
+          getStringField(data, "code") ?? getStringField(data, "errorCode"),
         metadata: {
           ...(safeData as Record<string, unknown>),
           ...(safeContext as Record<string, unknown>),
@@ -300,45 +315,45 @@ export class EnhancedLogger {
   // Standard log methods
   async error(
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "ERROR",
-    context?: any,
+    context?: unknown,
   ): Promise<void> {
     await this.log("error", message, data, category, context);
   }
 
   async warn(
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "SYSTEM",
-    context?: any,
+    context?: unknown,
   ): Promise<void> {
     await this.log("warn", message, data, category, context);
   }
 
   async info(
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "SYSTEM",
-    context?: any,
+    context?: unknown,
   ): Promise<void> {
     await this.log("info", message, data, category, context);
   }
 
   async debug(
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "SYSTEM",
-    context?: any,
+    context?: unknown,
   ): Promise<void> {
     await this.log("debug", message, data, category, context);
   }
 
   async verbose(
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "SYSTEM",
-    context?: any,
+    context?: unknown,
   ): Promise<void> {
     await this.log("verbose", message, data, category, context);
   }
@@ -347,8 +362,8 @@ export class EnhancedLogger {
   async auth(
     level: LogLevel,
     message: string,
-    data?: any,
-    context?: any,
+    data?: unknown,
+    context?: unknown,
   ): Promise<void> {
     await this.log(level, message, data, "AUTH", context);
   }
@@ -356,8 +371,8 @@ export class EnhancedLogger {
   async database(
     level: LogLevel,
     message: string,
-    data?: any,
-    context?: any,
+    data?: unknown,
+    context?: unknown,
   ): Promise<void> {
     await this.log(level, message, data, "DATABASE", context);
   }
@@ -365,8 +380,8 @@ export class EnhancedLogger {
   async api(
     level: LogLevel,
     message: string,
-    data?: any,
-    context?: any,
+    data?: unknown,
+    context?: unknown,
   ): Promise<void> {
     await this.log(level, message, data, "API", context);
   }
@@ -374,8 +389,8 @@ export class EnhancedLogger {
   async websocket(
     level: LogLevel,
     message: string,
-    data?: any,
-    context?: any,
+    data?: unknown,
+    context?: unknown,
   ): Promise<void> {
     await this.log(level, message, data, "WEBSOCKET", context);
   }
@@ -383,8 +398,8 @@ export class EnhancedLogger {
   async validation(
     level: LogLevel,
     message: string,
-    data?: any,
-    context?: any,
+    data?: unknown,
+    context?: unknown,
   ): Promise<void> {
     await this.log(level, message, data, "VALIDATION", context);
   }
@@ -392,21 +407,21 @@ export class EnhancedLogger {
   async performance(
     level: LogLevel,
     message: string,
-    data?: any,
-    context?: any,
+    data?: unknown,
+    context?: unknown,
   ): Promise<void> {
     await this.log(level, message, data, "PERFORMANCE", context);
   }
 
   // Special system event methods (always visible unless silent mode)
-  async startup(message: string, data?: any): Promise<void> {
+  async startup(message: string, data?: unknown): Promise<void> {
     if (this.config.level === "silent") return;
 
     const emoji = this.config.colorOutput ? "🚀" : "[STARTUP]";
     await this.log("info", `${emoji} ${message}`, data, "SYSTEM");
   }
 
-  async shutdown(message: string, data?: any): Promise<void> {
+  async shutdown(message: string, data?: unknown): Promise<void> {
     if (this.config.level === "silent") return;
 
     const emoji = this.config.colorOutput ? "🛑" : "[SHUTDOWN]";
@@ -415,7 +430,7 @@ export class EnhancedLogger {
 
   async success(
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "SYSTEM",
   ): Promise<void> {
     if (this.config.level === "silent") return;
@@ -426,7 +441,7 @@ export class EnhancedLogger {
 
   async failure(
     message: string,
-    data?: any,
+    data?: unknown,
     category: LogCategory = "ERROR",
   ): Promise<void> {
     if (this.config.level === "silent") return;
@@ -435,7 +450,11 @@ export class EnhancedLogger {
     await this.log("error", `${emoji} ${message}`, data, category);
   }
 
-  async security(message: string, data?: any, context?: any): Promise<void> {
+  async security(
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
     if (this.config.level === "silent") return;
 
     const emoji = this.config.colorOutput ? "🔒" : "[SECURITY]";
@@ -443,7 +462,7 @@ export class EnhancedLogger {
   }
 
   // Development-only logging
-  dev(message: string, data?: any, category: LogCategory = "SYSTEM"): void {
+  dev(message: string, data?: unknown, category: LogCategory = "SYSTEM"): void {
     if (
       process.env.NODE_ENV === "development" &&
       this.shouldLog("debug", category)
@@ -522,7 +541,7 @@ export class EnhancedLogger {
   // WebSocket event logging
   async websocketEvent(
     event: string,
-    data?: any,
+    data?: unknown,
     context?: { userId?: string; connectionId?: string },
   ): Promise<void> {
     await this.log("debug", `WebSocket: ${event}`, data, "WEBSOCKET", context);
@@ -542,7 +561,7 @@ export class EnhancedLogger {
   // Business logic event logging
   async businessEvent(
     event: string,
-    data?: any,
+    data?: unknown,
     context?: { userId?: string; workspaceId?: string; projectId?: string },
   ): Promise<void> {
     await this.log("info", `Business Event: ${event}`, data, "SYSTEM", context);
