@@ -251,6 +251,37 @@ interface EnhancedTeam {
   unreadCount?: number;
 }
 
+type MemberWithTeams = EnhancedTeamMember & {
+  teams: Array<{ id: string; name: string; color?: string }>;
+};
+
+interface TeamsPermissions {
+  canCreateTeams: boolean;
+  canUpdateTeams: boolean;
+  canDeleteTeams: boolean;
+  canManageTeams: boolean;
+  canViewMembers: boolean;
+  canAddMembers: boolean;
+  canRemoveMembers: boolean;
+  canManageMembers: boolean;
+  canViewUsers: boolean;
+  canCreateUsers: boolean;
+  canEditUsers: boolean;
+  canDeleteUsers: boolean;
+  canChangeUserRoles: boolean;
+  canToggleUserStatus: boolean;
+  canResetPasswords: boolean;
+  canManageUsers: boolean;
+  canExportData: boolean;
+  canAccessChat: boolean;
+  canViewCalendar: boolean;
+  canManageCalendar: boolean;
+  canViewSettings: boolean;
+  canUpdateSettings: boolean;
+  canViewAnalytics: boolean;
+  canViewDetailedAnalytics: boolean;
+}
+
 // Enhanced team role mapping
 const ROLE_LABELS = {
   "workspace-manager": {
@@ -307,7 +338,7 @@ function TeamsPage() {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] =
-    useState<EnhancedTeamMember | null>(null);
+    useState<WorkspaceUser | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<
     string | null
@@ -353,7 +384,7 @@ function TeamsPage() {
   const userRole = user?.role || "member";
 
   // Granular permissions check based on user role
-  const globalPermissions = {
+  const globalPermissions: TeamsPermissions = {
     // Team Management
     canCreateTeams: ["workspace-manager", "admin", "team-lead"].includes(
       userRole,
@@ -622,9 +653,12 @@ function TeamsPage() {
         color: teamColor,
         projectName:
           team.projectName ||
-          (Array.isArray(projects) ? projects : []).find(
-            (p: any) => p.id === team.projectId,
-          )?.name,
+          (
+            (Array.isArray(projects) ? projects : []) as Array<{
+              id: string;
+              name: string;
+            }>
+          ).find((p) => p.id === team.projectId)?.name,
         healthScore,
         healthStatus,
         completedTasks,
@@ -642,12 +676,7 @@ function TeamsPage() {
 
   // Deduplicated members with team information
   const uniqueMembers = useMemo(() => {
-    const memberMap = new Map<
-      string,
-      EnhancedTeamMember & {
-        teams: Array<{ id: string; name: string; color?: string }>;
-      }
-    >();
+    const memberMap = new Map<string, MemberWithTeams>();
 
     for (const team of enhancedTeams) {
       for (const member of team.members) {
@@ -884,7 +913,7 @@ function TeamsPage() {
     setIsCreateTeamOpen(true);
   };
 
-  const handleTeamCreated = async (newTeam: any) => {
+  const handleTeamCreated = async (newTeam: { name?: string } | undefined) => {
     setIsCreateTeamOpen(false);
 
     try {
@@ -925,7 +954,7 @@ function TeamsPage() {
     }
   };
 
-  const handleUserUpdated = (updatedUser: any) => {
+  const handleUserUpdated = (updatedUser: WorkspaceUser) => {
     setIsEditUserOpen(false);
     setSelectedUserForEdit(null);
     toast.success(`User "${updatedUser.name}" updated successfully!`);
@@ -1703,90 +1732,86 @@ function TeamsPage() {
             ) : directoryViewType === "grid" ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {directoryPagination.paginatedData.map(
-                    (user: any, index: number) => (
-                      <BlurFade
-                        key={user.id || user.userEmail}
-                        delay={0.05 + index * 0.02}
-                      >
-                        <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
-                          <CardContent className="p-6 space-y-4">
-                            {/* Avatar and Basic Info */}
-                            <div
-                              className="text-center space-y-3"
-                              onClick={() =>
-                                handleViewProfile(user.id || user.userEmail)
-                              }
-                            >
-                              <Avatar className="h-20 w-20 mx-auto border-4 border-primary/10 group-hover:border-primary/30 transition-colors">
-                                <AvatarImage
-                                  src={user.avatar}
-                                  alt={user.userName || user.name}
-                                />
-                                <AvatarFallback className="text-xl">
-                                  {(user.userName || user.name || "U")
-                                    .charAt(0)
-                                    .toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
+                  {directoryPagination.paginatedData.map((user, index) => (
+                    <BlurFade
+                      key={user.id || user.userEmail}
+                      delay={0.05 + index * 0.02}
+                    >
+                      <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
+                        <CardContent className="p-6 space-y-4">
+                          {/* Avatar and Basic Info */}
+                          <div
+                            className="text-center space-y-3"
+                            onClick={() =>
+                              handleViewProfile(user.id || user.userEmail)
+                            }
+                          >
+                            <Avatar className="h-20 w-20 mx-auto border-4 border-primary/10 group-hover:border-primary/30 transition-colors">
+                              <AvatarImage
+                                src={user.avatar}
+                                alt={user.userName || user.name}
+                              />
+                              <AvatarFallback className="text-xl">
+                                {(user.userName || user.name || "U")
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
 
-                              <div>
-                                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
-                                  {user.userName || user.name || "Unnamed User"}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {user.jobTitle || user.role || "Team Member"}
-                                </p>
+                            <div>
+                              <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
+                                {user.userName || user.name || "Unnamed User"}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {user.jobTitle || user.role || "Team Member"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Meta Info */}
+                          <div className="space-y-2 text-sm text-muted-foreground">
+                            {user.company && (
+                              <div className="flex items-center gap-2">
+                                <Briefcase className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{user.company}</span>
                               </div>
-                            </div>
+                            )}
+                            {user.location && (
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">
+                                  {user.location}
+                                </span>
+                              </div>
+                            )}
+                          </div>
 
-                            {/* Meta Info */}
-                            <div className="space-y-2 text-sm text-muted-foreground">
-                              {user.company && (
-                                <div className="flex items-center gap-2">
-                                  <Briefcase className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">
-                                    {user.company}
-                                  </span>
-                                </div>
-                              )}
-                              {user.location && (
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">
-                                    {user.location}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
+                          {/* Role Badge */}
+                          <div className="flex justify-center">
+                            <Badge variant="outline" className="text-xs">
+                              {ROLE_LABELS[
+                                user.role as keyof typeof ROLE_LABELS
+                              ]?.label || user.role}
+                            </Badge>
+                          </div>
 
-                            {/* Role Badge */}
-                            <div className="flex justify-center">
-                              <Badge variant="outline" className="text-xs">
-                                {ROLE_LABELS[
-                                  user.role as keyof typeof ROLE_LABELS
-                                ]?.label || user.role}
-                              </Badge>
-                            </div>
-
-                            {/* Action Button */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewProfile(user.id || user.userEmail);
-                              }}
-                            >
-                              <Eye className="h-3 w-3 mr-2" />
-                              View Profile
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </BlurFade>
-                    ),
-                  )}
+                          {/* Action Button */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewProfile(user.id || user.userEmail);
+                            }}
+                          >
+                            <Eye className="h-3 w-3 mr-2" />
+                            View Profile
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </BlurFade>
+                  ))}
                 </div>
 
                 {filteredDirectoryUsers.length > 12 && (
@@ -1807,88 +1832,82 @@ function TeamsPage() {
             ) : (
               <>
                 <div className="space-y-4">
-                  {directoryPagination.paginatedData.map(
-                    (user: any, index: number) => (
-                      <BlurFade
-                        key={user.id || user.userEmail}
-                        delay={0.05 + index * 0.02}
-                      >
-                        <Card className="hover:shadow-md transition-all cursor-pointer group">
-                          <CardContent className="p-6">
-                            <div
-                              className="flex items-center justify-between gap-6"
-                              onClick={() =>
-                                handleViewProfile(user.id || user.userEmail)
-                              }
-                            >
-                              {/* User Info */}
-                              <div className="flex items-center gap-4 flex-1 min-w-0">
-                                <Avatar className="h-16 w-16 border-2 border-primary/10 group-hover:border-primary/30 transition-colors flex-shrink-0">
-                                  <AvatarImage
-                                    src={user.avatar}
-                                    alt={user.userName || user.name}
-                                  />
-                                  <AvatarFallback className="text-lg">
-                                    {(user.userName || user.name || "U")
-                                      .charAt(0)
-                                      .toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
+                  {directoryPagination.paginatedData.map((user, index) => (
+                    <BlurFade
+                      key={user.id || user.userEmail}
+                      delay={0.05 + index * 0.02}
+                    >
+                      <Card className="hover:shadow-md transition-all cursor-pointer group">
+                        <CardContent className="p-6">
+                          <div
+                            className="flex items-center justify-between gap-6"
+                            onClick={() =>
+                              handleViewProfile(user.id || user.userEmail)
+                            }
+                          >
+                            {/* User Info */}
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                              <Avatar className="h-16 w-16 border-2 border-primary/10 group-hover:border-primary/30 transition-colors flex-shrink-0">
+                                <AvatarImage
+                                  src={user.avatar}
+                                  alt={user.userName || user.name}
+                                />
+                                <AvatarFallback className="text-lg">
+                                  {(user.userName || user.name || "U")
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
 
-                                <div className="flex-1 min-w-0 space-y-1">
-                                  <h3 className="font-bold text-lg group-hover:text-primary transition-colors truncate">
-                                    {user.userName ||
-                                      user.name ||
-                                      "Unnamed User"}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {user.userEmail || user.email}
-                                  </p>
-                                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                    {user.jobTitle && (
-                                      <span className="flex items-center gap-1">
-                                        <Briefcase className="h-3 w-3" />
-                                        {user.jobTitle}
-                                      </span>
-                                    )}
-                                    {user.location && (
-                                      <span className="flex items-center gap-1">
-                                        <MapPin className="h-3 w-3" />
-                                        {user.location}
-                                      </span>
-                                    )}
-                                  </div>
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <h3 className="font-bold text-lg group-hover:text-primary transition-colors truncate">
+                                  {user.userName || user.name || "Unnamed User"}
+                                </h3>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {user.userEmail || user.email}
+                                </p>
+                                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                  {user.jobTitle && (
+                                    <span className="flex items-center gap-1">
+                                      <Briefcase className="h-3 w-3" />
+                                      {user.jobTitle}
+                                    </span>
+                                  )}
+                                  {user.location && (
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="h-3 w-3" />
+                                      {user.location}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-
-                              {/* Role and Action */}
-                              <div className="flex items-center gap-4 flex-shrink-0">
-                                <Badge variant="outline">
-                                  {ROLE_LABELS[
-                                    user.role as keyof typeof ROLE_LABELS
-                                  ]?.label || user.role}
-                                </Badge>
-
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewProfile(
-                                      user.id || user.userEmail,
-                                    );
-                                  }}
-                                >
-                                  <Eye className="h-3 w-3 mr-2" />
-                                  View Profile
-                                </Button>
-                              </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </BlurFade>
-                    ),
-                  )}
+
+                            {/* Role and Action */}
+                            <div className="flex items-center gap-4 flex-shrink-0">
+                              <Badge variant="outline">
+                                {ROLE_LABELS[
+                                  user.role as keyof typeof ROLE_LABELS
+                                ]?.label || user.role}
+                              </Badge>
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewProfile(user.id || user.userEmail);
+                                }}
+                              >
+                                <Eye className="h-3 w-3 mr-2" />
+                                View Profile
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </BlurFade>
+                  ))}
                 </div>
 
                 {filteredDirectoryUsers.length > 12 && (
@@ -1919,7 +1938,7 @@ function TeamsPage() {
               users={usersPagination.paginatedData}
               onUserAction={(action, user) => {
                 if (action === "edit") {
-                  setSelectedUserForEdit(user as any);
+                  setSelectedUserForEdit(user);
                   setIsEditUserOpen(true);
                 } else if (action === "delete") {
                   if (
@@ -2179,8 +2198,8 @@ function UsersManagementView({
   onUserAction,
   searchTerm,
 }: {
-  users: any[];
-  onUserAction: (action: string, user: any) => void;
+  users: WorkspaceUser[];
+  onUserAction: (action: string, user: WorkspaceUser) => void;
   searchTerm: string;
 }) {
   const filteredUsers = users.filter(
@@ -2301,8 +2320,8 @@ function EditUserModal({
 }: {
   open: boolean;
   onClose: () => void;
-  user: any;
-  onUserUpdated: (user: any) => void;
+  user: WorkspaceUser | null;
+  onUserUpdated: (user: WorkspaceUser) => void;
 }) {
   const [formData, setFormData] = useState({
     name: "",
@@ -2426,7 +2445,7 @@ function TeamCard({
 }: {
   team: EnhancedTeam;
   onAction: (action: string, team: EnhancedTeam) => void;
-  userPermissions: any;
+  userPermissions: TeamsPermissions;
 }) {
   const workload = team.workload ?? 0;
   const roleCounts: Record<string, number> = {};
@@ -2746,9 +2765,9 @@ function MembersList({
 
   onMemberAction,
 }: {
-  members: any[];
-  userPermissions: any;
-  onMemberAction: (action: string, member: any) => void;
+  members: MemberWithTeams[];
+  userPermissions: TeamsPermissions;
+  onMemberAction: (action: string, member: MemberWithTeams) => void;
 }) {
   return (
     <MagicCard className="cursor-pointer">
@@ -2995,7 +3014,7 @@ function TeamListItem({
 }: {
   team: EnhancedTeam;
   onAction: (action: string, team: EnhancedTeam) => void;
-  userPermissions: any;
+  userPermissions: TeamsPermissions;
 }) {
   return (
     <Card className="hover:shadow-md transition-shadow">
