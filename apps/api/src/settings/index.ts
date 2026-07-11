@@ -1,6 +1,16 @@
 // @epic-3.2-settings: Settings API with audit logging and real-time sync
-import { Hono } from "hono";
-import { eq, and, or, desc, gte, lte, like, count } from "drizzle-orm";
+import { Hono, type Context } from "hono";
+import {
+  eq,
+  and,
+  or,
+  desc,
+  gte,
+  lte,
+  like,
+  count,
+  type SQL,
+} from "drizzle-orm";
 import { getDatabase } from "../database/connection";
 import {
   settingsAuditLogTable,
@@ -124,6 +134,7 @@ import {
   cloneSavedFilter,
   recordFilterUsage,
   getFilterTemplates,
+  type FilterGroup,
 } from "./controllers/filters";
 
 const app = new Hono<{ Variables: { userEmail: string } }>();
@@ -151,7 +162,7 @@ app.get("/", async (c) => {
 
     // Return default settings structure
     // TODO: Settings table not yet implemented in active schema
-    const settingsObject: any = {
+    const settingsObject: Record<string, unknown> = {
       profile: {
         name: "",
         email: userEmail,
@@ -202,7 +213,7 @@ app.get("/", async (c) => {
 });
 
 // Helper function to get client metadata
-function getClientMetadata(c: any) {
+function getClientMetadata(c: Context) {
   return {
     ip:
       c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown",
@@ -217,8 +228,8 @@ async function logAuditEvent(
   userEmail: string,
   action: string,
   section: string,
-  changes: Record<string, any>,
-  metadata: Record<string, any>,
+  changes: Record<string, unknown>,
+  metadata: Record<string, unknown>,
 ) {
   const db = getDatabase();
   try {
@@ -253,7 +264,7 @@ app.get("/:userId", async (c) => {
       .where(eq(userSettingsTable.userEmail, userEmail));
 
     // Convert to the expected format
-    const settingsObject: any = {
+    const settingsObject: Record<string, unknown> = {
       profile: {},
       appearance: {},
       notifications: {},
@@ -313,7 +324,7 @@ app.patch("/:userId/:section", async (c) => {
     const newSettings = { ...currentData, ...updates };
 
     // Create audit trail
-    const changes: Record<string, any> = {};
+    const changes: Record<string, unknown> = {};
     for (const key of Object.keys(updates)) {
       if (currentData[key] !== updates[key]) {
         changes[key] = {
@@ -354,7 +365,7 @@ app.patch("/:userId/:section", async (c) => {
       .from(userSettingsTable)
       .where(eq(userSettingsTable.userEmail, userEmail));
 
-    const settingsObject: any = {
+    const settingsObject: Record<string, unknown> = {
       profile: {},
       appearance: {},
       notifications: {},
@@ -412,8 +423,10 @@ app.post("/:userId/:section/reset", async (c) => {
       ? JSON.parse(currentSettings[0].settings)
       : {};
 
-    // Default settings for each section
-    const defaultSettings: Record<string, any> = {
+    // Default settings for each section. Every section is itself an object;
+    // the outer Record<string, unknown> forced a manual cast at every
+    // `defaultSettings[section][key]` access below.
+    const defaultSettings: Record<string, Record<string, unknown>> = {
       profile: {
         name: "",
         email: userEmail,
@@ -490,7 +503,7 @@ app.post("/:userId/:section/reset", async (c) => {
     const resetData = defaultSettings[section] || {};
 
     // Create audit trail
-    const changes: Record<string, any> = {};
+    const changes: Record<string, unknown> = {};
     for (const key of Object.keys(currentData)) {
       changes[key] = {
         from: currentData[key],
@@ -529,7 +542,7 @@ app.post("/:userId/:section/reset", async (c) => {
       .from(userSettingsTable)
       .where(eq(userSettingsTable.userEmail, userEmail));
 
-    const settingsObject: any = {
+    const settingsObject: Record<string, unknown> = {
       profile: {},
       appearance: {},
       notifications: {},
@@ -609,14 +622,20 @@ app.get("/:userId/audit", async (c) => {
       .limit(limit)
       .offset(offset);
 
-    // Format logs for frontend
-    const formattedLogs = logs.map((log: any) => ({
+    // Format logs for frontend.
+    // NOTE: this previously read log.changes (a column that doesn't exist on
+    // settings_audit_log — the real columns are oldValue/newValue) and
+    // JSON.parse()'d log.metadata, which is jsonb and already an object, not
+    // a JSON string — every call to this endpoint threw at runtime. Both
+    // were only masked because `log` was typed `any`.
+    const formattedLogs = logs.map((log) => ({
       id: log.id,
       userId: log.userEmail,
       action: log.action,
       section: log.section,
-      changes: JSON.parse(log.changes),
-      metadata: JSON.parse(log.metadata),
+      oldValue: log.oldValue ? JSON.parse(log.oldValue) : null,
+      newValue: log.newValue ? JSON.parse(log.newValue) : null,
+      metadata: log.metadata,
     }));
 
     return c.json({
@@ -702,7 +721,14 @@ app.post("/:userId/preset/:presetId", async (c) => {
     const metadata = getClientMetadata(c);
 
     // Get preset (for now, we'll use hardcoded presets, but this could come from the database)
-    const presets: Record<string, any> = {
+    const presets: Record<
+      string,
+      {
+        id: string;
+        name: string;
+        settings: Record<string, Record<string, unknown>>;
+      }
+    > = {
       "sarah-pm": {
         id: "sarah-pm",
         name: "Sarah (PM)",
@@ -746,18 +772,19 @@ app.post("/:userId/preset/:presetId", async (c) => {
         ? JSON.parse(currentSettings[0].settings)
         : {};
 
+      const sectionSettingsRecord = sectionSettings as Record<string, unknown>;
       const newSettings = {
         ...currentData,
-        ...(sectionSettings as Record<string, any>),
+        ...sectionSettingsRecord,
       };
 
       // Create audit trail
-      const changes: Record<string, any> = {};
-      for (const key of Object.keys(sectionSettings as any)) {
-        if (currentData[key] !== (sectionSettings as any)[key]) {
+      const changes: Record<string, unknown> = {};
+      for (const key of Object.keys(sectionSettingsRecord)) {
+        if (currentData[key] !== sectionSettingsRecord[key]) {
           changes[key] = {
             from: currentData[key],
-            to: (sectionSettings as any)[key],
+            to: sectionSettingsRecord[key],
           };
         }
       }
@@ -800,7 +827,7 @@ app.post("/:userId/preset/:presetId", async (c) => {
       .from(userSettingsTable)
       .where(eq(userSettingsTable.userEmail, userEmail));
 
-    const settingsObject: any = {
+    const settingsObject: Record<string, unknown> = {
       profile: {},
       appearance: {},
       notifications: {},
@@ -839,7 +866,12 @@ app.post("/:userId/export", async (c) => {
   }
 
   try {
-    const { format, sections, includeMetadata } = await c.req.json();
+    const body = (await c.req.json()) as {
+      format: "json" | "csv" | "yaml";
+      sections?: string[];
+      includeMetadata?: boolean;
+    };
+    const { format, sections, includeMetadata } = body;
     const metadata = getClientMetadata(c);
 
     // Get settings
@@ -850,20 +882,19 @@ app.post("/:userId/export", async (c) => {
         sections && sections.length > 0
           ? and(
               eq(userSettingsTable.userEmail, userEmail),
-              sections.length === 1
-                ? eq(userSettingsTable.section, sections[0])
-                : sections
-                    .map((section: string) =>
-                      eq(userSettingsTable.section, section),
-                    )
-                    .reduce((acc: any, curr: any) =>
-                      acc ? and(acc, curr) : curr,
-                    ),
+              sections
+                .map((section: string) =>
+                  eq(userSettingsTable.section, section),
+                )
+                .reduce<SQL<unknown> | undefined>(
+                  (acc, curr) => (acc ? and(acc, curr) : curr),
+                  undefined,
+                ),
             )
           : eq(userSettingsTable.userEmail, userEmail),
       );
 
-    const settingsObject: any = {};
+    const settingsObject: Record<string, unknown> = {};
     for (const setting of settings) {
       settingsObject[setting.section] = JSON.parse(setting.settings);
     }
@@ -894,7 +925,9 @@ app.post("/:userId/export", async (c) => {
         const csvRows = ["Section,Key,Value"];
         for (const [section, sectionData] of Object.entries(settingsObject)) {
           if (section !== "_metadata") {
-            for (const [key, value] of Object.entries(sectionData as any)) {
+            for (const [key, value] of Object.entries(
+              sectionData as Record<string, unknown>,
+            )) {
               csvRows.push(`${section},${key},"${JSON.stringify(value)}"`);
             }
           }
@@ -908,7 +941,9 @@ app.post("/:userId/export", async (c) => {
         // Simple YAML conversion (you might want to use a proper YAML library)
         data = Object.entries(settingsObject)
           .map(([section, sectionData]) => {
-            const sectionYaml = Object.entries(sectionData as any)
+            const sectionYaml = Object.entries(
+              sectionData as Record<string, unknown>,
+            )
               .map(([key, value]) => `  ${key}: ${JSON.stringify(value)}`)
               .join("\n");
             return `${section}:\n${sectionYaml}`;
@@ -3232,6 +3267,44 @@ app.get("/filters/:workspaceId/filters/:filterId", async (c) => {
   }
 });
 
+// Recursive filter-group schema producing the real FilterGroup type from
+// settings/controllers/filters.ts (logic/conditions/nested groups), instead
+// of a separately re-derived shape that can drift from it.
+//
+// zod infers a bare `value: z.unknown()` field as an OPTIONAL key (the key
+// may be absent), which FilterCondition.value doesn't allow even though it
+// accepts `unknown` as a value. .transform() rebuilds the object with value
+// assigned explicitly, which forces the inferred type to a real required key.
+const filterConditionSchema = z
+  .object({
+    field: z.string(),
+    operator: z.enum([
+      "=",
+      "!=",
+      "~",
+      ">",
+      "<",
+      "between",
+      "in",
+      "isEmpty",
+      "isNotEmpty",
+    ]),
+    value: z.unknown(),
+  })
+  .transform((condition) => ({ ...condition, value: condition.value }));
+
+// Input type is left as `unknown` (arbitrary pre-validation JSON) rather
+// than FilterGroup — .transform() above makes conditions' input and output
+// shapes genuinely different (value optional-key in, required-key out).
+const filterGroupSchema: z.ZodType<FilterGroup, z.ZodTypeDef, unknown> = z.lazy(
+  () =>
+    z.object({
+      logic: z.enum(["AND", "OR", "NOT"]),
+      conditions: z.array(filterConditionSchema),
+      groups: z.array(filterGroupSchema).optional(),
+    }),
+);
+
 // Create a new saved filter
 app.post(
   "/filters/:workspaceId/filters",
@@ -3241,27 +3314,7 @@ app.post(
       name: z.string().min(1).max(100),
       description: z.string().optional(),
       filterType: z.enum(["projects", "tasks", "users", "messages", "files"]),
-      filterConfig: z.object({
-        logic: z.enum(["AND", "OR", "NOT"]),
-        conditions: z.array(
-          z.object({
-            field: z.string(),
-            operator: z.enum([
-              "=",
-              "!=",
-              "~",
-              ">",
-              "<",
-              "between",
-              "in",
-              "isEmpty",
-              "isNotEmpty",
-            ]),
-            value: z.unknown(),
-          }),
-        ),
-        groups: z.any().optional(),
-      }),
+      filterConfig: filterGroupSchema,
       isPinned: z.boolean().optional(),
       isPublic: z.boolean().optional(),
     }),
@@ -3275,7 +3328,7 @@ app.post(
       const filter = await createSavedFilter(
         workspaceId,
         userEmail,
-        filterData as any,
+        filterData,
       );
 
       return c.json({
