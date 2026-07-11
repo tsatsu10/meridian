@@ -165,11 +165,17 @@ export const NotificationPreferences: React.FC<
     }
   };
 
-  const updatePreference = (key: keyof NotificationPreferences, value: any) => {
+  const updatePreference = (
+    key: keyof NotificationPreferences,
+    value: NotificationPreferences[keyof NotificationPreferences],
+  ) => {
     setPreferences((prev) => (prev ? { ...prev, [key]: value } : null));
   };
 
-  const updateTypePreference = (type: string, updates: any) => {
+  const updateTypePreference = (
+    type: string,
+    updates: Partial<{ enabled: boolean; channels: string[] }>,
+  ) => {
     setPreferences((prev) => {
       if (!prev) return null;
       return {
@@ -220,7 +226,7 @@ export const NotificationPreferences: React.FC<
             <button
               type="button"
               key={tab.id}
-              onClick={() => setActiveSection(tab.id as any)}
+              onClick={() => setActiveSection(tab.id as typeof activeSection)}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeSection === tab.id
                   ? "border-blue-600 text-blue-600"
@@ -298,7 +304,10 @@ export const NotificationPreferences: React.FC<
                           ] as boolean
                         }
                         onChange={(e) =>
-                          updatePreference(channel.key as any, e.target.checked)
+                          updatePreference(
+                            channel.key as keyof NotificationPreferences,
+                            e.target.checked,
+                          )
                         }
                         className="sr-only peer"
                       />
