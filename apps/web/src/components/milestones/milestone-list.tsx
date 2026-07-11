@@ -35,11 +35,52 @@ import { useDashboardData } from "@/hooks/queries/dashboard/use-dashboard-data";
 // @epic-1.3-milestones: Sarah (PM) needs milestone tracking and management
 // @persona-sarah: PM needs to view and manage project milestones
 
+// Common shape for milestones rendered by this list, whether they come
+// from useMilestones' localStorage-backed MilestoneTask or are derived
+// on the fly from dashboard task data below.
+interface DisplayMilestone {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  status: "upcoming" | "achieved" | "missed";
+  milestoneType: "phase_completion" | "deliverable" | "approval" | "deadline";
+  stakeholders: string[];
+  successCriteria: string;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  projectId: string;
+  isDerived?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// useDashboardData()'s RecentProject/ApiTask types are internal to that
+// hook (not exported) and don't model the extra task fields read below
+// (description/userEmail/createdAt/updatedAt) -- those are real API
+// response fields the hook's own minimal ApiTask just doesn't declare.
+interface DashboardMilestoneTask {
+  id: string;
+  title?: string;
+  description?: string;
+  dueDate?: string;
+  status?: string;
+  priority?: string;
+  userEmail?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface DashboardMilestoneProject {
+  id: string;
+  columns?: Array<{ tasks?: DashboardMilestoneTask[] }>;
+  tasks?: DashboardMilestoneTask[];
+}
+
 interface MilestoneListProps {
   projectId?: string;
   workspaceId?: string;
   className?: string;
-  onEditMilestone?: (milestone: any) => void;
+  onEditMilestone?: (milestone: DisplayMilestone) => void;
 }
 
 const getStatusIcon = (status: string) => {
@@ -104,7 +145,8 @@ export default function MilestoneList({
     updateMilestone,
   } = useMilestones(projectId);
   const { data: dashboardData } = useDashboardData();
-  const [selectedMilestone, setSelectedMilestone] = useState<any | null>(null);
+  const [selectedMilestone, setSelectedMilestone] =
+    useState<DisplayMilestone | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -126,8 +168,8 @@ export default function MilestoneList({
   const [selectMode, setSelectMode] = useState(false);
 
   // 🔧 Merge localStorage milestones with derived milestones from tasks
-  const allMilestones = useMemo(() => {
-    const derived: any[] = [];
+  const allMilestones = useMemo<DisplayMilestone[]>(() => {
+    const derived: DisplayMilestone[] = [];
 
     // Derive milestones from tasks (optimized to only process current project)
     // ✅ PERFORMANCE: Early return if no data to prevent unnecessary processing
@@ -139,19 +181,22 @@ export default function MilestoneList({
       return [...localStorageMilestones];
     }
 
+    // useDashboardData's RecentProject/ApiTask types don't declare every
+    // field the API actually returns (see DashboardMilestoneTask above).
+    const projects =
+      dashboardData.projects as unknown as DashboardMilestoneProject[];
+
     // 🚀 PERFORMANCE: Only find and process the current project
-    const currentProject = dashboardData.projects.find(
-      (p: any) => p.id === projectId,
-    );
+    const currentProject = projects.find((p) => p.id === projectId);
 
     if (currentProject) {
       const columnTasks =
-        currentProject.columns?.flatMap((col: any) => col.tasks || []) || [];
+        currentProject.columns?.flatMap((col) => col.tasks || []) || [];
       const directTasks = currentProject.tasks || [];
       const allTasks = [...columnTasks, ...directTasks];
 
       // Find milestone tasks (critical/urgent priority OR milestone keywords)
-      const milestoneTasks = allTasks.filter((task: any) => {
+      const milestoneTasks = allTasks.filter((task) => {
         const titleLower = task.title?.toLowerCase() || "";
         const milestoneKeywords = [
           "milestone",
@@ -173,9 +218,10 @@ export default function MilestoneList({
 
       // Convert tasks to milestone format
       for (const task of milestoneTasks) {
+        const title = task.title || "Untitled";
         derived.push({
           id: `derived_${task.id}`,
-          title: task.title,
+          title,
           description: task.description || "Auto-detected milestone from task",
           date:
             task.dueDate ||
@@ -188,7 +234,7 @@ export default function MilestoneList({
                 : "upcoming",
           milestoneType: "deliverable",
           stakeholders: task.userEmail ? [task.userEmail] : [],
-          successCriteria: `Complete task: ${task.title}`,
+          successCriteria: `Complete task: ${title}`,
           riskLevel:
             task.priority === "critical" || task.priority === "urgent"
               ? "high"
@@ -301,7 +347,7 @@ export default function MilestoneList({
   const groupedMilestones = useMemo(() => {
     if (groupBy === "none") return { "All Milestones": sortedMilestones };
 
-    const groups: Record<string, any[]> = {};
+    const groups: Record<string, DisplayMilestone[]> = {};
 
     for (const milestone of sortedMilestones) {
       let groupKey = "";
@@ -464,7 +510,11 @@ export default function MilestoneList({
       const csv = [
         headers.join(","),
         ...dataToExport.map((row) =>
-          headers.map((header) => `"${(row as any)[header] || ""}"`).join(","),
+          headers
+            .map(
+              (header) => `"${(row as Record<string, unknown>)[header] || ""}"`,
+            )
+            .join(","),
         ),
       ].join("\n");
 
@@ -479,7 +529,7 @@ export default function MilestoneList({
     }
   };
 
-  const handleMilestoneClick = (milestone: any) => {
+  const handleMilestoneClick = (milestone: DisplayMilestone) => {
     setSelectedMilestone(milestone);
     setIsDetailModalOpen(true);
   };
@@ -795,7 +845,7 @@ export default function MilestoneList({
                               <div className="flex flex-wrap gap-1">
                                 {milestone.stakeholders
                                   .slice(0, 3)
-                                  .map((email: any, index: any) => (
+                                  .map((email, index) => (
                                     <Badge
                                       key={index}
                                       variant="secondary"
