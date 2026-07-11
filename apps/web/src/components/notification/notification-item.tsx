@@ -95,13 +95,15 @@ const NotificationItem = memo(
     };
 
     // Helper function to safely parse metadata
-    const parseMetadata = (metadata: any): Record<string, any> | null => {
+    const parseMetadata = (
+      metadata: unknown,
+    ): Record<string, string> | null => {
       try {
         if (!metadata) return null;
         if (typeof metadata === "string") {
           return JSON.parse(metadata);
         }
-        return metadata;
+        return metadata as Record<string, string>;
       } catch (error) {
         console.error("Failed to parse notification metadata:", error);
         toast.error("Invalid notification data");
@@ -273,7 +275,7 @@ const NotificationItem = memo(
 
     const handleArchive = (e: React.MouseEvent) => {
       e.stopPropagation();
-      const isArchived = (notification as any).isArchived || false;
+      const isArchived = (notification as { isArchived?: boolean }).isArchived || false;
       if (isArchived) {
         unarchiveNotification(notification.id);
       } else {
@@ -510,7 +512,7 @@ const NotificationItem = memo(
               onClick={handleArchive}
               disabled={isArchiving || isUnarchiving}
             >
-              {(notification as any).isArchived ? (
+              {(notification as { isArchived?: boolean }).isArchived ? (
                 <ArchiveRestore className="h-3 w-3" />
               ) : (
                 <Archive className="h-3 w-3" />
@@ -678,7 +680,7 @@ const NotificationItem = memo(
                 onClick={handleArchive}
                 disabled={isArchiving || isUnarchiving}
               >
-                {(notification as any).isArchived ? (
+                {(notification as { isArchived?: boolean }).isArchived ? (
                   <ArchiveRestore className="h-3 w-3" />
                 ) : (
                   <Archive className="h-3 w-3" />
@@ -739,8 +741,10 @@ const NotificationItem = memo(
   (prevProps, nextProps) => {
     // Custom comparison function for memo optimization
     // Only re-render if these specific props change
-    const prevArchived = (prevProps.notification as any).isArchived || false;
-    const nextArchived = (nextProps.notification as any).isArchived || false;
+    const prevArchived =
+      (prevProps.notification as { isArchived?: boolean }).isArchived || false;
+    const nextArchived =
+      (nextProps.notification as { isArchived?: boolean }).isArchived || false;
 
     return (
       prevProps.notification.id === nextProps.notification.id &&
