@@ -83,7 +83,9 @@ describe("Task Lifecycle Integration", () => {
   });
 
   describe("Complete task workflow", () => {
-    it("should create, retrieve, update, and delete a task", async () => {
+    // Four dynamic controller imports make this test slow to start under
+    // full-suite CPU contention (~2.6s in isolation) — needs extra headroom.
+    it("should create, retrieve, update, and delete a task", { timeout: 30000 }, async () => {
       // Import controllers
       const createTask = (await import("../../task/controllers/create-task"))
         .default;
@@ -103,7 +105,7 @@ describe("Task Lifecycle Integration", () => {
         id: "new-task-1",
         projectId,
         title: "New Feature",
-        status: "to-do", // Must match column id from DEFAULT_COLUMNS
+        status: "todo", // Must match column id from DEFAULT_COLUMNS (task_status enum values)
         priority: "high",
         number: 1, // getTasks expects 'number' not 'taskNumber'
         description: "",
@@ -118,7 +120,7 @@ describe("Task Lifecycle Integration", () => {
       const createdTask = await createTask({
         projectId,
         title: "New Feature",
-        status: "to-do", // Must match column id from DEFAULT_COLUMNS
+        status: "todo", // Must match column id from DEFAULT_COLUMNS (task_status enum values)
         priority: "high",
       });
 
@@ -157,8 +159,8 @@ describe("Task Lifecycle Integration", () => {
 
       // getTasks returns {columns, archivedTasks, plannedTasks}
       // Tasks are organized by status in columns
-      // Note: column id is 'to-do' not 'todo' (matches DEFAULT_COLUMNS in get-tasks.ts)
-      const todoColumn = tasks.columns.find((col) => col.id === "to-do");
+      // Column ids equal task_status enum values (todo|in_progress|done) since PR #35
+      const todoColumn = tasks.columns.find((col) => col.id === "todo");
       expect(todoColumn).toBeDefined();
       expect(todoColumn?.tasks).toHaveLength(1);
       expect(todoColumn?.tasks[0].id).toBe("new-task-1");
@@ -180,7 +182,7 @@ describe("Task Lifecycle Integration", () => {
       mockDb.returning.mockResolvedValue([
         {
           ...createdTask,
-          status: "in-progress",
+          status: "in_progress",
           dueDate: createdTask.dueDate || new Date(),
           description: createdTask.description || "",
           priority: createdTask.priority || "medium",
@@ -189,7 +191,7 @@ describe("Task Lifecycle Integration", () => {
       ]);
 
       const updatedTask = await updateTaskPartial("new-task-1", {
-        status: "in-progress",
+        status: "in_progress",
         projectId,
         title: createdTask.title,
         dueDate: createdTask.dueDate || new Date(),
@@ -198,7 +200,7 @@ describe("Task Lifecycle Integration", () => {
         position: createdTask.position || 0,
       });
 
-      expect(updatedTask.status).toBe("in-progress");
+      expect(updatedTask.status).toBe("in_progress");
 
       // Step 4: Delete task
       resetMockDb(mockDb);
@@ -375,7 +377,7 @@ describe("Task Lifecycle Integration", () => {
         .default;
 
       const projectId = "project-1";
-      const statuses = ["todo", "in-progress", "in-review", "done"];
+      const statuses = ["todo", "in_progress", "done"];
 
       // Create task
       mockDb.insert.mockReturnThis();
@@ -573,7 +575,7 @@ describe("Task Lifecycle Integration", () => {
           id: "task-1",
           projectId,
           title: "Updated Event Task",
-          status: "in-progress",
+          status: "in_progress",
           number: 1,
           dueDate: new Date(),
           description: "",
@@ -586,7 +588,7 @@ describe("Task Lifecycle Integration", () => {
       await updateTaskPartial("task-1", {
         projectId,
         title: "Updated Event Task",
-        status: "in-progress",
+        status: "in_progress",
       });
 
       expect(publishEvent).toHaveBeenCalledWith(
