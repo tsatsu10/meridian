@@ -13,6 +13,10 @@ import { renderHook, act } from "@testing-library/react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+type TestGlobal = typeof globalThis & {
+  __TEST_STORAGE__?: Record<string, string>;
+};
+
 interface Workspace {
   id: string;
   name: string;
@@ -43,17 +47,18 @@ const createWorkspaceStore = () =>
         name: "test-workspace-store",
         storage: createJSONStorage(() => ({
           getItem: (name: string) => {
-            const item = (globalThis as any).__TEST_STORAGE__?.[name];
+            const item = (globalThis as TestGlobal).__TEST_STORAGE__?.[name];
             return item || null;
           },
           setItem: (name: string, value: string) => {
-            if (!(globalThis as any).__TEST_STORAGE__) {
-              (globalThis as any).__TEST_STORAGE__ = {};
+            const g = globalThis as TestGlobal;
+            if (!g.__TEST_STORAGE__) {
+              g.__TEST_STORAGE__ = {};
             }
-            (globalThis as any).__TEST_STORAGE__[name] = value;
+            g.__TEST_STORAGE__[name] = value;
           },
           removeItem: (name: string) => {
-            delete (globalThis as any).__TEST_STORAGE__?.[name];
+            delete (globalThis as TestGlobal).__TEST_STORAGE__?.[name];
           },
         })),
       },
@@ -65,7 +70,7 @@ describe("Workspace Store", () => {
 
   beforeEach(() => {
     // Clear test storage
-    (globalThis as any).__TEST_STORAGE__ = {};
+    (globalThis as TestGlobal).__TEST_STORAGE__ = {};
     useWorkspaceStore = createWorkspaceStore();
   });
 
@@ -178,12 +183,12 @@ describe("Workspace Store", () => {
     });
 
     // Check storage
-    const stored = (globalThis as any).__TEST_STORAGE__?.[
+    const stored = (globalThis as TestGlobal).__TEST_STORAGE__?.[
       "test-workspace-store"
     ];
     expect(stored).toBeDefined();
 
-    const parsed = JSON.parse(stored);
+    const parsed = JSON.parse(stored as string);
     expect(parsed.state.workspace).toEqual(testWorkspace);
   });
 
@@ -196,7 +201,7 @@ describe("Workspace Store", () => {
     };
 
     // Set storage directly
-    (globalThis as any).__TEST_STORAGE__ = {
+    (globalThis as TestGlobal).__TEST_STORAGE__ = {
       "test-workspace-store": JSON.stringify({
         state: { workspace: testWorkspace },
         version: 0,
