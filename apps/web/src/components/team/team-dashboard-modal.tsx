@@ -54,11 +54,51 @@ interface TeamDashboardModalProps {
   allTeams?: Team[];
 }
 
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status?: string;
+  performance: number;
+  workload?: number;
+  currentTasks?: number;
+}
+
+// Raw shapes returned by the tasks / activity endpoints before normalization.
+interface RawApiTask {
+  id: string;
+  title?: string;
+  name?: string;
+  assigneeName?: string;
+  assignee?: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string;
+  deadline?: string;
+  estimatedHours?: number;
+  estimate?: number;
+  actualHours?: number;
+  timeSpent?: number;
+}
+
+interface RawApiActivity {
+  id: string;
+  type?: string;
+  activityType?: string;
+  message?: string;
+  description?: string;
+  userName?: string;
+  user?: string;
+  timestamp?: string;
+  createdAt?: string;
+}
+
 interface Team {
   id: string;
   name: string;
   description: string;
-  members: any[];
+  members: TeamMember[];
   lead?: string;
   projectId?: string;
   projectName?: string;
@@ -127,8 +167,8 @@ export default function TeamDashboardModal({
 
   // Get timeline data for this team
   const { timelineData } = useProjectTimeline(allTeams);
-  const teamTimelineData = timelineData.find((tl: any) =>
-    tl.teams.some((t: any) => t.teamId === team?.id),
+  const teamTimelineData = timelineData.find((tl) =>
+    tl.teams.some((t) => t.teamId === team?.id),
   );
 
   // Update team when selectedTeam prop changes
@@ -157,17 +197,17 @@ export default function TeamDashboardModal({
 
         if (!response.ok) throw new Error("Failed to fetch tasks");
 
-        const tasksData = await response.json();
+        const tasksData: RawApiTask[] = await response.json();
 
         // Transform API data to Task format
-        const formattedTasks: Task[] = tasksData.map((t: any) => ({
+        const formattedTasks: Task[] = tasksData.map((t) => ({
           id: t.id,
-          title: t.title || t.name,
+          title: t.title || t.name || "",
           assignee: t.assigneeName || t.assignee || "Unassigned",
-          status: t.status || "todo",
-          priority: t.priority || "medium",
-          dueDate: t.dueDate || t.deadline,
-          estimatedHours: t.estimatedHours || t.estimate,
+          status: (t.status || "todo") as Task["status"],
+          priority: (t.priority || "medium") as Task["priority"],
+          dueDate: t.dueDate || t.deadline || "",
+          estimatedHours: t.estimatedHours || t.estimate || 0,
           actualHours: t.actualHours || t.timeSpent || 0,
         }));
 
@@ -208,19 +248,19 @@ export default function TeamDashboardModal({
           return;
         }
 
-        const activityData = await response.json();
+        const activityData: RawApiActivity[] = await response.json();
 
         // Transform API data to TeamActivity format
-        const formattedActivity: TeamActivity[] = activityData.map(
-          (a: any) => ({
-            id: a.id,
-            type: a.type || a.activityType || "comment_added",
-            message: a.message || a.description,
-            user: a.userName || a.user || "Unknown User",
-            timestamp: a.timestamp || a.createdAt,
-            icon: getActivityIcon(a.type || a.activityType),
-          }),
-        );
+        const formattedActivity: TeamActivity[] = activityData.map((a) => ({
+          id: a.id,
+          type: (a.type ||
+            a.activityType ||
+            "comment_added") as TeamActivity["type"],
+          message: a.message || a.description || "",
+          user: a.userName || a.user || "Unknown User",
+          timestamp: a.timestamp || a.createdAt || "",
+          icon: getActivityIcon(a.type || a.activityType || ""),
+        }));
 
         setActivity(formattedActivity);
       } catch (error) {
@@ -479,7 +519,7 @@ export default function TeamDashboardModal({
                   </h3>
                 </div>
                 <div className="space-y-2">
-                  {teamTimelineData.riskFactors.map((risk: any, index: any) => (
+                  {teamTimelineData.riskFactors.map((risk, index) => (
                     <div
                       key={index}
                       className="text-sm text-yellow-700 dark:text-yellow-300"
@@ -497,7 +537,7 @@ export default function TeamDashboardModal({
             )}
 
             {/* Critical Path Status */}
-            {teamTimelineData?.teams.find((t: any) => t.teamId === team?.id)
+            {teamTimelineData?.teams.find((t) => t.teamId === team?.id)
               ?.criticalPath && (
               <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
