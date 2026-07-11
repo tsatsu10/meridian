@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { MouseEventHandler, ReactNode } from "react";
 import {
   InteractiveChart,
   ProductivityChart,
@@ -8,24 +9,29 @@ import {
   ProjectHealthChart,
 } from "@/components/dashboard/interactive-chart";
 
+type ChartMockProps = {
+  children?: ReactNode;
+  onClick?: MouseEventHandler<HTMLDivElement>;
+};
+
 // Mock recharts components
 vi.mock("recharts", () => ({
-  LineChart: ({ children, onClick }: any) => (
+  LineChart: ({ children, onClick }: ChartMockProps) => (
     <div data-testid="line-chart" onClick={onClick}>
       {children}
     </div>
   ),
-  BarChart: ({ children, onClick }: any) => (
+  BarChart: ({ children, onClick }: ChartMockProps) => (
     <div data-testid="bar-chart" onClick={onClick}>
       {children}
     </div>
   ),
-  AreaChart: ({ children, onClick }: any) => (
+  AreaChart: ({ children, onClick }: ChartMockProps) => (
     <div data-testid="area-chart" onClick={onClick}>
       {children}
     </div>
   ),
-  PieChart: ({ children, onClick }: any) => (
+  PieChart: ({ children, onClick }: ChartMockProps) => (
     <div data-testid="pie-chart" onClick={onClick}>
       {children}
     </div>
@@ -39,7 +45,7 @@ vi.mock("recharts", () => ({
   YAxis: () => <div data-testid="y-axis" />,
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
   Tooltip: () => <div data-testid="tooltip" />,
-  ResponsiveContainer: ({ children }: any) => (
+  ResponsiveContainer: ({ children }: { children?: ReactNode }) => (
     <div data-testid="responsive-container">{children}</div>
   ),
 }));
