@@ -20,6 +20,11 @@ import ErrorBoundary from "@/components/error-boundary";
 // Import RBAC Provider and hooks
 import { RBACProvider, useRBACAuth } from "@/lib/permissions/provider";
 import type { RBACUser } from "@/lib/permissions/context";
+import type {
+  PermissionAction,
+  ResourceType,
+  AccessLevel,
+} from "@/lib/permissions/types";
 
 // Import notification provider
 
@@ -109,14 +114,14 @@ function UnifiedContextBridge({
 
   // Bridge RBAC permissions to unified interface
   const bridgedHasPermission = (action: string): boolean => {
-    return hasPermission(action as any);
+    return hasPermission(action as PermissionAction);
   };
 
   const bridgedCanAccessResource = (
     resource: string,
     level: string,
   ): boolean => {
-    return canAccessResource(resource as any, level as any);
+    return canAccessResource(resource as ResourceType, level as AccessLevel);
   };
 
   // Pass props to the inner component
