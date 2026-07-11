@@ -109,7 +109,7 @@ export default function EnhancedBacklogView({
     archivedTasks: Task[];
   } => {
     if (!proj || typeof proj !== "object") return false;
-    const p = proj as any;
+    const p = proj as Record<string, unknown>;
     return (
       typeof p.id === "string" &&
       typeof p.name === "string" &&
@@ -122,7 +122,7 @@ export default function EnhancedBacklogView({
   // Update theme type guard
   const hasThemeData = (theme: unknown): theme is ThemeWithProgress => {
     if (!theme || typeof theme !== "object") return false;
-    const t = theme as any;
+    const t = theme as Record<string, unknown>;
     return typeof t.id === "string";
   };
 
