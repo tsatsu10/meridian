@@ -126,7 +126,10 @@ function LocalizationSettingsPage() {
     enabled: !!currentWorkspace,
   });
 
-  const supportedLanguages = supportedResponse?.data || {};
+  const supportedLanguages = (supportedResponse?.data || {}) as Record<
+    string,
+    { name?: string; nativeName?: string }
+  >;
   const languages = languagesResponse?.data || [];
   const settings = settingsResponse?.data || {};
 
@@ -190,7 +193,7 @@ function LocalizationSettingsPage() {
     mutationFn: async ({
       languageCode,
       updates,
-    }: { languageCode: string; updates: any }) => {
+    }: { languageCode: string; updates: unknown }) => {
       if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/languages/${languageCode}`,
@@ -217,7 +220,7 @@ function LocalizationSettingsPage() {
 
   // Update settings mutation
   const updateSettingsMutation = useMutation({
-    mutationFn: async (updates: any) => {
+    mutationFn: async (updates: unknown) => {
       if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/settings`,
@@ -706,7 +709,7 @@ function LocalizationSettingsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(supportedLanguages).map(
-                      ([code, info]: [string, any]) => {
+                      ([code, info]) => {
                         const isAdded = languages.some(
                           (l: Language) => l.languageCode === code,
                         );
