@@ -247,7 +247,7 @@ export function useBulkExportProjects() {
 /**
  * Helper function to generate CSV from projects
  */
-function generateProjectsCSV(projects: any[]): string {
+function generateProjectsCSV(projects: Record<string, unknown>[]): string {
   const headers = ["ID", "Name", "Status", "Priority", "Owner", "Created At"];
   const rows = projects.map((p) => [
     p.id,
