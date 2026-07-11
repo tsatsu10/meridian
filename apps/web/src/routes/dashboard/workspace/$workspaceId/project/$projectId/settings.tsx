@@ -971,7 +971,7 @@ function ProjectSettings() {
                 <button
                   type="button"
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     activeTab === tab.id
@@ -1253,7 +1253,9 @@ function ProjectSettings() {
                         </div>
                         <Select
                           value={sortBy}
-                          onValueChange={(value: any) => setSortBy(value)}
+                          onValueChange={(value) =>
+                            setSortBy(value as typeof sortBy)
+                          }
                         >
                           <SelectTrigger
                             className="w-[180px]"
@@ -2004,7 +2006,7 @@ function ProjectSettings() {
               <Select
                 onValueChange={(value) => {
                   const user = workspaceUsers?.find(
-                    (u: any) => u.userEmail === value,
+                    (u: { userEmail: string }) => u.userEmail === value,
                   );
                   if (user?.userEmail && selectedTeam) {
                     handleAddMember(selectedTeam.id, {
@@ -2029,7 +2031,7 @@ function ProjectSettings() {
                     }
 
                     const availableUsers = workspaceUsers.filter(
-                      (user: any) =>
+                      (user: { userEmail: string }) =>
                         !selectedTeam?.members.some(
                           (member) => member.userEmail === user.userEmail,
                         ),
@@ -2043,11 +2045,16 @@ function ProjectSettings() {
                       );
                     }
 
-                    return availableUsers.map((user: any) => (
-                      <SelectItem key={user.userEmail} value={user.userEmail}>
-                        {user.userName} ({user.userEmail})
-                      </SelectItem>
-                    ));
+                    return availableUsers.map(
+                      (user: {
+                        userEmail: string;
+                        userName?: string | null;
+                      }) => (
+                        <SelectItem key={user.userEmail} value={user.userEmail}>
+                          {user.userName} ({user.userEmail})
+                        </SelectItem>
+                      ),
+                    );
                   })()}
                 </SelectContent>
               </Select>
