@@ -27,7 +27,7 @@ export function useToggleUserStatus() {
       });
       toast.success("User status updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to update user status");
     },
   });
