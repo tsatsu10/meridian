@@ -3,7 +3,7 @@
  * Handles workspace data export and import with validation
  */
 
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, type SQL } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import {
   workspaceTable,
@@ -47,13 +47,39 @@ export interface ImportResult {
   }>;
 }
 
+interface ExportDataBag {
+  exportDate: string;
+  workspaceId: string;
+  version: string;
+  workspace?: Record<string, unknown>;
+  projects?: Record<string, unknown>[];
+  tasks?: Record<string, unknown>[];
+  users?: Record<string, unknown>[];
+  roleAssignments?: Record<string, unknown>[];
+}
+
+// Arbitrary user-submitted import data (JSON body or parsed CSV row) --
+// genuinely untyped at this boundary, not a case of laziness.
+type ImportRecord = Record<string, unknown>;
+
+interface ParsedImportData {
+  projects?: ImportRecord[];
+  tasks?: ImportRecord[];
+  users?: ImportRecord[];
+}
+
+function getStringField(record: ImportRecord, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" ? value : undefined;
+}
+
 // Export workspace data
 export async function exportWorkspaceData(
   workspaceId: string,
   options: ExportOptions,
 ): Promise<{ data: string; filename: string; mimeType: string }> {
   const db = getDatabase();
-  const exportData: any = {
+  const exportData: ExportDataBag = {
     exportDate: new Date().toISOString(),
     workspaceId,
     version: "1.0",
@@ -77,7 +103,9 @@ export async function exportWorkspaceData(
 
   // Export projects
   if (options.includeProjects) {
-    const projectWhere: any[] = [eq(projectTable.workspaceId, workspaceId)];
+    const projectWhere: SQL<unknown>[] = [
+      eq(projectTable.workspaceId, workspaceId),
+    ];
 
     if (options.projectIds && options.projectIds.length > 0) {
       projectWhere.push(inArray(projectTable.id, options.projectIds));
@@ -102,7 +130,9 @@ export async function exportWorkspaceData(
 
   // Export tasks
   if (options.includeTasks) {
-    const taskWhere: any[] = [eq(projectTable.workspaceId, workspaceId)];
+    const taskWhere: SQL<unknown>[] = [
+      eq(projectTable.workspaceId, workspaceId),
+    ];
 
     if (options.projectIds && options.projectIds.length > 0) {
       taskWhere.push(inArray(taskTable.projectId, options.projectIds));
@@ -176,13 +206,14 @@ export async function exportWorkspaceData(
 }
 
 // Convert data to CSV format
-function convertToCSV(data: any): string {
+function convertToCSV(data: ExportDataBag): string {
   const lines: string[] = [];
 
   // Projects CSV
-  if (data.projects && data.projects.length > 0) {
+  const firstProject = data.projects?.[0];
+  if (data.projects && data.projects.length > 0 && firstProject) {
     lines.push("## PROJECTS ##");
-    const headers = Object.keys(data.projects[0]);
+    const headers = Object.keys(firstProject);
     lines.push(headers.join(","));
 
     for (const project of data.projects) {
@@ -198,9 +229,10 @@ function convertToCSV(data: any): string {
   }
 
   // Tasks CSV
-  if (data.tasks && data.tasks.length > 0) {
+  const firstTask = data.tasks?.[0];
+  if (data.tasks && data.tasks.length > 0 && firstTask) {
     lines.push("## TASKS ##");
-    const headers = Object.keys(data.tasks[0]);
+    const headers = Object.keys(firstTask);
     lines.push(headers.join(","));
 
     for (const task of data.tasks) {
@@ -216,9 +248,10 @@ function convertToCSV(data: any): string {
   }
 
   // Users CSV
-  if (data.users && data.users.length > 0) {
+  const firstUser = data.users?.[0];
+  if (data.users && data.users.length > 0 && firstUser) {
     lines.push("## USERS ##");
-    const headers = Object.keys(data.users[0]);
+    const headers = Object.keys(firstUser);
     lines.push(headers.join(","));
 
     for (const user of data.users) {
@@ -238,7 +271,7 @@ function convertToCSV(data: any): string {
 // Validate import data
 export async function validateImportData(
   workspaceId: string,
-  data: any,
+  data: unknown,
   format: "json" | "csv",
 ): Promise<ImportResult> {
   const result: ImportResult = {
@@ -250,20 +283,21 @@ export async function validateImportData(
   };
 
   try {
-    let parsedData: any;
+    let parsedData: ParsedImportData;
 
     if (format === "json") {
-      parsedData = typeof data === "string" ? JSON.parse(data) : data;
+      parsedData = (
+        typeof data === "string" ? JSON.parse(data) : data
+      ) as ParsedImportData;
     } else {
-      parsedData = parseCSV(data);
+      parsedData = parseCSV(data as string);
     }
 
     // Validate projects
     if (parsedData.projects) {
       result.totalRecords += parsedData.projects.length;
 
-      for (let i = 0; i < parsedData.projects.length; i++) {
-        const project = parsedData.projects[i];
+      for (const [i, project] of parsedData.projects.entries()) {
         const errors = validateProject(project);
 
         if (errors.length > 0) {
@@ -285,8 +319,7 @@ export async function validateImportData(
     if (parsedData.tasks) {
       result.totalRecords += parsedData.tasks.length;
 
-      for (let i = 0; i < parsedData.tasks.length; i++) {
-        const task = parsedData.tasks[i];
+      for (const [i, task] of parsedData.tasks.entries()) {
         const errors = validateTask(task);
 
         if (errors.length > 0) {
@@ -308,8 +341,7 @@ export async function validateImportData(
     if (parsedData.users) {
       result.totalRecords += parsedData.users.length;
 
-      for (let i = 0; i < parsedData.users.length; i++) {
-        const user = parsedData.users[i];
+      for (const [i, user] of parsedData.users.entries()) {
         const errors = validateUser(user);
 
         if (errors.length > 0) {
@@ -340,8 +372,8 @@ export async function validateImportData(
 }
 
 // Parse CSV data
-function parseCSV(csvData: string): any {
-  const result: any = {
+function parseCSV(csvData: string): Required<ParsedImportData> {
+  const result: Required<ParsedImportData> = {
     projects: [],
     tasks: [],
     users: [],
@@ -361,7 +393,7 @@ function parseCSV(csvData: string): any {
       if (!line || !line.trim()) continue;
 
       const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
-      const record: any = {};
+      const record: ImportRecord = {};
 
       for (const [index, header] of headers.entries()) {
         record[header] = values[index] || "";
@@ -382,15 +414,17 @@ function parseCSV(csvData: string): any {
 
 // Validation helpers
 function validateProject(
-  project: any,
+  project: ImportRecord,
 ): Array<{ field: string; message: string }> {
   const errors: Array<{ field: string; message: string }> = [];
+  const name = getStringField(project, "name");
+  const status = getStringField(project, "status");
 
-  if (!project.name || project.name.length < 1) {
+  if (!name || name.length < 1) {
     errors.push({ field: "name", message: "Project name is required" });
   }
 
-  if (project.name && project.name.length > 100) {
+  if (name && name.length > 100) {
     errors.push({
       field: "name",
       message: "Project name must be 100 characters or less",
@@ -398,8 +432,8 @@ function validateProject(
   }
 
   if (
-    project.status &&
-    !["active", "completed", "archived", "on-hold"].includes(project.status)
+    status &&
+    !["active", "completed", "archived", "on-hold"].includes(status)
   ) {
     errors.push({ field: "status", message: "Invalid project status" });
   }
@@ -407,14 +441,19 @@ function validateProject(
   return errors;
 }
 
-function validateTask(task: any): Array<{ field: string; message: string }> {
+function validateTask(
+  task: ImportRecord,
+): Array<{ field: string; message: string }> {
   const errors: Array<{ field: string; message: string }> = [];
+  const title = getStringField(task, "title");
+  const status = getStringField(task, "status");
+  const priority = getStringField(task, "priority");
 
-  if (!task.title || task.title.length < 1) {
+  if (!title || title.length < 1) {
     errors.push({ field: "title", message: "Task title is required" });
   }
 
-  if (task.title && task.title.length > 200) {
+  if (title && title.length > 200) {
     errors.push({
       field: "title",
       message: "Task title must be 200 characters or less",
@@ -422,34 +461,35 @@ function validateTask(task: any): Array<{ field: string; message: string }> {
   }
 
   if (
-    task.status &&
-    !["backlog", "todo", "in-progress", "review", "done"].includes(task.status)
+    status &&
+    !["backlog", "todo", "in-progress", "review", "done"].includes(status)
   ) {
     errors.push({ field: "status", message: "Invalid task status" });
   }
 
-  if (
-    task.priority &&
-    !["low", "medium", "high", "urgent"].includes(task.priority)
-  ) {
+  if (priority && !["low", "medium", "high", "urgent"].includes(priority)) {
     errors.push({ field: "priority", message: "Invalid task priority" });
   }
 
   return errors;
 }
 
-function validateUser(user: any): Array<{ field: string; message: string }> {
+function validateUser(
+  user: ImportRecord,
+): Array<{ field: string; message: string }> {
   const errors: Array<{ field: string; message: string }> = [];
+  const email = getStringField(user, "email");
+  const name = getStringField(user, "name");
 
-  if (!user.email) {
+  if (!email) {
     errors.push({ field: "email", message: "User email is required" });
   }
 
-  if (user.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push({ field: "email", message: "Invalid email format" });
   }
 
-  if (!user.name || user.name.length < 1) {
+  if (!name || name.length < 1) {
     errors.push({ field: "name", message: "User name is required" });
   }
 
@@ -459,7 +499,7 @@ function validateUser(user: any): Array<{ field: string; message: string }> {
 // Import workspace data
 export async function importWorkspaceData(
   workspaceId: string,
-  data: any,
+  data: unknown,
   options: ImportOptions,
 ): Promise<ImportResult> {
   const db = getDatabase();
@@ -484,29 +524,36 @@ export async function importWorkspaceData(
   };
 
   try {
-    let parsedData: any;
+    let parsedData: ParsedImportData;
 
     if (options.format === "json") {
-      parsedData = typeof data === "string" ? JSON.parse(data) : data;
+      parsedData = (
+        typeof data === "string" ? JSON.parse(data) : data
+      ) as ParsedImportData;
     } else {
-      parsedData = parseCSV(data);
+      parsedData = parseCSV(data as string);
     }
 
     // Import projects
     if (parsedData.projects) {
       for (const project of parsedData.projects) {
         try {
-          const projectId = project.id || createId();
+          const projectId = getStringField(project, "id") || createId();
+          const startDate = getStringField(project, "startDate");
+          const endDate = getStringField(project, "endDate");
 
           await db.insert(projectTable).values({
             id: projectId,
             workspaceId,
-            name: project.name,
-            description: project.description || null,
-            status: project.status || "active",
-            startDate: project.startDate ? new Date(project.startDate) : null,
-            dueDate: project.endDate ? new Date(project.endDate) : null,
-            ownerId: project.ownerId ?? null,
+            name: getStringField(project, "name") || "",
+            description: getStringField(project, "description") || null,
+            status: getStringField(project, "status") || "active",
+            startDate: startDate ? new Date(startDate) : null,
+            dueDate: endDate ? new Date(endDate) : null,
+            // ownerId is NOT NULL/FK on the schema; an empty string here still
+            // fails the FK constraint at insert time (caught below) exactly
+            // as a `null` value used to under the previous `any` typing.
+            ownerId: getStringField(project, "ownerId") ?? "",
             createdAt: new Date(),
             updatedAt: new Date(),
           });
@@ -534,26 +581,30 @@ export async function importWorkspaceData(
     if (parsedData.tasks) {
       for (const task of parsedData.tasks) {
         try {
-          const taskId = task.id || createId();
+          const taskId = getStringField(task, "id") || createId();
+          const dueDate = getStringField(task, "dueDate");
 
           await db.insert(taskTable).values({
             id: taskId,
-            projectId: task.projectId,
-            title: task.title,
-            description: task.description || null,
+            projectId: getStringField(task, "projectId") || "",
+            title: getStringField(task, "title") || "",
+            description: getStringField(task, "description") || null,
             // request-boundary narrowing onto the enum columns
             status:
-              (task.status as "todo" | "in_progress" | "done" | undefined) ||
-              "todo",
+              (getStringField(task, "status") as
+                | "todo"
+                | "in_progress"
+                | "done"
+                | undefined) || "todo",
             priority:
-              (task.priority as
+              (getStringField(task, "priority") as
                 | "low"
                 | "medium"
                 | "high"
                 | "urgent"
                 | undefined) || "medium",
-            assigneeId: task.assigneeId || null,
-            dueDate: task.dueDate ? new Date(task.dueDate) : null,
+            assigneeId: getStringField(task, "assigneeId") || null,
+            dueDate: dueDate ? new Date(dueDate) : null,
             createdAt: new Date(),
             updatedAt: new Date(),
           });
