@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { emailVerificationService } from "../email-verification-service";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 const app = new Hono();
 
@@ -47,7 +48,7 @@ app.post(
         },
         400,
       );
-    } catch (error: any) {
+    } catch (error) {
       logger.error("❌ Email verification error:", error);
       return c.json(
         {
@@ -88,7 +89,7 @@ app.get("/verify-email", async (c) => {
     // Redirect to frontend error page
     const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=${encodeURIComponent(result.message)}`;
     return c.redirect(redirectUrl);
-  } catch (error: any) {
+  } catch (error) {
     logger.error("❌ Email verification error:", error);
     const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=Verification%20failed`;
     return c.redirect(redirectUrl);
@@ -131,7 +132,7 @@ app.post(
         },
         200,
       );
-    } catch (error: any) {
+    } catch (error) {
       logger.error("❌ Resend verification error:", error);
       return c.json(
         {
@@ -179,7 +180,7 @@ app.post(
         },
         200,
       );
-    } catch (error: any) {
+    } catch (error) {
       logger.error("❌ Forgot password error:", error);
       return c.json(
         {
@@ -248,7 +249,7 @@ app.post(
         },
         400,
       );
-    } catch (error: any) {
+    } catch (error) {
       logger.error("❌ Reset password error:", error);
       return c.json(
         {
@@ -296,7 +297,7 @@ app.post(
         },
         400,
       );
-    } catch (error: any) {
+    } catch (error) {
       logger.error("❌ Verify reset token error:", error);
       return c.json(
         {

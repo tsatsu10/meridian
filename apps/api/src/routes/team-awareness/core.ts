@@ -13,6 +13,7 @@ import { KudosService } from "../../services/team-awareness/kudos-service";
 import { MoodTrackerService } from "../../services/team-awareness/mood-tracker-service";
 import { SkillsService } from "../../services/team-awareness/skills-service";
 import { Logger } from "../../services/logging/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 const teamAwareness = new Hono();
 
@@ -51,7 +52,7 @@ teamAwareness.get(
       });
 
       return c.json({ activities });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Get activities failed", error);
       return c.json({ error: "Failed to get activities" }, 500);
     }
@@ -78,7 +79,7 @@ teamAwareness.get(
       const stats = await ActivityTracker.getActivityStats(workspaceId, userId);
 
       return c.json(stats);
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Get activity stats failed", error);
       return c.json({ error: "Failed to get activity stats" }, 500);
     }
@@ -108,7 +109,7 @@ teamAwareness.get(
       );
 
       return c.json({ topUsers });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Get top users failed", error);
       return c.json({ error: "Failed to get top users" }, 500);
     }
@@ -155,7 +156,7 @@ teamAwareness.put(
       await UserStatusService.updateStatus(data);
 
       return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Update status failed", error);
       return c.json({ error: "Failed to update status" }, 500);
     }
@@ -178,7 +179,7 @@ teamAwareness.get("/status/:userId", async (c) => {
     const status = await UserStatusService.getUserStatus(userId, workspaceId);
 
     return c.json(status);
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get user status failed", error);
     return c.json({ error: "Failed to get user status" }, 500);
   }
@@ -195,7 +196,7 @@ teamAwareness.get("/status/workspace/:workspaceId", async (c) => {
     const statuses = await UserStatusService.getWorkspaceStatuses(workspaceId);
 
     return c.json({ statuses });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get workspace statuses failed", error);
     return c.json({ error: "Failed to get workspace statuses" }, 500);
   }
@@ -229,7 +230,7 @@ teamAwareness.post(
       );
 
       return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Heartbeat failed", error);
       return c.json({ error: "Heartbeat failed" }, 500);
     }
@@ -274,7 +275,7 @@ teamAwareness.post(
       const kudos = await KudosService.giveKudos(data);
 
       return c.json({ kudos }, 201);
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Give kudos failed", error);
       return c.json({ error: "Failed to give kudos" }, 500);
     }
@@ -304,7 +305,7 @@ teamAwareness.get(
       const kudos = await KudosService.getKudos(query as any);
 
       return c.json({ kudos });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Get kudos failed", error);
       return c.json({ error: "Failed to get kudos" }, 500);
     }
@@ -332,7 +333,7 @@ teamAwareness.get("/kudos/received/:userId", async (c) => {
     );
 
     return c.json({ kudos });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get received kudos failed", error);
     return c.json({ error: "Failed to get received kudos" }, 500);
   }
@@ -354,7 +355,7 @@ teamAwareness.get("/kudos/stats/:userId", async (c) => {
     const stats = await KudosService.getKudosStats(userId, workspaceId);
 
     return c.json(stats);
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get kudos stats failed", error);
     return c.json({ error: "Failed to get kudos stats" }, 500);
   }
@@ -381,7 +382,7 @@ teamAwareness.post(
       const reactions = await KudosService.addReaction(kudosId, userId, emoji);
 
       return c.json({ reactions });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Add kudos reaction failed", error);
       return c.json({ error: "Failed to add reaction" }, 500);
     }
@@ -404,7 +405,7 @@ teamAwareness.get("/kudos/leaderboard", async (c) => {
     const leaderboard = await KudosService.getTopReceivers(workspaceId, limit);
 
     return c.json({ leaderboard });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get kudos leaderboard failed", error);
     return c.json({ error: "Failed to get leaderboard" }, 500);
   }
@@ -450,7 +451,7 @@ teamAwareness.post(
       const mood = await MoodTrackerService.logMood(data);
 
       return c.json({ mood }, 201);
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Log mood failed", error);
       return c.json({ error: "Failed to log mood" }, 500);
     }
@@ -478,7 +479,7 @@ teamAwareness.get("/mood/user/:userId", async (c) => {
     );
 
     return c.json({ history });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get mood history failed", error);
     return c.json({ error: "Failed to get mood history" }, 500);
   }
@@ -503,7 +504,7 @@ teamAwareness.get("/mood/stats", async (c) => {
     );
 
     return c.json(stats);
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get mood stats failed", error);
     return c.json({ error: "Failed to get mood stats" }, 500);
   }
@@ -525,7 +526,7 @@ teamAwareness.get("/mood/trend", async (c) => {
     const trend = await MoodTrackerService.getMoodTrend(workspaceId, days);
 
     return c.json({ trend });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get mood trend failed", error);
     return c.json({ error: "Failed to get mood trend" }, 500);
   }
@@ -546,7 +547,7 @@ teamAwareness.get("/mood/morale", async (c) => {
     const morale = await MoodTrackerService.getTeamMoraleIndicator(workspaceId);
 
     return c.json(morale);
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get team morale failed", error);
     return c.json({ error: "Failed to get team morale" }, 500);
   }
@@ -598,7 +599,7 @@ teamAwareness.post(
       const skill = await SkillsService.addSkill(data);
 
       return c.json({ skill }, 201);
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Add skill failed", error);
       return c.json({ error: "Failed to add skill" }, 500);
     }
@@ -621,7 +622,7 @@ teamAwareness.get("/skills/user/:userId", async (c) => {
     const skills = await SkillsService.getUserSkills(userId, workspaceId);
 
     return c.json({ skills });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get user skills failed", error);
     return c.json({ error: "Failed to get user skills" }, 500);
   }
@@ -650,7 +651,7 @@ teamAwareness.get(
       const skills = await SkillsService.searchSkills(filters as any);
 
       return c.json({ skills });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Search skills failed", error);
       return c.json({ error: "Failed to search skills" }, 500);
     }
@@ -681,7 +682,7 @@ teamAwareness.post(
       });
 
       return c.json({ endorsements });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Endorse skill failed", error);
       return c.json({ error: "Failed to endorse skill" }, 500);
     }
@@ -708,7 +709,7 @@ teamAwareness.post(
       await SkillsService.verifySkill(skillId, verifierId);
 
       return c.json({ success: true });
-    } catch (error: any) {
+    } catch (error) {
       Logger.error("Verify skill failed", error);
       return c.json({ error: "Failed to verify skill" }, 500);
     }
@@ -730,7 +731,7 @@ teamAwareness.get("/skills/matrix", async (c) => {
     const matrix = await SkillsService.getSkillMatrix(workspaceId);
 
     return c.json({ matrix });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get skill matrix failed", error);
     return c.json({ error: "Failed to get skill matrix" }, 500);
   }
@@ -755,7 +756,7 @@ teamAwareness.get("/skills/popular", async (c) => {
     );
 
     return c.json({ popularSkills });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Get popular skills failed", error);
     return c.json({ error: "Failed to get popular skills" }, 500);
   }
@@ -777,7 +778,7 @@ teamAwareness.get("/skills/experts", async (c) => {
     const experts = await SkillsService.findExperts(workspaceId, skillName);
 
     return c.json({ experts });
-  } catch (error: any) {
+  } catch (error) {
     Logger.error("Find experts failed", error);
     return c.json({ error: "Failed to find experts" }, 500);
   }

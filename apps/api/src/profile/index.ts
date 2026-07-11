@@ -24,6 +24,7 @@ import updateConnection from "./controllers/update-connection";
 import deleteConnection from "./controllers/delete-connection";
 import uploadProfilePicture from "./controllers/upload-profile-picture";
 import logger from "../utils/logger";
+import { toError } from "../utils/error-utils";
 // Note: Add proper auth middleware when available
 
 // Validation schemas
@@ -129,10 +130,11 @@ profile
       const profile = await getProfile(userId);
       logger.debug("✅ Profile retrieved successfully");
       return c.json({ success: true, data: profile });
-    } catch (error: any) {
+    } catch (error) {
+      const err = toError(error);
       logger.error("❌ Error getting profile:", error);
-      logger.error("❌ Error stack:", error.stack);
-      return c.json({ error: error.message || "Failed to get profile" }, 500);
+      logger.error("❌ Error stack:", err.stack);
+      return c.json({ error: err.message || "Failed to get profile" }, 500);
     }
   })
 
@@ -178,15 +180,13 @@ profile
         items: experiences.length,
       });
       return c.json({ success: true, data: experiences });
-    } catch (error: any) {
+    } catch (error) {
+      const err = toError(error);
       logger.error("❌ Error getting experience:", error);
-      logger.error("❌ Error stack:", error.stack);
-      logger.error("❌ Error name:", error.name);
-      logger.error("❌ Error message:", error.message);
-      return c.json(
-        { error: error.message || "Failed to get experience" },
-        500,
-      );
+      logger.error("❌ Error stack:", err.stack);
+      logger.error("❌ Error name:", err.name);
+      logger.error("❌ Error message:", err.message);
+      return c.json({ error: err.message || "Failed to get experience" }, 500);
     }
   })
 
@@ -230,12 +230,13 @@ profile
         items: education.length,
       });
       return c.json({ success: true, data: education });
-    } catch (error: any) {
+    } catch (error) {
+      const err = toError(error);
       logger.error("❌ Error getting education:", error);
-      logger.error("❌ Error stack:", error.stack);
-      logger.error("❌ Error name:", error.name);
-      logger.error("❌ Error message:", error.message);
-      return c.json({ error: error.message || "Failed to get education" }, 500);
+      logger.error("❌ Error stack:", err.stack);
+      logger.error("❌ Error name:", err.name);
+      logger.error("❌ Error message:", err.message);
+      return c.json({ error: err.message || "Failed to get education" }, 500);
     }
   })
 
@@ -279,12 +280,13 @@ profile
         items: skills.length,
       });
       return c.json({ success: true, data: skills });
-    } catch (error: any) {
+    } catch (error) {
+      const err = toError(error);
       logger.error("❌ Error getting skills:", error);
-      logger.error("❌ Error stack:", error.stack);
-      logger.error("❌ Error name:", error.name);
-      logger.error("❌ Error message:", error.message);
-      return c.json({ error: error.message || "Failed to get skills" }, 500);
+      logger.error("❌ Error stack:", err.stack);
+      logger.error("❌ Error name:", err.name);
+      logger.error("❌ Error message:", err.message);
+      return c.json({ error: err.message || "Failed to get skills" }, 500);
     }
   })
 
@@ -328,15 +330,13 @@ profile
         items: connections.length,
       });
       return c.json({ success: true, data: connections });
-    } catch (error: any) {
+    } catch (error) {
+      const err = toError(error);
       logger.error("❌ Error getting connections:", error);
-      logger.error("❌ Error stack:", error.stack);
-      logger.error("❌ Error name:", error.name);
-      logger.error("❌ Error message:", error.message);
-      return c.json(
-        { error: error.message || "Failed to get connections" },
-        500,
-      );
+      logger.error("❌ Error stack:", err.stack);
+      logger.error("❌ Error name:", err.name);
+      logger.error("❌ Error message:", err.message);
+      return c.json({ error: err.message || "Failed to get connections" }, 500);
     }
   })
 

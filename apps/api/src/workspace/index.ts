@@ -25,6 +25,7 @@ import {
   validateRBACCompliance,
 } from "../middlewares/security-audit";
 import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
 
 const workspace = new Hono<{
   Variables: {
@@ -96,10 +97,10 @@ workspace.post(
     try {
       const newWorkspace = await createWorkspace(data.name, userEmail);
       return c.json(newWorkspace, 201);
-    } catch (error: any) {
+    } catch (error) {
       logger.error("❌ Failed to create workspace:", error);
       return c.json(
-        { error: error.message || "Failed to create workspace" },
+        { error: getErrorMessage(error) || "Failed to create workspace" },
         500,
       );
     }
@@ -187,9 +188,12 @@ workspace.get(
     try {
       const workspace = await getWorkspace(userEmail, id);
       return c.json(workspace);
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to get workspace:", error);
-      return c.json({ error: error.message || "Failed to get workspace" }, 500);
+      return c.json(
+        { error: getErrorMessage(error) || "Failed to get workspace" },
+        500,
+      );
     }
   },
 );
@@ -212,10 +216,10 @@ workspace.put(
         description,
       );
       return c.json(updatedWorkspace);
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update workspace:", error);
       return c.json(
-        { error: error.message || "Failed to update workspace" },
+        { error: getErrorMessage(error) || "Failed to update workspace" },
         500,
       );
     }
@@ -234,10 +238,10 @@ workspace.delete(
     try {
       const result = await deleteWorkspace(userEmail, id);
       return c.json({ message: "Workspace deleted successfully", result });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to delete workspace:", error);
       return c.json(
-        { error: error.message || "Failed to delete workspace" },
+        { error: getErrorMessage(error) || "Failed to delete workspace" },
         500,
       );
     }
@@ -257,10 +261,10 @@ workspace.get(
     try {
       const settings = await getWorkspaceSettings(userEmail, id);
       return c.json(settings);
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to get workspace settings:", error);
       return c.json(
-        { error: error.message || "Failed to get workspace settings" },
+        { error: getErrorMessage(error) || "Failed to get workspace settings" },
         500,
       );
     }
@@ -334,10 +338,13 @@ workspace.patch(
         message: "Workspace settings updated successfully",
         workspace: updatedWorkspace,
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update workspace settings:", error);
       return c.json(
-        { error: error.message || "Failed to update workspace settings" },
+        {
+          error:
+            getErrorMessage(error) || "Failed to update workspace settings",
+        },
         500,
       );
     }
@@ -365,9 +372,12 @@ workspace.post(
         message: "Logo uploaded successfully",
         logoUrl,
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to upload logo:", error);
-      return c.json({ error: error.message || "Failed to upload logo" }, 500);
+      return c.json(
+        { error: getErrorMessage(error) || "Failed to upload logo" },
+        500,
+      );
     }
   },
 );
