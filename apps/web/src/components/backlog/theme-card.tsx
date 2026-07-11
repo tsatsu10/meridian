@@ -225,13 +225,17 @@ export function ThemeCard({
                 <div className="flex -space-x-1">
                   {theme.assignees
                     .slice(0, 3)
-                    .map((assignee: any, index: any) => (
+                    .map((assignee, index) => (
                       <Avatar
                         key={index}
                         className="h-6 w-6 border-2 border-background"
                       >
                         <AvatarFallback className="text-xs">
-                          {String(assignee?.name ?? assignee)
+                          {String(
+                            typeof assignee === "string"
+                              ? assignee
+                              : (assignee?.name ?? ""),
+                          )
                             .charAt(0)
                             .toUpperCase()}
                         </AvatarFallback>
