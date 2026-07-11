@@ -7,7 +7,7 @@ export interface Automation {
   name: string;
   description: string | null;
   triggerType: string;
-  triggerConfig: any;
+  triggerConfig: Record<string, unknown>;
   actions: string;
   enabled: boolean;
   createdBy: string | null;
