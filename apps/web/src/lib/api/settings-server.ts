@@ -173,7 +173,7 @@ export class SettingsAPI {
     userId: string,
     section: keyof AllSettings,
     updates: Partial<AllSettings[keyof AllSettings]>,
-  ): Promise<{ settings: AllSettings; conflicts?: any[] }> {
+  ): Promise<{ settings: AllSettings; conflicts?: unknown[] }> {
     try {
       const currentSettings = await SettingsAPI.getSettings(userId);
       const updatedSettings = {
@@ -248,7 +248,7 @@ export class SettingsAPI {
     userId: string,
     section: keyof AllSettings,
     updates: Partial<AllSettings[keyof AllSettings]>,
-  ): Promise<{ settings: AllSettings; conflicts?: any[] }> {
+  ): Promise<{ settings: AllSettings; conflicts?: unknown[] }> {
     const currentSettings = SettingsAPI.getLocalFallback(userId);
     const updatedSettings = {
       ...currentSettings,
@@ -288,10 +288,10 @@ export class SettingsAPI {
     // Deep merge each section
     for (const [section, values] of Object.entries(settings)) {
       if (section in merged && typeof values === "object" && values !== null) {
-        merged[section as keyof AllSettings] = {
+        (merged as Record<string, unknown>)[section] = {
           ...merged[section as keyof AllSettings],
           ...values,
-        } as any;
+        };
       }
     }
 
@@ -306,7 +306,12 @@ export class SettingsAPI {
 
     // Basic validation rules
     if (section === "profile") {
-      const profile = settings as any;
+      const profile = settings as {
+        email?: string;
+        website?: string;
+        name?: string;
+        phone?: string;
+      };
 
       if (profile.email && !SettingsAPI.isValidEmail(profile.email)) {
         errors.push({
@@ -346,7 +351,7 @@ export class SettingsAPI {
     }
 
     if (section === "appearance") {
-      const appearance = settings as any;
+      const appearance = settings as { fontSize?: number };
 
       if (
         appearance.fontSize &&
@@ -392,7 +397,7 @@ export class SettingsAPI {
     }
   }
 
-  static exportData(userId: string): Record<string, any> {
+  static exportData(userId: string): Record<string, unknown> {
     try {
       const data = localStorage.getItem(`meridian-settings-${userId}`);
       return data ? JSON.parse(data) : {};
