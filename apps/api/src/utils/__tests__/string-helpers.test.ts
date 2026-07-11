@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { stripHtml as realStripHtml } from "../../lib/universal-sanitization";
 
 describe("String Helpers", () => {
   describe("capitalize", () => {
@@ -180,9 +181,8 @@ describe("String Helpers", () => {
   });
 
   describe("stripHtml", () => {
-    const stripHtml = (str: string): string => {
-      return str.replace(/<[^>]*>/g, "");
-    };
+    // Test the real production sanitizer, not an inline regex copy of it.
+    const stripHtml = realStripHtml;
 
     it("should remove HTML tags", () => {
       expect(stripHtml("<p>Hello</p>")).toBe("Hello");

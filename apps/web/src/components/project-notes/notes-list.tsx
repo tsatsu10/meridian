@@ -3,6 +3,7 @@
  * Displays all notes for a project with search, filter, and grid/list views
  */
 
+import DOMPurify from "isomorphic-dompurify";
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -150,7 +151,12 @@ export function NotesList({
     maxLength = 150,
   ) => {
     if (!content) return "No content";
-    const stripped = content.replace(/<[^>]*>/g, "").replace(/\n/g, " ");
+    // DOMPurify with no allowed tags yields plain text — a single-pass regex
+    // strip leaves reassembled tags behind (CodeQL flagged it).
+    const stripped = DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: [],
+      ALLOWED_ATTR: [],
+    }).replace(/\n/g, " ");
     return stripped.length > maxLength
       ? stripped.substring(0, maxLength) + "..."
       : stripped;

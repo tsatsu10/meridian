@@ -177,11 +177,16 @@ describe("Validation Middleware", () => {
       expect(sanitized).toBe("test input");
     });
 
-    it.skip("should remove HTML tags", () => {
+    it("should remove HTML tags", async () => {
+      // Exercise the real production sanitizer, not an inline regex copy.
+      const { stripHtml } = await import("../../lib/universal-sanitization");
       const input = '<script>alert("xss")</script>Hello';
-      const sanitized = input.replace(/<[^>]*>/g, "");
 
-      expect(sanitized).toBe("Hello");
+      expect(stripHtml(input)).toBe('alert("xss")Hello');
+      // Nested/reassembled tags must not survive stripping
+      expect(stripHtml("<scr<x>ipt>alert(1)</script>")).not.toContain(
+        "<script",
+      );
     });
 
     it("should escape special characters", () => {

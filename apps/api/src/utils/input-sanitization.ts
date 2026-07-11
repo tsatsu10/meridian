@@ -124,7 +124,9 @@ export function sanitizeObject<T extends Record<string, any>>(
  * Escape SQL wildcards
  */
 export function escapeSQLWildcards(input: string): string {
-  return input.replace(/[%_]/g, "\\$&");
+  // Backslash must be escaped first, or attacker-supplied `\` neutralizes
+  // the escaping added for % and _ (CodeQL js/incomplete-sanitization).
+  return input.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
 }
 
 /**

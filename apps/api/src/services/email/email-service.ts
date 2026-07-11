@@ -135,10 +135,15 @@ export class EmailService {
    * Strip HTML tags for plain text version
    */
   private stripHtml(html: string): string {
-    return html
-      .replace(/<[^>]*>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
+    // Strip to a fixpoint — a single pass leaves reassembled tags behind
+    // (`<scr<x>ipt>` → `<scr ipt>`); optional `>` drops unterminated tags.
+    let text = html;
+    let previous: string;
+    do {
+      previous = text;
+      text = text.replace(/<[^>]*>?/g, "");
+    } while (text !== previous);
+    return text.replace(/\s+/g, " ").trim();
   }
 
   /**

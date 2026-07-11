@@ -56,6 +56,34 @@ export interface LogEntry {
   };
 }
 
+// Keys whose values must never reach console/file/aggregation output.
+const SENSITIVE_KEY_PATTERN =
+  /pass(word)?|token|secret|auth|cookie|session[-_]?id|api[-_]?key|credential|jwt|bearer/i;
+const MAX_REDACTION_DEPTH = 6;
+
+/**
+ * Deep-copies log payloads with sensitive-looking keys masked. Loggers are a
+ * sink for arbitrary caller data (request bodies, headers, errors), so
+ * redaction has to happen here at the sink, not at each call site.
+ */
+export function redactSensitive(value: unknown, depth = 0): unknown {
+  if (value === null || typeof value !== "object") return value;
+  if (depth >= MAX_REDACTION_DEPTH) return "[MAX_DEPTH]";
+  if (value instanceof Error) {
+    return { name: value.name, message: value.message, stack: value.stack };
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => redactSensitive(item, depth + 1));
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    result[key] = SENSITIVE_KEY_PATTERN.test(key)
+      ? "[REDACTED]"
+      : redactSensitive(entry, depth + 1);
+  }
+  return result;
+}
+
 export class EnhancedLogger {
   private config: LoggerConfig;
   private levels: Record<LogLevel, number> = {
@@ -203,34 +231,40 @@ export class EnhancedLogger {
   ): Promise<void> {
     if (!this.shouldLog(level, category)) return;
 
+    // Redact once at the sink so console, file, and aggregation all get the
+    // same sanitized payload regardless of what call sites pass in.
+    const safeData = redactSensitive(data);
+    const safeContext = redactSensitive(context) as LogEntry["context"];
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level,
       category,
       message,
-      data,
-      context,
+      data: safeData,
+      context: safeContext,
     };
 
-    // Console output
+    // Console output. The "%s" placeholder keeps caller-supplied text from
+    // being interpreted as a console format string.
     if (this.config.enableConsole && !this.config.quietMode) {
       const formattedMessage = this.formatConsoleMessage(entry);
 
       switch (level) {
         case "error":
-          console.error(formattedMessage, data || "");
+          console.error("%s", formattedMessage, safeData ?? "");
           break;
         case "warn":
-          console.warn(formattedMessage, data || "");
+          console.warn("%s", formattedMessage, safeData ?? "");
           break;
         case "info":
-          console.info(formattedMessage);
+          console.info("%s", formattedMessage);
           break;
         case "debug":
-          console.debug(formattedMessage);
+          console.debug("%s", formattedMessage);
           break;
         case "verbose":
-          console.log(formattedMessage);
+          console.log("%s", formattedMessage);
           break;
       }
     }
@@ -251,7 +285,10 @@ export class EnhancedLogger {
         endpoint: context?.endpoint,
         statusCode: context?.statusCode,
         errorCode: data?.code || data?.errorCode,
-        metadata: { ...data, ...context },
+        metadata: {
+          ...(safeData as Record<string, unknown>),
+          ...(safeContext as Record<string, unknown>),
+        },
       };
 
       logAggregationService.recordLog(logMetrics);

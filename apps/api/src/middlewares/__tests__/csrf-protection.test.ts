@@ -255,8 +255,10 @@ describe("CSRF Protection Middleware", () => {
         name === "referer" ? "https://example.com/page" : null,
       );
 
+      // Compare the parsed origin exactly — substring checks pass for
+      // attacker URLs like https://evil.com/example.com.
       const referer = mockContext.req.header("referer");
-      expect(referer).toContain("example.com");
+      expect(new URL(referer as string).origin).toBe("https://example.com");
     });
   });
 

@@ -591,10 +591,12 @@ class SecurityLoggingService {
       action: "block",
     });
 
-    // XSS patterns
+    // XSS patterns. Detection keys on the opening tag alone — requiring a
+    // well-formed </script> close (the old pattern) let `</script >` and
+    // unterminated payloads through (CodeQL js/bad-tag-filter).
     this.addThreatRule({
       name: "XSS Script Injection",
-      pattern: /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      pattern: /<script\b/gi,
       severity: "high",
       action: "block",
     });

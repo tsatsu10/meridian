@@ -125,14 +125,14 @@ describe("Edge Cases and Error Scenarios", () => {
       expect(isValid).toBe(false);
     });
 
-    it("should handle special characters", () => {
+    it("should handle special characters", async () => {
+      // Exercise the real production sanitizer, not an inline regex copy.
+      const { stripHtml } = await import("../../lib/universal-sanitization");
       const data = {
         name: 'Test & <script>alert("xss")</script>',
       };
 
-      const sanitized = data.name.replace(/<[^>]*>/g, "");
-
-      expect(sanitized).not.toContain("<script>");
+      expect(stripHtml(data.name)).not.toContain("<script>");
     });
 
     it("should handle unicode characters", () => {

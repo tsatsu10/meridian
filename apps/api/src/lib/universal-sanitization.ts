@@ -26,9 +26,11 @@ import logger from "../utils/logger";
  * Comprehensive list of dangerous patterns
  */
 const DANGEROUS_PATTERNS = {
-  // Script execution
+  // Script execution. [\s\S] spans newlines and <\/script[^>]*> tolerates
+  // attribute/whitespace tricks in the closing tag; a trailing unterminated
+  // `<script` is caught by the opening-tag alternative.
   scripts: [
-    /<script[^>]*>.*?<\/script>/gi,
+    /<script\b[\s\S]*?<\/script[^>]*>|<script\b[^>]*>?/gi,
     /javascript:/gi,
     /vbscript:/gi,
     /data:text\/html/gi,
@@ -36,13 +38,13 @@ const DANGEROUS_PATTERNS = {
 
   // HTML elements that can execute code
   dangerousElements: [
-    /<iframe[^>]*>.*?<\/iframe>/gi,
+    /<iframe\b[\s\S]*?<\/iframe[^>]*>|<iframe\b[^>]*>?/gi,
     /<embed[^>]*>/gi,
     /<object[^>]*>/gi,
     /<applet[^>]*>/gi,
     /<link[^>]*>/gi,
     /<meta[^>]*>/gi,
-    /<style[^>]*>.*?<\/style>/gi,
+    /<style\b[\s\S]*?<\/style[^>]*>|<style\b[^>]*>?/gi,
   ],
 
   // Event handlers
@@ -97,8 +99,10 @@ export function escapeHtml(text: string): string {
 export function stripHtml(text: string): string {
   if (!text || typeof text !== "string") return "";
 
-  return text
-    .replace(/<[^>]*>/g, "") // Remove all HTML tags
+  // Decode entities BEFORE stripping — the old strip-then-decode order let
+  // encoded payloads rematerialize (`&lt;script&gt;` survived the tag strip,
+  // then decoded into a live `<script>`).
+  let result = text
     .replace(/&nbsp;/g, " ")
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
@@ -107,6 +111,17 @@ export function stripHtml(text: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
+
+  // Strip tags to a fixpoint: a single pass leaves reassembled tags behind
+  // (`<scr<x>ipt>` → `<scr ipt>`); the optional `>` also drops unterminated
+  // trailing tags, which browsers may still parse.
+  let previous: string;
+  do {
+    previous = result;
+    result = result.replace(/<[^>]*>?/g, "");
+  } while (result !== previous);
+
+  return result;
 }
 
 /**

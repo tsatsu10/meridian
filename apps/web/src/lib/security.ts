@@ -409,7 +409,10 @@ export function escapeHtml(text: string): string {
  */
 export function containsXSS(input: string): boolean {
   const xssPatterns = [
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    // Any opening <script is suspicious — requiring a well-formed closing
+    // tag let `</script >` and unterminated variants through
+    // (CodeQL js/bad-tag-filter).
+    /<script\b/gi,
     /javascript:/gi,
     /on\w+\s*=/gi, // Event handlers like onclick=
     /<iframe/gi,
