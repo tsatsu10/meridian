@@ -584,19 +584,30 @@ export function TeamMemberProfileModal({
                             Teams ({profile.teams.length})
                           </h3>
                           <div className="space-y-2">
-                            {profile.teams.slice(0, 3).map((team: any) => (
-                              <div
-                                key={team.id}
-                                className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 transition-colors group cursor-pointer"
-                              >
-                                <span className="text-sm font-medium group-hover:text-primary transition-colors">
-                                  {team.name}
-                                </span>
-                                <Badge variant="outline" className="text-xs">
-                                  {team.role}
-                                </Badge>
-                              </div>
-                            ))}
+                            {profile.teams
+                              .slice(0, 3)
+                              .map(
+                                (team: {
+                                  id: string;
+                                  name: string;
+                                  role?: string;
+                                }) => (
+                                  <div
+                                    key={team.id}
+                                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 transition-colors group cursor-pointer"
+                                  >
+                                    <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                                      {team.name}
+                                    </span>
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {team.role}
+                                    </Badge>
+                                  </div>
+                                ),
+                              )}
                             {profile.teams.length > 3 && (
                               <Button
                                 variant="ghost"
@@ -618,49 +629,67 @@ export function TeamMemberProfileModal({
                 <TabsContent value="goals" className="mt-6 space-y-4">
                   {profile.goals?.active && profile.goals.active.length > 0 ? (
                     <div className="space-y-4">
-                      {profile.goals.active.map((goal: any, _index: number) => (
-                        <Card
-                          key={goal.id}
-                          className="overflow-hidden group hover:shadow-lg transition-all"
-                        >
-                          <CardContent className="p-5 space-y-3">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <h4 className="font-semibold group-hover:text-primary transition-colors">
-                                  {goal.title}
-                                </h4>
-                                {goal.description && (
-                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                    {goal.description}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex flex-col items-end gap-1">
-                                <div className="text-2xl font-bold text-primary">
-                                  {goal.progress}%
+                      {profile.goals.active.map(
+                        (
+                          goal: {
+                            id: string;
+                            title: string;
+                            description?: string;
+                            progress: number;
+                            deadline?: string;
+                            keyResults?: { isCompleted?: boolean }[];
+                          },
+                          _index: number,
+                        ) => (
+                          <Card
+                            key={goal.id}
+                            className="overflow-hidden group hover:shadow-lg transition-all"
+                          >
+                            <CardContent className="p-5 space-y-3">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold group-hover:text-primary transition-colors">
+                                    {goal.title}
+                                  </h4>
+                                  {goal.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                      {goal.description}
+                                    </p>
+                                  )}
                                 </div>
-                                {goal.deadline && (
-                                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {format(new Date(goal.deadline), "MMM dd")}
+                                <div className="flex flex-col items-end gap-1">
+                                  <div className="text-2xl font-bold text-primary">
+                                    {goal.progress}%
                                   </div>
-                                )}
+                                  {goal.deadline && (
+                                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {format(
+                                        new Date(goal.deadline),
+                                        "MMM dd",
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="space-y-2">
-                              <Progress value={goal.progress} className="h-2" />
-                              {goal.keyResults &&
-                                goal.keyResults.length > 0 && (
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Target className="h-3 w-3" />
-                                    {goal.keyResults.length} key results
-                                  </div>
-                                )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                              <div className="space-y-2">
+                                <Progress
+                                  value={goal.progress}
+                                  className="h-2"
+                                />
+                                {goal.keyResults &&
+                                  goal.keyResults.length > 0 && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      <Target className="h-3 w-3" />
+                                      {goal.keyResults.length} key results
+                                    </div>
+                                  )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ),
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
@@ -678,43 +707,52 @@ export function TeamMemberProfileModal({
                         <Star className="h-4 w-4 text-amber-500" />
                         Recent Kudos
                       </h3>
-                      {profile.kudos.recent.map((kudos: any) => (
-                        <Card
-                          key={kudos.id}
-                          className="overflow-hidden hover:shadow-md transition-shadow"
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="text-3xl">
-                                {kudos.emoji || "⭐"}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-sm font-medium">
-                                    {kudos.fromName}
-                                  </span>
-                                  <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs capitalize"
-                                  >
-                                    {kudos.category?.replace("_", " ")}
-                                  </Badge>
+                      {profile.kudos.recent.map(
+                        (kudos: {
+                          id: string;
+                          category?: string;
+                          emoji?: string;
+                          fromName?: string;
+                          message?: string;
+                          createdAt: string;
+                        }) => (
+                          <Card
+                            key={kudos.id}
+                            className="overflow-hidden hover:shadow-md transition-shadow"
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-4">
+                                <div className="text-3xl">
+                                  {kudos.emoji || "⭐"}
                                 </div>
-                                <p className="text-sm text-foreground">
-                                  {kudos.message}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  {format(
-                                    new Date(kudos.createdAt),
-                                    "MMM dd, yyyy",
-                                  )}
-                                </p>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-sm font-medium">
+                                      {kudos.fromName}
+                                    </span>
+                                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs capitalize"
+                                    >
+                                      {kudos.category?.replace("_", " ")}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-foreground">
+                                    {kudos.message}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    {format(
+                                      new Date(kudos.createdAt),
+                                      "MMM dd, yyyy",
+                                    )}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardContent>
+                          </Card>
+                        ),
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
