@@ -1,5 +1,3 @@
-
-
 export interface Task {
   id: string;
   projectId: string;
@@ -46,7 +44,7 @@ export type TaskDependency = {
   id: string;
   dependentTaskId: string;
   requiredTaskId: string;
-  type: 'blocks' | 'blocked_by';
+  type: "blocks" | "blocked_by";
   createdAt: string;
   // Related task info for display
   dependentTask?: Task;
@@ -55,7 +53,7 @@ export type TaskDependency = {
 
 export type TaskWithDependencies = Task & {
   dependencies?: TaskDependency[]; // Tasks this task blocks
-  blockedBy?: TaskDependency[];    // Tasks that block this task
+  blockedBy?: TaskDependency[]; // Tasks that block this task
 };
 
 export type TaskWithSubtasks = Task & {

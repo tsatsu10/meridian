@@ -23,10 +23,10 @@ export interface PaginationResult<T> {
 // @epic-3.4-teams: Reusable pagination hook for teams, members, and users
 export function usePagination<T>(
   data: T[] = [],
-  options: PaginationOptions = {}
+  options: PaginationOptions = {},
 ): PaginationResult<T> {
   const { initialPage = 1, pageSize: initialPageSize = 10 } = options;
-  
+
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(initialPageSize);
 
@@ -83,4 +83,3 @@ export function usePagination<T>(
     pageInfo,
   };
 }
-

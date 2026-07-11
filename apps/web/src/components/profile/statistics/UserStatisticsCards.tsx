@@ -1,6 +1,6 @@
 /**
  * 📊 User Statistics Cards
- * 
+ *
  * Displays key user metrics in card format
  */
 
@@ -14,7 +14,10 @@ import {
   TrendingUp,
   Calendar,
 } from "lucide-react";
-import { getUserStatistics, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
+import {
+  getUserStatistics,
+  smartProfileKeys,
+} from "@/fetchers/profile/smart-profile-fetchers";
 import NumberTicker from "@/components/magicui/number-ticker";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { cn } from "@/lib/cn";
@@ -24,7 +27,10 @@ interface UserStatisticsCardsProps {
   className?: string;
 }
 
-export function UserStatisticsCards({ userId, className }: UserStatisticsCardsProps) {
+export function UserStatisticsCards({
+  userId,
+  className,
+}: UserStatisticsCardsProps) {
   const { data, isLoading } = useQuery({
     queryKey: smartProfileKeys.statistics(userId),
     queryFn: () => getUserStatistics(userId),
@@ -71,14 +77,14 @@ export function UserStatisticsCards({ userId, className }: UserStatisticsCardsPr
     },
     {
       label: "Response Time",
-      value: Math.round(parseFloat(stats.avgResponseTimeMinutes) || 0),
+      value: Math.round(Number.parseFloat(stats.avgResponseTimeMinutes) || 0),
       subValue: "minutes avg",
       icon: Clock,
       color: "text-orange-600 dark:text-orange-400",
     },
     {
       label: "Contribution Score",
-      value: Math.round(parseFloat(stats.contributionScore) || 0),
+      value: Math.round(Number.parseFloat(stats.contributionScore) || 0),
       subValue: "out of 100",
       icon: TrendingUp,
       color: "text-pink-600 dark:text-pink-400",
@@ -93,7 +99,12 @@ export function UserStatisticsCards({ userId, className }: UserStatisticsCardsPr
   ];
 
   return (
-    <div className={cn("grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4",
+        className,
+      )}
+    >
       {statCards.map((stat) => (
         <MagicCard key={stat.label} className="cursor-pointer">
           <CardContent className="p-6">
@@ -117,6 +128,7 @@ function formatTenure(days: number): string {
   if (days < 365) return `${Math.floor(days / 30)} months`;
   const years = Math.floor(days / 365);
   const months = Math.floor((days % 365) / 30);
-  return months > 0 ? `${years}y ${months}m` : `${years} year${years > 1 ? "s" : ""}`;
+  return months > 0
+    ? `${years}y ${months}m`
+    : `${years} year${years > 1 ? "s" : ""}`;
 }
-

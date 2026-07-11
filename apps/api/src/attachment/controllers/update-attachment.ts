@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable, userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface UpdateAttachmentData {
   name?: string;
@@ -30,11 +30,13 @@ async function updateAttachment(id: string, data: UpdateAttachmentData) {
     });
 
     if (!existingAttachment) {
-      throw new Error('Attachment not found');
+      throw new Error("Attachment not found");
     }
 
     if (existingAttachment.uploadedBy !== user.id) {
-      throw new Error('Permission denied: You can only update your own attachments');
+      throw new Error(
+        "Permission denied: You can only update your own attachments",
+      );
     }
 
     const updateData: any = { updatedAt: new Date() };
@@ -53,22 +55,27 @@ async function updateAttachment(id: string, data: UpdateAttachmentData) {
       };
     }
 
-    const result = await db.update(attachmentTable)
+    const result = await db
+      .update(attachmentTable)
       .set(updateData)
       .where(eq(attachmentTable.id, id))
       .returning();
 
     const attachment = result[0];
     if (!attachment) {
-      throw new Error('Failed to update attachment');
+      throw new Error("Failed to update attachment");
     }
 
-    logger.debug(`📎 Attachment updated: ${attachment.fileName} (${attachment.id})`);
+    logger.debug(
+      `📎 Attachment updated: ${attachment.fileName} (${attachment.id})`,
+    );
     return attachment;
   } catch (error) {
-    logger.error('❌ Update attachment error:', error);
-    throw new Error(`Failed to update attachment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error("❌ Update attachment error:", error);
+    throw new Error(
+      `Failed to update attachment: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
-export default updateAttachment; 
+export default updateAttachment;

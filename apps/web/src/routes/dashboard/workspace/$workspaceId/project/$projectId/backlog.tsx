@@ -4,10 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  ToggleGroup, 
-  ToggleGroupItem 
-} from "@/components/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Sheet,
   SheetContent,
@@ -32,7 +29,7 @@ import useProjectStore from "@/store/project";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import { useRBACAuth } from "@/lib/permissions/context";
 import { useProjectPermissions } from "@/lib/permissions/hooks";
-import { useKeyboardShortcuts, } from "@/hooks/use-keyboard-shortcuts";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { z } from "zod";
 
 // Theme API hooks
@@ -54,8 +51,8 @@ import type { ProjectWithTasks } from "@/types/project";
 import type Task from "@/types/task";
 
 // Icons
-import { 
-  Layout, 
+import {
+  Layout,
   ArrowRight,
   Plus,
   Sparkles,
@@ -64,7 +61,7 @@ import {
   Filter,
   Search,
   X,
-  Lock
+  Lock,
 } from "lucide-react";
 
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
@@ -78,16 +75,22 @@ export const Route = createFileRoute(
 
 // 🛡️ SECURITY: Theme validation schema
 const themeSchema = z.object({
-  name: z.string()
+  name: z
+    .string()
     .min(1, "Theme name is required")
     .max(100, "Theme name must be less than 100 characters")
     .trim(),
-  description: z.string()
+  description: z
+    .string()
     .max(500, "Description must be less than 500 characters")
     .trim()
     .optional(),
-  color: z.string()
-    .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid hex code (e.g., #FF5733)")
+  color: z
+    .string()
+    .regex(
+      /^#[0-9A-Fa-f]{6}$/,
+      "Color must be a valid hex code (e.g., #FF5733)",
+    )
     .optional()
     .default("#6366f1"),
 });
@@ -97,34 +100,40 @@ function BacklogPage() {
   const { projectId, workspaceId } = Route.useParams();
   const navigate = useNavigate();
   const { data, isLoading, error } = useGetTasks(projectId);
-  const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProject({ id: projectId, workspaceId });
+  const {
+    data: projectData,
+    isLoading: isProjectLoading,
+    error: projectError,
+  } = useGetProject({ id: projectId, workspaceId });
   const { project, setProject } = useProjectStore();
   const { mutate: updateTask } = useUpdateTask();
-  
+
   // 🎨 Theme mutations
   const { mutate: createTheme } = useCreateTheme();
   const { mutate: updateTheme } = useUpdateTheme();
   const { mutate: deleteTheme } = useDeleteTheme();
-  
+
   // ☑️ Bulk operation mutations
   const { mutate: bulkUpdateStatus } = useBulkUpdateStatus();
   const { mutate: bulkUpdatePriority } = useBulkUpdatePriority();
   const { mutate: bulkArchive } = useBulkArchiveTasks();
   const { mutate: bulkDelete } = useBulkDeleteTasks();
-  
+
   // 🔒 SECURITY: RBAC permission checks
   const { hasPermission, user } = useRBACAuth();
   const projectPermissions = useProjectPermissions(projectId);
-  
+
   // Check if user can edit backlog
-  const canEditBacklog = projectPermissions.canEdit || hasPermission('canEditProjects');
-  const canDeleteItems = projectPermissions.canDelete || hasPermission('canDeleteProjects');
-  
+  const canEditBacklog =
+    projectPermissions.canEdit || hasPermission("canEditProjects");
+  const canDeleteItems =
+    projectPermissions.canDelete || hasPermission("canDeleteProjects");
+
   // View management state
-  const [viewMode, setViewMode] = useState<'enhanced' | 'classic'>('enhanced');
+  const [viewMode, setViewMode] = useState<"enhanced" | "classic">("enhanced");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  
+
   // 🔍 FEATURE: Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -133,7 +142,7 @@ function BacklogPage() {
     assignee: null as string | null,
     theme: null as string | null,
   });
-  
+
   // ☑️ FEATURE: Bulk selection state
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [showHelp, setShowHelp] = useState(false);
@@ -147,59 +156,62 @@ function BacklogPage() {
   }, [data, setProject]);
 
   // ⌨️ FEATURE: Keyboard shortcuts for productivity
-  useKeyboardShortcuts([
+  useKeyboardShortcuts(
+    [
       {
-        key: 'n',
+        key: "n",
         action: () => {
           if (canEditBacklog) {
             setIsCreateTaskOpen(true);
           }
         },
-        description: 'Create new backlog item',
+        description: "Create new backlog item",
       },
       {
-        key: '/',
+        key: "/",
         action: () => {
-          document.querySelector<HTMLInputElement>('input[placeholder*="Search"]')?.focus();
+          document
+            .querySelector<HTMLInputElement>('input[placeholder*="Search"]')
+            ?.focus();
         },
-        description: 'Focus search',
+        description: "Focus search",
       },
       {
-        key: 'f',
+        key: "f",
         action: () => {
           setShowFilters(!showFilters);
         },
-        description: 'Toggle filters',
+        description: "Toggle filters",
       },
       {
-        key: 'e',
+        key: "e",
         action: () => {
-          setViewMode(viewMode === 'enhanced' ? 'classic' : 'enhanced');
+          setViewMode(viewMode === "enhanced" ? "classic" : "enhanced");
         },
-        description: 'Toggle enhanced/classic view',
+        description: "Toggle enhanced/classic view",
       },
       {
-        key: 'Escape',
+        key: "Escape",
         action: () => {
           if (showFilters) {
             setShowFilters(false);
           } else if (searchQuery) {
-            setSearchQuery('');
+            setSearchQuery("");
           } else if (selectedTasks.size > 0) {
             setSelectedTasks(new Set());
           }
         },
-        description: 'Close filters or clear search',
+        description: "Close filters or clear search",
       },
       {
-        key: '?',
+        key: "?",
         action: () => {
           setShowHelp(true);
         },
-        description: 'Show keyboard shortcuts help',
+        description: "Show keyboard shortcuts help",
       },
       {
-        key: 'a',
+        key: "a",
         ctrl: true,
         action: () => {
           // Select all visible tasks
@@ -209,25 +221,29 @@ function BacklogPage() {
           ]);
           setSelectedTasks(allTaskIds);
         },
-        description: 'Select all tasks',
+        description: "Select all tasks",
       },
       {
-        key: 'd',
+        key: "d",
         ctrl: true,
         action: () => {
           setSelectedTasks(new Set());
         },
-        description: 'Deselect all tasks',
+        description: "Deselect all tasks",
       },
     ],
-    !isTaskModalOpen && !isCreateTaskOpen && !showHelp);
+    !isTaskModalOpen && !isCreateTaskOpen && !showHelp,
+  );
 
   // ✅ PRODUCTION: Real API theme handlers with validation and permission checks
-  const handleThemeCreate = async (theme: Omit<TaskTheme, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleThemeCreate = async (
+    theme: Omit<TaskTheme, "id" | "createdAt" | "updatedAt">,
+  ) => {
     // Check permissions
     if (!canEditBacklog) {
-      toast.error('Permission denied', {
-        description: 'You do not have permission to create themes in this project.'
+      toast.error("Permission denied", {
+        description:
+          "You do not have permission to create themes in this project.",
       });
       return;
     }
@@ -235,7 +251,7 @@ function BacklogPage() {
     try {
       // Validate input with Zod
       const validated = themeSchema.parse(theme);
-      
+
       // ✅ Real API call with audit logging
       createTheme({
         projectId,
@@ -243,14 +259,14 @@ function BacklogPage() {
         description: validated.description,
         color: validated.color,
       });
-      
+
       // Note: Success toast and query invalidation handled by the hook
       return;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
-        toast.error('Invalid theme data', {
-          description: firstError.message
+        toast.error("Invalid theme data", {
+          description: firstError.message,
         });
       }
       throw error;
@@ -260,8 +276,9 @@ function BacklogPage() {
   const handleThemeEdit = async (theme: TaskTheme) => {
     // Check permissions
     if (!canEditBacklog) {
-      toast.error('Permission denied', {
-        description: 'You do not have permission to edit themes in this project.'
+      toast.error("Permission denied", {
+        description:
+          "You do not have permission to edit themes in this project.",
       });
       return theme;
     }
@@ -273,7 +290,7 @@ function BacklogPage() {
         description: theme.description,
         color: theme.color,
       });
-      
+
       // ✅ Real API call
       updateTheme({
         themeId: theme.id,
@@ -287,8 +304,8 @@ function BacklogPage() {
       return theme;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast.error('Invalid theme data', {
-          description: error.errors[0].message
+        toast.error("Invalid theme data", {
+          description: error.errors[0].message,
         });
       }
       throw error;
@@ -298,14 +315,19 @@ function BacklogPage() {
   const handleThemeDelete = async (themeId: string, themeName?: string) => {
     // Check permissions
     if (!canDeleteItems) {
-      toast.error('Permission denied', {
-        description: 'You do not have permission to delete themes in this project.'
+      toast.error("Permission denied", {
+        description:
+          "You do not have permission to delete themes in this project.",
       });
       return;
     }
 
     // Confirm deletion
-    if (!confirm('Are you sure you want to delete this theme? Tasks will not be deleted, but will lose their theme association.')) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this theme? Tasks will not be deleted, but will lose their theme association.",
+      )
+    ) {
       return;
     }
 
@@ -315,23 +337,26 @@ function BacklogPage() {
       projectId,
       themeName,
     });
-    
+
     // Note: Success toast and query invalidation handled by the hook
   };
 
   // ✅ FIXED: Task click now navigates to task detail page
   const handleTaskClick = (task: EnhancedTask) => {
     navigate({
-      to: '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId',
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
       params: {
         workspaceId,
         projectId,
-        taskId: task.id
-      }
+        taskId: task.id,
+      },
     });
   };
 
-  const handleTaskUpdate = async (taskId: string, updates: Partial<EnhancedTask>) => {
+  const handleTaskUpdate = async (
+    taskId: string,
+    updates: Partial<EnhancedTask>,
+  ) => {
     // The update endpoint needs the full task, so merge onto the existing one
     const existing = [
       ...(project?.plannedTasks ?? []),
@@ -339,7 +364,7 @@ function BacklogPage() {
     ].find((t: Task) => t.id === taskId);
 
     if (!existing) {
-      toast.error('Task not found');
+      toast.error("Task not found");
       return;
     }
 
@@ -353,10 +378,10 @@ function BacklogPage() {
         status: updates.status ?? existing.status,
         userEmail: updates.userEmail ?? existing.userEmail,
       });
-      toast.success('Task updated successfully');
+      toast.success("Task updated successfully");
     } catch (error) {
-      console.error('Failed to update task:', error);
-      toast.error('Failed to update task');
+      console.error("Failed to update task:", error);
+      toast.error("Failed to update task");
     }
   };
 
@@ -390,20 +415,24 @@ function BacklogPage() {
   // ✅ PRODUCTION: Real API bulk operation handlers
   const handleBulkDelete = () => {
     if (!canDeleteItems) {
-      toast.error('Permission denied', {
-        description: 'You do not have permission to delete items.'
+      toast.error("Permission denied", {
+        description: "You do not have permission to delete items.",
       });
       return;
     }
 
-    if (!confirm(`Delete ${selectedTasks.size} selected items? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Delete ${selectedTasks.size} selected items? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
     // ✅ Real API call
     bulkDelete({
       taskIds: Array.from(selectedTasks),
-      userId: user?.id || '',
+      userId: user?.id || "",
       projectId,
     });
     setSelectedTasks(new Set());
@@ -412,14 +441,14 @@ function BacklogPage() {
 
   const handleBulkArchive = () => {
     if (!canEditBacklog) {
-      toast.error('Permission denied');
+      toast.error("Permission denied");
       return;
     }
 
     // ✅ Real API call
     bulkArchive({
       taskIds: Array.from(selectedTasks),
-      userId: user?.id || '',
+      userId: user?.id || "",
       projectId,
     });
     setSelectedTasks(new Set());
@@ -428,24 +457,26 @@ function BacklogPage() {
 
   const handleBulkMoveToSprint = () => {
     if (!canEditBacklog) {
-      toast.error('Permission denied');
+      toast.error("Permission denied");
       return;
     }
 
     // ✅ Real API call - move to 'todo' status
     bulkUpdateStatus({
       taskIds: Array.from(selectedTasks),
-      status: 'todo',
-      userId: user?.id || '',
+      status: "todo",
+      userId: user?.id || "",
       projectId,
     });
     setSelectedTasks(new Set());
     // Note: Success toast and query invalidation handled by the hook
   };
 
-  const handleBulkSetPriority = (priority: 'low' | 'medium' | 'high' | 'urgent') => {
+  const handleBulkSetPriority = (
+    priority: "low" | "medium" | "high" | "urgent",
+  ) => {
     if (!canEditBacklog) {
-      toast.error('Permission denied');
+      toast.error("Permission denied");
       return;
     }
 
@@ -453,12 +484,11 @@ function BacklogPage() {
     bulkUpdatePriority({
       taskIds: Array.from(selectedTasks),
       priority,
-      userId: user?.id || '',
+      userId: user?.id || "",
       projectId,
     });
     // Note: Success toast and query invalidation handled by the hook
   };
-
 
   // 💀 Enhanced loading state with skeleton
   if (isLoading || isProjectLoading) {
@@ -475,48 +505,54 @@ function BacklogPage() {
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <AlertCircle className="h-12 w-12 text-orange-500" />
           <h3 className="text-lg font-semibold">Unable to load backlog</h3>
-          <p className="text-muted-foreground">There was an error loading the project backlog.</p>
+          <p className="text-muted-foreground">
+            There was an error loading the project backlog.
+          </p>
         </div>
       </LazyDashboardLayout>
     );
   }
 
   // Prepare project data for backlog views
-  const backlogProject: ProjectWithTasks | undefined = project ? {
-    ...project,
-    columns: [
-      {
-        id: "planned" as const,
-        name: "Planned" as const,
-        tasks: (project.plannedTasks || []).map((task: any) => ({
+  const backlogProject: ProjectWithTasks | undefined = project
+    ? {
+        ...project,
+        columns: [
+          {
+            id: "planned" as const,
+            name: "Planned" as const,
+            tasks: (project.plannedTasks || []).map((task: any) => ({
+              ...task,
+              assigneeName: null,
+              assigneeEmail: null,
+            })),
+          },
+          {
+            id: "archived" as const,
+            name: "Archived" as const,
+            tasks: (project.archivedTasks || []).map((task: any) => ({
+              ...task,
+              assigneeName: null,
+              assigneeEmail: null,
+            })),
+          },
+        ],
+        plannedTasks: (project.plannedTasks || []).map((task: any) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,
         })),
-      },
-      {
-        id: "archived" as const,
-        name: "Archived" as const,
-        tasks: (project.archivedTasks || []).map((task: any) => ({
+        archivedTasks: (project.archivedTasks || []).map((task: any) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,
         })),
-      },
-    ],
-    plannedTasks: (project.plannedTasks || []).map((task: any) => ({
-      ...task,
-      assigneeName: null,
-      assigneeEmail: null,
-    })),
-    archivedTasks: (project.archivedTasks || []).map((task: any) => ({
-      ...task,
-      assigneeName: null,
-      assigneeEmail: null,
-    })),
-  } : undefined;
+      }
+    : undefined;
 
-  const totalBacklogTasks = (project?.plannedTasks?.length || 0) + (project?.archivedTasks?.length || 0);
+  const totalBacklogTasks =
+    (project?.plannedTasks?.length || 0) +
+    (project?.archivedTasks?.length || 0);
 
   // 🔒 SECURITY: Show access denied if no permission
   if (!canEditBacklog && (project?.plannedTasks?.length || 0) === 0) {
@@ -528,8 +564,8 @@ function BacklogPage() {
           </div>
           <h3 className="text-lg font-semibold">Access Restricted</h3>
           <p className="text-muted-foreground text-center max-w-md">
-            You don't have permission to view or edit the backlog for this project.
-            Contact your project admin if you need access.
+            You don't have permission to view or edit the backlog for this
+            project. Contact your project admin if you need access.
           </p>
         </div>
       </LazyDashboardLayout>
@@ -544,9 +580,12 @@ function BacklogPage() {
           {/* Title and Actions */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Product Backlog</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Product Backlog
+              </h1>
               <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Manage and prioritize your product backlog for {projectData?.name}
+                Manage and prioritize your product backlog for{" "}
+                {projectData?.name}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -588,8 +627,17 @@ function BacklogPage() {
                   <Filter className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Filters</span>
                   {(filters.priority || filters.assignee || filters.theme) && (
-                    <Badge variant="secondary" className="ml-2 px-1.5 py-0 text-xs">
-                      {[filters.priority, filters.assignee, filters.theme].filter(Boolean).length}
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 px-1.5 py-0 text-xs"
+                    >
+                      {
+                        [
+                          filters.priority,
+                          filters.assignee,
+                          filters.theme,
+                        ].filter(Boolean).length
+                      }
                     </Badge>
                   )}
                 </Button>
@@ -606,15 +654,22 @@ function BacklogPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Priority</label>
                     <div className="flex gap-2 flex-wrap">
-                      {['low', 'medium', 'high', 'urgent'].map((priority) => (
+                      {["low", "medium", "high", "urgent"].map((priority) => (
                         <Button
                           key={priority}
-                          variant={filters.priority === priority ? "default" : "outline"}
+                          variant={
+                            filters.priority === priority
+                              ? "default"
+                              : "outline"
+                          }
                           size="sm"
-                          onClick={() => setFilters(f => ({ 
-                            ...f, 
-                            priority: f.priority === priority ? null : priority 
-                          }))}
+                          onClick={() =>
+                            setFilters((f) => ({
+                              ...f,
+                              priority:
+                                f.priority === priority ? null : priority,
+                            }))
+                          }
                           className="capitalize"
                         >
                           {priority}
@@ -628,7 +683,13 @@ function BacklogPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setFilters({ priority: null, assignee: null, theme: null })}
+                      onClick={() =>
+                        setFilters({
+                          priority: null,
+                          assignee: null,
+                          theme: null,
+                        })
+                      }
                       className="w-full"
                     >
                       <X className="w-4 h-4 mr-2" />
@@ -648,36 +709,47 @@ function BacklogPage() {
               onClick={() => setShowAnalytics(!showAnalytics)}
               className="text-xs"
             >
-              {showAnalytics ? 'Hide' : 'Show'} Analytics
+              {showAnalytics ? "Hide" : "Show"} Analytics
             </Button>
           </div>
         </div>
 
         {/* 📊 Analytics Panel */}
         {showAnalytics && (
-          <BacklogAnalyticsPanel 
-            tasks={[...(project?.plannedTasks || []), ...(project?.archivedTasks || [])]}
+          <BacklogAnalyticsPanel
+            tasks={[
+              ...(project?.plannedTasks || []),
+              ...(project?.archivedTasks || []),
+            ]}
           />
         )}
 
         {/* View Mode Toggle */}
         <div className="flex items-center justify-between">
-          <ToggleGroup 
-            type="single" 
-            value={viewMode} 
-            onValueChange={(value) => value && setViewMode(value as 'enhanced' | 'classic')}
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(value) =>
+              value && setViewMode(value as "enhanced" | "classic")
+            }
             className="border rounded-lg p-1"
           >
-            <ToggleGroupItem value="enhanced" className="flex items-center space-x-2">
+            <ToggleGroupItem
+              value="enhanced"
+              className="flex items-center space-x-2"
+            >
               <Sparkles className="h-4 w-4" />
               <span>Enhanced</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="classic" className="flex items-center space-x-2">
+            <ToggleGroupItem
+              value="classic"
+              className="flex items-center space-x-2"
+            >
               <Layout className="h-4 w-4" />
               <span>Classic</span>
             </ToggleGroupItem>
           </ToggleGroup>
-          
+
           {totalBacklogTasks > 0 && (
             <Badge variant="outline" className="text-sm">
               {totalBacklogTasks} items in backlog
@@ -697,11 +769,15 @@ function BacklogPage() {
                   Ready to Start Sprint?
                 </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  You have {project?.plannedTasks?.length ?? 0} planned tasks ready to move to active development
+                  You have {project?.plannedTasks?.length ?? 0} planned tasks
+                  ready to move to active development
                 </p>
               </div>
             </div>
-            <Button onClick={handleMoveAllPlannedToTodo} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={handleMoveAllPlannedToTodo}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               Move to Development
             </Button>
           </div>
@@ -709,7 +785,7 @@ function BacklogPage() {
 
         {/* Main Content */}
         <div className="min-h-[600px]">
-          {viewMode === 'enhanced' && backlogProject ? (
+          {viewMode === "enhanced" && backlogProject ? (
             <EnhancedBacklogView
               project={backlogProject}
               onThemeCreate={handleThemeCreate}
@@ -727,8 +803,8 @@ function BacklogPage() {
                 No backlog items yet
               </h3>
               <p className="text-muted-foreground text-center mb-4 max-w-md">
-                Start building your product backlog by creating your first user story or task. 
-                Organize them into themes for better management.
+                Start building your product backlog by creating your first user
+                story or task. Organize them into themes for better management.
               </p>
               <Button onClick={() => setIsCreateTaskOpen(true)} size="lg">
                 <Plus className="mr-2 h-4 w-4" />
@@ -744,8 +820,8 @@ function BacklogPage() {
           onClose={() => setIsTaskModalOpen(false)}
           projectContext={{
             id: projectId,
-            name: projectData?.name || 'Project',
-            slug: projectData?.slug || 'project'
+            name: projectData?.name || "Project",
+            slug: projectData?.slug || "project",
           }}
         />
 
@@ -760,10 +836,7 @@ function BacklogPage() {
         />
 
         {/* ⌨️ Help Dialog */}
-        <BacklogHelpDialog
-          open={showHelp}
-          onOpenChange={setShowHelp}
-        />
+        <BacklogHelpDialog open={showHelp} onOpenChange={setShowHelp} />
 
         {/* 💡 Help Button (Bottom Right) */}
         <Button

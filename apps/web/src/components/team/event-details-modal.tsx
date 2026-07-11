@@ -1,19 +1,25 @@
 // @epic-3.4-teams: Event details modal with edit/delete actions
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Video, 
-  Users, 
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Video,
+  Users,
   AlertCircle,
   Edit,
   Trash2,
   Loader2,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { useGetEvent } from "@/hooks/queries/calendar/use-get-event";
 import { useDeleteEvent } from "@/hooks/mutations/calendar/use-delete-event";
@@ -29,33 +35,39 @@ interface EventDetailsModalProps {
 }
 
 const eventTypeColors = {
-  meeting: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  deadline: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-  'time-off': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  workload: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-  milestone: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-  other: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+  meeting: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  deadline: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  "time-off":
+    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  workload:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+  milestone:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  other: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
 };
 
 const priorityColors = {
-  low: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-  medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-  high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-  urgent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+  low: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+  medium:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+  urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
 const statusColors = {
-  scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  'in-progress': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-  completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+  scheduled: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  "in-progress":
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  completed:
+    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  cancelled: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
 };
 
-export default function EventDetailsModal({ 
-  open, 
-  onClose, 
+export default function EventDetailsModal({
+  open,
+  onClose,
   eventId,
-  onEdit 
+  onEdit,
 }: EventDetailsModalProps) {
   const { data, isLoading, error } = useGetEvent(eventId, { enabled: open });
   const deleteEvent = useDeleteEvent();
@@ -68,7 +80,7 @@ export default function EventDetailsModal({
       await deleteEvent.mutateAsync(eventId);
       onClose();
     } catch (error) {
-      console.error('Failed to delete event:', error);
+      console.error("Failed to delete event:", error);
     }
   };
 
@@ -83,7 +95,9 @@ export default function EventDetailsModal({
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Loading Event</DialogTitle>
-            <DialogDescription>Please wait while we load the event details...</DialogDescription>
+            <DialogDescription>
+              Please wait while we load the event details...
+            </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -103,7 +117,9 @@ export default function EventDetailsModal({
           </DialogHeader>
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
-            <p className="text-sm text-muted-foreground">Failed to load event details</p>
+            <p className="text-sm text-muted-foreground">
+              Failed to load event details
+            </p>
             <Button onClick={onClose}>Close</Button>
           </div>
         </DialogContent>
@@ -151,18 +167,31 @@ export default function EventDetailsModal({
         <div className="space-y-6 py-4">
           {/* Status and Type Badges */}
           <div className="flex flex-wrap gap-2">
-            <Badge className={cn(eventTypeColors[event.type as keyof typeof eventTypeColors] || eventTypeColors.other)}>
+            <Badge
+              className={cn(
+                eventTypeColors[event.type as keyof typeof eventTypeColors] ||
+                  eventTypeColors.other,
+              )}
+            >
               {event.type}
             </Badge>
-            <Badge className={cn(statusColors[event.status as keyof typeof statusColors] || statusColors.scheduled)}>
+            <Badge
+              className={cn(
+                statusColors[event.status as keyof typeof statusColors] ||
+                  statusColors.scheduled,
+              )}
+            >
               {event.status}
             </Badge>
-            <Badge className={cn(priorityColors[event.priority as keyof typeof priorityColors] || priorityColors.medium)}>
+            <Badge
+              className={cn(
+                priorityColors[event.priority as keyof typeof priorityColors] ||
+                  priorityColors.medium,
+              )}
+            >
               {event.priority} priority
             </Badge>
-            {event.isRecurring && (
-              <Badge variant="outline">Recurring</Badge>
-            )}
+            {event.isRecurring && <Badge variant="outline">Recurring</Badge>}
           </div>
 
           <Separator />
@@ -171,7 +200,9 @@ export default function EventDetailsModal({
           {event.description && (
             <div>
               <h4 className="text-sm font-medium mb-2">Description</h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{event.description}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {event.description}
+              </p>
             </div>
           )}
 
@@ -181,17 +212,22 @@ export default function EventDetailsModal({
             <div className="space-y-2">
               <div className="flex items-center text-sm">
                 <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{format(new Date(event.startTime), 'EEEE, MMMM d, yyyy')}</span>
+                <span>
+                  {format(new Date(event.startTime), "EEEE, MMMM d, yyyy")}
+                </span>
               </div>
               <div className="flex items-center text-sm">
                 <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                 <span>
-                  {format(new Date(event.startTime), 'h:mm a')}
-                  {event.endTime && ` - ${format(new Date(event.endTime), 'h:mm a')}`}
+                  {format(new Date(event.startTime), "h:mm a")}
+                  {event.endTime &&
+                    ` - ${format(new Date(event.endTime), "h:mm a")}`}
                 </span>
               </div>
               {event.allDay && (
-                <Badge variant="secondary" className="text-xs">All Day Event</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  All Day Event
+                </Badge>
               )}
             </div>
           </div>
@@ -213,9 +249,9 @@ export default function EventDetailsModal({
               <h4 className="text-sm font-medium">Meeting Link</h4>
               <div className="flex items-center text-sm">
                 <Video className="h-4 w-4 mr-2 text-muted-foreground" />
-                <a 
-                  href={event.meetingLink} 
-                  target="_blank" 
+                <a
+                  href={event.meetingLink}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline flex items-center"
                 >
@@ -229,11 +265,14 @@ export default function EventDetailsModal({
           {/* Attendees */}
           {event.attendees && event.attendees.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">Attendees ({event.attendees.length})</h4>
+              <h4 className="text-sm font-medium">
+                Attendees ({event.attendees.length})
+              </h4>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Users className="h-4 w-4 mr-2" />
                 <span>
-                  {event.attendees.length} {event.attendees.length === 1 ? 'attendee' : 'attendees'}
+                  {event.attendees.length}{" "}
+                  {event.attendees.length === 1 ? "attendee" : "attendees"}
                 </span>
               </div>
             </div>
@@ -245,7 +284,10 @@ export default function EventDetailsModal({
               <h4 className="text-sm font-medium">Time Estimate</h4>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-2" />
-                <span>{event.estimatedHours} {event.estimatedHours === 1 ? 'hour' : 'hours'}</span>
+                <span>
+                  {event.estimatedHours}{" "}
+                  {event.estimatedHours === 1 ? "hour" : "hours"}
+                </span>
               </div>
             </div>
           )}
@@ -256,7 +298,8 @@ export default function EventDetailsModal({
               <h4 className="text-sm font-medium">Recurring Pattern</h4>
               <p className="text-sm text-muted-foreground">
                 Repeats {event.recurringPattern.frequency}
-                {event.recurringPattern.interval > 1 && ` every ${event.recurringPattern.interval} times`}
+                {event.recurringPattern.interval > 1 &&
+                  ` every ${event.recurringPattern.interval} times`}
               </p>
             </div>
           )}
@@ -265,9 +308,9 @@ export default function EventDetailsModal({
 
           {/* Metadata */}
           <div className="text-xs text-muted-foreground space-y-1">
-            <p>Created: {format(new Date(event.createdAt), 'PPpp')}</p>
+            <p>Created: {format(new Date(event.createdAt), "PPpp")}</p>
             {event.updatedAt && event.updatedAt !== event.createdAt && (
-              <p>Last updated: {format(new Date(event.updatedAt), 'PPpp')}</p>
+              <p>Last updated: {format(new Date(event.updatedAt), "PPpp")}</p>
             )}
           </div>
         </div>
@@ -280,7 +323,8 @@ export default function EventDetailsModal({
               <div className="flex-1">
                 <p className="font-medium text-sm">Delete this event?</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  This action cannot be undone. The event will be permanently deleted.
+                  This action cannot be undone. The event will be permanently
+                  deleted.
                 </p>
               </div>
             </div>
@@ -299,8 +343,10 @@ export default function EventDetailsModal({
                 onClick={handleDelete}
                 disabled={deleteEvent.isPending}
               >
-                {deleteEvent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {deleteEvent.isPending ? 'Deleting...' : 'Delete Event'}
+                {deleteEvent.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {deleteEvent.isPending ? "Deleting..." : "Delete Event"}
               </Button>
             </div>
           </div>
@@ -309,4 +355,3 @@ export default function EventDetailsModal({
     </Dialog>
   );
 }
-

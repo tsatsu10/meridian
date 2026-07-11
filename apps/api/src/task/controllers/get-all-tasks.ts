@@ -1,6 +1,11 @@
 import { and, eq, or, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { projectTable, taskTable, userTable, workspaceUserTable } from "../../database/schema";
+import {
+  projectTable,
+  taskTable,
+  userTable,
+  workspaceUserTable,
+} from "../../database/schema";
 
 interface GetAllTasksOptions {
   workspaceId: string;
@@ -50,7 +55,9 @@ async function getAllTasks({
 
   if (status && status.length > 0) {
     const statusCondition = or(
-      ...status.map((s) => eq(taskTable.status, s as "todo" | "in_progress" | "done"))
+      ...status.map((s) =>
+        eq(taskTable.status, s as "todo" | "in_progress" | "done"),
+      ),
     );
     if (statusCondition) {
       conditions.push(statusCondition);
@@ -59,7 +66,9 @@ async function getAllTasks({
 
   if (priority && priority.length > 0) {
     const priorityCondition = or(
-      ...priority.map((p) => eq(taskTable.priority, p as "low" | "medium" | "high" | "urgent"))
+      ...priority.map((p) =>
+        eq(taskTable.priority, p as "low" | "medium" | "high" | "urgent"),
+      ),
     );
     if (priorityCondition) {
       conditions.push(priorityCondition);
@@ -68,7 +77,7 @@ async function getAllTasks({
 
   if (projectIds && projectIds.length > 0) {
     conditions.push(
-      or(...projectIds.map((id) => eq(taskTable.projectId, id)))!
+      or(...projectIds.map((id) => eq(taskTable.projectId, id)))!,
     );
   }
 
@@ -83,9 +92,9 @@ async function getAllTasks({
   if (search) {
     conditions.push(
       or(
-        sql`${taskTable.title} LIKE ${'%' + search + '%'}`,
-        sql`${taskTable.description} LIKE ${'%' + search + '%'}`
-      )!
+        sql`${taskTable.title} LIKE ${"%" + search + "%"}`,
+        sql`${taskTable.description} LIKE ${"%" + search + "%"}`,
+      )!,
     );
   }
 
@@ -113,7 +122,7 @@ async function getAllTasks({
     .offset(offset);
 
   // Transform to expected format with nested project object
-  const tasks = tasksRaw.map(row => ({
+  const tasks = tasksRaw.map((row) => ({
     id: row.task.id,
     title: row.task.title,
     number: row.task.number,
@@ -149,7 +158,7 @@ async function getAllTasks({
     .where(eq(projectTable.workspaceId, workspaceId));
 
   // TODO: Add custom status columns when statusColumnTable schema is created
-  const projectsWithColumns = projects.map(project => ({
+  const projectsWithColumns = projects.map((project) => ({
     ...project,
     columns: [], // Empty array until statusColumnTable is implemented
   }));
@@ -161,7 +170,10 @@ async function getAllTasks({
       name: userTable.name,
     })
     .from(userTable)
-    .innerJoin(workspaceUserTable, eq(workspaceUserTable.userEmail, userTable.email))
+    .innerJoin(
+      workspaceUserTable,
+      eq(workspaceUserTable.userEmail, userTable.email),
+    )
     .where(eq(workspaceUserTable.workspaceId, workspaceId));
 
   return {
@@ -182,4 +194,4 @@ async function getAllTasks({
   };
 }
 
-export default getAllTasks; 
+export default getAllTasks;

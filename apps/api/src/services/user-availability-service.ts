@@ -1,6 +1,6 @@
 /**
  * 🟢 User Availability Service
- * 
+ *
  * Manages user availability status, working hours, and timezone
  */
 
@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import logger from "../utils/logger";
 
 export interface AvailabilityUpdate {
-  status?: 'available' | 'away' | 'busy' | 'do_not_disturb' | 'offline';
+  status?: "available" | "away" | "busy" | "do_not_disturb" | "offline";
   statusMessage?: string;
   statusEmoji?: string;
   autoStatus?: boolean;
@@ -82,7 +82,7 @@ export async function getUserAvailability(userId: string): Promise<any> {
  */
 export async function updateUserAvailability(
   userId: string,
-  data: AvailabilityUpdate
+  data: AvailabilityUpdate,
 ): Promise<any> {
   const db = getDatabase();
 
@@ -153,7 +153,9 @@ export function isInWorkingHours(availability: any): boolean {
   try {
     const now = new Date();
     // "lowercase" is not a valid weekday option (it threw RangeError at runtime)
-    const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    const dayOfWeek = now
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
 
     // Check if today is a working day
     const workingDays = availability.workingDays || [];
@@ -236,4 +238,3 @@ export async function updateAutoStatus(userId: string): Promise<void> {
     logger.error("Error updating auto status:", error);
   }
 }
-

@@ -2,9 +2,9 @@
  * Template Types for Frontend
  */
 
-export type TemplateDifficulty = 'beginner' | 'intermediate' | 'advanced';
-export type TemplatePriority = 'low' | 'medium' | 'high' | 'urgent';
-export type DependencyType = 'blocks' | 'blocked_by';
+export type TemplateDifficulty = "beginner" | "intermediate" | "advanced";
+export type TemplatePriority = "low" | "medium" | "high" | "urgent";
+export type DependencyType = "blocks" | "blocked_by";
 
 export interface ProjectTemplate {
   id: string;
@@ -83,8 +83,8 @@ export interface TemplateFilterOptions {
   searchQuery?: string;
   isOfficial?: boolean;
   minRating?: number;
-  sortBy?: 'popular' | 'recent' | 'rating' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "popular" | "recent" | "rating" | "name";
+  sortOrder?: "asc" | "desc";
   limit?: number;
   offset?: number;
 }
@@ -128,4 +128,3 @@ export interface TemplatesByIndustry {
 export interface TemplatesByProfession {
   [profession: string]: ProjectTemplate[];
 }
-

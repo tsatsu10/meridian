@@ -52,7 +52,7 @@ export default function EditTaskModal({
   const [status, setStatus] = useState(task.status);
   const [userEmail, setUserEmail] = useState(task.userEmail || "unassigned");
   const [dueDate, setDueDate] = useState<Date | undefined>(
-    task.dueDate ? new Date(task.dueDate) : undefined
+    task.dueDate ? new Date(task.dueDate) : undefined,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,7 +73,7 @@ export default function EditTaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title.trim()) {
       toast.error("Task title is required");
       return;
@@ -91,12 +91,12 @@ export default function EditTaskModal({
         userEmail: userEmail === "unassigned" ? null : userEmail || null,
         dueDate: dueDate ? dueDate.toISOString() : null,
       });
-      
+
       toast.success("Task updated successfully");
       onClose();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update task"
+        error instanceof Error ? error.message : "Failed to update task",
       );
     } finally {
       setIsSubmitting(false);
@@ -208,7 +208,10 @@ export default function EditTaskModal({
               {/* Assignee */}
               <div className="space-y-2">
                 <Label>Assignee</Label>
-                <Select value={userEmail || "unassigned"} onValueChange={setUserEmail}>
+                <Select
+                  value={userEmail || "unassigned"}
+                  onValueChange={setUserEmail}
+                >
                   <SelectTrigger>
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4" />
@@ -243,7 +246,7 @@ export default function EditTaskModal({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !dueDate && "text-muted-foreground"
+                        !dueDate && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -298,4 +301,4 @@ export default function EditTaskModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

@@ -1,12 +1,15 @@
-import { render, screen, } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ErrorBoundary, withErrorBoundary } from '@/components/error-boundary/error-boundary';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  ErrorBoundary,
+  withErrorBoundary,
+} from "@/components/error-boundary/error-boundary";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Test component that throws an error
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
   if (shouldThrow) {
-    throw new Error('Test error');
+    throw new Error("Test error");
   }
   return <div>No error</div>;
 };
@@ -14,91 +17,96 @@ const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
 // Test component for HOC
 const TestComponent = () => <div>Test Component</div>;
 
-const createTestQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
     },
-  },
-});
+  });
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   const queryClient = createTestQueryClient();
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
 
-describe('ErrorBoundary', () => {
+describe("ErrorBoundary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Suppress console.error for tests
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
-  it('renders children when there is no error', () => {
+  it("renders children when there is no error", () => {
     render(
       <TestWrapper>
         <ErrorBoundary>
           <ThrowError shouldThrow={false} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('No error')).toBeInTheDocument();
+    expect(screen.getByText("No error")).toBeInTheDocument();
   });
 
-  it('renders error UI when there is an error', () => {
+  it("renders error UI when there is an error", () => {
     render(
       <TestWrapper>
         <ErrorBoundary>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByText('We\'re sorry, but something unexpected happened. Our team has been notified.')).toBeInTheDocument();
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "We're sorry, but something unexpected happened. Our team has been notified.",
+      ),
+    ).toBeInTheDocument();
   });
 
-  it('shows error details in development mode', () => {
+  it("shows error details in development mode", () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = "development";
 
     render(
       <TestWrapper>
         <ErrorBoundary>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Error Details (Development)')).toBeInTheDocument();
-    expect(screen.getByText('Test error')).toBeInTheDocument();
+    expect(screen.getByText("Error Details (Development)")).toBeInTheDocument();
+    expect(screen.getByText("Test error")).toBeInTheDocument();
 
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('hides error details in production mode', () => {
+  it("hides error details in production mode", () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    process.env.NODE_ENV = "production";
 
     render(
       <TestWrapper>
         <ErrorBoundary>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.queryByText('Error Details (Development)')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Error Details (Development)"),
+    ).not.toBeInTheDocument();
 
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('calls onError callback when error occurs', () => {
+  it("calls onError callback when error occurs", () => {
     const onError = vi.fn();
 
     render(
@@ -106,18 +114,18 @@ describe('ErrorBoundary', () => {
         <ErrorBoundary onError={onError}>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(onError).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
         componentStack: expect.any(String),
-      })
+      }),
     );
   });
 
-  it('renders custom fallback UI when provided', () => {
+  it("renders custom fallback UI when provided", () => {
     const customFallback = <div>Custom error message</div>;
 
     render(
@@ -125,57 +133,57 @@ describe('ErrorBoundary', () => {
         <ErrorBoundary fallback={customFallback}>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Custom error message')).toBeInTheDocument();
+    expect(screen.getByText("Custom error message")).toBeInTheDocument();
   });
 
-  it('resets error boundary when resetOnPropsChange is true', () => {
+  it("resets error boundary when resetOnPropsChange is true", () => {
     const { rerender } = render(
       <TestWrapper>
-        <ErrorBoundary resetOnPropsChange={true} resetKeys={['key1']}>
+        <ErrorBoundary resetOnPropsChange={true} resetKeys={["key1"]}>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
 
     // Change resetKeys to trigger reset
     rerender(
       <TestWrapper>
-        <ErrorBoundary resetOnPropsChange={true} resetKeys={['key2']}>
+        <ErrorBoundary resetOnPropsChange={true} resetKeys={["key2"]}>
           <ThrowError shouldThrow={false} />
         </ErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('No error')).toBeInTheDocument();
+    expect(screen.getByText("No error")).toBeInTheDocument();
   });
 });
 
-describe('withErrorBoundary HOC', () => {
-  it('wraps component with error boundary', () => {
+describe("withErrorBoundary HOC", () => {
+  it("wraps component with error boundary", () => {
     const WrappedComponent = withErrorBoundary(TestComponent);
-    
+
     render(
       <TestWrapper>
         <WrappedComponent />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Test Component')).toBeInTheDocument();
+    expect(screen.getByText("Test Component")).toBeInTheDocument();
   });
 
-  it('applies custom error boundary props', () => {
+  it("applies custom error boundary props", () => {
     const customFallback = <div>Custom HOC fallback</div>;
-    
+
     // Create a component that throws
     const ThrowingComponent = () => {
-      throw new Error('HOC test error');
+      throw new Error("HOC test error");
     };
-    
+
     const WrappedComponent = withErrorBoundary(ThrowingComponent, {
       fallback: customFallback,
     });
@@ -183,16 +191,16 @@ describe('withErrorBoundary HOC', () => {
     render(
       <TestWrapper>
         <WrappedComponent />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // The HOC should render the custom fallback when an error occurs
-    expect(screen.getByText('Custom HOC fallback')).toBeInTheDocument();
+    expect(screen.getByText("Custom HOC fallback")).toBeInTheDocument();
   });
 });
 
-describe('Specialized Error Boundaries', () => {
-  it('renders dashboard error boundary fallback', () => {
+describe("Specialized Error Boundaries", () => {
+  it("renders dashboard error boundary fallback", () => {
     const DashboardErrorBoundary = withErrorBoundary(
       ({ children }: { children: React.ReactNode }) => <>{children}</>,
       {
@@ -202,7 +210,7 @@ describe('Specialized Error Boundaries', () => {
             <p>There was an error loading the dashboard.</p>
           </div>
         ),
-      }
+      },
     );
 
     render(
@@ -210,14 +218,16 @@ describe('Specialized Error Boundaries', () => {
         <DashboardErrorBoundary>
           <ThrowError shouldThrow={true} />
         </DashboardErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Dashboard Error')).toBeInTheDocument();
-    expect(screen.getByText('There was an error loading the dashboard.')).toBeInTheDocument();
+    expect(screen.getByText("Dashboard Error")).toBeInTheDocument();
+    expect(
+      screen.getByText("There was an error loading the dashboard."),
+    ).toBeInTheDocument();
   });
 
-  it('renders chart error boundary fallback', () => {
+  it("renders chart error boundary fallback", () => {
     const ChartErrorBoundary = withErrorBoundary(
       ({ children }: { children: React.ReactNode }) => <>{children}</>,
       {
@@ -226,7 +236,7 @@ describe('Specialized Error Boundaries', () => {
             <p>Chart failed to load</p>
           </div>
         ),
-      }
+      },
     );
 
     render(
@@ -234,13 +244,13 @@ describe('Specialized Error Boundaries', () => {
         <ChartErrorBoundary>
           <ThrowError shouldThrow={true} />
         </ChartErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Chart failed to load')).toBeInTheDocument();
+    expect(screen.getByText("Chart failed to load")).toBeInTheDocument();
   });
 
-  it('renders form error boundary fallback', () => {
+  it("renders form error boundary fallback", () => {
     const FormErrorBoundary = withErrorBoundary(
       ({ children }: { children: React.ReactNode }) => <>{children}</>,
       {
@@ -250,7 +260,7 @@ describe('Specialized Error Boundaries', () => {
             <p>There was an error with the form.</p>
           </div>
         ),
-      }
+      },
     );
 
     render(
@@ -258,10 +268,12 @@ describe('Specialized Error Boundaries', () => {
         <FormErrorBoundary>
           <ThrowError shouldThrow={true} />
         </FormErrorBoundary>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Form Error')).toBeInTheDocument();
-    expect(screen.getByText('There was an error with the form.')).toBeInTheDocument();
+    expect(screen.getByText("Form Error")).toBeInTheDocument();
+    expect(
+      screen.getByText("There was an error with the form."),
+    ).toBeInTheDocument();
   });
 });

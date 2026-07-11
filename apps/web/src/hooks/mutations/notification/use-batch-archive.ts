@@ -29,4 +29,3 @@ function useBatchArchive() {
 }
 
 export default useBatchArchive;
-

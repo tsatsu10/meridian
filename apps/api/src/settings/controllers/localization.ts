@@ -40,14 +40,14 @@ export interface LocalizationSettings {
   autoDetectLanguage: boolean;
   rtlLanguages: string[]; // Right-to-left languages
   dateFormat: string;
-  timeFormat: '12h' | '24h';
+  timeFormat: "12h" | "24h";
   numberFormat: {
     decimalSeparator: string;
     thousandSeparator: string;
   };
   currencyFormat: {
     symbol: string;
-    position: 'before' | 'after';
+    position: "before" | "after";
   };
   firstDayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday
   timezone: string;
@@ -59,18 +59,18 @@ export interface LocalizationSettings {
 // ===================================
 
 export const SUPPORTED_LANGUAGES = {
-  en: { name: 'English', nativeName: 'English', rtl: false },
-  es: { name: 'Spanish', nativeName: 'Español', rtl: false },
-  fr: { name: 'French', nativeName: 'Français', rtl: false },
-  de: { name: 'German', nativeName: 'Deutsch', rtl: false },
-  it: { name: 'Italian', nativeName: 'Italiano', rtl: false },
-  pt: { name: 'Portuguese', nativeName: 'Português', rtl: false },
-  ja: { name: 'Japanese', nativeName: '日本語', rtl: false },
-  'zh-CN': { name: 'Chinese (Simplified)', nativeName: '简体中文', rtl: false },
-  ar: { name: 'Arabic', nativeName: 'العربية', rtl: true },
-  ru: { name: 'Russian', nativeName: 'Русский', rtl: false },
-  hi: { name: 'Hindi', nativeName: 'हिन्दी', rtl: false },
-  ko: { name: 'Korean', nativeName: '한국어', rtl: false },
+  en: { name: "English", nativeName: "English", rtl: false },
+  es: { name: "Spanish", nativeName: "Español", rtl: false },
+  fr: { name: "French", nativeName: "Français", rtl: false },
+  de: { name: "German", nativeName: "Deutsch", rtl: false },
+  it: { name: "Italian", nativeName: "Italiano", rtl: false },
+  pt: { name: "Portuguese", nativeName: "Português", rtl: false },
+  ja: { name: "Japanese", nativeName: "日本語", rtl: false },
+  "zh-CN": { name: "Chinese (Simplified)", nativeName: "简体中文", rtl: false },
+  ar: { name: "Arabic", nativeName: "العربية", rtl: true },
+  ru: { name: "Russian", nativeName: "Русский", rtl: false },
+  hi: { name: "Hindi", nativeName: "हिन्दी", rtl: false },
+  ko: { name: "Korean", nativeName: "한국어", rtl: false },
 };
 
 // ===================================
@@ -78,20 +78,20 @@ export const SUPPORTED_LANGUAGES = {
 // ===================================
 
 const DEFAULT_TRANSLATIONS: Record<string, Translation> = {
-  'common.save': { key: 'common.save', value: 'Save' },
-  'common.cancel': { key: 'common.cancel', value: 'Cancel' },
-  'common.delete': { key: 'common.delete', value: 'Delete' },
-  'common.edit': { key: 'common.edit', value: 'Edit' },
-  'common.create': { key: 'common.create', value: 'Create' },
-  'common.search': { key: 'common.search', value: 'Search' },
-  'common.filter': { key: 'common.filter', value: 'Filter' },
-  'common.export': { key: 'common.export', value: 'Export' },
-  'common.import': { key: 'common.import', value: 'Import' },
-  'nav.dashboard': { key: 'nav.dashboard', value: 'Dashboard' },
-  'nav.projects': { key: 'nav.projects', value: 'Projects' },
-  'nav.tasks': { key: 'nav.tasks', value: 'Tasks' },
-  'nav.calendar': { key: 'nav.calendar', value: 'Calendar' },
-  'nav.settings': { key: 'nav.settings', value: 'Settings' },
+  "common.save": { key: "common.save", value: "Save" },
+  "common.cancel": { key: "common.cancel", value: "Cancel" },
+  "common.delete": { key: "common.delete", value: "Delete" },
+  "common.edit": { key: "common.edit", value: "Edit" },
+  "common.create": { key: "common.create", value: "Create" },
+  "common.search": { key: "common.search", value: "Search" },
+  "common.filter": { key: "common.filter", value: "Filter" },
+  "common.export": { key: "common.export", value: "Export" },
+  "common.import": { key: "common.import", value: "Import" },
+  "nav.dashboard": { key: "nav.dashboard", value: "Dashboard" },
+  "nav.projects": { key: "nav.projects", value: "Projects" },
+  "nav.tasks": { key: "nav.tasks", value: "Tasks" },
+  "nav.calendar": { key: "nav.calendar", value: "Calendar" },
+  "nav.settings": { key: "nav.settings", value: "Settings" },
 };
 
 // ===================================
@@ -115,14 +115,14 @@ export async function getLanguages(workspaceId: string): Promise<Language[]> {
   }
 
   const languages = (workspace.settings as any)?.languages || [];
-  
+
   // Ensure English is always present
   if (languages.length === 0) {
     const defaultLanguage: Language = {
       id: createId(),
       workspaceId,
-      languageCode: 'en',
-      languageName: 'English',
+      languageCode: "en",
+      languageName: "English",
       isEnabled: true,
       isDefault: true,
       completionPercentage: 100,
@@ -138,9 +138,12 @@ export async function getLanguages(workspaceId: string): Promise<Language[]> {
 /**
  * Get a single language
  */
-export async function getLanguage(workspaceId: string, languageCode: string): Promise<Language | null> {
+export async function getLanguage(
+  workspaceId: string,
+  languageCode: string,
+): Promise<Language | null> {
   const languages = await getLanguages(workspaceId);
-  return languages.find(l => l.languageCode === languageCode) || null;
+  return languages.find((l) => l.languageCode === languageCode) || null;
 }
 
 /**
@@ -148,7 +151,7 @@ export async function getLanguage(workspaceId: string, languageCode: string): Pr
  */
 export async function addLanguage(
   workspaceId: string,
-  languageCode: string
+  languageCode: string,
 ): Promise<Language> {
   const db = getDatabase();
   logger.info(`Adding language ${languageCode} to workspace: ${workspaceId}`);
@@ -167,12 +170,15 @@ export async function addLanguage(
   }
 
   const existingLanguages = (workspace.settings as any)?.languages || [];
-  
-  if (existingLanguages.some((l: Language) => l.languageCode === languageCode)) {
+
+  if (
+    existingLanguages.some((l: Language) => l.languageCode === languageCode)
+  ) {
     throw new Error("Language already exists");
   }
 
-  const langInfo = SUPPORTED_LANGUAGES[languageCode as keyof typeof SUPPORTED_LANGUAGES];
+  const langInfo =
+    SUPPORTED_LANGUAGES[languageCode as keyof typeof SUPPORTED_LANGUAGES];
   const newLanguage: Language = {
     id: createId(),
     workspaceId,
@@ -207,10 +213,14 @@ export async function addLanguage(
 export async function updateLanguage(
   workspaceId: string,
   languageCode: string,
-  updates: Partial<Omit<Language, 'id' | 'workspaceId' | 'languageCode' | 'createdAt'>>
+  updates: Partial<
+    Omit<Language, "id" | "workspaceId" | "languageCode" | "createdAt">
+  >,
 ): Promise<Language> {
   const db = getDatabase();
-  logger.info(`Updating language ${languageCode} for workspace: ${workspaceId}`);
+  logger.info(
+    `Updating language ${languageCode} for workspace: ${workspaceId}`,
+  );
 
   const [workspace] = await db
     .select()
@@ -222,7 +232,9 @@ export async function updateLanguage(
   }
 
   const existingLanguages = (workspace.settings as any)?.languages || [];
-  const langIndex = existingLanguages.findIndex((l: Language) => l.languageCode === languageCode);
+  const langIndex = existingLanguages.findIndex(
+    (l: Language) => l.languageCode === languageCode,
+  );
 
   if (langIndex === -1) {
     throw new Error("Language not found");
@@ -253,11 +265,16 @@ export async function updateLanguage(
 /**
  * Delete a language
  */
-export async function deleteLanguage(workspaceId: string, languageCode: string): Promise<void> {
+export async function deleteLanguage(
+  workspaceId: string,
+  languageCode: string,
+): Promise<void> {
   const db = getDatabase();
-  logger.info(`Deleting language ${languageCode} from workspace: ${workspaceId}`);
+  logger.info(
+    `Deleting language ${languageCode} from workspace: ${workspaceId}`,
+  );
 
-  if (languageCode === 'en') {
+  if (languageCode === "en") {
     throw new Error("Cannot delete default English language");
   }
 
@@ -271,7 +288,9 @@ export async function deleteLanguage(workspaceId: string, languageCode: string):
   }
 
   const existingLanguages = (workspace.settings as any)?.languages || [];
-  const updatedLanguages = existingLanguages.filter((l: Language) => l.languageCode !== languageCode);
+  const updatedLanguages = existingLanguages.filter(
+    (l: Language) => l.languageCode !== languageCode,
+  );
 
   await db
     .update(workspaces)
@@ -296,10 +315,12 @@ export async function deleteLanguage(workspaceId: string, languageCode: string):
  */
 export async function getTranslations(
   workspaceId: string,
-  languageCode: string
+  languageCode: string,
 ): Promise<Record<string, Translation>> {
   const db = getDatabase();
-  logger.info(`Fetching translations for ${languageCode} in workspace: ${workspaceId}`);
+  logger.info(
+    `Fetching translations for ${languageCode} in workspace: ${workspaceId}`,
+  );
 
   const [workspace] = await db
     .select()
@@ -310,10 +331,11 @@ export async function getTranslations(
     throw new Error("Workspace not found");
   }
 
-  const translations = (workspace.settings as any)?.translations?.[languageCode] || {};
+  const translations =
+    (workspace.settings as any)?.translations?.[languageCode] || {};
 
   // Return default translations for English if none exist
-  if (languageCode === 'en' && Object.keys(translations).length === 0) {
+  if (languageCode === "en" && Object.keys(translations).length === 0) {
     return DEFAULT_TRANSLATIONS;
   }
 
@@ -326,10 +348,12 @@ export async function getTranslations(
 export async function updateTranslations(
   workspaceId: string,
   languageCode: string,
-  translations: Record<string, Translation>
+  translations: Record<string, Translation>,
 ): Promise<void> {
   const db = getDatabase();
-  logger.info(`Updating translations for ${languageCode} in workspace: ${workspaceId}`);
+  logger.info(
+    `Updating translations for ${languageCode} in workspace: ${workspaceId}`,
+  );
 
   const [workspace] = await db
     .select()
@@ -348,12 +372,18 @@ export async function updateTranslations(
 
   // Calculate completion percentage
   const languages = (workspace.settings as any)?.languages || [];
-  const langIndex = languages.findIndex((l: Language) => l.languageCode === languageCode);
-  
+  const langIndex = languages.findIndex(
+    (l: Language) => l.languageCode === languageCode,
+  );
+
   if (langIndex !== -1) {
     const totalKeys = Object.keys(DEFAULT_TRANSLATIONS).length;
-    const translatedKeys = Object.keys(translations).filter(key => translations[key]?.value).length;
-    languages[langIndex].completionPercentage = Math.round((translatedKeys / totalKeys) * 100);
+    const translatedKeys = Object.keys(translations).filter(
+      (key) => translations[key]?.value,
+    ).length;
+    languages[langIndex].completionPercentage = Math.round(
+      (translatedKeys / totalKeys) * 100,
+    );
     languages[langIndex].updatedAt = new Date();
   }
 
@@ -377,34 +407,41 @@ export async function updateTranslations(
 export async function exportTranslations(
   workspaceId: string,
   languageCode?: string,
-  format: 'json' | 'csv' = 'json'
+  format: "json" | "csv" = "json",
 ): Promise<string> {
-  logger.info(`Exporting translations for workspace: ${workspaceId}, language: ${languageCode || 'all'}`);
+  logger.info(
+    `Exporting translations for workspace: ${workspaceId}, language: ${languageCode || "all"}`,
+  );
 
   if (languageCode) {
     const translations = await getTranslations(workspaceId, languageCode);
-    
-    if (format === 'json') {
+
+    if (format === "json") {
       return JSON.stringify(translations, null, 2);
     } else {
       // CSV format
       const csvRows = [
-        ['Key', 'Value', 'Context'].join(','),
-        ...Object.values(translations).map(t => 
-          [t.key, `"${t.value.replace(/"/g, '""')}"`, t.context || ''].join(',')
+        ["Key", "Value", "Context"].join(","),
+        ...Object.values(translations).map((t) =>
+          [t.key, `"${t.value.replace(/"/g, '""')}"`, t.context || ""].join(
+            ",",
+          ),
         ),
       ];
-      return csvRows.join('\n');
+      return csvRows.join("\n");
     }
   } else {
     // Export all languages
     const languages = await getLanguages(workspaceId);
     const allTranslations: Record<string, Record<string, Translation>> = {};
-    
+
     for (const lang of languages) {
-      allTranslations[lang.languageCode] = await getTranslations(workspaceId, lang.languageCode);
+      allTranslations[lang.languageCode] = await getTranslations(
+        workspaceId,
+        lang.languageCode,
+      );
     }
-    
+
     return JSON.stringify(allTranslations, null, 2);
   }
 }
@@ -416,9 +453,11 @@ export async function importTranslations(
   workspaceId: string,
   languageCode: string,
   data: string,
-  format: 'json' | 'csv' = 'json'
+  format: "json" | "csv" = "json",
 ): Promise<{ imported: number; errors: string[] }> {
-  logger.info(`Importing translations for ${languageCode} in workspace: ${workspaceId}`);
+  logger.info(
+    `Importing translations for ${languageCode} in workspace: ${workspaceId}`,
+  );
 
   const errors: string[] = [];
   let imported = 0;
@@ -426,12 +465,12 @@ export async function importTranslations(
   try {
     let translations: Record<string, Translation> = {};
 
-    if (format === 'json') {
+    if (format === "json") {
       const parsed = JSON.parse(data);
       translations = parsed;
     } else {
       // CSV format
-      const lines = data.split('\n');
+      const lines = data.split("\n");
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i]?.trim();
         if (!line) continue;
@@ -461,7 +500,9 @@ export async function importTranslations(
 /**
  * Get localization settings
  */
-export async function getLocalizationSettings(workspaceId: string): Promise<LocalizationSettings> {
+export async function getLocalizationSettings(
+  workspaceId: string,
+): Promise<LocalizationSettings> {
   const db = getDatabase();
   logger.info(`Fetching localization settings for workspace: ${workspaceId}`);
 
@@ -475,26 +516,26 @@ export async function getLocalizationSettings(workspaceId: string): Promise<Loca
   }
 
   const settings = (workspace.settings as any)?.localizationSettings || {};
-  
+
   return {
     workspaceId,
-    defaultLanguage: settings.defaultLanguage || 'en',
-    enabledLanguages: settings.enabledLanguages || ['en'],
-    fallbackLanguage: settings.fallbackLanguage || 'en',
+    defaultLanguage: settings.defaultLanguage || "en",
+    enabledLanguages: settings.enabledLanguages || ["en"],
+    fallbackLanguage: settings.fallbackLanguage || "en",
     autoDetectLanguage: settings.autoDetectLanguage ?? true,
-    rtlLanguages: settings.rtlLanguages || ['ar', 'he'],
-    dateFormat: settings.dateFormat || 'YYYY-MM-DD',
-    timeFormat: settings.timeFormat || '24h',
+    rtlLanguages: settings.rtlLanguages || ["ar", "he"],
+    dateFormat: settings.dateFormat || "YYYY-MM-DD",
+    timeFormat: settings.timeFormat || "24h",
     numberFormat: settings.numberFormat || {
-      decimalSeparator: '.',
-      thousandSeparator: ',',
+      decimalSeparator: ".",
+      thousandSeparator: ",",
     },
     currencyFormat: settings.currencyFormat || {
-      symbol: '$',
-      position: 'before',
+      symbol: "$",
+      position: "before",
     },
     firstDayOfWeek: settings.firstDayOfWeek ?? 0,
-    timezone: settings.timezone || 'UTC',
+    timezone: settings.timezone || "UTC",
     updatedAt: new Date(settings.updatedAt || workspace.updatedAt),
   };
 }
@@ -504,7 +545,7 @@ export async function getLocalizationSettings(workspaceId: string): Promise<Loca
  */
 export async function updateLocalizationSettings(
   workspaceId: string,
-  updates: Partial<Omit<LocalizationSettings, 'workspaceId' | 'updatedAt'>>
+  updates: Partial<Omit<LocalizationSettings, "workspaceId" | "updatedAt">>,
 ): Promise<LocalizationSettings> {
   const db = getDatabase();
   logger.info(`Updating localization settings for workspace: ${workspaceId}`);
@@ -518,7 +559,8 @@ export async function updateLocalizationSettings(
     throw new Error("Workspace not found");
   }
 
-  const currentSettings = (workspace.settings as any)?.localizationSettings || {};
+  const currentSettings =
+    (workspace.settings as any)?.localizationSettings || {};
   const updatedSettings = {
     ...currentSettings,
     ...updates,
@@ -536,8 +578,6 @@ export async function updateLocalizationSettings(
     .where(eq(workspaces.id, workspaceId));
 
   logger.info(`Localization settings updated for workspace: ${workspaceId}`);
-  
+
   return getLocalizationSettings(workspaceId);
 }
-
-

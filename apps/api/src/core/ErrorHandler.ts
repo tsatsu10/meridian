@@ -3,8 +3,13 @@
  * @persona-all - Consistent error experience for all users
  */
 
-import { APIResponseBuilder, ErrorCodes, ErrorCode, type APIResponse } from './APIResponse';
-import { logger } from '../utils/logger';
+import {
+  APIResponseBuilder,
+  ErrorCodes,
+  type ErrorCode,
+  type APIResponse,
+} from "./APIResponse";
+import { logger } from "../utils/logger";
 
 export interface AppError extends Error {
   code: ErrorCode;
@@ -22,9 +27,9 @@ export class CustomError extends Error implements AppError {
   constructor(
     message: string,
     code: ErrorCode = ErrorCodes.INTERNAL_ERROR,
-    statusCode: number = 500,
+    statusCode = 500,
     details?: any,
-    isOperational: boolean = true
+    isOperational = true,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -45,7 +50,7 @@ export class ValidationError extends CustomError {
 
 export class NotFoundError extends CustomError {
   constructor(resource: string, id?: string) {
-    const message = id 
+    const message = id
       ? `${resource} with id ${id} not found`
       : `${resource} not found`;
     super(message, ErrorCodes.NOT_FOUND, 404);
@@ -53,13 +58,13 @@ export class NotFoundError extends CustomError {
 }
 
 export class UnauthorizedError extends CustomError {
-  constructor(message: string = 'Unauthorized access') {
+  constructor(message = "Unauthorized access") {
     super(message, ErrorCodes.UNAUTHORIZED, 401);
   }
 }
 
 export class ForbiddenError extends CustomError {
-  constructor(message: string = 'Access forbidden') {
+  constructor(message = "Access forbidden") {
     super(message, ErrorCodes.FORBIDDEN, 403);
   }
 }
@@ -82,19 +87,19 @@ export class ExternalServiceError extends CustomError {
       `External service error: ${service} - ${message}`,
       ErrorCodes.EXTERNAL_SERVICE_ERROR,
       502,
-      details
+      details,
     );
   }
 }
 
 export class RateLimitError extends CustomError {
-  constructor(message: string = 'Rate limit exceeded') {
+  constructor(message = "Rate limit exceeded") {
     super(message, ErrorCodes.RATE_LIMIT_EXCEEDED, 429);
   }
 }
 
 export class ServiceUnavailableError extends CustomError {
-  constructor(message: string = 'Service temporarily unavailable') {
+  constructor(message = "Service temporarily unavailable") {
     super(message, ErrorCodes.SERVICE_UNAVAILABLE, 503);
   }
 }
@@ -112,73 +117,75 @@ export class ErrorHandler {
 
     // Handle known custom errors
     if (error instanceof CustomError) {
-      return APIResponseBuilder.error(
-        error.code,
-        error.message,
-        error.details
-      );
+      return APIResponseBuilder.error(error.code, error.message, error.details);
     }
 
     // Handle validation errors (Zod, Joi, etc.)
-    if (error.name === 'ValidationError' || error.name === 'ZodError') {
+    if (error.name === "ValidationError" || error.name === "ZodError") {
       return APIResponseBuilder.error(
         ErrorCodes.VALIDATION_ERROR,
-        'Validation failed',
-        error.message
+        "Validation failed",
+        error.message,
       );
     }
 
     // Handle database errors
-    if (error.name === 'PrismaClientKnownRequestError' || 
-        error.name === 'PrismaClientUnknownRequestError' ||
-        error.name === 'PrismaClientValidationError') {
+    if (
+      error.name === "PrismaClientKnownRequestError" ||
+      error.name === "PrismaClientUnknownRequestError" ||
+      error.name === "PrismaClientValidationError"
+    ) {
       return APIResponseBuilder.error(
         ErrorCodes.DATABASE_ERROR,
-        'Database operation failed',
-        process.env.NODE_ENV === 'development' ? error.message : undefined
+        "Database operation failed",
+        process.env.NODE_ENV === "development" ? error.message : undefined,
       );
     }
 
     // Handle JWT errors
-    if (error.name === 'JsonWebTokenError') {
+    if (error.name === "JsonWebTokenError") {
       return APIResponseBuilder.error(
         ErrorCodes.INVALID_TOKEN,
-        'Invalid token provided'
+        "Invalid token provided",
       );
     }
 
-    if (error.name === 'TokenExpiredError') {
+    if (error.name === "TokenExpiredError") {
       return APIResponseBuilder.error(
         ErrorCodes.TOKEN_EXPIRED,
-        'Token has expired'
+        "Token has expired",
       );
     }
 
     // Handle network errors
-    if (error.name === 'NetworkError' || (error.message && error.message.includes('ECONNREFUSED'))) {
+    if (
+      error.name === "NetworkError" ||
+      (error.message && error.message.includes("ECONNREFUSED"))
+    ) {
       return APIResponseBuilder.error(
         ErrorCodes.EXTERNAL_SERVICE_ERROR,
-        'Network connection failed'
+        "Network connection failed",
       );
     }
 
     // Default internal error
-    const errorMessage = error instanceof Error
-      ? error.message
-      : 'An unexpected error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
 
     return APIResponseBuilder.error(
       ErrorCodes.INTERNAL_ERROR,
-      process.env.NODE_ENV === 'production'
-        ? 'Internal server error'
+      process.env.NODE_ENV === "production"
+        ? "Internal server error"
         : errorMessage,
-      process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
+      process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.stack
+        : undefined,
     );
   }
 
   static async handleAsync<T>(
     promise: Promise<T>,
-    fallbackMessage: string = 'An unexpected error occurred'
+    fallbackMessage = "An unexpected error occurred",
   ): Promise<APIResponse<T>> {
     try {
       const result = await promise;
@@ -188,7 +195,7 @@ export class ErrorHandler {
       if (!(error instanceof Error)) {
         return APIResponseBuilder.error(
           ErrorCodes.INTERNAL_ERROR,
-          fallbackMessage
+          fallbackMessage,
         );
       }
       return this.handle(error as Error);
@@ -210,9 +217,9 @@ export class ErrorHandler {
     };
 
     if (error instanceof CustomError && error.isOperational) {
-      logger.warn('Operational error occurred', errorInfo);
+      logger.warn("Operational error occurred", errorInfo);
     } else {
-      logger.error('Unexpected error occurred', errorInfo);
+      logger.error("Unexpected error occurred", errorInfo);
     }
   }
 
@@ -232,13 +239,15 @@ export class ErrorHandler {
 }
 
 // Global error handlers
-process.on('uncaughtException', (error: Error) => {
-  logger.error('Uncaught Exception:', error);
+process.on("uncaughtException", (error: Error) => {
+  logger.error("Uncaught Exception:", error);
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
-  logger.error('Unhandled Rejection', { promise, reason }, 'ERROR');
-  process.exit(1);
-}); 
-
+process.on(
+  "unhandledRejection",
+  (reason: unknown, promise: Promise<unknown>) => {
+    logger.error("Unhandled Rejection", { promise, reason }, "ERROR");
+    process.exit(1);
+  },
+);

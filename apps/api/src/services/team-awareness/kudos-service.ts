@@ -4,21 +4,21 @@
  * Phase 2 - Team Awareness Features
  */
 
-import { getDatabase } from '../../database/connection';
-import { kudos } from '../../database/schema/team-awareness';
-import { users } from '../../database/schema';
-import { eq, desc, and, sql, inArray } from 'drizzle-orm';
-import { Logger } from '../logging/logger';
-import { CacheService, CacheTTL } from '../cache/cache-service';
-import { createId } from '@paralleldrive/cuid2';
+import { getDatabase } from "../../database/connection";
+import { kudos } from "../../database/schema/team-awareness";
+import { users } from "../../database/schema";
+import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { Logger } from "../logging/logger";
+import { CacheService, CacheTTL } from "../cache/cache-service";
+import { createId } from "@paralleldrive/cuid2";
 
-export type KudosType = 
-  | 'great-work'
-  | 'helpful'
-  | 'creative'
-  | 'teamwork'
-  | 'leadership'
-  | 'problem-solving';
+export type KudosType =
+  | "great-work"
+  | "helpful"
+  | "creative"
+  | "teamwork"
+  | "leadership"
+  | "problem-solving";
 
 export interface GiveKudosParams {
   workspaceId: string;
@@ -27,7 +27,7 @@ export interface GiveKudosParams {
   receiverId: string;
   type: KudosType;
   message: string;
-  relatedEntityType?: 'task' | 'project' | 'sprint';
+  relatedEntityType?: "task" | "project" | "sprint";
   relatedEntityId?: string;
   isPublic?: boolean;
 }
@@ -78,7 +78,7 @@ export class KudosService {
       await CacheService.invalidatePattern(`kudos:${params.workspaceId}*`);
       await CacheService.invalidatePattern(`kudos:user:${params.receiverId}*`);
 
-      Logger.business('Kudos given', {
+      Logger.business("Kudos given", {
         giverId: params.giverId,
         receiverId: params.receiverId,
         type: params.type,
@@ -86,7 +86,7 @@ export class KudosService {
 
       return newKudos;
     } catch (error) {
-      Logger.error('Failed to give kudos', error, params);
+      Logger.error("Failed to give kudos", error, params);
       throw error;
     }
   }
@@ -95,7 +95,7 @@ export class KudosService {
    * Get kudos with filters
    */
   static async getKudos(filters: KudosFilters) {
-    const cacheKey = `kudos:${filters.workspaceId}:${filters.userId || 'all'}:${filters.projectId || 'all'}`;
+    const cacheKey = `kudos:${filters.workspaceId}:${filters.userId || "all"}:${filters.projectId || "all"}`;
 
     return CacheService.getOrCompute(
       cacheKey,
@@ -105,7 +105,7 @@ export class KudosService {
         if (filters.userId) {
           // Get kudos where user is either giver or receiver
           conditions.push(
-            sql`(${kudos.giverId} = ${filters.userId} OR ${kudos.receiverId} = ${filters.userId})`
+            sql`(${kudos.giverId} = ${filters.userId} OR ${kudos.receiverId} = ${filters.userId})`,
           );
         }
 
@@ -150,7 +150,7 @@ export class KudosService {
           .offset(filters.offset || 0);
 
         // Fetch receiver data separately
-        const receiverIds = result.map(k => k.receiverId);
+        const receiverIds = result.map((k) => k.receiverId);
         const receivers = await this.getDb()
           .select({
             id: users.id,
@@ -161,21 +161,25 @@ export class KudosService {
           .from(users)
           .where(inArray(users.id, receiverIds));
 
-        const receiversMap = new Map(receivers.map(r => [r.id, r]));
+        const receiversMap = new Map(receivers.map((r) => [r.id, r]));
 
-        return result.map(k => ({
+        return result.map((k) => ({
           ...k,
           receiver: receiversMap.get(k.receiverId),
         }));
       },
-      CacheTTL.SHORT
+      CacheTTL.SHORT,
     );
   }
 
   /**
    * Get kudos received by user
    */
-  static async getReceivedKudos(userId: string, workspaceId: string, limit: number = 20) {
+  static async getReceivedKudos(
+    userId: string,
+    workspaceId: string,
+    limit = 20,
+  ) {
     const cacheKey = `kudos:user:${userId}:received`;
 
     return CacheService.getOrCompute(
@@ -207,15 +211,15 @@ export class KudosService {
           .where(
             and(
               eq(kudos.receiverId, userId),
-              eq(kudos.workspaceId, workspaceId)
-            )
+              eq(kudos.workspaceId, workspaceId),
+            ),
           )
           .orderBy(desc(kudos.createdAt))
           .limit(limit);
 
         return result;
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
   }
 
@@ -235,8 +239,8 @@ export class KudosService {
           .where(
             and(
               eq(kudos.receiverId, userId),
-              eq(kudos.workspaceId, workspaceId)
-            )
+              eq(kudos.workspaceId, workspaceId),
+            ),
           );
 
         // Count given kudos
@@ -244,10 +248,7 @@ export class KudosService {
           .select({ count: sql<number>`count(*)::int` })
           .from(kudos)
           .where(
-            and(
-              eq(kudos.giverId, userId),
-              eq(kudos.workspaceId, workspaceId)
-            )
+            and(eq(kudos.giverId, userId), eq(kudos.workspaceId, workspaceId)),
           );
 
         // Count by type received
@@ -260,8 +261,8 @@ export class KudosService {
           .where(
             and(
               eq(kudos.receiverId, userId),
-              eq(kudos.workspaceId, workspaceId)
-            )
+              eq(kudos.workspaceId, workspaceId),
+            ),
           )
           .groupBy(kudos.type);
 
@@ -271,7 +272,7 @@ export class KudosService {
           typeBreakdown,
         };
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
   }
 
@@ -287,11 +288,11 @@ export class KudosService {
         .limit(1);
 
       if (!existingKudos) {
-        throw new Error('Kudos not found');
+        throw new Error("Kudos not found");
       }
 
       const reactions = (existingKudos.reactions as any) || {};
-      
+
       if (!reactions[emoji]) {
         reactions[emoji] = [];
       }
@@ -313,13 +314,19 @@ export class KudosService {
         .where(eq(kudos.id, kudosId));
 
       // Invalidate cache
-      await CacheService.invalidatePattern(`kudos:${existingKudos.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `kudos:${existingKudos.workspaceId}*`,
+      );
 
-      Logger.info('Kudos reaction updated', { kudosId, userId, emoji });
+      Logger.info("Kudos reaction updated", { kudosId, userId, emoji });
 
       return reactions;
     } catch (error) {
-      Logger.error('Failed to add kudos reaction', error, { kudosId, userId, emoji });
+      Logger.error("Failed to add kudos reaction", error, {
+        kudosId,
+        userId,
+        emoji,
+      });
       throw error;
     }
   }
@@ -327,7 +334,7 @@ export class KudosService {
   /**
    * Get top kudos receivers (leaderboard)
    */
-  static async getTopReceivers(workspaceId: string, limit: number = 10) {
+  static async getTopReceivers(workspaceId: string, limit = 10) {
     const cacheKey = `kudos:leaderboard:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -347,13 +354,19 @@ export class KudosService {
           .from(kudos)
           .leftJoin(users, eq(kudos.receiverId, users.id))
           .where(eq(kudos.workspaceId, workspaceId))
-          .groupBy(kudos.receiverId, users.id, users.name, users.email, users.avatar)
+          .groupBy(
+            kudos.receiverId,
+            users.id,
+            users.name,
+            users.email,
+            users.avatar,
+          )
           .orderBy(desc(sql`count(*)`))
           .limit(limit);
 
         return topReceivers;
       },
-      CacheTTL.LONG
+      CacheTTL.LONG,
     );
   }
 
@@ -369,22 +382,24 @@ export class KudosService {
         .limit(1);
 
       if (!existingKudos) {
-        throw new Error('Kudos not found');
+        throw new Error("Kudos not found");
       }
 
       // Only giver can delete
       if (existingKudos.giverId !== userId) {
-        throw new Error('Only the kudos giver can delete');
+        throw new Error("Only the kudos giver can delete");
       }
 
       await this.getDb().delete(kudos).where(eq(kudos.id, kudosId));
 
       // Invalidate cache
-      await CacheService.invalidatePattern(`kudos:${existingKudos.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `kudos:${existingKudos.workspaceId}*`,
+      );
 
-      Logger.info('Kudos deleted', { kudosId, userId });
+      Logger.info("Kudos deleted", { kudosId, userId });
     } catch (error) {
-      Logger.error('Failed to delete kudos', error, { kudosId, userId });
+      Logger.error("Failed to delete kudos", error, { kudosId, userId });
       throw error;
     }
   }
@@ -392,7 +407,7 @@ export class KudosService {
   /**
    * Get recent kudos wall
    */
-  static async getKudosWall(workspaceId: string, limit: number = 20) {
+  static async getKudosWall(workspaceId: string, limit = 20) {
     const cacheKey = `kudos:wall:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -404,12 +419,9 @@ export class KudosService {
           limit,
         });
       },
-      CacheTTL.SHORT
+      CacheTTL.SHORT,
     );
   }
 }
 
 export default KudosService;
-
-
-

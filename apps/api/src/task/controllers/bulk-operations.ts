@@ -1,19 +1,19 @@
 /**
  * ☑️ Bulk Task Operations Controller
- * 
+ *
  * Handles bulk operations on multiple tasks at once
  */
 
 import { eq, inArray } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { tasks, activityTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // ⏩ Bulk Update Status
 export async function bulkUpdateStatus(
   taskIds: string[],
   status: string,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -46,7 +46,10 @@ export async function bulkUpdateStatus(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -64,7 +67,7 @@ export async function bulkUpdateStatus(
 export async function bulkUpdatePriority(
   taskIds: string[],
   priority: string,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -97,7 +100,10 @@ export async function bulkUpdatePriority(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -116,7 +122,7 @@ export async function bulkAssignTasks(
   taskIds: string[],
   assigneeId: string,
   assigneeEmail: string,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -152,7 +158,10 @@ export async function bulkAssignTasks(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -198,7 +207,10 @@ export async function bulkDeleteTasks(taskIds: string[], userId: string) {
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -243,7 +255,10 @@ export async function bulkArchiveTasks(taskIds: string[], userId: string) {
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task", { taskId: task.id, error: logError });
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -256,5 +271,3 @@ export async function bulkArchiveTasks(taskIds: string[], userId: string) {
     throw new Error("Failed to archive tasks");
   }
 }
-
-

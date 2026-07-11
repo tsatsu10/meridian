@@ -10,7 +10,7 @@ async function signIn(email: string, password: string) {
     .from(userTable)
     .where(eq(userTable.email, email))
     .limit(1);
-  
+
   const user = users[0];
 
   if (!user) {
@@ -31,4 +31,3 @@ async function signIn(email: string, password: string) {
 }
 
 export default signIn;
-

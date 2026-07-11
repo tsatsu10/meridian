@@ -1,6 +1,6 @@
 /**
  * Test Wrapper for React Components
- * 
+ *
  * Provides all necessary providers for testing:
  * - Router context
  * - Query client
@@ -8,9 +8,9 @@
  * - Auth provider
  */
 
-import { ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
+import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "next-themes";
 
 // Create a new query client for each test
 export function createTestQueryClient() {
@@ -48,4 +48,3 @@ export function TestWrapper({ children, queryClient }: TestWrapperProps) {
 export const renderOptions = {
   wrapper: TestWrapper,
 };
-

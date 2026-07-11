@@ -1,6 +1,6 @@
 /**
  * 💼 Active Projects Component
- * 
+ *
  * Displays user's current active projects with role and status
  */
 
@@ -11,7 +11,10 @@ import { Progress } from "@/components/ui/progress";
 import { FolderOpen, Calendar, Users, Clock } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import useWorkspaceStore from "@/store/workspace";
-import { getActiveProjects, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
+import {
+  getActiveProjects,
+  smartProfileKeys,
+} from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
 
@@ -21,7 +24,8 @@ interface ActiveProjectsProps {
 }
 
 const roleColors: Record<string, string> = {
-  owner: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  owner:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
   manager: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   member: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
   viewer: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -90,15 +94,22 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
       <CardContent>
         <div className="space-y-4">
           {projects.map((project: any) => {
-            const progress = project.taskCounts.total > 0
-              ? Math.round((project.taskCounts.completed / project.taskCounts.total) * 100)
-              : 0;
+            const progress =
+              project.taskCounts.total > 0
+                ? Math.round(
+                    (project.taskCounts.completed / project.taskCounts.total) *
+                      100,
+                  )
+                : 0;
 
             return (
               <Link
                 key={project.id}
                 to="/dashboard/workspace/$workspaceId/project/$projectId/board"
-                params={{ workspaceId: workspaceId ?? "", projectId: project.id }}
+                params={{
+                  workspaceId: workspaceId ?? "",
+                  projectId: project.id,
+                }}
                 className="block"
               >
                 <div className="p-4 rounded-lg border hover:border-primary transition-colors">
@@ -119,7 +130,10 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
                     </div>
                     <Badge
                       variant="outline"
-                      className={cn("text-xs", roleColors[project.role || "member"])}
+                      className={cn(
+                        "text-xs",
+                        roleColors[project.role || "member"],
+                      )}
                     >
                       {project.role || "member"}
                     </Badge>
@@ -148,9 +162,12 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
                       <Calendar className="h-3 w-3" />
                       <span>
                         {project.lastContribution
-                          ? formatDistanceToNow(new Date(project.lastContribution), {
-                              addSuffix: true,
-                            })
+                          ? formatDistanceToNow(
+                              new Date(project.lastContribution),
+                              {
+                                addSuffix: true,
+                              },
+                            )
                           : "No activity"}
                       </span>
                     </div>
@@ -170,4 +187,3 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
     </Card>
   );
 }
-

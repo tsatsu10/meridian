@@ -14,14 +14,17 @@ interface AnalyticsOptions {
   projectIds?: string[];
 }
 
-async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsOptions) {
+async function getAnalyticsSimple({
+  workspaceId,
+  timeRange = "30d",
+}: AnalyticsOptions) {
   // Initialize database connection
   const db = getDatabase();
-  
+
   // Calculate date range filter
   const now = new Date();
   let dateFilter: Date;
-  
+
   switch (timeRange) {
     case "7d":
       dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -50,14 +53,20 @@ async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsO
     .where(eq(projectTable.workspaceId, workspaceId));
 
   // Get task metrics - use separate queries to avoid Drizzle ORM join issues
-  const projectIds = projects.map(p => p.id);
+  const projectIds = projects.map((p) => p.id);
 
-  const tasks = projectIds.length > 0
-    ? await db
-        .select()
-        .from(taskTable)
-        .where(sql`${taskTable.projectId} = ANY(ARRAY[${sql.join(projectIds.map(id => sql`${id}`), sql`, `)}])`)
-    : [];
+  const tasks =
+    projectIds.length > 0
+      ? await db
+          .select()
+          .from(taskTable)
+          .where(
+            sql`${taskTable.projectId} = ANY(ARRAY[${sql.join(
+              projectIds.map((id) => sql`${id}`),
+              sql`, `,
+            )}])`,
+          )
+      : [];
 
   // Get team members - use separate queries to avoid Drizzle ORM join issues
   const workspaceUsers = await db
@@ -66,63 +75,76 @@ async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsO
     .where(eq(workspaceUserTable.workspaceId, workspaceId));
 
   // Fetch all users and create a lookup map
-  const allUsers = await db
-    .select()
-    .from(userTable);
+  const allUsers = await db.select().from(userTable);
 
-  const userMap = new Map(allUsers.map(u => [u.email, u]));
+  const userMap = new Map(allUsers.map((u) => [u.email, u]));
 
   // Match workspace users with their details
   const teamMembers = workspaceUsers
-    .map(wu => {
+    .map((wu) => {
       const user = userMap.get(wu.userEmail);
-      return user ? {
-        userEmail: user.email,
-        name: user.name,
-      } : null;
+      return user
+        ? {
+            userEmail: user.email,
+            name: user.name,
+          }
+        : null;
     })
     .filter((m): m is { userEmail: string; name: string } => m !== null);
 
   // Get time entries - filter by task IDs in memory
-  const taskIds = tasks.map(t => t.id);
+  const taskIds = tasks.map((t) => t.id);
 
-  const timeEntries = taskIds.length > 0
-    ? await db
-        .select()
-        .from(timeEntryTable)
-        .where(sql`${timeEntryTable.taskId} = ANY(ARRAY[${sql.join(taskIds.map(id => sql`${id}`), sql`, `)}])`)
-    : [];
+  const timeEntries =
+    taskIds.length > 0
+      ? await db
+          .select()
+          .from(timeEntryTable)
+          .where(
+            sql`${timeEntryTable.taskId} = ANY(ARRAY[${sql.join(
+              taskIds.map((id) => sql`${id}`),
+              sql`, `,
+            )}])`,
+          )
+      : [];
 
   // Calculate metrics
   const totalProjects = projects.length;
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'done').length;
-  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
-  const overdueTasks = tasks.filter(t => 
-    t.dueDate && 
-    new Date(t.dueDate) < now && 
-    t.status !== 'done'
+  const completedTasks = tasks.filter((t) => t.status === "done").length;
+  const inProgressTasks = tasks.filter(
+    (t) => t.status === "in_progress",
+  ).length;
+  const overdueTasks = tasks.filter(
+    (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done",
   ).length;
 
   // Time metrics
-  const totalHours = timeEntries.reduce((sum, entry) => sum + (entry.duration || 0), 0) / 3600; // Convert seconds to hours
+  const totalHours =
+    timeEntries.reduce((sum, entry) => sum + (entry.duration || 0), 0) / 3600; // Convert seconds to hours
   const avgTimePerTask = totalTasks > 0 ? totalHours / totalTasks : 0;
 
   // Project health analysis
-  const projectHealth = projects.map(project => {
-    const projectTasks = tasks.filter(t => t.projectId === project.id);
-    const completedProjectTasks = projectTasks.filter(t => t.status === 'done').length;
-    const completion = projectTasks.length > 0 ? (completedProjectTasks / projectTasks.length) * 100 : 0;
-    const overdueProjectTasks = projectTasks.filter(t => 
-      t.dueDate && 
-      new Date(t.dueDate) < now && 
-      t.status !== 'done'
+  const projectHealth = projects.map((project) => {
+    const projectTasks = tasks.filter((t) => t.projectId === project.id);
+    const completedProjectTasks = projectTasks.filter(
+      (t) => t.status === "done",
     ).length;
-    
+    const completion =
+      projectTasks.length > 0
+        ? (completedProjectTasks / projectTasks.length) * 100
+        : 0;
+    const overdueProjectTasks = projectTasks.filter(
+      (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done",
+    ).length;
+
     let health: "good" | "warning" | "critical" = "good";
     if (completion < 30 || overdueProjectTasks > projectTasks.length * 0.3) {
       health = "critical";
-    } else if (completion < 70 || overdueProjectTasks > projectTasks.length * 0.1) {
+    } else if (
+      completion < 70 ||
+      overdueProjectTasks > projectTasks.length * 0.1
+    ) {
       health = "warning";
     }
 
@@ -134,45 +156,63 @@ async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsO
       health,
       tasksCompleted: completedProjectTasks,
       totalTasks: projectTasks.length,
-      teamSize: new Set(projectTasks.map(t => t.userEmail).filter(Boolean)).size,
+      teamSize: new Set(projectTasks.map((t) => t.userEmail).filter(Boolean))
+        .size,
       overdueTasks: overdueProjectTasks,
     };
   });
 
   // Resource utilization
-  const resourceUtilization = teamMembers.map(member => {
-    const memberTasks = tasks.filter(t => t.userEmail === member.userEmail);
-    const completedMemberTasks = memberTasks.filter(t => t.status === 'done').length;
-    const memberTimeEntries = timeEntries.filter(te => 
-      memberTasks.some(mt => mt.id === te.taskId)
+  const resourceUtilization = teamMembers.map((member) => {
+    const memberTasks = tasks.filter((t) => t.userEmail === member.userEmail);
+    const completedMemberTasks = memberTasks.filter(
+      (t) => t.status === "done",
+    ).length;
+    const memberTimeEntries = timeEntries.filter((te) =>
+      memberTasks.some((mt) => mt.id === te.taskId),
     );
-    const memberHours = memberTimeEntries.reduce((sum, entry) => sum + (entry.duration || 0), 0) / 3600;
-    
+    const memberHours =
+      memberTimeEntries.reduce((sum, entry) => sum + (entry.duration || 0), 0) /
+      3600;
+
     return {
       userEmail: member.userEmail,
       userName: member.name,
       taskCount: memberTasks.length,
       completedTasks: completedMemberTasks,
       totalHours: Math.round(memberHours),
-      productivity: memberHours > 0 ? Math.round((completedMemberTasks / memberHours) * 100) / 100 : 0,
+      productivity:
+        memberHours > 0
+          ? Math.round((completedMemberTasks / memberHours) * 100) / 100
+          : 0,
     };
   });
 
   // Performance benchmarks
-  const avgProjectCompletion = projectHealth.length > 0 
-    ? Math.round(projectHealth.reduce((sum, p) => sum + p.completion, 0) / projectHealth.length)
-    : 0;
+  const avgProjectCompletion =
+    projectHealth.length > 0
+      ? Math.round(
+          projectHealth.reduce((sum, p) => sum + p.completion, 0) /
+            projectHealth.length,
+        )
+      : 0;
 
-  const productivity = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  const goodProjects = projectHealth.filter(p => p.health === 'good').length;
-  const overallHealth = projectHealth.length > 0 ? Math.round((goodProjects / projectHealth.length) * 100) : 100;
+  const productivity =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const goodProjects = projectHealth.filter((p) => p.health === "good").length;
+  const overallHealth =
+    projectHealth.length > 0
+      ? Math.round((goodProjects / projectHealth.length) * 100)
+      : 100;
 
   return {
     projectMetrics: {
       totalProjects,
       activeProjects: totalProjects, // Assume all are active for now
-      completedProjects: projectHealth.filter(p => p.completion === 100).length,
-      projectsAtRisk: projectHealth.filter(p => p.health === 'critical').length,
+      completedProjects: projectHealth.filter((p) => p.completion === 100)
+        .length,
+      projectsAtRisk: projectHealth.filter((p) => p.health === "critical")
+        .length,
     },
     taskMetrics: {
       totalTasks,
@@ -190,7 +230,10 @@ async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsO
       totalHours: Math.round(totalHours),
       billableHours: Math.round(totalHours), // Assume all hours are billable for now
       avgTimePerTask: Math.round(avgTimePerTask * 10) / 10,
-      timeUtilization: teamMembers.length > 0 ? Math.round((totalHours / (teamMembers.length * 40 * 4)) * 100) : 0, // 40 hours/week, 4 weeks
+      timeUtilization:
+        teamMembers.length > 0
+          ? Math.round((totalHours / (teamMembers.length * 40 * 4)) * 100)
+          : 0, // 40 hours/week, 4 weeks
     },
     projectHealth,
     resourceUtilization,
@@ -212,4 +255,4 @@ async function getAnalyticsSimple({ workspaceId, timeRange = "30d" }: AnalyticsO
   };
 }
 
-export default getAnalyticsSimple; 
+export default getAnalyticsSimple;

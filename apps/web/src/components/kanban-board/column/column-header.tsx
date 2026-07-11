@@ -3,7 +3,14 @@ import useDeleteStatusColumn from "@/hooks/mutations/project/use-delete-status-c
 import useProjectStore from "@/store/project";
 import type { ProjectWithTasks } from "@/types/project";
 import { produce } from "immer";
-import { Archive, Plus, Settings, MoreHorizontal, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Archive,
+  Plus,
+  Settings,
+  MoreHorizontal,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -41,19 +48,22 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
   const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
   const updateTask = useUpdateTask();
   const deleteStatusColumn = useDeleteStatusColumn();
-  
+
   // Type-safe task calculations
   const taskCount = (column?.tasks as any[])?.length || 0;
-  const completedTasks = (column?.tasks as any[])?.filter((task: any) => task.status === 'done').length || 0;
-  const progressPercentage = taskCount > 0 ? Math.round((completedTasks / taskCount) * 100) : 0;
+  const completedTasks =
+    (column?.tasks as any[])?.filter((task: any) => task.status === "done")
+      .length || 0;
+  const progressPercentage =
+    taskCount > 0 ? Math.round((completedTasks / taskCount) * 100) : 0;
 
   // 🚦 WIP LIMIT CALCULATIONS: Visual warnings for work-in-progress limits
-  const columnId = (column as any)?.id || 'default';
+  const columnId = (column as any)?.id || "default";
   const wipLimit = WIP_LIMITS[columnId] || WIP_LIMITS.default;
   const wipPercentage = (taskCount / wipLimit) * 100;
   const isApproachingLimit = wipPercentage >= 75 && wipPercentage < 100;
   const isExceedingLimit = wipPercentage >= 100;
-  
+
   // Color coding for WIP limits
   const getWipBadgeStyles = () => {
     if (isExceedingLimit) {
@@ -68,61 +78,68 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
   // Get column position for insertion
   const getCurrentColumnPosition = () => {
     if (!project?.columns) return undefined;
-    
+
     // Find the current column in the columns array
-    const currentColumn = project.columns.find((col: any) => col.id === (column as any)?.id);
+    const currentColumn = project.columns.find(
+      (col: any) => col.id === (column as any)?.id,
+    );
     if (!currentColumn) return undefined;
-    
+
     // For default columns, use their predictable positions + 1
     if (currentColumn.isDefault) {
       const defaultPositions = {
-        'todo': 0,
-        'in_progress': 1,
-        'done': 2
+        todo: 0,
+        in_progress: 1,
+        done: 2,
       };
-      const currentPos = defaultPositions[currentColumn.id as keyof typeof defaultPositions];
+      const currentPos =
+        defaultPositions[currentColumn.id as keyof typeof defaultPositions];
       if (currentPos !== undefined) {
         return currentPos + 1;
       }
     }
-    
+
     // For custom columns, we need to find their actual visual position
     // Sort columns the same way the backend does: by position, with conflict resolution
     const sortedColumns = [...project.columns].sort((a: any, b: any) => {
-      const posA = 'position' in a && typeof a.position === 'number' ? a.position : 999;
-      const posB = 'position' in b && typeof b.position === 'number' ? b.position : 999;
-      
+      const posA =
+        "position" in a && typeof a.position === "number" ? a.position : 999;
+      const posB =
+        "position" in b && typeof b.position === "number" ? b.position : 999;
+
       // If positions are equal, prioritize defaults first, then by creation order (ID)
       if (posA === posB) {
         if (a.isDefault && !b.isDefault) return -1;
         if (!a.isDefault && b.isDefault) return 1;
         return a.id.localeCompare(b.id);
       }
-      
+
       return posA - posB;
     });
-    
+
     // Find the visual index of the current column
-    const currentIndex = sortedColumns.findIndex((col: any) => col.id === (column as any)?.id);
-    
+    const currentIndex = sortedColumns.findIndex(
+      (col: any) => col.id === (column as any)?.id,
+    );
+
     // Insert after this column's visual position
     // The backend will handle shifting existing columns to make room
     if (currentIndex >= 0) {
       // Use the visual position + 1 for insertion
       return currentIndex + 1;
     }
-    
+
     // Fallback: append at the end
     return sortedColumns.length;
   };
 
   const handleArchiveColumn = async () => {
     if (!project) return;
-    
+
     try {
       // Move all tasks in this column to "archived" status
       const tasksToArchive = (column?.tasks as any[]) || [];
-      
+
       for (const task of tasksToArchive) {
         await updateTask.mutateAsync({
           id: task.id,
@@ -141,9 +158,13 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
       }
 
       // Update local state to remove the column
-      setProject(produce(project, (draft: any) => {
-        draft.columns = draft.columns.filter((col: any) => col.id !== (column as any)?.id);
-      }));
+      setProject(
+        produce(project, (draft: any) => {
+          draft.columns = draft.columns.filter(
+            (col: any) => col.id !== (column as any)?.id,
+          );
+        }),
+      );
 
       toast.success(`"${(column as any)?.name}" column archived successfully`);
     } catch (error) {
@@ -154,13 +175,15 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
   const handleDeleteColumn = async () => {
     if (!project || !(column as any)?.id) return;
-    
+
     // Check if column has tasks
     if (taskCount > 0) {
-      toast.error(`Cannot delete column. ${taskCount} task(s) are using this status. Please move them to another column first.`);
+      toast.error(
+        `Cannot delete column. ${taskCount} task(s) are using this status. Please move them to another column first.`,
+      );
       return;
     }
-    
+
     try {
       await deleteStatusColumn.mutateAsync({
         projectId: project.id,
@@ -168,9 +191,13 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
       });
 
       // Update local state to remove the column
-      setProject(produce(project, (draft: any) => {
-        draft.columns = draft.columns.filter((col: any) => col.id !== (column as any)?.id);
-      }));
+      setProject(
+        produce(project, (draft: any) => {
+          draft.columns = draft.columns.filter(
+            (col: any) => col.id !== (column as any)?.id,
+          );
+        }),
+      );
 
       toast.success(`"${(column as any)?.name}" column deleted successfully`);
     } catch (error) {
@@ -181,39 +208,39 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
   return (
     <>
-      <AddColumnModal 
+      <AddColumnModal
         open={isAddColumnModalOpen}
         onClose={() => setIsAddColumnModalOpen(false)}
         projectId={project?.id || ""}
         insertAfterPosition={getCurrentColumnPosition()}
       />
-      
+
       {/* @epic-design: Enhanced column header with modern aesthetics and persona-aligned functionality */}
       <div className="flex items-center justify-between w-full group/header">
         <div className="flex items-center gap-3">
           {/* Enhanced status indicator with gradient and animation */}
           <div className="relative">
-            <div 
-              className="w-3 h-3 rounded-full shadow-sm border border-white/20 dark:border-zinc-700/20 transition-all duration-200 group-hover/header:scale-110" 
-              style={{ 
+            <div
+              className="w-3 h-3 rounded-full shadow-sm border border-white/20 dark:border-zinc-700/20 transition-all duration-200 group-hover/header:scale-110"
+              style={{
                 backgroundColor: (column as any)?.color || "#6b7280",
-                boxShadow: `0 0 0 2px ${(column as any)?.color || "#6b7280"}20`
+                boxShadow: `0 0 0 2px ${(column as any)?.color || "#6b7280"}20`,
               }}
             />
             {/* Subtle pulsing animation for active columns */}
             {taskCount > 0 && (
-              <div 
-                className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20" 
+              <div
+                className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
                 style={{ backgroundColor: (column as any)?.color || "#6b7280" }}
               />
             )}
           </div>
-          
+
           {/* Enhanced column title with better typography */}
           <h3 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 tracking-tight">
             {(column as any)?.name}
           </h3>
-          
+
           {/* @persona-sarah: Enhanced task count badge for PM visibility */}
           <div className="flex items-center gap-2">
             {/* 🚦 WIP LIMIT INDICATOR: Visual warnings for work-in-progress limits */}
@@ -221,8 +248,8 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="relative group/wip">
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`text-xs font-medium px-2 py-0.5 transition-all duration-200 backdrop-blur-sm ${getWipBadgeStyles()}`}
                     >
                       <div className="flex items-center gap-1.5">
@@ -245,14 +272,15 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                 <TooltipContent className="max-w-xs">
                   <div className="space-y-1">
                     <p className="font-semibold text-xs">
-                      {isExceedingLimit 
-                        ? "⚠️ WIP Limit Exceeded" 
-                        : isApproachingLimit 
-                        ? "⚡ Approaching WIP Limit"
-                        : "✅ Within WIP Limit"}
+                      {isExceedingLimit
+                        ? "⚠️ WIP Limit Exceeded"
+                        : isApproachingLimit
+                          ? "⚡ Approaching WIP Limit"
+                          : "✅ Within WIP Limit"}
                     </p>
                     <p className="text-xs opacity-80">
-                      {taskCount} of {wipLimit} tasks ({Math.round(wipPercentage)}%)
+                      {taskCount} of {wipLimit} tasks (
+                      {Math.round(wipPercentage)}%)
                     </p>
                     {isExceedingLimit && (
                       <p className="text-xs text-red-400">
@@ -268,11 +296,11 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             {/* @persona-jennifer: Progress indicator for executive overview */}
             {!(column as any)?.isDefault && progressPercentage > 0 && (
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 shadow-sm"
               >
                 <div className="flex items-center gap-1">
@@ -314,8 +342,8 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                   <MoreHorizontal className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
+              <DropdownMenuContent
+                align="end"
                 className="w-48 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-xl"
               >
                 <DropdownMenuItem
@@ -330,7 +358,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                   <Settings className="mr-2 h-4 w-4" />
                   Edit Column
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -342,7 +370,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                   Archive Column
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-zinc-200/50 dark:bg-zinc-700/50" />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();

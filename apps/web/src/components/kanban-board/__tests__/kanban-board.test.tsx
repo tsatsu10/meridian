@@ -3,11 +3,11 @@
  * Testing drag-drop, task management, and permission-based actions
  */
 
-import { describe, it, } from 'vitest';
+import { describe, it } from "vitest";
 
 // Skip this test file due to module import issues
-describe.skip('Kanban Board Tests', () => {
-  it('skipped - module import issues need refactoring', () => {});
+describe.skip("Kanban Board Tests", () => {
+  it("skipped - module import issues need refactoring", () => {});
 });
 
 /* Original tests commented out:
@@ -313,4 +313,3 @@ describe('KanbanBoard', () => {
   });
 });
 */
-

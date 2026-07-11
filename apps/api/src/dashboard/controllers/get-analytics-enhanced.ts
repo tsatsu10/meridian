@@ -1,6 +1,18 @@
-import { and, eq, sql, count, avg, sum, desc, gte, lte, between, inArray } from "drizzle-orm";
+import {
+  and,
+  eq,
+  sql,
+  count,
+  avg,
+  sum,
+  desc,
+  gte,
+  lte,
+  between,
+  inArray,
+} from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 import {
   projectTable,
   taskTable,
@@ -138,7 +150,7 @@ interface AdvancedAnalyticsResponse {
     projectsAtRisk: ComparativeData;
     avgHealthScore: ComparativeData;
   };
-  
+
   taskMetrics: {
     totalTasks: ComparativeData;
     completedTasks: ComparativeData;
@@ -147,7 +159,7 @@ interface AdvancedAnalyticsResponse {
     avgCycleTime: ComparativeData;
     throughput: ComparativeData;
   };
-  
+
   teamMetrics: {
     totalMembers: ComparativeData;
     activeMembers: ComparativeData;
@@ -156,7 +168,7 @@ interface AdvancedAnalyticsResponse {
     collaborationIndex: ComparativeData;
     retentionRate?: ComparativeData;
   };
-  
+
   timeMetrics: {
     totalHours: ComparativeData;
     billableHours: ComparativeData;
@@ -169,22 +181,22 @@ interface AdvancedAnalyticsResponse {
   projectHealth: AdvancedProjectHealth[];
   resourceUtilization: EnhancedResourceUtilization[];
   performanceBenchmarks: AdvancedPerformanceBenchmarks;
-  
+
   // Time series with advanced granularity
   timeSeriesData: TimeSeriesDataPoint[];
-  
+
   // Advanced features
   departmentBreakdown?: any[];
   skillGapAnalysis?: any[];
   capacityPlanning?: any[];
   riskAssessment?: any[];
-  
+
   // Forecasting (if enabled)
   forecasting?: ForecastingData;
-  
+
   // Benchmarking (if enabled)
   industryBenchmarks?: any;
-  
+
   // Metadata
   summary: {
     timeRange: string;
@@ -200,9 +212,11 @@ interface AdvancedAnalyticsResponse {
   };
 }
 
-async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<AdvancedAnalyticsResponse> {
+async function getEnhancedAnalytics(
+  options: EnhancedAnalyticsOptions,
+): Promise<AdvancedAnalyticsResponse> {
   logger.debug("📊 getEnhancedAnalytics called with options:", options);
-  
+
   const {
     workspaceId,
     timeRange = "30d",
@@ -225,7 +239,7 @@ async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<
     timeRange,
     includeArchived,
     includeForecasting,
-    includeBenchmarks
+    includeBenchmarks,
   });
 
   try {
@@ -235,9 +249,12 @@ async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<
       timeRange,
       compareWith,
       customStartDate,
-      customEndDate
+      customEndDate,
     );
-    logger.debug("📊 Date ranges calculated:", { currentPeriod, comparisonPeriod });
+    logger.debug("📊 Date ranges calculated:", {
+      currentPeriod,
+      comparisonPeriod,
+    });
 
     // Build base conditions with advanced filtering
     logger.debug("📊 Building filter conditions...");
@@ -263,9 +280,16 @@ async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<
       departmentData,
     ] = await Promise.all([
       getMetricsForPeriod(conditions, baseWorkspaceId, currentPeriod),
-      compareWith !== "baseline" ? getMetricsForPeriod(conditions, baseWorkspaceId, comparisonPeriod) : null,
+      compareWith !== "baseline"
+        ? getMetricsForPeriod(conditions, baseWorkspaceId, comparisonPeriod)
+        : null,
       getAdvancedProjectHealth(conditions, currentPeriod),
-      getEnhancedResourceUtilization(conditions, baseWorkspaceId, currentPeriod, comparisonPeriod),
+      getEnhancedResourceUtilization(
+        conditions,
+        baseWorkspaceId,
+        currentPeriod,
+        comparisonPeriod,
+      ),
       getTimeSeriesData(conditions, currentPeriod, granularity),
       getDepartmentBreakdown(conditions, currentPeriod),
     ]);
@@ -273,56 +297,112 @@ async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<
 
     // Calculate comparative data
     const projectMetrics = {
-      totalProjects: calculateComparativeData(currentMetrics.projects.totalProjects, comparisonMetrics?.projects?.totalProjects),
-      activeProjects: calculateComparativeData(currentMetrics.projects.activeProjects, comparisonMetrics?.projects?.activeProjects),
+      totalProjects: calculateComparativeData(
+        currentMetrics.projects.totalProjects,
+        comparisonMetrics?.projects?.totalProjects,
+      ),
+      activeProjects: calculateComparativeData(
+        currentMetrics.projects.activeProjects,
+        comparisonMetrics?.projects?.activeProjects,
+      ),
       completedProjects: calculateComparativeData(0, 0), // Will be calculated from projectHealth
       projectsAtRisk: calculateComparativeData(0, 0), // Will be calculated from projectHealth
-      avgHealthScore: calculateComparativeData(currentMetrics.projects.avgHealthScore, comparisonMetrics?.projects?.avgHealthScore),
+      avgHealthScore: calculateComparativeData(
+        currentMetrics.projects.avgHealthScore,
+        comparisonMetrics?.projects?.avgHealthScore,
+      ),
     };
 
     const taskMetrics = {
-      totalTasks: calculateComparativeData(currentMetrics.tasks.totalTasks, comparisonMetrics?.tasks?.totalTasks),
-      completedTasks: calculateComparativeData(currentMetrics.tasks.completedTasks, comparisonMetrics?.tasks?.completedTasks),
-      inProgressTasks: calculateComparativeData(currentMetrics.tasks.inProgressTasks, comparisonMetrics?.tasks?.inProgressTasks),
-      overdueTasks: calculateComparativeData(currentMetrics.tasks.overdueTasks, comparisonMetrics?.tasks?.overdueTasks),
-      avgCycleTime: calculateComparativeData(currentMetrics.tasks.avgCycleTime, comparisonMetrics?.tasks?.avgCycleTime),
-      throughput: calculateComparativeData(currentMetrics.tasks.throughput, comparisonMetrics?.tasks?.throughput),
+      totalTasks: calculateComparativeData(
+        currentMetrics.tasks.totalTasks,
+        comparisonMetrics?.tasks?.totalTasks,
+      ),
+      completedTasks: calculateComparativeData(
+        currentMetrics.tasks.completedTasks,
+        comparisonMetrics?.tasks?.completedTasks,
+      ),
+      inProgressTasks: calculateComparativeData(
+        currentMetrics.tasks.inProgressTasks,
+        comparisonMetrics?.tasks?.inProgressTasks,
+      ),
+      overdueTasks: calculateComparativeData(
+        currentMetrics.tasks.overdueTasks,
+        comparisonMetrics?.tasks?.overdueTasks,
+      ),
+      avgCycleTime: calculateComparativeData(
+        currentMetrics.tasks.avgCycleTime,
+        comparisonMetrics?.tasks?.avgCycleTime,
+      ),
+      throughput: calculateComparativeData(
+        currentMetrics.tasks.throughput,
+        comparisonMetrics?.tasks?.throughput,
+      ),
     };
 
     const teamMetrics = {
-      totalMembers: calculateComparativeData(currentMetrics.team.totalMembers, comparisonMetrics?.team?.totalMembers),
-      activeMembers: calculateComparativeData(currentMetrics.team.activeMembers, comparisonMetrics?.team?.activeMembers),
-      avgProductivity: calculateComparativeData(currentMetrics.team.avgProductivity, comparisonMetrics?.team?.avgProductivity),
-      teamEfficiency: calculateComparativeData(currentMetrics.team.avgProductivity, comparisonMetrics?.team?.avgProductivity),
-      collaborationIndex: calculateComparativeData(currentMetrics.team.collaborationIndex, comparisonMetrics?.team?.collaborationIndex),
+      totalMembers: calculateComparativeData(
+        currentMetrics.team.totalMembers,
+        comparisonMetrics?.team?.totalMembers,
+      ),
+      activeMembers: calculateComparativeData(
+        currentMetrics.team.activeMembers,
+        comparisonMetrics?.team?.activeMembers,
+      ),
+      avgProductivity: calculateComparativeData(
+        currentMetrics.team.avgProductivity,
+        comparisonMetrics?.team?.avgProductivity,
+      ),
+      teamEfficiency: calculateComparativeData(
+        currentMetrics.team.avgProductivity,
+        comparisonMetrics?.team?.avgProductivity,
+      ),
+      collaborationIndex: calculateComparativeData(
+        currentMetrics.team.collaborationIndex,
+        comparisonMetrics?.team?.collaborationIndex,
+      ),
     };
 
     const timeMetrics = {
-      totalHours: calculateComparativeData(currentMetrics.time.totalHours, comparisonMetrics?.time?.totalHours),
-      billableHours: calculateComparativeData(currentMetrics.time.billableHours, comparisonMetrics?.time?.billableHours),
-      avgTimePerTask: calculateComparativeData(currentMetrics.time.avgTimePerTask, comparisonMetrics?.time?.avgTimePerTask),
-      timeUtilization: calculateComparativeData(currentMetrics.time.timeUtilization, comparisonMetrics?.time?.timeUtilization),
+      totalHours: calculateComparativeData(
+        currentMetrics.time.totalHours,
+        comparisonMetrics?.time?.totalHours,
+      ),
+      billableHours: calculateComparativeData(
+        currentMetrics.time.billableHours,
+        comparisonMetrics?.time?.billableHours,
+      ),
+      avgTimePerTask: calculateComparativeData(
+        currentMetrics.time.avgTimePerTask,
+        comparisonMetrics?.time?.avgTimePerTask,
+      ),
+      timeUtilization: calculateComparativeData(
+        currentMetrics.time.timeUtilization,
+        comparisonMetrics?.time?.timeUtilization,
+      ),
     };
 
     // Calculate advanced performance benchmarks
     const performanceBenchmarks = calculateAdvancedBenchmarks(
       currentMetrics,
       comparisonMetrics,
-      projectHealthData
+      projectHealthData,
     );
 
     // Update project metrics from calculated health
     projectMetrics.completedProjects = calculateComparativeData(
-      projectHealthData.filter(p => p.completion === 100).length,
-      null
+      projectHealthData.filter((p) => p.completion === 100).length,
+      null,
     );
     projectMetrics.projectsAtRisk = calculateComparativeData(
-      projectHealthData.filter(p => p.health === "critical" || p.health === "at_risk").length,
-      null
+      projectHealthData.filter(
+        (p) => p.health === "critical" || p.health === "at_risk",
+      ).length,
+      null,
     );
 
     // Generate forecasting data if requested
-    const forecasting = includeForecasting 
+    const forecasting = includeForecasting
       ? await generateForecastingData(projectHealthData, timeSeriesData)
       : undefined;
 
@@ -330,11 +410,14 @@ async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<
     const { recommendations, alerts } = generateInsights(
       projectHealthData,
       resourceData,
-      performanceBenchmarks
+      performanceBenchmarks,
     );
 
     // Calculate data quality score
-    const dataQuality = calculateDataQualityScore(currentMetrics, timeSeriesData);
+    const dataQuality = calculateDataQualityScore(
+      currentMetrics,
+      timeSeriesData,
+    );
 
     return {
       projectMetrics,
@@ -349,7 +432,9 @@ async function getEnhancedAnalytics(options: EnhancedAnalyticsOptions): Promise<
       forecasting,
       summary: {
         timeRange: `${currentPeriod.start} to ${currentPeriod.end}`,
-        comparisonPeriod: comparisonPeriod ? `${comparisonPeriod.start} to ${comparisonPeriod.end}` : undefined,
+        comparisonPeriod: comparisonPeriod
+          ? `${comparisonPeriod.start} to ${comparisonPeriod.end}`
+          : undefined,
         generatedAt: new Date().toISOString(),
         dataQuality,
         recommendations,
@@ -367,7 +452,7 @@ function calculateDateRanges(
   timeRange: string,
   compareWith: string,
   customStartDate?: string,
-  customEndDate?: string
+  customEndDate?: string,
 ) {
   const now = new Date();
   let currentStart: Date;
@@ -458,9 +543,13 @@ function buildFilterConditions(filters: any) {
   return { conditions, workspaceId: filters.workspaceId };
 }
 
-async function getMetricsForPeriod(baseConditions: any[], workspaceId: string, period: any) {
+async function getMetricsForPeriod(
+  baseConditions: any[],
+  workspaceId: string,
+  period: any,
+) {
   const db = getDatabase();
-  
+
   // Project metrics
   const [projectMetrics] = await db
     .select({
@@ -481,7 +570,9 @@ async function getMetricsForPeriod(baseConditions: any[], workspaceId: string, p
     })
     .from(projectTable)
     .leftJoin(taskTable, eq(taskTable.projectId, projectTable.id))
-    .where(baseConditions.length === 1 ? baseConditions[0] : and(...baseConditions));
+    .where(
+      baseConditions.length === 1 ? baseConditions[0] : and(...baseConditions),
+    );
 
   // Task metrics - combine baseConditions with period filter
   const taskConditions = [
@@ -500,7 +591,9 @@ async function getMetricsForPeriod(baseConditions: any[], workspaceId: string, p
     })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(taskConditions.length === 1 ? taskConditions[0] : and(...taskConditions));
+    .where(
+      taskConditions.length === 1 ? taskConditions[0] : and(...taskConditions),
+    );
 
   // Team metrics
   const [teamMetrics] = await db
@@ -531,19 +624,45 @@ async function getMetricsForPeriod(baseConditions: any[], workspaceId: string, p
     .from(timeEntryTable)
     .innerJoin(taskTable, eq(timeEntryTable.taskId, taskTable.id))
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(timeConditions.length === 1 ? timeConditions[0] : and(...timeConditions));
+    .where(
+      timeConditions.length === 1 ? timeConditions[0] : and(...timeConditions),
+    );
 
   return {
-    projects: projectMetrics || { totalProjects: 0, activeProjects: 0, avgHealthScore: 0 },
-    tasks: taskMetrics || { totalTasks: 0, completedTasks: 0, inProgressTasks: 0, overdueTasks: 0, avgCycleTime: 0, throughput: 0 },
-    team: teamMetrics || { totalMembers: 0, activeMembers: 0, avgProductivity: 0, collaborationIndex: 0 },
-    time: timeMetrics || { totalHours: 0, billableHours: 0, avgTimePerTask: 0, timeUtilization: 0 },
+    projects: projectMetrics || {
+      totalProjects: 0,
+      activeProjects: 0,
+      avgHealthScore: 0,
+    },
+    tasks: taskMetrics || {
+      totalTasks: 0,
+      completedTasks: 0,
+      inProgressTasks: 0,
+      overdueTasks: 0,
+      avgCycleTime: 0,
+      throughput: 0,
+    },
+    team: teamMetrics || {
+      totalMembers: 0,
+      activeMembers: 0,
+      avgProductivity: 0,
+      collaborationIndex: 0,
+    },
+    time: timeMetrics || {
+      totalHours: 0,
+      billableHours: 0,
+      avgTimePerTask: 0,
+      timeUtilization: 0,
+    },
   };
 }
 
-async function getAdvancedProjectHealth(baseConditions: any[], period: any): Promise<AdvancedProjectHealth[]> {
+async function getAdvancedProjectHealth(
+  baseConditions: any[],
+  period: any,
+): Promise<AdvancedProjectHealth[]> {
   const db = getDatabase();
-  
+
   const projectHealthData = await db
     .select({
       id: projectTable.id,
@@ -559,19 +678,30 @@ async function getAdvancedProjectHealth(baseConditions: any[], period: any): Pro
     .from(projectTable)
     .leftJoin(taskTable, eq(taskTable.projectId, projectTable.id))
     .leftJoin(timeEntryTable, eq(timeEntryTable.taskId, taskTable.id))
-    .where(baseConditions.length === 1 ? baseConditions[0] : and(...baseConditions))
-    .groupBy(projectTable.id, projectTable.name, projectTable.slug, projectTable.createdAt);
+    .where(
+      baseConditions.length === 1 ? baseConditions[0] : and(...baseConditions),
+    )
+    .groupBy(
+      projectTable.id,
+      projectTable.name,
+      projectTable.slug,
+      projectTable.createdAt,
+    );
 
-  return projectHealthData.map(project => {
-    const completion = project.totalTasks > 0 ? (project.completedTasks / project.totalTasks) * 100 : 0;
-    const overdueRatio = project.totalTasks > 0 ? project.overdueTasks / project.totalTasks : 0;
-    
+  return projectHealthData.map((project) => {
+    const completion =
+      project.totalTasks > 0
+        ? (project.completedTasks / project.totalTasks) * 100
+        : 0;
+    const overdueRatio =
+      project.totalTasks > 0 ? project.overdueTasks / project.totalTasks : 0;
+
     // Advanced health scoring
     let healthScore = 100;
     healthScore -= overdueRatio * 30; // Penalty for overdue tasks
     healthScore -= (100 - completion) * 0.5; // Penalty for incomplete work
     healthScore = Math.max(0, Math.min(100, healthScore));
-    
+
     let health: "excellent" | "good" | "warning" | "critical" | "at_risk";
     if (healthScore >= 90) health = "excellent";
     else if (healthScore >= 75) health = "good";
@@ -593,10 +723,14 @@ async function getAdvancedProjectHealth(baseConditions: any[], period: any): Pro
     else burndownTrend = "critical";
 
     // Project age in weeks - safely convert to timestamp
-    const projectCreatedTimestamp = project.createdAt && (project.createdAt as any).getTime 
-      ? (project.createdAt as any).getTime() 
-      : new Date(project.createdAt).getTime();
-    const projectAge = Math.max(1, (period.endTs - projectCreatedTimestamp) / (1000 * 60 * 60 * 24 * 7));
+    const projectCreatedTimestamp =
+      project.createdAt && (project.createdAt as any).getTime
+        ? (project.createdAt as any).getTime()
+        : new Date(project.createdAt).getTime();
+    const projectAge = Math.max(
+      1,
+      (period.endTs - projectCreatedTimestamp) / (1000 * 60 * 60 * 24 * 7),
+    );
     const velocity = project.completedTasks / projectAge;
 
     return {
@@ -624,10 +758,10 @@ async function getEnhancedResourceUtilization(
   baseConditions: any[],
   workspaceId: string,
   currentPeriod: any,
-  comparisonPeriod: any
+  comparisonPeriod: any,
 ): Promise<EnhancedResourceUtilization[]> {
   const db = getDatabase();
-  
+
   const resourceData = await db
     .select({
       userEmail: userTable.email,
@@ -638,23 +772,34 @@ async function getEnhancedResourceUtilization(
       totalHours: sql<number>`COALESCE(SUM(${timeEntryTable.duration}), 0) / 3600`,
     })
     .from(userTable)
-    .innerJoin(workspaceUserTable, eq(workspaceUserTable.userEmail, userTable.email))
+    .innerJoin(
+      workspaceUserTable,
+      eq(workspaceUserTable.userEmail, userTable.email),
+    )
     .leftJoin(taskTable, eq(taskTable.userEmail, userTable.email))
     .leftJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .leftJoin(timeEntryTable, eq(timeEntryTable.taskId, taskTable.id))
-    .where(and(
-      eq(workspaceUserTable.workspaceId, workspaceId),
-      gte(taskTable.createdAt, new Date(currentPeriod.start)),
-      lte(taskTable.createdAt, new Date(currentPeriod.end))
-    ))
+    .where(
+      and(
+        eq(workspaceUserTable.workspaceId, workspaceId),
+        gte(taskTable.createdAt, new Date(currentPeriod.start)),
+        lte(taskTable.createdAt, new Date(currentPeriod.end)),
+      ),
+    )
     .groupBy(userTable.email, userTable.name);
 
-  return resourceData.map(user => {
-    const productivity = user.totalHours > 0 ? user.completedTasks / user.totalHours : 0;
+  return resourceData.map((user) => {
+    const productivity =
+      user.totalHours > 0 ? user.completedTasks / user.totalHours : 0;
     const utilization = Math.min(100, (user.totalHours / (40 * 4)) * 100);
-    const efficiency = user.taskCount > 0 ? (user.completedTasks / user.taskCount) * 100 : 0;
-    
-    let workloadBalance: "underutilized" | "optimal" | "overloaded" | "critical";
+    const efficiency =
+      user.taskCount > 0 ? (user.completedTasks / user.taskCount) * 100 : 0;
+
+    let workloadBalance:
+      | "underutilized"
+      | "optimal"
+      | "overloaded"
+      | "critical";
     if (utilization < 60) workloadBalance = "underutilized";
     else if (utilization <= 85) workloadBalance = "optimal";
     else if (utilization <= 100) workloadBalance = "overloaded";
@@ -690,15 +835,15 @@ async function getEnhancedResourceUtilization(
 async function getTimeSeriesData(
   baseConditions: any[],
   period: any,
-  granularity: string
+  granularity: string,
 ): Promise<TimeSeriesDataPoint[]> {
   const db = getDatabase();
   const timeSeriesData: TimeSeriesDataPoint[] = [];
-  
+
   // Determine step size based on granularity
   let stepMs: number;
   let steps: number;
-  
+
   switch (granularity) {
     case "daily":
       stepMs = 24 * 60 * 60 * 1000;
@@ -719,22 +864,22 @@ async function getTimeSeriesData(
 
   // Limit iterations to prevent performance issues
   const maxSteps = Math.min(steps, 100);
-  
+
   for (let i = 0; i < maxSteps; i++) {
-    const stepStartMs = period.startTs + (i * stepMs);
+    const stepStartMs = period.startTs + i * stepMs;
     const stepEndMs = Math.min(stepStartMs + stepMs, period.endTs); // Don't exceed period end
     const stepStartDate = new Date(stepStartMs);
     const stepEndDate = new Date(stepEndMs);
-    
+
     // Format date for display - use ISO format for consistency
-    const date = stepStartDate.toISOString().split('T')[0] ?? "";
+    const date = stepStartDate.toISOString().split("T")[0] ?? "";
 
     // Build step-specific conditions
     // Use timestamp comparison for better database compatibility
     const stepConditions = [
       ...baseConditions,
       sql`${taskTable.createdAt} >= ${stepStartDate.toISOString()}`,
-      sql`${taskTable.createdAt} < ${stepEndDate.toISOString()}`
+      sql`${taskTable.createdAt} < ${stepEndDate.toISOString()}`,
     ];
 
     try {
@@ -748,13 +893,28 @@ async function getTimeSeriesData(
         .from(taskTable)
         .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
         .leftJoin(timeEntryTable, eq(timeEntryTable.taskId, taskTable.id))
-        .where(stepConditions.length === 1 ? stepConditions[0] : and(...stepConditions));
+        .where(
+          stepConditions.length === 1
+            ? stepConditions[0]
+            : and(...stepConditions),
+        );
 
-      const stepData = stepResult[0] || { tasksCreated: 0, tasksCompleted: 0, hoursLogged: 0, activeUsers: 0 };
-      
+      const stepData = stepResult[0] || {
+        tasksCreated: 0,
+        tasksCompleted: 0,
+        hoursLogged: 0,
+        activeUsers: 0,
+      };
+
       // Calculate derived metrics
-      const productivity = stepData.tasksCreated > 0 ? (stepData.tasksCompleted / stepData.tasksCreated) * 100 : 0;
-      const burnRate = stepData.activeUsers > 0 ? stepData.hoursLogged / stepData.activeUsers : 0;
+      const productivity =
+        stepData.tasksCreated > 0
+          ? (stepData.tasksCompleted / stepData.tasksCreated) * 100
+          : 0;
+      const burnRate =
+        stepData.activeUsers > 0
+          ? stepData.hoursLogged / stepData.activeUsers
+          : 0;
       const velocity = stepData.tasksCompleted;
 
       timeSeriesData.push({
@@ -795,13 +955,17 @@ async function getDepartmentBreakdown(baseConditions: any[], period: any) {
   return [];
 }
 
-function calculateComparativeData(current: any, comparison: any | null): ComparativeData {
+function calculateComparativeData(
+  current: any,
+  comparison: any | null,
+): ComparativeData {
   // Handle null/undefined comparison
   if (comparison === null || comparison === undefined) {
-    const currentValue = typeof current === 'object' && current !== null ? 
-      (Object.values(current)[0] as number) || 0 : 
-      Number(current) || 0;
-    
+    const currentValue =
+      typeof current === "object" && current !== null
+        ? (Object.values(current)[0] as number) || 0
+        : Number(current) || 0;
+
     return {
       current: currentValue,
       comparison: null,
@@ -810,19 +974,25 @@ function calculateComparativeData(current: any, comparison: any | null): Compara
   }
 
   // Extract numeric values from objects or use as-is
-  const currentValue = typeof current === 'object' && current !== null ? 
-    (Object.values(current)[0] as number) || 0 : 
-    Number(current) || 0;
-  
-  const comparisonValue = typeof comparison === 'object' && comparison !== null ? 
-    (Object.values(comparison)[0] as number) || 0 : 
-    Number(comparison) || 0;
-  
+  const currentValue =
+    typeof current === "object" && current !== null
+      ? (Object.values(current)[0] as number) || 0
+      : Number(current) || 0;
+
+  const comparisonValue =
+    typeof comparison === "object" && comparison !== null
+      ? (Object.values(comparison)[0] as number) || 0
+      : Number(comparison) || 0;
+
   // Calculate changes
   const absolute = currentValue - comparisonValue;
-  const percentage = comparisonValue !== 0 ? (absolute / comparisonValue) * 100 : 
-                     currentValue > 0 ? 100 : 0;
-  
+  const percentage =
+    comparisonValue !== 0
+      ? (absolute / comparisonValue) * 100
+      : currentValue > 0
+        ? 100
+        : 0;
+
   // Determine trend with small change threshold (< 2% is stable)
   let trend: "up" | "down" | "stable";
   if (Math.abs(percentage) < 2) {
@@ -834,10 +1004,10 @@ function calculateComparativeData(current: any, comparison: any | null): Compara
   return {
     current: currentValue,
     comparison: comparisonValue,
-    change: { 
-      absolute: Math.round(absolute * 100) / 100, 
-      percentage: Math.round(percentage * 10) / 10, 
-      trend 
+    change: {
+      absolute: Math.round(absolute * 100) / 100,
+      percentage: Math.round(percentage * 10) / 10,
+      trend,
     },
   };
 }
@@ -845,50 +1015,83 @@ function calculateComparativeData(current: any, comparison: any | null): Compara
 function calculateAdvancedBenchmarks(
   currentMetrics: any,
   comparisonMetrics: any,
-  projectHealth: AdvancedProjectHealth[]
+  projectHealth: AdvancedProjectHealth[],
 ): AdvancedPerformanceBenchmarks {
-  const avgProjectCompletion = projectHealth.length > 0
-    ? projectHealth.reduce((sum, p) => sum + p.completion, 0) / projectHealth.length
-    : 0;
+  const avgProjectCompletion =
+    projectHealth.length > 0
+      ? projectHealth.reduce((sum, p) => sum + p.completion, 0) /
+        projectHealth.length
+      : 0;
 
   const avgTaskCycleTime = currentMetrics.tasks.avgCycleTime || 0;
-  const teamVelocity = projectHealth.length > 0
-    ? projectHealth.reduce((sum, p) => sum + p.velocity, 0) / projectHealth.length
-    : 0;
-  const qualityScore = currentMetrics.tasks.completedTasks && currentMetrics.tasks.totalTasks
-    ? (currentMetrics.tasks.completedTasks / currentMetrics.tasks.totalTasks) * 100
-    : 0;
+  const teamVelocity =
+    projectHealth.length > 0
+      ? projectHealth.reduce((sum, p) => sum + p.velocity, 0) /
+        projectHealth.length
+      : 0;
+  const qualityScore =
+    currentMetrics.tasks.completedTasks && currentMetrics.tasks.totalTasks
+      ? (currentMetrics.tasks.completedTasks /
+          currentMetrics.tasks.totalTasks) *
+        100
+      : 0;
   const onTimeDelivery = 95; // Would calculate from actual delivery data
 
-  const compAvgProjectCompletion = comparisonMetrics ? 
-    (comparisonMetrics.tasks.completedTasks / Math.max(comparisonMetrics.tasks.totalTasks, 1)) * 100 : null;
+  const compAvgProjectCompletion = comparisonMetrics
+    ? (comparisonMetrics.tasks.completedTasks /
+        Math.max(comparisonMetrics.tasks.totalTasks, 1)) *
+      100
+    : null;
 
   return {
-    avgProjectCompletion: calculateComparativeData(avgProjectCompletion, compAvgProjectCompletion),
-    avgTaskCycleTime: calculateComparativeData(avgTaskCycleTime, comparisonMetrics?.tasks?.avgCycleTime),
+    avgProjectCompletion: calculateComparativeData(
+      avgProjectCompletion,
+      compAvgProjectCompletion,
+    ),
+    avgTaskCycleTime: calculateComparativeData(
+      avgTaskCycleTime,
+      comparisonMetrics?.tasks?.avgCycleTime,
+    ),
     teamVelocity: calculateComparativeData(teamVelocity, null),
-    qualityScore: calculateComparativeData(qualityScore, comparisonMetrics ? 
-      (comparisonMetrics.tasks.completedTasks / Math.max(comparisonMetrics.tasks.totalTasks, 1)) * 100 : null),
+    qualityScore: calculateComparativeData(
+      qualityScore,
+      comparisonMetrics
+        ? (comparisonMetrics.tasks.completedTasks /
+            Math.max(comparisonMetrics.tasks.totalTasks, 1)) *
+            100
+        : null,
+    ),
     onTimeDelivery: calculateComparativeData(onTimeDelivery, null),
   };
 }
 
 async function generateForecastingData(
   projectHealth: AdvancedProjectHealth[],
-  timeSeriesData: TimeSeriesDataPoint[]
+  timeSeriesData: TimeSeriesDataPoint[],
 ): Promise<ForecastingData> {
   // Simple forecasting based on current velocity
-  const avgVelocity = projectHealth.reduce((sum, p) => sum + p.velocity, 0) / projectHealth.length;
-  const totalRemaining = projectHealth.reduce((sum, p) => sum + (p.totalTasks - p.tasksCompleted), 0);
-  
+  const avgVelocity =
+    projectHealth.reduce((sum, p) => sum + p.velocity, 0) /
+    projectHealth.length;
+  const totalRemaining = projectHealth.reduce(
+    (sum, p) => sum + (p.totalTasks - p.tasksCompleted),
+    0,
+  );
+
   const estimatedWeeks = totalRemaining / Math.max(avgVelocity, 1);
-  const estimatedCompletion = new Date(Date.now() + estimatedWeeks * 7 * 24 * 60 * 60 * 1000);
+  const estimatedCompletion = new Date(
+    Date.now() + estimatedWeeks * 7 * 24 * 60 * 60 * 1000,
+  );
 
   return {
     projectCompletionDate: estimatedCompletion.toISOString(),
     confidenceInterval: {
-      low: new Date(estimatedCompletion.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      high: new Date(estimatedCompletion.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      low: new Date(
+        estimatedCompletion.getTime() - 7 * 24 * 60 * 60 * 1000,
+      ).toISOString(),
+      high: new Date(
+        estimatedCompletion.getTime() + 14 * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     },
     resourceRequirements: {
       estimated: Math.ceil(totalRemaining / 10), // Simple estimate
@@ -909,24 +1112,35 @@ async function generateForecastingData(
 function generateInsights(
   projectHealth: AdvancedProjectHealth[],
   resourceData: EnhancedResourceUtilization[],
-  benchmarks: AdvancedPerformanceBenchmarks
+  benchmarks: AdvancedPerformanceBenchmarks,
 ) {
   const recommendations: string[] = [];
-  const alerts: Array<{ type: "warning" | "critical" | "info"; message: string; actionRequired: boolean }> = [];
+  const alerts: Array<{
+    type: "warning" | "critical" | "info";
+    message: string;
+    actionRequired: boolean;
+  }> = [];
 
   // Analyze project health
-  const criticalProjects = projectHealth.filter(p => p.health === "critical" || p.health === "at_risk");
+  const criticalProjects = projectHealth.filter(
+    (p) => p.health === "critical" || p.health === "at_risk",
+  );
   if (criticalProjects.length > 0) {
     alerts.push({
       type: "critical",
       message: `${criticalProjects.length} projects require immediate attention`,
       actionRequired: true,
     });
-    recommendations.push("Review critical projects and allocate additional resources");
+    recommendations.push(
+      "Review critical projects and allocate additional resources",
+    );
   }
 
   // Analyze resource utilization
-  const overloadedResources = resourceData.filter(r => r.workloadBalance === "overloaded" || r.workloadBalance === "critical");
+  const overloadedResources = resourceData.filter(
+    (r) =>
+      r.workloadBalance === "overloaded" || r.workloadBalance === "critical",
+  );
   if (overloadedResources.length > 0) {
     alerts.push({
       type: "warning",
@@ -936,9 +1150,13 @@ function generateInsights(
     recommendations.push("Rebalance workload across team members");
   }
 
-  const underutilizedResources = resourceData.filter(r => r.workloadBalance === "underutilized");
+  const underutilizedResources = resourceData.filter(
+    (r) => r.workloadBalance === "underutilized",
+  );
   if (underutilizedResources.length > 0) {
-    recommendations.push("Consider reassigning tasks to underutilized team members");
+    recommendations.push(
+      "Consider reassigning tasks to underutilized team members",
+    );
   }
 
   // Analyze performance trends
@@ -948,27 +1166,34 @@ function generateInsights(
       message: "Team velocity is decreasing compared to previous period",
       actionRequired: false,
     });
-    recommendations.push("Investigate causes of velocity decline and implement improvements");
+    recommendations.push(
+      "Investigate causes of velocity decline and implement improvements",
+    );
   }
 
   return { recommendations, alerts };
 }
 
-function calculateDataQualityScore(metrics: any, timeSeriesData: TimeSeriesDataPoint[]): number {
+function calculateDataQualityScore(
+  metrics: any,
+  timeSeriesData: TimeSeriesDataPoint[],
+): number {
   let score = 100;
-  
+
   // Reduce score for missing data
   if (!metrics.tasks.totalTasks) score -= 20;
   if (!metrics.time.totalHours) score -= 15;
   if (timeSeriesData.length < 7) score -= 25;
-  
+
   // Reduce score for data inconsistencies
   const recentData = timeSeriesData.slice(-7);
-  const hasRecentActivity = recentData.some(d => d.tasksCreated > 0 || d.hoursLogged > 0);
+  const hasRecentActivity = recentData.some(
+    (d) => d.tasksCreated > 0 || d.hoursLogged > 0,
+  );
   if (!hasRecentActivity) score -= 30;
 
   return Math.max(0, Math.min(100, score));
 }
 
 export default getEnhancedAnalytics;
-export type { EnhancedAnalyticsOptions, AdvancedAnalyticsResponse }; 
+export type { EnhancedAnalyticsOptions, AdvancedAnalyticsResponse };

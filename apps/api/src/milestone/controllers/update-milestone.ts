@@ -1,8 +1,8 @@
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { milestoneTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // @epic-1.3-milestones: Update project milestones
 // @role-project-manager: PM needs to update milestone details and status
@@ -47,9 +47,12 @@ export async function updateMilestone(c: Context) {
     }
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (riskLevel) updateData.riskLevel = riskLevel;
-    if (riskDescription !== undefined) updateData.riskDescription = riskDescription;
-    if (dependencyTaskIds) updateData.dependencyTaskIds = JSON.stringify(dependencyTaskIds);
-    if (stakeholderIds) updateData.stakeholderIds = JSON.stringify(stakeholderIds);
+    if (riskDescription !== undefined)
+      updateData.riskDescription = riskDescription;
+    if (dependencyTaskIds)
+      updateData.dependencyTaskIds = JSON.stringify(dependencyTaskIds);
+    if (stakeholderIds)
+      updateData.stakeholderIds = JSON.stringify(stakeholderIds);
     if (progress !== undefined) updateData.progress = progress;
 
     // Update milestone
@@ -64,15 +67,19 @@ export async function updateMilestone(c: Context) {
         {
           error: "Milestone not found",
         },
-        404
+        404,
       );
     }
 
     // Parse JSON fields for response
     return c.json({
       ...milestone,
-      dependencyTaskIds: milestone.dependencyTaskIds ? JSON.parse(milestone.dependencyTaskIds) : [],
-      stakeholderIds: milestone.stakeholderIds ? JSON.parse(milestone.stakeholderIds) : [],
+      dependencyTaskIds: milestone.dependencyTaskIds
+        ? JSON.parse(milestone.dependencyTaskIds)
+        : [],
+      stakeholderIds: milestone.stakeholderIds
+        ? JSON.parse(milestone.stakeholderIds)
+        : [],
     });
   } catch (error) {
     logger.error("Error updating milestone:", error);
@@ -80,7 +87,7 @@ export async function updateMilestone(c: Context) {
       {
         error: "Failed to update milestone",
       },
-      500
+      500,
     );
   }
-} 
+}

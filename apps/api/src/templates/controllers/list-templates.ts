@@ -15,9 +15,8 @@ interface ListTemplatesResult {
 }
 
 export default async function listTemplates(
-  filters: TemplateFilterOptions & { limit?: number; offset?: number }
+  filters: TemplateFilterOptions & { limit?: number; offset?: number },
 ): Promise<ListTemplatesResult> {
-
   const {
     industry,
     profession,
@@ -65,15 +64,16 @@ export default async function listTemplates(
       or(
         like(projectTemplates.name, `%${searchQuery}%`),
         like(projectTemplates.description, `%${searchQuery}%`),
-        like(projectTemplates.profession, `%${searchQuery}%`)
-      )
+        like(projectTemplates.profession, `%${searchQuery}%`),
+      ),
     );
   }
 
   // TODO: Implement tag filtering when needed
   // Tags are stored as JSONB, would need special handling
 
-  const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+  const whereClause =
+    whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
   // Build order by
   let orderByClause;
@@ -127,10 +127,13 @@ export default async function listTemplates(
       .where(inArray(templateTasks.templateId, templateIds))
       .groupBy(templateTasks.templateId);
 
-    taskCounts = counts.reduce((acc, curr) => {
-      acc[curr.templateId] = curr.count;
-      return acc;
-    }, {} as Record<string, number>);
+    taskCounts = counts.reduce(
+      (acc, curr) => {
+        acc[curr.templateId] = curr.count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   }
 
   // Format templates with additional info
@@ -147,5 +150,3 @@ export default async function listTemplates(
     offset,
   };
 }
-
-

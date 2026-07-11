@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userProfileTable, userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface ProfileUpdateData {
   jobTitle?: string;
@@ -24,9 +24,12 @@ interface ProfileUpdateData {
   showPhone?: boolean;
 }
 
-const updateProfile = async (userId: string, profileData: ProfileUpdateData) => {
+const updateProfile = async (
+  userId: string,
+  profileData: ProfileUpdateData,
+) => {
   const db = getDatabase();
-  
+
   try {
     // Check if user exists
     const userExists = await db
@@ -82,4 +85,4 @@ const updateProfile = async (userId: string, profileData: ProfileUpdateData) => 
   }
 };
 
-export default updateProfile; 
+export default updateProfile;

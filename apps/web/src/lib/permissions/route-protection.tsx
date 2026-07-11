@@ -1,11 +1,11 @@
 /**
  * 🛡️ Route Protection System
- * 
+ *
  * Comprehensive route protection for permission-based page access.
  * Integrates with TanStack Router for declarative route security.
  */
 
-import React from "react";
+import type React from "react";
 import { useRBACAuth } from "./context";
 import type { PermissionAction, UserRole } from "./types";
 import { RequirePermission, RequireRole } from "./components";
@@ -15,18 +15,18 @@ import { RequirePermission, RequireRole } from "./components";
 /**
  * Page-level permission guard - wraps entire page components
  */
-export function ProtectedPage({ 
-  children, 
+export function ProtectedPage({
+  children,
   permission,
-  fallbackPath = "/dashboard"
+  fallbackPath = "/dashboard",
 }: {
   children: React.ReactNode;
   permission: PermissionAction;
   fallbackPath?: string;
 }) {
   return (
-    <RequirePermission 
-      action={permission} 
+    <RequirePermission
+      action={permission}
       fallback={<RedirectToPath path={fallbackPath} />}
     >
       {children}
@@ -41,7 +41,7 @@ export function RoleProtectedPage({
   children,
   role,
   minimum = true,
-  fallbackPath = "/dashboard"
+  fallbackPath = "/dashboard",
 }: {
   children: React.ReactNode;
   role: UserRole;
@@ -49,8 +49,8 @@ export function RoleProtectedPage({
   fallbackPath?: string;
 }) {
   return (
-    <RequireRole 
-      role={role} 
+    <RequireRole
+      role={role}
       minimum={minimum}
       fallback={<RedirectToPath path={fallbackPath} />}
     >
@@ -65,21 +65,23 @@ export function RoleProtectedPage({
 export function MultiPermissionPage({
   children,
   permissions,
-  fallbackPath = "/dashboard"
+  fallbackPath = "/dashboard",
 }: {
   children: React.ReactNode;
   permissions: PermissionAction[];
   fallbackPath?: string;
 }) {
   const { hasPermission } = useRBACAuth();
-  
+
   // Check if user has all required permissions
-  const hasAllPermissions = permissions.every(permission => hasPermission(permission));
-  
+  const hasAllPermissions = permissions.every((permission) =>
+    hasPermission(permission),
+  );
+
   if (!hasAllPermissions) {
     return <RedirectToPath path={fallbackPath} />;
   }
-  
+
   return <>{children}</>;
 }
 
@@ -97,8 +99,8 @@ export function useRouteProtection() {
   };
 
   const redirectIfUnauthorized = (
-    permission: PermissionAction, 
-    redirectPath = "/dashboard"
+    permission: PermissionAction,
+    redirectPath = "/dashboard",
   ) => {
     if (!isLoading && !hasPermission(permission)) {
       window.location.href = redirectPath;
@@ -123,14 +125,28 @@ function RedirectToPath({ path }: { path: string }) {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <svg
+            className="w-8 h-8 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+            />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-        <p className="text-gray-600 mb-4">You don't have permission to access this page.</p>
-        <button 
-          onClick={() => window.location.href = path}
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          Access Denied
+        </h2>
+        <p className="text-gray-600 mb-4">
+          You don't have permission to access this page.
+        </p>
+        <button
+          onClick={() => (window.location.href = path)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
           Go to Dashboard
@@ -169,16 +185,12 @@ export const RouteProtections = {
 
   // Settings routes
   settings: (children: React.ReactNode) => (
-    <ProtectedPage permission="canManageWorkspace">
-      {children}
-    </ProtectedPage>
+    <ProtectedPage permission="canManageWorkspace">{children}</ProtectedPage>
   ),
 
   // Analytics routes
   analytics: (children: React.ReactNode) => (
-    <ProtectedPage permission="canViewAnalytics">
-      {children}
-    </ProtectedPage>
+    <ProtectedPage permission="canViewAnalytics">{children}</ProtectedPage>
   ),
 
   // Member-only routes (basic access)
@@ -195,7 +207,7 @@ export const RouteProtections = {
 export function createPermissionCheck(permission: PermissionAction) {
   return () => {
     return {
-      requiresPermission: permission
+      requiresPermission: permission,
     };
   };
 }
@@ -205,7 +217,7 @@ export function createPermissionCheck(permission: PermissionAction) {
  */
 export function createProtectedLoader<T>(
   _permission: PermissionAction,
-  loader: () => Promise<T>
+  loader: () => Promise<T>,
 ) {
   return async (): Promise<T> => {
     // TODO: Implement permission checking in loaders
@@ -262,4 +274,4 @@ export const RouteExamples = {
   `,
 };
 
-// Exports are handled in the function declarations above 
+// Exports are handled in the function declarations above

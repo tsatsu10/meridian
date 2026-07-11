@@ -5,16 +5,18 @@ interface UseGetNotificationsInfiniteOptions {
   includeArchived?: boolean;
 }
 
-function useGetNotificationsInfinite(options?: UseGetNotificationsInfiniteOptions) {
+function useGetNotificationsInfinite(
+  options?: UseGetNotificationsInfiniteOptions,
+) {
   const { includeArchived = false } = options || {};
 
   return useInfiniteQuery({
     queryKey: ["notifications-infinite", includeArchived],
-    queryFn: ({ pageParam = 0 }) => 
-      getNotifications({ 
-        limit: 50, 
-        offset: pageParam, 
-        includeArchived 
+    queryFn: ({ pageParam = 0 }) =>
+      getNotifications({
+        limit: 50,
+        offset: pageParam,
+        includeArchived,
       }),
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.hasMore) {
@@ -43,4 +45,3 @@ function useGetNotificationsInfinite(options?: UseGetNotificationsInfiniteOption
 }
 
 export default useGetNotificationsInfinite;
-

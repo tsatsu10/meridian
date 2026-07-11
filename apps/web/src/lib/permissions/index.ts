@@ -1,15 +1,15 @@
 /**
  * @epic-1.1-rbac RBAC Permissions System Export
- * 
+ *
  * Main export file for the comprehensive Role-Based Access Control system.
  * Import from here to use RBAC functionality throughout your application.
  */
 
 // ===== CORE TYPES =====
-export type { 
-  UserRole, 
-  AllPermissions, 
-  PermissionContext, 
+export type {
+  UserRole,
+  AllPermissions,
+  PermissionContext,
   PermissionCheckResult,
   PermissionAction,
   ResourceType,
@@ -29,8 +29,8 @@ export type {
 export { ROLE_METADATA } from "./types";
 
 // ===== CONTEXT & HOOKS =====
-export type { 
-  RBACUser, 
+export type {
+  RBACUser,
   RBACAuthContextType,
   RequirePermissionProps,
   RequireRoleProps,
@@ -93,7 +93,6 @@ export {
   withRole,
   PermissionStatus,
   PermissionDebug,
-  
   // Aliases for cleaner component names
   CanDo,
   OnlyRole,
@@ -103,14 +102,14 @@ export {
 } from "./components";
 
 // ===== ROUTE PROTECTION =====
-export { 
+export {
   ProtectedPage,
-  RoleProtectedPage, 
+  RoleProtectedPage,
   MultiPermissionPage,
   useRouteProtection,
   RouteProtections,
   createPermissionCheck,
-  createProtectedLoader
+  createProtectedLoader,
 } from "./route-protection";
 
 // ===== ADVANCED HOOKS =====
@@ -145,33 +144,47 @@ export { useRBACAuth as useAuthWithPermissions } from "./provider";
  */
 export const QuickChecks = {
   // Workspace-level checks
-  canManageWorkspace: (user: any) => user?.permissions?.canManageWorkspace || false,
+  canManageWorkspace: (user: any) =>
+    user?.permissions?.canManageWorkspace || false,
   canViewWorkspace: (user: any) => user?.permissions?.canViewWorkspace || false,
   canInviteUsers: (user: any) => user?.permissions?.canInviteUsers || false,
-  
+
   // Project-level checks
-  canCreateProjects: (user: any) => user?.permissions?.canCreateProjects || false,
-  canManageProjects: (user: any) => user?.permissions?.canEditProjects || user?.permissions?.canManageProjectSettings || false,
+  canCreateProjects: (user: any) =>
+    user?.permissions?.canCreateProjects || false,
+  canManageProjects: (user: any) =>
+    user?.permissions?.canEditProjects ||
+    user?.permissions?.canManageProjectSettings ||
+    false,
   canEditProjects: (user: any) => user?.permissions?.canEditProjects || false,
-  canDeleteProjects: (user: any) => user?.permissions?.canDeleteProjects || false,
-  canArchiveProjects: (user: any) => user?.permissions?.canArchiveProjects || false,
+  canDeleteProjects: (user: any) =>
+    user?.permissions?.canDeleteProjects || false,
+  canArchiveProjects: (user: any) =>
+    user?.permissions?.canArchiveProjects || false,
   canCloneProjects: (user: any) => user?.permissions?.canCloneProjects || false,
-  canManageProjectSettings: (user: any) => user?.permissions?.canManageProjectSettings || false,
-  canManageProjectTeam: (user: any) => user?.permissions?.canManageProjectTeam || false,
-  canViewAllProjects: (user: any) => user?.permissions?.canViewAllProjects || false,
-  
+  canManageProjectSettings: (user: any) =>
+    user?.permissions?.canManageProjectSettings || false,
+  canManageProjectTeam: (user: any) =>
+    user?.permissions?.canManageProjectTeam || false,
+  canViewAllProjects: (user: any) =>
+    user?.permissions?.canViewAllProjects || false,
+
   // Task-level checks
   canCreateTasks: (user: any) => user?.permissions?.canCreateTasks || false,
   canEditTasks: (user: any) => user?.permissions?.canEditTasks || false,
   canAssignTasks: (user: any) => user?.permissions?.canAssignTasks || false,
-  
+
   // Team-level checks
   canManageTeam: (user: any) => user?.permissions?.canCreateTeams || false,
   canAddMembers: (user: any) => user?.permissions?.canAddMembers || false,
-  canAssignTeamLeads: (user: any) => user?.permissions?.canAssignTeamLeads || false,
-  
+  canAssignTeamLeads: (user: any) =>
+    user?.permissions?.canAssignTeamLeads || false,
+
   // Special subtask permissions (Team Lead specific)
-  canCRUDSubtasks: (user: any) => user?.role === "team-lead" || user?.permissions?.canManageSubtaskHierarchy || false,
+  canCRUDSubtasks: (user: any) =>
+    user?.role === "team-lead" ||
+    user?.permissions?.canManageSubtaskHierarchy ||
+    false,
 } as const;
 
 /**
@@ -193,23 +206,21 @@ export const RoleLevels = {
  */
 export const PermissionCombos = {
   // Admin access
-  IS_ADMIN: [
-    { type: "role" as const, role: "workspace-manager" as const },
-  ],
-  
+  IS_ADMIN: [{ type: "role" as const, role: "workspace-manager" as const }],
+
   // Manager access (workspace or department)
   IS_MANAGER: [
     { type: "role" as const, role: "workspace-manager" as const },
     { type: "role" as const, role: "department-head" as const },
   ],
-  
+
   // Project leadership
   CAN_LEAD_PROJECTS: [
     { type: "role" as const, role: "workspace-manager" as const },
     { type: "role" as const, role: "department-head" as const },
     { type: "role" as const, role: "project-manager" as const },
   ],
-  
+
   // Team leadership
   CAN_LEAD_TEAMS: [
     { type: "role" as const, role: "workspace-manager" as const },
@@ -217,14 +228,14 @@ export const PermissionCombos = {
     { type: "role" as const, role: "project-manager" as const },
     { type: "role" as const, role: "team-lead" as const },
   ],
-  
+
   // Task management
   CAN_MANAGE_TASKS: [
     { type: "permission" as const, action: "canCreateTasks" as const },
     { type: "permission" as const, action: "canEditTasks" as const },
     { type: "permission" as const, action: "canAssignTasks" as const },
   ],
-  
+
   // External user detection
   IS_EXTERNAL: [
     { type: "role" as const, role: "client" as const },
@@ -236,4 +247,4 @@ export const PermissionCombos = {
 
 // ===== DEFAULT EXPORTS =====
 import { RBACProvider } from "./provider";
-export default RBACProvider; 
+export default RBACProvider;

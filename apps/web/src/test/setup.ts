@@ -1,7 +1,7 @@
-import '@testing-library/jest-dom';
-import { expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
+import "@testing-library/jest-dom";
+import { expect, afterEach, beforeAll, afterAll, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import * as matchers from "@testing-library/jest-dom/matchers";
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
@@ -28,9 +28,9 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 // Mock matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -43,7 +43,7 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock window.scrollTo
-Object.defineProperty(window, 'scrollTo', {
+Object.defineProperty(window, "scrollTo", {
   writable: true,
   value: vi.fn(),
 });
@@ -55,8 +55,8 @@ const originalWarn = console.warn;
 beforeAll(() => {
   console.error = (...args: any[]) => {
     if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Warning: ReactDOM.render is no longer supported')
+      typeof args[0] === "string" &&
+      args[0].includes("Warning: ReactDOM.render is no longer supported")
     ) {
       return;
     }
@@ -65,9 +65,9 @@ beforeAll(() => {
 
   console.warn = (...args: any[]) => {
     if (
-      typeof args[0] === 'string' &&
-      (args[0].includes('componentWillReceiveProps') ||
-        args[0].includes('componentWillMount'))
+      typeof args[0] === "string" &&
+      (args[0].includes("componentWillReceiveProps") ||
+        args[0].includes("componentWillMount"))
     ) {
       return;
     }

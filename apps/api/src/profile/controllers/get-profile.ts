@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userTable, userProfileTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 /**
  * Fetches complete user profile data including basic info and extended profile
@@ -11,10 +11,10 @@ import logger from '../../utils/logger';
  */
 const getProfile = async (userId: string) => {
   const db = getDatabase();
-  
+
   try {
     logger.debug("🔍 getProfile called with userId:", userId);
-    
+
     // Get user basic info and profile data
     const result = await db
       .select({
@@ -23,7 +23,7 @@ const getProfile = async (userId: string) => {
         name: userTable.name,
         email: userTable.email,
         createdAt: userTable.createdAt,
-        
+
         // Profile extended info
         jobTitle: userProfileTable.jobTitle,
         company: userProfileTable.company,
@@ -78,7 +78,11 @@ const getProfile = async (userId: string) => {
         user.location,
         user.profilePicture,
       ];
-      completenessScore = Math.round((fields.filter(field => field && String(field).trim()).length / fields.length) * 100);
+      completenessScore = Math.round(
+        (fields.filter((field) => field && String(field).trim()).length /
+          fields.length) *
+          100,
+      );
     }
 
     return {
@@ -87,10 +91,16 @@ const getProfile = async (userId: string) => {
     };
   } catch (error) {
     logger.error("❌ Error fetching profile:", error);
-    logger.error("❌ Error details:", error instanceof Error ? error.message : String(error));
-    logger.error("❌ Stack:", error instanceof Error ? error.stack : "No stack");
+    logger.error(
+      "❌ Error details:",
+      error instanceof Error ? error.message : String(error),
+    );
+    logger.error(
+      "❌ Stack:",
+      error instanceof Error ? error.stack : "No stack",
+    );
     throw error; // Re-throw the original error instead of wrapping it
   }
 };
 
-export default getProfile; 
+export default getProfile;

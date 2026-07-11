@@ -1,7 +1,7 @@
 /**
  * 🔒 Universal Input Sanitization Utility
  * Comprehensive sanitization for ALL user inputs across the application
- * 
+ *
  * Protects against:
  * - XSS (Cross-Site Scripting)
  * - HTML Injection
@@ -9,7 +9,7 @@
  * - Path Traversal
  * - SQL Injection (via input cleaning)
  * - NoSQL Injection
- * 
+ *
  * Usage across:
  * - Tasks (title, description)
  * - Projects (name, description, slug)
@@ -20,7 +20,7 @@
  * - Any user-generated content
  */
 
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 /**
  * Comprehensive list of dangerous patterns
@@ -33,7 +33,7 @@ const DANGEROUS_PATTERNS = {
     /vbscript:/gi,
     /data:text\/html/gi,
   ],
-  
+
   // HTML elements that can execute code
   dangerousElements: [
     /<iframe[^>]*>.*?<\/iframe>/gi,
@@ -44,19 +44,19 @@ const DANGEROUS_PATTERNS = {
     /<meta[^>]*>/gi,
     /<style[^>]*>.*?<\/style>/gi,
   ],
-  
+
   // Event handlers
   eventHandlers: [
     /on\w+\s*=/gi, // onclick, onerror, onload, etc.
   ],
-  
+
   // Path traversal
   pathTraversal: [
     /\.\.[\/\\]/g, // ../
     /\.\.%2[fF]/g, // URL encoded ../
     /\.\.%5[cC]/g, // URL encoded ..\
   ],
-  
+
   // SQL injection patterns
   sqlInjection: [
     /(\bunion\b.*\bselect\b)|(\bselect\b.*\bunion\b)/gi,
@@ -64,35 +64,30 @@ const DANGEROUS_PATTERNS = {
     /--\s*$/g, // SQL comment at end
     /\/\*.*\*\//g, // SQL block comments
   ],
-  
+
   // NoSQL injection
-  noSqlInjection: [
-    /\$where/gi,
-    /\$ne/gi,
-    /\$gt/gi,
-    /\$regex/gi,
-  ],
+  noSqlInjection: [/\$where/gi, /\$ne/gi, /\$gt/gi, /\$regex/gi],
 };
 
 /**
  * HTML entities to escape
  */
 const HTML_ESCAPE_MAP: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#x27;',
-  '/': '&#x2F;',
-  '`': '&#x60;',
-  '=': '&#x3D;',
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#x27;",
+  "/": "&#x2F;",
+  "`": "&#x60;",
+  "=": "&#x3D;",
 };
 
 /**
  * Escape HTML entities
  */
 export function escapeHtml(text: string): string {
-  if (!text || typeof text !== 'string') return '';
+  if (!text || typeof text !== "string") return "";
   return text.replace(/[&<>"'`=\/]/g, (char) => HTML_ESCAPE_MAP[char] || char);
 }
 
@@ -100,18 +95,18 @@ export function escapeHtml(text: string): string {
  * Strip ALL HTML tags
  */
 export function stripHtml(text: string): string {
-  if (!text || typeof text !== 'string') return '';
-  
+  if (!text || typeof text !== "string") return "";
+
   return text
-    .replace(/<[^>]*>/g, '') // Remove all HTML tags
-    .replace(/&nbsp;/g, ' ')
+    .replace(/<[^>]*>/g, "") // Remove all HTML tags
+    .replace(/&nbsp;/g, " ")
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&#x27;/g, "'")
     .replace(/&#x2F;/g, "/")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 }
 
 /**
@@ -121,7 +116,7 @@ export function containsDangerousContent(text: string): {
   isDangerous: boolean;
   matchedPatterns: string[];
 } {
-  if (!text || typeof text !== 'string') {
+  if (!text || typeof text !== "string") {
     return { isDangerous: false, matchedPatterns: [] };
   }
 
@@ -152,7 +147,7 @@ export function sanitizeText(
     maxLength?: number;
     allowNewlines?: boolean;
     stripHtmlTags?: boolean;
-  } = {}
+  } = {},
 ): string {
   const {
     maxLength = 500,
@@ -160,14 +155,14 @@ export function sanitizeText(
     stripHtmlTags = true,
   } = options;
 
-  if (!text || typeof text !== 'string') return '';
+  if (!text || typeof text !== "string") return "";
 
   let sanitized = text.trim();
 
   // Check for dangerous content
   const { isDangerous, matchedPatterns } = containsDangerousContent(sanitized);
   if (isDangerous) {
-    logger.warn('🚨 Dangerous content detected and sanitized', {
+    logger.warn("🚨 Dangerous content detected and sanitized", {
       contentPreview: sanitized.substring(0, 100),
       patterns: matchedPatterns,
     });
@@ -176,7 +171,7 @@ export function sanitizeText(
     Object.values(DANGEROUS_PATTERNS)
       .flat()
       .forEach((pattern) => {
-        sanitized = sanitized.replace(pattern, '[removed]');
+        sanitized = sanitized.replace(pattern, "[removed]");
       });
   }
 
@@ -187,16 +182,16 @@ export function sanitizeText(
 
   // Handle newlines
   if (!allowNewlines) {
-    sanitized = sanitized.replace(/[\r\n]+/g, ' ');
+    sanitized = sanitized.replace(/[\r\n]+/g, " ");
   }
 
   // Normalize whitespace
-  sanitized = sanitized.replace(/\s+/g, ' ').trim();
+  sanitized = sanitized.replace(/\s+/g, " ").trim();
 
   // Length limit
   if (sanitized.length > maxLength) {
     sanitized = sanitized.substring(0, maxLength);
-    logger.debug('Text truncated', { maxLength, original: text.length });
+    logger.debug("Text truncated", { maxLength, original: text.length });
   }
 
   return sanitized;
@@ -212,18 +207,18 @@ export function sanitizeRichText(
   options: {
     maxLength?: number;
     allowMarkdown?: boolean;
-  } = {}
+  } = {},
 ): string {
   const { maxLength = 10000, allowMarkdown = true } = options;
 
-  if (!text || typeof text !== 'string') return '';
+  if (!text || typeof text !== "string") return "";
 
   let sanitized = text.trim();
 
   // Check for and remove dangerous content
   const { isDangerous, matchedPatterns } = containsDangerousContent(sanitized);
   if (isDangerous) {
-    logger.warn('🚨 Dangerous rich text content detected', {
+    logger.warn("🚨 Dangerous rich text content detected", {
       contentPreview: sanitized.substring(0, 100),
       patterns: matchedPatterns,
     });
@@ -232,7 +227,7 @@ export function sanitizeRichText(
     Object.values(DANGEROUS_PATTERNS)
       .flat()
       .forEach((pattern) => {
-        sanitized = sanitized.replace(pattern, '[removed]');
+        sanitized = sanitized.replace(pattern, "[removed]");
       });
   }
 
@@ -252,16 +247,16 @@ export function sanitizeRichText(
  * 🔒 SLUG SANITIZATION
  * Use for: URL slugs, identifiers
  */
-export function sanitizeSlug(slug: string, maxLength: number = 100): string {
-  if (!slug || typeof slug !== 'string') return '';
+export function sanitizeSlug(slug: string, maxLength = 100): string {
+  if (!slug || typeof slug !== "string") return "";
 
   return slug
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s-]/g, '') // Only alphanumeric, spaces, hyphens
-    .replace(/\s+/g, '-') // Spaces to hyphens
-    .replace(/-+/g, '-') // Multiple hyphens to single
-    .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+    .replace(/[^a-z0-9\s-]/g, "") // Only alphanumeric, spaces, hyphens
+    .replace(/\s+/g, "-") // Spaces to hyphens
+    .replace(/-+/g, "-") // Multiple hyphens to single
+    .replace(/^-|-$/g, "") // Remove leading/trailing hyphens
     .substring(0, maxLength);
 }
 
@@ -270,15 +265,15 @@ export function sanitizeSlug(slug: string, maxLength: number = 100): string {
  * Use for: File uploads, attachments
  */
 export function sanitizeFileName(fileName: string): string {
-  if (!fileName || typeof fileName !== 'string') return 'file';
+  if (!fileName || typeof fileName !== "string") return "file";
 
   let sanitized = fileName.trim();
 
   // Remove path separators (path traversal prevention)
   sanitized = sanitized
-    .replace(/\.\./g, '') // Remove ../
-    .replace(/[\/\\]/g, '') // Remove slashes
-    .replace(/[<>:"|?*\x00-\x1f]/g, '') // Remove Windows-invalid chars and control chars
+    .replace(/\.\./g, "") // Remove ../
+    .replace(/[\/\\]/g, "") // Remove slashes
+    .replace(/[<>:"|?*\x00-\x1f]/g, "") // Remove Windows-invalid chars and control chars
     .trim();
 
   // Strip HTML
@@ -287,35 +282,35 @@ export function sanitizeFileName(fileName: string): string {
   // Length limit
   if (sanitized.length > 255) {
     // Preserve extension
-    const parts = sanitized.split('.');
-    const ext = parts.length > 1 ? parts.pop() : '';
-    const name = parts.join('.');
-    sanitized = name.substring(0, 250) + (ext ? `.${ext}` : '');
+    const parts = sanitized.split(".");
+    const ext = parts.length > 1 ? parts.pop() : "";
+    const name = parts.join(".");
+    sanitized = name.substring(0, 250) + (ext ? `.${ext}` : "");
   }
 
-  return sanitized || 'file';
+  return sanitized || "file";
 }
 
 /**
  * 🔒 EMAIL VALIDATION
  */
 export function isValidEmail(email: string): boolean {
-  if (!email || typeof email !== 'string') return false;
-  
+  if (!email || typeof email !== "string") return false;
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email) && email.length <= 254 && !email.includes('..');
+  return emailRegex.test(email) && email.length <= 254 && !email.includes("..");
 }
 
 /**
  * 🔒 URL VALIDATION
  */
 export function isValidUrl(url: string): boolean {
-  if (!url || typeof url !== 'string') return false;
+  if (!url || typeof url !== "string") return false;
 
   try {
     const parsed = new URL(url);
     // Only allow http/https
-    return ['http:', 'https:'].includes(parsed.protocol);
+    return ["http:", "https:"].includes(parsed.protocol);
   } catch {
     return false;
   }
@@ -324,14 +319,14 @@ export function isValidUrl(url: string): boolean {
 /**
  * 🔒 SANITIZE URL
  */
-export function sanitizeUrl(url: string, maxLength: number = 2000): string {
-  if (!url || typeof url !== 'string') return '';
+export function sanitizeUrl(url: string, maxLength = 2000): string {
+  if (!url || typeof url !== "string") return "";
 
   const trimmed = url.trim();
-  
+
   if (!isValidUrl(trimmed)) {
-    logger.warn('Invalid URL blocked', { url: trimmed.substring(0, 100) });
-    return '';
+    logger.warn("Invalid URL blocked", { url: trimmed.substring(0, 100) });
+    return "";
   }
 
   return trimmed.substring(0, maxLength);
@@ -347,9 +342,13 @@ export function sanitizeNumber(
     min?: number;
     max?: number;
     defaultValue?: number;
-  } = {}
+  } = {},
 ): number {
-  const { min = -Infinity, max = Infinity, defaultValue = 0 } = options;
+  const {
+    min = Number.NEGATIVE_INFINITY,
+    max = Number.POSITIVE_INFINITY,
+    defaultValue = 0,
+  } = options;
 
   const parsed = Number(value);
 
@@ -370,7 +369,7 @@ export function sanitizeArray<T>(
     maxLength?: number;
     validator?: (item: T) => boolean;
     unique?: boolean;
-  } = {}
+  } = {},
 ): T[] {
   const { maxLength = 1000, validator, unique = false } = options;
 
@@ -398,22 +397,22 @@ export function sanitizeObject(
     allowedKeys?: string[];
     maxDepth?: number;
     currentDepth?: number;
-  } = {}
+  } = {},
 ): any {
   const { allowedKeys, maxDepth = 5, currentDepth = 0 } = options;
 
   if (currentDepth >= maxDepth) {
-    logger.warn('Object depth limit reached', { maxDepth });
+    logger.warn("Object depth limit reached", { maxDepth });
     return {};
   }
 
-  if (typeof obj !== 'object' || obj === null) {
+  if (typeof obj !== "object" || obj === null) {
     return obj;
   }
 
   if (Array.isArray(obj)) {
     return obj.map((item) =>
-      sanitizeObject(item, { ...options, currentDepth: currentDepth + 1 })
+      sanitizeObject(item, { ...options, currentDepth: currentDepth + 1 }),
     );
   }
 
@@ -421,8 +420,8 @@ export function sanitizeObject(
 
   Object.keys(obj).forEach((key) => {
     // Skip dangerous keys
-    if (key.startsWith('__') || key.startsWith('$')) {
-      logger.warn('Dangerous object key blocked', { key });
+    if (key.startsWith("__") || key.startsWith("$")) {
+      logger.warn("Dangerous object key blocked", { key });
       return;
     }
 
@@ -433,12 +432,12 @@ export function sanitizeObject(
 
     const value = obj[key];
 
-    if (typeof value === 'object') {
+    if (typeof value === "object") {
       sanitized[key] = sanitizeObject(value, {
         ...options,
         currentDepth: currentDepth + 1,
       });
-    } else if (typeof value === 'string') {
+    } else if (typeof value === "string") {
       sanitized[key] = sanitizeText(value, { maxLength: 5000 });
     } else {
       sanitized[key] = value;
@@ -454,30 +453,39 @@ export function sanitizeObject(
  */
 export function sanitizeInput(
   input: any,
-  type: 'text' | 'richText' | 'email' | 'url' | 'fileName' | 'slug' | 'number' | 'array' | 'object',
-  options?: any
+  type:
+    | "text"
+    | "richText"
+    | "email"
+    | "url"
+    | "fileName"
+    | "slug"
+    | "number"
+    | "array"
+    | "object",
+  options?: any,
 ): any {
   switch (type) {
-    case 'text':
+    case "text":
       return sanitizeText(input, options);
-    case 'richText':
+    case "richText":
       return sanitizeRichText(input, options);
-    case 'email':
-      return isValidEmail(input) ? input : '';
-    case 'url':
+    case "email":
+      return isValidEmail(input) ? input : "";
+    case "url":
       return sanitizeUrl(input, options?.maxLength);
-    case 'fileName':
+    case "fileName":
       return sanitizeFileName(input);
-    case 'slug':
+    case "slug":
       return sanitizeSlug(input, options?.maxLength);
-    case 'number':
+    case "number":
       return sanitizeNumber(input, options);
-    case 'array':
+    case "array":
       return sanitizeArray(input, options);
-    case 'object':
+    case "object":
       return sanitizeObject(input, options);
     default:
-      logger.warn('Unknown sanitization type', { type });
+      logger.warn("Unknown sanitization type", { type });
       return sanitizeText(String(input));
   }
 }
@@ -490,7 +498,7 @@ export default {
   escapeHtml,
   stripHtml,
   containsDangerousContent,
-  
+
   // Type-specific sanitization
   sanitizeText,
   sanitizeRichText,
@@ -500,12 +508,11 @@ export default {
   sanitizeNumber,
   sanitizeArray,
   sanitizeObject,
-  
+
   // Validation
   isValidEmail,
   isValidUrl,
-  
+
   // Universal
   sanitizeInput,
 };
-

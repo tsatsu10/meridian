@@ -4,10 +4,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 interface CreateDependencyParams {
   taskId: string;
   requiredTaskId: string;
-  type?: 'blocks' | 'blocked_by';
+  type?: "blocks" | "blocked_by";
 }
 
-async function createDependency({ taskId, requiredTaskId, type = 'blocks' }: CreateDependencyParams) {
+async function createDependency({
+  taskId,
+  requiredTaskId,
+  type = "blocks",
+}: CreateDependencyParams) {
   const response = await (client as any).task[":taskId"].dependencies.$post({
     param: { taskId },
     json: { requiredTaskId, type },
@@ -42,4 +46,4 @@ function useCreateDependency() {
   });
 }
 
-export default useCreateDependency; 
+export default useCreateDependency;

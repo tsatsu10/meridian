@@ -1,6 +1,6 @@
 /**
  * 🛡️ Admin Role Management Interface
- * 
+ *
  * @epic-3.4-admin @persona-jennifer: Executive oversight of role assignments
  * Comprehensive role management dashboard for workspace managers and department heads
  */
@@ -19,11 +19,13 @@ const AdminRoleManagementWithPermission = () => (
 );
 
 export const Route = createFileRoute("/dashboard/admin/roles")({
-  component: withErrorBoundary(AdminRoleManagementWithPermission, "Admin Role Management"),
+  component: withErrorBoundary(
+    AdminRoleManagementWithPermission,
+    "Admin Role Management",
+  ),
 });
 
 function RoleManagementPage() {
-  
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -36,7 +38,7 @@ function RoleManagementPage() {
             Manage user roles and permissions across your workspace
           </p>
         </div>
-        
+
         <Button className="flex items-center gap-2">
           <UserCog className="h-4 w-4" />
           Assign Role
@@ -53,12 +55,15 @@ function RoleManagementPage() {
         <CardContent>
           <div className="text-center py-8">
             <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Role management interface is being built.</p>
-            <p className="text-sm text-gray-500">Full functionality coming soon!</p>
+            <p className="text-gray-600">
+              Role management interface is being built.
+            </p>
+            <p className="text-sm text-gray-500">
+              Full functionality coming soon!
+            </p>
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-

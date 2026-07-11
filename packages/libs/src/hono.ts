@@ -22,27 +22,24 @@ const apiUrl =
       ? trimmed
       : `${trimmed}/api`;
 
-export const client = hc<AppType>(
-  apiUrl,
-  {
-    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-      // Create timeout controller (30 seconds for most operations, 60 for uploads)
-      const isUpload = init?.body instanceof FormData;
-      const timeoutMs = isUpload ? 60000 : 30000;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+export const client = hc<AppType>(apiUrl, {
+  fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+    // Create timeout controller (30 seconds for most operations, 60 for uploads)
+    const isUpload = init?.body instanceof FormData;
+    const timeoutMs = isUpload ? 60000 : 30000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      return fetch(input, {
-        ...init,
-        headers: {
-          ...init?.headers,
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        signal: controller.signal,
-      }).finally(() => {
-        clearTimeout(timeoutId);
-      });
-    },
+    return fetch(input, {
+      ...init,
+      headers: {
+        ...init?.headers,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      signal: controller.signal,
+    }).finally(() => {
+      clearTimeout(timeoutId);
+    });
   },
-);
+});

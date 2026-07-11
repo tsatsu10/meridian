@@ -4,7 +4,9 @@ import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout"
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BarChart3 } from "lucide-react";
 
-export const Route = createFileRoute("/dashboard/workspace/$workspaceId/project/$projectId/analytics")({
+export const Route = createFileRoute(
+  "/dashboard/workspace/$workspaceId/project/$projectId/analytics",
+)({
   component: ProjectAnalyticsPage,
 });
 
@@ -21,10 +23,12 @@ function ProjectAnalyticsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate({ 
-                to: "/dashboard/workspace/$workspaceId/project/$projectId", 
-                params: { workspaceId, projectId } 
-              })}
+              onClick={() =>
+                navigate({
+                  to: "/dashboard/workspace/$workspaceId/project/$projectId",
+                  params: { workspaceId, projectId },
+                })
+              }
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Project
@@ -41,4 +45,4 @@ function ProjectAnalyticsPage() {
       </div>
     </LazyDashboardLayout>
   );
-} 
+}

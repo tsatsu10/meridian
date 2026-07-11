@@ -14,4 +14,3 @@ async function updateWorkspaceUser(userEmail: string, status: string) {
 }
 
 export default updateWorkspaceUser;
-

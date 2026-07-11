@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const EVENTS = new EventEmitter();
 EVENTS.setMaxListeners(100);
@@ -53,4 +53,3 @@ export async function subscribeToEvent<T>(
 process.on("SIGTERM", () => {
   shutdownEventBus().catch(console.error);
 });
-

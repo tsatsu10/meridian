@@ -27,7 +27,7 @@ function TaskCalendar({ value, onChange, disabled }: TaskCalendarProps) {
               "text-zinc-900 dark:text-zinc-100",
               "focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400",
               "hover:border-zinc-300 dark:hover:border-zinc-600",
-              disabled && "opacity-50 cursor-not-allowed"
+              disabled && "opacity-50 cursor-not-allowed",
             )}
             disabled={disabled}
           >

@@ -48,42 +48,42 @@ export interface UpdateEmailTemplateInput {
 
 // Get all email templates for a workspace
 export async function getEmailTemplates(
-  workspaceId: string
+  workspaceId: string,
 ): Promise<EmailTemplate[]> {
   const db = getDatabase();
-  
+
   const templates = await db
     .select()
     .from(emailTemplates)
     .where(
       and(
         eq(emailTemplates.workspaceId, workspaceId),
-        eq(emailTemplates.isActive, true)
-      )
+        eq(emailTemplates.isActive, true),
+      ),
     )
     .orderBy(emailTemplates.createdAt);
-  
+
   return templates as EmailTemplate[];
 }
 
 // Get a single email template
 export async function getEmailTemplate(
   templateId: string,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<EmailTemplate | null> {
   const db = getDatabase();
-  
+
   const [template] = await db
     .select()
     .from(emailTemplates)
     .where(
       and(
         eq(emailTemplates.id, templateId),
-        eq(emailTemplates.workspaceId, workspaceId)
-      )
+        eq(emailTemplates.workspaceId, workspaceId),
+      ),
     )
     .limit(1);
-  
+
   return (template as EmailTemplate) || null;
 }
 
@@ -91,10 +91,10 @@ export async function getEmailTemplate(
 export async function createEmailTemplate(
   workspaceId: string,
   userId: string,
-  input: CreateEmailTemplateInput
+  input: CreateEmailTemplateInput,
 ): Promise<EmailTemplate> {
   const db = getDatabase();
-  
+
   const [template] = await db
     .insert(emailTemplates)
     .values({
@@ -114,7 +114,7 @@ export async function createEmailTemplate(
       updatedAt: new Date(),
     })
     .returning();
-  
+
   return template as EmailTemplate;
 }
 
@@ -122,10 +122,10 @@ export async function createEmailTemplate(
 export async function updateEmailTemplate(
   templateId: string,
   workspaceId: string,
-  updates: UpdateEmailTemplateInput
+  updates: UpdateEmailTemplateInput,
 ): Promise<EmailTemplate> {
   const db = getDatabase();
-  
+
   const [template] = await db
     .update(emailTemplates)
     .set({
@@ -135,32 +135,32 @@ export async function updateEmailTemplate(
     .where(
       and(
         eq(emailTemplates.id, templateId),
-        eq(emailTemplates.workspaceId, workspaceId)
-      )
+        eq(emailTemplates.workspaceId, workspaceId),
+      ),
     )
     .returning();
-  
+
   if (!template) {
-    throw new Error('Template not found or access denied');
+    throw new Error("Template not found or access denied");
   }
-  
+
   return template as EmailTemplate;
 }
 
 // Delete an email template
 export async function deleteEmailTemplate(
   templateId: string,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<void> {
   const db = getDatabase();
-  
+
   await db
     .delete(emailTemplates)
     .where(
       and(
         eq(emailTemplates.id, templateId),
-        eq(emailTemplates.workspaceId, workspaceId)
-      )
+        eq(emailTemplates.workspaceId, workspaceId),
+      ),
     );
 }
 
@@ -175,8 +175,8 @@ export async function testSMTPConnection(config: {
 }): Promise<{ success: boolean; message: string }> {
   try {
     // Import nodemailer lazily
-    const nodemailer = await import('nodemailer');
-    
+    const nodemailer = await import("nodemailer");
+
     // Create transporter
     const transporter = nodemailer.createTransport({
       host: config.host,
@@ -187,18 +187,18 @@ export async function testSMTPConnection(config: {
         pass: config.password,
       },
     });
-    
+
     // Verify connection
     await transporter.verify();
-    
+
     return {
       success: true,
-      message: 'SMTP connection successful',
+      message: "SMTP connection successful",
     };
   } catch (error: any) {
     return {
       success: false,
-      message: error.message || 'Failed to connect to SMTP server',
+      message: error.message || "Failed to connect to SMTP server",
     };
   }
 }
@@ -214,11 +214,11 @@ export async function sendTestEmail(
     fromEmail: string;
     fromName: string;
   },
-  toEmail: string
+  toEmail: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const nodemailer = await import('nodemailer');
-    
+    const nodemailer = await import("nodemailer");
+
     const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
@@ -228,25 +228,23 @@ export async function sendTestEmail(
         pass: config.password,
       },
     });
-    
+
     await transporter.sendMail({
       from: `"${config.fromName}" <${config.fromEmail}>`,
       to: toEmail,
-      subject: 'Meridian Test Email',
-      text: 'This is a test email from Meridian to verify your SMTP configuration.',
-      html: '<p>This is a test email from <strong>Meridian</strong> to verify your SMTP configuration.</p>',
+      subject: "Meridian Test Email",
+      text: "This is a test email from Meridian to verify your SMTP configuration.",
+      html: "<p>This is a test email from <strong>Meridian</strong> to verify your SMTP configuration.</p>",
     });
-    
+
     return {
       success: true,
-      message: 'Test email sent successfully',
+      message: "Test email sent successfully",
     };
   } catch (error: any) {
     return {
       success: false,
-      message: error.message || 'Failed to send test email',
+      message: error.message || "Failed to send test email",
     };
   }
 }
-
-

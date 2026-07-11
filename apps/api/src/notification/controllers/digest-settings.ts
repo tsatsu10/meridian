@@ -5,26 +5,26 @@ import { logger } from "../../utils/logger";
 
 export async function getDigestSettings(userEmail: string) {
   const db = getDatabase();
-  
+
   try {
     const [settings] = await db
       .select()
       .from(digestSettings)
       .where(eq(digestSettings.userEmail, userEmail))
       .limit(1);
-    
+
     // Return default settings if none exist
     if (!settings) {
       return {
         userEmail,
         dailyEnabled: true,
-        dailyTime: '09:00',
+        dailyTime: "09:00",
         weeklyEnabled: true,
         weeklyDay: 1, // Monday
-        digestSections: ['tasks', 'mentions', 'comments', 'kudos'],
+        digestSections: ["tasks", "mentions", "comments", "kudos"],
       };
     }
-    
+
     return settings;
   } catch (error) {
     logger.error("Failed to get digest settings:", error);
@@ -40,10 +40,10 @@ export async function updateDigestSettings(
     weeklyEnabled?: boolean;
     weeklyDay?: number;
     digestSections?: string[];
-  }
+  },
 ) {
   const db = getDatabase();
-  
+
   try {
     // Check if settings exist
     const [existing] = await db
@@ -51,7 +51,7 @@ export async function updateDigestSettings(
       .from(digestSettings)
       .where(eq(digestSettings.userEmail, userEmail))
       .limit(1);
-    
+
     if (existing) {
       // Update existing settings
       const [updated] = await db
@@ -62,7 +62,7 @@ export async function updateDigestSettings(
         })
         .where(eq(digestSettings.userEmail, userEmail))
         .returning();
-      
+
       logger.info(`Digest settings updated for ${userEmail}`);
       return updated;
     } else {
@@ -71,14 +71,21 @@ export async function updateDigestSettings(
         .insert(digestSettings)
         .values({
           userEmail,
-          dailyEnabled: data.dailyEnabled !== undefined ? data.dailyEnabled : true,
-          dailyTime: data.dailyTime || '09:00',
-          weeklyEnabled: data.weeklyEnabled !== undefined ? data.weeklyEnabled : true,
+          dailyEnabled:
+            data.dailyEnabled !== undefined ? data.dailyEnabled : true,
+          dailyTime: data.dailyTime || "09:00",
+          weeklyEnabled:
+            data.weeklyEnabled !== undefined ? data.weeklyEnabled : true,
           weeklyDay: data.weeklyDay !== undefined ? data.weeklyDay : 1,
-          digestSections: data.digestSections || ['tasks', 'mentions', 'comments', 'kudos'],
+          digestSections: data.digestSections || [
+            "tasks",
+            "mentions",
+            "comments",
+            "kudos",
+          ],
         })
         .returning();
-      
+
       logger.info(`Digest settings created for ${userEmail}`);
       return created;
     }
@@ -87,5 +94,3 @@ export async function updateDigestSettings(
     throw new Error("Failed to update digest settings");
   }
 }
-
-

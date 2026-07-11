@@ -1,5 +1,5 @@
-import { Context } from 'hono';
-import { createError } from './errors';
+import type { Context } from "hono";
+import { createError } from "./errors";
 
 // Performance optimization service
 export class PerformanceService {
@@ -17,11 +17,11 @@ export class PerformanceService {
   recordApiResponseTime(endpoint: string, duration: number) {
     const key = `api:${endpoint}`;
     const existing = this.metrics.get(key) || { count: 0, total: 0, avg: 0 };
-    
+
     existing.count++;
     existing.total += duration;
     existing.avg = existing.total / existing.count;
-    
+
     this.metrics.set(key, existing);
   }
 
@@ -29,11 +29,11 @@ export class PerformanceService {
   recordDbQueryTime(query: string, duration: number) {
     const key = `db:${query}`;
     const existing = this.metrics.get(key) || { count: 0, total: 0, avg: 0 };
-    
+
     existing.count++;
     existing.total += duration;
     existing.avg = existing.total / existing.count;
-    
+
     this.metrics.set(key, existing);
   }
 
@@ -43,36 +43,41 @@ export class PerformanceService {
   }
 
   // Get slow queries
-  getSlowQueries(threshold: number = 1000) {
-    const slowQueries: Array<{ query: string; avg: number; count: number }> = [];
-    
+  getSlowQueries(threshold = 1000) {
+    const slowQueries: Array<{ query: string; avg: number; count: number }> =
+      [];
+
     for (const [key, metrics] of this.metrics) {
-      if (key.startsWith('db:') && metrics.avg > threshold) {
+      if (key.startsWith("db:") && metrics.avg > threshold) {
         slowQueries.push({
-          query: key.replace('db:', ''),
+          query: key.replace("db:", ""),
           avg: metrics.avg,
           count: metrics.count,
         });
       }
     }
-    
+
     return slowQueries.sort((a, b) => b.avg - a.avg);
   }
 
   // Get slow API endpoints
-  getSlowEndpoints(threshold: number = 500) {
-    const slowEndpoints: Array<{ endpoint: string; avg: number; count: number }> = [];
-    
+  getSlowEndpoints(threshold = 500) {
+    const slowEndpoints: Array<{
+      endpoint: string;
+      avg: number;
+      count: number;
+    }> = [];
+
     for (const [key, metrics] of this.metrics) {
-      if (key.startsWith('api:') && metrics.avg > threshold) {
+      if (key.startsWith("api:") && metrics.avg > threshold) {
         slowEndpoints.push({
-          endpoint: key.replace('api:', ''),
+          endpoint: key.replace("api:", ""),
           avg: metrics.avg,
           count: metrics.count,
         });
       }
     }
-    
+
     return slowEndpoints.sort((a, b) => b.avg - a.avg);
   }
 
@@ -87,12 +92,15 @@ export function performanceMiddleware() {
   return async (c: Context, next: () => Promise<void>) => {
     const startTime = Date.now();
     const endpoint = c.req.path;
-    
+
     try {
       await next();
     } finally {
       const duration = Date.now() - startTime;
-      PerformanceService.getInstance().recordApiResponseTime(endpoint, duration);
+      PerformanceService.getInstance().recordApiResponseTime(
+        endpoint,
+        duration,
+      );
     }
   };
 }
@@ -100,10 +108,10 @@ export function performanceMiddleware() {
 // Database query performance wrapper
 export function withDbPerformance<T>(
   queryFn: () => Promise<T>,
-  queryName: string
+  queryName: string,
 ): Promise<T> {
   const startTime = Date.now();
-  
+
   return queryFn().finally(() => {
     const duration = Date.now() - startTime;
     PerformanceService.getInstance().recordDbQueryTime(queryName, duration);
@@ -124,9 +132,10 @@ export function createPerformanceRoutes() {
 
     // Get slow queries
     async getSlowQueries(c: Context) {
-      const threshold = parseInt(c.req.query('threshold') || '1000');
-      const slowQueries = PerformanceService.getInstance().getSlowQueries(threshold);
-      
+      const threshold = Number.parseInt(c.req.query("threshold") || "1000");
+      const slowQueries =
+        PerformanceService.getInstance().getSlowQueries(threshold);
+
       return c.json({
         success: true,
         data: slowQueries,
@@ -135,9 +144,10 @@ export function createPerformanceRoutes() {
 
     // Get slow endpoints
     async getSlowEndpoints(c: Context) {
-      const threshold = parseInt(c.req.query('threshold') || '500');
-      const slowEndpoints = PerformanceService.getInstance().getSlowEndpoints(threshold);
-      
+      const threshold = Number.parseInt(c.req.query("threshold") || "500");
+      const slowEndpoints =
+        PerformanceService.getInstance().getSlowEndpoints(threshold);
+
       return c.json({
         success: true,
         data: slowEndpoints,
@@ -147,12 +157,11 @@ export function createPerformanceRoutes() {
     // Clear metrics
     async clearMetrics(c: Context) {
       PerformanceService.getInstance().clearMetrics();
-      
+
       return c.json({
         success: true,
-        message: 'Performance metrics cleared',
+        message: "Performance metrics cleared",
       });
     },
   };
 }
-

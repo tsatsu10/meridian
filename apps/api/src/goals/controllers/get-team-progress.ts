@@ -5,7 +5,7 @@
  * Gets aggregated progress summary for team
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { goals } from "../../database/schema/goals";
 import { teams, teamMembers, users } from "../../database/schema";
@@ -43,7 +43,11 @@ export async function getTeamProgress(c: Context) {
       return c.json({ error: "Team id is required" }, 400);
     }
 
-    const [team] = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1);
+    const [team] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
 
     if (!team) {
       return c.json({ error: "Team not found" }, 404);
@@ -84,9 +88,14 @@ export async function getTeamProgress(c: Context) {
           },
         });
 
-        const totalProgress = memberGoals.reduce((sum, g) => sum + (g.progress ?? 0), 0);
+        const totalProgress = memberGoals.reduce(
+          (sum, g) => sum + (g.progress ?? 0),
+          0,
+        );
         const avgProgress =
-          memberGoals.length > 0 ? Math.round(totalProgress / memberGoals.length) : 0;
+          memberGoals.length > 0
+            ? Math.round(totalProgress / memberGoals.length)
+            : 0;
 
         const u = userById.get(member.userId);
 
@@ -99,7 +108,8 @@ export async function getTeamProgress(c: Context) {
           },
           goalsCount: memberGoals.length,
           averageProgress: avgProgress,
-          completedGoals: memberGoals.filter((g) => (g.progress ?? 0) >= 100).length,
+          completedGoals: memberGoals.filter((g) => (g.progress ?? 0) >= 100)
+            .length,
           goals: memberGoals.map((g) => ({
             id: g.id,
             title: g.title,
@@ -111,17 +121,25 @@ export async function getTeamProgress(c: Context) {
     );
 
     const teamStats = {
-      totalGoals: memberProgress.reduce((sum: number, m: MemberProgressRow) => sum + m.goalsCount, 0),
+      totalGoals: memberProgress.reduce(
+        (sum: number, m: MemberProgressRow) => sum + m.goalsCount,
+        0,
+      ),
       averageProgress:
         memberProgress.length > 0
           ? Math.round(
-              memberProgress.reduce((sum: number, m: MemberProgressRow) => sum + m.averageProgress, 0) /
-                memberProgress.length,
+              memberProgress.reduce(
+                (sum: number, m: MemberProgressRow) => sum + m.averageProgress,
+                0,
+              ) / memberProgress.length,
             )
           : 0,
       membersWithGoals: memberProgress.filter((m) => m.goalsCount > 0).length,
       totalMembers: members.length,
-      completedGoals: memberProgress.reduce((sum: number, m: MemberProgressRow) => sum + m.completedGoals, 0),
+      completedGoals: memberProgress.reduce(
+        (sum: number, m: MemberProgressRow) => sum + m.completedGoals,
+        0,
+      ),
     };
 
     return c.json({
@@ -140,7 +158,10 @@ export async function getTeamProgress(c: Context) {
     return c.json(
       {
         error: "Failed to fetch team progress",
-        details: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        details:
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
       },
       500,
     );

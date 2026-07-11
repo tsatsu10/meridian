@@ -4,15 +4,21 @@
  * Phase 2 - Team Awareness Features
  */
 
-import { getDatabase } from '../../database/connection';
-import { userStatus } from '../../database/schema/team-awareness';
-import { users } from '../../database/schema';
-import { eq, and, inArray } from 'drizzle-orm';
-import { Logger } from '../logging/logger';
-import { CacheService, CacheKeys, CacheTTL } from '../cache/cache-service';
-import { createId } from '@paralleldrive/cuid2';
+import { getDatabase } from "../../database/connection";
+import { userStatus } from "../../database/schema/team-awareness";
+import { users } from "../../database/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { Logger } from "../logging/logger";
+import { CacheService, CacheKeys, CacheTTL } from "../cache/cache-service";
+import { createId } from "@paralleldrive/cuid2";
 
-export type UserStatusType = 'online' | 'away' | 'busy' | 'offline' | 'in-meeting' | 'focus';
+export type UserStatusType =
+  | "online"
+  | "away"
+  | "busy"
+  | "offline"
+  | "in-meeting"
+  | "focus";
 
 export interface UpdateStatusParams {
   userId: string;
@@ -44,8 +50,8 @@ export class UserStatusService {
         .where(
           and(
             eq(userStatus.userId, params.userId),
-            eq(userStatus.workspaceId, params.workspaceId)
-          )
+            eq(userStatus.workspaceId, params.workspaceId),
+          ),
         )
         .limit(1);
 
@@ -66,7 +72,7 @@ export class UserStatusService {
             currentTaskId: params.currentTaskId,
             updatedAt: now,
           })
-          .where(eq(userStatus.id, existingStatus[0]?.id ?? ''));
+          .where(eq(userStatus.id, existingStatus[0]?.id ?? ""));
       } else {
         // Create new status
         const statusId = createId();
@@ -86,15 +92,19 @@ export class UserStatusService {
       }
 
       // Invalidate cache
-      await CacheService.invalidate(`user-status:${params.userId}:${params.workspaceId}`);
-      await CacheService.invalidatePattern(`workspace-status:${params.workspaceId}*`);
+      await CacheService.invalidate(
+        `user-status:${params.userId}:${params.workspaceId}`,
+      );
+      await CacheService.invalidatePattern(
+        `workspace-status:${params.workspaceId}*`,
+      );
 
-      Logger.info('User status updated', {
+      Logger.info("User status updated", {
         userId: params.userId,
         status: params.status,
       });
     } catch (error) {
-      Logger.error('Failed to update user status', error, params);
+      Logger.error("Failed to update user status", error, params);
       throw error;
     }
   }
@@ -114,8 +124,8 @@ export class UserStatusService {
           .where(
             and(
               eq(userStatus.userId, userId),
-              eq(userStatus.workspaceId, workspaceId)
-            )
+              eq(userStatus.workspaceId, workspaceId),
+            ),
           )
           .limit(1);
 
@@ -123,14 +133,14 @@ export class UserStatusService {
           return {
             userId,
             workspaceId,
-            status: 'offline' as UserStatusType,
+            status: "offline" as UserStatusType,
             lastSeenAt: null,
           };
         }
 
         return status[0];
       },
-      CacheTTL.VERY_SHORT // 1 minute cache for real-time status
+      CacheTTL.VERY_SHORT, // 1 minute cache for real-time status
     );
   }
 
@@ -168,7 +178,7 @@ export class UserStatusService {
 
         return statuses;
       },
-      CacheTTL.VERY_SHORT
+      CacheTTL.VERY_SHORT,
     );
   }
 
@@ -183,13 +193,16 @@ export class UserStatusService {
         .where(
           and(
             inArray(userStatus.userId, userIds),
-            eq(userStatus.workspaceId, workspaceId)
-          )
+            eq(userStatus.workspaceId, workspaceId),
+          ),
         );
 
       return statuses;
     } catch (error) {
-      Logger.error('Failed to get user statuses', error, { userIds, workspaceId });
+      Logger.error("Failed to get user statuses", error, {
+        userIds,
+        workspaceId,
+      });
       return [];
     }
   }
@@ -208,14 +221,17 @@ export class UserStatusService {
         .where(
           and(
             eq(userStatus.userId, userId),
-            eq(userStatus.workspaceId, workspaceId)
-          )
+            eq(userStatus.workspaceId, workspaceId),
+          ),
         );
 
       // Invalidate cache
       await CacheService.invalidate(`user-status:${userId}:${workspaceId}`);
     } catch (error) {
-      Logger.error('Failed to update last seen', error, { userId, workspaceId });
+      Logger.error("Failed to update last seen", error, {
+        userId,
+        workspaceId,
+      });
     }
   }
 
@@ -226,7 +242,7 @@ export class UserStatusService {
     await this.updateStatus({
       userId,
       workspaceId,
-      status: 'offline',
+      status: "offline",
     });
   }
 
@@ -237,7 +253,7 @@ export class UserStatusService {
     await this.updateStatus({
       userId,
       workspaceId,
-      status: 'online',
+      status: "online",
     });
   }
 
@@ -255,14 +271,16 @@ export class UserStatusService {
           statusEmoji: null,
           clearAt: null,
         })
-        .where(and(
-          // Only clear if clearAt is set and in the past
-          // Using raw SQL since we need to check null and compare dates
-        ));
+        .where(
+          and(
+            // Only clear if clearAt is set and in the past
+            // Using raw SQL since we need to check null and compare dates
+          ),
+        );
 
-      Logger.info('Cleared expired status messages');
+      Logger.info("Cleared expired status messages");
     } catch (error) {
-      Logger.error('Failed to clear expired statuses', error);
+      Logger.error("Failed to clear expired statuses", error);
     }
   }
 
@@ -281,13 +299,13 @@ export class UserStatusService {
           .where(
             and(
               eq(userStatus.workspaceId, workspaceId),
-              eq(userStatus.status, 'online')
-            )
+              eq(userStatus.status, "online"),
+            ),
           );
 
         return result.length;
       },
-      CacheTTL.VERY_SHORT
+      CacheTTL.VERY_SHORT,
     );
   }
 
@@ -310,7 +328,7 @@ export class UserStatusService {
           away: 0,
           busy: 0,
           offline: 0,
-          'in-meeting': 0,
+          "in-meeting": 0,
           focus: 0,
           total: allStatuses.length,
         };
@@ -323,14 +341,19 @@ export class UserStatusService {
 
         return stats;
       },
-      CacheTTL.VERY_SHORT
+      CacheTTL.VERY_SHORT,
     );
   }
 
   /**
    * Heartbeat - Update user activity
    */
-  static async heartbeat(userId: string, workspaceId: string, currentProjectId?: string, currentTaskId?: string) {
+  static async heartbeat(
+    userId: string,
+    workspaceId: string,
+    currentProjectId?: string,
+    currentTaskId?: string,
+  ) {
     try {
       await this.updateLastSeen(userId, workspaceId);
 
@@ -345,17 +368,14 @@ export class UserStatusService {
           .where(
             and(
               eq(userStatus.userId, userId),
-              eq(userStatus.workspaceId, workspaceId)
-            )
+              eq(userStatus.workspaceId, workspaceId),
+            ),
           );
       }
     } catch (error) {
-      Logger.error('Heartbeat failed', error, { userId, workspaceId });
+      Logger.error("Heartbeat failed", error, { userId, workspaceId });
     }
   }
 }
 
 export default UserStatusService;
-
-
-

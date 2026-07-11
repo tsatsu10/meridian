@@ -2,10 +2,10 @@
 let dotenvLoaded = false;
 
 function loadDotenv() {
-  if (!dotenvLoaded && process.env.NODE_ENV !== 'test') {
+  if (!dotenvLoaded && process.env.NODE_ENV !== "test") {
     try {
       // Dynamic import for better test compatibility
-      require('dotenv').config();
+      require("dotenv").config();
       dotenvLoaded = true;
     } catch (error) {
       // Dotenv not available, use process.env directly
@@ -15,7 +15,7 @@ function loadDotenv() {
 
 function getSettings() {
   loadDotenv();
-  
+
   return {
     disableRegistration: process.env.DISABLE_REGISTRATION === "true",
     isDemoMode: process.env.DEMO_MODE === "true",
@@ -23,4 +23,3 @@ function getSettings() {
 }
 
 export default getSettings;
-

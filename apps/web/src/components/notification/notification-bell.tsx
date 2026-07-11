@@ -17,18 +17,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Bell, 
-  BellRing, 
-  Check, 
-  X, 
+import {
+  Bell,
+  BellRing,
+  Check,
+  X,
   Settings,
   MessageSquare,
   Users,
   AlertTriangle,
   CheckCircle2,
   Target,
-  Activity
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,7 +37,15 @@ import { formatDistanceToNow } from "date-fns";
 // Enhanced notification types with Magic UI styling
 interface Notification {
   id: string;
-  type: "info" | "warning" | "success" | "error" | "task" | "message" | "mention" | "approval";
+  type:
+    | "info"
+    | "warning"
+    | "success"
+    | "error"
+    | "task"
+    | "message"
+    | "mention"
+    | "approval";
   title: string;
   message: string;
   timestamp: Date;
@@ -66,7 +74,10 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     actionUrl: "/dashboard/all-tasks?task=1",
     avatar: "/avatars/sarah.jpg",
     sender: "Sarah Johnson",
-    metadata: { projectName: "Meridian Platform v2.0", taskName: "Magic UI Integration" }
+    metadata: {
+      projectName: "Meridian Platform v2.0",
+      taskName: "Magic UI Integration",
+    },
   },
   {
     id: "2",
@@ -79,7 +90,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     actionUrl: "/dashboard/projects/1/code-review",
     avatar: "/avatars/mike.jpg",
     sender: "Mike Chen",
-    metadata: { projectName: "Meridian Platform v2.0" }
+    metadata: { projectName: "Meridian Platform v2.0" },
   },
   {
     id: "3",
@@ -92,7 +103,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     actionUrl: "/dashboard/teams/2/chat",
     avatar: "/avatars/lisa.jpg",
     sender: "Lisa Martinez",
-    metadata: { teamName: "Design & UX" }
+    metadata: { teamName: "Design & UX" },
   },
   {
     id: "4",
@@ -103,7 +114,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     isRead: true,
     priority: "low",
     actionUrl: "/dashboard/projects/1/milestones",
-    metadata: { projectName: "Meridian Platform v2.0" }
+    metadata: { projectName: "Meridian Platform v2.0" },
   },
   {
     id: "5",
@@ -116,20 +127,48 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     actionUrl: "/dashboard/analytics?filter=budget",
     avatar: "/avatars/jennifer.jpg",
     sender: "Jennifer Wilson",
-    metadata: { projectName: "Marketing Campaign Q2" }
-  }
+    metadata: { projectName: "Marketing Campaign Q2" },
+  },
 ];
 
 // Notification type icons and colors
 const NOTIFICATION_CONFIG = {
-  info: { icon: Bell, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-  warning: { icon: AlertTriangle, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-900/20" },
-  success: { icon: CheckCircle2, color: "text-green-500", bg: "bg-green-50 dark:bg-green-900/20" },
+  info: {
+    icon: Bell,
+    color: "text-blue-500",
+    bg: "bg-blue-50 dark:bg-blue-900/20",
+  },
+  warning: {
+    icon: AlertTriangle,
+    color: "text-yellow-500",
+    bg: "bg-yellow-50 dark:bg-yellow-900/20",
+  },
+  success: {
+    icon: CheckCircle2,
+    color: "text-green-500",
+    bg: "bg-green-50 dark:bg-green-900/20",
+  },
   error: { icon: X, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
-  task: { icon: Target, color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-900/20" },
-  message: { icon: MessageSquare, color: "text-cyan-500", bg: "bg-cyan-50 dark:bg-cyan-900/20" },
-  mention: { icon: Users, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20" },
-  approval: { icon: Activity, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/20" }
+  task: {
+    icon: Target,
+    color: "text-purple-500",
+    bg: "bg-purple-50 dark:bg-purple-900/20",
+  },
+  message: {
+    icon: MessageSquare,
+    color: "text-cyan-500",
+    bg: "bg-cyan-50 dark:bg-cyan-900/20",
+  },
+  mention: {
+    icon: Users,
+    color: "text-orange-500",
+    bg: "bg-orange-50 dark:bg-orange-900/20",
+  },
+  approval: {
+    icon: Activity,
+    color: "text-indigo-500",
+    bg: "bg-indigo-50 dark:bg-indigo-900/20",
+  },
 };
 
 // Priority colors
@@ -137,7 +176,7 @@ const PRIORITY_COLORS = {
   low: "border-gray-300 dark:border-gray-600",
   medium: "border-yellow-300 dark:border-yellow-600",
   high: "border-red-300 dark:border-red-600",
-  urgent: "border-purple-400 dark:border-purple-500 animate-pulse"
+  urgent: "border-purple-400 dark:border-purple-500 animate-pulse",
 };
 
 interface NotificationBellProps {
@@ -147,44 +186,47 @@ interface NotificationBellProps {
   maxNotifications?: number;
 }
 
-export default function NotificationBell({ 
+export default function NotificationBell({
   variant = "icon",
   className,
   showBadge = true,
-  maxNotifications = 10
+  maxNotifications = 10,
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
+  const [notifications, setNotifications] =
+    useState<Notification[]>(DEMO_NOTIFICATIONS);
 
   const visibleNotifications = useMemo(() => {
     return notifications.slice(0, maxNotifications);
   }, [notifications, maxNotifications]);
 
   // Count unread notifications
-  const unreadCount = useMemo(() => 
-    visibleNotifications.filter(n => !n.isRead).length, 
-    [visibleNotifications]
+  const unreadCount = useMemo(
+    () => visibleNotifications.filter((n) => !n.isRead).length,
+    [visibleNotifications],
   );
 
   // Mark notification as read
   const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
     );
   };
 
   // Mark all as read
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
   // Delete notification
   const deleteNotification = (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
   };
 
   // Render notification item
-  const NotificationItem = ({ notification }: { notification: Notification }) => {
+  const NotificationItem = ({
+    notification,
+  }: { notification: Notification }) => {
     const config = NOTIFICATION_CONFIG[notification.type];
     const IconComponent = config.icon;
 
@@ -197,7 +239,7 @@ export default function NotificationBell({
         className={cn(
           "p-4 border-l-4 cursor-pointer transition-all duration-200 hover:bg-muted/50",
           PRIORITY_COLORS[notification.priority],
-          !notification.isRead && "bg-primary/5"
+          !notification.isRead && "bg-primary/5",
         )}
         onClick={() => {
           markAsRead(notification.id);
@@ -216,16 +258,18 @@ export default function NotificationBell({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                <h4 className={cn(
-                  "text-sm font-medium text-foreground truncate",
-                  !notification.isRead && "font-semibold"
-                )}>
+                <h4
+                  className={cn(
+                    "text-sm font-medium text-foreground truncate",
+                    !notification.isRead && "font-semibold",
+                  )}
+                >
                   {notification.title}
                 </h4>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                   {notification.message}
                 </p>
-                
+
                 {/* Metadata */}
                 <div className="flex items-center space-x-2 mt-2">
                   {notification.sender && (
@@ -233,10 +277,15 @@ export default function NotificationBell({
                       <Avatar className="h-4 w-4">
                         <AvatarImage src={notification.avatar} />
                         <AvatarFallback className="text-xs">
-                          {notification.sender.split(' ').map(n => n[0]).join('')}
+                          {notification.sender
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs text-muted-foreground">{notification.sender}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {notification.sender}
+                      </span>
                     </div>
                   )}
                   {notification.metadata?.projectName && (
@@ -248,7 +297,9 @@ export default function NotificationBell({
 
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                    {formatDistanceToNow(notification.timestamp, {
+                      addSuffix: true,
+                    })}
                   </span>
                   {!notification.isRead && (
                     <div className="w-2 h-2 bg-primary rounded-full" />
@@ -311,7 +362,7 @@ export default function NotificationBell({
           className={cn(
             "relative transition-all duration-200",
             getButtonStyling(),
-            className
+            className,
           )}
         >
           <motion.div
@@ -324,18 +375,18 @@ export default function NotificationBell({
             ) : (
               <Bell className="h-5 w-5" />
             )}
-            
+
             {showBadge && unreadCount > 0 && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute -top-1 -right-1"
               >
-                <Badge 
+                <Badge
                   className={cn(
                     "h-5 w-5 flex items-center justify-center p-0 text-xs",
                     "bg-red-500 hover:bg-red-600 text-white border-background",
-                    unreadCount > 99 && "px-1 w-auto"
+                    unreadCount > 99 && "px-1 w-auto",
                   )}
                 >
                   {unreadCount > 99 ? "99+" : unreadCount}
@@ -343,17 +394,17 @@ export default function NotificationBell({
               </motion.div>
             )}
           </motion.div>
-          
+
           {variant === "button" && <span className="ml-2">Notifications</span>}
           {variant === "dock" && <span className="ml-2">Alerts</span>}
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent 
-        align="end" 
+      <DropdownMenuContent
+        align="end"
         className={cn(
           "w-96 max-h-[32rem] glass-card border-border/50 p-0",
-          "backdrop-blur-xl bg-white/90 dark:bg-black/90"
+          "backdrop-blur-xl bg-white/90 dark:bg-black/90",
         )}
       >
         {/* Header */}
@@ -376,9 +427,9 @@ export default function NotificationBell({
                   Mark all read
                 </Button>
               )}
-      <Button
-        variant="ghost"
-        size="icon"
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-8 w-8"
                 onClick={() => {
                   // TODO: Open notification settings
@@ -396,13 +447,18 @@ export default function NotificationBell({
             {visibleNotifications.length > 0 ? (
               <div className="divide-y divide-border/50">
                 {visibleNotifications.map((notification) => (
-                  <NotificationItem key={notification.id} notification={notification} />
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                  />
                 ))}
               </div>
             ) : (
               <div className="p-8 text-center">
                 <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h4 className="font-medium text-foreground mb-2">No notifications</h4>
+                <h4 className="font-medium text-foreground mb-2">
+                  No notifications
+                </h4>
                 <p className="text-sm text-muted-foreground">
                   You're all caught up! Check back later for updates.
                 </p>

@@ -18,7 +18,13 @@ interface StatusColumn {
 // "in-review" was dropped because the enum has no such status.
 const DEFAULT_COLUMNS: StatusColumn[] = [
   { id: "todo", name: "To Do", color: "#6b7280", position: 0, isDefault: true },
-  { id: "in_progress", name: "In Progress", color: "#3b82f6", position: 1, isDefault: true },
+  {
+    id: "in_progress",
+    name: "In Progress",
+    color: "#3b82f6",
+    position: 1,
+    isDefault: true,
+  },
   { id: "done", name: "Done", color: "#10b981", position: 2, isDefault: true },
 ];
 
@@ -39,10 +45,9 @@ async function getTasks(projectId: string) {
 
   // Use default columns until custom columns are implemented
   const allColumns: StatusColumn[] = [...DEFAULT_COLUMNS];
-  
-  
+
   // Add custom columns that aren't defaults
-  customColumns.forEach(customCol => {
+  customColumns.forEach((customCol) => {
     if (!customCol.isDefault) {
       allColumns.push({
         id: customCol.id,
@@ -65,45 +70,56 @@ async function getTasks(projectId: string) {
     .where(eq(taskTable.projectId, projectId));
 
   // Fetch users separately and create lookup map
-  const userEmails = [...new Set(tasksFromDb.map(t => t.userEmail).filter(Boolean))];
-  const users = userEmails.length > 0
-    ? await db.select().from(userTable).where(or(...userEmails.map(email => eq(userTable.email, email!))))
-    : [];
-  const userMap = new Map(users.map(u => [u.email, u]));
+  const userEmails = [
+    ...new Set(tasksFromDb.map((t) => t.userEmail).filter(Boolean)),
+  ];
+  const users =
+    userEmails.length > 0
+      ? await db
+          .select()
+          .from(userTable)
+          .where(or(...userEmails.map((email) => eq(userTable.email, email!))))
+      : [];
+  const userMap = new Map(users.map((u) => [u.email, u]));
 
   // Transform to expected format
-  const tasks = tasksFromDb.map(task => {
-    const assignee = task.userEmail ? userMap.get(task.userEmail) : null;
-    return {
-      id: task.id,
-      title: task.title,
-      number: task.number,
-      description: task.description,
-      status: task.status,
-      priority: task.priority,
-      dueDate: task.dueDate,
-      position: task.position,
-      createdAt: task.createdAt,
-      userEmail: task.userEmail,
-      assigneeName: assignee?.name || null,
-      assigneeEmail: assignee?.email || null,
-      projectId: task.projectId,
-      parentId: task.parentTaskId, // Fixed: use parentTaskId not parentId
-    };
-  }).sort((a, b) => (a.position || 0) - (b.position || 0)); // Sort by position
+  const tasks = tasksFromDb
+    .map((task) => {
+      const assignee = task.userEmail ? userMap.get(task.userEmail) : null;
+      return {
+        id: task.id,
+        title: task.title,
+        number: task.number,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        position: task.position,
+        createdAt: task.createdAt,
+        userEmail: task.userEmail,
+        assigneeName: assignee?.name || null,
+        assigneeEmail: assignee?.email || null,
+        projectId: task.projectId,
+        parentId: task.parentTaskId, // Fixed: use parentTaskId not parentId
+      };
+    })
+    .sort((a, b) => (a.position || 0) - (b.position || 0)); // Sort by position
 
   // @epic-1.2-dependencies: Fetch all dependencies for tasks in this project (simplified for now)
-  const taskIds = tasks.map(task => task.id);
+  const taskIds = tasks.map((task) => task.id);
   const dependencies: any[] = []; // Temporarily disabled to fix TypeScript issues
 
   // Create a task lookup map for dependency resolution
-  const taskLookupMap = new Map(tasks.map(task => [task.id, task]));
+  const taskLookupMap = new Map(tasks.map((task) => [task.id, task]));
 
   // Create dependency maps for quick lookup with related task information
-  const dependencyMap = new Map<string, { dependencies: any[], blockedBy: any[] }>();
-  
+  const dependencyMap = new Map<
+    string,
+    { dependencies: any[]; blockedBy: any[] }
+  >();
+
   // Initialize dependency arrays for all tasks
-  taskIds.forEach(taskId => {
+  taskIds.forEach((taskId) => {
     dependencyMap.set(taskId, { dependencies: [], blockedBy: [] });
   });
 
@@ -117,12 +133,15 @@ async function getTasks(projectId: string) {
 
     // First pass: create task map with dependencies
     taskList.forEach((task: any) => {
-      const taskDeps = dependencyMap.get(task.id) || { dependencies: [], blockedBy: [] };
-      taskMap.set(task.id, { 
-        ...task, 
+      const taskDeps = dependencyMap.get(task.id) || {
+        dependencies: [],
+        blockedBy: [],
+      };
+      taskMap.set(task.id, {
+        ...task,
         subtasks: [],
         dependencies: taskDeps.dependencies,
-        blockedBy: taskDeps.blockedBy
+        blockedBy: taskDeps.blockedBy,
       });
     });
 
@@ -142,16 +161,18 @@ async function getTasks(projectId: string) {
       if (task.subtasks && task.subtasks.length > 0) {
         // Recursively calculate progress for nested subtasks
         task.subtasks = task.subtasks.map(calculateProgress);
-        
+
         // Calculate completion percentage
-        const completedSubtasks = task.subtasks.filter((subtask: any) => 
-          subtask.status === 'done'
+        const completedSubtasks = task.subtasks.filter(
+          (subtask: any) => subtask.status === "done",
         ).length;
-        
+
         task.subtaskProgress = {
           completed: completedSubtasks,
           total: task.subtasks.length,
-          percentage: Math.round((completedSubtasks / task.subtasks.length) * 100)
+          percentage: Math.round(
+            (completedSubtasks / task.subtasks.length) * 100,
+          ),
         };
       }
       return task;
@@ -168,7 +189,7 @@ async function getTasks(projectId: string) {
     position: column.position,
     isDefault: column.isDefault,
     tasks: buildTaskHierarchy(
-      tasks.filter((task) => task.status === column.id)
+      tasks.filter((task) => task.status === column.id),
     ),
   }));
 
@@ -191,4 +212,3 @@ async function getTasks(projectId: string) {
 }
 
 export default getTasks;
-

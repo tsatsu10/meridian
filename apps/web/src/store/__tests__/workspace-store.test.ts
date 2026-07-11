@@ -1,6 +1,6 @@
 /**
  * Workspace Store Tests
- * 
+ *
  * Tests Zustand workspace store:
  * - Store initialization
  * - State updates
@@ -8,10 +8,10 @@
  * - Selectors
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { describe, it, expect, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface Workspace {
   id: string;
@@ -34,10 +34,13 @@ const createWorkspaceStore = () =>
         workspace: undefined,
         currentWorkspace: undefined,
         setWorkspace: (updatedWorkspace) =>
-          set(() => ({ workspace: updatedWorkspace, currentWorkspace: updatedWorkspace })),
+          set(() => ({
+            workspace: updatedWorkspace,
+            currentWorkspace: updatedWorkspace,
+          })),
       }),
       {
-        name: 'test-workspace-store',
+        name: "test-workspace-store",
         storage: createJSONStorage(() => ({
           getItem: (name: string) => {
             const item = (globalThis as any).__TEST_STORAGE__?.[name];
@@ -53,11 +56,11 @@ const createWorkspaceStore = () =>
             delete (globalThis as any).__TEST_STORAGE__?.[name];
           },
         })),
-      }
-    )
+      },
+    ),
   );
 
-describe('Workspace Store', () => {
+describe("Workspace Store", () => {
   let useWorkspaceStore: ReturnType<typeof createWorkspaceStore>;
 
   beforeEach(() => {
@@ -66,20 +69,20 @@ describe('Workspace Store', () => {
     useWorkspaceStore = createWorkspaceStore();
   });
 
-  it('should initialize with undefined workspace', () => {
+  it("should initialize with undefined workspace", () => {
     const { result } = renderHook(() => useWorkspaceStore());
 
     expect(result.current.workspace).toBeUndefined();
   });
 
-  it('should set workspace', () => {
+  it("should set workspace", () => {
     const { result } = renderHook(() => useWorkspaceStore());
 
     const testWorkspace: Workspace = {
-      id: 'workspace-123',
-      name: 'Test Workspace',
-      slug: 'test-workspace',
-      ownerId: 'user-456',
+      id: "workspace-123",
+      name: "Test Workspace",
+      slug: "test-workspace",
+      ownerId: "user-456",
     };
 
     act(() => {
@@ -89,14 +92,14 @@ describe('Workspace Store', () => {
     expect(result.current.workspace).toEqual(testWorkspace);
   });
 
-  it('should provide currentWorkspace alias', () => {
+  it("should provide currentWorkspace alias", () => {
     const { result } = renderHook(() => useWorkspaceStore());
 
     const testWorkspace: Workspace = {
-      id: 'workspace-123',
-      name: 'Test Workspace',
-      slug: 'test-workspace',
-      ownerId: 'user-456',
+      id: "workspace-123",
+      name: "Test Workspace",
+      slug: "test-workspace",
+      ownerId: "user-456",
     };
 
     act(() => {
@@ -107,21 +110,21 @@ describe('Workspace Store', () => {
     expect(result.current.currentWorkspace).toEqual(result.current.workspace);
   });
 
-  it('should update workspace', () => {
+  it("should update workspace", () => {
     const { result } = renderHook(() => useWorkspaceStore());
 
     const workspace1: Workspace = {
-      id: 'workspace-1',
-      name: 'Workspace 1',
-      slug: 'workspace-1',
-      ownerId: 'user-1',
+      id: "workspace-1",
+      name: "Workspace 1",
+      slug: "workspace-1",
+      ownerId: "user-1",
     };
 
     const workspace2: Workspace = {
-      id: 'workspace-2',
-      name: 'Workspace 2',
-      slug: 'workspace-2',
-      ownerId: 'user-1',
+      id: "workspace-2",
+      name: "Workspace 2",
+      slug: "workspace-2",
+      ownerId: "user-1",
     };
 
     act(() => {
@@ -137,14 +140,14 @@ describe('Workspace Store', () => {
     expect(result.current.workspace).toEqual(workspace2);
   });
 
-  it('should clear workspace', () => {
+  it("should clear workspace", () => {
     const { result } = renderHook(() => useWorkspaceStore());
 
     const testWorkspace: Workspace = {
-      id: 'workspace-123',
-      name: 'Test Workspace',
-      slug: 'test-workspace',
-      ownerId: 'user-456',
+      id: "workspace-123",
+      name: "Test Workspace",
+      slug: "test-workspace",
+      ownerId: "user-456",
     };
 
     act(() => {
@@ -160,14 +163,14 @@ describe('Workspace Store', () => {
     expect(result.current.workspace).toBeUndefined();
   });
 
-  it('should persist workspace to storage', () => {
+  it("should persist workspace to storage", () => {
     const { result } = renderHook(() => useWorkspaceStore());
 
     const testWorkspace: Workspace = {
-      id: 'workspace-persist',
-      name: 'Persistent Workspace',
-      slug: 'persistent',
-      ownerId: 'user-789',
+      id: "workspace-persist",
+      name: "Persistent Workspace",
+      slug: "persistent",
+      ownerId: "user-789",
     };
 
     act(() => {
@@ -175,24 +178,26 @@ describe('Workspace Store', () => {
     });
 
     // Check storage
-    const stored = (globalThis as any).__TEST_STORAGE__?.['test-workspace-store'];
+    const stored = (globalThis as any).__TEST_STORAGE__?.[
+      "test-workspace-store"
+    ];
     expect(stored).toBeDefined();
-    
+
     const parsed = JSON.parse(stored);
     expect(parsed.state.workspace).toEqual(testWorkspace);
   });
 
-  it('should hydrate from storage', () => {
+  it("should hydrate from storage", () => {
     const testWorkspace: Workspace = {
-      id: 'workspace-hydrate',
-      name: 'Hydrated Workspace',
-      slug: 'hydrated',
-      ownerId: 'user-999',
+      id: "workspace-hydrate",
+      name: "Hydrated Workspace",
+      slug: "hydrated",
+      ownerId: "user-999",
     };
 
     // Set storage directly
     (globalThis as any).__TEST_STORAGE__ = {
-      'test-workspace-store': JSON.stringify({
+      "test-workspace-store": JSON.stringify({
         state: { workspace: testWorkspace },
         version: 0,
       }),
@@ -205,15 +210,15 @@ describe('Workspace Store', () => {
     expect(result.current.workspace).toEqual(testWorkspace);
   });
 
-  it('should handle multiple subscribers', () => {
+  it("should handle multiple subscribers", () => {
     const { result: result1 } = renderHook(() => useWorkspaceStore());
     const { result: result2 } = renderHook(() => useWorkspaceStore());
 
     const testWorkspace: Workspace = {
-      id: 'workspace-multi',
-      name: 'Multi Workspace',
-      slug: 'multi',
-      ownerId: 'user-multi',
+      id: "workspace-multi",
+      name: "Multi Workspace",
+      slug: "multi",
+      ownerId: "user-multi",
     };
 
     act(() => {
@@ -225,4 +230,3 @@ describe('Workspace Store', () => {
     expect(result2.current.workspace).toEqual(testWorkspace);
   });
 });
-

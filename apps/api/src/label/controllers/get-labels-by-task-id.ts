@@ -15,7 +15,10 @@ async function getLabelsByTaskId(taskId: string) {
     return [];
   }
 
-  return db.select().from(labelTable).where(eq(labelTable.projectId, task.projectId));
+  return db
+    .select()
+    .from(labelTable)
+    .where(eq(labelTable.projectId, task.projectId));
 }
 
 export default getLabelsByTaskId;

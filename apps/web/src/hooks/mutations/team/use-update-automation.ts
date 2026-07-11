@@ -20,15 +20,24 @@ export function useUpdateAutomation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ teamId, automationId, ...data }: UpdateAutomationData) => {
-      const response = await fetchApi(`/team/${teamId}/automations/${automationId}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+    mutationFn: async ({
+      teamId,
+      automationId,
+      ...data
+    }: UpdateAutomationData) => {
+      const response = await fetchApi(
+        `/team/${teamId}/automations/${automationId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(data),
+        },
+      );
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["team-automations", variables.teamId] });
+      queryClient.invalidateQueries({
+        queryKey: ["team-automations", variables.teamId],
+      });
       toast.success("Automation updated successfully");
     },
     onError: (error: any) => {
@@ -36,4 +45,3 @@ export function useUpdateAutomation() {
     },
   });
 }
-

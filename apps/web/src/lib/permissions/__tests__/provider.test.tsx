@@ -1,9 +1,8 @@
-
-import { describe, it, } from 'vitest';
+import { describe, it } from "vitest";
 
 // Skip this test file due to module import issues
-describe.skip('Permissions Provider Tests', () => {
-  it('skipped - module import issues need refactoring', () => {});
+describe.skip("Permissions Provider Tests", () => {
+  it("skipped - module import issues need refactoring", () => {});
 });
 
 /* Original tests commented out:

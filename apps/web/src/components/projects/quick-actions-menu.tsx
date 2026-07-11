@@ -55,7 +55,9 @@ export function QuickActionsMenu({
       <DropdownMenuContent align="end" className="w-48">
         {onStar && (
           <DropdownMenuItem onClick={() => onStar(project.id)}>
-            <Star className={`h-4 w-4 mr-2 ${isPinned ? 'fill-yellow-500' : ''}`} />
+            <Star
+              className={`h-4 w-4 mr-2 ${isPinned ? "fill-yellow-500" : ""}`}
+            />
             {isPinned ? "Unpin" : "Pin to Top"}
           </DropdownMenuItem>
         )}
@@ -84,23 +86,21 @@ export function QuickActionsMenu({
             Settings
           </DropdownMenuItem>
         )}
-        {project.isArchived ? (
-          onRestore && (
-            <DropdownMenuItem onClick={() => onRestore(project)}>
-              <ArchiveRestore className="h-4 w-4 mr-2" />
-              Restore
-            </DropdownMenuItem>
-          )
-        ) : (
-          onArchive && (
-            <DropdownMenuItem onClick={() => onArchive(project)}>
-              <Archive className="h-4 w-4 mr-2" />
-              Archive
-            </DropdownMenuItem>
-          )
-        )}
+        {project.isArchived
+          ? onRestore && (
+              <DropdownMenuItem onClick={() => onRestore(project)}>
+                <ArchiveRestore className="h-4 w-4 mr-2" />
+                Restore
+              </DropdownMenuItem>
+            )
+          : onArchive && (
+              <DropdownMenuItem onClick={() => onArchive(project)}>
+                <Archive className="h-4 w-4 mr-2" />
+                Archive
+              </DropdownMenuItem>
+            )}
         {onDelete && (
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={() => onDelete(project)}
             className="text-red-600 dark:text-red-400"
           >
@@ -112,4 +112,3 @@ export function QuickActionsMenu({
     </DropdownMenu>
   );
 }
-

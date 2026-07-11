@@ -61,8 +61,8 @@ export function MultiSelect({
     }
   };
 
-  const selectedOptions = options.filter((option) => 
-    selected.includes(option.value)
+  const selectedOptions = options.filter((option) =>
+    selected.includes(option.value),
   );
 
   return (
@@ -75,13 +75,15 @@ export function MultiSelect({
           className={cn(
             "w-full justify-between",
             selected.length > 0 ? "h-auto min-h-10" : "h-10",
-            className
+            className,
           )}
           disabled={disabled}
         >
           <div className="flex gap-1 flex-wrap flex-1 items-center">
             {selected.length === 0 && (
-              <span className="text-muted-foreground text-sm">{placeholder}</span>
+              <span className="text-muted-foreground text-sm">
+                {placeholder}
+              </span>
             )}
             {selectedOptions.slice(0, maxDisplay).map((option) => {
               const OptionIcon = option.icon;
@@ -132,7 +134,7 @@ export function MultiSelect({
             {options.map((option) => {
               const isSelected = selected.includes(option.value);
               const OptionIcon = option.icon;
-              
+
               return (
                 <CommandItem
                   key={option.value}
@@ -144,7 +146,7 @@ export function MultiSelect({
                       "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                       isSelected
                         ? "bg-primary text-primary-foreground"
-                        : "opacity-50 [&_svg]:invisible"
+                        : "opacity-50 [&_svg]:invisible",
                     )}
                   >
                     <Check className={cn("h-4 w-4")} />
@@ -162,4 +164,3 @@ export function MultiSelect({
     </Popover>
   );
 }
-

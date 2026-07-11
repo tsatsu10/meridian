@@ -1,13 +1,24 @@
 // @epic-3.4-teams: Workload heatmap visualization
 // @persona-david: Team Lead workload distribution view
-import { useMemo } from 'react';
-import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
-import { cn } from '@/lib/cn';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import type { HeatmapData, MemberSchedule } from '@/types/schedule';
-import { Activity, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useMemo } from "react";
+import {
+  format,
+  addDays,
+  startOfWeek,
+  eachDayOfInterval,
+  isSameDay,
+} from "date-fns";
+import { cn } from "@/lib/cn";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import type { HeatmapData, MemberSchedule } from "@/types/schedule";
+import { Activity, TrendingUp, AlertTriangle } from "lucide-react";
 
 interface WorkloadHeatmapProps {
   memberSchedules: MemberSchedule[];
@@ -22,69 +33,77 @@ export function WorkloadHeatmap({
   startDate = new Date(),
   weeks = 4,
   onCellClick,
-  className
+  className,
 }: WorkloadHeatmapProps) {
-  
   const { dateRange, heatmapData } = useMemo(() => {
     const start = startOfWeek(startDate);
     const end = addDays(start, weeks * 7 - 1);
     const dates = eachDayOfInterval({ start, end });
-    
+
     const data: Map<string, Map<string, HeatmapData>> = new Map();
-    
-    memberSchedules.forEach(member => {
+
+    memberSchedules.forEach((member) => {
       const memberData: Map<string, HeatmapData> = new Map();
-      
-      dates.forEach(date => {
-        const dateKey = format(date, 'yyyy-MM-dd');
-        
+
+      dates.forEach((date) => {
+        const dateKey = format(date, "yyyy-MM-dd");
+
         // Get events for this date
-        const dayEvents = member.events.filter(event => 
-          isSameDay(event.startDate, date) || 
-          (event.startDate <= date && event.endDate >= date)
+        const dayEvents = member.events.filter(
+          (event) =>
+            isSameDay(event.startDate, date) ||
+            (event.startDate <= date && event.endDate >= date),
         );
-        
+
         // Calculate workload for this day
         const totalHours = dayEvents.reduce((sum, event) => {
           return sum + (event.estimatedHours || 2);
         }, 0);
-        
+
         const workloadPercentage = Math.min((totalHours / 8) * 100, 150);
-        
-        let level: HeatmapData['level'] = 'none';
-        if (workloadPercentage > 0 && workloadPercentage <= 50) level = 'low';
-        else if (workloadPercentage > 50 && workloadPercentage <= 80) level = 'medium';
-        else if (workloadPercentage > 80 && workloadPercentage <= 100) level = 'high';
-        else if (workloadPercentage > 100) level = 'critical';
-        
+
+        let level: HeatmapData["level"] = "none";
+        if (workloadPercentage > 0 && workloadPercentage <= 50) level = "low";
+        else if (workloadPercentage > 50 && workloadPercentage <= 80)
+          level = "medium";
+        else if (workloadPercentage > 80 && workloadPercentage <= 100)
+          level = "high";
+        else if (workloadPercentage > 100) level = "critical";
+
         memberData.set(dateKey, {
           date,
           value: workloadPercentage,
           level,
           events: dayEvents,
-          tooltip: generateTooltip(member.memberName, date, dayEvents, totalHours, workloadPercentage)
+          tooltip: generateTooltip(
+            member.memberName,
+            date,
+            dayEvents,
+            totalHours,
+            workloadPercentage,
+          ),
         });
       });
-      
+
       data.set(member.memberId, memberData);
     });
-    
+
     return {
       dateRange: dates,
-      heatmapData: data
+      heatmapData: data,
     };
   }, [memberSchedules, startDate, weeks]);
-  
+
   const levelColors = {
-    none: 'bg-muted/30',
-    low: 'bg-green-500/30',
-    medium: 'bg-yellow-500/50',
-    high: 'bg-orange-500/70',
-    critical: 'bg-red-500/90'
+    none: "bg-muted/30",
+    low: "bg-green-500/30",
+    medium: "bg-yellow-500/50",
+    high: "bg-orange-500/70",
+    critical: "bg-red-500/90",
   };
-  
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
+
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -109,7 +128,9 @@ export function WorkloadHeatmap({
                 <span className="text-xs">Heavy</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className={cn("w-3 h-3 rounded-sm", levelColors.critical)} />
+                <div
+                  className={cn("w-3 h-3 rounded-sm", levelColors.critical)}
+                />
                 <span className="text-xs">Critical</span>
               </div>
             </div>
@@ -123,27 +144,26 @@ export function WorkloadHeatmap({
             <div className="flex mb-2">
               <div className="w-32 flex-shrink-0" /> {/* Member name column */}
               {dateRange.map((date, index) => (
-                <div
-                  key={index}
-                  className="w-10 text-center flex-shrink-0"
-                >
+                <div key={index} className="w-10 text-center flex-shrink-0">
                   <div className="text-xs font-medium">
                     {weekDays[date.getDay()]}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {format(date, 'd')}
+                    {format(date, "d")}
                   </div>
                 </div>
               ))}
             </div>
-            
+
             {/* Member rows */}
-            {memberSchedules.map(member => {
+            {memberSchedules.map((member) => {
               const memberData = heatmapData.get(member.memberId);
               if (!memberData) return null;
-              
-              const memberStats = calculateMemberStats(Array.from(memberData.values()));
-              
+
+              const memberStats = calculateMemberStats(
+                Array.from(memberData.values()),
+              );
+
               return (
                 <div key={member.memberId} className="flex items-center mb-2">
                   <div className="w-32 flex-shrink-0 pr-2">
@@ -157,9 +177,14 @@ export function WorkloadHeatmap({
                             variant="secondary"
                             className={cn(
                               "text-xs",
-                              memberStats.avgWorkload > 100 && "bg-red-100 text-red-800",
-                              memberStats.avgWorkload > 80 && memberStats.avgWorkload <= 100 && "bg-orange-100 text-orange-800",
-                              memberStats.avgWorkload > 50 && memberStats.avgWorkload <= 80 && "bg-yellow-100 text-yellow-800"
+                              memberStats.avgWorkload > 100 &&
+                                "bg-red-100 text-red-800",
+                              memberStats.avgWorkload > 80 &&
+                                memberStats.avgWorkload <= 100 &&
+                                "bg-orange-100 text-orange-800",
+                              memberStats.avgWorkload > 50 &&
+                                memberStats.avgWorkload <= 80 &&
+                                "bg-yellow-100 text-yellow-800",
                             )}
                           >
                             {Math.round(memberStats.avgWorkload)}%
@@ -171,14 +196,15 @@ export function WorkloadHeatmap({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-1">
                     {dateRange.map((date, index) => {
-                      const dateKey = format(date, 'yyyy-MM-dd');
+                      const dateKey = format(date, "yyyy-MM-dd");
                       const cellData = memberData.get(dateKey);
-                      
-                      if (!cellData) return <div key={index} className="w-10 h-10" />;
-                      
+
+                      if (!cellData)
+                        return <div key={index} className="w-10 h-10" />;
+
                       return (
                         <TooltipProvider key={index}>
                           <Tooltip>
@@ -188,7 +214,7 @@ export function WorkloadHeatmap({
                                 className={cn(
                                   "w-10 h-10 rounded-sm border border-border/50 transition-all hover:scale-110 hover:z-10 hover:shadow-lg",
                                   levelColors[cellData.level],
-                                  onCellClick && "cursor-pointer"
+                                  onCellClick && "cursor-pointer",
                                 )}
                               >
                                 {cellData.events.length > 0 && (
@@ -200,8 +226,10 @@ export function WorkloadHeatmap({
                             </TooltipTrigger>
                             <TooltipContent>
                               <div className="space-y-1">
-                                {cellData.tooltip.split('\n').map((line, i) => (
-                                  <div key={i} className="text-xs">{line}</div>
+                                {cellData.tooltip.split("\n").map((line, i) => (
+                                  <div key={i} className="text-xs">
+                                    {line}
+                                  </div>
                                 ))}
                               </div>
                             </TooltipContent>
@@ -215,7 +243,7 @@ export function WorkloadHeatmap({
             })}
           </div>
         </div>
-        
+
         {/* Summary Stats */}
         <div className="mt-6 grid grid-cols-3 gap-4">
           <Card>
@@ -226,12 +254,14 @@ export function WorkloadHeatmap({
                   <div className="text-2xl font-bold">
                     {calculateTeamAverage(heatmapData)}%
                   </div>
-                  <div className="text-xs text-muted-foreground">Avg Workload</div>
+                  <div className="text-xs text-muted-foreground">
+                    Avg Workload
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -245,7 +275,7 @@ export function WorkloadHeatmap({
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -254,7 +284,9 @@ export function WorkloadHeatmap({
                   <div className="text-2xl font-bold">
                     {calculateBalanceScore(heatmapData)}%
                   </div>
-                  <div className="text-xs text-muted-foreground">Balance Score</div>
+                  <div className="text-xs text-muted-foreground">
+                    Balance Score
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -270,80 +302,90 @@ function generateTooltip(
   date: Date,
   events: any[],
   totalHours: number,
-  workloadPercentage: number
+  workloadPercentage: number,
 ): string {
   const lines = [
     `${memberName}`,
-    format(date, 'EEEE, MMMM d'),
+    format(date, "EEEE, MMMM d"),
     `${totalHours.toFixed(1)} hours (${Math.round(workloadPercentage)}%)`,
-    '',
-    events.length > 0 ? 'Events:' : 'No events'
+    "",
+    events.length > 0 ? "Events:" : "No events",
   ];
-  
-  events.slice(0, 3).forEach(event => {
+
+  events.slice(0, 3).forEach((event) => {
     lines.push(`• ${event.title}`);
   });
-  
+
   if (events.length > 3) {
     lines.push(`... and ${events.length - 3} more`);
   }
-  
-  return lines.join('\n');
+
+  return lines.join("\n");
 }
 
 function calculateMemberStats(data: HeatmapData[]) {
   const avgWorkload = data.reduce((sum, d) => sum + d.value, 0) / data.length;
-  const peakDays = data.filter(d => d.level === 'critical').length;
-  
+  const peakDays = data.filter((d) => d.level === "critical").length;
+
   return { avgWorkload, peakDays };
 }
 
-function calculateTeamAverage(heatmapData: Map<string, Map<string, HeatmapData>>): number {
+function calculateTeamAverage(
+  heatmapData: Map<string, Map<string, HeatmapData>>,
+): number {
   let totalWorkload = 0;
   let count = 0;
-  
-  heatmapData.forEach(memberData => {
-    memberData.forEach(cellData => {
+
+  heatmapData.forEach((memberData) => {
+    memberData.forEach((cellData) => {
       totalWorkload += cellData.value;
       count++;
     });
   });
-  
+
   return count > 0 ? Math.round(totalWorkload / count) : 0;
 }
 
-function calculatePeakDays(heatmapData: Map<string, Map<string, HeatmapData>>): number {
+function calculatePeakDays(
+  heatmapData: Map<string, Map<string, HeatmapData>>,
+): number {
   let peakDays = 0;
-  
-  heatmapData.forEach(memberData => {
-    memberData.forEach(cellData => {
-      if (cellData.level === 'critical') peakDays++;
+
+  heatmapData.forEach((memberData) => {
+    memberData.forEach((cellData) => {
+      if (cellData.level === "critical") peakDays++;
     });
   });
-  
+
   return peakDays;
 }
 
-function calculateBalanceScore(heatmapData: Map<string, Map<string, HeatmapData>>): number {
+function calculateBalanceScore(
+  heatmapData: Map<string, Map<string, HeatmapData>>,
+): number {
   const memberWorkloads: number[] = [];
-  
-  heatmapData.forEach(memberData => {
-    const workloads = Array.from(memberData.values()).map(d => d.value);
-    const avgWorkload = workloads.reduce((sum, w) => sum + w, 0) / workloads.length;
+
+  heatmapData.forEach((memberData) => {
+    const workloads = Array.from(memberData.values()).map((d) => d.value);
+    const avgWorkload =
+      workloads.reduce((sum, w) => sum + w, 0) / workloads.length;
     memberWorkloads.push(avgWorkload);
   });
-  
+
   if (memberWorkloads.length === 0) return 100;
-  
-  const avgTeamWorkload = memberWorkloads.reduce((sum, w) => sum + w, 0) / memberWorkloads.length;
-  const variance = memberWorkloads.reduce((sum, w) => sum + Math.pow(w - avgTeamWorkload, 2), 0) / memberWorkloads.length;
+
+  const avgTeamWorkload =
+    memberWorkloads.reduce((sum, w) => sum + w, 0) / memberWorkloads.length;
+  const variance =
+    memberWorkloads.reduce(
+      (sum, w) => sum + Math.pow(w - avgTeamWorkload, 2),
+      0,
+    ) / memberWorkloads.length;
   const stdDev = Math.sqrt(variance);
-  
+
   // Lower standard deviation = better balance
   // Convert to 0-100 score where 100 is perfect balance
   const balanceScore = Math.max(0, 100 - stdDev);
-  
+
   return Math.round(balanceScore);
 }
-
-

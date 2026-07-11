@@ -12,7 +12,7 @@ import {
   templateDependencies,
 } from "../schema";
 import { allTemplates } from "./project-templates";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 export async function seedProjectTemplates() {
   // Initialize database connection if not already initialized
@@ -29,23 +29,25 @@ export async function seedProjectTemplates() {
       const templateId = createId();
 
       // Insert template
-      await getDatabase().insert(projectTemplates).values({
-        id: templateId,
-        name: templateInput.name,
-        description: templateInput.description,
-        profession: templateInput.profession,
-        industry: templateInput.industry,
-        category: templateInput.category,
-        icon: templateInput.icon,
-        color: templateInput.color || "#6366f1",
-        estimatedDuration: templateInput.estimatedDuration,
-        difficulty: templateInput.difficulty || "intermediate",
-        tags: templateInput.tags || [],
-        settings: templateInput.settings || {},
-        isPublic: templateInput.isPublic !== false,
-        isOfficial: true, // These are official Meridian templates
-        createdBy: null, // System-created
-      });
+      await getDatabase()
+        .insert(projectTemplates)
+        .values({
+          id: templateId,
+          name: templateInput.name,
+          description: templateInput.description,
+          profession: templateInput.profession,
+          industry: templateInput.industry,
+          category: templateInput.category,
+          icon: templateInput.icon,
+          color: templateInput.color || "#6366f1",
+          estimatedDuration: templateInput.estimatedDuration,
+          difficulty: templateInput.difficulty || "intermediate",
+          tags: templateInput.tags || [],
+          settings: templateInput.settings || {},
+          isPublic: templateInput.isPublic !== false,
+          isOfficial: true, // These are official Meridian templates
+          createdBy: null, // System-created
+        });
 
       templatesCreated++;
       logger.debug(`  ✅ Created template: ${templateInput.name}`);
@@ -59,20 +61,22 @@ export async function seedProjectTemplates() {
           const taskId = createId();
           taskPositionToId[taskInput.position] = taskId;
 
-          await getDatabase().insert(templateTasks).values({
-            id: taskId,
-            templateId: templateId,
-            title: taskInput.title,
-            description: taskInput.description,
-            position: taskInput.position,
-            priority: taskInput.priority || "medium",
-            estimatedHours: taskInput.estimatedHours,
-            suggestedAssigneeRole: taskInput.suggestedAssigneeRole,
-            relativeStartDay: taskInput.relativeStartDay,
-            relativeDueDay: taskInput.relativeDueDay,
-            tags: taskInput.tags || [],
-            metadata: {},
-          });
+          await getDatabase()
+            .insert(templateTasks)
+            .values({
+              id: taskId,
+              templateId: templateId,
+              title: taskInput.title,
+              description: taskInput.description,
+              position: taskInput.position,
+              priority: taskInput.priority || "medium",
+              estimatedHours: taskInput.estimatedHours,
+              suggestedAssigneeRole: taskInput.suggestedAssigneeRole,
+              relativeStartDay: taskInput.relativeStartDay,
+              relativeDueDay: taskInput.relativeDueDay,
+              tags: taskInput.tags || [],
+              metadata: {},
+            });
 
           tasksCreated++;
 
@@ -101,14 +105,17 @@ export async function seedProjectTemplates() {
 
           if (taskInput.dependencies && taskInput.dependencies.length > 0) {
             for (const depInput of taskInput.dependencies) {
-              const requiredTaskId = taskPositionToId[depInput.requiredTaskPosition];
+              const requiredTaskId =
+                taskPositionToId[depInput.requiredTaskPosition];
 
               if (taskId && requiredTaskId) {
-                await getDatabase().insert(templateDependencies).values({
-                  dependentTaskId: taskId,
-                  requiredTaskId,
-                  type: depInput.type || "blocks",
-                });
+                await getDatabase()
+                  .insert(templateDependencies)
+                  .values({
+                    dependentTaskId: taskId,
+                    requiredTaskId,
+                    type: depInput.type || "blocks",
+                  });
 
                 dependenciesCreated++;
               }
@@ -117,7 +124,10 @@ export async function seedProjectTemplates() {
         }
       }
     } catch (error) {
-      logger.error(`  ❌ Error creating template "${templateInput.name}":`, error);
+      logger.error(
+        `  ❌ Error creating template "${templateInput.name}":`,
+        error,
+      );
     }
   }
 
@@ -148,5 +158,3 @@ if (require.main === module) {
       process.exit(1);
     });
 }
-
-

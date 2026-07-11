@@ -1,6 +1,6 @@
 /**
  * 👤 Clickable User Profile Component
- * 
+ *
  * Makes user names and avatars clickable to view their profile
  * Can open either a quick view modal or navigate to full profile
  */
@@ -11,10 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/cn";
 
 // Lazy load the modal to improve performance when many profiles are displayed
-const TeamMemberProfileModal = lazy(() => 
-  import("@/components/profile/team-member/team-member-profile-modal").then(m => ({ 
-    default: m.TeamMemberProfileModal 
-  }))
+const TeamMemberProfileModal = lazy(() =>
+  import("@/components/profile/team-member/team-member-profile-modal").then(
+    (m) => ({
+      default: m.TeamMemberProfileModal,
+    }),
+  ),
 );
 
 interface ClickableUserProfileProps {
@@ -63,10 +65,10 @@ export function ClickableUserProfile({
 }: ClickableUserProfileProps) {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // Use userId if available, otherwise fall back to userEmail
   const profileId = userId || userEmail;
-  
+
   if (!profileId) {
     // If no ID available, render without click functionality
     return (
@@ -75,12 +77,19 @@ export function ClickableUserProfile({
           <Avatar className={cn(sizeClasses[size].avatar, avatarClassName)}>
             <AvatarImage src={userAvatar} alt={userName} />
             <AvatarFallback className={cn(sizeClasses[size].text)}>
-              {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+              {userName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
             </AvatarFallback>
           </Avatar>
         )}
         {showName && (
-          <span className={cn("font-medium", sizeClasses[size].text, nameClassName)}>
+          <span
+            className={cn("font-medium", sizeClasses[size].text, nameClassName)}
+          >
             {userName}
           </span>
         )}
@@ -88,11 +97,11 @@ export function ClickableUserProfile({
       </div>
     );
   }
-  
+
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (openMode === "page") {
       navigate({ to: `/dashboard/profile/${profileId}` });
     } else {
@@ -100,24 +109,24 @@ export function ClickableUserProfile({
       setIsModalOpen(true);
     }
   };
-  
+
   const handleViewFull = () => {
     setIsModalOpen(false);
     navigate({ to: `/dashboard/profile/${profileId}` });
   };
-  
+
   return (
     <>
-      <div 
+      <div
         className={cn(
           "flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity",
-          className
+          className,
         )}
         onClick={handleClick}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             handleClick(e as any);
           }
         }}
@@ -126,22 +135,29 @@ export function ClickableUserProfile({
           <Avatar className={cn(sizeClasses[size].avatar, avatarClassName)}>
             <AvatarImage src={userAvatar} alt={userName} />
             <AvatarFallback className={cn(sizeClasses[size].text)}>
-              {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+              {userName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
             </AvatarFallback>
           </Avatar>
         )}
         {showName && (
-          <span className={cn(
-            "font-medium hover:underline",
-            sizeClasses[size].text,
-            nameClassName
-          )}>
+          <span
+            className={cn(
+              "font-medium hover:underline",
+              sizeClasses[size].text,
+              nameClassName,
+            )}
+          >
             {userName}
           </span>
         )}
         {children}
       </div>
-      
+
       {(openMode === "modal" || openMode === "both") && isModalOpen && (
         <Suspense fallback={null}>
           <TeamMemberProfileModal
@@ -155,4 +171,3 @@ export function ClickableUserProfile({
     </>
   );
 }
-

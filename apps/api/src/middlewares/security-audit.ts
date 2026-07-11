@@ -1,6 +1,6 @@
 /**
  * 🔒 Security Audit Middleware
- * 
+ *
  * Comprehensive security auditing for RBAC enforcement.
  * Logs all permission checks and validates security compliance.
  */
@@ -8,10 +8,14 @@
 import { createMiddleware } from "hono/factory";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
-import { roleAssignmentTable, roleHistoryTable, userTable } from "../database/schema";
+import {
+  roleAssignmentTable,
+  roleHistoryTable,
+  userTable,
+} from "../database/schema";
 import type { UserRole, PermissionAction } from "../types/rbac";
 import { createId } from "@paralleldrive/cuid2";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 interface SecurityAuditLog {
   id: string;
@@ -44,7 +48,7 @@ export function securityAuditLogger() {
     const userEmail = c.get("userEmail") || "anonymous";
     const userRole = c.get("userRole") || "guest";
     const userId = c.get("userId") || "unknown";
-    
+
     const auditLog: SecurityAuditLog = {
       id: createId(),
       userId,
@@ -54,28 +58,31 @@ export function securityAuditLogger() {
       endpoint: c.req.path,
       method: c.req.method,
       allowed: false, // Will be updated based on response
-      ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown",
+      ipAddress:
+        c.req.header("x-forwarded-for") ||
+        c.req.header("x-real-ip") ||
+        "unknown",
       userAgent: c.req.header("user-agent") || "unknown",
       timestamp: new Date(),
     };
 
     try {
       await next();
-      
+
       // Mark as allowed if no error was thrown
       auditLog.allowed = true;
       auditLog.responseStatus = 200;
-      
     } catch (error) {
       auditLog.allowed = false;
-      auditLog.reason = error instanceof Error ? error.message : "Unknown error";
+      auditLog.reason =
+        error instanceof Error ? error.message : "Unknown error";
       auditLog.responseStatus = 500;
-      
+
       logger.warn("🚨 Security audit: Action failed", {
         user: userEmail,
         role: userRole,
         action: auditLog.action,
-        error: auditLog.reason
+        error: auditLog.reason,
       });
     }
 
@@ -86,9 +93,9 @@ export function securityAuditLogger() {
     if (isSecuritySensitiveAction(auditLog.endpoint, auditLog.method)) {
       logger.debug("🔒 Security audit log:", {
         ...auditLog,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
-      
+
       // Store in database for persistent auditing
       await storeAuditLog(auditLog);
     }
@@ -107,13 +114,13 @@ function isSecuritySensitiveAction(endpoint: string, method: string): boolean {
     "/admin/",
     "/users/",
     "/billing/",
-    "/settings/"
+    "/settings/",
   ];
-  
+
   const sensitiveMethods = ["POST", "PUT", "DELETE", "PATCH"];
-  
+
   return (
-    sensitivePatterns.some(pattern => endpoint.includes(pattern)) ||
+    sensitivePatterns.some((pattern) => endpoint.includes(pattern)) ||
     sensitiveMethods.includes(method) ||
     endpoint.includes("delete") ||
     endpoint.includes("remove") ||
@@ -129,7 +136,7 @@ async function storeAuditLog(auditLog: SecurityAuditLog): Promise<void> {
   try {
     const db = getDatabase();
     // Only store audit logs if we have a valid user ID
-    if (!auditLog.userId || auditLog.userId === 'unknown') {
+    if (!auditLog.userId || auditLog.userId === "unknown") {
       logger.warn("Skipping audit log storage - no valid user ID");
       return;
     }
@@ -142,7 +149,9 @@ async function storeAuditLog(auditLog: SecurityAuditLog): Promise<void> {
       .limit(1);
 
     if (userExists.length === 0) {
-      logger.warn(`Skipping audit log storage - user ${auditLog.userId} not found`);
+      logger.warn(
+        `Skipping audit log storage - user ${auditLog.userId} not found`,
+      );
       return;
     }
 
@@ -156,7 +165,7 @@ async function storeAuditLog(auditLog: SecurityAuditLog): Promise<void> {
       action: "security_audit",
       role: auditLog.userRole ?? "unknown",
       performedBy: auditLog.userId,
-      reason: `Security audit: ${auditLog.action} - ${auditLog.allowed ? 'ALLOWED' : 'DENIED'}`,
+      reason: `Security audit: ${auditLog.action} - ${auditLog.allowed ? "ALLOWED" : "DENIED"}`,
       workspaceId: auditLog.context?.workspaceId || null,
       metadata: {
         ipAddress: auditLog.ipAddress,
@@ -178,19 +187,19 @@ export function validateRBACCompliance() {
     const userRole = c.get("userRole") as UserRole;
     const endpoint = c.req.path;
     const method = c.req.method;
-    
+
     // Extract IDs from URL path for context validation
     const workspaceIdFromPath = endpoint.match(/\/workspace\/([^\/]+)/)?.[1];
     const projectIdFromPath = endpoint.match(/\/project\/([^\/]+)/)?.[1];
-    
+
     // Check for potential security bypasses
     const securityViolations = [];
-    
+
     // 1. Check for admin operations without proper role
     if (isAdminOperation(endpoint, method) && !hasAdminRole(userRole)) {
       securityViolations.push("Admin operation attempted without admin role");
     }
-    
+
     // 2. Check for workspace operations without workspace context
     // Skip collection routes (/api/workspace, /api/workspaces) — create/list have no id in path
     if (
@@ -202,46 +211,58 @@ export function validateRBACCompliance() {
     ) {
       // Only flag as violation if it's not a GET operation that might be listing workspaces
       if (method !== "GET" || !endpoint.endsWith("/workspace")) {
-        securityViolations.push("Workspace operation without workspace context");
+        securityViolations.push(
+          "Workspace operation without workspace context",
+        );
       }
     }
-    
-    // 3. Check for project operations without project context  
+
+    // 3. Check for project operations without project context
     // Skip this check if we can extract project ID from path or it's a list operation
-    if (isProjectOperation(endpoint) && !c.get("projectId") && !projectIdFromPath && !endpoint.includes("/project/list")) {
+    if (
+      isProjectOperation(endpoint) &&
+      !c.get("projectId") &&
+      !projectIdFromPath &&
+      !endpoint.includes("/project/list")
+    ) {
       // Only flag as violation if it's not a GET operation that might be listing projects
       if (method !== "GET" || !endpoint.endsWith("/project")) {
         securityViolations.push("Project operation without project context");
       }
     }
-    
+
     // 4. Check for guest/external user restrictions
     if (isExternalUser(userRole) && hasInternalRestrictions(endpoint)) {
       securityViolations.push("External user accessing internal resources");
     }
-    
+
     if (securityViolations.length > 0) {
       logger.warn("🚨 RBAC COMPLIANCE VIOLATION:", {
         user: c.get("userEmail"),
         role: userRole,
         endpoint,
         method,
-        violations: securityViolations
+        violations: securityViolations,
       });
-      
+
       // In demo mode, only warn instead of blocking
       const { isDemoMode } = require("../utils/get-settings").default();
       if (isDemoMode) {
-        logger.warn("⚠️ Demo mode: Allowing operation despite compliance violations");
+        logger.warn(
+          "⚠️ Demo mode: Allowing operation despite compliance violations",
+        );
       } else {
-        return c.json({
-          error: "Security policy violation",
-          violations: securityViolations,
-          message: "This action violates security policies"
-        }, 403);
+        return c.json(
+          {
+            error: "Security policy violation",
+            violations: securityViolations,
+            message: "This action violates security policies",
+          },
+          403,
+        );
       }
     }
-    
+
     await next();
   });
 }
@@ -251,7 +272,7 @@ function isAdminOperation(endpoint: string, method: string): boolean {
   return (
     endpoint.includes("/admin/") ||
     endpoint.includes("/roles/assign") ||
-    endpoint.includes("/workspace") && method === "DELETE" ||
+    (endpoint.includes("/workspace") && method === "DELETE") ||
     endpoint.includes("/billing/")
   );
 }
@@ -261,12 +282,17 @@ function hasAdminRole(role: UserRole): boolean {
 }
 
 function isWorkspaceOperation(endpoint: string): boolean {
-  return endpoint.includes("/workspace/") && !endpoint.includes("/workspace/list");
+  return (
+    endpoint.includes("/workspace/") && !endpoint.includes("/workspace/list")
+  );
 }
 
 /** Paths for listing/creating workspaces (no :id segment). */
 function isWorkspaceCollectionPath(endpoint: string): boolean {
-  return /^\/api\/workspaces\/?$/.test(endpoint) || /^\/api\/workspace\/?$/.test(endpoint);
+  return (
+    /^\/api\/workspaces\/?$/.test(endpoint) ||
+    /^\/api\/workspace\/?$/.test(endpoint)
+  );
 }
 
 function isProjectOperation(endpoint: string): boolean {
@@ -293,26 +319,25 @@ function hasInternalRestrictions(endpoint: string): boolean {
 export function detectDemoMode() {
   return createMiddleware(async (c, next) => {
     const userEmail = c.get("userEmail") || "";
-    
+
     // Detect demo users
-    const isDemoUser = (
-      userEmail.endsWith('@meridian.app') || 
-      userEmail.includes('demo') || 
-      userEmail === 'demo@example.com' ||
-      userEmail.includes('test@')
-    );
-    
+    const isDemoUser =
+      userEmail.endsWith("@meridian.app") ||
+      userEmail.includes("demo") ||
+      userEmail === "demo@example.com" ||
+      userEmail.includes("test@");
+
     if (isDemoUser) {
       logger.warn("⚠️ DEMO MODE DETECTED:", {
         user: userEmail,
         endpoint: c.req.path,
-        message: "Demo user bypassing normal security restrictions"
+        message: "Demo user bypassing normal security restrictions",
       });
-      
+
       // In production, you might want to add additional restrictions for demo users
       c.set("isDemoUser", true);
     }
-    
+
     await next();
   });
 }
@@ -321,4 +346,4 @@ export default {
   securityAuditLogger,
   validateRBACCompliance,
   detectDemoMode,
-}; 
+};

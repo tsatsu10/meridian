@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Calendar as CalendarIcon,
   Settings,
@@ -12,22 +12,34 @@ import {
   ArrowLeft,
   Save,
   RotateCcw,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { useWorkspaceStore } from '@/store/workspace';
-import { API_BASE_URL } from '@/constants/urls';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { useWorkspaceStore } from "@/store/workspace";
+import { API_BASE_URL } from "@/constants/urls";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/calendar')({
+export const Route = createFileRoute("/dashboard/settings/calendar")({
   component: withErrorBoundary(CalendarSettings, "Calendar Settings"),
 });
 
@@ -39,7 +51,7 @@ interface CalendarSettingsData {
   defaultEventDuration: number;
   defaultEventReminder: number;
   allowAllDayEvents: boolean;
-  defaultEventVisibility: 'public' | 'private' | 'workspace';
+  defaultEventVisibility: "public" | "private" | "workspace";
   requireEventApproval: boolean;
   workingHoursEnabled: boolean;
   workingHoursStart: string;
@@ -51,10 +63,10 @@ interface CalendarSettingsData {
   bufferTimeBetweenMeetings: number;
   allowRecurringEvents: boolean;
   maxRecurringInstances: number;
-  calendarViewType: 'month' | 'week' | 'day' | 'agenda';
+  calendarViewType: "month" | "week" | "day" | "agenda";
   showWeekends: boolean;
-  startDayOfWeek: 'sunday' | 'monday';
-  timeFormat: '12h' | '24h';
+  startDayOfWeek: "sunday" | "monday";
+  timeFormat: "12h" | "24h";
   dateFormat: string;
   sendEventReminders: boolean;
   sendEventUpdates: boolean;
@@ -74,24 +86,27 @@ function CalendarSettings() {
   // Fix: Use workspace directly instead of broken currentWorkspace getter
   const workspace = useWorkspaceStore((state) => state.workspace);
   const currentWorkspace = workspace;
-  
+
   const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState<Partial<CalendarSettingsData>>({});
 
   // Fetch calendar settings
   const { data: settings, isLoading } = useQuery({
-    queryKey: ['calendar-settings', currentWorkspace?.id],
+    queryKey: ["calendar-settings", currentWorkspace?.id],
     queryFn: async () => {
-      if (!currentWorkspace) throw new Error('No workspace selected');
-      
-      const response = await fetch(`${API_BASE_URL}/settings/calendar/${currentWorkspace.id}`, {
-        credentials: 'include',
-      });
-      
+      if (!currentWorkspace) throw new Error("No workspace selected");
+
+      const response = await fetch(
+        `${API_BASE_URL}/settings/calendar/${currentWorkspace.id}`,
+        {
+          credentials: "include",
+        },
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to fetch calendar settings');
+        throw new Error("Failed to fetch calendar settings");
       }
-      
+
       const result = await response.json();
       return result.data as CalendarSettingsData;
     },
@@ -107,25 +122,30 @@ function CalendarSettings() {
   // Update settings mutation
   const updateSettingsMutation = useMutation({
     mutationFn: async (updates: Partial<CalendarSettingsData>) => {
-      if (!currentWorkspace) throw new Error('No workspace selected');
-      
-      const response = await fetch(`${API_BASE_URL}/settings/calendar/${currentWorkspace.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(updates),
-      });
-      
+      if (!currentWorkspace) throw new Error("No workspace selected");
+
+      const response = await fetch(
+        `${API_BASE_URL}/settings/calendar/${currentWorkspace.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(updates),
+        },
+      );
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update settings');
+        throw new Error(error.error || "Failed to update settings");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['calendar-settings', currentWorkspace?.id] });
-      toast.success('Calendar settings updated successfully');
+      queryClient.invalidateQueries({
+        queryKey: ["calendar-settings", currentWorkspace?.id],
+      });
+      toast.success("Calendar settings updated successfully");
       setHasChanges(false);
     },
     onError: (error: Error) => {
@@ -134,7 +154,7 @@ function CalendarSettings() {
   });
 
   const handleChange = (field: keyof CalendarSettingsData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -146,7 +166,7 @@ function CalendarSettings() {
     if (settings) {
       setFormData(settings);
       setHasChanges(false);
-      toast.info('Changes reset');
+      toast.info("Changes reset");
     }
   };
 
@@ -156,7 +176,9 @@ function CalendarSettings() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading calendar settings...</p>
+            <p className="text-muted-foreground">
+              Loading calendar settings...
+            </p>
           </div>
         </div>
       </LazyDashboardLayout>
@@ -169,14 +191,20 @@ function CalendarSettings() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button onClick={() => navigate({ to: '/dashboard/settings' })} variant="ghost" size="sm">
+            <Button
+              onClick={() => navigate({ to: "/dashboard/settings" })}
+              variant="ghost"
+              size="sm"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
             </Button>
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                 <CalendarIcon className="h-8 w-8" /> Calendar Settings
               </h1>
-              <p className="text-muted-foreground">Configure calendar sync, events, and scheduling preferences</p>
+              <p className="text-muted-foreground">
+                Configure calendar sync, events, and scheduling preferences
+              </p>
             </div>
           </div>
           {hasChanges && (
@@ -184,9 +212,15 @@ function CalendarSettings() {
               <Button onClick={handleReset} variant="outline" size="sm">
                 <RotateCcw className="h-4 w-4 mr-2" /> Reset
               </Button>
-              <Button onClick={handleSave} size="sm" disabled={updateSettingsMutation.isPending}>
+              <Button
+                onClick={handleSave}
+                size="sm"
+                disabled={updateSettingsMutation.isPending}
+              >
                 <Save className="h-4 w-4 mr-2" />
-                {updateSettingsMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateSettingsMutation.isPending
+                  ? "Saving..."
+                  : "Save Changes"}
               </Button>
             </div>
           )}
@@ -199,17 +233,23 @@ function CalendarSettings() {
               <CalendarIcon className="h-5 w-5" />
               Google Calendar Integration
             </CardTitle>
-            <CardDescription>Connect and sync with Google Calendar</CardDescription>
+            <CardDescription>
+              Connect and sync with Google Calendar
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <Label>Enable Google Calendar</Label>
-                <p className="text-sm text-muted-foreground">Connect your Google Calendar account</p>
+                <p className="text-sm text-muted-foreground">
+                  Connect your Google Calendar account
+                </p>
               </div>
               <Switch
                 checked={formData.googleCalendarEnabled ?? false}
-                onCheckedChange={(checked) => handleChange('googleCalendarEnabled', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("googleCalendarEnabled", checked)
+                }
               />
             </div>
 
@@ -220,34 +260,52 @@ function CalendarSettings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Enable Automatic Sync</Label>
-                    <p className="text-sm text-muted-foreground">Automatically sync events with Google Calendar</p>
+                    <p className="text-sm text-muted-foreground">
+                      Automatically sync events with Google Calendar
+                    </p>
                   </div>
                   <Switch
                     checked={formData.googleCalendarSyncEnabled ?? false}
-                    onCheckedChange={(checked) => handleChange('googleCalendarSyncEnabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("googleCalendarSyncEnabled", checked)
+                    }
                   />
                 </div>
 
                 {formData.googleCalendarSyncEnabled && (
                   <div className="space-y-2 pl-6">
-                    <Label htmlFor="googleCalendarSyncInterval">Sync Interval (minutes)</Label>
+                    <Label htmlFor="googleCalendarSyncInterval">
+                      Sync Interval (minutes)
+                    </Label>
                     <Input
                       id="googleCalendarSyncInterval"
                       type="number"
                       min="5"
                       max="1440"
                       value={formData.googleCalendarSyncInterval || 15}
-                      onChange={(e) => handleChange('googleCalendarSyncInterval', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleChange(
+                          "googleCalendarSyncInterval",
+                          Number.parseInt(e.target.value),
+                        )
+                      }
                     />
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="googleCalendarDefaultCalendar">Default Calendar</Label>
+                  <Label htmlFor="googleCalendarDefaultCalendar">
+                    Default Calendar
+                  </Label>
                   <Input
                     id="googleCalendarDefaultCalendar"
-                    value={formData.googleCalendarDefaultCalendar || ''}
-                    onChange={(e) => handleChange('googleCalendarDefaultCalendar', e.target.value)}
+                    value={formData.googleCalendarDefaultCalendar || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        "googleCalendarDefaultCalendar",
+                        e.target.value,
+                      )
+                    }
                     placeholder="primary"
                   />
                 </div>
@@ -268,36 +326,54 @@ function CalendarSettings() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="defaultEventDuration">Default Duration (minutes)</Label>
+                <Label htmlFor="defaultEventDuration">
+                  Default Duration (minutes)
+                </Label>
                 <Input
                   id="defaultEventDuration"
                   type="number"
                   min="15"
                   max="1440"
                   value={formData.defaultEventDuration || 60}
-                  onChange={(e) => handleChange('defaultEventDuration', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleChange(
+                      "defaultEventDuration",
+                      Number.parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="defaultEventReminder">Default Reminder (minutes before)</Label>
+                <Label htmlFor="defaultEventReminder">
+                  Default Reminder (minutes before)
+                </Label>
                 <Input
                   id="defaultEventReminder"
                   type="number"
                   min="0"
                   max="1440"
                   value={formData.defaultEventReminder || 15}
-                  onChange={(e) => handleChange('defaultEventReminder', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleChange(
+                      "defaultEventReminder",
+                      Number.parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="defaultEventVisibility">Default Visibility</Label>
+                <Label htmlFor="defaultEventVisibility">
+                  Default Visibility
+                </Label>
                 <Select
-                  value={formData.defaultEventVisibility || 'workspace'}
-                  onValueChange={(value) => handleChange('defaultEventVisibility', value)}
+                  value={formData.defaultEventVisibility || "workspace"}
+                  onValueChange={(value) =>
+                    handleChange("defaultEventVisibility", value)
+                  }
                 >
                   <SelectTrigger id="defaultEventVisibility">
                     <SelectValue />
@@ -317,18 +393,24 @@ function CalendarSettings() {
               <Label>Allow All-Day Events</Label>
               <Switch
                 checked={formData.allowAllDayEvents ?? true}
-                onCheckedChange={(checked) => handleChange('allowAllDayEvents', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowAllDayEvents", checked)
+                }
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <Label>Require Event Approval</Label>
-                <p className="text-sm text-muted-foreground">New events need approval before being added</p>
+                <p className="text-sm text-muted-foreground">
+                  New events need approval before being added
+                </p>
               </div>
               <Switch
                 checked={formData.requireEventApproval ?? false}
-                onCheckedChange={(checked) => handleChange('requireEventApproval', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("requireEventApproval", checked)
+                }
               />
             </div>
           </CardContent>
@@ -341,17 +423,23 @@ function CalendarSettings() {
               <Clock className="h-5 w-5" />
               Working Hours
             </CardTitle>
-            <CardDescription>Set your workspace's working schedule</CardDescription>
+            <CardDescription>
+              Set your workspace's working schedule
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <Label>Enable Working Hours</Label>
-                <p className="text-sm text-muted-foreground">Show working hours on calendar</p>
+                <p className="text-sm text-muted-foreground">
+                  Show working hours on calendar
+                </p>
               </div>
               <Switch
                 checked={formData.workingHoursEnabled ?? true}
-                onCheckedChange={(checked) => handleChange('workingHoursEnabled', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("workingHoursEnabled", checked)
+                }
               />
             </div>
 
@@ -365,8 +453,10 @@ function CalendarSettings() {
                     <Input
                       id="workingHoursStart"
                       type="time"
-                      value={formData.workingHoursStart || '09:00'}
-                      onChange={(e) => handleChange('workingHoursStart', e.target.value)}
+                      value={formData.workingHoursStart || "09:00"}
+                      onChange={(e) =>
+                        handleChange("workingHoursStart", e.target.value)
+                      }
                     />
                   </div>
 
@@ -375,8 +465,10 @@ function CalendarSettings() {
                     <Input
                       id="workingHoursEnd"
                       type="time"
-                      value={formData.workingHoursEnd || '17:00'}
-                      onChange={(e) => handleChange('workingHoursEnd', e.target.value)}
+                      value={formData.workingHoursEnd || "17:00"}
+                      onChange={(e) =>
+                        handleChange("workingHoursEnd", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -384,17 +476,29 @@ function CalendarSettings() {
                 <div className="space-y-2">
                   <Label>Working Days</Label>
                   <div className="flex flex-wrap gap-2">
-                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                    {[
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday",
+                    ].map((day) => (
                       <Badge
                         key={day}
-                        variant={formData.workingDays?.includes(day) ? 'default' : 'outline'}
+                        variant={
+                          formData.workingDays?.includes(day)
+                            ? "default"
+                            : "outline"
+                        }
                         className="cursor-pointer"
                         onClick={() => {
                           const current = formData.workingDays || [];
                           const updated = current.includes(day)
-                            ? current.filter(d => d !== day)
+                            ? current.filter((d) => d !== day)
                             : [...current, day];
-                          handleChange('workingDays', updated);
+                          handleChange("workingDays", updated);
                         }}
                       >
                         {day.charAt(0).toUpperCase() + day.slice(1)}
@@ -407,8 +511,8 @@ function CalendarSettings() {
                   <Label htmlFor="timezone">Timezone</Label>
                   <Input
                     id="timezone"
-                    value={formData.timezone || 'UTC'}
-                    onChange={(e) => handleChange('timezone', e.target.value)}
+                    value={formData.timezone || "UTC"}
+                    onChange={(e) => handleChange("timezone", e.target.value)}
                     placeholder="UTC"
                   />
                 </div>
@@ -424,39 +528,57 @@ function CalendarSettings() {
               <Users className="h-5 w-5" />
               Meeting Settings
             </CardTitle>
-            <CardDescription>Configure meeting and room booking settings</CardDescription>
+            <CardDescription>
+              Configure meeting and room booking settings
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Allow Meeting Rooms</Label>
               <Switch
                 checked={formData.allowMeetingRooms ?? true}
-                onCheckedChange={(checked) => handleChange('allowMeetingRooms', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowMeetingRooms", checked)
+                }
               />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="maxMeetingDuration">Max Meeting Duration (minutes)</Label>
+                <Label htmlFor="maxMeetingDuration">
+                  Max Meeting Duration (minutes)
+                </Label>
                 <Input
                   id="maxMeetingDuration"
                   type="number"
                   min="15"
                   max="1440"
                   value={formData.maxMeetingDuration || 480}
-                  onChange={(e) => handleChange('maxMeetingDuration', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleChange(
+                      "maxMeetingDuration",
+                      Number.parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bufferTimeBetweenMeetings">Buffer Time Between Meetings (minutes)</Label>
+                <Label htmlFor="bufferTimeBetweenMeetings">
+                  Buffer Time Between Meetings (minutes)
+                </Label>
                 <Input
                   id="bufferTimeBetweenMeetings"
                   type="number"
                   min="0"
                   max="120"
                   value={formData.bufferTimeBetweenMeetings || 0}
-                  onChange={(e) => handleChange('bufferTimeBetweenMeetings', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleChange(
+                      "bufferTimeBetweenMeetings",
+                      Number.parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
             </div>
@@ -467,20 +589,29 @@ function CalendarSettings() {
               <Label>Allow Recurring Events</Label>
               <Switch
                 checked={formData.allowRecurringEvents ?? true}
-                onCheckedChange={(checked) => handleChange('allowRecurringEvents', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowRecurringEvents", checked)
+                }
               />
             </div>
 
             {formData.allowRecurringEvents && (
               <div className="space-y-2 pl-6">
-                <Label htmlFor="maxRecurringInstances">Max Recurring Instances</Label>
+                <Label htmlFor="maxRecurringInstances">
+                  Max Recurring Instances
+                </Label>
                 <Input
                   id="maxRecurringInstances"
                   type="number"
                   min="1"
                   max="365"
                   value={formData.maxRecurringInstances || 365}
-                  onChange={(e) => handleChange('maxRecurringInstances', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleChange(
+                      "maxRecurringInstances",
+                      Number.parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
             )}
@@ -494,15 +625,19 @@ function CalendarSettings() {
               <Eye className="h-5 w-5" />
               Display Settings
             </CardTitle>
-            <CardDescription>Customize calendar display preferences</CardDescription>
+            <CardDescription>
+              Customize calendar display preferences
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="calendarViewType">Default View</Label>
                 <Select
-                  value={formData.calendarViewType || 'month'}
-                  onValueChange={(value) => handleChange('calendarViewType', value)}
+                  value={formData.calendarViewType || "month"}
+                  onValueChange={(value) =>
+                    handleChange("calendarViewType", value)
+                  }
                 >
                   <SelectTrigger id="calendarViewType">
                     <SelectValue />
@@ -519,8 +654,10 @@ function CalendarSettings() {
               <div className="space-y-2">
                 <Label htmlFor="startDayOfWeek">Start Day of Week</Label>
                 <Select
-                  value={formData.startDayOfWeek || 'monday'}
-                  onValueChange={(value) => handleChange('startDayOfWeek', value)}
+                  value={formData.startDayOfWeek || "monday"}
+                  onValueChange={(value) =>
+                    handleChange("startDayOfWeek", value)
+                  }
                 >
                   <SelectTrigger id="startDayOfWeek">
                     <SelectValue />
@@ -537,8 +674,8 @@ function CalendarSettings() {
               <div className="space-y-2">
                 <Label htmlFor="timeFormat">Time Format</Label>
                 <Select
-                  value={formData.timeFormat || '12h'}
-                  onValueChange={(value) => handleChange('timeFormat', value)}
+                  value={formData.timeFormat || "12h"}
+                  onValueChange={(value) => handleChange("timeFormat", value)}
                 >
                   <SelectTrigger id="timeFormat">
                     <SelectValue />
@@ -554,8 +691,8 @@ function CalendarSettings() {
                 <Label htmlFor="dateFormat">Date Format</Label>
                 <Input
                   id="dateFormat"
-                  value={formData.dateFormat || 'MM/DD/YYYY'}
-                  onChange={(e) => handleChange('dateFormat', e.target.value)}
+                  value={formData.dateFormat || "MM/DD/YYYY"}
+                  onChange={(e) => handleChange("dateFormat", e.target.value)}
                   placeholder="MM/DD/YYYY"
                 />
               </div>
@@ -567,7 +704,9 @@ function CalendarSettings() {
               <Label>Show Weekends</Label>
               <Switch
                 checked={formData.showWeekends ?? true}
-                onCheckedChange={(checked) => handleChange('showWeekends', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("showWeekends", checked)
+                }
               />
             </div>
           </CardContent>
@@ -580,14 +719,18 @@ function CalendarSettings() {
               <Bell className="h-5 w-5" />
               Event Notifications
             </CardTitle>
-            <CardDescription>Control event notification preferences</CardDescription>
+            <CardDescription>
+              Control event notification preferences
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Send Event Reminders</Label>
               <Switch
                 checked={formData.sendEventReminders ?? true}
-                onCheckedChange={(checked) => handleChange('sendEventReminders', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("sendEventReminders", checked)
+                }
               />
             </div>
 
@@ -595,7 +738,9 @@ function CalendarSettings() {
               <Label>Send Event Updates</Label>
               <Switch
                 checked={formData.sendEventUpdates ?? true}
-                onCheckedChange={(checked) => handleChange('sendEventUpdates', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("sendEventUpdates", checked)
+                }
               />
             </div>
 
@@ -603,7 +748,9 @@ function CalendarSettings() {
               <Label>Send Cancellation Notices</Label>
               <Switch
                 checked={formData.sendCancellationNotices ?? true}
-                onCheckedChange={(checked) => handleChange('sendCancellationNotices', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("sendCancellationNotices", checked)
+                }
               />
             </div>
 
@@ -612,20 +759,26 @@ function CalendarSettings() {
             <div className="space-y-2">
               <Label>Reminder Methods</Label>
               <div className="flex flex-wrap gap-2">
-                {['email', 'push', 'inApp'].map((method) => (
+                {["email", "push", "inApp"].map((method) => (
                   <Badge
                     key={method}
-                    variant={formData.reminderMethods?.includes(method) ? 'default' : 'outline'}
+                    variant={
+                      formData.reminderMethods?.includes(method)
+                        ? "default"
+                        : "outline"
+                    }
                     className="cursor-pointer"
                     onClick={() => {
                       const current = formData.reminderMethods || [];
                       const updated = current.includes(method)
-                        ? current.filter(m => m !== method)
+                        ? current.filter((m) => m !== method)
                         : [...current, method];
-                      handleChange('reminderMethods', updated);
+                      handleChange("reminderMethods", updated);
                     }}
                   >
-                    {method === 'inApp' ? 'In-App' : method.charAt(0).toUpperCase() + method.slice(1)}
+                    {method === "inApp"
+                      ? "In-App"
+                      : method.charAt(0).toUpperCase() + method.slice(1)}
                   </Badge>
                 ))}
               </div>
@@ -637,14 +790,18 @@ function CalendarSettings() {
         <Card>
           <CardHeader>
             <CardTitle>Privacy & Permissions</CardTitle>
-            <CardDescription>Control calendar privacy and access settings</CardDescription>
+            <CardDescription>
+              Control calendar privacy and access settings
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Allow External Calendars</Label>
               <Switch
                 checked={formData.allowExternalCalendars ?? true}
-                onCheckedChange={(checked) => handleChange('allowExternalCalendars', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowExternalCalendars", checked)
+                }
               />
             </div>
 
@@ -652,7 +809,9 @@ function CalendarSettings() {
               <Label>Allow Guest Access</Label>
               <Switch
                 checked={formData.allowGuestAccess ?? true}
-                onCheckedChange={(checked) => handleChange('allowGuestAccess', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowGuestAccess", checked)
+                }
               />
             </div>
 
@@ -660,7 +819,9 @@ function CalendarSettings() {
               <Label>Allow Event Export</Label>
               <Switch
                 checked={formData.allowEventExport ?? true}
-                onCheckedChange={(checked) => handleChange('allowEventExport', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowEventExport", checked)
+                }
               />
             </div>
 
@@ -668,18 +829,24 @@ function CalendarSettings() {
               <Label>Show Busy Time</Label>
               <Switch
                 checked={formData.showBusyTime ?? true}
-                onCheckedChange={(checked) => handleChange('showBusyTime', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("showBusyTime", checked)
+                }
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <Label>Allow Conflicting Events</Label>
-                <p className="text-sm text-muted-foreground">Users can schedule overlapping events</p>
+                <p className="text-sm text-muted-foreground">
+                  Users can schedule overlapping events
+                </p>
               </div>
               <Switch
                 checked={formData.allowConflictingEvents ?? false}
-                onCheckedChange={(checked) => handleChange('allowConflictingEvents', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowConflictingEvents", checked)
+                }
               />
             </div>
           </CardContent>

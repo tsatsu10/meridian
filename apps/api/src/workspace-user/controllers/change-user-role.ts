@@ -6,18 +6,18 @@ import { workspaceUserTable } from "../../database/schema";
 async function changeUserRole(
   workspaceId: string,
   userEmail: string,
-  role: string
+  role: string,
 ) {
   const db = getDatabase();
-  
+
   const [updatedWorkspaceUser] = await db
     .update(workspaceUserTable)
     .set({ role: role as any }) // Type assertion for enum
     .where(
       and(
         eq(workspaceUserTable.workspaceId, workspaceId),
-        eq(workspaceUserTable.userEmail, userEmail)
-      )
+        eq(workspaceUserTable.userEmail, userEmail),
+      ),
     )
     .returning();
 
@@ -25,5 +25,3 @@ async function changeUserRole(
 }
 
 export default changeUserRole;
-
-

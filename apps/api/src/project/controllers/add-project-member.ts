@@ -1,7 +1,11 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
-import { projectMemberTable, userTable, projectTable } from "../../database/schema";
+import {
+  projectMemberTable,
+  userTable,
+  projectTable,
+} from "../../database/schema";
 
 interface AddMemberData {
   projectId: string;
@@ -53,7 +57,7 @@ async function addProjectMember(data: AddMemberData) {
     .from(projectMemberTable)
     .where(
       eq(projectMemberTable.projectId, projectId) &&
-      eq(projectMemberTable.userEmail, userEmail)
+        eq(projectMemberTable.userEmail, userEmail),
     );
 
   if (existingMember) {
@@ -71,7 +75,9 @@ async function addProjectMember(data: AddMemberData) {
       role,
       hoursPerWeek,
       assignedBy,
-      notificationSettings: notificationSettings ? JSON.stringify(notificationSettings) : null,
+      notificationSettings: notificationSettings
+        ? JSON.stringify(notificationSettings)
+        : null,
       assignedAt: new Date(),
       isActive: true,
     })
@@ -80,4 +86,4 @@ async function addProjectMember(data: AddMemberData) {
   return newMember;
 }
 
-export default addProjectMember; 
+export default addProjectMember;

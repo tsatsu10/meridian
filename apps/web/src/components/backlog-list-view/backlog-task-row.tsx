@@ -38,7 +38,12 @@ interface BacklogTaskRowProps {
   setBacklogData: (data: BacklogData) => void;
 }
 
-export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBacklogData }: BacklogTaskRowProps) {
+export default function BacklogTaskRow({
+  task,
+  onTaskUpdate,
+  backlogData,
+  setBacklogData,
+}: BacklogTaskRowProps) {
   const navigate = useNavigate();
   const { project } = useProjectStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -91,16 +96,14 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
         }
 
         // Add to target column
-        const targetColumn = draft.columns.find(
-          (col) => col.id === columnId,
-        );
+        const targetColumn = draft.columns.find((col) => col.id === columnId);
         if (targetColumn) {
           targetColumn.tasks.push({
             ...task,
             status: columnId,
           });
         }
-      })
+      }),
     );
 
     toast.success(`Task moved to ${columnId.replace(/-/g, " ")}`);
@@ -172,7 +175,7 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
                 <div className="flex items-center space-x-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    {task.assignedTeam?.name || 'Assigned Team'}
+                    {task.assignedTeam?.name || "Assigned Team"}
                   </span>
                 </div>
               ) : task.userEmail ? (
@@ -180,7 +183,10 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={task.assigneeAvatar ?? undefined} />
                     <AvatarFallback>
-                      {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                      {task.assigneeName
+                        ?.split(" ")
+                        .map((n: string) => n[0])
+                        .join("") || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm text-muted-foreground">
@@ -190,7 +196,9 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
               ) : (
                 <div className="flex items-center space-x-2">
                   <UserIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Unassigned</span>
+                  <span className="text-sm text-muted-foreground">
+                    Unassigned
+                  </span>
                 </div>
               )}
             </div>

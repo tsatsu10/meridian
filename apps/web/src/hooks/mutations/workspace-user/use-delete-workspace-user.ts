@@ -13,14 +13,21 @@ export function useDeleteWorkspaceUser() {
 
   return useMutation({
     mutationFn: async ({ workspaceId, userEmail }: DeleteWorkspaceUserData) => {
-      const response = await fetchApi(`/workspace-user/${workspaceId}?userEmail=${encodeURIComponent(userEmail)}`, {
-        method: "DELETE",
-      });
+      const response = await fetchApi(
+        `/workspace-user/${workspaceId}?userEmail=${encodeURIComponent(userEmail)}`,
+        {
+          method: "DELETE",
+        },
+      );
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-users", variables.workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
+      queryClient.invalidateQueries({
+        queryKey: ["workspace-users", variables.workspaceId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.workspaceId],
+      });
       toast.success("User removed successfully");
     },
     onError: (error: any) => {

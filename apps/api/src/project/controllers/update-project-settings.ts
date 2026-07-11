@@ -3,10 +3,10 @@ import { getDatabase } from "../../database/connection";
 import { projectSettingsTable } from "../../database/schema";
 
 async function updateProjectSettings(
-  projectId: string, 
-  category: string, 
-  settings: Record<string, any>, 
-  modifiedBy?: string
+  projectId: string,
+  category: string,
+  settings: Record<string, any>,
+  modifiedBy?: string,
 ) {
   const db = getDatabase();
   // Check if settings already exist
@@ -16,8 +16,8 @@ async function updateProjectSettings(
     .where(
       and(
         eq(projectSettingsTable.projectId, projectId),
-        eq(projectSettingsTable.category, category)
-      )
+        eq(projectSettingsTable.category, category),
+      ),
     );
 
   // Only real project_settings columns (no lastModified/modifiedBy columns
@@ -40,14 +40,17 @@ async function updateProjectSettings(
       .where(
         and(
           eq(projectSettingsTable.projectId, projectId),
-          eq(projectSettingsTable.category, category)
-        )
+          eq(projectSettingsTable.category, category),
+        ),
       )
       .returning();
 
     return {
       ...updatedSettings[0],
-      settings: typeof updatedSettings[0]?.settings === "string" ? JSON.parse(updatedSettings[0].settings) : updatedSettings[0]?.settings,
+      settings:
+        typeof updatedSettings[0]?.settings === "string"
+          ? JSON.parse(updatedSettings[0].settings)
+          : updatedSettings[0]?.settings,
     };
   } else {
     // Create new settings
@@ -60,9 +63,12 @@ async function updateProjectSettings(
 
     return {
       ...newSettings[0],
-      settings: typeof newSettings[0]?.settings === "string" ? JSON.parse(newSettings[0].settings) : newSettings[0]?.settings,
+      settings:
+        typeof newSettings[0]?.settings === "string"
+          ? JSON.parse(newSettings[0].settings)
+          : newSettings[0]?.settings,
     };
   }
 }
 
-export default updateProjectSettings; 
+export default updateProjectSettings;

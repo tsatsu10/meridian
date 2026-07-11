@@ -1,8 +1,19 @@
 import { getDatabase } from "../../database/connection";
-import { projectTable, teamTable, teamMemberTable } from "../../database/schema";
+import {
+  projectTable,
+  teamTable,
+  teamMemberTable,
+} from "../../database/schema";
 import { ActivityTracker } from "../../services/team-awareness/activity-tracker";
-import { sanitizeText, sanitizeRichText, sanitizeSlug } from "../../lib/universal-sanitization";
-import { captureException, addBreadcrumb } from "../../services/monitoring/sentry";
+import {
+  sanitizeText,
+  sanitizeRichText,
+  sanitizeSlug,
+} from "../../lib/universal-sanitization";
+import {
+  captureException,
+  addBreadcrumb,
+} from "../../services/monitoring/sentry";
 import logger from "../../utils/logger";
 import { HTTPException } from "hono/http-exception";
 
@@ -66,13 +77,19 @@ async function createProject(data: CreateProjectData, ownerId: string) {
     } = data;
 
     // 🔒 SECURITY: Sanitize all user inputs to prevent XSS
-    const sanitizedName = sanitizeText(name || '', { maxLength: 100, stripHtmlTags: true });
-    const sanitizedDescription = sanitizeRichText(description || '', { maxLength: 2000 });
+    const sanitizedName = sanitizeText(name || "", {
+      maxLength: 100,
+      stripHtmlTags: true,
+    });
+    const sanitizedDescription = sanitizeRichText(description || "", {
+      maxLength: 2000,
+    });
     const sanitizedSlug = sanitizeSlug(slug || sanitizedName);
-    
+
     if (!sanitizedName || sanitizedName.length === 0) {
       throw new HTTPException(400, {
-        message: "Project name cannot be empty or contain only dangerous content",
+        message:
+          "Project name cannot be empty or contain only dangerous content",
       });
     }
 
@@ -92,61 +109,59 @@ async function createProject(data: CreateProjectData, ownerId: string) {
         description: sanitizedDescription,
         icon,
         slug: sanitizedSlug,
-      status, // Maps to schema status
-      // request-boundary narrowing onto the enum column
-      priority: priority as "low" | "medium" | "high" | "urgent", // Maps to schema priority
-      startDate: startDate ? new Date(startDate) : undefined,
-      dueDate: endDate ? new Date(endDate) : undefined, // endDate -> dueDate
-      // Store extra fields in settings JSON
-      settings: {
-        category,
-        visibility,
-        allowGuestAccess,
-        requireApprovalForJoining,
-        timeTrackingEnabled,
-        requireTimeEntry,
-        enableSubtasks,
-        enableDependencies,
-        enableBudgetTracking,
-        budget,
-        estimatedHours,
-        slackNotifications,
-      },
-    })
-    .returning();
+        status, // Maps to schema status
+        // request-boundary narrowing onto the enum column
+        priority: priority as "low" | "medium" | "high" | "urgent", // Maps to schema priority
+        startDate: startDate ? new Date(startDate) : undefined,
+        dueDate: endDate ? new Date(endDate) : undefined, // endDate -> dueDate
+        // Store extra fields in settings JSON
+        settings: {
+          category,
+          visibility,
+          allowGuestAccess,
+          requireApprovalForJoining,
+          timeTrackingEnabled,
+          requireTimeEntry,
+          enableSubtasks,
+          enableDependencies,
+          enableBudgetTracking,
+          budget,
+          estimatedHours,
+          slackNotifications,
+        },
+      })
+      .returning();
 
-  if (!newProject) {
-    throw new Error("Project insert returned no row");
-  }
+    if (!newProject) {
+      throw new Error("Project insert returned no row");
+    }
 
-  // Automatically create a team for this project
-  const [newTeam] = await db
-    .insert(teamTable)
-    .values({
-      name: `${name} Team`,
-      description: `Team for ${name} project`,
-      workspaceId,
-      projectId: newProject.id,
-      createdBy: ownerId,
-      isActive: true,
-      settings: {
-        type: 'project',
-        autoCreated: true,
-      },
-    })
-    .returning();
+    // Automatically create a team for this project
+    const [newTeam] = await db
+      .insert(teamTable)
+      .values({
+        name: `${name} Team`,
+        description: `Team for ${name} project`,
+        workspaceId,
+        projectId: newProject.id,
+        createdBy: ownerId,
+        isActive: true,
+        settings: {
+          type: "project",
+          autoCreated: true,
+        },
+      })
+      .returning();
 
-  if (!newTeam) {
-    throw new Error("newTeam: write returned no row");
-  }
+    if (!newTeam) {
+      throw new Error("newTeam: write returned no row");
+    }
 
-  // Add the project owner as the first team member with 'lead' role
-  await db
-    .insert(teamMemberTable)
-    .values({
+    // Add the project owner as the first team member with 'lead' role
+    await db.insert(teamMemberTable).values({
       teamId: newTeam.id,
       userId: ownerId,
-      role: 'lead',
+      role: "lead",
       addedBy: ownerId,
     });
 
@@ -155,16 +170,16 @@ async function createProject(data: CreateProjectData, ownerId: string) {
       await ActivityTracker.logProjectActivity(
         ownerId,
         workspaceId,
-        'created',
+        "created",
         newProject.id,
-        sanitizedName
+        sanitizedName,
       );
     } catch (error) {
-      console.error('Failed to log project creation activity:', error);
+      console.error("Failed to log project creation activity:", error);
     }
 
     // 📊 SENTRY: Add breadcrumb for successful project creation
-    addBreadcrumb('Project created successfully', 'project', 'info', {
+    addBreadcrumb("Project created successfully", "project", "info", {
       projectId: newProject.id,
       workspaceId,
       hasDescription: !!description,
@@ -175,17 +190,17 @@ async function createProject(data: CreateProjectData, ownerId: string) {
     return newProject;
   } catch (error) {
     logger.error("Error creating project:", error);
-    
+
     // 📊 SENTRY: Capture project creation errors
     if (!(error instanceof HTTPException)) {
       captureException(error as Error, {
-        feature: 'projects',
-        action: 'create_project',
+        feature: "projects",
+        action: "create_project",
         workspaceId: data.workspaceId,
         name: data.name?.substring(0, 100),
       });
     }
-    
+
     if (error instanceof HTTPException) {
       throw error;
     }
@@ -195,4 +210,3 @@ async function createProject(data: CreateProjectData, ownerId: string) {
 }
 
 export default createProject;
-

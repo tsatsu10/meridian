@@ -10,7 +10,7 @@ import updateTemplate from "./controllers/update-template";
 import getTemplateStats from "./controllers/get-template-stats";
 import rateTemplate from "./controllers/rate-template";
 import rbacMiddleware from "../middlewares/rbac";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 // Validation schemas
 const difficultySchema = z.enum(["beginner", "intermediate", "advanced"]);
@@ -38,10 +38,15 @@ const templateTaskSchema = z.object({
   relativeDueDay: z.number().int().min(0).optional(),
   tags: z.array(z.string()).optional().default([]),
   subtasks: z.array(templateSubtaskSchema).optional().default([]),
-  dependencies: z.array(z.object({
-    requiredTaskPosition: z.number().int().min(0),
-    type: dependencyTypeSchema.optional().default("blocks"),
-  })).optional().default([]),
+  dependencies: z
+    .array(
+      z.object({
+        requiredTaskPosition: z.number().int().min(0),
+        type: dependencyTypeSchema.optional().default("blocks"),
+      }),
+    )
+    .optional()
+    .default([]),
 });
 
 const createTemplateSchema = z.object({
@@ -51,7 +56,10 @@ const createTemplateSchema = z.object({
   industry: z.string().min(1).max(200),
   category: z.string().max(100).optional(),
   icon: z.string().max(50).optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
   estimatedDuration: z.number().int().min(1).optional(),
   difficulty: difficultySchema.optional().default("intermediate"),
   tags: z.array(z.string()).optional().default([]),
@@ -78,13 +86,25 @@ const templates = new Hono<{
         difficulty: difficultySchema.optional(),
         tags: z.string().optional(), // comma-separated
         searchQuery: z.string().optional(),
-        isOfficial: z.string().optional().transform(val => val === "true"),
-        minRating: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+        isOfficial: z
+          .string()
+          .optional()
+          .transform((val) => val === "true"),
+        minRating: z
+          .string()
+          .optional()
+          .transform((val) => (val ? Number.parseInt(val) : undefined)),
         sortBy: sortBySchema.optional().default("popular"),
         sortOrder: sortOrderSchema.optional().default("desc"),
-        limit: z.string().optional().transform(val => val ? parseInt(val) : 50),
-        offset: z.string().optional().transform(val => val ? parseInt(val) : 0),
-      })
+        limit: z
+          .string()
+          .optional()
+          .transform((val) => (val ? Number.parseInt(val) : 50)),
+        offset: z
+          .string()
+          .optional()
+          .transform((val) => (val ? Number.parseInt(val) : 0)),
+      }),
     ),
     async (c) => {
       try {
@@ -93,7 +113,9 @@ const templates = new Hono<{
         // Parse tags if provided
         const parsedFilters = {
           ...filters,
-          tags: filters.tags ? filters.tags.split(",").map(t => t.trim()) : undefined,
+          tags: filters.tags
+            ? filters.tags.split(",").map((t) => t.trim())
+            : undefined,
         };
 
         const result = await listTemplates(parsedFilters);
@@ -101,18 +123,28 @@ const templates = new Hono<{
       } catch (error) {
         logger.error("Failed to list templates:", error);
         // Return empty results if table doesn't exist yet
-        if (error instanceof Error && error.message.includes('relation "project_templates" does not exist')) {
+        if (
+          error instanceof Error &&
+          error.message.includes('relation "project_templates" does not exist')
+        ) {
           return c.json({
             templates: [],
             total: 0,
             limit: 50,
             offset: 0,
-            warning: "Template tables not yet created in database. Run 'npm run db:push' to create them."
+            warning:
+              "Template tables not yet created in database. Run 'npm run db:push' to create them.",
           });
         }
-        return c.json({ error: "Failed to list templates", details: error instanceof Error ? error.message : String(error) }, 500);
+        return c.json(
+          {
+            error: "Failed to list templates",
+            details: error instanceof Error ? error.message : String(error),
+          },
+          500,
+        );
       }
-    }
+    },
   )
 
   // Get template statistics
@@ -134,7 +166,7 @@ const templates = new Hono<{
       }
 
       return c.json(template);
-    }
+    },
   )
 
   // Create new template (requires admin or specific permission)
@@ -152,7 +184,7 @@ const templates = new Hono<{
 
       const template = await createTemplate(templateData, userId);
       return c.json(template, 201);
-    }
+    },
   )
 
   // Update template
@@ -173,7 +205,7 @@ const templates = new Hono<{
       }
 
       return c.json(template);
-    }
+    },
   )
 
   // Delete template
@@ -188,11 +220,17 @@ const templates = new Hono<{
       const result = await deleteTemplate(templateId, userId);
 
       if (!result.success) {
-        return c.json({ error: result.error || "Failed to delete template" }, 404);
+        return c.json(
+          { error: result.error || "Failed to delete template" },
+          404,
+        );
       }
 
-      return c.json({ success: true, message: "Template deleted successfully" });
-    }
+      return c.json({
+        success: true,
+        message: "Template deleted successfully",
+      });
+    },
   )
 
   // Apply template to project
@@ -207,11 +245,12 @@ const templates = new Hono<{
         workspaceId: z.string(),
         startDate: z.string().datetime().optional(),
         assigneeMapping: z.record(z.string()).optional(), // Map role to userId
-      })
+      }),
     ),
     async (c) => {
       const { templateId } = c.req.valid("param");
-      const { projectId, workspaceId, startDate, assigneeMapping } = c.req.valid("json");
+      const { projectId, workspaceId, startDate, assigneeMapping } =
+        c.req.valid("json");
       const userId = c.get("userId");
 
       const result = await applyTemplate({
@@ -224,11 +263,14 @@ const templates = new Hono<{
       });
 
       if (!result.success) {
-        return c.json({ error: result.error || "Failed to apply template" }, 400);
+        return c.json(
+          { error: result.error || "Failed to apply template" },
+          400,
+        );
       }
 
       return c.json(result);
-    }
+    },
   )
 
   // Rate template
@@ -239,7 +281,7 @@ const templates = new Hono<{
       "json",
       z.object({
         rating: z.number().int().min(1).max(5),
-      })
+      }),
     ),
     async (c) => {
       const { templateId } = c.req.valid("param");
@@ -253,13 +295,14 @@ const templates = new Hono<{
       const result = await rateTemplate(templateId, userId, rating);
 
       if (!result.success) {
-        return c.json({ error: result.error || "Failed to rate template" }, 400);
+        return c.json(
+          { error: result.error || "Failed to rate template" },
+          400,
+        );
       }
 
       return c.json(result);
-    }
+    },
   );
 
 export default templates;
-
-

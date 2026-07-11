@@ -26,8 +26,12 @@ export function useBulkUpdateTaskStatus() {
     },
     onSuccess: () => {
       if (workspace?.id) {
-        queryClient.invalidateQueries({ queryKey: ["all-tasks", workspace.id] });
-        queryClient.invalidateQueries({ queryKey: ["all-tasks-stats", workspace.id] });
+        queryClient.invalidateQueries({
+          queryKey: ["all-tasks", workspace.id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["all-tasks-stats", workspace.id],
+        });
         invalidateDashboardQueriesForWorkspace(queryClient, workspace.id);
       }
     },

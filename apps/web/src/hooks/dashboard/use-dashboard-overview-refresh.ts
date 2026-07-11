@@ -15,12 +15,19 @@ export function useDashboardOverviewRefresh(refetch: () => Promise<unknown>) {
   const [refreshCooldownSeconds, setRefreshCooldownSeconds] = useState(0);
 
   const syncCooldownFromLimiter = useCallback(() => {
-    const remaining = rateLimiter.getRemainingAttempts(REFRESH_KEY, REFRESH_LIMIT, REFRESH_WINDOW_MS);
+    const remaining = rateLimiter.getRemainingAttempts(
+      REFRESH_KEY,
+      REFRESH_LIMIT,
+      REFRESH_WINDOW_MS,
+    );
     if (remaining > 0) {
       setRefreshCooldownSeconds(0);
       return;
     }
-    const ms = rateLimiter.getTimeUntilNextAttempt(REFRESH_KEY, REFRESH_WINDOW_MS);
+    const ms = rateLimiter.getTimeUntilNextAttempt(
+      REFRESH_KEY,
+      REFRESH_WINDOW_MS,
+    );
     if (ms > 0) {
       setRefreshCooldownSeconds(Math.ceil(ms / 1000));
     }
@@ -46,22 +53,29 @@ export function useDashboardOverviewRefresh(refetch: () => Promise<unknown>) {
 
   const resetDashboardErrorState = useCallback(() => {
     void queryClient.resetQueries({
-      predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "dashboard",
+      predicate: (q) =>
+        Array.isArray(q.queryKey) && q.queryKey[0] === "dashboard",
     });
   }, [queryClient]);
 
   const softRefreshDashboard = useCallback(async () => {
     await queryClient.invalidateQueries({
-      predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "dashboard",
+      predicate: (q) =>
+        Array.isArray(q.queryKey) && q.queryKey[0] === "dashboard",
     });
   }, [queryClient]);
 
   const handleRefresh = async () => {
     if (!rateLimiter.isAllowed(REFRESH_KEY, REFRESH_LIMIT, REFRESH_WINDOW_MS)) {
-      const timeUntilNext = rateLimiter.getTimeUntilNextAttempt(REFRESH_KEY, REFRESH_WINDOW_MS);
+      const timeUntilNext = rateLimiter.getTimeUntilNextAttempt(
+        REFRESH_KEY,
+        REFRESH_WINDOW_MS,
+      );
       const secondsLeft = Math.ceil(timeUntilNext / 1000);
       setRefreshCooldownSeconds(secondsLeft);
-      toast.error(`Too many refresh attempts. Please wait ${secondsLeft} seconds.`);
+      toast.error(
+        `Too many refresh attempts. Please wait ${secondsLeft} seconds.`,
+      );
       return;
     }
 
@@ -76,7 +90,7 @@ export function useDashboardOverviewRefresh(refetch: () => Promise<unknown>) {
       toast.error("Failed to refresh dashboard");
       logger.error(
         "Dashboard refresh failed",
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     } finally {
       setIsRefreshing(false);

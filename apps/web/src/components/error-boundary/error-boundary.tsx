@@ -1,5 +1,6 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import type React from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { AlertTriangle, RefreshCw, Home, Bug } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -25,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: '',
+      errorId: "",
     };
   }
 
@@ -40,8 +41,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error details
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     this.setState({
       error,
       errorInfo,
@@ -75,7 +76,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private reportError = (error: Error, errorInfo: ErrorInfo) => {
     // Report to external error tracking service
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
+    if (typeof window !== "undefined" && (window as any).Sentry) {
       (window as any).Sentry.captureException(error, {
         contexts: {
           react: {
@@ -95,10 +96,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private sendErrorReport = async (error: Error, errorInfo: ErrorInfo) => {
     try {
-      await fetch('/api/errors', {
-        method: 'POST',
+      await fetch("/api/errors", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           error: {
@@ -116,7 +117,7 @@ export class ErrorBoundary extends Component<Props, State> {
         }),
       });
     } catch (reportingError) {
-      console.error('Failed to report error:', reportingError);
+      console.error("Failed to report error:", reportingError);
     }
   };
 
@@ -125,7 +126,7 @@ export class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: '',
+      errorId: "",
     });
   };
 
@@ -134,7 +135,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   private handleReload = () => {
@@ -156,16 +157,17 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 dark:bg-red-900 rounded-full">
                 <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              
+
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   Something went wrong
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  We're sorry, but something unexpected happened. Our team has been notified.
+                  We're sorry, but something unexpected happened. Our team has
+                  been notified.
                 </p>
 
-                {process.env.NODE_ENV === 'development' && this.state.error && (
+                {process.env.NODE_ENV === "development" && this.state.error && (
                   <details className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-left">
                     <summary className="cursor-pointer font-medium text-gray-900 dark:text-white mb-2">
                       Error Details (Development)
@@ -197,7 +199,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Try Again
                   </button>
-                  
+
                   <button
                     onClick={this.handleGoHome}
                     className="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -205,7 +207,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     <Home className="w-4 h-4 mr-2" />
                     Go Home
                   </button>
-                  
+
                   <button
                     onClick={this.handleReload}
                     className="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors"
@@ -232,7 +234,7 @@ export class ErrorBoundary extends Component<Props, State> {
 // Higher-order component for easier usage
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<Props, 'children'>
+  errorBoundaryProps?: Omit<Props, "children">,
 ) {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary {...errorBoundaryProps}>
@@ -241,7 +243,7 @@ export function withErrorBoundary<P extends object>(
   );
 
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  
+
   return WrappedComponent;
 }
 
@@ -275,7 +277,7 @@ export const DashboardErrorBoundary = withErrorBoundary(
         </button>
       </div>
     ),
-  }
+  },
 );
 
 export const ChartErrorBoundary = withErrorBoundary(
@@ -291,7 +293,7 @@ export const ChartErrorBoundary = withErrorBoundary(
         </div>
       </div>
     ),
-  }
+  },
 );
 
 export const FormErrorBoundary = withErrorBoundary(
@@ -310,5 +312,5 @@ export const FormErrorBoundary = withErrorBoundary(
         </p>
       </div>
     ),
-  }
+  },
 );

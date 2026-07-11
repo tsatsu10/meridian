@@ -21,12 +21,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  X, 
-  UserIcon, 
-  Users,
-  Layout,
-} from "lucide-react";
+import { X, UserIcon, Users, Layout } from "lucide-react";
 import { addWeeks, startOfTomorrow } from "date-fns";
 import { toast } from "sonner";
 import useCreateTask from "@/hooks/mutations/task/use-create-task";
@@ -45,8 +40,8 @@ import { priorityOptions, statusOptions } from "@/constants/task";
 // @persona-mike: Dev needs fast, efficient task creation without friction
 
 interface Team {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
   description: string | null;
   workspaceId: string;
   createdAt: string;
@@ -54,8 +49,8 @@ interface Team {
 }
 
 interface Project {
-      id: string;
-      name: string;
+  id: string;
+  name: string;
   description: string | null;
   workspaceId: string;
   createdAt: string;
@@ -149,15 +144,15 @@ interface ProjectOption extends ProjectWithTasks {
 }
 
 // Quick date presets
-void ([
+void [
   { label: "Today", value: () => new Date() },
   { label: "Tomorrow", value: () => startOfTomorrow() },
   { label: "Next Week", value: () => addWeeks(new Date(), 1) },
   { label: "2 Weeks", value: () => addWeeks(new Date(), 2) },
-]);
+];
 
 // Team colors for display (fallback colors for teams without specific colors)
-void ([
+void [
   "#3B82F6", // blue
   "#10B981", // emerald
   "#8B5CF6", // purple
@@ -166,33 +161,39 @@ void ([
   "#06B6D4", // cyan
   "#84CC16", // lime
   "#EC4899", // pink
-]);
+];
 
-export default function CreateTaskModal({ 
-  open, 
+export default function CreateTaskModal({
+  open,
   onOpenChange,
-  onClose, 
+  onClose,
   projectContext,
   onTaskCreated,
   hideProjectSelection = false,
   status: initialStatus = "todo",
-  parentTaskId
+  parentTaskId,
 }: CreateTaskModalProps) {
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
   const createTaskMutation = useCreateTask();
 
   // Helper functions to safely resolve the project from context
-  const getContextProjectId = (context: ProjectState | undefined): string | undefined => {
+  const getContextProjectId = (
+    context: ProjectState | undefined,
+  ): string | undefined => {
     return context?.id ?? context?.columns?.[0]?.tasks?.[0]?.projectId;
   };
-  const getContextProjectLabel = (context: ProjectState | undefined): string | undefined => {
+  const getContextProjectLabel = (
+    context: ProjectState | undefined,
+  ): string | undefined => {
     return context?.name ?? getContextProjectId(context);
   };
-  const isValidProjectContext = (context: ProjectState | undefined): boolean => {
+  const isValidProjectContext = (
+    context: ProjectState | undefined,
+  ): boolean => {
     return !!getContextProjectId(context);
   };
-  
+
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -204,7 +205,7 @@ export default function CreateTaskModal({
     dueDate: null,
     parentId: parentTaskId || null,
     dependencies: [],
-    labels: []
+    labels: [],
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -214,27 +215,31 @@ export default function CreateTaskModal({
 
   // Type-safe hook usage with proper runtime validation
   const projectsQuery = useGetProjects({ workspaceId: workspace?.id ?? "" });
-  const projects = Array.isArray(projectsQuery.data) 
-    ? (projectsQuery.data as ProjectOption[]) 
+  const projects = Array.isArray(projectsQuery.data)
+    ? (projectsQuery.data as ProjectOption[])
     : [];
 
-  const usersQuery = useGetActiveWorkspaceUsers({ workspaceId: workspace?.id ?? "" });
-  const users = Array.isArray(usersQuery.data) 
-    ? (usersQuery.data as WorkspaceUser[]) 
+  const usersQuery = useGetActiveWorkspaceUsers({
+    workspaceId: workspace?.id ?? "",
+  });
+  const users = Array.isArray(usersQuery.data)
+    ? (usersQuery.data as WorkspaceUser[])
     : [];
 
   const teamsQuery = useTeams(workspace?.id ?? "");
-  const teams = Array.isArray(teamsQuery.data) 
-    ? (teamsQuery.data as unknown as WorkspaceTeam[]) 
+  const teams = Array.isArray(teamsQuery.data)
+    ? (teamsQuery.data as unknown as WorkspaceTeam[])
     : [];
 
   const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(
-    hideProjectSelection && project ? (project as unknown as ProjectOption) : null
+    hideProjectSelection && project
+      ? (project as unknown as ProjectOption)
+      : null,
   );
 
   const tasksQuery = useGetTasks(selectedProject?.id ?? "");
-  const availableTasks = Array.isArray(tasksQuery.data) 
-    ? (tasksQuery.data as TaskWithSubtasks[]) 
+  const availableTasks = Array.isArray(tasksQuery.data)
+    ? (tasksQuery.data as TaskWithSubtasks[])
     : [];
 
   // Reset form when modal closes
@@ -251,7 +256,7 @@ export default function CreateTaskModal({
         dueDate: null,
         parentId: parentTaskId || null,
         dependencies: [],
-        labels: []
+        labels: [],
       });
       setShowAdvanced(false);
       setShowDependencies(false);
@@ -264,13 +269,13 @@ export default function CreateTaskModal({
   useEffect(() => {
     if (isValidProjectContext(projectContext)) {
       const contextProject = projects.find(
-        (p) => p.id === getContextProjectId(projectContext)
+        (p) => p.id === getContextProjectId(projectContext),
       );
       if (contextProject) {
         setSelectedProject(contextProject);
         setFormData((prev) => ({
           ...prev,
-          projectId: contextProject.id
+          projectId: contextProject.id,
         }));
       }
     }
@@ -287,7 +292,7 @@ export default function CreateTaskModal({
     e.preventDefault();
 
     if (!isValidProjectContext(projectContext) && !selectedProject) {
-      toast.error('Please select a project');
+      toast.error("Please select a project");
       return;
     }
 
@@ -298,11 +303,12 @@ export default function CreateTaskModal({
         status: formData.status,
         priority: formData.priority,
         dueDate: formData.dueDate || new Date().toISOString(),
-        projectId: selectedProject?.id || getContextProjectId(projectContext) || "",
+        projectId:
+          selectedProject?.id || getContextProjectId(projectContext) || "",
         parentId: formData.parentId || undefined,
         userEmail: formData.assigneeEmail || undefined,
         dependencies: formData.dependencies,
-        labels: formData.labels
+        labels: formData.labels,
       };
 
       const newTask = await createTaskMutation.mutateAsync(taskData);
@@ -312,10 +318,10 @@ export default function CreateTaskModal({
       }
 
       toast.success("Task created successfully");
-            handleClose();
+      handleClose();
     } catch (error) {
-      console.error('Error creating task:', error);
-      toast.error('Failed to create task');
+      console.error("Error creating task:", error);
+      toast.error("Failed to create task");
     }
   };
 
@@ -331,15 +337,15 @@ export default function CreateTaskModal({
       dueDate: null,
       parentId: null,
       dependencies: [],
-      labels: []
+      labels: [],
     });
     setShowAdvanced(false);
     setShowDependencies(false);
     setNewLabel("");
     setIsCalendarOpen(false);
-    
+
     if (onClose) {
-    onClose();
+      onClose();
     }
     if (onOpenChange) {
       onOpenChange(false);
@@ -350,64 +356,67 @@ export default function CreateTaskModal({
     if (newLabel.trim()) {
       setFormData((prev) => ({
         ...prev,
-        labels: [...prev.labels, newLabel.trim()]
+        labels: [...prev.labels, newLabel.trim()],
       }));
       setNewLabel("");
     }
   });
 
-      // Dependency management functions
+  // Dependency management functions
   const handleDependencyToggle = (taskId: string, checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
       dependencies: checked
         ? [...prev.dependencies, taskId]
-        : prev.dependencies.filter(id => id !== taskId)
+        : prev.dependencies.filter((id) => id !== taskId),
     }));
   };
 
   const removeDependency = (taskId: string) => {
     setFormData((prev) => ({
       ...prev,
-      dependencies: prev.dependencies.filter(id => id !== taskId)
+      dependencies: prev.dependencies.filter((id) => id !== taskId),
     }));
   };
 
-    // Selected dependency tasks for display
-  const selectedDependencyTasks = useMemo(() => 
-    availableTasks.filter(task => formData.dependencies.includes(task.id)),
-    [availableTasks, formData.dependencies]
+  // Selected dependency tasks for display
+  const selectedDependencyTasks = useMemo(
+    () =>
+      availableTasks.filter((task) => formData.dependencies.includes(task.id)),
+    [availableTasks, formData.dependencies],
   );
 
   // Form validation
-  const isFormValid = useMemo(() => 
-    formData.title.trim() !== "" && (isValidProjectContext(projectContext) || selectedProject),
-    [formData.title, projectContext, selectedProject]
+  const isFormValid = useMemo(
+    () =>
+      formData.title.trim() !== "" &&
+      (isValidProjectContext(projectContext) || selectedProject),
+    [formData.title, projectContext, selectedProject],
   );
 
-  void (useMemo(() => 
-    priorityOptions.find(p => p.value === formData.priority),
-    [formData.priority]
-  ));
+  void useMemo(
+    () => priorityOptions.find((p) => p.value === formData.priority),
+    [formData.priority],
+  );
 
-  void (useMemo(() => 
-    statusOptions.find(s => s.value === formData.status),
-    [formData.status]
-  ));
+  void useMemo(
+    () => statusOptions.find((s) => s.value === formData.status),
+    [formData.status],
+  );
 
   const handleAssigneeChange = (value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      assigneeEmail: value === 'unassigned' ? null : value,
-      assignedTeamId: null // Clear team if user is assigned
+      assigneeEmail: value === "unassigned" ? null : value,
+      assignedTeamId: null, // Clear team if user is assigned
     }));
   };
 
   const handleTeamChange = (value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      assignedTeamId: value === 'none' ? null : value,
-      assigneeEmail: null // Clear assignee if team is assigned
+      assignedTeamId: value === "none" ? null : value,
+      assigneeEmail: null, // Clear assignee if team is assigned
     }));
   };
 
@@ -422,7 +431,7 @@ export default function CreateTaskModal({
                 in {getContextProjectLabel(projectContext)}
               </span>
             )}
-                    </DialogTitle>
+          </DialogTitle>
           <DialogDescription>
             {isValidProjectContext(projectContext)
               ? `Add a new task to ${getContextProjectLabel(projectContext)}`
@@ -435,11 +444,11 @@ export default function CreateTaskModal({
             <div className="space-y-2">
               <Label htmlFor="project">Project</Label>
               <Select
-                value={selectedProject?.id || ''}
+                value={selectedProject?.id || ""}
                 onValueChange={(value) => {
                   const project = projects.find((p) => p.id === value);
                   setSelectedProject(project || null);
-                  setFormData(prev => ({ ...prev, projectId: value }));
+                  setFormData((prev) => ({ ...prev, projectId: value }));
                 }}
               >
                 <SelectTrigger>
@@ -449,135 +458,155 @@ export default function CreateTaskModal({
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       <div className="flex items-center">
-                        {project.icon && (
-                          <Layout className="mr-2 h-4 w-4" />
-                        )}
+                        {project.icon && <Layout className="mr-2 h-4 w-4" />}
                         {project.name}
-                    </div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-                  </div>
+            </div>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
-                        <Input
-                          id="title"
-                          value={formData.title}
-                          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               placeholder="Enter task title"
-                        />
-                      </div>
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={formData.description}
-                          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               placeholder="Enter task description"
-                          rows={3}
-                        />
-                      </div>
+              rows={3}
+            />
+          </div>
 
           <div className="space-y-4">
-                              <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <Switch
                 id="show-advanced"
                 checked={showAdvanced}
                 onCheckedChange={setShowAdvanced}
               />
               <Label htmlFor="show-advanced">Show advanced options</Label>
-                        </div>
+            </div>
 
             {showAdvanced && (
               <>
                 {/* Parent Task Selection (Subtask) */}
                 <div className="space-y-2">
                   <Label htmlFor="parentTask">Parent Task (Optional)</Label>
-                          <Select
+                  <Select
                     value={formData.parentId || "none"}
-                    onValueChange={(value) => 
-                      setFormData(prev => ({ ...prev, parentId: value === "none" ? null : value }))
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        parentId: value === "none" ? null : value,
+                      }))
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select parent task" />
-                            </SelectTrigger>
-                            <SelectContent>
+                    </SelectTrigger>
+                    <SelectContent>
                       <SelectItem value="none">None</SelectItem>
                       {availableTasks.map((task: TaskWithSubtasks) => (
                         <SelectItem key={task.id} value={task.id}>
                           {task.title}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Dependencies */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Dependencies</Label>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                      size="sm"
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => setShowDependencies(!showDependencies)}
-                                    >
+                    >
                       {showDependencies ? "Close" : "Add Dependencies"}
-                                    </Button>
-                                </div>
+                    </Button>
+                  </div>
 
                   {showDependencies && (
                     <div className="border rounded-md p-4 space-y-2">
                       {availableTasks.map((task: TaskWithSubtasks) => (
-                        <div key={task.id} className="flex items-center space-x-2">
+                        <div
+                          key={task.id}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`dep-${task.id}`}
                             checked={formData.dependencies.includes(task.id)}
-                            onCheckedChange={(checked: boolean) => 
+                            onCheckedChange={(checked: boolean) =>
                               handleDependencyToggle(task.id, checked)
                             }
                           />
                           <Label htmlFor={`dep-${task.id}`}>{task.title}</Label>
                         </div>
                       ))}
-                      </div>
+                    </div>
                   )}
 
                   {/* Selected Dependencies Display */}
                   {formData.dependencies.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-sm text-muted-foreground mb-2">Selected Dependencies:</p>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Selected Dependencies:
+                      </p>
                       <div className="flex flex-wrap gap-2">
-                        {selectedDependencyTasks.map((task: TaskWithSubtasks) => (
-                          <Badge
-                            key={task.id}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {task.title}
-                            <X
-                              className="h-3 w-3 cursor-pointer"
-                              onClick={() => removeDependency(task.id)}
-                            />
-                          </Badge>
-                        ))}
-                                </div>
-                                  </div>
+                        {selectedDependencyTasks.map(
+                          (task: TaskWithSubtasks) => (
+                            <Badge
+                              key={task.id}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
+                              {task.title}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={() => removeDependency(task.id)}
+                              />
+                            </Badge>
+                          ),
+                        )}
+                      </div>
+                    </div>
                   )}
-                                  </div>
+                </div>
               </>
             )}
-                                        </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="priority">Priority</Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))} >
+              <Select
+                value={formData.priority}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, priority: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -585,68 +614,77 @@ export default function CreateTaskModal({
                   {priorityOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       <div className="flex items-center">
-                        <div className={`mr-2 h-2 w-2 rounded-full ${option.icon}`} />
+                        <div
+                          className={`mr-2 h-2 w-2 rounded-full ${option.icon}`}
+                        />
                         {option.label}
-                                      </div>
-                                    </SelectItem>
+                      </div>
+                    </SelectItem>
                   ))}
-                            </SelectContent>
-                          </Select>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))} >
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, status: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
+                </SelectTrigger>
+                <SelectContent>
                   {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       <div className="flex items-center">
-                        <div className={`mr-2 h-2 w-2 rounded-full ${option.icon}`} />
+                        <div
+                          className={`mr-2 h-2 w-2 rounded-full ${option.icon}`}
+                        />
                         {option.label}
-                                </div>
-                              </SelectItem>
-                  ))}
-                            </SelectContent>
-                          </Select>
-                    </div>
                       </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="assignee">Assignee</Label>
-                                <Select
-                value={formData.assigneeEmail || 'unassigned'}
+              <Select
+                value={formData.assigneeEmail || "unassigned"}
                 onValueChange={handleAssigneeChange}
-                                >
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select assignee" />
-                                  </SelectTrigger>
-                                  <SelectContent>
+                </SelectTrigger>
+                <SelectContent>
                   <SelectItem value="unassigned">
                     <div className="flex items-center">
                       <UserIcon className="mr-2 h-4 w-4" />
                       Unassigned
-                                        </div>
-                                      </SelectItem>
+                    </div>
+                  </SelectItem>
                   {users.map((user: WorkspaceUser) => (
-                    <SelectItem key={user.id} value={user.userEmail || ''}>
+                    <SelectItem key={user.id} value={user.userEmail || ""}>
                       <div className="flex items-center">
                         <UserIcon className="mr-2 h-4 w-4" />
                         {user.userName}
-                                        </div>
-                                      </SelectItem>
+                      </div>
+                    </SelectItem>
                   ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                </SelectContent>
+              </Select>
+            </div>
 
-                                    <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="team">Team</Label>
               <Select
-                value={formData.assignedTeamId || 'none'}
+                value={formData.assignedTeamId || "none"}
                 onValueChange={handleTeamChange}
               >
                 <SelectTrigger>
@@ -657,29 +695,29 @@ export default function CreateTaskModal({
                     <div className="flex items-center">
                       <Users className="mr-2 h-4 w-4" />
                       No team
-                                          </div>
+                    </div>
                   </SelectItem>
                   {teams.map((team: WorkspaceTeam) => (
                     <SelectItem key={team.id} value={team.id}>
                       <div className="flex items-center">
                         <Users className="mr-2 h-4 w-4" />
                         {team.name}
-                                      </div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-                                </div>
-              </div>
+            </div>
+          </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
-                      Cancel
-                    </Button>
+              Cancel
+            </Button>
             <Button type="submit" disabled={!isFormValid}>
-                          Create Task
-                    </Button>
-                  </DialogFooter>
+              Create Task
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

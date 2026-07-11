@@ -4,13 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Zap,
-  ZapOff,
-  Info,
-  CheckCircle2,
-  Eye,
-} from "lucide-react";
+import { Zap, ZapOff, Info, CheckCircle2, Eye } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export function ReducedMotionMode() {
@@ -84,7 +78,10 @@ export function ReducedMotionMode() {
           </CardTitle>
           <div className="flex items-center gap-3">
             {isReducedMotion && (
-              <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+              <Badge
+                variant="outline"
+                className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+              >
                 Active
               </Badge>
             )}
@@ -101,7 +98,8 @@ export function ReducedMotionMode() {
           </div>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Minimize animations and transitions for users with vestibular disorders
+          Minimize animations and transitions for users with vestibular
+          disorders
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -112,11 +110,10 @@ export function ReducedMotionMode() {
               <Eye className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <div className="text-sm text-blue-900 dark:text-blue-200">
-                  <strong>System Preference Detected:</strong> Your operating system is set to prefer reduced motion.
+                  <strong>System Preference Detected:</strong> Your operating
+                  system is set to prefer reduced motion.
                   {!isReducedMotion && (
-                    <>
-                      {" "}Would you like to enable reduced motion mode?
-                    </>
+                    <> Would you like to enable reduced motion mode?</>
                   )}
                 </div>
                 {!isReducedMotion && (
@@ -136,12 +133,14 @@ export function ReducedMotionMode() {
 
         {/* Status Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className={cn(
-            "p-4 border rounded-lg transition-colors",
-            isReducedMotion
-              ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-              : "border-border bg-background/50"
-          )}>
+          <div
+            className={cn(
+              "p-4 border rounded-lg transition-colors",
+              isReducedMotion
+                ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                : "border-border bg-background/50",
+            )}
+          >
             <div className="flex items-center gap-2 mb-2">
               {isReducedMotion ? (
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -155,12 +154,14 @@ export function ReducedMotionMode() {
             </div>
           </div>
 
-          <div className={cn(
-            "p-4 border rounded-lg transition-colors",
-            isReducedMotion
-              ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-              : "border-border bg-background/50"
-          )}>
+          <div
+            className={cn(
+              "p-4 border rounded-lg transition-colors",
+              isReducedMotion
+                ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                : "border-border bg-background/50",
+            )}
+          >
             <div className="flex items-center gap-2 mb-2">
               {isReducedMotion ? (
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -180,7 +181,9 @@ export function ReducedMotionMode() {
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold">Animation Preview</h4>
             <span className="text-xs text-muted-foreground">
-              {isReducedMotion ? "Animations are disabled" : "Animations are enabled"}
+              {isReducedMotion
+                ? "Animations are disabled"
+                : "Animations are enabled"}
             </span>
           </div>
 
@@ -188,10 +191,12 @@ export function ReducedMotionMode() {
             {/* Spinning Animation */}
             <div className="p-4 border border-border rounded-lg bg-background/50">
               <div className="flex flex-col items-center gap-3">
-                <div className={cn(
-                  "h-12 w-12 rounded-full border-4 border-blue-600 border-t-transparent",
-                  !isReducedMotion && "animate-spin"
-                )}></div>
+                <div
+                  className={cn(
+                    "h-12 w-12 rounded-full border-4 border-blue-600 border-t-transparent",
+                    !isReducedMotion && "animate-spin",
+                  )}
+                ></div>
                 <span className="text-xs text-muted-foreground">Spinning</span>
               </div>
             </div>
@@ -199,10 +204,12 @@ export function ReducedMotionMode() {
             {/* Pulse Animation */}
             <div className="p-4 border border-border rounded-lg bg-background/50">
               <div className="flex flex-col items-center gap-3">
-                <div className={cn(
-                  "h-12 w-12 rounded-full bg-green-600",
-                  !isReducedMotion && "animate-pulse"
-                )}></div>
+                <div
+                  className={cn(
+                    "h-12 w-12 rounded-full bg-green-600",
+                    !isReducedMotion && "animate-pulse",
+                  )}
+                ></div>
                 <span className="text-xs text-muted-foreground">Pulsing</span>
               </div>
             </div>
@@ -210,10 +217,12 @@ export function ReducedMotionMode() {
             {/* Bounce Animation */}
             <div className="p-4 border border-border rounded-lg bg-background/50">
               <div className="flex flex-col items-center gap-3">
-                <div className={cn(
-                  "h-12 w-12 rounded-lg bg-purple-600",
-                  !isReducedMotion && "animate-bounce"
-                )}></div>
+                <div
+                  className={cn(
+                    "h-12 w-12 rounded-lg bg-purple-600",
+                    !isReducedMotion && "animate-bounce",
+                  )}
+                ></div>
                 <span className="text-xs text-muted-foreground">Bouncing</span>
               </div>
             </div>
@@ -221,10 +230,12 @@ export function ReducedMotionMode() {
             {/* Fade Animation */}
             <div className="p-4 border border-border rounded-lg bg-background/50">
               <div className="flex flex-col items-center gap-3">
-                <div className={cn(
-                  "h-12 w-12 rounded-lg bg-orange-600",
-                  !isReducedMotion && "animate-pulse opacity-50"
-                )}></div>
+                <div
+                  className={cn(
+                    "h-12 w-12 rounded-lg bg-orange-600",
+                    !isReducedMotion && "animate-pulse opacity-50",
+                  )}
+                ></div>
                 <span className="text-xs text-muted-foreground">Fading</span>
               </div>
             </div>
@@ -250,7 +261,8 @@ export function ReducedMotionMode() {
               <div className="text-sm">
                 <div className="font-medium mb-1">Loading Animations</div>
                 <div className="text-xs text-muted-foreground">
-                  Spinners and progress bars use instant states instead of animations
+                  Spinners and progress bars use instant states instead of
+                  animations
                 </div>
               </div>
             </div>
@@ -260,7 +272,8 @@ export function ReducedMotionMode() {
               <div className="text-sm">
                 <div className="font-medium mb-1">UI Transitions</div>
                 <div className="text-xs text-muted-foreground">
-                  Buttons, dropdowns, and modals appear instantly without fade effects
+                  Buttons, dropdowns, and modals appear instantly without fade
+                  effects
                 </div>
               </div>
             </div>
@@ -270,7 +283,8 @@ export function ReducedMotionMode() {
               <div className="text-sm">
                 <div className="font-medium mb-1">Hover Effects</div>
                 <div className="text-xs text-muted-foreground">
-                  Hover state changes happen instantly without smooth transitions
+                  Hover state changes happen instantly without smooth
+                  transitions
                 </div>
               </div>
             </div>
@@ -282,10 +296,13 @@ export function ReducedMotionMode() {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-900 dark:text-blue-200">
-              <strong>About Reduced Motion:</strong> This feature is designed for users with vestibular disorders
-              or those who experience discomfort from animations and motion effects. Enabling this mode removes
-              or significantly reduces animations, transitions, and parallax effects throughout the interface.
-              The system automatically detects your OS preference and can apply it automatically.
+              <strong>About Reduced Motion:</strong> This feature is designed
+              for users with vestibular disorders or those who experience
+              discomfort from animations and motion effects. Enabling this mode
+              removes or significantly reduces animations, transitions, and
+              parallax effects throughout the interface. The system
+              automatically detects your OS preference and can apply it
+              automatically.
             </div>
           </div>
         </div>
@@ -296,8 +313,9 @@ export function ReducedMotionMode() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-green-900 dark:text-green-200">
-                <strong>Reduced Motion Active:</strong> Animations and transitions are now minimized across
-                the entire dashboard. You can disable this mode at any time using the toggle above.
+                <strong>Reduced Motion Active:</strong> Animations and
+                transitions are now minimized across the entire dashboard. You
+                can disable this mode at any time using the toggle above.
               </div>
             </div>
           </div>
@@ -306,4 +324,3 @@ export function ReducedMotionMode() {
     </Card>
   );
 }
-

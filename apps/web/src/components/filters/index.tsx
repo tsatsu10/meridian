@@ -155,7 +155,10 @@ function BoardFilters({ onFiltersChange }: BoardFiltersProps) {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 w-full">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 flex-1 max-w-full sm:max-w-md">
           <div className="relative flex-1">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" aria-hidden="true" />
+            <Search
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400"
+              aria-hidden="true"
+            />
             <Input
               value={searchValue}
               onChange={(e) => handleSearch(e.target.value)}
@@ -176,7 +179,7 @@ function BoardFilters({ onFiltersChange }: BoardFiltersProps) {
                     ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
                     : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700",
                 )}
-                aria-label={`Filter tasks. ${(selectedPriority || selectedAssignee || selectedDueDate) ? 'Filters active' : 'No filters applied'}`}
+                aria-label={`Filter tasks. ${selectedPriority || selectedAssignee || selectedDueDate ? "Filters active" : "No filters applied"}`}
                 aria-haspopup="menu"
               >
                 <Filter className="w-3.5 h-3.5" aria-hidden="true" />
@@ -288,7 +291,7 @@ function BoardFilters({ onFiltersChange }: BoardFiltersProps) {
                     ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
                     : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700",
                 )}
-                aria-label={`Sort tasks. ${selectedSortBy ? `Sorted by ${selectedSortBy} ${sortOrder === 'asc' ? 'ascending' : 'descending'}` : 'No sorting applied'}`}
+                aria-label={`Sort tasks. ${selectedSortBy ? `Sorted by ${selectedSortBy} ${sortOrder === "asc" ? "ascending" : "descending"}` : "No sorting applied"}`}
                 aria-haspopup="menu"
               >
                 <SortAsc
@@ -357,7 +360,10 @@ function BoardFilters({ onFiltersChange }: BoardFiltersProps) {
             aria-label="Switch to board view"
             aria-pressed={viewMode === "board"}
           >
-            <LayoutGrid className="w-4 h-4 sm:w-3.5 sm:h-3.5" aria-hidden="true" />
+            <LayoutGrid
+              className="w-4 h-4 sm:w-3.5 sm:h-3.5"
+              aria-hidden="true"
+            />
             <span className="text-xs sm:text-xs">Board</span>
           </button>
           <button

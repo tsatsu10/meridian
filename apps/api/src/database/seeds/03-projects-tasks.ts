@@ -1,6 +1,6 @@
 /**
  * 📂 Phase 3: Projects, Tasks & Milestones Seed
- * 
+ *
  * Creates:
  * - 10 projects with various statuses
  * - 200 tasks with realistic distribution
@@ -52,16 +52,66 @@ import {
 // ==========================================
 
 const PROJECT_TEMPLATES = [
-  { name: "Mobile App Launch", status: "active", priority: "high", progress: 65 },
-  { name: "API v2 Migration", status: "active", priority: "urgent", progress: 40 },
-  { name: "Design System Overhaul", status: "in_progress", priority: "medium", progress: 80 },
-  { name: "Customer Portal", status: "completed", priority: "high", progress: 100 },
-  { name: "Analytics Dashboard", status: "planning", priority: "medium", progress: 15 },
-  { name: "Security Audit Implementation", status: "active", priority: "urgent", progress: 50 },
-  { name: "Performance Optimization", status: "in_progress", priority: "high", progress: 70 },
-  { name: "Integration Hub", status: "active", priority: "medium", progress: 35 },
-  { name: "Documentation Portal", status: "planning", priority: "low", progress: 10 },
-  { name: "Mobile Responsive Update", status: "on_hold", priority: "medium", progress: 25 },
+  {
+    name: "Mobile App Launch",
+    status: "active",
+    priority: "high",
+    progress: 65,
+  },
+  {
+    name: "API v2 Migration",
+    status: "active",
+    priority: "urgent",
+    progress: 40,
+  },
+  {
+    name: "Design System Overhaul",
+    status: "in_progress",
+    priority: "medium",
+    progress: 80,
+  },
+  {
+    name: "Customer Portal",
+    status: "completed",
+    priority: "high",
+    progress: 100,
+  },
+  {
+    name: "Analytics Dashboard",
+    status: "planning",
+    priority: "medium",
+    progress: 15,
+  },
+  {
+    name: "Security Audit Implementation",
+    status: "active",
+    priority: "urgent",
+    progress: 50,
+  },
+  {
+    name: "Performance Optimization",
+    status: "in_progress",
+    priority: "high",
+    progress: 70,
+  },
+  {
+    name: "Integration Hub",
+    status: "active",
+    priority: "medium",
+    progress: 35,
+  },
+  {
+    name: "Documentation Portal",
+    status: "planning",
+    priority: "low",
+    progress: 10,
+  },
+  {
+    name: "Mobile Responsive Update",
+    status: "on_hold",
+    priority: "medium",
+    progress: 25,
+  },
 ];
 
 // ==========================================
@@ -69,7 +119,13 @@ const PROJECT_TEMPLATES = [
 // ==========================================
 
 const DEFAULT_COLUMNS = [
-  { name: "To Do", slug: "todo", color: "#6b7280", position: 0, isDefault: true },
+  {
+    name: "To Do",
+    slug: "todo",
+    color: "#6b7280",
+    position: 0,
+    isDefault: true,
+  },
   { name: "In Progress", slug: "in-progress", color: "#3b82f6", position: 1 },
   { name: "In Review", slug: "review", color: "#f59e0b", position: 2 },
   { name: "Done", slug: "done", color: "#10b981", position: 3 },
@@ -114,13 +170,17 @@ export async function seedProjectsAndTasks() {
 
     // 1. CREATE PROJECTS
     logger.info("📁 Creating projects...");
-    
+
     const createdProjects: any[] = [];
 
     for (const projectTemplate of PROJECT_TEMPLATES) {
-      const projectOwner = randomElement(allUsers.filter(u => 
-        ['admin', 'manager', 'project-manager', 'team-lead'].includes(u.role || '')
-      ));
+      const projectOwner = randomElement(
+        allUsers.filter((u) =>
+          ["admin", "manager", "project-manager", "team-lead"].includes(
+            u.role || "",
+          ),
+        ),
+      );
 
       const startDate = daysAgo(randomInt(30, 180));
       const dueDate = new Date(startDate);
@@ -130,24 +190,40 @@ export async function seedProjectsAndTasks() {
         .insert(projects)
         .values({
           name: projectTemplate.name,
-          description: generateDescription('project'),
+          description: generateDescription("project"),
           workspaceId: workspace.id,
           ownerId: projectOwner.id,
-          slug: projectTemplate.name.toLowerCase().replace(/\s+/g, '-'),
+          slug: projectTemplate.name.toLowerCase().replace(/\s+/g, "-"),
           color: randomColor(),
-          icon: randomElement(['📱', '🚀', '🎨', '⚡', '🔐', '📊', '🛠️', '🔗', '📝', '📱']),
+          icon: randomElement([
+            "📱",
+            "🚀",
+            "🎨",
+            "⚡",
+            "🔐",
+            "📊",
+            "🛠️",
+            "🔗",
+            "📝",
+            "📱",
+          ]),
           status: projectTemplate.status as any,
           priority: projectTemplate.priority as any,
           startDate,
           dueDate,
-          completedAt: projectTemplate.status === 'completed' ? daysAgo(randomInt(1, 30)) : null,
+          completedAt:
+            projectTemplate.status === "completed"
+              ? daysAgo(randomInt(1, 30))
+              : null,
           settings: { enableTimeTracking: true, enableComments: true },
           isArchived: false,
         })
         .returning();
 
       createdProjects.push(project);
-      logger.info(`   ✅ Created project: ${project.name} (${projectTemplate.status})`);
+      logger.info(
+        `   ✅ Created project: ${project.name} (${projectTemplate.status})`,
+      );
 
       // Add project members (3-6 per project)
       const memberCount = randomInt(3, 6);
@@ -183,7 +259,7 @@ export async function seedProjectsAndTasks() {
 
       // Create labels for this project
       const projectLabels = randomElements(LABELS, randomInt(4, 8));
-      
+
       for (const labelData of projectLabels) {
         await db.insert(label).values({
           name: labelData.name,
@@ -195,13 +271,13 @@ export async function seedProjectsAndTasks() {
 
     // 2. CREATE TASKS
     logger.info("\n📋 Creating tasks...");
-    
+
     const allTasks: any[] = [];
     const tasksPerProject = 20; // Average
 
     for (const project of createdProjects) {
       const taskCount = randomInt(15, 25);
-      const projectMembers = allUsers.filter(u => randomBool(0.6)); // 60% chance per user
+      const projectMembers = allUsers.filter((u) => randomBool(0.6)); // 60% chance per user
 
       for (let i = 0; i < taskCount; i++) {
         const status = getTaskStatus();
@@ -214,7 +290,7 @@ export async function seedProjectsAndTasks() {
           .insert(tasks)
           .values({
             title: generateTaskTitle(),
-            description: generateDescription('task'),
+            description: generateDescription("task"),
             projectId: project.id,
             assigneeId: assignee?.id || null,
             userEmail: assignee?.email || null,
@@ -223,10 +299,18 @@ export async function seedProjectsAndTasks() {
             position: i,
             number: i + 1,
             dueDate,
-            startDate: status !== 'todo' ? createdAt : null,
-            completedAt: status === 'done' ? generateCompletedDate(createdAt, dueDate) : null,
+            startDate: status !== "todo" ? createdAt : null,
+            completedAt:
+              status === "done"
+                ? generateCompletedDate(createdAt, dueDate)
+                : null,
             estimatedHours: randomInt(2, 16),
-            actualHours: status === 'done' ? randomInt(2, 20) : (status === 'in_progress' ? randomInt(1, 10) : null),
+            actualHours:
+              status === "done"
+                ? randomInt(2, 20)
+                : status === "in_progress"
+                  ? randomInt(1, 10)
+                  : null,
             createdAt,
             updatedAt: new Date(),
           })
@@ -240,22 +324,24 @@ export async function seedProjectsAndTasks() {
 
     // 3. CREATE TASK DEPENDENCIES
     logger.info("\n🔗 Creating task dependencies...");
-    
+
     let dependencyCount = 0;
 
     // Group tasks by project
-    const tasksByProject = createdProjects.map(project => ({
+    const tasksByProject = createdProjects.map((project) => ({
       project,
-      tasks: allTasks.filter(t => t.projectId === project.id),
+      tasks: allTasks.filter((t) => t.projectId === project.id),
     }));
 
     for (const { project, tasks: projectTasks } of tasksByProject) {
       // Create 3-8 dependencies per project
       const depCount = randomInt(3, 8);
-      
+
       for (let i = 0; i < depCount && projectTasks.length > 1; i++) {
         const dependentTask = randomElement(projectTasks);
-        const requiredTask = randomElement(projectTasks.filter(t => t.id !== dependentTask.id));
+        const requiredTask = randomElement(
+          projectTasks.filter((t) => t.id !== dependentTask.id),
+        );
 
         // Avoid duplicates
         const existing = await db
@@ -264,8 +350,8 @@ export async function seedProjectsAndTasks() {
           .where(
             and(
               eq(taskDependencies.dependentTaskId, dependentTask.id),
-              eq(taskDependencies.requiredTaskId, requiredTask.id)
-            )
+              eq(taskDependencies.requiredTaskId, requiredTask.id),
+            ),
           )
           .limit(1);
 
@@ -275,7 +361,7 @@ export async function seedProjectsAndTasks() {
             requiredTaskId: requiredTask.id,
             type: "blocks",
           });
-          
+
           dependencyCount++;
         }
       }
@@ -285,38 +371,45 @@ export async function seedProjectsAndTasks() {
 
     // 4. CREATE MILESTONES
     logger.info("\n🎯 Creating milestones...");
-    
+
     let milestoneCount = 0;
 
     for (const project of createdProjects) {
       // Skip completed/planning projects
-      if (project.status === 'completed' || project.status === 'planning') continue;
+      if (project.status === "completed" || project.status === "planning")
+        continue;
 
       const count = randomInt(2, 4);
-      const projectTasks = allTasks.filter(t => t.projectId === project.id);
+      const projectTasks = allTasks.filter((t) => t.projectId === project.id);
 
       for (let i = 0; i < count; i++) {
         const dueDate = new Date(project.startDate);
         dueDate.setDate(dueDate.getDate() + (i + 1) * 30); // 30 days apart
 
-        const status = dueDate < new Date() 
-          ? (randomBool(0.7) ? 'completed' : 'missed')
-          : (randomBool(0.3) ? 'in_progress' : 'not_started');
+        const status =
+          dueDate < new Date()
+            ? randomBool(0.7)
+              ? "completed"
+              : "missed"
+            : randomBool(0.3)
+              ? "in_progress"
+              : "not_started";
 
         await db.insert(milestone).values({
-          title: `${randomElement(['Phase', 'Sprint', 'Release', 'Beta'])} ${i + 1}`,
+          title: `${randomElement(["Phase", "Sprint", "Release", "Beta"])} ${i + 1}`,
           description: `Key milestone for ${project.name}`,
-          type: randomElement(['phase', 'deadline', 'review', 'release']),
+          type: randomElement(["phase", "deadline", "review", "release"]),
           status,
           dueDate,
-          completedAt: status === 'completed' ? daysAgo(randomInt(1, 30)) : null,
+          completedAt:
+            status === "completed" ? daysAgo(randomInt(1, 30)) : null,
           projectId: project.id,
-          riskLevel: randomElement(['low', 'medium', 'high']),
+          riskLevel: randomElement(["low", "medium", "high"]),
           dependencyTaskIds: JSON.stringify(
-            randomElements(projectTasks, randomInt(0, 3)).map(t => t.id)
+            randomElements(projectTasks, randomInt(0, 3)).map((t) => t.id),
           ),
           stakeholderIds: JSON.stringify(
-            randomElements(allUsers, randomInt(2, 4)).map(u => u.id)
+            randomElements(allUsers, randomInt(2, 4)).map((u) => u.id),
           ),
           createdBy: project.ownerId,
         });
@@ -338,7 +431,6 @@ export async function seedProjectsAndTasks() {
       projects: createdProjects,
       tasks: allTasks,
     };
-
   } catch (error) {
     logger.error("❌ Error seeding projects and tasks:", error);
     throw error;

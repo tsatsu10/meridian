@@ -1,7 +1,7 @@
 // Generic debounce hook for search inputs and other delayed operations
 // Improves performance by reducing unnecessary API calls
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * Debounce hook that delays updating a value until after a specified delay
@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
  * @param delay - Delay in milliseconds (default: 500ms)
  * @returns Debounced value
  */
-export function useDebounce<T>(value: T, delay: number = 500): T {
+export function useDebounce<T>(value: T, delay = 500): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {

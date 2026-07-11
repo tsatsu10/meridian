@@ -1,15 +1,15 @@
 /**
  * 🔊 Centralized Logging Service Interface
- * 
+ *
  * Re-exports the enhanced logger from utils with a standardized interface
  * for use across the application and in tests.
  */
 
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 // Re-export types (LogLevel name is reserved for the enum below)
-export type { LogCategory } from '../utils/logger';
-export type { LogLevel as UtilsLogLevel } from '../utils/logger';
+export type { LogCategory } from "../utils/logger";
+export type { LogLevel as UtilsLogLevel } from "../utils/logger";
 
 export interface LogEntry {
   timestamp: string;
@@ -46,15 +46,15 @@ class LoggingService {
   /**
    * Create a log entry
    */
-  log(entry: Omit<LogEntry, 'timestamp'>): LogEntry {
+  log(entry: Omit<LogEntry, "timestamp">): LogEntry {
     const fullEntry: LogEntry = {
       timestamp: new Date().toISOString(),
-      ...entry
+      ...entry,
     };
 
     // Store in memory for retrieval
     this.logs.push(fullEntry);
-    
+
     // Trim if exceeds max
     if (this.logs.length > this.MAX_LOGS_IN_MEMORY) {
       this.logs = this.logs.slice(-this.MAX_LOGS_IN_MEMORY);
@@ -62,7 +62,7 @@ class LoggingService {
 
     // Also log using the actual logger
     const logMethod = entry.level.toLowerCase() as keyof typeof logger;
-    if (typeof logger[logMethod] === 'function') {
+    if (typeof logger[logMethod] === "function") {
       (logger[logMethod] as any)(entry.message, entry.data, entry.category);
     }
 
@@ -76,11 +76,11 @@ class LoggingService {
     let filtered = [...this.logs];
 
     if (level) {
-      filtered = filtered.filter(log => log.level === level);
+      filtered = filtered.filter((log) => log.level === level);
     }
 
     if (category) {
-      filtered = filtered.filter(log => log.category === category);
+      filtered = filtered.filter((log) => log.category === category);
     }
 
     if (limit) {
@@ -116,7 +116,7 @@ class LoggingService {
     return {
       total: this.logs.length,
       byLevel,
-      byCategory
+      byCategory,
     };
   }
 }
@@ -135,40 +135,40 @@ export function createLoggingMiddleware(config?: Partial<LoggingConfig>) {
 
     // Log request
     loggingService.log({
-      level: 'info',
-      category: 'API',
+      level: "info",
+      category: "API",
       message: `${method} ${path}`,
       context: {
-        requestId: c.get('requestId'),
-        userId: c.get('user')?.id
-      }
+        requestId: c.get("requestId"),
+        userId: c.get("user")?.id,
+      },
     });
 
     try {
       await next();
     } catch (error) {
       loggingService.log({
-        level: 'error',
-        category: 'ERROR',
+        level: "error",
+        category: "ERROR",
         message: `Request failed: ${method} ${path}`,
         data: error,
         context: {
-          requestId: c.get('requestId'),
-          userId: c.get('user')?.id
-        }
+          requestId: c.get("requestId"),
+          userId: c.get("user")?.id,
+        },
       });
       throw error;
     } finally {
       const duration = Date.now() - start;
       loggingService.log({
-        level: 'debug',
-        category: 'PERFORMANCE',
+        level: "debug",
+        category: "PERFORMANCE",
         message: `${method} ${path} completed in ${duration}ms`,
         data: { duration },
         context: {
-          requestId: c.get('requestId'),
-          userId: c.get('user')?.id
-        }
+          requestId: c.get("requestId"),
+          userId: c.get("user")?.id,
+        },
       });
     }
   };
@@ -180,10 +180,9 @@ export { logger };
 
 // Export LogLevel enum for convenience
 export enum LogLevel {
-  ERROR = 'error',
-  WARN = 'warn',
-  INFO = 'info',
-  DEBUG = 'debug',
-  VERBOSE = 'verbose'
+  ERROR = "error",
+  WARN = "warn",
+  INFO = "info",
+  DEBUG = "debug",
+  VERBOSE = "verbose",
 }
-

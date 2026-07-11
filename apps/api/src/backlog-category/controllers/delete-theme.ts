@@ -1,13 +1,13 @@
 /**
  * 🗑️ Delete Theme Controller
- * 
+ *
  * Deletes a backlog theme
  */
 
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { backlogThemesTable, activityTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 export async function deleteTheme(themeId: string, userId: string) {
   const db = getDatabase();
@@ -33,7 +33,9 @@ export async function deleteTheme(themeId: string, userId: string) {
     // Either reassign or set to null
 
     // Delete theme
-    await db.delete(backlogThemesTable).where(eq(backlogThemesTable.id, themeId));
+    await db
+      .delete(backlogThemesTable)
+      .where(eq(backlogThemesTable.id, themeId));
 
     // 📊 Log activity
     try {
@@ -58,5 +60,3 @@ export async function deleteTheme(themeId: string, userId: string) {
     throw error;
   }
 }
-
-

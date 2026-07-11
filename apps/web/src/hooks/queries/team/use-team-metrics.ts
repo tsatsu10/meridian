@@ -23,4 +23,3 @@ export function useTeamMetrics(workspaceId: string) {
     staleTime: 30000, // 30 seconds - metrics can be slightly stale
   });
 }
-

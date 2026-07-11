@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { API_BASE_URL, } from '@/constants/urls';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { AlertTriangle, Shield, Eye, TrendingUp, } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/constants/urls";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { AlertTriangle, Shield, Eye, TrendingUp } from "lucide-react";
+import { format } from "date-fns";
 
 interface SecurityEvent {
   id: string;
@@ -34,14 +34,16 @@ export function SecurityDashboard() {
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [stats, setStats] = useState<SecurityStats | null>(null);
   const [loading, setLoading] = useState(false);
-  const [timeRange, setTimeRange] = useState('24h');
+  const [timeRange, setTimeRange] = useState("24h");
 
   const fetchSecurityData = async () => {
     setLoading(true);
     try {
       const [eventsResponse, statsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/audit/security-logs?limit=20`),
-        fetch(`${API_BASE_URL}/audit/stats?days=${timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : 30}`)
+        fetch(
+          `${API_BASE_URL}/audit/stats?days=${timeRange === "24h" ? 1 : timeRange === "7d" ? 7 : 30}`,
+        ),
       ]);
 
       const eventsData = await eventsResponse.json();
@@ -65,7 +67,7 @@ export function SecurityDashboard() {
         setStats(securityStats);
       }
     } catch (error) {
-      console.error('Failed to fetch security data:', error);
+      console.error("Failed to fetch security data:", error);
     } finally {
       setLoading(false);
     }
@@ -73,24 +75,24 @@ export function SecurityDashboard() {
 
   useEffect(() => {
     fetchSecurityData();
-    
+
     // Refresh every 30 seconds for security monitoring
     const interval = setInterval(fetchSecurityData, 30000);
     return () => clearInterval(interval);
   }, [timeRange]);
 
   const getRiskColor = (score?: number) => {
-    if (!score) return 'bg-gray-100 text-gray-800';
-    if (score >= 70) return 'bg-red-100 text-red-800';
-    if (score >= 40) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
+    if (!score) return "bg-gray-100 text-gray-800";
+    if (score >= 70) return "bg-red-100 text-red-800";
+    if (score >= 40) return "bg-yellow-100 text-yellow-800";
+    return "bg-green-100 text-green-800";
   };
 
   const getRiskLevel = (score?: number) => {
-    if (!score) return 'Unknown';
-    if (score >= 70) return 'High';
-    if (score >= 40) return 'Medium';
-    return 'Low';
+    if (!score) return "Unknown";
+    if (score >= 70) return "High";
+    if (score >= 40) return "Medium";
+    return "Low";
   };
 
   const renderSecurityEvent = (event: SecurityEvent) => (
@@ -104,7 +106,7 @@ export function SecurityDashboard() {
               <AlertTriangle className="w-4 h-4 text-red-500" />
             )}
             <span className="font-medium">
-              {event.eventType.replace(/_/g, ' ').toUpperCase()}
+              {event.eventType.replace(/_/g, " ").toUpperCase()}
             </span>
             {event.riskScore && (
               <Badge className={getRiskColor(event.riskScore)}>
@@ -116,7 +118,7 @@ export function SecurityDashboard() {
           <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-2">
             <div className="flex items-center gap-1">
               <span className="font-medium">User:</span>
-              <span>{event.userEmail || 'Anonymous'}</span>
+              <span>{event.userEmail || "Anonymous"}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="font-medium">IP:</span>
@@ -124,11 +126,13 @@ export function SecurityDashboard() {
             </div>
             <div className="flex items-center gap-1">
               <span className="font-medium">Time:</span>
-              <span>{format(new Date(event.timestamp * 1000), 'MMM dd, HH:mm:ss')}</span>
+              <span>
+                {format(new Date(event.timestamp * 1000), "MMM dd, HH:mm:ss")}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <span className="font-medium">Method:</span>
-              <span>{event.authMethod || 'N/A'}</span>
+              <span>{event.authMethod || "N/A"}</span>
             </div>
           </div>
 
@@ -144,7 +148,7 @@ export function SecurityDashboard() {
             <div className="flex gap-1 flex-wrap">
               {event.riskFactors.map((factor, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
-                  {factor.replace(/_/g, ' ')}
+                  {factor.replace(/_/g, " ")}
                 </Badge>
               ))}
             </div>
@@ -169,46 +173,53 @@ export function SecurityDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Login Success Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Login Success Rate
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {stats ? Math.round((stats.successfulLogins / (stats.successfulLogins + stats.failedLogins)) * 100) : 0}%
+              {stats
+                ? Math.round(
+                    (stats.successfulLogins /
+                      (stats.successfulLogins + stats.failedLogins)) *
+                      100,
+                  )
+                : 0}
+              %
             </div>
-            <p className="text-xs text-muted-foreground">
-              Last {timeRange}
-            </p>
+            <p className="text-xs text-muted-foreground">Last {timeRange}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed Attempts</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Failed Attempts
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               {stats?.failedLogins || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Requires monitoring
-            </p>
+            <p className="text-xs text-muted-foreground">Requires monitoring</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Risk Events</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              High Risk Events
+            </CardTitle>
             <Shield className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {events.filter(e => (e.riskScore || 0) >= 70).length}
+              {events.filter((e) => (e.riskScore || 0) >= 70).length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Immediate attention
-            </p>
+            <p className="text-xs text-muted-foreground">Immediate attention</p>
           </CardContent>
         </Card>
 
@@ -219,25 +230,23 @@ export function SecurityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Set(events.map(e => e.ipAddress)).size}
+              {new Set(events.map((e) => e.ipAddress)).size}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Active sources
-            </p>
+            <p className="text-xs text-muted-foreground">Active sources</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Time Range Selector */}
       <div className="flex gap-2">
-        {['24h', '7d', '30d'].map((range) => (
+        {["24h", "7d", "30d"].map((range) => (
           <button
             key={range}
             onClick={() => setTimeRange(range)}
             className={`px-3 py-1 rounded text-sm ${
               timeRange === range
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
             {range}
@@ -278,7 +287,8 @@ export function SecurityDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {events.filter(e => !e.success && (e.riskScore || 0) >= 70).length === 0 ? (
+          {events.filter((e) => !e.success && (e.riskScore || 0) >= 70)
+            .length === 0 ? (
             <div className="text-center py-4">
               <Shield className="w-12 h-12 text-green-500 mx-auto mb-2" />
               <p className="text-green-600 font-medium">All Clear</p>
@@ -287,21 +297,28 @@ export function SecurityDashboard() {
           ) : (
             <div className="space-y-3">
               {events
-                .filter(e => !e.success && (e.riskScore || 0) >= 70)
+                .filter((e) => !e.success && (e.riskScore || 0) >= 70)
                 .slice(0, 5)
-                .map(event => (
-                  <div key={event.id} className="bg-red-50 border border-red-200 rounded p-3">
+                .map((event) => (
+                  <div
+                    key={event.id}
+                    className="bg-red-50 border border-red-200 rounded p-3"
+                  >
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
                       <div>
                         <p className="font-medium text-red-800">
-                          High Risk {event.eventType.replace(/_/g, ' ')}
+                          High Risk {event.eventType.replace(/_/g, " ")}
                         </p>
                         <p className="text-sm text-red-700">
-                          {event.userEmail || 'Anonymous user'} from {event.ipAddress}
+                          {event.userEmail || "Anonymous user"} from{" "}
+                          {event.ipAddress}
                         </p>
                         <p className="text-xs text-red-600 mt-1">
-                          {format(new Date(event.timestamp * 1000), 'MMM dd, yyyy HH:mm')}
+                          {format(
+                            new Date(event.timestamp * 1000),
+                            "MMM dd, yyyy HH:mm",
+                          )}
                         </p>
                       </div>
                     </div>

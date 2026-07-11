@@ -11,7 +11,7 @@ export interface NotificationsPage {
 }
 
 async function getNotifications(
-  options: { limit?: number; offset?: number; includeArchived?: boolean } = {}
+  options: { limit?: number; offset?: number; includeArchived?: boolean } = {},
 ): Promise<NotificationsPage> {
   const { limit = 50, offset = 0, includeArchived } = options;
 

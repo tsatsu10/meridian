@@ -1,42 +1,42 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import updateTask from '../update-task';
-import type Task from '@/types/task';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import updateTask from "../update-task";
+import type Task from "@/types/task";
 
 // Mock the client
-vi.mock('@meridian/libs', () => ({
+vi.mock("@meridian/libs", () => ({
   client: {
     task: {
-      ':id': {
+      ":id": {
         $put: vi.fn(),
       },
     },
   },
 }));
 
-import { client } from '@meridian/libs';
+import { client } from "@meridian/libs";
 
-describe('updateTask', () => {
+describe("updateTask", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   const mockTask: Task = {
-    id: 'task-123',
+    id: "task-123",
     parentId: null,
     number: 1,
-    title: 'Updated Task',
-    description: 'Updated description',
-    status: 'in-progress',
-    priority: 'high',
-    userEmail: 'user@example.com',
-    dueDate: new Date('2024-12-31').toISOString(),
+    title: "Updated Task",
+    description: "Updated description",
+    status: "in-progress",
+    priority: "high",
+    userEmail: "user@example.com",
+    dueDate: new Date("2024-12-31").toISOString(),
     position: 1,
-    projectId: 'project-123',
+    projectId: "project-123",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  it('should update a task successfully', async () => {
+  it("should update a task successfully", async () => {
     const mockResponse = { ...mockTask, updatedAt: new Date().toISOString() };
 
     const mockPut = vi.fn().mockResolvedValue({
@@ -44,21 +44,21 @@ describe('updateTask', () => {
       json: async () => mockResponse,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    const result = await updateTask('task-123', mockTask);
+    const result = await updateTask("task-123", mockTask);
 
     expect(mockPut).toHaveBeenCalledWith({
-      param: { id: 'task-123' },
+      param: { id: "task-123" },
       json: {
-        userEmail: 'user@example.com',
-        title: 'Updated Task',
-        description: 'Updated description',
-        status: 'in-progress',
-        priority: 'high',
+        userEmail: "user@example.com",
+        title: "Updated Task",
+        description: "Updated description",
+        status: "in-progress",
+        priority: "high",
         dueDate: mockTask.dueDate?.toString(),
         position: 1,
-        projectId: 'project-123',
+        projectId: "project-123",
         parentId: undefined,
       },
     });
@@ -66,10 +66,10 @@ describe('updateTask', () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it('should handle task with parentId', async () => {
+  it("should handle task with parentId", async () => {
     const taskWithParent: Task = {
       ...mockTask,
-      parentId: 'parent-task-123',
+      parentId: "parent-task-123",
     };
 
     const mockPut = vi.fn().mockResolvedValue({
@@ -77,25 +77,25 @@ describe('updateTask', () => {
       json: async () => taskWithParent,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskWithParent);
+    await updateTask("task-123", taskWithParent);
 
     expect(mockPut).toHaveBeenCalledWith(
       expect.objectContaining({
         json: expect.objectContaining({
-          parentId: 'parent-task-123',
+          parentId: "parent-task-123",
         }),
-      })
+      }),
     );
   });
 
-  it('should handle missing optional fields with defaults', async () => {
+  it("should handle missing optional fields with defaults", async () => {
     const minimalTask: Partial<Task> = {
-      id: 'task-123',
-      title: 'Minimal Task',
-      status: 'todo',
-      projectId: 'project-123',
+      id: "task-123",
+      title: "Minimal Task",
+      status: "todo",
+      projectId: "project-123",
     };
 
     const mockPut = vi.fn().mockResolvedValue({
@@ -103,24 +103,24 @@ describe('updateTask', () => {
       json: async () => minimalTask,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', minimalTask as Task);
+    await updateTask("task-123", minimalTask as Task);
 
     const call = mockPut.mock.calls[0][0];
-    expect(call.json.userEmail).toBe('');
-    expect(call.json.description).toBe('');
-    expect(call.json.priority).toBe('');
+    expect(call.json.userEmail).toBe("");
+    expect(call.json.description).toBe("");
+    expect(call.json.priority).toBe("");
     expect(call.json.position).toBe(0);
     expect(call.json.parentId).toBeUndefined();
   });
 
-  it('should use current date when dueDate is missing', async () => {
+  it("should use current date when dueDate is missing", async () => {
     const taskNoDueDate: Partial<Task> = {
-      id: 'task-123',
-      title: 'Task',
-      status: 'todo',
-      projectId: 'project-123',
+      id: "task-123",
+      title: "Task",
+      status: "todo",
+      projectId: "project-123",
     };
 
     const mockPut = vi.fn().mockResolvedValue({
@@ -128,58 +128,58 @@ describe('updateTask', () => {
       json: async () => taskNoDueDate,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNoDueDate as Task);
+    await updateTask("task-123", taskNoDueDate as Task);
 
     const call = mockPut.mock.calls[0][0];
     expect(call.json.dueDate).toBeTruthy();
-    expect(typeof call.json.dueDate).toBe('string');
+    expect(typeof call.json.dueDate).toBe("string");
   });
 
-  it('should update task status', async () => {
-    const taskNewStatus = { ...mockTask, status: 'done' };
+  it("should update task status", async () => {
+    const taskNewStatus = { ...mockTask, status: "done" };
 
     const mockPut = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => taskNewStatus,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNewStatus);
+    await updateTask("task-123", taskNewStatus);
 
     expect(mockPut).toHaveBeenCalledWith(
       expect.objectContaining({
         json: expect.objectContaining({
-          status: 'done',
+          status: "done",
         }),
-      })
+      }),
     );
   });
 
-  it('should update task priority', async () => {
-    const taskNewPriority = { ...mockTask, priority: 'urgent' };
+  it("should update task priority", async () => {
+    const taskNewPriority = { ...mockTask, priority: "urgent" };
 
     const mockPut = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => taskNewPriority,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNewPriority);
+    await updateTask("task-123", taskNewPriority);
 
     expect(mockPut).toHaveBeenCalledWith(
       expect.objectContaining({
         json: expect.objectContaining({
-          priority: 'urgent',
+          priority: "urgent",
         }),
-      })
+      }),
     );
   });
 
-  it('should update task position', async () => {
+  it("should update task position", async () => {
     const taskNewPosition = { ...mockTask, position: 5 };
 
     const mockPut = vi.fn().mockResolvedValue({
@@ -187,102 +187,102 @@ describe('updateTask', () => {
       json: async () => taskNewPosition,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNewPosition);
+    await updateTask("task-123", taskNewPosition);
 
     expect(mockPut).toHaveBeenCalledWith(
       expect.objectContaining({
         json: expect.objectContaining({
           position: 5,
         }),
-      })
+      }),
     );
   });
 
-  it('should throw error when response is not ok', async () => {
+  it("should throw error when response is not ok", async () => {
     const mockPut = vi.fn().mockResolvedValue({
       ok: false,
-      text: async () => 'Task update failed: Task not found',
+      text: async () => "Task update failed: Task not found",
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await expect(
-      updateTask('invalid-task', mockTask)
-    ).rejects.toThrow('Task update failed: Task not found');
+    await expect(updateTask("invalid-task", mockTask)).rejects.toThrow(
+      "Task update failed: Task not found",
+    );
   });
 
-  it('should handle permission errors', async () => {
+  it("should handle permission errors", async () => {
     const mockPut = vi.fn().mockResolvedValue({
       ok: false,
-      text: async () => 'Permission denied',
+      text: async () => "Permission denied",
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await expect(
-      updateTask('task-123', mockTask)
-    ).rejects.toThrow('Permission denied');
+    await expect(updateTask("task-123", mockTask)).rejects.toThrow(
+      "Permission denied",
+    );
   });
 
-  it('should convert dueDate to string', async () => {
+  it("should convert dueDate to string", async () => {
     const mockPut = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockTask,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', mockTask);
+    await updateTask("task-123", mockTask);
 
     const call = mockPut.mock.calls[0][0];
-    expect(typeof call.json.dueDate).toBe('string');
+    expect(typeof call.json.dueDate).toBe("string");
   });
 
-  it('should update assignee (userEmail)', async () => {
-    const taskNewAssignee = { ...mockTask, userEmail: 'newuser@example.com' };
+  it("should update assignee (userEmail)", async () => {
+    const taskNewAssignee = { ...mockTask, userEmail: "newuser@example.com" };
 
     const mockPut = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => taskNewAssignee,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNewAssignee);
+    await updateTask("task-123", taskNewAssignee);
 
     expect(mockPut).toHaveBeenCalledWith(
       expect.objectContaining({
         json: expect.objectContaining({
-          userEmail: 'newuser@example.com',
+          userEmail: "newuser@example.com",
         }),
-      })
+      }),
     );
   });
 
-  it('should handle empty description', async () => {
-    const taskNoDesc = { ...mockTask, description: '' };
+  it("should handle empty description", async () => {
+    const taskNoDesc = { ...mockTask, description: "" };
 
     const mockPut = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => taskNoDesc,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNoDesc);
+    await updateTask("task-123", taskNoDesc);
 
     expect(mockPut).toHaveBeenCalledWith(
       expect.objectContaining({
         json: expect.objectContaining({
-          description: '',
+          description: "",
         }),
-      })
+      }),
     );
   });
 
-  it('should handle null/undefined userEmail with empty string', async () => {
+  it("should handle null/undefined userEmail with empty string", async () => {
     const taskNoUser = { ...mockTask, userEmail: undefined };
 
     const mockPut = vi.fn().mockResolvedValue({
@@ -290,28 +290,28 @@ describe('updateTask', () => {
       json: async () => taskNoUser,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('task-123', taskNoUser as unknown as Task);
+    await updateTask("task-123", taskNoUser as unknown as Task);
 
     const call = mockPut.mock.calls[0][0];
-    expect(call.json.userEmail).toBe('');
+    expect(call.json.userEmail).toBe("");
   });
 
-  it('should pass correct task ID in param', async () => {
+  it("should pass correct task ID in param", async () => {
     const mockPut = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockTask,
     });
 
-    ((client.task as any)[':id'].$put as any) = mockPut;
+    ((client.task as any)[":id"].$put as any) = mockPut;
 
-    await updateTask('specific-task-id', mockTask);
+    await updateTask("specific-task-id", mockTask);
 
     expect(mockPut).toHaveBeenCalledWith(
       expect.objectContaining({
-        param: { id: 'specific-task-id' },
-      })
+        param: { id: "specific-task-id" },
+      }),
     );
   });
 });

@@ -11,7 +11,12 @@
 
 import { eq, and, gte, lte, desc, like, or, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { activityTable, userTable, taskTable, projectTable } from "../../database/schema";
+import {
+  activityTable,
+  userTable,
+  taskTable,
+  projectTable,
+} from "../../database/schema";
 
 export interface AuditLog {
   id: string;
@@ -49,7 +54,10 @@ export interface AuditLogsResponse {
 
 function buildWorkspaceConditions(
   workspaceId: string,
-  filters: Pick<AuditLogFilters, "startDate" | "endDate" | "userEmail" | "action" | "searchTerm">
+  filters: Pick<
+    AuditLogFilters,
+    "startDate" | "endDate" | "userEmail" | "action" | "searchTerm"
+  >,
 ) {
   const conditions = [eq(projectTable.workspaceId, workspaceId)];
 
@@ -68,7 +76,7 @@ function buildWorkspaceConditions(
   if (filters.searchTerm) {
     const search = or(
       like(activityTable.type, `%${filters.searchTerm}%`),
-      like(taskTable.title, `%${filters.searchTerm}%`)
+      like(taskTable.title, `%${filters.searchTerm}%`),
     );
     if (search) {
       conditions.push(search);
@@ -80,7 +88,7 @@ function buildWorkspaceConditions(
 
 export default async function getAuditLogs(
   workspaceId: string,
-  filters: AuditLogFilters = {}
+  filters: AuditLogFilters = {},
 ): Promise<AuditLogsResponse> {
   const db = getDatabase();
 
@@ -150,7 +158,7 @@ export default async function getAuditLogs(
     total,
     page,
     pageSize,
-    totalPages
+    totalPages,
   };
 }
 
@@ -158,7 +166,7 @@ export default async function getAuditLogs(
 export async function getAuditStats(
   workspaceId: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
 ): Promise<{
   totalActions: number;
   actionsByType: Record<string, number>;
@@ -168,7 +176,10 @@ export async function getAuditStats(
 }> {
   const db = getDatabase();
 
-  const whereConditions = buildWorkspaceConditions(workspaceId, { startDate, endDate });
+  const whereConditions = buildWorkspaceConditions(workspaceId, {
+    startDate,
+    endDate,
+  });
 
   const baseQuery = () =>
     db
@@ -212,9 +223,7 @@ export async function getAuditStats(
 }
 
 // Get available filter options
-export async function getAuditFilterOptions(
-  workspaceId: string
-): Promise<{
+export async function getAuditFilterOptions(workspaceId: string): Promise<{
   actions: string[];
   entityTypes: string[];
   users: Array<{ email: string; name: string }>;
@@ -251,6 +260,6 @@ export async function getAuditFilterOptions(
     actions,
     // All activity rows are task activities in this schema
     entityTypes: ["task"],
-    users
+    users,
   };
 }

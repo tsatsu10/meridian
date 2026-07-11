@@ -4,12 +4,16 @@
 
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import React from "react";
+import type React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),
-  Link: ({ children, to, ...rest }: { children?: React.ReactNode; to?: string; [key: string]: unknown }) => (
+  Link: ({
+    children,
+    to,
+    ...rest
+  }: { children?: React.ReactNode; to?: string; [key: string]: unknown }) => (
     <a href={typeof to === "string" ? to : "#"} {...rest}>
       {children}
     </a>
@@ -194,7 +198,11 @@ vi.mock("@/components/dashboard/animated-stats-card", () => ({
   default: ({ title, value }: { title: string; value: number | string }) => (
     <div data-testid={`stat-card-${title.replace(/\s+/g, "-").toLowerCase()}`}>
       <span>{title}</span>
-      <span data-testid={`stat-value-${title.replace(/\s+/g, "-").toLowerCase()}`}>{value}</span>
+      <span
+        data-testid={`stat-value-${title.replace(/\s+/g, "-").toLowerCase()}`}
+      >
+        {value}
+      </span>
     </div>
   ),
 }));
@@ -234,7 +242,7 @@ describe("DashboardOverviewPage Integration", () => {
     render(
       <Wrapper>
         <DashboardOverviewPage />
-      </Wrapper>
+      </Wrapper>,
     );
 
     await waitFor(() => {
@@ -248,14 +256,20 @@ describe("DashboardOverviewPage Integration", () => {
     render(
       <Wrapper>
         <DashboardOverviewPage />
-      </Wrapper>
+      </Wrapper>,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("stat-value-total-tasks")).toHaveTextContent("25");
+      expect(screen.getByTestId("stat-value-total-tasks")).toHaveTextContent(
+        "25",
+      );
     });
-    expect(screen.getByTestId("stat-value-active-projects")).toHaveTextContent("2");
-    expect(screen.getByTestId("stat-value-team-members")).toHaveTextContent("5");
+    expect(screen.getByTestId("stat-value-active-projects")).toHaveTextContent(
+      "2",
+    );
+    expect(screen.getByTestId("stat-value-team-members")).toHaveTextContent(
+      "5",
+    );
   });
 
   it("lists projects from dashboard data", async () => {
@@ -263,7 +277,7 @@ describe("DashboardOverviewPage Integration", () => {
     render(
       <Wrapper>
         <DashboardOverviewPage />
-      </Wrapper>
+      </Wrapper>,
     );
 
     await waitFor(() => {
@@ -277,7 +291,7 @@ describe("DashboardOverviewPage Integration", () => {
     render(
       <Wrapper>
         <DashboardOverviewPage />
-      </Wrapper>
+      </Wrapper>,
     );
 
     await waitFor(() => {
@@ -292,11 +306,13 @@ describe("DashboardOverviewPage Integration", () => {
     render(
       <Wrapper>
         <DashboardOverviewPage />
-      </Wrapper>
+      </Wrapper>,
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /refresh/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -306,7 +322,7 @@ describe("DashboardOverviewPage Integration", () => {
       render(
         <Wrapper>
           <DashboardOverviewPage />
-        </Wrapper>
+        </Wrapper>,
       );
     }).not.toThrow();
   });
@@ -318,11 +334,13 @@ describe("DashboardOverviewPage Integration", () => {
     render(
       <Wrapper>
         <DashboardOverviewPage />
-      </Wrapper>
+      </Wrapper>,
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /refresh/i }),
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /refresh/i }));

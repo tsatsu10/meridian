@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { MemoryMonitor } from '@/utils/memory-optimization';
+import React, { createContext, useContext, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { MemoryMonitor } from "@/utils/memory-optimization";
 import { logger } from "@/lib/logger";
 
 // @epic-3.2-time: Memory management provider for optimal performance
@@ -18,13 +18,17 @@ interface MemoryCleanupContextType {
   isHighMemory: boolean;
 }
 
-const MemoryCleanupContext = createContext<MemoryCleanupContextType | null>(null);
+const MemoryCleanupContext = createContext<MemoryCleanupContextType | null>(
+  null,
+);
 
 interface MemoryCleanupProviderProps {
   children: React.ReactNode;
 }
 
-export function MemoryCleanupProvider({ children }: MemoryCleanupProviderProps) {
+export function MemoryCleanupProvider({
+  children,
+}: MemoryCleanupProviderProps) {
   const queryClient = useQueryClient();
   const memoryMonitor = MemoryMonitor.getInstance();
   const isHighMemoryRef = useRef(false);
@@ -47,11 +51,14 @@ export function MemoryCleanupProvider({ children }: MemoryCleanupProviderProps) 
 
       // Only cleanup if we have excessive queries (100+, was 50+)
       if (allQueries.length > 100) {
-        const staleQueries = allQueries.filter(query =>
-          query.isStale() && !(query as any).isFetching && query.state.dataUpdatedAt < Date.now() - 10 * 60 * 1000 // 10min old
+        const staleQueries = allQueries.filter(
+          (query) =>
+            query.isStale() &&
+            !(query as any).isFetching &&
+            query.state.dataUpdatedAt < Date.now() - 10 * 60 * 1000, // 10min old
         );
 
-        staleQueries.forEach(query => {
+        staleQueries.forEach((query) => {
           cache.remove(query);
         });
 
@@ -65,32 +72,34 @@ export function MemoryCleanupProvider({ children }: MemoryCleanupProviderProps) 
         const storageSize = JSON.stringify(localStorage).length;
         if (storageSize > 10 * 1024 * 1024) {
           const keysToKeep = [
-            'meridian-workspace-id',
-            'meridian-user-preferences',
-            'meridian-auth-token',
-            'meridian-ui-theme'
+            "meridian-workspace-id",
+            "meridian-user-preferences",
+            "meridian-auth-token",
+            "meridian-ui-theme",
           ];
 
           const itemsToRemove: string[] = [];
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && !keysToKeep.includes(key) && key.includes('cache')) {
+            if (key && !keysToKeep.includes(key) && key.includes("cache")) {
               itemsToRemove.push(key);
             }
           }
 
           if (itemsToRemove.length > 0) {
-            itemsToRemove.forEach(key => localStorage.removeItem(key));
-            logger.debug(`🧹 Cleaned up ${itemsToRemove.length} localStorage cache items`);
+            itemsToRemove.forEach((key) => localStorage.removeItem(key));
+            logger.debug(
+              `🧹 Cleaned up ${itemsToRemove.length} localStorage cache items`,
+            );
           }
         }
       } catch (e) {
-        console.warn('Failed to clean localStorage:', e);
+        console.warn("Failed to clean localStorage:", e);
       }
 
       lastCleanupRef.current = now;
     } catch (error) {
-      console.error('❌ Memory cleanup failed:', error);
+      console.error("❌ Memory cleanup failed:", error);
     }
   }, [queryClient]);
 
@@ -107,8 +116,11 @@ export function MemoryCleanupProvider({ children }: MemoryCleanupProviderProps) 
 
         // Rate limit logging to prevent spam
         const now = Date.now();
-        if (now - lastLogRef.current > 30000) { // Log at most once per 30 seconds
-          console.warn('🧠 High memory usage detected (>95%), triggering cleanup');
+        if (now - lastLogRef.current > 30000) {
+          // Log at most once per 30 seconds
+          console.warn(
+            "🧠 High memory usage detected (>95%), triggering cleanup",
+          );
           lastLogRef.current = now;
         }
 
@@ -125,14 +137,19 @@ export function MemoryCleanupProvider({ children }: MemoryCleanupProviderProps) 
     });
 
     // Gentle periodic cleanup - every 10 minutes (was 5 minutes)
-    const cleanupInterval = setInterval(() => {
-      const usage = memoryMonitor.getCurrentUsage();
-      // Only cleanup if memory is truly high (>92%, was >90%)
-      if (usage > 0.92) {
-        logger.debug(`🧠 Periodic cleanup triggered (memory: ${Math.round(usage * 100)}%)`);
-        performCleanup();
-      }
-    }, 10 * 60 * 1000); // Every 10 minutes
+    const cleanupInterval = setInterval(
+      () => {
+        const usage = memoryMonitor.getCurrentUsage();
+        // Only cleanup if memory is truly high (>92%, was >90%)
+        if (usage > 0.92) {
+          logger.debug(
+            `🧠 Periodic cleanup triggered (memory: ${Math.round(usage * 100)}%)`,
+          );
+          performCleanup();
+        }
+      },
+      10 * 60 * 1000,
+    ); // Every 10 minutes
 
     return () => {
       unsubscribe();
@@ -144,7 +161,7 @@ export function MemoryCleanupProvider({ children }: MemoryCleanupProviderProps) 
   const contextValue: MemoryCleanupContextType = {
     performCleanup,
     getCurrentUsage,
-    isHighMemory
+    isHighMemory,
   };
 
   return (
@@ -167,7 +184,9 @@ export function MemoryCleanupProvider({ children }: MemoryCleanupProviderProps) 
 export function useMemoryCleanup() {
   const context = useContext(MemoryCleanupContext);
   if (!context) {
-    throw new Error('useMemoryCleanup must be used within a MemoryCleanupProvider');
+    throw new Error(
+      "useMemoryCleanup must be used within a MemoryCleanupProvider",
+    );
   }
   return context;
-} 
+}

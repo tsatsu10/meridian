@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
@@ -117,25 +117,34 @@ function TaskDetailsPage() {
     }
   }, [deleteTask, taskId, handleBack]);
 
-  const toggleSection = useCallback((section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  }, []);
+  const toggleSection = useCallback(
+    (section: keyof typeof expandedSections) => {
+      setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+    },
+    [],
+  );
 
   // 📊 Computed Values
-  const statusColor = ({
-    todo: "bg-zinc-500",
-    in_progress: "bg-blue-500",
-    review: "bg-amber-500",
-    done: "bg-green-500",
-    blocked: "bg-red-500",
-  } as Record<string, string>)[task?.status || "todo"] ?? "bg-zinc-500";
+  const statusColor =
+    (
+      {
+        todo: "bg-zinc-500",
+        in_progress: "bg-blue-500",
+        review: "bg-amber-500",
+        done: "bg-green-500",
+        blocked: "bg-red-500",
+      } as Record<string, string>
+    )[task?.status || "todo"] ?? "bg-zinc-500";
 
-  const priorityColor = ({
-    low: "text-zinc-600 dark:text-zinc-400",
-    medium: "text-blue-600 dark:text-blue-400",
-    high: "text-amber-600 dark:text-amber-400",
-    urgent: "text-red-600 dark:text-red-400",
-  } as Record<string, string>)[task?.priority || "medium"] ?? "text-blue-600 dark:text-blue-400";
+  const priorityColor =
+    (
+      {
+        low: "text-zinc-600 dark:text-zinc-400",
+        medium: "text-blue-600 dark:text-blue-400",
+        high: "text-amber-600 dark:text-amber-400",
+        urgent: "text-red-600 dark:text-red-400",
+      } as Record<string, string>
+    )[task?.priority || "medium"] ?? "text-blue-600 dark:text-blue-400";
 
   // 🎨 Loading State
   if (isLoading) {
@@ -248,7 +257,10 @@ function TaskDetailsPage() {
                     Share Task
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    className="text-red-600"
+                  >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Task
                   </DropdownMenuItem>
@@ -298,7 +310,9 @@ function TaskDetailsPage() {
                     </Button>
                   }
                 >
-                  <p className="text-sm text-muted-foreground">No subtasks yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    No subtasks yet
+                  </p>
                 </Section>
 
                 {/* Comments Section */}
@@ -327,7 +341,9 @@ function TaskDetailsPage() {
                     </Button>
                   }
                 >
-                  <p className="text-sm text-muted-foreground">No files attached</p>
+                  <p className="text-sm text-muted-foreground">
+                    No files attached
+                  </p>
                 </Section>
 
                 {/* Activity Section */}
@@ -362,7 +378,9 @@ function TaskDetailsPage() {
 
                   {/* Priority */}
                   <InfoRow label="Priority">
-                    <span className={cn("capitalize font-medium", priorityColor)}>
+                    <span
+                      className={cn("capitalize font-medium", priorityColor)}
+                    >
                       {task.priority}
                     </span>
                   </InfoRow>
@@ -379,7 +397,9 @@ function TaskDetailsPage() {
                         <span className="text-sm">{task.userEmail}</span>
                       </div>
                     ) : (
-                      <span className="text-sm text-muted-foreground">Unassigned</span>
+                      <span className="text-sm text-muted-foreground">
+                        Unassigned
+                      </span>
                     )}
                   </InfoRow>
 
@@ -390,7 +410,9 @@ function TaskDetailsPage() {
                         {format(new Date(task.dueDate), "MMM d, yyyy")}
                       </span>
                     ) : (
-                      <span className="text-sm text-muted-foreground">Not set</span>
+                      <span className="text-sm text-muted-foreground">
+                        Not set
+                      </span>
                     )}
                   </InfoRow>
 
@@ -420,7 +442,9 @@ function TaskDetailsPage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Time Tracked</span>
+                      <span className="text-muted-foreground">
+                        Time Tracked
+                      </span>
                       <span className="font-medium">0h</span>
                     </div>
                   </div>
@@ -481,7 +505,7 @@ function Section({
           onClick={onToggle}
           className="flex-1 flex items-center gap-3 text-left"
           aria-expanded={isExpanded}
-          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title} section`}
+          aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title} section`}
         >
           {icon && <div className="text-muted-foreground">{icon}</div>}
           <h2 className="font-semibold text-base">{title}</h2>
@@ -492,7 +516,7 @@ function Section({
           <button
             onClick={onToggle}
             className="p-1 hover:bg-muted rounded transition-colors"
-            aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title} section`}
+            aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title} section`}
           >
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}

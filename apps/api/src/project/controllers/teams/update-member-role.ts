@@ -1,19 +1,19 @@
 /**
  * Update Team Member Role Controller
- * 
+ *
  * Updates the role of a team member
- * 
+ *
  * @epic-3.4-teams: Change member role functionality
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../../database/connection";
-import logger from '../../../utils/logger';
-import { 
+import logger from "../../../utils/logger";
+import {
   teams,
   teamMembers,
-  userTable as users
+  userTable as users,
 } from "../../../database/schema";
 
 interface UpdateRoleRequest {
@@ -25,7 +25,10 @@ async function updateMemberRole(c: Context) {
   const { projectId, teamId, memberId } = c.req.param();
 
   if (!projectId || !teamId || !memberId) {
-    return c.json({ error: "Project ID, Team ID, and Member ID are required" }, 400);
+    return c.json(
+      { error: "Project ID, Team ID, and Member ID are required" },
+      400,
+    );
   }
 
   try {
@@ -34,7 +37,7 @@ async function updateMemberRole(c: Context) {
       where: and(
         eq(teams.id, teamId),
         eq(teams.projectId, projectId),
-        eq(teams.isActive, true)
+        eq(teams.isActive, true),
       ),
     });
 
@@ -44,10 +47,7 @@ async function updateMemberRole(c: Context) {
 
     // Verify member exists in team
     const existingMember = await db.query.teamMembers.findFirst({
-      where: and(
-        eq(teamMembers.id, memberId),
-        eq(teamMembers.teamId, teamId)
-      ),
+      where: and(eq(teamMembers.id, memberId), eq(teamMembers.teamId, teamId)),
     });
 
     if (!existingMember) {
@@ -95,5 +95,3 @@ async function updateMemberRole(c: Context) {
 }
 
 export default updateMemberRole;
-
-

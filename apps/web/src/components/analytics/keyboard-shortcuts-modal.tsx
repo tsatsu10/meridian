@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Keyboard, Command } from "lucide-react";
@@ -55,7 +61,10 @@ const KeyBadge = ({ keyName }: { keyName: string }) => (
   </Badge>
 );
 
-export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcutsModalProps) {
+export function KeyboardShortcutsModal({
+  open,
+  onOpenChange,
+}: KeyboardShortcutsModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -84,9 +93,14 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
                     <span className="text-sm">{shortcut.description}</span>
                     <div className="flex items-center gap-1">
                       {shortcut.keys.map((key, keyIndex) => (
-                        <span key={keyIndex} className="flex items-center gap-1">
+                        <span
+                          key={keyIndex}
+                          className="flex items-center gap-1"
+                        >
                           {keyIndex > 0 && (
-                            <span className="text-muted-foreground text-xs">+</span>
+                            <span className="text-muted-foreground text-xs">
+                              +
+                            </span>
                           )}
                           <KeyBadge keyName={key} />
                         </span>
@@ -104,8 +118,9 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
               <div className="space-y-1">
                 <p className="text-sm font-medium">Pro Tip</p>
                 <p className="text-xs text-muted-foreground">
-                  On Mac, "Ctrl" is replaced with "Cmd" (⌘). Most shortcuts work across all
-                  platforms. Press <KeyBadge keyName="?" /> at any time to show this guide.
+                  On Mac, "Ctrl" is replaced with "Cmd" (⌘). Most shortcuts work
+                  across all platforms. Press <KeyBadge keyName="?" /> at any
+                  time to show this guide.
                 </p>
               </div>
             </div>
@@ -115,4 +130,3 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
     </Dialog>
   );
 }
-

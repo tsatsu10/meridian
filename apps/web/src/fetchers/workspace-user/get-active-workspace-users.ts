@@ -6,7 +6,9 @@ export type GetActiveWorkspaceUsersRequest = { workspaceId: string };
 async function getActiveWorkspaceUsers({
   workspaceId,
 }: GetActiveWorkspaceUsersRequest) {
-  const response = await (client as any)["workspace-user"][":workspaceId"].active.$get({
+  const response = await (client as any)["workspace-user"][
+    ":workspaceId"
+  ].active.$get({
     param: { workspaceId },
   });
 

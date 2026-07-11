@@ -52,22 +52,23 @@ export default function NotificationAnalyticsModal({
   );
 
   // Calculate read rate
-  const readRate = stats.total > 0 ? ((stats.read / stats.total) * 100).toFixed(1) : "0";
+  const readRate =
+    stats.total > 0 ? ((stats.read / stats.total) * 100).toFixed(1) : "0";
 
   // Calculate average response time (time to mark as read)
   const calculateAverageResponseTime = () => {
-    const readNotifications = notifications.filter(n => n.isRead);
+    const readNotifications = notifications.filter((n) => n.isRead);
     if (readNotifications.length === 0) return "N/A";
-    
+
     const totalMinutes = readNotifications.reduce((acc, notif) => {
       const created = new Date(notif.createdAt).getTime();
       const now = Date.now();
       const minutes = (now - created) / (1000 * 60);
       return acc + minutes;
     }, 0);
-    
+
     const avgMinutes = totalMinutes / readNotifications.length;
-    
+
     if (avgMinutes < 60) {
       return `${Math.round(avgMinutes)} minutes`;
     } else if (avgMinutes < 1440) {
@@ -78,11 +79,13 @@ export default function NotificationAnalyticsModal({
   };
 
   // Get most common notification type
-  const mostCommonType = Object.entries(typeDistribution)
-    .sort(([, a], [, b]) => b - a)[0]?.[0] || "N/A";
+  const mostCommonType =
+    Object.entries(typeDistribution).sort(([, a], [, b]) => b - a)[0]?.[0] ||
+    "N/A";
 
   // Calculate important rate
-  const importantRate = stats.total > 0 ? ((stats.important / stats.total) * 100).toFixed(1) : 0;
+  const importantRate =
+    stats.total > 0 ? ((stats.important / stats.total) * 100).toFixed(1) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,7 +141,9 @@ export default function NotificationAnalyticsModal({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{calculateAverageResponseTime()}</div>
+                <div className="text-3xl font-bold">
+                  {calculateAverageResponseTime()}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Time to mark as read
                 </p>
@@ -167,7 +172,11 @@ export default function NotificationAnalyticsModal({
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">{count}</span>
                         <span className="text-xs text-muted-foreground">
-                          ({stats.total > 0 ? ((count / stats.total) * 100).toFixed(0) : 0}%)
+                          (
+                          {stats.total > 0
+                            ? ((count / stats.total) * 100).toFixed(0)
+                            : 0}
+                          %)
                         </span>
                       </div>
                     </div>
@@ -193,7 +202,12 @@ export default function NotificationAnalyticsModal({
                     <div>
                       <p className="font-medium text-sm">Most Common Type</p>
                       <p className="text-xs text-muted-foreground">
-                        Your most frequent notification type is <Badge variant="secondary" className="capitalize">{mostCommonType}</Badge> with {typeDistribution[mostCommonType] || 0} notifications
+                        Your most frequent notification type is{" "}
+                        <Badge variant="secondary" className="capitalize">
+                          {mostCommonType}
+                        </Badge>{" "}
+                        with {typeDistribution[mostCommonType] || 0}{" "}
+                        notifications
                       </p>
                     </div>
                   </div>
@@ -205,9 +219,12 @@ export default function NotificationAnalyticsModal({
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
                     <div>
-                      <p className="font-medium text-sm">Important Notifications</p>
+                      <p className="font-medium text-sm">
+                        Important Notifications
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {importantRate}% of your notifications are marked as important ({stats.important} of {stats.total})
+                        {importantRate}% of your notifications are marked as
+                        important ({stats.important} of {stats.total})
                       </p>
                     </div>
                   </div>
@@ -219,10 +236,14 @@ export default function NotificationAnalyticsModal({
                   <div className="flex items-start gap-3">
                     <Mail className="h-5 w-5 text-primary mt-0.5" />
                     <div>
-                      <p className="font-medium text-sm">Unread Notifications</p>
+                      <p className="font-medium text-sm">
+                        Unread Notifications
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        You have {stats.unread} unread notifications waiting for your attention
-                        {stats.unread > 10 && " (consider reviewing and archiving old ones)"}
+                        You have {stats.unread} unread notifications waiting for
+                        your attention
+                        {stats.unread > 10 &&
+                          " (consider reviewing and archiving old ones)"}
                       </p>
                     </div>
                   </div>
@@ -235,9 +256,12 @@ export default function NotificationAnalyticsModal({
                     <div className="flex items-start gap-3">
                       <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
                       <div>
-                        <p className="font-medium text-sm">Pinned Notifications</p>
+                        <p className="font-medium text-sm">
+                          Pinned Notifications
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          You have {stats.pinned} pinned notifications for quick access
+                          You have {stats.pinned} pinned notifications for quick
+                          access
                         </p>
                       </div>
                     </div>
@@ -256,25 +280,37 @@ export default function NotificationAnalyticsModal({
               {stats.unread > 20 && (
                 <div className="flex items-start gap-2">
                   <span className="text-orange-600">•</span>
-                  <p>You have many unread notifications. Consider using batch operations to mark multiple as read at once.</p>
+                  <p>
+                    You have many unread notifications. Consider using batch
+                    operations to mark multiple as read at once.
+                  </p>
                 </div>
               )}
-              {parseFloat(readRate) < 50 && stats.total > 10 && (
+              {Number.parseFloat(readRate) < 50 && stats.total > 10 && (
                 <div className="flex items-start gap-2">
                   <span className="text-orange-600">•</span>
-                  <p>Your read rate is below 50%. Archive old notifications to keep your inbox clean.</p>
+                  <p>
+                    Your read rate is below 50%. Archive old notifications to
+                    keep your inbox clean.
+                  </p>
                 </div>
               )}
               {stats.pinned === 0 && (
                 <div className="flex items-start gap-2">
                   <span className="text-blue-600">•</span>
-                  <p>Pin important notifications to keep them at the top of your list for quick access.</p>
+                  <p>
+                    Pin important notifications to keep them at the top of your
+                    list for quick access.
+                  </p>
                 </div>
               )}
               {Object.keys(typeDistribution).length > 1 && (
                 <div className="flex items-start gap-2">
                   <span className="text-green-600">•</span>
-                  <p>Use filters to focus on specific notification types for better productivity.</p>
+                  <p>
+                    Use filters to focus on specific notification types for
+                    better productivity.
+                  </p>
                 </div>
               )}
             </div>
@@ -284,4 +320,3 @@ export default function NotificationAnalyticsModal({
     </Dialog>
   );
 }
-

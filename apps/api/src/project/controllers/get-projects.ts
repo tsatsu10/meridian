@@ -60,7 +60,9 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
     sortOrder,
   });
 
-  const { initializeDatabase, getDatabase } = await import("../../database/connection");
+  const { initializeDatabase, getDatabase } = await import(
+    "../../database/connection"
+  );
   await initializeDatabase();
   const db = getDatabase();
 
@@ -76,7 +78,10 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
   if (q) {
     const term = `%${q}%`;
     whereConditions.push(
-      or(ilike(projectTable.name, term), ilike(projectTable.description, term))!,
+      or(
+        ilike(projectTable.name, term),
+        ilike(projectTable.description, term),
+      )!,
     );
   }
 
@@ -85,7 +90,12 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
   }
   if (options?.priority?.length) {
     // request-boundary narrowing onto the enum column
-    whereConditions.push(inArray(projectTable.priority, options.priority as ("low" | "medium" | "high" | "urgent")[]));
+    whereConditions.push(
+      inArray(
+        projectTable.priority,
+        options.priority as ("low" | "medium" | "high" | "urgent")[],
+      ),
+    );
   }
   if (options?.ownerIds?.length) {
     whereConditions.push(inArray(projectTable.ownerId, options.ownerIds));

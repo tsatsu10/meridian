@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * Fix Database Enum - Add Missing User Roles
- * 
+ *
  * This script adds the missing user role enum values to the database.
  */
 
@@ -14,26 +14,27 @@ import logger from "../../utils/logger";
 
 async function fixEnum() {
   logger.info("🔧 Fixing user_role enum...\n");
-  
+
   try {
     await initializeDatabase();
     const db = getDatabase();
-    
+
     logger.info("📝 Adding missing enum values...");
-    
+
     const enumValues = [
-      'workspace-manager',
-      'team-lead',
-      'project-manager',
-      'department-head',
-      'project-viewer',
-      'guest'
+      "workspace-manager",
+      "team-lead",
+      "project-manager",
+      "department-head",
+      "project-viewer",
+      "guest",
     ];
-    
+
     for (const value of enumValues) {
       try {
         logger.info(`   Adding '${value}'...`);
-        await db.execute(sql.raw(`
+        await db.execute(
+          sql.raw(`
           DO $$ 
           BEGIN
             IF NOT EXISTS (
@@ -44,20 +45,22 @@ async function fixEnum() {
               ALTER TYPE user_role ADD VALUE '${value}';
             END IF;
           END $$;
-        `));
+        `),
+        );
         logger.info(`   ✅ '${value}' added or already exists`);
       } catch (err: any) {
-        if (err.message.includes('already exists')) {
+        if (err.message.includes("already exists")) {
           logger.info(`   ⏭️  '${value}' already exists`);
         } else {
           logger.error(`   ❌ Failed to add '${value}': ${err.message}`);
         }
       }
     }
-    
+
     logger.info("\n✅ Enum fix complete!");
-    logger.info("\n📋 Next step: Run 'pnpm run seed:all' to populate database\n");
-    
+    logger.info(
+      "\n📋 Next step: Run 'pnpm run seed:all' to populate database\n",
+    );
   } catch (error) {
     logger.error("❌ Error fixing enum:", error);
     throw error;
@@ -75,4 +78,3 @@ if (require.main === module) {
 }
 
 export default fixEnum;
-

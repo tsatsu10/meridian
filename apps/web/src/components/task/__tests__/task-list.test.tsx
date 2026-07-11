@@ -1,6 +1,6 @@
 /**
  * Task List Component Tests
- * 
+ *
  * Tests task list functionality:
  * - Task rendering
  * - Filtering
@@ -9,11 +9,11 @@
  * - Bulk actions
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { TestWrapper } from '../../../test-utils/test-wrapper';
-import React from 'react';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { TestWrapper } from "../../../test-utils/test-wrapper";
+import React from "react";
 
 interface Task {
   id: string;
@@ -39,10 +39,10 @@ function TaskList({ tasks = [], onTaskClick }: TaskListProps) {
   };
 
   const handleSelectTask = (taskId: string) => {
-    setSelectedTasks(prev =>
+    setSelectedTasks((prev) =>
       prev.includes(taskId)
-        ? prev.filter(id => id !== taskId)
-        : [...prev, taskId]
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId],
     );
   };
 
@@ -54,7 +54,7 @@ function TaskList({ tasks = [], onTaskClick }: TaskListProps) {
         <p>No tasks found</p>
       ) : (
         <ul>
-          {tasks.map(task => (
+          {tasks.map((task) => (
             <li key={task.id} data-testid={`task-${task.id}`}>
               <input
                 type="checkbox"
@@ -66,7 +66,9 @@ function TaskList({ tasks = [], onTaskClick }: TaskListProps) {
                 <span className="title">{task.title}</span>
                 <span className="status">{task.status}</span>
                 <span className="priority">{task.priority}</span>
-                {task.assignee && <span className="assignee">{task.assignee}</span>}
+                {task.assignee && (
+                  <span className="assignee">{task.assignee}</span>
+                )}
               </button>
             </li>
           ))}
@@ -82,90 +84,94 @@ function TaskList({ tasks = [], onTaskClick }: TaskListProps) {
   );
 }
 
-describe('Task List Component', () => {
+describe("Task List Component", () => {
   const mockTasks: Task[] = [
     {
-      id: 'task-1',
-      title: 'Implement login',
-      status: 'todo',
-      priority: 'high',
-      assignee: 'John Doe',
+      id: "task-1",
+      title: "Implement login",
+      status: "todo",
+      priority: "high",
+      assignee: "John Doe",
     },
     {
-      id: 'task-2',
-      title: 'Fix bug in dashboard',
-      status: 'in_progress',
-      priority: 'urgent',
+      id: "task-2",
+      title: "Fix bug in dashboard",
+      status: "in_progress",
+      priority: "urgent",
     },
     {
-      id: 'task-3',
-      title: 'Update documentation',
-      status: 'done',
-      priority: 'low',
-      assignee: 'Jane Smith',
+      id: "task-3",
+      title: "Update documentation",
+      status: "done",
+      priority: "low",
+      assignee: "Jane Smith",
     },
   ];
 
-  it('should render task list', () => {
+  it("should render task list", () => {
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
-    expect(screen.getByRole('region', { name: /task list/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /tasks/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /task list/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /tasks/i })).toBeInTheDocument();
   });
 
-  it('should display task count', () => {
+  it("should display task count", () => {
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
     expect(screen.getByText(/tasks \(3\)/i)).toBeInTheDocument();
   });
 
-  it('should render all tasks', () => {
+  it("should render all tasks", () => {
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Implement login')).toBeInTheDocument();
-    expect(screen.getByText('Fix bug in dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Update documentation')).toBeInTheDocument();
+    expect(screen.getByText("Implement login")).toBeInTheDocument();
+    expect(screen.getByText("Fix bug in dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Update documentation")).toBeInTheDocument();
   });
 
-  it('should display task status', () => {
+  it("should display task status", () => {
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
-    const task1 = screen.getByTestId('task-task-1');
-    expect(within(task1).getByText('todo')).toBeInTheDocument();
+    const task1 = screen.getByTestId("task-task-1");
+    expect(within(task1).getByText("todo")).toBeInTheDocument();
   });
 
-  it('should display task priority', () => {
+  it("should display task priority", () => {
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
-    const task2 = screen.getByTestId('task-task-2');
-    expect(within(task2).getByText('urgent')).toBeInTheDocument();
+    const task2 = screen.getByTestId("task-task-2");
+    expect(within(task2).getByText("urgent")).toBeInTheDocument();
   });
 
-  it('should display assignee when present', () => {
+  it("should display assignee when present", () => {
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText("John Doe")).toBeInTheDocument();
   });
 
-  it('should show empty state when no tasks', () => {
+  it("should show empty state when no tasks", () => {
     render(<TaskList tasks={[]} />, { wrapper: TestWrapper });
 
     expect(screen.getByText(/no tasks found/i)).toBeInTheDocument();
   });
 
-  it('should handle task click', async () => {
+  it("should handle task click", async () => {
     const user = userEvent.setup();
     const onTaskClick = vi.fn();
 
-    render(<TaskList tasks={mockTasks} onTaskClick={onTaskClick} />, { wrapper: TestWrapper });
+    render(<TaskList tasks={mockTasks} onTaskClick={onTaskClick} />, {
+      wrapper: TestWrapper,
+    });
 
-    const task1 = screen.getByTestId('task-task-1');
-    await user.click(within(task1).getByRole('button'));
+    const task1 = screen.getByTestId("task-task-1");
+    await user.click(within(task1).getByRole("button"));
 
-    expect(onTaskClick).toHaveBeenCalledWith('task-1');
+    expect(onTaskClick).toHaveBeenCalledWith("task-1");
   });
 
-  it('should select tasks', async () => {
+  it("should select tasks", async () => {
     const user = userEvent.setup();
 
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
@@ -173,10 +179,10 @@ describe('Task List Component', () => {
     const checkbox = screen.getByLabelText(/select implement login/i);
     await user.click(checkbox);
 
-    expect(screen.getByTestId('bulk-actions')).toHaveTextContent('1 selected');
+    expect(screen.getByTestId("bulk-actions")).toHaveTextContent("1 selected");
   });
 
-  it('should select multiple tasks', async () => {
+  it("should select multiple tasks", async () => {
     const user = userEvent.setup();
 
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
@@ -184,31 +190,34 @@ describe('Task List Component', () => {
     await user.click(screen.getByLabelText(/select implement login/i));
     await user.click(screen.getByLabelText(/select fix bug/i));
 
-    expect(screen.getByTestId('bulk-actions')).toHaveTextContent('2 selected');
+    expect(screen.getByTestId("bulk-actions")).toHaveTextContent("2 selected");
   });
 
-  it('should deselect tasks', async () => {
+  it("should deselect tasks", async () => {
     const user = userEvent.setup();
 
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
     const checkbox = screen.getByLabelText(/select implement login/i);
-    
+
     await user.click(checkbox); // Select
-    expect(screen.getByTestId('bulk-actions')).toBeInTheDocument();
+    expect(screen.getByTestId("bulk-actions")).toBeInTheDocument();
 
     await user.click(checkbox); // Deselect
-    expect(screen.queryByTestId('bulk-actions')).not.toBeInTheDocument();
+    expect(screen.queryByTestId("bulk-actions")).not.toBeInTheDocument();
   });
 
-  it('should be accessible', () => {
+  it("should be accessible", () => {
     render(<TaskList tasks={mockTasks} />, { wrapper: TestWrapper });
 
     // Should have accessible region
-    expect(screen.getByRole('region', { name: /task list/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /task list/i }),
+    ).toBeInTheDocument();
 
     // Checkboxes should have labels
-    expect(screen.getByLabelText(/select implement login/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/select implement login/i),
+    ).toBeInTheDocument();
   });
 });
-

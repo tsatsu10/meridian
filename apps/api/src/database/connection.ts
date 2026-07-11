@@ -1,34 +1,34 @@
 // PostgreSQL database connection for production with Neon
 // Provides reliable cloud database connection
 
-import { drizzle } from 'drizzle-orm/postgres-js';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from "drizzle-orm/postgres-js";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 // Schema: use `./schema` (schema.ts) as the single source of truth for typings and migrations.
-import * as schema from './schema';
-import logger from '../utils/logger';
+import * as schema from "./schema";
+import logger from "../utils/logger";
 
 /** Drizzle client typed with the full schema (fixes `db.query` / `.query.*` inference). */
 export type MeridianDatabase = PostgresJsDatabase<typeof schema>;
 
 /** TLS for postgres.js: off on loopback; on for remote. Override with DATABASE_SSL=true|false */
-function resolvePostgresSsl(databaseUrl: string): boolean | 'require' {
+function resolvePostgresSsl(databaseUrl: string): boolean | "require" {
   const override = process.env.DATABASE_SSL;
-  if (override === 'true') return 'require';
-  if (override === 'false') return false;
+  if (override === "true") return "require";
+  if (override === "false") return false;
 
   try {
-    const normalized = databaseUrl.replace(/^postgres(ql)?:\/\//, 'http://');
+    const normalized = databaseUrl.replace(/^postgres(ql)?:\/\//, "http://");
     const url = new URL(normalized);
     const host = url.hostname.toLowerCase();
     const isLocal =
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      host === '::1' ||
-      host.endsWith('.local');
-    return isLocal ? false : 'require';
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "::1" ||
+      host.endsWith(".local");
+    return isLocal ? false : "require";
   } catch {
-    return 'require';
+    return "require";
   }
 }
 
@@ -40,7 +40,7 @@ declare global {
 }
 
 // Initialize globals if not present
-if (typeof global.__meridian_db__ === 'undefined') {
+if (typeof global.__meridian_db__ === "undefined") {
   global.__meridian_db__ = null;
   global.__meridian_sql__ = null;
   global.__meridian_db_initialized__ = false;
@@ -51,16 +51,16 @@ if (typeof global.__meridian_db__ === 'undefined') {
  */
 export async function initializeDatabase() {
   if (global.__meridian_db__ && global.__meridian_db_initialized__) {
-    logger.info('✅ Database already initialized, returning existing instance');
+    logger.info("✅ Database already initialized, returning existing instance");
     return global.__meridian_db__;
   }
 
   try {
-    logger.info('🗃️ Initializing PostgreSQL database connection...');
+    logger.info("🗃️ Initializing PostgreSQL database connection...");
 
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
-      throw new Error('DATABASE_URL environment variable is required');
+      throw new Error("DATABASE_URL environment variable is required");
     }
 
     // Local Postgres (localhost) is usually non-TLS; cloud hosts need SSL.
@@ -84,11 +84,10 @@ export async function initializeDatabase() {
 
     global.__meridian_db__ = drizzle(global.__meridian_sql__, { schema });
     global.__meridian_db_initialized__ = true;
-    logger.info('✅ PostgreSQL database initialized successfully');
+    logger.info("✅ PostgreSQL database initialized successfully");
     return global.__meridian_db__;
-
   } catch (error) {
-    logger.error('❌ Failed to initialize database:', error);
+    logger.error("❌ Failed to initialize database:", error);
     throw error;
   }
 }
@@ -98,8 +97,10 @@ export async function initializeDatabase() {
  */
 export function getDatabase(): MeridianDatabase {
   if (!global.__meridian_db__ || !global.__meridian_db_initialized__) {
-    logger.error('❌ Database not initialized when getDatabase() was called');
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    logger.error("❌ Database not initialized when getDatabase() was called");
+    throw new Error(
+      "Database not initialized. Call initializeDatabase() first.",
+    );
   }
 
   return global.__meridian_db__;
@@ -114,7 +115,7 @@ export async function closeDatabase() {
     global.__meridian_sql__ = null;
     global.__meridian_db__ = null;
     global.__meridian_db_initialized__ = false;
-    logger.info('🗃️ PostgreSQL database connection closed');
+    logger.info("🗃️ PostgreSQL database connection closed");
   }
 }
 
@@ -124,15 +125,15 @@ export async function closeDatabase() {
 export async function checkDatabaseHealth() {
   try {
     if (!global.__meridian_sql__) {
-      return { healthy: false, message: 'Database not connected' };
+      return { healthy: false, message: "Database not connected" };
     }
 
     await global.__meridian_sql__`SELECT 1 as health_check`;
-    return { healthy: true, message: 'Database connection healthy' };
+    return { healthy: true, message: "Database connection healthy" };
   } catch (error) {
     return {
       healthy: false,
-      message: `Database health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      message: `Database health check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     };
   }
 }
@@ -141,15 +142,17 @@ export async function checkDatabaseHealth() {
 export { closeDatabase as closeDatabaseConnection };
 export { checkDatabaseHealth as testDatabaseConnection };
 
-export function getDatabaseType(): 'postgresql' {
-  return 'postgresql';
+export function getDatabaseType(): "postgresql" {
+  return "postgresql";
 }
 
 export function getDatabaseStats() {
   return {
-    type: 'postgresql',
+    type: "postgresql",
     isConnected: !!global.__meridian_db__,
-    url: process.env.DATABASE_URL ? 'postgresql://***:***@neon.tech/***' : 'Not configured'
+    url: process.env.DATABASE_URL
+      ? "postgresql://***:***@neon.tech/***"
+      : "Not configured",
   };
 }
 
@@ -168,15 +171,14 @@ export function getRawSQLClient() {
     query: async (query: string) => {
       try {
         if (!global.__meridian_sql__) {
-          throw new Error('Database connection closed');
+          throw new Error("Database connection closed");
         }
         const result = await global.__meridian_sql__.unsafe(query);
         return { rows: result };
       } catch (error) {
-        logger.error('Raw SQL query failed:', error);
+        logger.error("Raw SQL query failed:", error);
         throw error; // Let validator handle the error properly
       }
-    }
+    },
   };
 }
-

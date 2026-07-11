@@ -7,10 +7,12 @@ interface NotificationSectionProps {
   allNotifications: any[];
 }
 
-export default function NotificationSection({ allNotifications }: NotificationSectionProps) {
+export default function NotificationSection({
+  allNotifications,
+}: NotificationSectionProps) {
   const notifications = allNotifications || [];
   const recentNotifications = notifications.slice(0, 5);
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <Card
@@ -24,7 +26,11 @@ export default function NotificationSection({ allNotifications }: NotificationSe
             id="notifications-heading"
             className="text-lg flex items-center gap-2"
           >
-            <Bell className="h-5 w-5 text-blue-600" aria-hidden="true" data-testid="bell-icon" />
+            <Bell
+              className="h-5 w-5 text-blue-600"
+              aria-hidden="true"
+              data-testid="bell-icon"
+            />
             Recent Activity
           </CardTitle>
           {unreadCount > 0 && (
@@ -42,8 +48,7 @@ export default function NotificationSection({ allNotifications }: NotificationSe
             ? "No recent notifications to display."
             : unreadCount === 0
               ? `Showing ${recentNotifications.length} most recent notifications out of ${notifications.length} total. All notifications are read.`
-              : `Showing ${recentNotifications.length} most recent notifications out of ${notifications.length} total. ${unreadCount} notifications are unread and require attention.`
-          }
+              : `Showing ${recentNotifications.length} most recent notifications out of ${notifications.length} total. ${unreadCount} notifications are unread and require attention.`}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -53,7 +58,11 @@ export default function NotificationSection({ allNotifications }: NotificationSe
             role="status"
             aria-label="No recent activity available"
           >
-            <Bell className="h-6 w-6 mx-auto mb-2 opacity-50" aria-hidden="true" data-testid="bell-icon-empty" />
+            <Bell
+              className="h-6 w-6 mx-auto mb-2 opacity-50"
+              aria-hidden="true"
+              data-testid="bell-icon-empty"
+            />
             <p className="text-sm">No recent activity</p>
           </div>
         ) : (
@@ -67,7 +76,9 @@ export default function NotificationSection({ allNotifications }: NotificationSe
                 key={`${notification.id}-${index}`}
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-lg border transition-colors",
-                  notification.isRead ? "bg-gray-50" : "bg-blue-50 border-blue-200"
+                  notification.isRead
+                    ? "bg-gray-50"
+                    : "bg-blue-50 border-blue-200",
                 )}
                 role="article"
                 aria-labelledby={`notification-title-${index}`}
@@ -75,10 +86,16 @@ export default function NotificationSection({ allNotifications }: NotificationSe
                 tabIndex={0}
               >
                 <div className="mt-0.5" aria-hidden="true">
-                  {notification.title.includes('🚨') ? (
-                    <AlertTriangle className="h-4 w-4 text-red-500" data-testid="alert-triangle-icon" />
+                  {notification.title.includes("🚨") ? (
+                    <AlertTriangle
+                      className="h-4 w-4 text-red-500"
+                      data-testid="alert-triangle-icon"
+                    />
                   ) : (
-                    <Target className="h-4 w-4 text-blue-500" data-testid="target-icon" />
+                    <Target
+                      className="h-4 w-4 text-blue-500"
+                      data-testid="target-icon"
+                    />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -119,9 +136,11 @@ export default function NotificationSection({ allNotifications }: NotificationSe
                   />
                 )}
                 <div className="sr-only">
-                  {!notification.isRead ? "Unread notification" : "Read notification"}.
-                  Priority: {notification.priority}.
-                  Received on {new Date(notification.timestamp).toLocaleDateString()}.
+                  {!notification.isRead
+                    ? "Unread notification"
+                    : "Read notification"}
+                  . Priority: {notification.priority}. Received on{" "}
+                  {new Date(notification.timestamp).toLocaleDateString()}.
                 </div>
               </li>
             ))}

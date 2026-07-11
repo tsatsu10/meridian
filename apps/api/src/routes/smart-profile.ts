@@ -1,6 +1,6 @@
 /**
  * 🎯 Smart Profile Routes
- * 
+ *
  * API endpoints for enhanced profile features:
  * - Profile views & analytics
  * - Optimization suggestions
@@ -86,7 +86,9 @@ smartProfileRoutes.put(
   zValidator(
     "json",
     z.object({
-      status: z.enum(["available", "away", "busy", "do_not_disturb", "offline"]).optional(),
+      status: z
+        .enum(["available", "away", "busy", "do_not_disturb", "offline"])
+        .optional(),
       statusMessage: z.string().optional(),
       statusEmoji: z.string().optional(),
       autoStatus: z.boolean().optional(),
@@ -95,7 +97,7 @@ smartProfileRoutes.put(
       workingHoursStart: z.string().optional(),
       workingHoursEnd: z.string().optional(),
       workingDays: z.array(z.string()).optional(),
-    })
+    }),
   ),
   async (c) => {
     try {
@@ -114,7 +116,7 @@ smartProfileRoutes.put(
       logger.error("Error updating availability:", error);
       return c.json({ error: error.message }, 500);
     }
-  }
+  },
 );
 
 // ========================================
@@ -125,7 +127,7 @@ smartProfileRoutes.put(
 smartProfileRoutes.get("/:userId/collaborators", async (c) => {
   try {
     const { userId } = c.req.param();
-    const limit = parseInt(c.req.query("limit") || "5");
+    const limit = Number.parseInt(c.req.query("limit") || "5");
 
     const collaborators = await getFrequentCollaborators(userId, limit);
 
@@ -207,8 +209,8 @@ smartProfileRoutes.get("/:userId/work-history", async (c) => {
   try {
     const { userId } = c.req.param();
     const workspaceId = c.req.query("workspaceId");
-    const limit = parseInt(c.req.query("limit") || "50");
-    const offset = parseInt(c.req.query("offset") || "0");
+    const limit = Number.parseInt(c.req.query("limit") || "50");
+    const offset = Number.parseInt(c.req.query("offset") || "0");
 
     const history = await getUserWorkHistory(userId, workspaceId, {
       limit,
@@ -257,7 +259,7 @@ smartProfileRoutes.post(
       type: z
         .enum(["project_lead", "key_feature", "problem_solver", "team_builder"])
         .optional(),
-    })
+    }),
   ),
   async (c) => {
     try {
@@ -271,14 +273,18 @@ smartProfileRoutes.post(
 
       // TODO: Check if user has permission to record contributions
 
-      const contribution = await recordMajorContribution(userId, workspaceId, data);
+      const contribution = await recordMajorContribution(
+        userId,
+        workspaceId,
+        data,
+      );
 
       return c.json({ success: true, data: contribution });
     } catch (error: any) {
       logger.error("Error recording contribution:", error);
       return c.json({ error: error.message }, 500);
     }
-  }
+  },
 );
 
 // ========================================
@@ -317,8 +323,8 @@ smartProfileRoutes.get("/:userId/recent-tasks", async (c) => {
 smartProfileRoutes.get("/:userId/activity", async (c) => {
   try {
     const { userId } = c.req.param();
-    const limit = parseInt(c.req.query("limit") || "20");
-    const offset = parseInt(c.req.query("offset") || "0");
+    const limit = Number.parseInt(c.req.query("limit") || "20");
+    const offset = Number.parseInt(c.req.query("offset") || "0");
 
     const activities = await getUserActivityFeed(userId, { limit, offset });
 
@@ -372,11 +378,7 @@ smartProfileRoutes.get("/:userId/analytics", async (c) => {
       return c.json({ error: "Unauthorized" }, 403);
     }
 
-    const [
-      statistics,
-      collaborators,
-      availability,
-    ] = await Promise.all([
+    const [statistics, collaborators, availability] = await Promise.all([
       getUserStatistics(userId),
       getFrequentCollaborators(userId, 5),
       getUserAvailability(userId),
@@ -401,4 +403,3 @@ smartProfileRoutes.get("/:userId/analytics", async (c) => {
 });
 
 export default smartProfileRoutes;
-

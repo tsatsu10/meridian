@@ -1,18 +1,23 @@
-
-import { API_BASE_URL, } from '@/constants/urls';
+import { API_BASE_URL } from "@/constants/urls";
 
 export interface DeleteStatusColumnRequest {
   projectId: string;
   columnId: string;
 }
 
-async function deleteStatusColumn({ projectId, columnId }: DeleteStatusColumnRequest) {
-  const response = await fetch(`${API_BASE_URL}/projects/${projectId}/status-columns/${columnId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
+async function deleteStatusColumn({
+  projectId,
+  columnId,
+}: DeleteStatusColumnRequest) {
+  const response = await fetch(
+    `${API_BASE_URL}/projects/${projectId}/status-columns/${columnId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -23,4 +28,4 @@ async function deleteStatusColumn({ projectId, columnId }: DeleteStatusColumnReq
   return data;
 }
 
-export default deleteStatusColumn; 
+export default deleteStatusColumn;

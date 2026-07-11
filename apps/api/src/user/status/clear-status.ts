@@ -5,12 +5,10 @@ import { logger } from "../../utils/logger";
 
 export async function clearUserStatus(userEmail: string) {
   const db = getDatabase();
-  
+
   try {
-    await db
-      .delete(userStatus)
-      .where(eq(userStatus.userEmail, userEmail));
-    
+    await db.delete(userStatus).where(eq(userStatus.userEmail, userEmail));
+
     logger.info(`Status cleared for ${userEmail}`);
     return { success: true };
   } catch (error) {
@@ -18,5 +16,3 @@ export async function clearUserStatus(userEmail: string) {
     throw new Error("Failed to clear user status");
   }
 }
-
-

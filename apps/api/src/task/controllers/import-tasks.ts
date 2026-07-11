@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
-import { projectTable, taskTable, userTable, teamTable } from "../../database/schema";
+import {
+  projectTable,
+  taskTable,
+  userTable,
+  teamTable,
+} from "../../database/schema";
 import { publishEvent } from "../../events";
 import getNextTaskNumber from "./get-next-task-number";
 
@@ -42,16 +47,20 @@ async function importTasks(projectId: string, tasksToImport: ImportTask[]) {
       }
 
       // Get assignee name if it's a user assignment
-      const [assignee] = taskData.userEmail ? await db
-        .select({ name: userTable.name })
-        .from(userTable)
-        .where(eq(userTable.email, taskData.userEmail)) : [null];
+      const [assignee] = taskData.userEmail
+        ? await db
+            .select({ name: userTable.name })
+            .from(userTable)
+            .where(eq(userTable.email, taskData.userEmail))
+        : [null];
 
-      // Get team name if it's a team assignment  
-      const [team] = taskData.assignedTeamId ? await db
-        .select({ name: teamTable.name })
-        .from(teamTable)
-        .where(eq(teamTable.id, taskData.assignedTeamId)) : [null];
+      // Get team name if it's a team assignment
+      const [team] = taskData.assignedTeamId
+        ? await db
+            .select({ name: teamTable.name })
+            .from(teamTable)
+            .where(eq(teamTable.id, taskData.assignedTeamId))
+        : [null];
 
       const [createdTask] = await db
         .insert(taskTable)
@@ -64,7 +73,13 @@ async function importTasks(projectId: string, tasksToImport: ImportTask[]) {
           status: taskData.status as "todo" | "in_progress" | "done",
           dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
           description: taskData.description || "",
-          priority: (taskData.priority as "low" | "medium" | "high" | "urgent" | undefined) || "low",
+          priority:
+            (taskData.priority as
+              | "low"
+              | "medium"
+              | "high"
+              | "urgent"
+              | undefined) || "low",
           number: ++taskNumber,
         })
         .returning();
@@ -83,7 +98,9 @@ async function importTasks(projectId: string, tasksToImport: ImportTask[]) {
           task: {
             ...createdTask,
             assigneeName: assignee?.name,
-            assignedTeam: team?.name ? { id: taskData.assignedTeamId, name: team.name } : undefined,
+            assignedTeam: team?.name
+              ? { id: taskData.assignedTeamId, name: team.name }
+              : undefined,
           },
         });
       } else {
@@ -119,4 +136,3 @@ async function importTasks(projectId: string, tasksToImport: ImportTask[]) {
 }
 
 export default importTasks;
-

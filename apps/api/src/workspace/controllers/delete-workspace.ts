@@ -56,4 +56,3 @@ async function deleteWorkspace(userEmail: string, workspaceId: string) {
 }
 
 export default deleteWorkspace;
-

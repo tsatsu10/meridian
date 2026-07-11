@@ -1,12 +1,12 @@
 /**
  * 🛡️ RBAC Types for API
- * 
+ *
  * Shared types for role-based access control
  */
 
-export type UserRole = 
+export type UserRole =
   | "guest"
-  | "stakeholder" 
+  | "stakeholder"
   | "contractor"
   | "client"
   | "member"
@@ -62,4 +62,4 @@ export interface CustomPermission {
   expiresAt?: Date;
   createdAt: Date;
   createdBy: string;
-} 
+}

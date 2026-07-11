@@ -1,20 +1,20 @@
-import { useMemo } from 'react';
-import { useAuthStore } from '@/store/consolidated/auth';
-import useGetProject from '@/hooks/queries/project/use-get-project';
+import { useMemo } from "react";
+import { useAuthStore } from "@/store/consolidated/auth";
+import useGetProject from "@/hooks/queries/project/use-get-project";
 
 /**
  * Custom hook for project-level RBAC permissions
  * Determines what actions a user can perform on a specific project
- * 
+ *
  * @param projectId - The project ID to check permissions for
  * @param workspaceId - The workspace ID containing the project
  * @returns Permission flags for various project actions
- * 
+ *
  * @example
  * ```tsx
  * function ProjectPage() {
  *   const { canEditTasks, canDeleteTasks } = useProjectPermissions(projectId, workspaceId);
- *   
+ *
  *   return (
  *     <>
  *       {canEditTasks && <Button>Edit</Button>}
@@ -26,9 +26,9 @@ import useGetProject from '@/hooks/queries/project/use-get-project';
  */
 export function useProjectPermissions(projectId: string, workspaceId?: string) {
   const { user } = useAuthStore();
-  const { data: project, isLoading } = useGetProject({ 
-    id: projectId, 
-    workspaceId: workspaceId || '' 
+  const { data: project, isLoading } = useGetProject({
+    id: projectId,
+    workspaceId: workspaceId || "",
   });
 
   const permissions = useMemo(() => {
@@ -43,16 +43,16 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
         canManageProject: false,
         canInviteMembers: false,
         canManageWorkspace: false,
-        userRole: 'guest' as const,
+        userRole: "guest" as const,
       };
     }
 
     // Get user role from context or default to 'member'
-    const userRole = (user as any).role || 'member';
-    
+    const userRole = (user as any).role || "member";
+
     // Project access check - everyone with valid user has basic access
     // Backend should enforce workspace membership
-     // Backend will validate
+    // Backend will validate
 
     // Role-based permissions (aligned with Meridian role system)
     const rolePermissions = {
@@ -79,7 +79,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
         canManageWorkspace: false,
       },
       // Project Viewer - read-only access
-      'project-viewer': {
+      "project-viewer": {
         hasProjectAccess: true,
         canViewTasks: true,
         canCreateTasks: false,
@@ -90,7 +90,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
         canManageWorkspace: false,
       },
       // Project Manager - full project control
-      'project-manager': {
+      "project-manager": {
         hasProjectAccess: true,
         canViewTasks: true,
         canCreateTasks: true,
@@ -101,7 +101,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
         canManageWorkspace: false,
       },
       // Team Lead - team coordination and project oversight
-      'team-lead': {
+      "team-lead": {
         hasProjectAccess: true,
         canViewTasks: true,
         canCreateTasks: true,
@@ -112,7 +112,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
         canManageWorkspace: false,
       },
       // Department Head - multi-project oversight
-      'department-head': {
+      "department-head": {
         hasProjectAccess: true,
         canViewTasks: true,
         canCreateTasks: true,
@@ -134,7 +134,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
         canManageWorkspace: true,
       },
       // Workspace Manager - full workspace control
-      'workspace-manager': {
+      "workspace-manager": {
         hasProjectAccess: true,
         canViewTasks: true,
         canCreateTasks: true,
@@ -147,7 +147,9 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
     };
 
     // Get permissions for user's role, default to member
-    const permissions = rolePermissions[userRole as keyof typeof rolePermissions] || rolePermissions.member;
+    const permissions =
+      rolePermissions[userRole as keyof typeof rolePermissions] ||
+      rolePermissions.member;
 
     return {
       ...permissions,
@@ -163,18 +165,24 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
  * Hook for bulk permission checks
  * Useful for optimizing multiple permission checks
  */
-export function useBulkProjectPermissions(projectId: string, workspaceId?: string) {
+export function useBulkProjectPermissions(
+  projectId: string,
+  workspaceId?: string,
+) {
   const permissions = useProjectPermissions(projectId, workspaceId);
 
   return {
     ...permissions,
     // Convenience flags
     canModifyTasks: permissions.canEditTasks || permissions.canDeleteTasks,
-    isReadOnly: permissions.canViewTasks && !permissions.canCreateTasks && !permissions.canEditTasks,
-    isFullAccess: permissions.canManageProject && permissions.canManageWorkspace,
+    isReadOnly:
+      permissions.canViewTasks &&
+      !permissions.canCreateTasks &&
+      !permissions.canEditTasks,
+    isFullAccess:
+      permissions.canManageProject && permissions.canManageWorkspace,
     isPowerUser: permissions.canEditTasks && permissions.canDeleteTasks,
   };
 }
 
 export default useProjectPermissions;
-

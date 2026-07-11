@@ -1,29 +1,29 @@
 /**
  * 🎯 Get Goal Detail Controller
- * 
+ *
  * GET /api/goals/:id
  * Gets detailed information about a specific goal including key results and progress history
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { goals } from "../../database/schema/goals";
 import { eq } from "drizzle-orm";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 export async function getGoalDetail(c: Context) {
   try {
     const db = getDatabase();
-    const userId = c.get('userId');
-    const goalId = c.req.param('id');
-    
+    const userId = c.get("userId");
+    const goalId = c.req.param("id");
+
     if (!userId) {
       return c.json({ error: "Authentication required" }, 401);
     }
     if (!goalId) {
       return c.json({ error: "Goal id is required" }, 400);
     }
-    
+
     // Fetch goal with all related data
     const goal = await db.query.goals.findFirst({
       where: eq(goals.id, goalId),
@@ -44,30 +44,32 @@ export async function getGoalDetail(c: Context) {
         childGoals: true, // If this goal has sub-goals
       },
     });
-    
+
     if (!goal) {
       return c.json({ error: "Goal not found" }, 404);
     }
-    
+
     // Check access permission
     // User can see: their own goals, team goals if they're in the team, org goals
-    if (goal.userId !== userId && goal.privacy === 'private') {
+    if (goal.userId !== userId && goal.privacy === "private") {
       return c.json({ error: "Access denied" }, 403);
     }
-    
-    return c.json({ 
-      success: true, 
-      data: goal
+
+    return c.json({
+      success: true,
+      data: goal,
     });
-    
   } catch (error) {
     logger.error("Get goal detail error:", error);
-    return c.json({ 
-      error: "Failed to fetch goal details",
-      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
-    }, 500);
+    return c.json(
+      {
+        error: "Failed to fetch goal details",
+        details:
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
+      },
+      500,
+    );
   }
 }
-
-
-

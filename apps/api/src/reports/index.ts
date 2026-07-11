@@ -3,7 +3,7 @@ import { authMiddleware } from "../middlewares/secure-auth";
 import { getDatabase } from "../database/connection";
 import { scheduledReports, reportExecutions } from "../database/schema";
 import { eq, desc } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const reportsRoutes = new Hono();
 
@@ -87,7 +87,7 @@ reportsRoutes.put("/schedule/:id", authMiddleware, async (c) => {
         format: body.format,
         isActive: body.enabled,
       })
-      .where(eq(scheduledReports.id, parseInt(id)))
+      .where(eq(scheduledReports.id, Number.parseInt(id)))
       .returning();
 
     if (updated.length === 0) {
@@ -109,7 +109,7 @@ reportsRoutes.delete("/schedule/:id", authMiddleware, async (c) => {
 
     const deleted = await db
       .delete(scheduledReports)
-      .where(eq(scheduledReports.id, parseInt(id)))
+      .where(eq(scheduledReports.id, Number.parseInt(id)))
       .returning();
 
     if (deleted.length === 0) {
@@ -133,7 +133,7 @@ reportsRoutes.post("/send-now", authMiddleware, async (c) => {
     const execution = await db
       .insert(reportExecutions)
       .values({
-        reportId: parseInt(reportId),
+        reportId: Number.parseInt(reportId),
         status: "pending",
       })
       .returning();
@@ -256,7 +256,9 @@ reportsRoutes.post("/scheduled/:reportId/toggle", authMiddleware, async (c) => {
     const { enabled } = await c.req.json();
 
     // In production, update the report in the database
-    logger.debug(`Toggling report ${reportId} to ${enabled ? "enabled" : "disabled"}`);
+    logger.debug(
+      `Toggling report ${reportId} to ${enabled ? "enabled" : "disabled"}`,
+    );
 
     return c.json({
       success: true,
@@ -309,4 +311,3 @@ reportsRoutes.post("/scheduled/:reportId/run", authMiddleware, async (c) => {
 });
 
 export default reportsRoutes;
-

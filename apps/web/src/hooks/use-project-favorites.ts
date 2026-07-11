@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL, API_URL } from "@/constants/urls";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -22,13 +22,18 @@ export function useProjectFavorites() {
     const loadPinnedProjects = async () => {
       try {
         // Try loading from API first
-        const response = await fetch(`${API_BASE_URL}/user-preferences?userEmail=${encodeURIComponent(user.email)}`, {
-          credentials: 'include',
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/user-preferences?userEmail=${encodeURIComponent(user.email)}`,
+          {
+            credentials: "include",
+          },
+        );
 
         if (response.ok) {
           const data = await response.json();
-          const pinned = Array.isArray(data.pinnedProjects) ? data.pinnedProjects : [];
+          const pinned = Array.isArray(data.pinnedProjects)
+            ? data.pinnedProjects
+            : [];
           setPinnedProjects(pinned);
           // Sync to localStorage for offline access
           localStorage.setItem(FAVORITES_KEY, JSON.stringify(pinned));
@@ -59,82 +64,106 @@ export function useProjectFavorites() {
   }, [user?.email]);
 
   // Save to API whenever it changes
-  const savePinnedProjects = useCallback(async (newPinned: string[]) => {
-    // Early return if user email is not available or already syncing
-    if (!user?.email || isSyncing) {
-      console.warn('[Favorites] Cannot save: user.email =', user?.email, 'isSyncing =', isSyncing);
-      // Still save to localStorage
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(newPinned));
-      return;
-    }
-
-    setIsSyncing(true);
-    
-    try {
-      const payload = {
-        userEmail: user.email,
-        pinnedProjects: newPinned,
-      };
-      
-      logger.debug('[Favorites] Saving to API:', payload);
-      logger.debug('[Favorites] API_URL:', { value: API_URL });
-      logger.debug(`[Favorites] Full URL: ${API_BASE_URL}/user-preferences`);
-      
-      const bodyString = JSON.stringify(payload);
-      logger.debug('[Favorites] Stringified body:', { value: bodyString });
-      logger.debug('[Favorites] Body length:', { value: bodyString.length });
-      
-      const response = await fetch(`${API_BASE_URL}/user-preferences`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: bodyString,
-      });
-      
-      logger.debug('[Favorites] Response status:', { value: response.status });
-      logger.debug('[Favorites] Response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Favorites] API error response:', errorText);
-        throw new Error(`Failed to save pinned projects: ${response.status} ${errorText}`);
+  const savePinnedProjects = useCallback(
+    async (newPinned: string[]) => {
+      // Early return if user email is not available or already syncing
+      if (!user?.email || isSyncing) {
+        console.warn(
+          "[Favorites] Cannot save: user.email =",
+          user?.email,
+          "isSyncing =",
+          isSyncing,
+        );
+        // Still save to localStorage
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(newPinned));
+        return;
       }
 
-      // Also save to localStorage for offline access
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(newPinned));
-      logger.debug('[Favorites] Successfully saved to API and localStorage');
-    } catch (error) {
-      console.error("[Favorites] Failed to save pinned projects:", error);
-      toast.error("Failed to save pinned project. Changes saved locally.");
-      // Still save to localStorage even if API fails
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(newPinned));
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [user?.email, isSyncing]);
+      setIsSyncing(true);
 
-  const togglePin = useCallback(async (projectId: string) => {
-    setPinnedProjects((prev) => {
-      const newPinned = prev.includes(projectId)
-        ? prev.filter((id) => id !== projectId)
-        : [...prev, projectId];
-      
-      // Save to API asynchronously
-      savePinnedProjects(newPinned);
-      
-      return newPinned;
-    });
-  }, [savePinnedProjects]);
+      try {
+        const payload = {
+          userEmail: user.email,
+          pinnedProjects: newPinned,
+        };
 
-  const isPinned = useCallback((projectId: string) => pinnedProjects.includes(projectId), [pinnedProjects]);
+        logger.debug("[Favorites] Saving to API:", payload);
+        logger.debug("[Favorites] API_URL:", { value: API_URL });
+        logger.debug(`[Favorites] Full URL: ${API_BASE_URL}/user-preferences`);
 
-  const sortWithPinned = useCallback(<T extends { id: string }>(projects: T[]): T[] => {
-    const pinned = projects.filter((p) => isPinned(p.id));
-    const unpinned = projects.filter((p) => !isPinned(p.id));
-    return [...pinned, ...unpinned];
-  }, [isPinned]);
+        const bodyString = JSON.stringify(payload);
+        logger.debug("[Favorites] Stringified body:", { value: bodyString });
+        logger.debug("[Favorites] Body length:", { value: bodyString.length });
+
+        const response = await fetch(`${API_BASE_URL}/user-preferences`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: bodyString,
+        });
+
+        logger.debug("[Favorites] Response status:", {
+          value: response.status,
+        });
+        logger.debug(
+          "[Favorites] Response headers:",
+          Object.fromEntries(response.headers.entries()),
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("[Favorites] API error response:", errorText);
+          throw new Error(
+            `Failed to save pinned projects: ${response.status} ${errorText}`,
+          );
+        }
+
+        // Also save to localStorage for offline access
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(newPinned));
+        logger.debug("[Favorites] Successfully saved to API and localStorage");
+      } catch (error) {
+        console.error("[Favorites] Failed to save pinned projects:", error);
+        toast.error("Failed to save pinned project. Changes saved locally.");
+        // Still save to localStorage even if API fails
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(newPinned));
+      } finally {
+        setIsSyncing(false);
+      }
+    },
+    [user?.email, isSyncing],
+  );
+
+  const togglePin = useCallback(
+    async (projectId: string) => {
+      setPinnedProjects((prev) => {
+        const newPinned = prev.includes(projectId)
+          ? prev.filter((id) => id !== projectId)
+          : [...prev, projectId];
+
+        // Save to API asynchronously
+        savePinnedProjects(newPinned);
+
+        return newPinned;
+      });
+    },
+    [savePinnedProjects],
+  );
+
+  const isPinned = useCallback(
+    (projectId: string) => pinnedProjects.includes(projectId),
+    [pinnedProjects],
+  );
+
+  const sortWithPinned = useCallback(
+    <T extends { id: string }>(projects: T[]): T[] => {
+      const pinned = projects.filter((p) => isPinned(p.id));
+      const unpinned = projects.filter((p) => !isPinned(p.id));
+      return [...pinned, ...unpinned];
+    },
+    [isPinned],
+  );
 
   return {
     pinnedProjects,
@@ -145,4 +174,3 @@ export function useProjectFavorites() {
     isSyncing,
   };
 }
-

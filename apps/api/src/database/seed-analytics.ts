@@ -1,15 +1,15 @@
 import { getDatabase } from "./connection";
-import { 
-  workspaceTable, 
-  projectTable, 
-  taskTable, 
-  userTable, 
+import {
+  workspaceTable,
+  projectTable,
+  taskTable,
+  userTable,
   workspaceUserTable,
   roleAssignmentTable,
-  timeEntryTable 
+  timeEntryTable,
 } from "./schema";
 import { eq } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 // @epic-3.1-analytics: Seed script for testing enhanced analytics
 // Creates production-like test data with historical records
@@ -24,13 +24,13 @@ interface SeedOptions {
 
 export async function seedAnalyticsData(options: SeedOptions = {}) {
   const db = getDatabase();
-  
+
   const {
     workspaceId: existingWorkspaceId,
     projectCount = 5,
     tasksPerProject = 20,
     teamMembers = 8,
-    historicalDays = 90
+    historicalDays = 90,
   } = options;
 
   logger.debug("🌱 Starting analytics data seeding...");
@@ -43,7 +43,7 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
     // 0. Create or get admin user
     const adminEmail = "admin@meridian.app";
     let adminUserId: string;
-    
+
     const existingAdmin = await db
       .select()
       .from(userTable)
@@ -51,23 +51,30 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
       .limit(1);
 
     if (existingAdmin.length === 0) {
-      const [newAdmin] = await db.insert(userTable).values({
-        id: `user-admin-${Date.now()}`,
-        email: adminEmail,
-        name: "Admin User",
-        password: "hashed_password_placeholder", // password field, not passwordHash
-        role: "admin",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
-      
+      const [newAdmin] = await db
+        .insert(userTable)
+        .values({
+          id: `user-admin-${Date.now()}`,
+          email: adminEmail,
+          name: "Admin User",
+          password: "hashed_password_placeholder", // password field, not passwordHash
+          role: "admin",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
       adminUserId = newAdmin.id;
-      logger.debug(`\n✅ Created admin user: ${adminEmail} (ID: ${adminUserId})`);
+      logger.debug(
+        `\n✅ Created admin user: ${adminEmail} (ID: ${adminUserId})`,
+      );
     } else {
       adminUserId = existingAdmin[0].id;
-      logger.debug(`\n✅ Using existing admin user: ${adminEmail} (ID: ${adminUserId})`);
+      logger.debug(
+        `\n✅ Using existing admin user: ${adminEmail} (ID: ${adminUserId})`,
+      );
     }
-    
+
     // 1. Create or use existing workspace
     let workspaceId: string;
     if (existingWorkspaceId) {
@@ -85,7 +92,7 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
           updatedAt: new Date(),
         })
         .returning();
-      
+
       workspaceId = workspace.id;
       logger.debug(`\n✅ Created workspace: ${workspaceId}`);
     }
@@ -93,11 +100,11 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
     // 2. Create team members
     const userEmails: string[] = [];
     const roles = ["member", "team-lead", "project-manager", "admin"];
-    
+
     for (let i = 0; i < teamMembers; i++) {
       const email = `user${i + 1}@analytics.test`;
       const role = roles[i % roles.length];
-      
+
       // Create user if doesn't exist
       const existingUser = await db
         .select()
@@ -160,11 +167,11 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
     // 3. Create projects with varying health
     const projectIds: string[] = [];
     const projectHealthTypes = ["excellent", "good", "warning", "critical"];
-    
+
     for (let i = 0; i < projectCount; i++) {
       const healthType = projectHealthTypes[i % projectHealthTypes.length];
       const daysAgo = Math.floor((historicalDays * i) / projectCount); // Stagger project creation
-      
+
       const [project] = await db
         .insert(projectTable)
         .values({
@@ -186,10 +193,11 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
     let totalTasks = 0;
     const taskStatuses = ["todo", "in-progress", "done", "blocked"];
     const priorities = ["low", "medium", "high", "critical"];
-    
+
     for (const [projectIndex, projectId] of projectIds.entries()) {
-      const healthType = projectHealthTypes[projectIndex % projectHealthTypes.length];
-      
+      const healthType =
+        projectHealthTypes[projectIndex % projectHealthTypes.length];
+
       // Adjust task completion based on project health
       let doneRatio = 0.7; // Default 70% complete
       if (healthType === "excellent") doneRatio = 0.9;
@@ -199,26 +207,38 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
 
       for (let t = 0; t < tasksPerProject; t++) {
         const isDone = Math.random() < doneRatio;
-        const status = isDone ? "done" : taskStatuses[Math.floor(Math.random() * (taskStatuses.length - 1))];
-        const priority = priorities[Math.floor(Math.random() * priorities.length)];
-        const assignee = userEmails[Math.floor(Math.random() * userEmails.length)];
-        
+        const status = isDone
+          ? "done"
+          : taskStatuses[Math.floor(Math.random() * (taskStatuses.length - 1))];
+        const priority =
+          priorities[Math.floor(Math.random() * priorities.length)];
+        const assignee =
+          userEmails[Math.floor(Math.random() * userEmails.length)];
+
         // Spread tasks across historical period
         const taskAgeRatio = t / tasksPerProject;
         const taskDaysAgo = Math.floor(historicalDays * taskAgeRatio);
-        const createdAt = new Date(Date.now() - taskDaysAgo * 24 * 60 * 60 * 1000);
-        
+        const createdAt = new Date(
+          Date.now() - taskDaysAgo * 24 * 60 * 60 * 1000,
+        );
+
         // Set due dates - some overdue for critical/warning projects
         let dueDate: Date | null = null;
         if (healthType === "critical" || healthType === "warning") {
           // 30% of tasks are overdue
           if (Math.random() < 0.3 && !isDone) {
-            dueDate = new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000);
+            dueDate = new Date(
+              Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000,
+            );
           } else {
-            dueDate = new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000);
+            dueDate = new Date(
+              Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000,
+            );
           }
         } else {
-          dueDate = new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000);
+          dueDate = new Date(
+            Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000,
+          );
         }
 
         const [task] = await db
@@ -234,7 +254,11 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
             assigneeEmail: assignee,
             dueDate: dueDate || null,
             createdAt,
-            updatedAt: isDone ? new Date(createdAt.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000) : createdAt,
+            updatedAt: isDone
+              ? new Date(
+                  createdAt.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000,
+                )
+              : createdAt,
           })
           .returning();
 
@@ -242,12 +266,15 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
         if (isDone || status === "in-progress") {
           const hoursSpent = Math.random() * 8 + 1; // 1-9 hours
           const timeEntryCount = Math.floor(Math.random() * 3) + 1; // 1-3 time entries per task
-          
+
           for (let e = 0; e < timeEntryCount; e++) {
             const entryHours = hoursSpent / timeEntryCount;
-            const entryDaysAgo = taskDaysAgo - Math.floor(Math.random() * (taskDaysAgo || 1));
-            
-            const entryDate = new Date(Date.now() - entryDaysAgo * 24 * 60 * 60 * 1000);
+            const entryDaysAgo =
+              taskDaysAgo - Math.floor(Math.random() * (taskDaysAgo || 1));
+
+            const entryDate = new Date(
+              Date.now() - entryDaysAgo * 24 * 60 * 60 * 1000,
+            );
             await db.insert(timeEntryTable).values({
               id: `time-${projectIndex}-${t}-${e}-${Date.now()}`,
               taskId: task.id,
@@ -278,9 +305,8 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
       workspaceId,
       projectIds,
       userEmails,
-      totalTasks
+      totalTasks,
     };
-
   } catch (error) {
     logger.error("❌ Error seeding analytics data:", error);
     throw error;
@@ -293,7 +319,7 @@ if (require.main === module) {
     projectCount: 5,
     tasksPerProject: 20,
     teamMembers: 8,
-    historicalDays: 90
+    historicalDays: 90,
   })
     .then(() => {
       logger.debug("\n✅ Seed completed successfully!");
@@ -306,5 +332,3 @@ if (require.main === module) {
 }
 
 export default seedAnalyticsData;
-
-

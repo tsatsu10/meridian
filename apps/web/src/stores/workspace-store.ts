@@ -1,11 +1,11 @@
 /**
  * Workspace Store Stub
- * 
+ *
  * Temporary stub for workspace state management.
  * Components can import this without errors during build.
  */
 
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface Workspace {
   id: string;
@@ -22,4 +22,3 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   workspace: null,
   setWorkspace: (workspace) => set({ workspace }),
 }));
-

@@ -24,7 +24,7 @@ export interface ProjectHealthMetrics {
  * Generate smart recommendations based on project health metrics
  */
 export function generateRecommendations(
-  metrics: ProjectHealthMetrics
+  metrics: ProjectHealthMetrics,
 ): Recommendation[] {
   const recommendations: Recommendation[] = [];
 
@@ -52,8 +52,7 @@ export function generateRecommendations(
     recommendations.push({
       id: "low-completion",
       title: "Low Task Completion Rate",
-      description:
-        `Only ${Math.round(metrics.factors.completionRate)}% of tasks are complete. Consider breaking down large tasks or removing scope.`,
+      description: `Only ${Math.round(metrics.factors.completionRate)}% of tasks are complete. Consider breaking down large tasks or removing scope.`,
       priority: metrics.factors.completionRate < 25 ? "high" : "medium",
       category: "performance",
       actionItems: [
@@ -128,8 +127,7 @@ export function generateRecommendations(
     recommendations.push({
       id: "high-risk",
       title: "High Risk Level - Action Required",
-      description:
-        `Risk level is elevated at ${Math.round(100 - metrics.factors.riskLevel)}%. Proactive risk management is critical.`,
+      description: `Risk level is elevated at ${Math.round(100 - metrics.factors.riskLevel)}%. Proactive risk management is critical.`,
       priority: "high",
       category: "risk",
       actionItems: [
@@ -181,10 +179,7 @@ export function generateRecommendations(
   }
 
   // Stable/Improving Trends - Positive message
-  if (
-    metrics.trend === "improving" &&
-    metrics.score > 60
-  ) {
+  if (metrics.trend === "improving" && metrics.score > 60) {
     recommendations.push({
       id: "positive-momentum",
       title: "Positive Momentum Maintained",
@@ -205,8 +200,7 @@ export function generateRecommendations(
   // Sort recommendations by priority and impact
   recommendations.sort((a, b) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
-    const priorityDiff =
-      priorityOrder[a.priority] - priorityOrder[b.priority];
+    const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
     if (priorityDiff !== 0) return priorityDiff;
     return (b.estimatedImpact || 0) - (a.estimatedImpact || 0);
   });
@@ -217,10 +211,7 @@ export function generateRecommendations(
 /**
  * Get recommendation for specific factor
  */
-export function getFactorRecommendation(
-  factor: string,
-  score: number
-): string {
+export function getFactorRecommendation(factor: string, score: number): string {
   const recommendations: { [key: string]: { [key: string]: string } } = {
     completionRate: {
       critical: "Accelerate task completion - current rate will miss deadline",
@@ -241,8 +232,7 @@ export function getFactorRecommendation(
       excellent: "High-quality deliverables maintained",
     },
     resourceAllocation: {
-      critical:
-        "Urgent: Critical resource shortage or misallocation detected",
+      critical: "Urgent: Critical resource shortage or misallocation detected",
       warning: "Resource constraints detected",
       improving: "Resource allocation improving",
       excellent: "Optimal resource utilization",
@@ -256,8 +246,13 @@ export function getFactorRecommendation(
   };
 
   const level =
-    score < 40 ? "critical" : score < 60 ? "warning" : score < 80 ? "improving" : "excellent";
+    score < 40
+      ? "critical"
+      : score < 60
+        ? "warning"
+        : score < 80
+          ? "improving"
+          : "excellent";
 
   return recommendations[factor]?.[level] || "Monitor this factor";
 }
-

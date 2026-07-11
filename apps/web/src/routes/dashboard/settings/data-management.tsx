@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Database,
   Download,
@@ -27,19 +27,31 @@ import {
   FileJson,
   FileSpreadsheet,
   Info,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,23 +61,30 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { useWorkspaceStore } from '@/store/workspace';
-import { API_BASE_URL } from '@/constants/urls';
-import { format } from 'date-fns';
-import { Progress } from '@/components/ui/progress';
+} from "@/components/ui/alert-dialog";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { useWorkspaceStore } from "@/store/workspace";
+import { API_BASE_URL } from "@/constants/urls";
+import { format } from "date-fns";
+import { Progress } from "@/components/ui/progress";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/data-management')({
+export const Route = createFileRoute("/dashboard/settings/data-management")({
   component: withErrorBoundary(DataManagementSettings, "Data Management"),
 });
 
 interface BackupSettings {
   enableAutomatedBackups: boolean;
-  backupFrequency: 'hourly' | 'daily' | 'weekly' | 'monthly';
+  backupFrequency: "hourly" | "daily" | "weekly" | "monthly";
   backupTime: string;
-  backupDayOfWeek?: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  backupDayOfWeek?:
+    | "monday"
+    | "tuesday"
+    | "wednesday"
+    | "thursday"
+    | "friday"
+    | "saturday"
+    | "sunday";
   backupDayOfMonth?: number;
   includeWorkspaceData: boolean;
   includeProjects: boolean;
@@ -79,7 +98,7 @@ interface BackupSettings {
   retentionDays: number;
   compressBackups: boolean;
   encryptBackups: boolean;
-  storageType: 'local' | 's3' | 'azure' | 'gcp';
+  storageType: "local" | "s3" | "azure" | "gcp";
   storagePath: string;
   s3Bucket?: string;
   s3Region?: string;
@@ -97,8 +116,8 @@ interface BackupSettings {
 interface BackupRecord {
   id: string;
   workspaceId: string;
-  type: 'manual' | 'scheduled';
-  status: 'in_progress' | 'completed' | 'failed';
+  type: "manual" | "scheduled";
+  status: "in_progress" | "completed" | "failed";
   size: number;
   itemsCount: number;
   startTime: Date;
@@ -126,14 +145,14 @@ interface ImportResult {
 }
 
 function DataManagementSettings() {
-  void (useNavigate());
+  void useNavigate();
   const workspace = useWorkspaceStore((state) => state.workspace);
   const currentWorkspace = workspace;
   const queryClient = useQueryClient();
-  
+
   const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState<Partial<BackupSettings>>({});
-  const [_recipientInput, _setRecipientInput] = useState('');
+  const [_recipientInput, _setRecipientInput] = useState("");
 
   // Storage Usage State
   const [isLoading, setIsLoading] = useState(false);
@@ -143,13 +162,13 @@ function DataManagementSettings() {
   const [deleteTarget, setDeleteTarget] = useState<string>("");
 
   // Import/Export State
-  const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json');
+  const [exportFormat, setExportFormat] = useState<"json" | "csv">("json");
   const [includeProjects, setIncludeProjects] = useState(true);
   const [includeTasks, setIncludeTasks] = useState(true);
   const [includeUsers, setIncludeUsers] = useState(false);
   const [includeRoles, setIncludeRoles] = useState(false);
-  const [importFormat, setImportFormat] = useState<'json' | 'csv'>('json');
-  const [importData, setImportData] = useState('');
+  const [importFormat, setImportFormat] = useState<"json" | "csv">("json");
+  const [importData, setImportData] = useState("");
   const [validateOnly, setValidateOnly] = useState(false);
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -162,24 +181,28 @@ function DataManagementSettings() {
       projects: 0,
       files: 0,
       media: 0,
-      other: 0
-    }
+      other: 0,
+    },
   };
 
-  const usagePercentage = dataUsage.total > 0 ? (dataUsage.used / dataUsage.total) * 100 : 0;
+  const usagePercentage =
+    dataUsage.total > 0 ? (dataUsage.used / dataUsage.total) * 100 : 0;
 
   // Fetch backup settings
   const { data: settings, isLoading: settingsLoading } = useQuery({
-    queryKey: ['backup-settings', currentWorkspace?.id],
+    queryKey: ["backup-settings", currentWorkspace?.id],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/settings/backup?workspaceId=${currentWorkspace?.id}`, {
-        credentials: 'include',
-      });
-      
+      const response = await fetch(
+        `${API_BASE_URL}/settings/backup?workspaceId=${currentWorkspace?.id}`,
+        {
+          credentials: "include",
+        },
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to fetch backup settings');
+        throw new Error("Failed to fetch backup settings");
       }
-      
+
       const result = await response.json();
       return result.data as BackupSettings;
     },
@@ -188,16 +211,19 @@ function DataManagementSettings() {
 
   // Fetch backup history
   const { data: backups } = useQuery({
-    queryKey: ['backup-history', currentWorkspace?.id],
+    queryKey: ["backup-history", currentWorkspace?.id],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/settings/backup/history?workspaceId=${currentWorkspace?.id}&limit=10`, {
-        credentials: 'include',
-      });
-      
+      const response = await fetch(
+        `${API_BASE_URL}/settings/backup/history?workspaceId=${currentWorkspace?.id}&limit=10`,
+        {
+          credentials: "include",
+        },
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to fetch backup history');
+        throw new Error("Failed to fetch backup history");
       }
-      
+
       const result = await response.json();
       return result.data as BackupRecord[];
     },
@@ -206,16 +232,19 @@ function DataManagementSettings() {
 
   // Fetch export templates
   const { data: templates } = useQuery({
-    queryKey: ['export-templates'],
+    queryKey: ["export-templates"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/settings/import-export/templates`, {
-        credentials: 'include',
-      });
-      
+      const response = await fetch(
+        `${API_BASE_URL}/settings/import-export/templates`,
+        {
+          credentials: "include",
+        },
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to fetch templates');
+        throw new Error("Failed to fetch templates");
       }
-      
+
       const result = await response.json();
       return result.data as Record<string, ExportTemplate>;
     },
@@ -231,116 +260,132 @@ function DataManagementSettings() {
   // Save backup settings mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/settings/backup?workspaceId=${currentWorkspace?.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${API_BASE_URL}/settings/backup?workspaceId=${currentWorkspace?.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(formData),
         },
-        credentials: 'include',
-        body: JSON.stringify(formData),
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to save backup settings');
+        throw new Error("Failed to save backup settings");
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['backup-settings', currentWorkspace?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["backup-settings", currentWorkspace?.id],
+      });
       setHasChanges(false);
-      toast.success('Backup settings saved successfully');
+      toast.success("Backup settings saved successfully");
     },
     onError: () => {
-      toast.error('Failed to save backup settings');
+      toast.error("Failed to save backup settings");
     },
   });
 
   // Manual backup mutation
   const manualBackupMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/settings/backup/create?workspaceId=${currentWorkspace?.id}`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/settings/backup/create?workspaceId=${currentWorkspace?.id}`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to create backup');
+        throw new Error("Failed to create backup");
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['backup-history', currentWorkspace?.id] });
-      toast.success('Backup created successfully');
+      queryClient.invalidateQueries({
+        queryKey: ["backup-history", currentWorkspace?.id],
+      });
+      toast.success("Backup created successfully");
     },
     onError: () => {
-      toast.error('Failed to create backup');
+      toast.error("Failed to create backup");
     },
   });
 
   // Export mutation
   const exportMutation = useMutation({
     mutationFn: async (options: {
-      format: 'json' | 'csv';
+      format: "json" | "csv";
       includeProjects: boolean;
       includeTasks: boolean;
       includeUsers: boolean;
       includeRoles: boolean;
     }) => {
-      const response = await fetch(`${API_BASE_URL}/settings/import-export/export?workspaceId=${currentWorkspace?.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${API_BASE_URL}/settings/import-export/export?workspaceId=${currentWorkspace?.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(options),
         },
-        credentials: 'include',
-        body: JSON.stringify(options),
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Export failed');
+        throw new Error("Export failed");
       }
 
       return response.blob();
     },
     onSuccess: (data, variables) => {
       const blob = new Blob([data], {
-        type: variables.format === 'json' ? 'application/json' : 'text/csv',
+        type: variables.format === "json" ? "application/json" : "text/csv",
       });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `workspace-export-${new Date().toISOString()}.${variables.format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Export completed successfully');
+      toast.success("Export completed successfully");
     },
     onError: () => {
-      toast.error('Export failed');
+      toast.error("Export failed");
     },
   });
 
   // Import mutation
   const importMutation = useMutation({
     mutationFn: async (options: {
-      format: 'json' | 'csv';
+      format: "json" | "csv";
       data: string;
       validateOnly: boolean;
       skipDuplicates: boolean;
     }) => {
-      const response = await fetch(`${API_BASE_URL}/settings/import-export/import?workspaceId=${currentWorkspace?.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${API_BASE_URL}/settings/import-export/import?workspaceId=${currentWorkspace?.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(options),
         },
-        credentials: 'include',
-        body: JSON.stringify(options),
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Import failed');
+        throw new Error("Import failed");
       }
 
       const result = await response.json();
@@ -349,20 +394,22 @@ function DataManagementSettings() {
     onSuccess: (data) => {
       setImportResult(data);
       if (data.success && !validateOnly) {
-        queryClient.invalidateQueries({ queryKey: ['projects'] });
-        queryClient.invalidateQueries({ queryKey: ['tasks'] });
-        toast.success(`Import completed: ${data.importedRecords} records imported`);
+        queryClient.invalidateQueries({ queryKey: ["projects"] });
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        toast.success(
+          `Import completed: ${data.importedRecords} records imported`,
+        );
       } else if (validateOnly) {
         toast.info(`Validation completed: ${data.totalRecords} records valid`);
       }
     },
     onError: () => {
-      toast.error('Import failed');
+      toast.error("Import failed");
     },
   });
 
   const handleFormChange = (field: keyof BackupSettings, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -393,7 +440,7 @@ function DataManagementSettings() {
 
   const handleImport = () => {
     if (!importData.trim()) {
-      toast.error('Please provide data to import');
+      toast.error("Please provide data to import");
       return;
     }
 
@@ -405,7 +452,7 @@ function DataManagementSettings() {
     });
   };
 
-      const confirmDeleteData = (type: string) => {
+  const confirmDeleteData = (type: string) => {
     setDeleteTarget(type);
     setDeleteDialogOpen(true);
   };
@@ -413,7 +460,7 @@ function DataManagementSettings() {
   const handleDeleteData = async () => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       toast.success(`${deleteTarget} deletion initiated`);
       setDeleteDialogOpen(false);
     } catch (error) {
@@ -423,14 +470,15 @@ function DataManagementSettings() {
     }
   };
 
-      if (!currentWorkspace) {
+  if (!currentWorkspace) {
     return (
       <LazyDashboardLayout>
         <div className="container max-w-4xl py-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              No workspace selected. Please select a workspace to manage data settings.
+              No workspace selected. Please select a workspace to manage data
+              settings.
             </AlertDescription>
           </Alert>
         </div>
@@ -492,9 +540,11 @@ function DataManagementSettings() {
                   </div>
                   <Progress value={usagePercentage} />
                   <p className="text-xs text-muted-foreground">
-                    {dataUsage.used === 0 ? "🚀 Your workspace is ready to use" : 
-                     usagePercentage > 80 ? "⚠️ Storage is almost full" : 
-                     "Storage usage is within normal limits"}
+                    {dataUsage.used === 0
+                      ? "🚀 Your workspace is ready to use"
+                      : usagePercentage > 80
+                        ? "⚠️ Storage is almost full"
+                        : "Storage usage is within normal limits"}
                   </p>
                 </div>
 
@@ -502,29 +552,38 @@ function DataManagementSettings() {
                   <div className="text-center py-8 border rounded-lg bg-muted/50">
                     <Database className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground">
-                      No data stored yet. Start creating projects and uploading files to see your usage breakdown.
+                      No data stored yet. Start creating projects and uploading
+                      files to see your usage breakdown.
                     </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 border rounded-lg">
                       <Folder className="h-6 w-6 text-blue-500 mx-auto mb-2" />
-                      <p className="text-lg font-semibold">{dataUsage.breakdown.projects} GB</p>
+                      <p className="text-lg font-semibold">
+                        {dataUsage.breakdown.projects} GB
+                      </p>
                       <p className="text-xs text-muted-foreground">Projects</p>
                     </div>
                     <div className="text-center p-4 border rounded-lg">
                       <File className="h-6 w-6 text-green-500 mx-auto mb-2" />
-                      <p className="text-lg font-semibold">{dataUsage.breakdown.files} GB</p>
+                      <p className="text-lg font-semibold">
+                        {dataUsage.breakdown.files} GB
+                      </p>
                       <p className="text-xs text-muted-foreground">Files</p>
                     </div>
                     <div className="text-center p-4 border rounded-lg">
                       <Image className="h-6 w-6 text-purple-500 mx-auto mb-2" />
-                      <p className="text-lg font-semibold">{dataUsage.breakdown.media} GB</p>
+                      <p className="text-lg font-semibold">
+                        {dataUsage.breakdown.media} GB
+                      </p>
                       <p className="text-xs text-muted-foreground">Media</p>
                     </div>
                     <div className="text-center p-4 border rounded-lg">
                       <Archive className="h-6 w-6 text-orange-500 mx-auto mb-2" />
-                      <p className="text-lg font-semibold">{dataUsage.breakdown.other} GB</p>
+                      <p className="text-lg font-semibold">
+                        {dataUsage.breakdown.other} GB
+                      </p>
                       <p className="text-xs text-muted-foreground">Other</p>
                     </div>
                   </div>
@@ -547,13 +606,17 @@ function DataManagementSettings() {
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Warning:</strong> Data deletion is permanent and cannot be recovered. Make sure to create backups before proceeding.
+                    <strong>Warning:</strong> Data deletion is permanent and
+                    cannot be recovered. Make sure to create backups before
+                    proceeding.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 border rounded-lg">
-                    <h4 className="font-medium mb-2">Delete Completed Projects</h4>
+                    <h4 className="font-medium mb-2">
+                      Delete Completed Projects
+                    </h4>
                     <p className="text-sm text-muted-foreground mb-3">
                       Remove all completed projects and associated data
                     </p>
@@ -567,7 +630,7 @@ function DataManagementSettings() {
                       Delete
                     </Button>
                   </div>
-                  
+
                   <div className="p-4 border rounded-lg">
                     <h4 className="font-medium mb-2">Delete All Data</h4>
                     <p className="text-sm text-muted-foreground mb-3">
@@ -605,9 +668,7 @@ function DataManagementSettings() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>
-                      Common backup operations
-                    </CardDescription>
+                    <CardDescription>Common backup operations</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -628,10 +689,14 @@ function DataManagementSettings() {
                           </>
                         )}
                       </Button>
-                      
+
                       <Button
                         variant="outline"
-                        onClick={() => queryClient.invalidateQueries({ queryKey: ['backup-history'] })}
+                        onClick={() =>
+                          queryClient.invalidateQueries({
+                            queryKey: ["backup-history"],
+                          })
+                        }
                         size="lg"
                       >
                         <RefreshCw className="h-4 w-4 mr-2" />
@@ -660,20 +725,24 @@ function DataManagementSettings() {
                       </div>
                       <Switch
                         checked={formData.enableAutomatedBackups}
-                        onCheckedChange={(checked) => handleFormChange('enableAutomatedBackups', checked)}
+                        onCheckedChange={(checked) =>
+                          handleFormChange("enableAutomatedBackups", checked)
+                        }
                       />
                     </div>
 
                     {formData.enableAutomatedBackups && (
                       <>
                         <Separator />
-                        
+
                         {/* Backup Frequency */}
                         <div className="space-y-2">
                           <Label>Backup Frequency</Label>
                           <Select
                             value={formData.backupFrequency}
-                            onValueChange={(value) => handleFormChange('backupFrequency', value)}
+                            onValueChange={(value) =>
+                              handleFormChange("backupFrequency", value)
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -693,7 +762,9 @@ function DataManagementSettings() {
                           <Input
                             type="time"
                             value={formData.backupTime}
-                            onChange={(e) => handleFormChange('backupTime', e.target.value)}
+                            onChange={(e) =>
+                              handleFormChange("backupTime", e.target.value)
+                            }
                           />
                         </div>
                       </>
@@ -704,25 +775,43 @@ function DataManagementSettings() {
                     {/* What to Include */}
                     <div className="space-y-4">
                       <Label>What to Include in Backups</Label>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[
-                          { key: 'includeWorkspaceData', label: 'Workspace Data' },
-                          { key: 'includeProjects', label: 'Projects' },
-                          { key: 'includeTasks', label: 'Tasks' },
-                          { key: 'includeUsers', label: 'Users' },
-                          { key: 'includeMessages', label: 'Messages' },
-                          { key: 'includeFiles', label: 'Files' },
-                          { key: 'includeSettings', label: 'Settings' },
-                          { key: 'includeAuditLogs', label: 'Audit Logs' },
+                          {
+                            key: "includeWorkspaceData",
+                            label: "Workspace Data",
+                          },
+                          { key: "includeProjects", label: "Projects" },
+                          { key: "includeTasks", label: "Tasks" },
+                          { key: "includeUsers", label: "Users" },
+                          { key: "includeMessages", label: "Messages" },
+                          { key: "includeFiles", label: "Files" },
+                          { key: "includeSettings", label: "Settings" },
+                          { key: "includeAuditLogs", label: "Audit Logs" },
                         ].map((item) => (
-                          <div key={item.key} className="flex items-center space-x-2">
+                          <div
+                            key={item.key}
+                            className="flex items-center space-x-2"
+                          >
                             <Switch
-                              checked={formData[item.key as keyof BackupSettings] as boolean}
-                              onCheckedChange={(checked) => handleFormChange(item.key as keyof BackupSettings, checked)}
+                              checked={
+                                formData[
+                                  item.key as keyof BackupSettings
+                                ] as boolean
+                              }
+                              onCheckedChange={(checked) =>
+                                handleFormChange(
+                                  item.key as keyof BackupSettings,
+                                  checked,
+                                )
+                              }
                               id={item.key}
                             />
-                            <Label htmlFor={item.key} className="cursor-pointer">
+                            <Label
+                              htmlFor={item.key}
+                              className="cursor-pointer"
+                            >
                               {item.label}
                             </Label>
                           </div>
@@ -735,45 +824,56 @@ function DataManagementSettings() {
                     {/* Advanced Options */}
                     <div className="space-y-4">
                       <Label>Advanced Options</Label>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={formData.compressBackups}
-                            onCheckedChange={(checked) => handleFormChange('compressBackups', checked)}
+                            onCheckedChange={(checked) =>
+                              handleFormChange("compressBackups", checked)
+                            }
                             id="compress"
                           />
                           <Label htmlFor="compress" className="cursor-pointer">
                             Compress Backups
                           </Label>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={formData.encryptBackups}
-                            onCheckedChange={(checked) => handleFormChange('encryptBackups', checked)}
+                            onCheckedChange={(checked) =>
+                              handleFormChange("encryptBackups", checked)
+                            }
                             id="encrypt"
                           />
                           <Label htmlFor="encrypt" className="cursor-pointer">
                             Encrypt Backups
                           </Label>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={formData.incrementalBackups}
-                            onCheckedChange={(checked) => handleFormChange('incrementalBackups', checked)}
+                            onCheckedChange={(checked) =>
+                              handleFormChange("incrementalBackups", checked)
+                            }
                             id="incremental"
                           />
-                          <Label htmlFor="incremental" className="cursor-pointer">
+                          <Label
+                            htmlFor="incremental"
+                            className="cursor-pointer"
+                          >
                             Incremental Backups
                           </Label>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={formData.verifyBackupIntegrity}
-                            onCheckedChange={(checked) => handleFormChange('verifyBackupIntegrity', checked)}
+                            onCheckedChange={(checked) =>
+                              handleFormChange("verifyBackupIntegrity", checked)
+                            }
                             id="verify"
                           />
                           <Label htmlFor="verify" className="cursor-pointer">
@@ -794,10 +894,15 @@ function DataManagementSettings() {
                           min="1"
                           max="100"
                           value={formData.maxBackupCount}
-                          onChange={(e) => handleFormChange('maxBackupCount', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleFormChange(
+                              "maxBackupCount",
+                              Number.parseInt(e.target.value),
+                            )
+                          }
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label>Retention Days</Label>
                         <Input
@@ -805,7 +910,12 @@ function DataManagementSettings() {
                           min="1"
                           max="365"
                           value={formData.retentionDays}
-                          onChange={(e) => handleFormChange('retentionDays', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleFormChange(
+                              "retentionDays",
+                              Number.parseInt(e.target.value),
+                            )
+                          }
                         />
                       </div>
                     </div>
@@ -824,30 +934,46 @@ function DataManagementSettings() {
                         {backups?.length || 0} backups
                       </Badge>
                     </CardTitle>
-                    <CardDescription>
-                      Recent backup operations
-                    </CardDescription>
+                    <CardDescription>Recent backup operations</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {backups && backups.length > 0 ? (
                       <div className="space-y-4">
                         {backups.map((backup) => (
-                          <div key={backup.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div
+                            key={backup.id}
+                            className="flex items-center justify-between p-4 border rounded-lg"
+                          >
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <Badge variant={backup.status === 'completed' ? 'default' : backup.status === 'failed' ? 'destructive' : 'secondary'}>
-                                  {backup.status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
-                                  {backup.status === 'failed' && <XCircle className="h-3 w-3 mr-1" />}
-                                  {backup.status === 'in_progress' && <Clock className="h-3 w-3 mr-1 animate-spin" />}
+                                <Badge
+                                  variant={
+                                    backup.status === "completed"
+                                      ? "default"
+                                      : backup.status === "failed"
+                                        ? "destructive"
+                                        : "secondary"
+                                  }
+                                >
+                                  {backup.status === "completed" && (
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                  )}
+                                  {backup.status === "failed" && (
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                  )}
+                                  {backup.status === "in_progress" && (
+                                    <Clock className="h-3 w-3 mr-1 animate-spin" />
+                                  )}
                                   {backup.status}
                                 </Badge>
                                 <Badge variant="outline">{backup.type}</Badge>
                               </div>
                               <p className="text-sm">
-                                {format(new Date(backup.startTime), 'PPP p')}
+                                {format(new Date(backup.startTime), "PPP p")}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {backup.itemsCount} items • {(backup.size / 1024 / 1024).toFixed(2)} MB
+                                {backup.itemsCount} items •{" "}
+                                {(backup.size / 1024 / 1024).toFixed(2)} MB
                               </p>
                             </div>
                             <div className="flex gap-2">
@@ -868,7 +994,8 @@ function DataManagementSettings() {
                       <div className="text-center py-12 border rounded-lg bg-muted/50">
                         <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                         <p className="text-sm text-muted-foreground">
-                          No backups yet. Create your first backup to protect your data.
+                          No backups yet. Create your first backup to protect
+                          your data.
                         </p>
                       </div>
                     )}
@@ -878,7 +1005,10 @@ function DataManagementSettings() {
                 {/* Save/Reset Buttons */}
                 {hasChanges && (
                   <div className="flex gap-4">
-                    <Button onClick={handleSave} disabled={saveMutation.isPending}>
+                    <Button
+                      onClick={handleSave}
+                      disabled={saveMutation.isPending}
+                    >
                       {saveMutation.isPending ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -891,7 +1021,11 @@ function DataManagementSettings() {
                         </>
                       )}
                     </Button>
-                    <Button variant="outline" onClick={handleReset} disabled={saveMutation.isPending}>
+                    <Button
+                      variant="outline"
+                      onClick={handleReset}
+                      disabled={saveMutation.isPending}
+                    >
                       <RotateCcw className="h-4 w-4 mr-2" />
                       Reset
                     </Button>
@@ -918,7 +1052,12 @@ function DataManagementSettings() {
                 {/* Format Selection */}
                 <div className="space-y-2">
                   <Label>Export Format</Label>
-                  <Select value={exportFormat} onValueChange={(value: 'json' | 'csv') => setExportFormat(value)}>
+                  <Select
+                    value={exportFormat}
+                    onValueChange={(value: "json" | "csv") =>
+                      setExportFormat(value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -942,7 +1081,7 @@ function DataManagementSettings() {
                 {/* What to Export */}
                 <div className="space-y-4">
                   <Label>What to Export</Label>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
                       <Switch
@@ -950,11 +1089,14 @@ function DataManagementSettings() {
                         onCheckedChange={setIncludeProjects}
                         id="export-projects"
                       />
-                      <Label htmlFor="export-projects" className="cursor-pointer">
+                      <Label
+                        htmlFor="export-projects"
+                        className="cursor-pointer"
+                      >
                         Projects
                       </Label>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Switch
                         checked={includeTasks}
@@ -965,7 +1107,7 @@ function DataManagementSettings() {
                         Tasks
                       </Label>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Switch
                         checked={includeUsers}
@@ -976,7 +1118,7 @@ function DataManagementSettings() {
                         Users
                       </Label>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Switch
                         checked={includeRoles}
@@ -1014,7 +1156,8 @@ function DataManagementSettings() {
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Available Templates:</strong> {Object.keys(templates).join(', ')}
+                      <strong>Available Templates:</strong>{" "}
+                      {Object.keys(templates).join(", ")}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -1036,7 +1179,12 @@ function DataManagementSettings() {
                 {/* Format Selection */}
                 <div className="space-y-2">
                   <Label>Import Format</Label>
-                  <Select value={importFormat} onValueChange={(value: 'json' | 'csv') => setImportFormat(value)}>
+                  <Select
+                    value={importFormat}
+                    onValueChange={(value: "json" | "csv") =>
+                      setImportFormat(value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -1081,7 +1229,7 @@ function DataManagementSettings() {
                       Validate Only (Don't Import)
                     </Label>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={skipDuplicates}
@@ -1103,19 +1251,21 @@ function DataManagementSettings() {
                   {importMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {validateOnly ? 'Validating...' : 'Importing...'}
+                      {validateOnly ? "Validating..." : "Importing..."}
                     </>
                   ) : (
                     <>
                       <Upload className="h-4 w-4 mr-2" />
-                      {validateOnly ? 'Validate Data' : 'Import Data'}
+                      {validateOnly ? "Validate Data" : "Import Data"}
                     </>
                   )}
                 </Button>
 
                 {/* Import Results */}
                 {importResult && (
-                  <Alert variant={importResult.success ? 'default' : 'destructive'}>
+                  <Alert
+                    variant={importResult.success ? "default" : "destructive"}
+                  >
                     {importResult.success ? (
                       <CheckCircle className="h-4 w-4" />
                     ) : (
@@ -1123,21 +1273,33 @@ function DataManagementSettings() {
                     )}
                     <AlertDescription>
                       <div className="space-y-2">
-                        <p><strong>Total Records:</strong> {importResult.totalRecords}</p>
-                        <p><strong>Imported:</strong> {importResult.importedRecords}</p>
-                        <p><strong>Skipped:</strong> {importResult.skippedRecords}</p>
+                        <p>
+                          <strong>Total Records:</strong>{" "}
+                          {importResult.totalRecords}
+                        </p>
+                        <p>
+                          <strong>Imported:</strong>{" "}
+                          {importResult.importedRecords}
+                        </p>
+                        <p>
+                          <strong>Skipped:</strong>{" "}
+                          {importResult.skippedRecords}
+                        </p>
                         {importResult.errors.length > 0 && (
                           <div className="mt-4">
                             <strong>Errors:</strong>
                             <ul className="list-disc list-inside mt-2 space-y-1">
-                              {importResult.errors.slice(0, 5).map((error, index) => (
-                                <li key={index} className="text-sm">
-                                  Row {error.row}: {error.message}
-                                </li>
-                              ))}
+                              {importResult.errors
+                                .slice(0, 5)
+                                .map((error, index) => (
+                                  <li key={index} className="text-sm">
+                                    Row {error.row}: {error.message}
+                                  </li>
+                                ))}
                               {importResult.errors.length > 5 && (
                                 <li className="text-sm">
-                                  ...and {importResult.errors.length - 5} more errors
+                                  ...and {importResult.errors.length - 5} more
+                                  errors
                                 </li>
                               )}
                             </ul>
@@ -1158,13 +1320,14 @@ function DataManagementSettings() {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your {deleteTarget} and remove all associated data from our servers.
+                This action cannot be undone. This will permanently delete your{" "}
+                {deleteTarget} and remove all associated data from our servers.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleDeleteData} 
+              <AlertDialogAction
+                onClick={handleDeleteData}
                 disabled={isLoading}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >

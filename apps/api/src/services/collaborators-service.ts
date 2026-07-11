@@ -1,6 +1,6 @@
 /**
  * 🤝 Collaborators Service
- * 
+ *
  * Calculates and manages frequent collaborator relationships
  */
 
@@ -19,7 +19,9 @@ import logger from "../utils/logger";
 /**
  * Calculate frequent collaborators for a user
  */
-export async function calculateFrequentCollaborators(userId: string): Promise<void> {
+export async function calculateFrequentCollaborators(
+  userId: string,
+): Promise<void> {
   const db = getDatabase();
 
   try {
@@ -34,12 +36,15 @@ export async function calculateFrequentCollaborators(userId: string): Promise<vo
 
     // Get all users who worked on the same tasks (through comments, etc.)
     // For now, simplify to users in same projects
-    const collaboratorsMap = new Map<string, {
-      count: number;
-      sharedProjects: string[];
-      sharedTasks: string[];
-      lastCollaboration: Date;
-    }>();
+    const collaboratorsMap = new Map<
+      string,
+      {
+        count: number;
+        sharedProjects: string[];
+        sharedTasks: string[];
+        lastCollaboration: Date;
+      }
+    >();
 
     // Get project members for user's projects
     for (const projectId of projectIds) {
@@ -49,8 +54,8 @@ export async function calculateFrequentCollaborators(userId: string): Promise<vo
         .where(
           and(
             eq(projectMembers.projectId, projectId),
-            ne(projectMembers.userEmail, userId) // Exclude self
-          )
+            ne(projectMembers.userEmail, userId), // Exclude self
+          ),
         );
 
       for (const member of members) {
@@ -76,7 +81,8 @@ export async function calculateFrequentCollaborators(userId: string): Promise<vo
         // Collaboration score based on frequency and recency
         const baseScore = Math.min(data.count * 10, 70); // Max 70 from frequency
         const recencyDays = Math.floor(
-          (Date.now() - data.lastCollaboration.getTime()) / (1000 * 60 * 60 * 24)
+          (Date.now() - data.lastCollaboration.getTime()) /
+            (1000 * 60 * 60 * 24),
         );
         const recencyScore = Math.max(30 - recencyDays, 0); // Max 30 from recency
 
@@ -85,7 +91,7 @@ export async function calculateFrequentCollaborators(userId: string): Promise<vo
           collaborationScore: baseScore + recencyScore,
           ...data,
         };
-      }
+      },
     );
 
     // Sort by score and take top 10
@@ -107,8 +113,8 @@ export async function calculateFrequentCollaborators(userId: string): Promise<vo
           .where(
             and(
               eq(frequentCollaborators.userId, userId),
-              eq(frequentCollaborators.collaboratorId, user.id)
-            )
+              eq(frequentCollaborators.collaboratorId, user.id),
+            ),
           );
 
         // Insert new record
@@ -126,7 +132,7 @@ export async function calculateFrequentCollaborators(userId: string): Promise<vo
     }
 
     logger.info(
-      `Calculated ${topCollaborators.length} frequent collaborators for user ${userId}`
+      `Calculated ${topCollaborators.length} frequent collaborators for user ${userId}`,
     );
   } catch (error) {
     logger.error("Error calculating frequent collaborators:", error);
@@ -139,7 +145,7 @@ export async function calculateFrequentCollaborators(userId: string): Promise<vo
  */
 export async function getFrequentCollaborators(
   userId: string,
-  limit: number = 5
+  limit = 5,
 ): Promise<any[]> {
   const db = getDatabase();
 
@@ -192,4 +198,3 @@ export async function recalculateAllCollaborators(): Promise<void> {
     logger.error("Error recalculating all collaborators:", error);
   }
 }
-

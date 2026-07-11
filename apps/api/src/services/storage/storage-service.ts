@@ -4,18 +4,18 @@
  * Phase 0 - Day 4 Implementation
  */
 
-import crypto from 'crypto';
-import path from 'path';
-import fs from 'fs';
-import { promisify } from 'util';
-import logger from '../../utils/logger';
+import crypto from "crypto";
+import path from "path";
+import fs from "fs";
+import { promisify } from "util";
+import logger from "../../utils/logger";
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
 const mkdir = promisify(fs.mkdir);
 
 export interface StorageConfig {
-  provider: 'local' | 's3' | 'cloudinary';
+  provider: "local" | "s3" | "cloudinary";
   maxFileSize: number; // in bytes
   allowedMimeTypes: string[];
   uploadDir?: string; // for local storage
@@ -72,13 +72,13 @@ export class StorageService {
    */
   private async initializeProvider() {
     switch (this.config.provider) {
-      case 's3':
+      case "s3":
         await this.initializeS3();
         break;
-      case 'cloudinary':
+      case "cloudinary":
         await this.initializeCloudinary();
         break;
-      case 'local':
+      case "local":
         await this.initializeLocal();
         break;
       default:
@@ -91,20 +91,24 @@ export class StorageService {
    */
   private async initializeS3() {
     try {
-      const { S3Client } = await import('@aws-sdk/client-s3');
-      
+      const { S3Client } = await import("@aws-sdk/client-s3");
+
       this.s3Client = new S3Client({
         region: this.config.s3Region || process.env.AWS_REGION,
         credentials: {
-          accessKeyId: this.config.s3AccessKeyId || process.env.AWS_ACCESS_KEY_ID || '',
-          secretAccessKey: this.config.s3SecretAccessKey || process.env.AWS_SECRET_ACCESS_KEY || '',
+          accessKeyId:
+            this.config.s3AccessKeyId || process.env.AWS_ACCESS_KEY_ID || "",
+          secretAccessKey:
+            this.config.s3SecretAccessKey ||
+            process.env.AWS_SECRET_ACCESS_KEY ||
+            "",
         },
       });
-      
-      logger.debug('✅ AWS S3 client initialized');
+
+      logger.debug("✅ AWS S3 client initialized");
     } catch (error) {
-      logger.error('❌ Failed to initialize S3:', error);
-      throw new Error('S3 initialization failed');
+      logger.error("❌ Failed to initialize S3:", error);
+      throw new Error("S3 initialization failed");
     }
   }
 
@@ -113,19 +117,21 @@ export class StorageService {
    */
   private async initializeCloudinary() {
     try {
-      const cloudinary = await import('cloudinary');
-      
+      const cloudinary = await import("cloudinary");
+
       this.cloudinary = cloudinary.v2;
       this.cloudinary.config({
-        cloud_name: this.config.cloudinaryName || process.env.CLOUDINARY_CLOUD_NAME,
+        cloud_name:
+          this.config.cloudinaryName || process.env.CLOUDINARY_CLOUD_NAME,
         api_key: this.config.cloudinaryApiKey || process.env.CLOUDINARY_API_KEY,
-        api_secret: this.config.cloudinaryApiSecret || process.env.CLOUDINARY_API_SECRET,
+        api_secret:
+          this.config.cloudinaryApiSecret || process.env.CLOUDINARY_API_SECRET,
       });
-      
-      logger.debug('✅ Cloudinary client initialized');
+
+      logger.debug("✅ Cloudinary client initialized");
     } catch (error) {
-      logger.error('❌ Failed to initialize Cloudinary:', error);
-      throw new Error('Cloudinary initialization failed');
+      logger.error("❌ Failed to initialize Cloudinary:", error);
+      throw new Error("Cloudinary initialization failed");
     }
   }
 
@@ -133,15 +139,16 @@ export class StorageService {
    * Initialize local storage
    */
   private async initializeLocal() {
-    const uploadDir = this.config.uploadDir || path.join(process.cwd(), 'uploads');
-    
+    const uploadDir =
+      this.config.uploadDir || path.join(process.cwd(), "uploads");
+
     try {
       await mkdir(uploadDir, { recursive: true });
-      await mkdir(path.join(uploadDir, 'thumbnails'), { recursive: true });
+      await mkdir(path.join(uploadDir, "thumbnails"), { recursive: true });
       logger.debug(`✅ Local storage initialized at: ${uploadDir}`);
     } catch (error) {
-      logger.error('❌ Failed to initialize local storage:', error);
-      throw new Error('Local storage initialization failed');
+      logger.error("❌ Failed to initialize local storage:", error);
+      throw new Error("Local storage initialization failed");
     }
   }
 
@@ -149,7 +156,7 @@ export class StorageService {
    * Generate unique file ID
    */
   private generateFileId(): string {
-    return `file_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    return `file_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
   }
 
   /**
@@ -157,9 +164,10 @@ export class StorageService {
    */
   private generateSafeFileName(originalName: string, fileId: string): string {
     const ext = path.extname(originalName);
-    const baseName = path.basename(originalName, ext)
+    const baseName = path
+      .basename(originalName, ext)
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
+      .replace(/[^a-z0-9]/g, "-")
       .slice(0, 50);
     return `${fileId}_${baseName}${ext}`;
   }
@@ -167,7 +175,10 @@ export class StorageService {
   /**
    * Validate file
    */
-  private validateFile(file: Express.Multer.File): { valid: boolean; error?: string } {
+  private validateFile(file: Express.Multer.File): {
+    valid: boolean;
+    error?: string;
+  } {
     // Check file size
     if (file.size > this.config.maxFileSize) {
       const maxSizeMB = (this.config.maxFileSize / (1024 * 1024)).toFixed(2);
@@ -179,9 +190,9 @@ export class StorageService {
 
     // Check mime type
     if (this.config.allowedMimeTypes.length > 0) {
-      const isAllowed = this.config.allowedMimeTypes.some(type => {
-        if (type.endsWith('/*')) {
-          const category = type.split('/')[0] ?? '';
+      const isAllowed = this.config.allowedMimeTypes.some((type) => {
+        if (type.endsWith("/*")) {
+          const category = type.split("/")[0] ?? "";
           return file.mimetype.startsWith(category);
         }
         return file.mimetype === type;
@@ -203,7 +214,7 @@ export class StorageService {
    */
   async uploadFile(
     file: Express.Multer.File,
-    metadata: Partial<FileMetadata>
+    metadata: Partial<FileMetadata>,
   ): Promise<UploadResult> {
     // Validate file
     const validation = this.validateFile(file);
@@ -220,20 +231,25 @@ export class StorageService {
 
     try {
       switch (this.config.provider) {
-        case 's3':
+        case "s3":
           return await this.uploadToS3(file, fileId, fileName, metadata);
-        case 'cloudinary':
-          return await this.uploadToCloudinary(file, fileId, fileName, metadata);
-        case 'local':
+        case "cloudinary":
+          return await this.uploadToCloudinary(
+            file,
+            fileId,
+            fileName,
+            metadata,
+          );
+        case "local":
           return await this.uploadToLocal(file, fileId, fileName, metadata);
         default:
-          throw new Error('No storage provider configured');
+          throw new Error("No storage provider configured");
       }
     } catch (error: any) {
-      logger.error('❌ Upload error:', error);
+      logger.error("❌ Upload error:", error);
       return {
         success: false,
-        error: error.message || 'Upload failed',
+        error: error.message || "Upload failed",
       } as UploadResult;
     }
   }
@@ -245,12 +261,12 @@ export class StorageService {
     file: Express.Multer.File,
     fileId: string,
     fileName: string,
-    metadata: Partial<FileMetadata>
+    metadata: Partial<FileMetadata>,
   ): Promise<UploadResult> {
-    const { PutObjectCommand } = await import('@aws-sdk/client-s3');
-    
+    const { PutObjectCommand } = await import("@aws-sdk/client-s3");
+
     const key = `uploads/${metadata.workspaceId}/${fileName}`;
-    
+
     const command = new PutObjectCommand({
       Bucket: this.config.s3Bucket || process.env.AWS_S3_BUCKET,
       Key: key,
@@ -259,17 +275,17 @@ export class StorageService {
       Metadata: {
         fileId,
         originalName: file.originalname,
-        uploadedBy: metadata.uploadedBy || '',
-        workspaceId: metadata.workspaceId || '',
+        uploadedBy: metadata.uploadedBy || "",
+        workspaceId: metadata.workspaceId || "",
       },
     });
 
     await this.s3Client.send(command);
-    
+
     const url = `https://${this.config.s3Bucket}.s3.${this.config.s3Region}.amazonaws.com/${key}`;
-    
+
     logger.debug(`✅ File uploaded to S3: ${fileName}`);
-    
+
     return {
       success: true,
       fileId,
@@ -289,24 +305,24 @@ export class StorageService {
     file: Express.Multer.File,
     fileId: string,
     fileName: string,
-    metadata: Partial<FileMetadata>
+    metadata: Partial<FileMetadata>,
   ): Promise<UploadResult> {
     // Convert buffer to base64 data URI
-    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-    
+    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+
     const uploadResult = await this.cloudinary.uploader.upload(dataUri, {
       public_id: fileId,
       folder: `meridian/${metadata.workspaceId}`,
-      resource_type: 'auto',
+      resource_type: "auto",
       context: {
         originalName: file.originalname,
-        uploadedBy: metadata.uploadedBy || '',
-        workspaceId: metadata.workspaceId || '',
+        uploadedBy: metadata.uploadedBy || "",
+        workspaceId: metadata.workspaceId || "",
       },
     });
-    
+
     logger.debug(`✅ File uploaded to Cloudinary: ${fileName}`);
-    
+
     return {
       success: true,
       fileId,
@@ -327,17 +343,18 @@ export class StorageService {
     file: Express.Multer.File,
     fileId: string,
     fileName: string,
-    metadata: Partial<FileMetadata>
+    metadata: Partial<FileMetadata>,
   ): Promise<UploadResult> {
-    const uploadDir = this.config.uploadDir || path.join(process.cwd(), 'uploads');
+    const uploadDir =
+      this.config.uploadDir || path.join(process.cwd(), "uploads");
     const filePath = path.join(uploadDir, fileName);
-    
+
     await writeFile(filePath, file.buffer);
-    
+
     const url = `/uploads/${fileName}`;
-    
+
     logger.debug(`✅ File uploaded locally: ${fileName}`);
-    
+
     return {
       success: true,
       fileId,
@@ -355,17 +372,17 @@ export class StorageService {
   async deleteFile(fileId: string, fileName: string): Promise<boolean> {
     try {
       switch (this.config.provider) {
-        case 's3':
+        case "s3":
           return await this.deleteFromS3(fileName);
-        case 'cloudinary':
+        case "cloudinary":
           return await this.deleteFromCloudinary(fileId);
-        case 'local':
+        case "local":
           return await this.deleteFromLocal(fileName);
         default:
           return false;
       }
     } catch (error) {
-      logger.error('❌ Delete error:', error);
+      logger.error("❌ Delete error:", error);
       return false;
     }
   }
@@ -374,8 +391,8 @@ export class StorageService {
    * Delete from S3
    */
   private async deleteFromS3(fileName: string): Promise<boolean> {
-    const { DeleteObjectCommand } = await import('@aws-sdk/client-s3');
-    
+    const { DeleteObjectCommand } = await import("@aws-sdk/client-s3");
+
     const command = new DeleteObjectCommand({
       Bucket: this.config.s3Bucket || process.env.AWS_S3_BUCKET,
       Key: fileName,
@@ -399,9 +416,10 @@ export class StorageService {
    * Delete from local storage
    */
   private async deleteFromLocal(fileName: string): Promise<boolean> {
-    const uploadDir = this.config.uploadDir || path.join(process.cwd(), 'uploads');
+    const uploadDir =
+      this.config.uploadDir || path.join(process.cwd(), "uploads");
     const filePath = path.join(uploadDir, fileName);
-    
+
     await unlink(filePath);
     logger.debug(`✅ File deleted locally: ${fileName}`);
     return true;
@@ -410,46 +428,52 @@ export class StorageService {
   /**
    * Get signed URL for private files (S3 only)
    */
-  async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string | null> {
-    if (this.config.provider !== 's3') {
+  async getSignedUrl(key: string, expiresIn = 3600): Promise<string | null> {
+    if (this.config.provider !== "s3") {
       return null;
     }
 
     try {
-      const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+      const { GetObjectCommand } = await import("@aws-sdk/client-s3");
       // Optional dependency: only present when S3 storage is configured
-      const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner' as string);
-      
+      const { getSignedUrl } = await import(
+        "@aws-sdk/s3-request-presigner" as string
+      );
+
       const command = new GetObjectCommand({
         Bucket: this.config.s3Bucket || process.env.AWS_S3_BUCKET,
         Key: key,
       });
 
-      const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+      const signedUrl = await getSignedUrl(this.s3Client, command, {
+        expiresIn,
+      });
       return signedUrl;
     } catch (error) {
-      logger.error('❌ Failed to generate signed URL:', error);
+      logger.error("❌ Failed to generate signed URL:", error);
       return null;
     }
   }
 }
 
 // Export default storage service instance
-export const createStorageService = (config?: Partial<StorageConfig>): StorageService => {
+export const createStorageService = (
+  config?: Partial<StorageConfig>,
+): StorageService => {
   const defaultConfig: StorageConfig = {
-    provider: (process.env.STORAGE_PROVIDER as any) || 'local',
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 10MB default
-    allowedMimeTypes: process.env.ALLOWED_MIME_TYPES?.split(',') || [
-      'image/*',
-      'video/*',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/*',
+    provider: (process.env.STORAGE_PROVIDER as any) || "local",
+    maxFileSize: Number.parseInt(process.env.MAX_FILE_SIZE || "10485760"), // 10MB default
+    allowedMimeTypes: process.env.ALLOWED_MIME_TYPES?.split(",") || [
+      "image/*",
+      "video/*",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/*",
     ],
-    uploadDir: process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads'),
+    uploadDir: process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads"),
     s3Region: process.env.AWS_REGION,
     s3Bucket: process.env.AWS_S3_BUCKET,
     cloudinaryName: process.env.CLOUDINARY_CLOUD_NAME,
@@ -459,5 +483,3 @@ export const createStorageService = (config?: Partial<StorageConfig>): StorageSe
 };
 
 export const storageService = createStorageService();
-
-

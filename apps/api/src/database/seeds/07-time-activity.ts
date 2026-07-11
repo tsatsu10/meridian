@@ -1,6 +1,6 @@
 /**
  * ⏱️ Phase 7: Time Tracking & Activity Seed
- * 
+ *
  * Creates:
  * - 300 time entries (last 30 days)
  * - 500 activity feed entries (last 90 days)
@@ -39,17 +39,17 @@ import {
 // ==========================================
 
 const ACTIVITY_TYPES = [
-  'task_created',
-  'task_completed',
-  'task_updated',
-  'task_assigned',
-  'comment_added',
-  'project_created',
-  'team_joined',
-  'milestone_achieved',
-  'goal_completed',
-  'kudos_given',
-  'kudos_received',
+  "task_created",
+  "task_completed",
+  "task_updated",
+  "task_assigned",
+  "comment_added",
+  "project_created",
+  "team_joined",
+  "milestone_achieved",
+  "goal_completed",
+  "kudos_given",
+  "kudos_received",
 ] as const;
 
 // ==========================================
@@ -72,7 +72,7 @@ export async function seedTimeAndActivity() {
 
     // 1. CREATE TIME ENTRIES
     logger.info("⏱️ Creating time entries...");
-    
+
     let timeEntryCount = 0;
 
     for (const user of allUsers) {
@@ -114,7 +114,7 @@ export async function seedTimeAndActivity() {
 
     // 2. CREATE ACTIVITIES
     logger.info("\n📊 Creating activity feed...");
-    
+
     let activityCount = 0;
 
     for (let i = 0; i < 500; i++) {
@@ -125,7 +125,12 @@ export async function seedTimeAndActivity() {
 
       const content = {
         type: activityType,
-        description: generateActivityDescription(activityType, user.name, task, project),
+        description: generateActivityDescription(
+          activityType,
+          user.name,
+          task,
+          project,
+        ),
         taskId: task?.id,
         projectId: project?.id,
         taskTitle: task?.title,
@@ -133,7 +138,7 @@ export async function seedTimeAndActivity() {
       };
 
       await db.insert(activities).values({
-        taskId: activityType.includes('task') ? task?.id : null,
+        taskId: activityType.includes("task") ? task?.id : null,
         userId: user.id,
         type: activityType,
         content: content as any,
@@ -151,7 +156,7 @@ export async function seedTimeAndActivity() {
 
     // 3. CREATE ACTIVITY SESSIONS
     logger.info("\n🔄 Creating activity sessions...");
-    
+
     let sessionCount = 0;
 
     for (const user of allUsers) {
@@ -165,7 +170,7 @@ export async function seedTimeAndActivity() {
           workspaceId: workspace.id,
           currentTaskId: task?.id || null,
           currentProjectId: project?.id || null,
-          activityType: randomElement(['editing', 'viewing', 'commenting']),
+          activityType: randomElement(["editing", "viewing", "commenting"]),
           startedAt: hoursAgo(randomInt(1, 4)),
           lastActive: hoursAgo(randomInt(0, 1)),
         });
@@ -178,9 +183,9 @@ export async function seedTimeAndActivity() {
 
     // 4. CREATE MOOD CHECK-INS
     logger.info("\n😊 Creating mood check-ins...");
-    
+
     let moodCount = 0;
-    const moods = ['great', 'good', 'okay', 'bad', 'stressed'] as const;
+    const moods = ["great", "good", "okay", "bad", "stressed"] as const;
 
     for (const user of allUsers) {
       // 15-30 mood check-ins per user over last 30 days
@@ -191,13 +196,15 @@ export async function seedTimeAndActivity() {
           userEmail: user.email,
           workspaceId: workspace.id,
           mood: randomElement(moods),
-          notes: randomBool(0.3) ? randomElement([
-            "Productive day!",
-            "Feeling a bit overwhelmed",
-            "Great team collaboration",
-            "Making good progress",
-            "Need to prioritize better",
-          ]) : null,
+          notes: randomBool(0.3)
+            ? randomElement([
+                "Productive day!",
+                "Feeling a bit overwhelmed",
+                "Great team collaboration",
+                "Making good progress",
+                "Need to prioritize better",
+              ])
+            : null,
           isAnonymous: randomBool(0.2),
           createdAt: daysAgo(randomInt(0, 30)),
         });
@@ -210,13 +217,13 @@ export async function seedTimeAndActivity() {
 
     // 5. CREATE MOOD ANALYTICS
     logger.info("\n📊 Creating mood analytics...");
-    
+
     for (let i = 0; i < 30; i++) {
       const date = daysAgo(i);
       date.setHours(0, 0, 0, 0);
 
       const totalCheckins = randomInt(5, allUsers.length);
-      
+
       await db.insert(moodAnalytics).values({
         workspaceId: workspace.id,
         date,
@@ -245,7 +252,6 @@ export async function seedTimeAndActivity() {
       timeEntryCount,
       activityCount,
     };
-
   } catch (error) {
     logger.error("❌ Error seeding time and activity:", error);
     throw error;
@@ -256,14 +262,19 @@ export async function seedTimeAndActivity() {
 // HELPER FUNCTIONS
 // ==========================================
 
-function generateActivityDescription(type: typeof ACTIVITY_TYPES[number], userName: string, task: any, project: any): string {
+function generateActivityDescription(
+  type: (typeof ACTIVITY_TYPES)[number],
+  userName: string,
+  task: any,
+  project: any,
+): string {
   const descriptions: Record<string, string> = {
-    task_created: `${userName} created task "${task?.title || 'New Task'}"`,
-    task_completed: `${userName} completed "${task?.title || 'Task'}"`,
-    task_updated: `${userName} updated "${task?.title || 'Task'}"`,
-    task_assigned: `${userName} was assigned to "${task?.title || 'Task'}"`,
-    comment_added: `${userName} commented on "${task?.title || 'Task'}"`,
-    project_created: `${userName} created project "${project?.name || 'New Project'}"`,
+    task_created: `${userName} created task "${task?.title || "New Task"}"`,
+    task_completed: `${userName} completed "${task?.title || "Task"}"`,
+    task_updated: `${userName} updated "${task?.title || "Task"}"`,
+    task_assigned: `${userName} was assigned to "${task?.title || "Task"}"`,
+    comment_added: `${userName} commented on "${task?.title || "Task"}"`,
+    project_created: `${userName} created project "${project?.name || "New Project"}"`,
     team_joined: `${userName} joined the team`,
     milestone_achieved: `${userName} achieved a milestone`,
     goal_completed: `${userName} completed a goal`,
@@ -274,44 +285,46 @@ function generateActivityDescription(type: typeof ACTIVITY_TYPES[number], userNa
   return descriptions[type] || `${userName} performed an action`;
 }
 
-function getActivityIcon(type: typeof ACTIVITY_TYPES[number]): string {
+function getActivityIcon(type: (typeof ACTIVITY_TYPES)[number]): string {
   const icons: Record<string, string> = {
-    task_created: '➕',
-    task_completed: '✅',
-    task_updated: '📝',
-    task_assigned: '👤',
-    comment_added: '💬',
-    project_created: '📁',
-    team_joined: '👥',
-    milestone_achieved: '🎯',
-    goal_completed: '🏆',
-    kudos_given: '👏',
-    kudos_received: '⭐',
+    task_created: "➕",
+    task_completed: "✅",
+    task_updated: "📝",
+    task_assigned: "👤",
+    comment_added: "💬",
+    project_created: "📁",
+    team_joined: "👥",
+    milestone_achieved: "🎯",
+    goal_completed: "🏆",
+    kudos_given: "👏",
+    kudos_received: "⭐",
   };
 
-  return icons[type] || '📌';
+  return icons[type] || "📌";
 }
 
-function getActivityColor(type: typeof ACTIVITY_TYPES[number]): string {
+function getActivityColor(type: (typeof ACTIVITY_TYPES)[number]): string {
   const colors: Record<string, string> = {
-    task_created: '#3b82f6',
-    task_completed: '#10b981',
-    task_updated: '#f59e0b',
-    task_assigned: '#8b5cf6',
-    comment_added: '#06b6d4',
-    project_created: '#6366f1',
-    team_joined: '#ec4899',
-    milestone_achieved: '#f97316',
-    goal_completed: '#eab308',
-    kudos_given: '#14b8a6',
-    kudos_received: '#a855f7',
+    task_created: "#3b82f6",
+    task_completed: "#10b981",
+    task_updated: "#f59e0b",
+    task_assigned: "#8b5cf6",
+    comment_added: "#06b6d4",
+    project_created: "#6366f1",
+    team_joined: "#ec4899",
+    milestone_achieved: "#f97316",
+    goal_completed: "#eab308",
+    kudos_given: "#14b8a6",
+    kudos_received: "#a855f7",
   };
 
-  return colors[type] || '#6b7280';
+  return colors[type] || "#6b7280";
 }
 
 function randomDate(start: Date, end: Date): Date {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime()),
+  );
 }
 
 export default seedTimeAndActivity;

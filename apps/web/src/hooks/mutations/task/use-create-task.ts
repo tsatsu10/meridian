@@ -34,33 +34,33 @@ function useCreateTask() {
       // Invalidate all task-related queries to ensure calendar synchronization
       if (workspace?.id) {
         // Invalidate all-tasks queries (includes calendar views)
-        queryClient.invalidateQueries({ 
-          queryKey: ["all-tasks", workspace.id] 
+        queryClient.invalidateQueries({
+          queryKey: ["all-tasks", workspace.id],
         });
         queryClient.invalidateQueries({
           queryKey: ["all-tasks-stats", workspace.id],
         });
-        
+
         // Invalidate project-specific task queries
-        queryClient.invalidateQueries({ 
-          queryKey: ["project-tasks"] 
+        queryClient.invalidateQueries({
+          queryKey: ["project-tasks"],
         });
-        
+
         // Invalidate project data that might contain task counts
-        queryClient.invalidateQueries({ 
-          queryKey: ["project"] 
+        queryClient.invalidateQueries({
+          queryKey: ["project"],
         });
-        
+
         // Invalidate workspace dashboard data
-        queryClient.invalidateQueries({ 
-          queryKey: ["workspace", workspace.id] 
+        queryClient.invalidateQueries({
+          queryKey: ["workspace", workspace.id],
         });
 
         invalidateDashboardQueriesForWorkspace(queryClient, workspace.id);
 
         // Invalidate any team calendar data
-        queryClient.invalidateQueries({ 
-          queryKey: ["team-calendar"] 
+        queryClient.invalidateQueries({
+          queryKey: ["team-calendar"],
         });
       }
     },

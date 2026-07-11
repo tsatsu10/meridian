@@ -1,40 +1,48 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus, } from 'lucide-react';
-import MilestoneList from '@/components/milestones/milestone-list';
-import CreateMilestoneModal from '@/components/shared/modals/create-milestone-modal';
-import DashboardPopup from '@/components/dashboard/dashboard-popup';
-import { useMilestones } from '@/hooks/use-milestones';
-import { toast } from 'sonner';
-import useGetProject from '@/hooks/queries/project/use-get-project';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { AlertCircle } from 'lucide-react';
-import UniversalHeader from '@/components/dashboard/universal-header';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import MilestoneList from "@/components/milestones/milestone-list";
+import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
+import DashboardPopup from "@/components/dashboard/dashboard-popup";
+import { useMilestones } from "@/hooks/use-milestones";
+import { toast } from "sonner";
+import useGetProject from "@/hooks/queries/project/use-get-project";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { AlertCircle } from "lucide-react";
+import UniversalHeader from "@/components/dashboard/universal-header";
 
 // @epic-1.3-milestones: Sarah (PM) needs comprehensive milestone management
 // @persona-sarah: PM needs dedicated milestone tracking interface
 
-export const Route = createFileRoute('/dashboard/workspace/$workspaceId/project/$projectId/milestones')({
+export const Route = createFileRoute(
+  "/dashboard/workspace/$workspaceId/project/$projectId/milestones",
+)({
   component: ProjectMilestones,
 });
 
 function ProjectMilestones() {
   const { projectId, workspaceId } = Route.useParams();
-  const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProject({ id: projectId, workspaceId });
+  const {
+    data: projectData,
+    isLoading: isProjectLoading,
+    error: projectError,
+  } = useGetProject({ id: projectId, workspaceId });
   const { createMilestone, updateMilestone } = useMilestones(projectId);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<any | null>(null);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  void (useNavigate());
+  void useNavigate();
   const [_showFilters, _setShowFilters] = useState(false);
   const [_isCreateModalOpen, _setIsCreateModalOpen] = useState(false);
 
-    if (isProjectLoading) {
+  if (isProjectLoading) {
     return (
       <LazyDashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-zinc-500 dark:text-zinc-400">Loading milestones...</div>
+          <div className="text-zinc-500 dark:text-zinc-400">
+            Loading milestones...
+          </div>
         </div>
       </LazyDashboardLayout>
     );
@@ -46,7 +54,9 @@ function ProjectMilestones() {
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <AlertCircle className="h-12 w-12 text-orange-500" />
           <h3 className="text-lg font-semibold">Unable to load milestones</h3>
-          <p className="text-muted-foreground">There was an error loading the project milestones.</p>
+          <p className="text-muted-foreground">
+            There was an error loading the project milestones.
+          </p>
         </div>
       </LazyDashboardLayout>
     );
@@ -54,13 +64,13 @@ function ProjectMilestones() {
 
   return (
     <LazyDashboardLayout>
-      <UniversalHeader 
+      <UniversalHeader
         title="Project Milestones"
         subtitle="Track and manage project milestones and key deliverables"
         variant="default"
         customActions={
           <div className="flex items-center space-x-2">
-            <Button 
+            <Button
               size="sm"
               onClick={() => setIsMilestoneModalOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -73,7 +83,7 @@ function ProjectMilestones() {
       />
       <div className="space-y-6 p-6">
         {/* Milestone List */}
-        <MilestoneList 
+        <MilestoneList
           projectId={projectId}
           workspaceId={workspaceId}
           onEditMilestone={(milestone) => {
@@ -96,14 +106,14 @@ function ProjectMilestones() {
             if (editingMilestone) {
               // Update existing milestone
               updateMilestone(editingMilestone.id, milestone);
-              toast.success('Milestone updated successfully');
+              toast.success("Milestone updated successfully");
             } else {
               // Create new milestone
               createMilestone({
                 ...milestone,
                 projectId: projectId,
               });
-              toast.success('Milestone created successfully');
+              toast.success("Milestone created successfully");
             }
             setIsMilestoneModalOpen(false);
             setEditingMilestone(null);
@@ -122,4 +132,4 @@ function ProjectMilestones() {
       </div>
     </LazyDashboardLayout>
   );
-} 
+}

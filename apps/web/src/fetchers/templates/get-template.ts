@@ -1,11 +1,13 @@
 import { API_BASE_URL } from "../../constants/urls";
 import type { TemplateWithTasks } from "../../types/templates";
 
-export async function getTemplate(templateId: string): Promise<TemplateWithTasks> {
+export async function getTemplate(
+  templateId: string,
+): Promise<TemplateWithTasks> {
   const response = await fetch(`${API_BASE_URL}/templates/${templateId}`, {
-    credentials: 'include',
+    credentials: "include",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
@@ -15,4 +17,3 @@ export async function getTemplate(templateId: string): Promise<TemplateWithTasks
 
   return response.json();
 }
-

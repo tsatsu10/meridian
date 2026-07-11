@@ -28,18 +28,21 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export class APIResponseBuilder {
-  static success<T>(data: T, meta?: Partial<APIResponse['meta']>): APIResponse<T> {
+  static success<T>(
+    data: T,
+    meta?: Partial<APIResponse["meta"]>,
+  ): APIResponse<T> {
     return {
       success: true,
       data,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: this.generateRequestId(),
-        version: process.env.API_VERSION || '1.0.0',
+        version: process.env.API_VERSION || "1.0.0",
         ...meta,
       },
     };
@@ -49,7 +52,7 @@ export class APIResponseBuilder {
     code: string,
     message: string,
     details?: any,
-    meta?: Partial<APIResponse['meta']>
+    meta?: Partial<APIResponse["meta"]>,
   ): APIResponse {
     return {
       success: false,
@@ -61,7 +64,7 @@ export class APIResponseBuilder {
       meta: {
         timestamp: new Date().toISOString(),
         requestId: this.generateRequestId(),
-        version: process.env.API_VERSION || '1.0.0',
+        version: process.env.API_VERSION || "1.0.0",
         ...meta,
       },
     };
@@ -70,17 +73,17 @@ export class APIResponseBuilder {
   static paginated<T>(
     data: T[],
     pagination: Required<PaginationParams> & { total: number },
-    meta?: Partial<APIResponse['meta']>
+    meta?: Partial<APIResponse["meta"]>,
   ): APIResponse<T[]> {
     const totalPages = Math.ceil(pagination.total / pagination.limit);
-    
+
     return {
       success: true,
       data,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: this.generateRequestId(),
-        version: process.env.API_VERSION || '1.0.0',
+        version: process.env.API_VERSION || "1.0.0",
         pagination: {
           page: pagination.page,
           limit: pagination.limit,
@@ -100,38 +103,37 @@ export class APIResponseBuilder {
 // Common error codes
 export const ErrorCodes = {
   // Authentication & Authorization
-  UNAUTHORIZED: 'UNAUTHORIZED',
-  FORBIDDEN: 'FORBIDDEN',
-  INVALID_TOKEN: 'INVALID_TOKEN',
-  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
-  
+  UNAUTHORIZED: "UNAUTHORIZED",
+  FORBIDDEN: "FORBIDDEN",
+  INVALID_TOKEN: "INVALID_TOKEN",
+  TOKEN_EXPIRED: "TOKEN_EXPIRED",
+
   // Validation
-  VALIDATION_ERROR: 'VALIDATION_ERROR',
-  INVALID_INPUT: 'INVALID_INPUT',
-  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
-  
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  INVALID_INPUT: "INVALID_INPUT",
+  MISSING_REQUIRED_FIELD: "MISSING_REQUIRED_FIELD",
+
   // Resources
-  NOT_FOUND: 'NOT_FOUND',
-  ALREADY_EXISTS: 'ALREADY_EXISTS',
-  RESOURCE_CONFLICT: 'RESOURCE_CONFLICT',
-  CONFLICT: 'CONFLICT', // Alias for RESOURCE_CONFLICT
-  
+  NOT_FOUND: "NOT_FOUND",
+  ALREADY_EXISTS: "ALREADY_EXISTS",
+  RESOURCE_CONFLICT: "RESOURCE_CONFLICT",
+  CONFLICT: "CONFLICT", // Alias for RESOURCE_CONFLICT
+
   // Database
-  DATABASE_ERROR: 'DATABASE_ERROR',
-  TRANSACTION_FAILED: 'TRANSACTION_FAILED',
-  
+  DATABASE_ERROR: "DATABASE_ERROR",
+  TRANSACTION_FAILED: "TRANSACTION_FAILED",
+
   // External Services
-  EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
-  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
-  
+  EXTERNAL_SERVICE_ERROR: "EXTERNAL_SERVICE_ERROR",
+  RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
+
   // Internal
-  INTERNAL_ERROR: 'INTERNAL_ERROR',
-  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
-  
+  INTERNAL_ERROR: "INTERNAL_ERROR",
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+
   // Real-time
-  WEBSOCKET_ERROR: 'WEBSOCKET_ERROR',
-  CONNECTION_FAILED: 'CONNECTION_FAILED',
+  WEBSOCKET_ERROR: "WEBSOCKET_ERROR",
+  CONNECTION_FAILED: "CONNECTION_FAILED",
 } as const;
 
-export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes]; 
-
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

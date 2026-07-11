@@ -1,12 +1,12 @@
 import { createId } from "@paralleldrive/cuid2";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import logger from '../../utils/logger';
-import { 
-  workspaceTable, 
-  userTable, 
-  roleAssignmentTable, 
-  roleHistoryTable 
+import logger from "../../utils/logger";
+import {
+  workspaceTable,
+  userTable,
+  roleAssignmentTable,
+  roleHistoryTable,
 } from "../../database/schema";
 
 /**
@@ -15,8 +15,10 @@ import {
  */
 async function assignWorkspaceManagerToCreators() {
   const db = getDatabase();
-  logger.debug("🔄 Starting workspace-manager role assignment for existing workspace creators...");
-  
+  logger.debug(
+    "🔄 Starting workspace-manager role assignment for existing workspace creators...",
+  );
+
   try {
     // Get all workspaces with their owners
     const workspaces = await db
@@ -24,7 +26,7 @@ async function assignWorkspaceManagerToCreators() {
         workspaceId: workspaceTable.id,
         workspaceName: workspaceTable.name,
         ownerId: workspaceTable.ownerId,
-        createdAt: workspaceTable.createdAt
+        createdAt: workspaceTable.createdAt,
       })
       .from(workspaceTable);
 
@@ -42,7 +44,9 @@ async function assignWorkspaceManagerToCreators() {
         .limit(1);
 
       if (!user) {
-        logger.debug(`⚠️  User not found for workspace "${workspace.workspaceName}": ${workspace.ownerId}`);
+        logger.debug(
+          `⚠️  User not found for workspace "${workspace.workspaceName}": ${workspace.ownerId}`,
+        );
         skippedCount++;
         continue;
       }
@@ -56,20 +60,22 @@ async function assignWorkspaceManagerToCreators() {
             eq(roleAssignmentTable.userId, user.id),
             eq(roleAssignmentTable.role, "workspace-manager"),
             eq(roleAssignmentTable.workspaceId, workspace.workspaceId),
-            eq(roleAssignmentTable.isActive, true)
-          )
+            eq(roleAssignmentTable.isActive, true),
+          ),
         )
         .limit(1);
 
       if (existingAssignment.length > 0) {
-        logger.debug(`⏭️  Workspace-manager role already assigned for "${workspace.workspaceName}": ${user.email}`);
+        logger.debug(
+          `⏭️  Workspace-manager role already assigned for "${workspace.workspaceName}": ${user.email}`,
+        );
         skippedCount++;
         continue;
       }
 
       // Assign workspace-manager role
       const assignmentId = createId();
-      
+
       await db.insert(roleAssignmentTable).values({
         id: assignmentId,
         userId: user.id,
@@ -88,19 +94,24 @@ async function assignWorkspaceManagerToCreators() {
         performedBy: user.id,
         reason: "Migration: Retroactive assignment for workspace creator",
         workspaceId: workspace.workspaceId,
-        notes: "Migration: Existing workspace creator automatically assigned workspace-manager role",
+        notes:
+          "Migration: Existing workspace creator automatically assigned workspace-manager role",
         metadata: {
           source: "migration-workspace-creators",
         },
       });
 
-      logger.debug(`✅ Assigned workspace-manager role to "${workspace.workspaceName}" creator: ${user.email}`);
+      logger.debug(
+        `✅ Assigned workspace-manager role to "${workspace.workspaceName}" creator: ${user.email}`,
+      );
       assignedCount++;
     }
 
     logger.debug("\n📊 Migration Summary:");
     logger.debug(`   ✅ Assigned: ${assignedCount} workspace creators`);
-    logger.debug(`   ⏭️  Skipped: ${skippedCount} (already assigned or user not found)`);
+    logger.debug(
+      `   ⏭️  Skipped: ${skippedCount} (already assigned or user not found)`,
+    );
     logger.debug(`   📋 Total processed: ${workspaces.length} workspaces`);
     logger.debug("🎉 Migration completed successfully!");
 
@@ -108,13 +119,12 @@ async function assignWorkspaceManagerToCreators() {
       success: true,
       totalWorkspaces: workspaces.length,
       assigned: assignedCount,
-      skipped: skippedCount
+      skipped: skippedCount,
     };
-
   } catch (error) {
     logger.error("❌ Failed to assign workspace-manager roles:", error);
     throw error;
   }
 }
 
-export default assignWorkspaceManagerToCreators; 
+export default assignWorkspaceManagerToCreators;

@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 import useWorkspaceStore from "@/store/workspace";
 import Workspaces from "./sections/workspaces";
 import { useUserPreferencesStore } from "@/store/user-preferences";
-import { TooltipProvider, } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarNavigation } from "@/components/navigation/magic-ui-navigation";
 
 export function SidebarContent() {
@@ -20,13 +20,15 @@ export function SidebarContent() {
     <TooltipProvider>
       <nav className="flex flex-1 flex-col h-full overflow-y-auto">
         {/* Workspace switcher/creator at the top */}
-        <div className={cn(
-          "border-b border-border/20",
-          isSidebarOpened ? "p-3" : "p-2"
-        )}>
+        <div
+          className={cn(
+            "border-b border-border/20",
+            isSidebarOpened ? "p-3" : "p-2",
+          )}
+        >
           <Workspaces />
         </div>
-        
+
         {/* Main Navigation - Centered */}
         <div className="flex-1 flex flex-col justify-center">
           {workspace && (
@@ -43,12 +45,14 @@ export function SidebarContent() {
             />
           )}
         </div>
-        
+
         {/* Bottom Actions */}
-        <div className={cn(
-          "border-t border-border/20 space-y-1",
-          isSidebarOpened ? "p-3" : "p-2"
-        )}>
+        <div
+          className={cn(
+            "border-t border-border/20 space-y-1",
+            isSidebarOpened ? "p-3" : "p-2",
+          )}
+        >
           {/* Workspace Settings link removed per request */}
         </div>
       </nav>

@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import debounce from '../debounce';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import debounce from "../debounce";
 
-describe('debounce utility', () => {
+describe("debounce utility", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -11,7 +11,7 @@ describe('debounce utility', () => {
     vi.useRealTimers();
   });
 
-  it('should delay function execution', () => {
+  it("should delay function execution", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 500);
 
@@ -24,7 +24,7 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalledTimes(1);
   });
 
-  it('should cancel previous calls when called multiple times', () => {
+  it("should cancel previous calls when called multiple times", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 500);
 
@@ -41,22 +41,22 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalledTimes(1);
   });
 
-  it('should pass arguments to the debounced function', () => {
+  it("should pass arguments to the debounced function", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 500);
 
-    debouncedFunc('arg1', 'arg2', 123);
+    debouncedFunc("arg1", "arg2", 123);
 
     vi.advanceTimersByTime(500);
 
-    expect(func).toHaveBeenCalledWith('arg1', 'arg2', 123);
+    expect(func).toHaveBeenCalledWith("arg1", "arg2", 123);
   });
 
-  it('should handle multiple argument types', () => {
+  it("should handle multiple argument types", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 500);
 
-    const obj = { key: 'value' };
+    const obj = { key: "value" };
     const arr = [1, 2, 3];
 
     debouncedFunc(obj, arr, true, null);
@@ -66,7 +66,7 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalledWith(obj, arr, true, null);
   });
 
-  it('should work with different delay times', () => {
+  it("should work with different delay times", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 1000);
 
@@ -79,7 +79,7 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle rapid successive calls correctly', () => {
+  it("should handle rapid successive calls correctly", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 300);
 
@@ -97,8 +97,8 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalledWith(9);
   });
 
-  it('should work with synchronous functions', () => {
-    const func = vi.fn(() => 'result');
+  it("should work with synchronous functions", () => {
+    const func = vi.fn(() => "result");
     const debouncedFunc = debounce(func, 500);
 
     debouncedFunc();
@@ -107,8 +107,8 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalled();
   });
 
-  it('should work with async functions', async () => {
-    const func = vi.fn(async () => 'async result');
+  it("should work with async functions", async () => {
+    const func = vi.fn(async () => "async result");
     const debouncedFunc = debounce(func, 500);
 
     debouncedFunc();
@@ -117,7 +117,7 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalled();
   });
 
-  it('should handle zero delay', () => {
+  it("should handle zero delay", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 0);
 
@@ -128,7 +128,7 @@ describe('debounce utility', () => {
     expect(func).toHaveBeenCalledTimes(1);
   });
 
-  it('should maintain separate timers for different debounced functions', () => {
+  it("should maintain separate timers for different debounced functions", () => {
     const func1 = vi.fn();
     const func2 = vi.fn();
     const debouncedFunc1 = debounce(func1, 300);
@@ -145,14 +145,14 @@ describe('debounce utility', () => {
     expect(func2).toHaveBeenCalledTimes(1);
   });
 
-  it('should clear timeout when called again before delay expires', () => {
+  it("should clear timeout when called again before delay expires", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 1000);
 
-    debouncedFunc('first');
+    debouncedFunc("first");
     vi.advanceTimersByTime(500);
 
-    debouncedFunc('second');
+    debouncedFunc("second");
     vi.advanceTimersByTime(500);
 
     // First call should be cancelled, function not called yet
@@ -162,12 +162,12 @@ describe('debounce utility', () => {
 
     // Only second call should execute
     expect(func).toHaveBeenCalledTimes(1);
-    expect(func).toHaveBeenCalledWith('second');
+    expect(func).toHaveBeenCalledWith("second");
   });
 
-  it('should handle functions that throw errors', () => {
+  it("should handle functions that throw errors", () => {
     const func = vi.fn(() => {
-      throw new Error('Test error');
+      throw new Error("Test error");
     });
     const debouncedFunc = debounce(func, 500);
 
@@ -175,6 +175,6 @@ describe('debounce utility', () => {
 
     expect(() => {
       vi.advanceTimersByTime(500);
-    }).toThrow('Test error');
+    }).toThrow("Test error");
   });
 });

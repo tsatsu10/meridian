@@ -1,7 +1,11 @@
 import { eq, isNull } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { calendarEvents, eventAttendees, recurringPatterns } from "../../database/schema";
-import logger from '../../utils/logger';
+import {
+  calendarEvents,
+  eventAttendees,
+  recurringPatterns,
+} from "../../database/schema";
+import logger from "../../utils/logger";
 
 // @epic-3.4-teams: Get single calendar event with attendees and recurring pattern
 export async function getEvent(eventId: string) {
@@ -10,14 +14,12 @@ export async function getEvent(eventId: string) {
   try {
     // Get the event (exclude soft-deleted)
     const event = await db.query.calendarEvents.findFirst({
-      where: (events, { eq, and, isNull }) => and(
-        eq(events.id, eventId),
-        isNull(events.deletedAt)
-      ),
+      where: (events, { eq, and, isNull }) =>
+        and(eq(events.id, eventId), isNull(events.deletedAt)),
     });
 
     if (!event) {
-      throw new Error('Event not found');
+      throw new Error("Event not found");
     }
 
     // Get attendees
@@ -52,5 +54,3 @@ export async function getEvent(eventId: string) {
     throw error;
   }
 }
-
-

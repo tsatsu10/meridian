@@ -79,23 +79,26 @@ interface DataAccessRequest {
 }
 
 export function GDPRComplianceWidget() {
-  void (useQueryClient());
+  void useQueryClient();
   const [selectedTab, setSelectedTab] = useState<string>("overview");
 
   // Fetch GDPR compliance overview
-  const { data: compliance, isLoading: complianceLoading } = useQuery<GDPRCompliance>({
-    queryKey: ["gdpr-compliance"],
-    queryFn: async () => {
-      const response = await fetch("/api/security/gdpr/compliance");
-      if (!response.ok) throw new Error("Failed to fetch GDPR compliance");
-      const result = await response.json();
-      return result.data;
-    },
-    refetchInterval: 60000, // Refresh every minute
-  });
+  const { data: compliance, isLoading: complianceLoading } =
+    useQuery<GDPRCompliance>({
+      queryKey: ["gdpr-compliance"],
+      queryFn: async () => {
+        const response = await fetch("/api/security/gdpr/compliance");
+        if (!response.ok) throw new Error("Failed to fetch GDPR compliance");
+        const result = await response.json();
+        return result.data;
+      },
+      refetchInterval: 60000, // Refresh every minute
+    });
 
   // Fetch data retention policies
-  const { data: retentionPolicies, isLoading: policiesLoading } = useQuery<DataRetentionPolicy[]>({
+  const { data: retentionPolicies, isLoading: policiesLoading } = useQuery<
+    DataRetentionPolicy[]
+  >({
     queryKey: ["gdpr-retention-policies"],
     queryFn: async () => {
       const response = await fetch("/api/security/gdpr/retention-policies");
@@ -106,7 +109,9 @@ export function GDPRComplianceWidget() {
   });
 
   // Fetch consent records
-  const { data: consentRecords, isLoading: consentLoading } = useQuery<UserConsentRecord[]>({
+  const { data: consentRecords, isLoading: consentLoading } = useQuery<
+    UserConsentRecord[]
+  >({
     queryKey: ["gdpr-consent-records"],
     queryFn: async () => {
       const response = await fetch("/api/security/gdpr/consent-records");
@@ -117,7 +122,9 @@ export function GDPRComplianceWidget() {
   });
 
   // Fetch data access requests
-  const { data: accessRequests, isLoading: requestsLoading } = useQuery<DataAccessRequest[]>({
+  const { data: accessRequests, isLoading: requestsLoading } = useQuery<
+    DataAccessRequest[]
+  >({
     queryKey: ["gdpr-access-requests"],
     queryFn: async () => {
       const response = await fetch("/api/security/gdpr/access-requests");
@@ -148,7 +155,9 @@ export function GDPRComplianceWidget() {
     },
   });
 
-  const getStatusColor = (status: "compliant" | "warning" | "non-compliant") => {
+  const getStatusColor = (
+    status: "compliant" | "warning" | "non-compliant",
+  ) => {
     switch (status) {
       case "compliant":
         return "text-green-600";
@@ -172,9 +181,12 @@ export function GDPRComplianceWidget() {
 
   const getRequestStatusBadge = (status: string) => {
     const styles = {
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      processing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      processing:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      completed:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
       rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
     };
     return styles[status as keyof typeof styles] || styles.pending;
@@ -186,7 +198,9 @@ export function GDPRComplianceWidget() {
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span className="ml-2 text-muted-foreground">Loading GDPR compliance...</span>
+            <span className="ml-2 text-muted-foreground">
+              Loading GDPR compliance...
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -195,7 +209,11 @@ export function GDPRComplianceWidget() {
 
   const overallScore = compliance?.overallScore ?? 0;
   const scoreColor =
-    overallScore >= 90 ? "text-green-600" : overallScore >= 70 ? "text-yellow-600" : "text-red-600";
+    overallScore >= 90
+      ? "text-green-600"
+      : overallScore >= 70
+        ? "text-yellow-600"
+        : "text-red-600";
 
   return (
     <Card className="glass-card">
@@ -210,11 +228,13 @@ export function GDPRComplianceWidget() {
               variant="outline"
               className={cn(
                 "text-xs font-bold",
-                overallScore >= 90 && "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+                overallScore >= 90 &&
+                  "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
                 overallScore >= 70 &&
                   overallScore < 90 &&
                   "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-                overallScore < 70 && "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                overallScore < 70 &&
+                  "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
               )}
             >
               Score: {overallScore}%
@@ -248,21 +268,37 @@ export function GDPRComplianceWidget() {
             {/* Overall Score */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Overall Compliance Score</span>
-                <span className={cn("text-3xl font-bold", scoreColor)}>{overallScore}%</span>
+                <span className="text-sm font-medium">
+                  Overall Compliance Score
+                </span>
+                <span className={cn("text-3xl font-bold", scoreColor)}>
+                  {overallScore}%
+                </span>
               </div>
               <Progress
                 value={overallScore}
                 className={cn(
                   "h-3",
                   overallScore >= 90 && "[&>div]:bg-green-600",
-                  overallScore >= 70 && overallScore < 90 && "[&>div]:bg-yellow-600",
-                  overallScore < 70 && "[&>div]:bg-red-600"
+                  overallScore >= 70 &&
+                    overallScore < 90 &&
+                    "[&>div]:bg-yellow-600",
+                  overallScore < 70 && "[&>div]:bg-red-600",
                 )}
               />
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Last audit: {compliance?.lastAudit ? new Date(compliance.lastAudit).toLocaleDateString() : "N/A"}</span>
-                <span>Next audit: {compliance?.nextAudit ? new Date(compliance.nextAudit).toLocaleDateString() : "N/A"}</span>
+                <span>
+                  Last audit:{" "}
+                  {compliance?.lastAudit
+                    ? new Date(compliance.lastAudit).toLocaleDateString()
+                    : "N/A"}
+                </span>
+                <span>
+                  Next audit:{" "}
+                  {compliance?.nextAudit
+                    ? new Date(compliance.nextAudit).toLocaleDateString()
+                    : "N/A"}
+                </span>
               </div>
             </div>
 
@@ -271,25 +307,36 @@ export function GDPRComplianceWidget() {
               <h4 className="text-sm font-semibold">Compliance Categories</h4>
               <div className="space-y-2">
                 {compliance?.categories &&
-                  Object.entries(compliance.categories).map(([key, category]) => (
-                    <div
-                      key={key}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        {getStatusIcon(category.status)}
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">{category.name}</div>
-                          <div className="text-xs text-muted-foreground">{category.details}</div>
+                  Object.entries(compliance.categories).map(
+                    ([key, category]) => (
+                      <div
+                        key={key}
+                        className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          {getStatusIcon(category.status)}
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">
+                              {category.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {category.details}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={cn(
+                              "text-sm font-semibold",
+                              getStatusColor(category.status),
+                            )}
+                          >
+                            {category.score}%
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className={cn("text-sm font-semibold", getStatusColor(category.status))}>
-                          {category.score}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    ),
+                  )}
               </div>
             </div>
 
@@ -297,29 +344,48 @@ export function GDPRComplianceWidget() {
             <div className="grid grid-cols-3 gap-4">
               <div className="p-3 border border-border rounded-lg bg-background/50">
                 <div className="flex items-center gap-2 mb-1">
-                  <Database className="h-4 w-4 text-blue-600" aria-hidden="true" />
-                  <span className="text-xs text-muted-foreground">Active Policies</span>
+                  <Database
+                    className="h-4 w-4 text-blue-600"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    Active Policies
+                  </span>
                 </div>
                 <div className="text-xl font-bold">
-                  {retentionPolicies?.filter((p) => p.status === "active").length ?? 0}
+                  {retentionPolicies?.filter((p) => p.status === "active")
+                    .length ?? 0}
                 </div>
               </div>
 
               <div className="p-3 border border-border rounded-lg bg-background/50">
                 <div className="flex items-center gap-2 mb-1">
-                  <Users className="h-4 w-4 text-green-600" aria-hidden="true" />
-                  <span className="text-xs text-muted-foreground">Consented Users</span>
+                  <Users
+                    className="h-4 w-4 text-green-600"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    Consented Users
+                  </span>
                 </div>
-                <div className="text-xl font-bold">{consentRecords?.length ?? 0}</div>
+                <div className="text-xl font-bold">
+                  {consentRecords?.length ?? 0}
+                </div>
               </div>
 
               <div className="p-3 border border-border rounded-lg bg-background/50">
                 <div className="flex items-center gap-2 mb-1">
-                  <FileText className="h-4 w-4 text-yellow-600" aria-hidden="true" />
-                  <span className="text-xs text-muted-foreground">Pending Requests</span>
+                  <FileText
+                    className="h-4 w-4 text-yellow-600"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    Pending Requests
+                  </span>
                 </div>
                 <div className="text-xl font-bold">
-                  {accessRequests?.filter((r) => r.status === "pending").length ?? 0}
+                  {accessRequests?.filter((r) => r.status === "pending")
+                    .length ?? 0}
                 </div>
               </div>
             </div>
@@ -341,7 +407,9 @@ export function GDPRComplianceWidget() {
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{policy.dataType}</span>
+                          <span className="font-medium text-sm">
+                            {policy.dataType}
+                          </span>
                           <Badge
                             variant="outline"
                             className={cn(
@@ -351,15 +419,17 @@ export function GDPRComplianceWidget() {
                               policy.status === "expiring" &&
                                 "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
                               policy.status === "expired" &&
-                                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
                             )}
                           >
                             {policy.status}
                           </Badge>
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Retention: {policy.retentionPeriod} • {policy.recordsCount} records
-                          {policy.expiryDate && ` • Expires ${new Date(policy.expiryDate).toLocaleDateString()}`}
+                          Retention: {policy.retentionPeriod} •{" "}
+                          {policy.recordsCount} records
+                          {policy.expiryDate &&
+                            ` • Expires ${new Date(policy.expiryDate).toLocaleDateString()}`}
                         </div>
                       </div>
                       {getStatusIcon(policy.complianceStatus)}
@@ -386,28 +456,34 @@ export function GDPRComplianceWidget() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <div className="font-medium text-sm">{record.name}</div>
-                          <div className="text-xs text-muted-foreground">{record.email}</div>
+                          <div className="font-medium text-sm">
+                            {record.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {record.email}
+                          </div>
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {new Date(record.consentDate).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {Object.entries(record.consentTypes).map(([type, granted]) => (
-                          <Badge
-                            key={type}
-                            variant="outline"
-                            className={cn(
-                              "text-xs",
-                              granted
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                            )}
-                          >
-                            {type}: {granted ? "✓" : "✗"}
-                          </Badge>
-                        ))}
+                        {Object.entries(record.consentTypes).map(
+                          ([type, granted]) => (
+                            <Badge
+                              key={type}
+                              variant="outline"
+                              className={cn(
+                                "text-xs",
+                                granted
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+                              )}
+                            >
+                              {type}: {granted ? "✓" : "✗"}
+                            </Badge>
+                          ),
+                        )}
                       </div>
                     </div>
                   ))}
@@ -432,8 +508,16 @@ export function GDPRComplianceWidget() {
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{request.userEmail}</span>
-                          <Badge variant="outline" className={cn("text-xs", getRequestStatusBadge(request.status))}>
+                          <span className="font-medium text-sm">
+                            {request.userEmail}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-xs",
+                              getRequestStatusBadge(request.status),
+                            )}
+                          >
                             {request.status}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
@@ -441,7 +525,8 @@ export function GDPRComplianceWidget() {
                           </Badge>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Requested: {new Date(request.requestDate).toLocaleDateString()}
+                          Requested:{" "}
+                          {new Date(request.requestDate).toLocaleDateString()}
                           {request.completionDate &&
                             ` • Completed: ${new Date(request.completionDate).toLocaleDateString()}`}
                         </div>
@@ -462,10 +547,14 @@ export function GDPRComplianceWidget() {
         {/* Action Banner */}
         {overallScore < 90 && (
           <div className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <AlertCircle
+              className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="text-xs text-yellow-900 dark:text-yellow-200">
-              <strong>Action Required:</strong> Some compliance areas need attention. Review the detailed breakdown
-              and take necessary actions to improve your GDPR compliance score.
+              <strong>Action Required:</strong> Some compliance areas need
+              attention. Review the detailed breakdown and take necessary
+              actions to improve your GDPR compliance score.
             </div>
           </div>
         )}
@@ -473,4 +562,3 @@ export function GDPRComplianceWidget() {
     </Card>
   );
 }
-

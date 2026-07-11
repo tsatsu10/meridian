@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 /**
  * Skeleton Loader Component
@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
  */
 
 interface SkeletonProps {
-  className?: string
+  className?: string;
 }
 
 export function Skeleton({ className }: SkeletonProps) {
@@ -15,10 +15,10 @@ export function Skeleton({ className }: SkeletonProps) {
     <div
       className={cn(
         "animate-pulse rounded-md bg-slate-200 dark:bg-slate-800",
-        className
+        className,
       )}
     />
-  )
+  );
 }
 
 /**
@@ -41,7 +41,7 @@ export function ProfileCardSkeleton() {
         <Skeleton className="h-4 w-3/4" />
       </div>
     </div>
-  )
+  );
 }
 
 /**
@@ -63,7 +63,7 @@ export function ExperienceItemSkeleton() {
       </div>
       <Skeleton className="h-8 w-8 rounded" />
     </div>
-  )
+  );
 }
 
 /**
@@ -82,7 +82,7 @@ export function ConnectionItemSkeleton() {
       </div>
       <Skeleton className="h-8 w-8 rounded" />
     </div>
-  )
+  );
 }
 
 /**
@@ -95,7 +95,7 @@ export function FormInputSkeleton() {
       <Skeleton className="h-4 w-24" />
       <Skeleton className="h-10 w-full" />
     </div>
-  )
+  );
 }
 
 /**
@@ -115,7 +115,7 @@ export function ProjectCardSkeleton() {
       <Skeleton className="h-2 w-full rounded-full" />
       <Skeleton className="h-3 w-48" />
     </div>
-  )
+  );
 }
 
 /**
@@ -167,6 +167,5 @@ export function ProfilePageSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

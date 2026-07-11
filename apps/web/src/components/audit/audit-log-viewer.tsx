@@ -1,12 +1,26 @@
-import { useState, useEffect } from 'react';
-import { API_BASE_URL, } from '@/constants/urls';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Badge } from '../ui/badge';
-import { Calendar, Download, Filter, Search, Shield, User, Activity } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/constants/urls";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Badge } from "../ui/badge";
+import {
+  Calendar,
+  Download,
+  Filter,
+  Search,
+  Shield,
+  User,
+  Activity,
+} from "lucide-react";
+import { format } from "date-fns";
 
 interface AuditLogEntry {
   id: string;
@@ -15,7 +29,7 @@ interface AuditLogEntry {
   resourceId?: string;
   actorEmail: string;
   actorName?: string;
-  severity: 'debug' | 'info' | 'warn' | 'error' | 'critical';
+  severity: "debug" | "info" | "warn" | "error" | "critical";
   category?: string;
   description?: string;
   timestamp: number;
@@ -40,13 +54,13 @@ export function AuditLogViewer() {
   const [stats, setStats] = useState<AuditStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-    search: '',
-    severity: '',
-    category: '',
-    action: '',
-    startDate: '',
-    endDate: '',
-    actorId: '',
+    search: "",
+    severity: "",
+    category: "",
+    action: "",
+    startDate: "",
+    endDate: "",
+    actorId: "",
   });
   const [pagination, setPagination] = useState({
     offset: 0,
@@ -56,11 +70,11 @@ export function AuditLogViewer() {
   });
 
   const severityColors = {
-    debug: 'bg-gray-100 text-gray-800',
-    info: 'bg-blue-100 text-blue-800',
-    warn: 'bg-yellow-100 text-yellow-800',
-    error: 'bg-red-100 text-red-800',
-    critical: 'bg-red-200 text-red-900',
+    debug: "bg-gray-100 text-gray-800",
+    info: "bg-blue-100 text-blue-800",
+    warn: "bg-yellow-100 text-yellow-800",
+    error: "bg-red-100 text-red-800",
+    critical: "bg-red-200 text-red-900",
   };
 
   const fetchAuditLogs = async (resetPagination = false) => {
@@ -71,7 +85,7 @@ export function AuditLogViewer() {
         limit: pagination.limit.toString(),
         offset: offset.toString(),
         ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value)
+          Object.entries(filters).filter(([_, value]) => value),
         ),
       });
 
@@ -98,7 +112,7 @@ export function AuditLogViewer() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch audit logs:', error);
+      console.error("Failed to fetch audit logs:", error);
     } finally {
       setLoading(false);
     }
@@ -108,41 +122,45 @@ export function AuditLogViewer() {
     try {
       const response = await fetch(`${API_BASE_URL}/audit/stats`);
       const data = await response.json();
-      
+
       if (data.success) {
         setStats(data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch audit stats:', error);
+      console.error("Failed to fetch audit stats:", error);
     }
   };
 
-  const exportLogs = async (format: 'json' | 'csv') => {
+  const exportLogs = async (format: "json" | "csv") => {
     try {
       const params = new URLSearchParams({
         format,
-        startDate: filters.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        startDate:
+          filters.startDate ||
+          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: filters.endDate || new Date().toISOString(),
         ...Object.fromEntries(
-          Object.entries(filters).filter(([key, value]) => value && key !== 'search')
+          Object.entries(filters).filter(
+            ([key, value]) => value && key !== "search",
+          ),
         ),
       });
 
       const response = await fetch(`${API_BASE_URL}/audit/export?${params}`);
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.${format}`;
+        a.download = `audit-logs-${new Date().toISOString().split("T")[0]}.${format}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }
     } catch (error) {
-      console.error('Failed to export logs:', error);
+      console.error("Failed to export logs:", error);
     }
   };
 
@@ -173,7 +191,7 @@ export function AuditLogViewer() {
               </>
             )}
           </div>
-          
+
           <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
             <div className="flex items-center gap-1">
               <User className="w-4 h-4" />
@@ -181,7 +199,12 @@ export function AuditLogViewer() {
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              <span>{format(new Date(log.timestamp * 1000), 'MMM dd, yyyy HH:mm:ss')}</span>
+              <span>
+                {format(
+                  new Date(log.timestamp * 1000),
+                  "MMM dd, yyyy HH:mm:ss",
+                )}
+              </span>
             </div>
             {log.ipAddress && (
               <div className="flex items-center gap-1">
@@ -217,7 +240,9 @@ export function AuditLogViewer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Events
+              </CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -230,7 +255,9 @@ export function AuditLogViewer() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Critical Events</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Critical Events
+              </CardTitle>
               <Shield className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
@@ -245,16 +272,16 @@ export function AuditLogViewer() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Security Failures</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Security Failures
+              </CardTitle>
               <Shield className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
                 {stats.recentSecurityFailures.length}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Recent failures
-              </p>
+              <p className="text-xs text-muted-foreground">Recent failures</p>
             </CardContent>
           </Card>
 
@@ -265,7 +292,7 @@ export function AuditLogViewer() {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {stats.topActions[0]?.action || 'N/A'}
+                {stats.topActions[0]?.action || "N/A"}
               </div>
               <p className="text-xs text-muted-foreground">
                 {stats.topActions[0]?.count || 0} times
@@ -290,14 +317,14 @@ export function AuditLogViewer() {
               <Input
                 placeholder="Search logs..."
                 value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
                 className="pl-10"
               />
             </div>
 
             <Select
               value={filters.severity}
-              onValueChange={(value) => handleFilterChange('severity', value)}
+              onValueChange={(value) => handleFilterChange("severity", value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Severity" />
@@ -314,7 +341,7 @@ export function AuditLogViewer() {
 
             <Select
               value={filters.category}
-              onValueChange={(value) => handleFilterChange('category', value)}
+              onValueChange={(value) => handleFilterChange("category", value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Category" />
@@ -333,7 +360,7 @@ export function AuditLogViewer() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => exportLogs('json')}
+                onClick={() => exportLogs("json")}
                 className="flex items-center gap-1"
               >
                 <Download className="w-4 h-4" />
@@ -342,7 +369,7 @@ export function AuditLogViewer() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => exportLogs('csv')}
+                onClick={() => exportLogs("csv")}
                 className="flex items-center gap-1"
               >
                 <Download className="w-4 h-4" />
@@ -356,13 +383,13 @@ export function AuditLogViewer() {
               type="datetime-local"
               placeholder="Start Date"
               value={filters.startDate}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              onChange={(e) => handleFilterChange("startDate", e.target.value)}
             />
             <Input
               type="datetime-local"
               placeholder="End Date"
               value={filters.endDate}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
+              onChange={(e) => handleFilterChange("endDate", e.target.value)}
             />
           </div>
         </CardContent>
@@ -384,12 +411,14 @@ export function AuditLogViewer() {
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-600">No audit logs found matching your criteria.</p>
+              <p className="text-gray-600">
+                No audit logs found matching your criteria.
+              </p>
             </div>
           ) : (
             <div>
               {logs.map(renderLogEntry)}
-              
+
               {pagination.hasMore && (
                 <div className="text-center mt-4">
                   <Button
@@ -397,7 +426,7 @@ export function AuditLogViewer() {
                     onClick={() => fetchAuditLogs(false)}
                     disabled={loading}
                   >
-                    {loading ? 'Loading...' : 'Load More'}
+                    {loading ? "Loading..." : "Load More"}
                   </Button>
                 </div>
               )}

@@ -1,6 +1,6 @@
 /**
  * 📈 Work History Service
- * 
+ *
  * Tracks career progression within the workspace
  */
 
@@ -11,7 +11,13 @@ import { eq, and, desc } from "drizzle-orm";
 import logger from "../utils/logger";
 
 export interface WorkHistoryEvent {
-  eventType: 'role_change' | 'promotion' | 'project_completed' | 'milestone' | 'team_join' | 'project_join';
+  eventType:
+    | "role_change"
+    | "promotion"
+    | "project_completed"
+    | "milestone"
+    | "team_join"
+    | "project_join";
   eventTitle: string;
   eventDescription?: string;
   fromValue?: string;
@@ -26,7 +32,7 @@ export interface WorkHistoryEvent {
 export async function recordWorkHistoryEvent(
   userId: string,
   workspaceId: string,
-  event: WorkHistoryEvent
+  event: WorkHistoryEvent,
 ): Promise<any> {
   const db = getDatabase();
 
@@ -42,7 +48,9 @@ export async function recordWorkHistoryEvent(
       })
       .returning();
 
-    logger.info(`Recorded work history event: ${event.eventType} for user ${userId}`);
+    logger.info(
+      `Recorded work history event: ${event.eventType} for user ${userId}`,
+    );
 
     return historyEntry[0];
   } catch (error) {
@@ -57,7 +65,7 @@ export async function recordWorkHistoryEvent(
 export async function getUserWorkHistory(
   userId: string,
   workspaceId?: string,
-  options?: { limit?: number; offset?: number }
+  options?: { limit?: number; offset?: number },
 ): Promise<any[]> {
   const db = getDatabase();
 
@@ -129,15 +137,14 @@ export async function recordMajorContribution(
     title: string;
     description?: string;
     projectId: string;
-    type?: 'project_lead' | 'key_feature' | 'problem_solver' | 'team_builder';
-  }
+    type?: "project_lead" | "key_feature" | "problem_solver" | "team_builder";
+  },
 ): Promise<any> {
   return recordWorkHistoryEvent(userId, workspaceId, {
-    eventType: 'project_completed',
+    eventType: "project_completed",
     eventTitle: data.title,
     eventDescription: data.description,
     projectId: data.projectId,
-    toValue: data.type || 'major_contribution',
+    toValue: data.type || "major_contribution",
   });
 }
-

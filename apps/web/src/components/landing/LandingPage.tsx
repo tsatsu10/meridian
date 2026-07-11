@@ -1,17 +1,22 @@
-import { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Link } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import useTheme from '@/components/providers/theme-provider/hooks/use-theme';
-import { MeridianMark } from '@/components/branding/meridian-mark';
-import { 
-  CheckCircle, 
-  ArrowRight, 
-  Star, 
-  Users, 
-  Shield, 
+import { useRef, useState } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useTheme from "@/components/providers/theme-provider/hooks/use-theme";
+import { MeridianMark } from "@/components/branding/meridian-mark";
+import {
+  CheckCircle,
+  ArrowRight,
+  Star,
+  Users,
+  Shield,
   Zap,
   Calendar,
   MessageSquare,
@@ -46,236 +51,339 @@ import {
   Activity,
   PieChart,
   Database,
-  Cloud
-} from 'lucide-react';
+  Cloud,
+} from "lucide-react";
 
 // User Personas/Roles
 const userRoles = [
   {
-    id: 'workspace-manager',
-    name: 'Workspace Manager',
+    id: "workspace-manager",
+    name: "Workspace Manager",
     icon: Crown,
     level: 7,
-    description: 'Full workspace control, billing, system management',
-    color: 'from-purple-500 to-pink-500',
-    features: ['Complete System Access', 'Billing Management', 'Global Analytics', 'User Administration']
+    description: "Full workspace control, billing, system management",
+    color: "from-purple-500 to-pink-500",
+    features: [
+      "Complete System Access",
+      "Billing Management",
+      "Global Analytics",
+      "User Administration",
+    ],
   },
   {
-    id: 'department-head',
-    name: 'Department Head',
+    id: "department-head",
+    name: "Department Head",
     icon: Briefcase,
     level: 6,
-    description: 'Multi-project oversight, department analytics',
-    color: 'from-blue-500 to-purple-500',
-    features: ['Department Analytics', 'Cross-Project View', 'Budget Tracking', 'Resource Planning']
+    description: "Multi-project oversight, department analytics",
+    color: "from-blue-500 to-purple-500",
+    features: [
+      "Department Analytics",
+      "Cross-Project View",
+      "Budget Tracking",
+      "Resource Planning",
+    ],
   },
   {
-    id: 'project-manager',
-    name: 'Project Manager',
+    id: "project-manager",
+    name: "Project Manager",
     icon: Target,
     level: 4,
-    description: 'Project lifecycle management, team coordination',
-    color: 'from-green-500 to-blue-500',
-    features: ['Project Planning', 'Gantt Charts', 'Team Assignment', 'Timeline Management']
+    description: "Project lifecycle management, team coordination",
+    color: "from-green-500 to-blue-500",
+    features: [
+      "Project Planning",
+      "Gantt Charts",
+      "Team Assignment",
+      "Timeline Management",
+    ],
   },
   {
-    id: 'team-lead',
-    name: 'Team Lead',
+    id: "team-lead",
+    name: "Team Lead",
     icon: Users,
     level: 2,
-    description: 'Task assignment, subtask management, team coordination',
-    color: 'from-orange-500 to-red-500',
-    features: ['Task Assignment', 'Workload Balancing', 'Sprint Planning', 'Team Analytics']
+    description: "Task assignment, subtask management, team coordination",
+    color: "from-orange-500 to-red-500",
+    features: [
+      "Task Assignment",
+      "Workload Balancing",
+      "Sprint Planning",
+      "Team Analytics",
+    ],
   },
   {
-    id: 'member',
-    name: 'Team Member',
+    id: "member",
+    name: "Team Member",
     icon: UserCog,
     level: 1,
-    description: 'Task execution, collaboration, time tracking',
-    color: 'from-cyan-500 to-blue-500',
-    features: ['Task Management', 'Time Tracking', 'Real-time Chat', 'File Sharing']
-  }
+    description: "Task execution, collaboration, time tracking",
+    color: "from-cyan-500 to-blue-500",
+    features: [
+      "Task Management",
+      "Time Tracking",
+      "Real-time Chat",
+      "File Sharing",
+    ],
+  },
 ];
 
 // Core Platform Features
 const platformFeatures = [
   {
-    category: 'Collaboration',
+    category: "Collaboration",
     icon: MessageSquare,
-    color: 'from-blue-500 to-cyan-500',
+    color: "from-blue-500 to-cyan-500",
     features: [
-      { name: 'Real-time Chat', icon: MessageSquare, description: 'Instant messaging with threads and reactions' },
-      { name: 'Video Conferencing', icon: Video, description: 'Built-in video calls and screen sharing' },
-      { name: 'Live Presence', icon: Activity, description: 'See who\'s online and what they\'re working on' },
-      { name: 'Collaborative Docs', icon: FileText, description: 'Real-time document editing' }
-    ]
+      {
+        name: "Real-time Chat",
+        icon: MessageSquare,
+        description: "Instant messaging with threads and reactions",
+      },
+      {
+        name: "Video Conferencing",
+        icon: Video,
+        description: "Built-in video calls and screen sharing",
+      },
+      {
+        name: "Live Presence",
+        icon: Activity,
+        description: "See who's online and what they're working on",
+      },
+      {
+        name: "Collaborative Docs",
+        icon: FileText,
+        description: "Real-time document editing",
+      },
+    ],
   },
   {
-    category: 'Project Management',
+    category: "Project Management",
     icon: Kanban,
-    color: 'from-purple-500 to-pink-500',
+    color: "from-purple-500 to-pink-500",
     features: [
-      { name: 'Smart Boards', icon: Kanban, description: 'Kanban, List, Timeline, and Calendar views' },
-      { name: 'Task Dependencies', icon: GitBranch, description: 'Visualize and manage task relationships' },
-      { name: 'Gantt Charts', icon: BarChart3, description: 'Advanced project timeline visualization' },
-      { name: 'Milestones', icon: Target, description: 'Track key project achievements' }
-    ]
+      {
+        name: "Smart Boards",
+        icon: Kanban,
+        description: "Kanban, List, Timeline, and Calendar views",
+      },
+      {
+        name: "Task Dependencies",
+        icon: GitBranch,
+        description: "Visualize and manage task relationships",
+      },
+      {
+        name: "Gantt Charts",
+        icon: BarChart3,
+        description: "Advanced project timeline visualization",
+      },
+      {
+        name: "Milestones",
+        icon: Target,
+        description: "Track key project achievements",
+      },
+    ],
   },
   {
-    category: 'Analytics & Insights',
+    category: "Analytics & Insights",
     icon: PieChart,
-    color: 'from-green-500 to-emerald-500',
+    color: "from-green-500 to-emerald-500",
     features: [
-      { name: 'Executive Dashboard', icon: TrendingUp, description: 'High-level portfolio insights' },
-      { name: 'Team Analytics', icon: Users, description: 'Performance metrics and workload' },
-      { name: 'Time Tracking', icon: Clock, description: 'Automated time logging and reports' },
-      { name: 'Custom Reports', icon: BarChart3, description: 'Build your own analytics' }
-    ]
+      {
+        name: "Executive Dashboard",
+        icon: TrendingUp,
+        description: "High-level portfolio insights",
+      },
+      {
+        name: "Team Analytics",
+        icon: Users,
+        description: "Performance metrics and workload",
+      },
+      {
+        name: "Time Tracking",
+        icon: Clock,
+        description: "Automated time logging and reports",
+      },
+      {
+        name: "Custom Reports",
+        icon: BarChart3,
+        description: "Build your own analytics",
+      },
+    ],
   },
   {
-    category: 'Automation & AI',
+    category: "Automation & AI",
     icon: Brain,
-    color: 'from-orange-500 to-red-500',
+    color: "from-orange-500 to-red-500",
     features: [
-      { name: 'Smart Workflows', icon: Workflow, description: 'Automate repetitive tasks' },
-      { name: 'AI Insights', icon: Sparkles, description: 'Intelligent project recommendations' },
-      { name: 'Auto-Assignment', icon: UserPlus, description: 'Smart task distribution' },
-      { name: 'Recurring Tasks', icon: CheckSquare, description: 'Scheduled task automation' }
-    ]
-  }
+      {
+        name: "Smart Workflows",
+        icon: Workflow,
+        description: "Automate repetitive tasks",
+      },
+      {
+        name: "AI Insights",
+        icon: Sparkles,
+        description: "Intelligent project recommendations",
+      },
+      {
+        name: "Auto-Assignment",
+        icon: UserPlus,
+        description: "Smart task distribution",
+      },
+      {
+        name: "Recurring Tasks",
+        icon: CheckSquare,
+        description: "Scheduled task automation",
+      },
+    ],
+  },
 ];
 
 // Tech Stack highlights
 const techStack = [
-  { name: 'React 18', icon: Code, color: 'text-blue-400' },
-  { name: 'PostgreSQL', icon: Database, color: 'text-indigo-400' },
-  { name: 'WebSocket', icon: Zap, color: 'text-yellow-400' },
-  { name: 'Cloud-Native', icon: Cloud, color: 'text-purple-400' },
-  { name: 'SOC 2', icon: Shield, color: 'text-green-400' },
-  { name: 'Real-time', icon: Activity, color: 'text-red-400' }
+  { name: "React 18", icon: Code, color: "text-blue-400" },
+  { name: "PostgreSQL", icon: Database, color: "text-indigo-400" },
+  { name: "WebSocket", icon: Zap, color: "text-yellow-400" },
+  { name: "Cloud-Native", icon: Cloud, color: "text-purple-400" },
+  { name: "SOC 2", icon: Shield, color: "text-green-400" },
+  { name: "Real-time", icon: Activity, color: "text-red-400" },
 ];
 
 const companyLogos = [
-  'Microsoft', 'Google', 'Slack', 'Notion', 'Figma', 'Stripe'
+  "Microsoft",
+  "Google",
+  "Slack",
+  "Notion",
+  "Figma",
+  "Stripe",
 ];
 
 const testimonials = [
-  { 
-    quote: "Meridian's role-based system is a game-changer. Each team member sees exactly what they need - nothing more, nothing less.", 
-    author: "Sarah Chen", 
-    role: "VP of Engineering", 
+  {
+    quote:
+      "Meridian's role-based system is a game-changer. Each team member sees exactly what they need - nothing more, nothing less.",
+    author: "Sarah Chen",
+    role: "VP of Engineering",
     company: "TechFlow",
     avatar: "SC",
-    userRole: "Department Head"
+    userRole: "Department Head",
   },
-  { 
-    quote: "Real-time collaboration is seamless. Our distributed team feels more connected than ever before.", 
-    author: "Marcus Rodriguez", 
-    role: "Project Manager", 
+  {
+    quote:
+      "Real-time collaboration is seamless. Our distributed team feels more connected than ever before.",
+    author: "Marcus Rodriguez",
+    role: "Project Manager",
     company: "InnovateCorp",
     avatar: "MR",
-    userRole: "Project Manager"
+    userRole: "Project Manager",
   },
-  { 
-    quote: "The analytics dashboards give me visibility into all projects at once. Perfect for executive oversight.", 
-    author: "Emily Watson", 
-    role: "CTO", 
+  {
+    quote:
+      "The analytics dashboards give me visibility into all projects at once. Perfect for executive oversight.",
+    author: "Emily Watson",
+    role: "CTO",
     company: "CreativeStudio",
     avatar: "EW",
-    userRole: "Workspace Manager"
+    userRole: "Workspace Manager",
   },
 ];
 
 const stats = [
-  { value: '50K+', label: 'Active Teams', icon: Users },
-  { value: '99.9%', label: 'Uptime SLA', icon: TrendingUp },
-  { value: '2M+', label: 'Tasks Completed', icon: CheckCircle },
-  { value: '<100ms', label: 'Response Time', icon: Zap }
+  { value: "50K+", label: "Active Teams", icon: Users },
+  { value: "99.9%", label: "Uptime SLA", icon: TrendingUp },
+  { value: "2M+", label: "Tasks Completed", icon: CheckCircle },
+  { value: "<100ms", label: "Response Time", icon: Zap },
 ];
 
 const faqData = [
   {
-    question: 'How does role-based access control work?',
-    answer: 'Meridian has 11 hierarchical roles from Workspace Manager (full control) to Guest (temporary access). Each role has specific permissions tailored to their responsibilities, ensuring team members see exactly what they need.'
+    question: "How does role-based access control work?",
+    answer:
+      "Meridian has 11 hierarchical roles from Workspace Manager (full control) to Guest (temporary access). Each role has specific permissions tailored to their responsibilities, ensuring team members see exactly what they need.",
   },
   {
-    question: 'Is real-time collaboration truly instant?',
-    answer: 'Yes! Using WebSocket technology, all changes are pushed to team members in real-time (<100ms latency). Chat, presence, task updates, and document edits sync instantly across all connected users.'
+    question: "Is real-time collaboration truly instant?",
+    answer:
+      "Yes! Using WebSocket technology, all changes are pushed to team members in real-time (<100ms latency). Chat, presence, task updates, and document edits sync instantly across all connected users.",
   },
   {
-    question: 'Can I migrate from other tools?',
-    answer: 'Absolutely! We provide migration tools for popular platforms like Asana, Trello, Jira, and Monday.com. Our team offers free migration assistance for Enterprise plans.'
+    question: "Can I migrate from other tools?",
+    answer:
+      "Absolutely! We provide migration tools for popular platforms like Asana, Trello, Jira, and Monday.com. Our team offers free migration assistance for Enterprise plans.",
   },
   {
-    question: 'What kind of analytics do you provide?',
-    answer: 'Executive dashboards, team performance metrics, time tracking, project health scores, burndown charts, velocity tracking, and custom report builders. All role-appropriate to your access level.'
+    question: "What kind of analytics do you provide?",
+    answer:
+      "Executive dashboards, team performance metrics, time tracking, project health scores, burndown charts, velocity tracking, and custom report builders. All role-appropriate to your access level.",
   },
   {
-    question: 'How secure is Meridian?',
-    answer: 'Enterprise-grade security with SOC 2 compliance, end-to-end encryption, 2FA authentication, RBAC, audit logs, and regular security audits. Your data is hosted on secure cloud infrastructure.'
+    question: "How secure is Meridian?",
+    answer:
+      "Enterprise-grade security with SOC 2 compliance, end-to-end encryption, 2FA authentication, RBAC, audit logs, and regular security audits. Your data is hosted on secure cloud infrastructure.",
   },
   {
-    question: 'Does it work offline?',
-    answer: 'Yes! Meridian is a Progressive Web App (PWA) that works offline and syncs when you reconnect. Install it on desktop or mobile for a native app experience.'
-  }
+    question: "Does it work offline?",
+    answer:
+      "Yes! Meridian is a Progressive Web App (PWA) that works offline and syncs when you reconnect. Install it on desktop or mobile for a native app experience.",
+  },
 ];
 
 const pricingPlans = [
   {
-    name: 'Starter',
-    price: 'Free',
-    period: 'forever',
-    description: 'Perfect for small teams getting started',
+    name: "Starter",
+    price: "Free",
+    period: "forever",
+    description: "Perfect for small teams getting started",
     features: [
-      'Up to 5 team members',
-      'Unlimited projects',
-      'Basic boards & calendar',
-      'Community support',
-      '5GB storage',
-      'Mobile apps'
+      "Up to 5 team members",
+      "Unlimited projects",
+      "Basic boards & calendar",
+      "Community support",
+      "5GB storage",
+      "Mobile apps",
     ],
-    cta: 'Get Started',
-    popular: false
+    cta: "Get Started",
+    popular: false,
   },
   {
-    name: 'Professional',
-    price: '$12',
-    period: 'per user/month',
-    description: 'For growing teams that need more power',
+    name: "Professional",
+    price: "$12",
+    period: "per user/month",
+    description: "For growing teams that need more power",
     features: [
-      'Unlimited team members',
-      'Advanced analytics',
-      'AI automations',
-      'Video conferencing',
-      'Priority support',
-      '100GB storage',
-      'Custom integrations',
-      'Time tracking',
-      'Gantt charts'
+      "Unlimited team members",
+      "Advanced analytics",
+      "AI automations",
+      "Video conferencing",
+      "Priority support",
+      "100GB storage",
+      "Custom integrations",
+      "Time tracking",
+      "Gantt charts",
     ],
-    cta: 'Start Free Trial',
-    popular: true
+    cta: "Start Free Trial",
+    popular: true,
   },
   {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: 'contact us',
-    description: 'For large organizations with specific needs',
+    name: "Enterprise",
+    price: "Custom",
+    period: "contact us",
+    description: "For large organizations with specific needs",
     features: [
-      'Everything in Professional',
-      'SSO & advanced security',
-      'Dedicated success manager',
-      'Custom workflows',
-      'Unlimited storage',
-      'SLA guarantee',
-      'On-premise option',
-      'White-label available',
-      'Migration assistance'
+      "Everything in Professional",
+      "SSO & advanced security",
+      "Dedicated success manager",
+      "Custom workflows",
+      "Unlimited storage",
+      "SLA guarantee",
+      "On-premise option",
+      "White-label available",
+      "Migration assistance",
     ],
-    cta: 'Contact Sales',
-    popular: false
-  }
+    cta: "Contact Sales",
+    popular: false,
+  },
 ];
 
 export default function LandingPage() {
@@ -283,28 +391,36 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(userRoles[0]);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-  const [activeFeatureCategory, setActiveFeatureCategory] = useState(platformFeatures[0]);
+  const [activeFeatureCategory, setActiveFeatureCategory] = useState(
+    platformFeatures[0],
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
   const handleThemeToggle = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen bg-background w-full overflow-x-hidden">
+    <div
+      ref={containerRef}
+      className="relative min-h-screen bg-background w-full overflow-x-hidden"
+    >
       {/* Navigation */}
       <nav className="sticky top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <motion.div 
+            <motion.div
               className="flex items-center"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Link to="/" className="flex-shrink-0 flex items-center group gap-3">
+              <Link
+                to="/"
+                className="flex-shrink-0 flex items-center group gap-3"
+              >
                 <div className="rounded-xl bg-card p-1.5 shadow-md ring-1 ring-border group-hover:shadow-lg transition-all duration-300">
                   <MeridianMark className="h-9 w-9" />
                 </div>
@@ -312,7 +428,10 @@ export default function LandingPage() {
                   <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     Meridian
                   </span>
-                  <Badge variant="outline" className="text-xs px-2 py-0 border-blue-200 text-blue-600 dark:border-blue-800 dark:text-blue-400">
+                  <Badge
+                    variant="outline"
+                    className="text-xs px-2 py-0 border-blue-200 text-blue-600 dark:border-blue-800 dark:text-blue-400"
+                  >
                     v2.0
                   </Badge>
                 </div>
@@ -322,10 +441,10 @@ export default function LandingPage() {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
               {[
-                { name: 'Features', href: '#features', icon: Rocket },
-                { name: 'Roles', href: '#roles', icon: Users },
-                { name: 'Pricing', href: '#pricing', icon: Star },
-                { name: 'FAQ', href: '#faq', icon: HelpCircle }
+                { name: "Features", href: "#features", icon: Rocket },
+                { name: "Roles", href: "#roles", icon: Users },
+                { name: "Pricing", href: "#pricing", icon: Star },
+                { name: "FAQ", href: "#faq", icon: HelpCircle },
               ].map((item) => (
                 <motion.a
                   key={item.name}
@@ -354,10 +473,10 @@ export default function LandingPage() {
               >
                 <motion.div
                   initial={false}
-                  animate={{ rotate: theme === 'dark' ? 180 : 0 }}
+                  animate={{ rotate: theme === "dark" ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {theme === 'dark' ? '🌙' : '☀️'}
+                  {theme === "dark" ? "🌙" : "☀️"}
                 </motion.div>
               </Button>
 
@@ -365,9 +484,12 @@ export default function LandingPage() {
               <Link to="/auth/sign-in">
                 <Button variant="ghost">Sign In</Button>
               </Link>
-              
+
               <Link to="/auth/sign-up">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
                     <Rocket className="w-4 h-4 mr-2" />
                     <span>Start Free Trial</span>
@@ -399,7 +521,7 @@ export default function LandingPage() {
           {mobileMenuOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="lg:hidden overflow-hidden bg-background/95 backdrop-blur-xl border-t border-border/50"
@@ -408,10 +530,10 @@ export default function LandingPage() {
                 {/* Mobile Navigation Links */}
                 <div className="space-y-2">
                   {[
-                    { name: 'Features', href: '#features', icon: Rocket },
-                    { name: 'Roles', href: '#roles', icon: Users },
-                    { name: 'Pricing', href: '#pricing', icon: Star },
-                    { name: 'FAQ', href: '#faq', icon: HelpCircle }
+                    { name: "Features", href: "#features", icon: Rocket },
+                    { name: "Roles", href: "#roles", icon: Users },
+                    { name: "Pricing", href: "#pricing", icon: Star },
+                    { name: "FAQ", href: "#faq", icon: HelpCircle },
                   ].map((item) => (
                     <motion.a
                       key={item.name}
@@ -434,7 +556,7 @@ export default function LandingPage() {
                       <span>Sign In</span>
                     </Button>
                   </Link>
-                  
+
                   <Link to="/auth/sign-up" className="w-full">
                     <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600">
                       <Rocket className="w-4 h-4 mr-2" />
@@ -448,8 +570,10 @@ export default function LandingPage() {
                     className="w-full justify-start"
                     onClick={handleThemeToggle}
                   >
-                    <span className="mr-2">{theme === 'dark' ? '🌙' : '☀️'}</span>
-                    Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode
+                    <span className="mr-2">
+                      {theme === "dark" ? "🌙" : "☀️"}
+                    </span>
+                    Switch to {theme === "dark" ? "Light" : "Dark"} Mode
                   </Button>
                 </div>
               </div>
@@ -464,8 +588,8 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/20" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
-        
-        <motion.div 
+
+        <motion.div
           style={{ y: heroY }}
           className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
         >
@@ -479,7 +603,9 @@ export default function LandingPage() {
             >
               <Sparkles className="w-4 h-4" />
               <span>Powered by Advanced RBAC & Real-Time Collaboration</span>
-              <Badge className="bg-white/20 text-white border-0 px-2 py-0">NEW</Badge>
+              <Badge className="bg-white/20 text-white border-0 px-2 py-0">
+                NEW
+              </Badge>
             </motion.div>
 
             {/* Headline */}
@@ -503,8 +629,16 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed"
             >
-              From <span className="font-semibold text-foreground">Workspace Managers</span> to <span className="font-semibold text-foreground">Team Members</span>, 
-              Meridian adapts to your role with real-time collaboration, AI automation, and enterprise-grade security.
+              From{" "}
+              <span className="font-semibold text-foreground">
+                Workspace Managers
+              </span>{" "}
+              to{" "}
+              <span className="font-semibold text-foreground">
+                Team Members
+              </span>
+              , Meridian adapts to your role with real-time collaboration, AI
+              automation, and enterprise-grade security.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -515,12 +649,19 @@ export default function LandingPage() {
               className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
             >
               <Link to="/auth/sign-up">
-                <Button size="lg" className="text-lg px-8 py-6 h-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl">
+                <Button
+                  size="lg"
+                  className="text-lg px-8 py-6 h-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl"
+                >
                   Start Free Trial
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-2">
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-6 h-auto border-2"
+              >
                 <Play className="mr-2 w-5 h-5" />
                 Watch Demo
               </Button>
@@ -544,8 +685,12 @@ export default function LandingPage() {
                   <div className="flex items-center justify-center mb-2">
                     <stat.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {stat.label}
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
@@ -597,7 +742,9 @@ export default function LandingPage() {
                     className="flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-border/50 shadow-sm"
                   >
                     <tech.icon className={`w-4 h-4 ${tech.color}`} />
-                    <span className="text-sm font-medium text-foreground">{tech.name}</span>
+                    <span className="text-sm font-medium text-foreground">
+                      {tech.name}
+                    </span>
                   </motion.div>
                 ))}
               </div>
@@ -623,13 +770,21 @@ export default function LandingPage() {
                     <div className="text-center">
                       <motion.div
                         animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        transition={{
+                          duration: 20,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: "linear",
+                        }}
                         className="w-24 h-24 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-xl"
                       >
                         <Layers className="w-12 h-12 text-white" />
                       </motion.div>
-                      <h3 className="text-2xl font-bold text-foreground mb-2">See Meridian in Action</h3>
-                      <p className="text-muted-foreground mb-4">Interactive demo coming soon</p>
+                      <h3 className="text-2xl font-bold text-foreground mb-2">
+                        See Meridian in Action
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Interactive demo coming soon
+                      </p>
                       <Button variant="outline" size="sm">
                         <Play className="w-4 h-4 mr-2" />
                         Watch Video Tour
@@ -657,10 +812,14 @@ export default function LandingPage() {
               11 Hierarchical Roles
             </motion.div>
             <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
-              Built for <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Every Team Member</span>
+              Built for{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Every Team Member
+              </span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              From executives to team members, Meridian provides role-specific views, permissions, and features
+              From executives to team members, Meridian provides role-specific
+              views, permissions, and features
             </p>
           </div>
 
@@ -676,15 +835,21 @@ export default function LandingPage() {
                 onClick={() => setSelectedRole(role)}
                 className={`p-6 rounded-xl border-2 transition-all duration-300 ${
                   selectedRole.id === role.id
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-lg scale-105'
-                    : 'border-border bg-background hover:border-blue-400 hover:shadow-md'
+                    ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-lg scale-105"
+                    : "border-border bg-background hover:border-blue-400 hover:shadow-md"
                 }`}
               >
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${role.color} mx-auto mb-3 flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 rounded-lg bg-gradient-to-r ${role.color} mx-auto mb-3 flex items-center justify-center`}
+                >
                   <role.icon className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-sm font-semibold text-foreground mb-1">{role.name}</div>
-                <Badge variant="outline" className="text-xs">Level {role.level}</Badge>
+                <div className="text-sm font-semibold text-foreground mb-1">
+                  {role.name}
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  Level {role.level}
+                </Badge>
               </motion.button>
             ))}
           </div>
@@ -700,14 +865,22 @@ export default function LandingPage() {
               className="p-8 bg-background rounded-2xl border-2 border-blue-600 shadow-xl"
             >
               <div className="flex items-start gap-6 mb-6">
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${selectedRole.color} flex items-center justify-center flex-shrink-0`}>
+                <div
+                  className={`w-16 h-16 rounded-xl bg-gradient-to-r ${selectedRole.color} flex items-center justify-center flex-shrink-0`}
+                >
                   <selectedRole.icon className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">{selectedRole.name}</h3>
-                  <p className="text-muted-foreground text-lg">{selectedRole.description}</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    {selectedRole.name}
+                  </h3>
+                  <p className="text-muted-foreground text-lg">
+                    {selectedRole.description}
+                  </p>
                 </div>
-                <Badge className={`bg-gradient-to-r ${selectedRole.color} text-white border-0`}>
+                <Badge
+                  className={`bg-gradient-to-r ${selectedRole.color} text-white border-0`}
+                >
                   Level {selectedRole.level}
                 </Badge>
               </div>
@@ -721,7 +894,9 @@ export default function LandingPage() {
                     className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg"
                   >
                     <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span className="text-foreground font-medium">{feature}</span>
+                    <span className="text-foreground font-medium">
+                      {feature}
+                    </span>
                   </motion.div>
                 ))}
               </div>
@@ -747,15 +922,22 @@ export default function LandingPage() {
               Everything Your Team Needs
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              From real-time collaboration to AI-powered automation, Meridian has it all
+              From real-time collaboration to AI-powered automation, Meridian
+              has it all
             </p>
           </div>
 
           {/* Feature Categories Tabs */}
-          <Tabs value={activeFeatureCategory.category} onValueChange={(value) => {
-            const category = platformFeatures.find(f => f.category === value);
-            if (category) setActiveFeatureCategory(category);
-          }} className="w-full">
+          <Tabs
+            value={activeFeatureCategory.category}
+            onValueChange={(value) => {
+              const category = platformFeatures.find(
+                (f) => f.category === value,
+              );
+              if (category) setActiveFeatureCategory(category);
+            }}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-12">
               {platformFeatures.map((category) => (
                 <TabsTrigger
@@ -770,7 +952,11 @@ export default function LandingPage() {
             </TabsList>
 
             {platformFeatures.map((category) => (
-              <TabsContent key={category.category} value={category.category} className="mt-0">
+              <TabsContent
+                key={category.category}
+                value={category.category}
+                className="mt-0"
+              >
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -785,7 +971,9 @@ export default function LandingPage() {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="group p-6 bg-background rounded-xl border-2 border-border hover:border-blue-500 shadow-sm hover:shadow-lg transition-all duration-300"
                     >
-                      <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${category.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      <div
+                        className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${category.color} mb-4 group-hover:scale-110 transition-transform duration-300`}
+                      >
                         <feature.icon className="w-6 h-6 text-white" />
                       </div>
                       <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-blue-600 transition-colors">
@@ -836,7 +1024,10 @@ export default function LandingPage() {
               >
                 <div className="flex items-center mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                    <Star
+                      key={i}
+                      className="w-5 h-5 text-yellow-400 fill-current"
+                    />
                   ))}
                 </div>
                 <blockquote className="text-foreground mb-6 leading-relaxed text-lg">
@@ -848,9 +1039,15 @@ export default function LandingPage() {
                       {testimonial.avatar}
                     </div>
                     <div>
-                      <div className="font-semibold text-foreground">{testimonial.author}</div>
-                      <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                      <div className="text-xs text-muted-foreground">{testimonial.company}</div>
+                      <div className="font-semibold text-foreground">
+                        {testimonial.author}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {testimonial.role}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {testimonial.company}
+                      </div>
                     </div>
                   </div>
                   <Badge variant="outline" className="text-xs">
@@ -893,7 +1090,9 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className={`relative p-8 bg-background rounded-2xl border-2 shadow-sm hover:shadow-xl transition-all duration-300 ${
-                  plan.popular ? 'border-blue-600 scale-105 shadow-blue-100 dark:shadow-blue-900/20' : 'border-border'
+                  plan.popular
+                    ? "border-blue-600 scale-105 shadow-blue-100 dark:shadow-blue-900/20"
+                    : "border-border"
                 }`}
               >
                 {plan.popular && (
@@ -903,20 +1102,28 @@ export default function LandingPage() {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
-                  <p className="text-muted-foreground mb-6">{plan.description}</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    {plan.name}
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    {plan.description}
+                  </p>
                   <div className="mb-6">
-                    <span className="text-5xl font-bold text-foreground">{plan.price}</span>
+                    <span className="text-5xl font-bold text-foreground">
+                      {plan.price}
+                    </span>
                     {plan.period && (
-                      <span className="text-muted-foreground ml-2">/{plan.period}</span>
+                      <span className="text-muted-foreground ml-2">
+                        /{plan.period}
+                      </span>
                     )}
                   </div>
-                  
-                  {plan.name === 'Enterprise' ? (
+
+                  {plan.name === "Enterprise" ? (
                     <a href="#contact" className="w-full block">
-                      <Button 
+                      <Button
                         className="w-full mb-8 h-12 text-base"
                         variant="outline"
                       >
@@ -926,16 +1133,16 @@ export default function LandingPage() {
                     </a>
                   ) : (
                     <Link to="/auth/sign-up" className="w-full">
-                      <Button 
-                        className={`w-full mb-8 h-12 text-base ${plan.popular ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' : ''}`}
-                        variant={plan.popular ? 'default' : 'outline'}
+                      <Button
+                        className={`w-full mb-8 h-12 text-base ${plan.popular ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" : ""}`}
+                        variant={plan.popular ? "default" : "outline"}
                       >
                         {plan.cta}
                         <ArrowRight className="ml-2 w-4 h-4" />
                       </Button>
                     </Link>
                   )}
-                  
+
                   <ul className="space-y-4 text-left">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start gap-3">
@@ -1010,10 +1217,14 @@ export default function LandingPage() {
                 className="bg-background rounded-xl border shadow-sm overflow-hidden"
               >
                 <button
-                  onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                  onClick={() =>
+                    setOpenFaqIndex(openFaqIndex === index ? null : index)
+                  }
                   className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-muted/50 transition-colors"
                 >
-                  <span className="font-semibold text-foreground text-lg pr-4">{faq.question}</span>
+                  <span className="font-semibold text-foreground text-lg pr-4">
+                    {faq.question}
+                  </span>
                   <motion.div
                     animate={{ rotate: openFaqIndex === index ? 180 : 0 }}
                     transition={{ duration: 0.3 }}
@@ -1025,13 +1236,15 @@ export default function LandingPage() {
                   {openFaqIndex === index && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
+                      animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
                     >
                       <div className="px-6 pb-5">
-                        <p className="text-muted-foreground leading-relaxed text-base">{faq.answer}</p>
+                        <p className="text-muted-foreground leading-relaxed text-base">
+                          {faq.answer}
+                        </p>
                       </div>
                     </motion.div>
                   )}
@@ -1072,7 +1285,10 @@ export default function LandingPage() {
             {/* Animated background elements */}
             <div className="absolute inset-0 opacity-20">
               <div className="absolute top-0 left-1/4 w-64 h-64 bg-white rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+              <div
+                className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse"
+                style={{ animationDelay: "1s" }}
+              />
             </div>
 
             <div className="relative z-10">
@@ -1080,16 +1296,25 @@ export default function LandingPage() {
                 Ready to Transform Your Team?
               </h2>
               <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-                Join 50,000+ teams who've made the switch to smarter, role-based project management
+                Join 50,000+ teams who've made the switch to smarter, role-based
+                project management
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/auth/sign-up">
-                  <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto bg-white text-blue-600 hover:bg-gray-100 shadow-xl">
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="text-lg px-8 py-6 h-auto bg-white text-blue-600 hover:bg-gray-100 shadow-xl"
+                  >
                     Start Free Trial
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-2 border-white text-white hover:bg-white/10">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-lg px-8 py-6 h-auto border-2 border-white text-white hover:bg-white/10"
+                >
                   <Calendar className="mr-2 w-5 h-5" />
                   Schedule Demo
                 </Button>
@@ -1123,16 +1348,20 @@ export default function LandingPage() {
                 <div className="rounded-xl bg-muted/80 p-1.5 ring-1 ring-border">
                   <MeridianMark className="h-9 w-9" />
                 </div>
-                <span className="text-xl font-bold text-foreground">Meridian</span>
+                <span className="text-xl font-bold text-foreground">
+                  Meridian
+                </span>
               </div>
               <p className="text-muted-foreground mb-6 max-w-md leading-relaxed">
-                The role-based project management platform that brings teams together with real-time collaboration, AI automation, and enterprise-grade security.
+                The role-based project management platform that brings teams
+                together with real-time collaboration, AI automation, and
+                enterprise-grade security.
               </p>
               <div className="flex space-x-4">
                 {[
-                  { icon: Twitter, href: '#', label: 'Twitter' },
-                  { icon: Linkedin, href: '#', label: 'LinkedIn' },
-                  { icon: Github, href: '#', label: 'GitHub' }
+                  { icon: Twitter, href: "#", label: "Twitter" },
+                  { icon: Linkedin, href: "#", label: "LinkedIn" },
+                  { icon: Github, href: "#", label: "GitHub" },
                 ].map((social) => (
                   <motion.a
                     key={social.label}
@@ -1152,9 +1381,19 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-foreground mb-4">Product</h3>
               <ul className="space-y-3">
-                {['Features', 'Pricing', 'Integrations', 'API', 'Mobile Apps', 'Changelog'].map((link) => (
+                {[
+                  "Features",
+                  "Pricing",
+                  "Integrations",
+                  "API",
+                  "Mobile Apps",
+                  "Changelog",
+                ].map((link) => (
                   <li key={link}>
-                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                    <a
+                      href="#"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
                       {link}
                     </a>
                   </li>
@@ -1166,9 +1405,19 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-foreground mb-4">Company</h3>
               <ul className="space-y-3">
-                {['About', 'Blog', 'Careers', 'Contact', 'Partners', 'Press Kit'].map((link) => (
+                {[
+                  "About",
+                  "Blog",
+                  "Careers",
+                  "Contact",
+                  "Partners",
+                  "Press Kit",
+                ].map((link) => (
                   <li key={link}>
-                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                    <a
+                      href="#"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
                       {link}
                     </a>
                   </li>
@@ -1182,8 +1431,17 @@ export default function LandingPage() {
               © {new Date().getFullYear()} Meridian. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-6">
-              {['Privacy Policy', 'Terms of Service', 'Security', 'Cookie Policy'].map((link) => (
-                <a key={link} href="#" className="text-muted-foreground hover:text-foreground text-sm transition-colors">
+              {[
+                "Privacy Policy",
+                "Terms of Service",
+                "Security",
+                "Cookie Policy",
+              ].map((link) => (
+                <a
+                  key={link}
+                  href="#"
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                >
                   {link}
                 </a>
               ))}

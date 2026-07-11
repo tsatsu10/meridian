@@ -1,7 +1,7 @@
 import { getDatabase } from "../database/connection";
 import { projectTable, taskTable } from "../database/schema";
 import { eq } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 export interface ProjectHealthMetrics {
   score: number;
@@ -22,7 +22,7 @@ export interface ProjectHealthMetrics {
  * Uses multiple factors to determine overall project health
  */
 export async function calculateProjectHealth(
-  projectId: string
+  projectId: string,
 ): Promise<ProjectHealthMetrics | null> {
   try {
     const db = getDatabase();
@@ -73,7 +73,7 @@ export async function calculateProjectHealth(
         timelineHealth * 0.25 +
         taskHealth * 0.2 +
         resourceAllocation * 0.15 +
-        (100 - riskLevel) * 0.15
+        (100 - riskLevel) * 0.15,
     );
 
     // Determine status based on score
@@ -125,7 +125,7 @@ function calculateTimelineHealth(project: any, tasks: any[]): number {
   const now = new Date();
   const dueDate = new Date(project.dueDate);
   const daysRemaining = Math.ceil(
-    (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   // Check for overdue tasks
@@ -177,7 +177,9 @@ function calculateTaskHealth(tasks: any[]): number {
   }
 
   // Prioritization quality
-  const unpriorityzedTasks = tasks.filter((t) => t.priority === "medium").length;
+  const unpriorityzedTasks = tasks.filter(
+    (t) => t.priority === "medium",
+  ).length;
   if (unpriorityzedTasks / tasks.length > 0.7) {
     score -= 10;
   }
@@ -219,7 +221,8 @@ function calculateResourceAllocation(tasks: any[]): number {
     }
 
     // Unassigned tasks impact
-    const unassignedRatio = (tasks.length - assignedTasks.length) / tasks.length;
+    const unassignedRatio =
+      (tasks.length - assignedTasks.length) / tasks.length;
     if (unassignedRatio > 0.3) {
       score -= Math.min(20, unassignedRatio * 30);
     }
@@ -239,14 +242,14 @@ function calculateRiskLevel(tasks: any[], project: any): number {
 
   // High priority unstarted tasks = high risk
   const highPriorityTodo = tasks.filter(
-    (t) => t.priority === "high" && t.status === "todo"
+    (t) => t.priority === "high" && t.status === "todo",
   );
   riskScore += highPriorityTodo.length * 10;
 
   // Blocked/incomplete critical path = high risk
   const inProgressTasks = tasks.filter((t) => t.status === "in_progress");
   const blockingRisk = tasks.filter(
-    (t) => t.status === "todo" && inProgressTasks.length < 2
+    (t) => t.status === "todo" && inProgressTasks.length < 2,
   );
   riskScore += Math.min(15, blockingRisk.length * 3);
 
@@ -260,7 +263,8 @@ function calculateRiskLevel(tasks: any[], project: any): number {
   if (project.dueDate) {
     const now = new Date();
     const daysRemaining = Math.ceil(
-      (new Date(project.dueDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(project.dueDate).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     const remainingTasks = tasks.filter((t) => t.status !== "done").length;
 
@@ -283,7 +287,7 @@ function calculateRiskLevel(tasks: any[], project: any): number {
  * Map score to health status
  */
 function getHealthStatus(
-  score: number
+  score: number,
 ): "excellent" | "good" | "fair" | "critical" {
   if (score >= 80) return "excellent";
   if (score >= 60) return "good";
@@ -299,4 +303,3 @@ function determineTrend(score: number): "improving" | "stable" | "declining" {
   // For now, return stable
   return "stable";
 }
-

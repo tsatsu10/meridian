@@ -1,6 +1,7 @@
-import React, { useMemo, useCallback, useState, useRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { 
+import type React from "react";
+import { useMemo, useCallback, useState, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import {
   DndContext,
   type DragEndEvent,
   DragOverlay,
@@ -13,22 +14,32 @@ import {
   useSensors,
   PointerSensor,
 } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion, } from "framer-motion";
-import { cn } from '@/lib/cn';
-import { Badge } from '@/components/ui/badge';
-import { Avatar } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { motion } from "framer-motion";
+import { cn } from "@/lib/cn";
+import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   MoreHorizontal,
   Eye,
@@ -42,8 +53,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   GripVertical,
-} from 'lucide-react';
-import { format } from 'date-fns';
+} from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 // @epic-3.2-time: Mike needs efficient task browsing with large datasets
@@ -102,30 +113,32 @@ interface VirtualizedTaskListProps {
 // ♿ WCAG 2.1 AA Compliant colors (contrast ratio >= 4.5:1)
 const priorityColors = {
   low: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100",
-  medium: "bg-yellow-200 text-yellow-900 dark:bg-yellow-800 dark:text-yellow-100",
+  medium:
+    "bg-yellow-200 text-yellow-900 dark:bg-yellow-800 dark:text-yellow-100",
   high: "bg-orange-200 text-orange-900 dark:bg-orange-800 dark:text-orange-100",
   urgent: "bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100",
 };
 
 const priorityLabels = {
   low: "Low",
-  medium: "Medium", 
+  medium: "Medium",
   high: "High",
   urgent: "Urgent",
 };
 
 const statusColors = {
-  "todo": "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100",
-  "in_progress": "bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-100",
-  "done": "bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-100",
-  "in_review": "bg-purple-200 text-purple-900 dark:bg-purple-800 dark:text-purple-100",
+  todo: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100",
+  in_progress: "bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-100",
+  done: "bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-100",
+  in_review:
+    "bg-purple-200 text-purple-900 dark:bg-purple-800 dark:text-purple-100",
 };
 
 const statusLabels = {
-  "todo": "To Do",
-  "in_progress": "In Progress",
-  "done": "Done",
-  "in_review": "In Review",
+  todo: "To Do",
+  in_progress: "In Progress",
+  done: "Done",
+  in_review: "In Review",
 };
 
 const ITEM_HEIGHT = 72; // Height of each task row in pixels
@@ -139,22 +152,22 @@ const PaginationControls: React.FC<{
   onPageChange: (page: number) => void;
 }> = ({ pagination, pageSize, onPageSizeChange, onPageChange }) => {
   const { currentPage, pages, total } = pagination;
-  
-  const startItem = ((currentPage - 1) * pageSize) + 1;
+
+  const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, total);
-  
+
   const renderPageNumbers = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(pages, startPage + maxVisiblePages - 1);
-    
+    const endPage = Math.min(pages, startPage + maxVisiblePages - 1);
+
     // Adjust if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pageNumbers.push(
         <Button
@@ -165,10 +178,10 @@ const PaginationControls: React.FC<{
           className="h-8 w-8 p-0"
         >
           {i}
-        </Button>
+        </Button>,
       );
     }
-    
+
     return pageNumbers;
   };
 
@@ -183,7 +196,10 @@ const PaginationControls: React.FC<{
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Rows per page:</span>
-          <Select value={pageSize.toString()} onValueChange={(value) => onPageSizeChange(parseInt(value))}>
+          <Select
+            value={pageSize.toString()}
+            onValueChange={(value) => onPageSizeChange(Number.parseInt(value))}
+          >
             <SelectTrigger className="w-20 h-8">
               <SelectValue />
             </SelectTrigger>
@@ -197,7 +213,7 @@ const PaginationControls: React.FC<{
           </Select>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-1">
         <Button
           variant="outline"
@@ -219,11 +235,9 @@ const PaginationControls: React.FC<{
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        
-        <div className="flex items-center gap-1">
-          {renderPageNumbers()}
-        </div>
-        
+
+        <div className="flex items-center gap-1">{renderPageNumbers()}</div>
+
         <Button
           variant="outline"
           size="sm"
@@ -264,44 +278,52 @@ interface TaskRowProps {
   isDragging?: boolean;
 }
 
-const TaskRow: React.FC<TaskRowProps> = ({ 
-  index, 
-  style, 
-  data, 
-  dragAttributes = {}, 
-  dragListeners = {}, 
-  isDragging = false 
+const TaskRow: React.FC<TaskRowProps> = ({
+  index,
+  style,
+  data,
+  dragAttributes = {},
+  dragListeners = {},
+  isDragging = false,
 }) => {
-  const { tasks, selectedTasks, onTaskSelect, onTaskUpdate, onTaskDelete } = data;
+  const { tasks, selectedTasks, onTaskSelect, onTaskUpdate, onTaskDelete } =
+    data;
   const task = tasks[index];
 
   const isOverdue = (dueDate: Date | null) => {
     if (!dueDate) return false;
-    return dueDate < new Date() && task.status !== 'done';
+    return dueDate < new Date() && task.status !== "done";
   };
 
   const formatDueDate = (dueDate: Date | null) => {
     if (!dueDate) return null;
-    return format(dueDate, 'MMM d');
+    return format(dueDate, "MMM d");
   };
 
-  const handleQuickStatusUpdate = useCallback(async (newStatus: string) => {
-    if (!onTaskUpdate) {
-      console.error('onTaskUpdate function not provided');
-      return;
-    }
-    try {await onTaskUpdate(task.id, { status: newStatus });} catch (error) {
-      console.error('Failed to update task status:', error);
-    }
-  }, [task.id, onTaskUpdate]);
+  const handleQuickStatusUpdate = useCallback(
+    async (newStatus: string) => {
+      if (!onTaskUpdate) {
+        console.error("onTaskUpdate function not provided");
+        return;
+      }
+      try {
+        await onTaskUpdate(task.id, { status: newStatus });
+      } catch (error) {
+        console.error("Failed to update task status:", error);
+      }
+    },
+    [task.id, onTaskUpdate],
+  );
 
   const handleDelete = useCallback(async () => {
     if (!onTaskDelete) {
-      console.error('onTaskDelete function not provided');
+      console.error("onTaskDelete function not provided");
       return;
     }
-    try {await onTaskDelete(task.id);} catch (error) {
-      console.error('Failed to delete task:', error);
+    try {
+      await onTaskDelete(task.id);
+    } catch (error) {
+      console.error("Failed to delete task:", error);
     }
   }, [task.id, onTaskDelete]);
 
@@ -310,21 +332,22 @@ const TaskRow: React.FC<TaskRowProps> = ({
       style={{
         ...style,
         display: "grid",
-        gridTemplateColumns: "20px 48px 1fr 150px 120px 100px 150px 100px 100px 48px",
+        gridTemplateColumns:
+          "20px 48px 1fr 150px 120px 100px 150px 100px 100px 48px",
         gap: "0.75rem",
-        alignItems: "center"
+        alignItems: "center",
       }}
       className={cn(
         "group px-4 py-2 hover:bg-muted/50 transition-colors border-b border-border/50",
-        isDragging && "opacity-50 z-50"
+        isDragging && "opacity-50 z-50",
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.02 }}
     >
       {/* Drag Handle */}
-      <div 
-        {...dragAttributes} 
+      <div
+        {...dragAttributes}
         {...dragListeners}
         className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
         title="Drag to reorder"
@@ -350,9 +373,13 @@ const TaskRow: React.FC<TaskRowProps> = ({
             {task.title}
           </div>
           <div className="text-xs text-muted-foreground line-clamp-1 flex items-center gap-1">
-            <span>{task.project.slug}-{task.number}</span>
+            <span>
+              {task.project.slug}-{task.number}
+            </span>
             {task.parentId && (
-              <span className="bg-muted px-1 py-0.5 rounded text-xs">Subtask</span>
+              <span className="bg-muted px-1 py-0.5 rounded text-xs">
+                Subtask
+              </span>
             )}
           </div>
         </div>
@@ -370,18 +397,19 @@ const TaskRow: React.FC<TaskRowProps> = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-6 px-2">
-              <Badge 
+              <Badge
                 className={cn(
                   "text-xs cursor-pointer hover:opacity-80 transition-opacity",
-                  statusColors[task.status as keyof typeof statusColors]
+                  statusColors[task.status as keyof typeof statusColors],
                 )}
               >
-                {statusLabels[task.status as keyof typeof statusLabels] || task.status}
+                {statusLabels[task.status as keyof typeof statusLabels] ||
+                  task.status}
               </Badge>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -390,7 +418,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
             >
               To Do
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -399,7 +427,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
             >
               In Progress
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -408,7 +436,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
             >
               In Review
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -423,13 +451,14 @@ const TaskRow: React.FC<TaskRowProps> = ({
 
       {/* Priority */}
       <div>
-        <Badge 
+        <Badge
           className={cn(
             "text-xs",
-            priorityColors[task.priority as keyof typeof priorityColors]
+            priorityColors[task.priority as keyof typeof priorityColors],
           )}
         >
-          {priorityLabels[task.priority as keyof typeof priorityLabels] || task.priority}
+          {priorityLabels[task.priority as keyof typeof priorityLabels] ||
+            task.priority}
         </Badge>
       </div>
 
@@ -458,17 +487,21 @@ const TaskRow: React.FC<TaskRowProps> = ({
       <div>
         <div className="text-xs text-muted-foreground flex items-center gap-1">
           <Clock className="h-3 w-3" />
-          {format(task.createdAt, 'MMM d')}
+          {format(task.createdAt, "MMM d")}
         </div>
       </div>
 
       {/* Due Date */}
       <div>
         {task.dueDate ? (
-          <div className={cn(
-            "text-xs flex items-center gap-1",
-            isOverdue(task.dueDate) ? "text-red-600 font-medium" : "text-muted-foreground"
-          )}>
+          <div
+            className={cn(
+              "text-xs flex items-center gap-1",
+              isOverdue(task.dueDate)
+                ? "text-red-600 font-medium"
+                : "text-muted-foreground",
+            )}
+          >
             <Clock className="h-3 w-3" />
             {formatDueDate(task.dueDate)}
             {isOverdue(task.dueDate) && " (Overdue)"}
@@ -482,9 +515,9 @@ const TaskRow: React.FC<TaskRowProps> = ({
       <div className="flex justify-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
               aria-label={`Actions for task ${task.title}`}
             >
@@ -504,38 +537,41 @@ const TaskRow: React.FC<TaskRowProps> = ({
               View Details
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const newStatus = task.status === 'done' ? 'todo' : 'done';
+                const newStatus = task.status === "done" ? "todo" : "done";
                 handleQuickStatusUpdate(newStatus);
               }}
               className="flex items-center gap-2"
             >
               <CheckSquare className="h-4 w-4" />
-              {task.status === 'done' ? 'Mark as To Do' : 'Mark as Done'}
+              {task.status === "done" ? "Mark as To Do" : "Mark as Done"}
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (!onTaskUpdate) {
-                  console.error('onTaskUpdate function not provided');
+                  console.error("onTaskUpdate function not provided");
                   return;
                 }
                 try {
-                  const newPriority = task.priority === 'urgent' ? 'medium' : 'urgent';await onTaskUpdate(task.id, { priority: newPriority });} catch (error) {
-                  console.error('Failed to update task priority:', error);
+                  const newPriority =
+                    task.priority === "urgent" ? "medium" : "urgent";
+                  await onTaskUpdate(task.id, { priority: newPriority });
+                } catch (error) {
+                  console.error("Failed to update task priority:", error);
                 }
               }}
               className="flex items-center gap-2"
             >
               <Flag className="h-4 w-4" />
-              {task.priority === 'urgent' ? 'Remove Urgent' : 'Mark as Urgent'}
+              {task.priority === "urgent" ? "Remove Urgent" : "Mark as Urgent"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -554,14 +590,10 @@ const TaskRow: React.FC<TaskRowProps> = ({
 };
 
 // Sortable Task Row wrapper component
-const SortableTaskRow: React.FC<TaskRowProps> = ({ 
-  index, 
-  style, 
-  data
-}) => {
+const SortableTaskRow: React.FC<TaskRowProps> = ({ index, style, data }) => {
   const { tasks } = data;
   const task = tasks[index];
-  
+
   const {
     attributes,
     listeners,
@@ -586,10 +618,10 @@ const SortableTaskRow: React.FC<TaskRowProps> = ({
 
   return (
     <div ref={setNodeRef} style={sortableStyle}>
-      <TaskRow 
-        index={index} 
-        style={{}} 
-        data={data} 
+      <TaskRow
+        index={index}
+        style={{}}
+        data={data}
         dragAttributes={attributes}
         dragListeners={listeners}
         isDragging={isDragging}
@@ -604,14 +636,15 @@ const TaskListHeader: React.FC<{
   onSelectAll: () => void;
 }> = ({ selectedTasks, totalTasks, onSelectAll }) => {
   const allSelected = selectedTasks.length === totalTasks && totalTasks > 0;
-  
+
   return (
-    <div 
+    <div
       style={{
         display: "grid",
-        gridTemplateColumns: "20px 48px 1fr 150px 120px 100px 150px 100px 100px 48px",
+        gridTemplateColumns:
+          "20px 48px 1fr 150px 120px 100px 150px 100px 100px 48px",
         gap: "0.75rem",
-        alignItems: "center"
+        alignItems: "center",
       }}
       className="px-4 py-3 bg-muted/30 border-b border-border text-sm font-medium text-muted-foreground"
     >
@@ -621,7 +654,8 @@ const TaskListHeader: React.FC<{
           type="checkbox"
           checked={allSelected}
           ref={(input) => {
-            if (input) input.indeterminate = selectedTasks.length > 0 && !allSelected;
+            if (input)
+              input.indeterminate = selectedTasks.length > 0 && !allSelected;
           }}
           onChange={onSelectAll}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -644,13 +678,14 @@ const TaskListSkeleton: React.FC = () => {
   return (
     <div className="space-y-2 p-4">
       {Array.from({ length: 10 }).map((_, i) => (
-        <div 
-          key={i} 
+        <div
+          key={i}
           style={{
             display: "grid",
-            gridTemplateColumns: "20px 48px 1fr 150px 120px 100px 150px 100px 100px 48px",
+            gridTemplateColumns:
+              "20px 48px 1fr 150px 120px 100px 150px 100px 100px 48px",
             gap: "0.75rem",
-            alignItems: "center"
+            alignItems: "center",
           }}
           className="py-2"
         >
@@ -707,7 +742,7 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
   onPageChange,
 }) => {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  
+
   // DnD Kit sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -721,7 +756,7 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
         delay: 200,
         tolerance: 8,
       },
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -740,7 +775,7 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
     if (activeIndex !== overIndex) {
       const activeTask = tasks[activeIndex];
       const newPosition = overIndex + 1; // Positions are 1-indexed
-      
+
       try {
         await onTaskReorder(activeTask.id, newPosition);
         toast.success("Task reordered successfully");
@@ -751,13 +786,16 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
     }
   };
 
-  const itemData = useMemo(() => ({
-    tasks,
-    selectedTasks,
-    onTaskSelect,
-    onTaskUpdate,
-    onTaskDelete,
-  }), [tasks, selectedTasks, onTaskSelect, onTaskUpdate, onTaskDelete]);
+  const itemData = useMemo(
+    () => ({
+      tasks,
+      selectedTasks,
+      onTaskSelect,
+      onTaskUpdate,
+      onTaskDelete,
+    }),
+    [tasks, selectedTasks, onTaskSelect, onTaskUpdate, onTaskDelete],
+  );
 
   // Show pagination controls whenever pagination data is available
   const shouldShowPagination = pagination && pagination.total > 0;
@@ -830,31 +868,31 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
           items={tasks.map((task) => task.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div 
+          <div
             ref={parentRef}
             className="border-t"
             style={{
               height: `${listHeight}px`,
-              overflow: 'auto',
+              overflow: "auto",
             }}
           >
             <div
               style={{
                 height: `${virtualizer.getTotalSize()}px`,
-                width: '100%',
-                position: 'relative',
+                width: "100%",
+                position: "relative",
               }}
             >
               {virtualizer.getVirtualItems().map((virtualRow) => {
-                void (tasks[virtualRow.index]);
+                void tasks[virtualRow.index];
                 return (
                   <div
                     key={virtualRow.index}
                     style={{
-                      position: 'absolute',
+                      position: "absolute",
                       top: 0,
                       left: 0,
-                      width: '100%',
+                      width: "100%",
                       height: `${ITEM_HEIGHT}px`,
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
@@ -870,14 +908,14 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
             </div>
           </div>
         </SortableContext>
-        
+
         {/* Drag Overlay */}
         <DragOverlay>
           {activeId ? (
             <div className="transform rotate-2 shadow-lg">
               {(() => {
-                const task = tasks.find(t => t.id === activeId);
-                const taskIndex = tasks.findIndex(t => t.id === activeId);
+                const task = tasks.find((t) => t.id === activeId);
+                const taskIndex = tasks.findIndex((t) => t.id === activeId);
                 return task ? (
                   <TaskRow
                     index={taskIndex}
@@ -903,4 +941,4 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
   );
 };
 
-export default VirtualizedTaskList; 
+export default VirtualizedTaskList;

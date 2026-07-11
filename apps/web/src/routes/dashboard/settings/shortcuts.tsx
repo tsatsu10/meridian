@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Keyboard,
   Edit,
@@ -11,16 +11,28 @@ import {
   Command,
   Search,
   Filter,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +40,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,13 +50,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { useWorkspaceStore } from '@/store/workspace';
-import { API_BASE_URL } from '@/constants/urls';
+} from "@/components/ui/alert-dialog";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { useWorkspaceStore } from "@/store/workspace";
+import { API_BASE_URL } from "@/constants/urls";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/shortcuts')({
+export const Route = createFileRoute("/dashboard/settings/shortcuts")({
   component: withErrorBoundary(ShortcutsSettingsPage, "Keyboard Shortcuts"),
 });
 
@@ -59,11 +71,11 @@ interface KeyboardShortcut {
 }
 
 const CATEGORY_NAMES = {
-  navigation: 'Navigation',
-  actions: 'Actions',
-  editing: 'Editing',
-  selection: 'Selection',
-  view: 'View',
+  navigation: "Navigation",
+  actions: "Actions",
+  editing: "Editing",
+  selection: "Selection",
+  view: "View",
 };
 
 function ShortcutsSettingsPage() {
@@ -73,23 +85,24 @@ function ShortcutsSettingsPage() {
   const currentWorkspace = workspace;
   const queryClient = useQueryClient();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false);
-  const [selectedShortcut, setSelectedShortcut] = useState<KeyboardShortcut | null>(null);
-  const [editingKeys, setEditingKeys] = useState('');
+  const [selectedShortcut, setSelectedShortcut] =
+    useState<KeyboardShortcut | null>(null);
+  const [editingKeys, setEditingKeys] = useState("");
   const [isRecording, setIsRecording] = useState(false);
 
   // Fetch shortcuts
   const { data: shortcutsResponse, isLoading } = useQuery({
-    queryKey: ['shortcuts', currentWorkspace?.id],
+    queryKey: ["shortcuts", currentWorkspace?.id],
     queryFn: async () => {
       if (!currentWorkspace) return null;
       const response = await fetch(
         `${API_BASE_URL}/settings/shortcuts/${currentWorkspace.id}/shortcuts`,
-        { credentials: 'include' }
+        { credentials: "include" },
       );
       return response.ok ? response.json() : null;
     },
@@ -98,11 +111,14 @@ function ShortcutsSettingsPage() {
 
   // Fetch presets
   const { data: presetsResponse } = useQuery({
-    queryKey: ['shortcut-presets'],
+    queryKey: ["shortcut-presets"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/settings/shortcuts/presets`, {
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/settings/shortcuts/presets`,
+        {
+          credentials: "include",
+        },
+      );
       return response.ok ? response.json() : null;
     },
   });
@@ -112,105 +128,126 @@ function ShortcutsSettingsPage() {
 
   // Update shortcut mutation
   const updateShortcutMutation = useMutation({
-    mutationFn: async ({ shortcutId, updates }: { shortcutId: string; updates: any }) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+    mutationFn: async ({
+      shortcutId,
+      updates,
+    }: { shortcutId: string; updates: any }) => {
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/shortcuts/${currentWorkspace.id}/shortcuts/${shortcutId}`,
         {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(updates),
-        }
+        },
       );
-      if (!response.ok) throw new Error('Failed to update shortcut');
+      if (!response.ok) throw new Error("Failed to update shortcut");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Shortcut updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['shortcuts', currentWorkspace?.id] });
+      toast.success("Shortcut updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["shortcuts", currentWorkspace?.id],
+      });
       setIsEditDialogOpen(false);
     },
     onError: () => {
-      toast.error('Failed to update shortcut');
+      toast.error("Failed to update shortcut");
     },
   });
 
   // Reset shortcuts mutation
   const resetShortcutsMutation = useMutation({
     mutationFn: async () => {
-      if (!currentWorkspace) throw new Error('No workspace');
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/shortcuts/${currentWorkspace.id}/reset`,
         {
-          method: 'POST',
-          credentials: 'include',
-        }
+          method: "POST",
+          credentials: "include",
+        },
       );
-      if (!response.ok) throw new Error('Failed to reset shortcuts');
+      if (!response.ok) throw new Error("Failed to reset shortcuts");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Shortcuts reset to defaults');
-      queryClient.invalidateQueries({ queryKey: ['shortcuts', currentWorkspace?.id] });
+      toast.success("Shortcuts reset to defaults");
+      queryClient.invalidateQueries({
+        queryKey: ["shortcuts", currentWorkspace?.id],
+      });
       setIsResetDialogOpen(false);
     },
     onError: () => {
-      toast.error('Failed to reset shortcuts');
+      toast.error("Failed to reset shortcuts");
     },
   });
 
   // Apply preset mutation
   const applyPresetMutation = useMutation({
     mutationFn: async (presetId: string) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/shortcuts/${currentWorkspace.id}/presets/${presetId}/apply`,
         {
-          method: 'POST',
-          credentials: 'include',
-        }
+          method: "POST",
+          credentials: "include",
+        },
       );
-      if (!response.ok) throw new Error('Failed to apply preset');
+      if (!response.ok) throw new Error("Failed to apply preset");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Preset applied successfully');
-      queryClient.invalidateQueries({ queryKey: ['shortcuts', currentWorkspace?.id] });
+      toast.success("Preset applied successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["shortcuts", currentWorkspace?.id],
+      });
     },
     onError: () => {
-      toast.error('Failed to apply preset');
+      toast.error("Failed to apply preset");
     },
   });
 
   // Group shortcuts by category
-  const groupedShortcuts = shortcuts.reduce((acc: any, shortcut: KeyboardShortcut) => {
-    const category = shortcut.category || 'other';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(shortcut);
-    return acc;
-  }, {});
+  const groupedShortcuts = shortcuts.reduce(
+    (acc: any, shortcut: KeyboardShortcut) => {
+      const category = shortcut.category || "other";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(shortcut);
+      return acc;
+    },
+    {},
+  );
 
   // Filter shortcuts
-  const filteredGroups = Object.entries(groupedShortcuts).reduce((acc: any, [category, items]) => {
-    const filtered = (items as KeyboardShortcut[]).filter((shortcut) => {
-      const matchesSearch = searchTerm === '' || 
-        shortcut.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        shortcut.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        shortcut.shortcutKeys.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
-      
-      return matchesSearch && matchesCategory;
-    });
-    
-    if (filtered.length > 0) {
-      acc[category] = filtered;
-    }
-    return acc;
-  }, {});
+  const filteredGroups = Object.entries(groupedShortcuts).reduce(
+    (acc: any, [category, items]) => {
+      const filtered = (items as KeyboardShortcut[]).filter((shortcut) => {
+        const matchesSearch =
+          searchTerm === "" ||
+          shortcut.description
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          shortcut.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          shortcut.shortcutKeys
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
+
+        const matchesCategory =
+          categoryFilter === "all" || category === categoryFilter;
+
+        return matchesSearch && matchesCategory;
+      });
+
+      if (filtered.length > 0) {
+        acc[category] = filtered;
+      }
+      return acc;
+    },
+    {},
+  );
 
   const handleEditShortcut = (shortcut: KeyboardShortcut) => {
     setSelectedShortcut(shortcut);
@@ -232,11 +269,13 @@ function ShortcutsSettingsPage() {
         (s: KeyboardShortcut) =>
           s.id !== selectedShortcut.id &&
           s.shortcutKeys === editingKeys &&
-          s.isEnabled
+          s.isEnabled,
       );
 
       if (conflict) {
-        toast.error(`Conflict: "${editingKeys}" is already used by ${conflict.description}`);
+        toast.error(
+          `Conflict: "${editingKeys}" is already used by ${conflict.description}`,
+        );
         return;
       }
 
@@ -249,35 +288,44 @@ function ShortcutsSettingsPage() {
 
   const handleKeyRecord = (e: React.KeyboardEvent) => {
     if (!isRecording) return;
-    
+
     e.preventDefault();
-    
+
     const keys = [];
-    if (e.ctrlKey || e.metaKey) keys.push('Ctrl');
-    if (e.shiftKey) keys.push('Shift');
-    if (e.altKey) keys.push('Alt');
-    
+    if (e.ctrlKey || e.metaKey) keys.push("Ctrl");
+    if (e.shiftKey) keys.push("Shift");
+    if (e.altKey) keys.push("Alt");
+
     const key = e.key;
-    if (!['Control', 'Shift', 'Alt', 'Meta'].includes(key)) {
-      keys.push(key === ' ' ? 'Space' : key.length === 1 ? key.toUpperCase() : key);
+    if (!["Control", "Shift", "Alt", "Meta"].includes(key)) {
+      keys.push(
+        key === " " ? "Space" : key.length === 1 ? key.toUpperCase() : key,
+      );
     }
-    
-    if (keys.length > 0 && keys[keys.length - 1] !== 'Ctrl' && keys[keys.length - 1] !== 'Shift' && keys[keys.length - 1] !== 'Alt') {
-      setEditingKeys(keys.join('+'));
+
+    if (
+      keys.length > 0 &&
+      keys[keys.length - 1] !== "Ctrl" &&
+      keys[keys.length - 1] !== "Shift" &&
+      keys[keys.length - 1] !== "Alt"
+    ) {
+      setEditingKeys(keys.join("+"));
       setIsRecording(false);
     }
   };
 
   const formatShortcutKey = (key: string) => {
     return key
-      .replace('Ctrl', '⌃')
-      .replace('Shift', '⇧')
-      .replace('Alt', '⌥')
-      .replace('Meta', '⌘')
-      .replace('Command', '⌘');
+      .replace("Ctrl", "⌃")
+      .replace("Shift", "⇧")
+      .replace("Alt", "⌥")
+      .replace("Meta", "⌘")
+      .replace("Command", "⌘");
   };
 
-  const customShortcutsCount = shortcuts.filter((s: KeyboardShortcut) => s.isCustom).length;
+  const customShortcutsCount = shortcuts.filter(
+    (s: KeyboardShortcut) => s.isCustom,
+  ).length;
 
   return (
     <LazyDashboardLayout>
@@ -285,7 +333,11 @@ function ShortcutsSettingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button onClick={() => navigate({ to: '/dashboard/settings' })} variant="ghost" size="sm">
+            <Button
+              onClick={() => navigate({ to: "/dashboard/settings" })}
+              variant="ghost"
+              size="sm"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
             </Button>
             <div className="space-y-1">
@@ -298,11 +350,19 @@ function ShortcutsSettingsPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setIsCheatSheetOpen(true)} variant="outline" size="sm">
+            <Button
+              onClick={() => setIsCheatSheetOpen(true)}
+              variant="outline"
+              size="sm"
+            >
               <HelpCircle className="h-4 w-4 mr-2" />
               Cheat Sheet
             </Button>
-            <Button onClick={() => setIsResetDialogOpen(true)} variant="outline" size="sm">
+            <Button
+              onClick={() => setIsResetDialogOpen(true)}
+              variant="outline"
+              size="sm"
+            >
               <RotateCcw className="h-4 w-4 mr-2" />
               Reset
             </Button>
@@ -395,53 +455,69 @@ function ShortcutsSettingsPage() {
             </CardContent>
           </Card>
         ) : (
-          Object.entries(filteredGroups).map(([category, categoryShortcuts]) => (
-            <Card key={category}>
-              <CardHeader>
-                <CardTitle>
-                  {CATEGORY_NAMES[category as keyof typeof CATEGORY_NAMES] || category}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {(categoryShortcuts as KeyboardShortcut[]).map((shortcut) => (
-                    <div
-                      key={shortcut.id}
-                      className="flex items-center justify-between p-3 rounded-lg border"
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div>
-                          <div className="font-medium">{shortcut.description || shortcut.action}</div>
-                          <div className="text-sm text-muted-foreground">{shortcut.action}</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <Badge variant={shortcut.isCustom ? 'default' : 'secondary'} className="font-mono">
-                          {formatShortcutKey(shortcut.shortcutKeys)}
-                        </Badge>
-
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={shortcut.isEnabled}
-                            onCheckedChange={() => handleToggleShortcut(shortcut)}
-                          />
-                        </div>
-
-                        <Button
-                          onClick={() => handleEditShortcut(shortcut)}
-                          size="sm"
-                          variant="ghost"
+          Object.entries(filteredGroups).map(
+            ([category, categoryShortcuts]) => (
+              <Card key={category}>
+                <CardHeader>
+                  <CardTitle>
+                    {CATEGORY_NAMES[category as keyof typeof CATEGORY_NAMES] ||
+                      category}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {(categoryShortcuts as KeyboardShortcut[]).map(
+                      (shortcut) => (
+                        <div
+                          key={shortcut.id}
+                          className="flex items-center justify-between p-3 rounded-lg border"
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                          <div className="flex items-center gap-4 flex-1">
+                            <div>
+                              <div className="font-medium">
+                                {shortcut.description || shortcut.action}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {shortcut.action}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <Badge
+                              variant={
+                                shortcut.isCustom ? "default" : "secondary"
+                              }
+                              className="font-mono"
+                            >
+                              {formatShortcutKey(shortcut.shortcutKeys)}
+                            </Badge>
+
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={shortcut.isEnabled}
+                                onCheckedChange={() =>
+                                  handleToggleShortcut(shortcut)
+                                }
+                              />
+                            </div>
+
+                            <Button
+                              onClick={() => handleEditShortcut(shortcut)}
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ),
+          )
         )}
 
         {/* Edit Shortcut Dialog */}
@@ -457,7 +533,7 @@ function ShortcutsSettingsPage() {
               <div className="space-y-2">
                 <Label>Current Shortcut</Label>
                 <div className="p-3 rounded-lg border bg-muted font-mono text-center">
-                  {formatShortcutKey(selectedShortcut?.shortcutKeys || '')}
+                  {formatShortcutKey(selectedShortcut?.shortcutKeys || "")}
                 </div>
               </div>
               <div className="space-y-2">
@@ -469,7 +545,9 @@ function ShortcutsSettingsPage() {
                     onKeyDown={handleKeyRecord}
                     onFocus={() => setIsRecording(true)}
                     onBlur={() => setIsRecording(false)}
-                    placeholder={isRecording ? 'Press keys...' : 'Click to record'}
+                    placeholder={
+                      isRecording ? "Press keys..." : "Click to record"
+                    }
                     className="font-mono text-center"
                   />
                   {isRecording && (
@@ -482,10 +560,16 @@ function ShortcutsSettingsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSaveShortcut} disabled={!editingKeys || updateShortcutMutation.isPending}>
+              <Button
+                onClick={handleSaveShortcut}
+                disabled={!editingKeys || updateShortcutMutation.isPending}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Save
               </Button>
@@ -494,17 +578,23 @@ function ShortcutsSettingsPage() {
         </Dialog>
 
         {/* Reset Confirmation */}
-        <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <AlertDialog
+          open={isResetDialogOpen}
+          onOpenChange={setIsResetDialogOpen}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Reset All Shortcuts?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will reset all keyboard shortcuts to their default values. Any custom shortcuts will be lost.
+                This will reset all keyboard shortcuts to their default values.
+                Any custom shortcuts will be lost.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => resetShortcutsMutation.mutate()}>
+              <AlertDialogAction
+                onClick={() => resetShortcutsMutation.mutate()}
+              >
                 Reset to Defaults
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -521,28 +611,34 @@ function ShortcutsSettingsPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6">
-              {Object.entries(groupedShortcuts).map(([category, categoryShortcuts]) => (
-                <div key={category}>
-                  <h3 className="font-semibold mb-3">
-                    {CATEGORY_NAMES[category as keyof typeof CATEGORY_NAMES] || category}
-                  </h3>
-                  <div className="space-y-2">
-                    {(categoryShortcuts as KeyboardShortcut[])
-                      .filter(s => s.isEnabled)
-                      .map((shortcut) => (
-                        <div
-                          key={shortcut.id}
-                          className="flex items-center justify-between py-2 border-b last:border-0"
-                        >
-                          <span className="text-sm">{shortcut.description || shortcut.action}</span>
-                          <Badge variant="secondary" className="font-mono">
-                            {formatShortcutKey(shortcut.shortcutKeys)}
-                          </Badge>
-                        </div>
-                      ))}
+              {Object.entries(groupedShortcuts).map(
+                ([category, categoryShortcuts]) => (
+                  <div key={category}>
+                    <h3 className="font-semibold mb-3">
+                      {CATEGORY_NAMES[
+                        category as keyof typeof CATEGORY_NAMES
+                      ] || category}
+                    </h3>
+                    <div className="space-y-2">
+                      {(categoryShortcuts as KeyboardShortcut[])
+                        .filter((s) => s.isEnabled)
+                        .map((shortcut) => (
+                          <div
+                            key={shortcut.id}
+                            className="flex items-center justify-between py-2 border-b last:border-0"
+                          >
+                            <span className="text-sm">
+                              {shortcut.description || shortcut.action}
+                            </span>
+                            <Badge variant="secondary" className="font-mono">
+                              {formatShortcutKey(shortcut.shortcutKeys)}
+                            </Badge>
+                          </div>
+                        ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           </DialogContent>
         </Dialog>

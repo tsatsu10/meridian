@@ -1,6 +1,6 @@
 /**
  * ProjectFiltersAccessible.tsx - WCAG 2.1 Level AA Compliant Filtering UI
- * 
+ *
  * Accessibility Features:
  * - Semantic HTML5 elements (header, nav, main, section, form)
  * - Comprehensive ARIA labels and descriptions
@@ -12,15 +12,19 @@
  * - Live regions for dynamic content updates
  * - Error handling with proper announcements
  * - Touch targets minimum 48x48px (mobile accessible)
- * 
+ *
  * Compliance: WCAG 2.1 Level AA
  * Testing: axe DevTools, Lighthouse, NVDA, JAWS
  */
 
 import React, { useCallback, useRef, useState } from "react";
-import { X, ChevronDown, Search, RotateCcw, } from "lucide-react";
+import { X, ChevronDown, Search, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { useFilterStore } from "@/store/project-filters";
@@ -43,12 +47,15 @@ interface FilterCheckboxProps {
 }
 
 const FilterCheckbox = React.forwardRef<HTMLInputElement, FilterCheckboxProps>(
-  ({ id, label, checked, onChange, count, disabled = false, ariaLabel }, ref) => {
+  (
+    { id, label, checked, onChange, count, disabled = false, ariaLabel },
+    ref,
+  ) => {
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange(e.target.checked);
       },
-      [onChange]
+      [onChange],
     );
 
     return (
@@ -68,7 +75,9 @@ const FilterCheckbox = React.forwardRef<HTMLInputElement, FilterCheckboxProps>(
           htmlFor={id}
           className={cn(
             "flex-1 cursor-pointer text-sm font-medium transition-colors",
-            disabled ? "text-slate-400 cursor-not-allowed" : "text-slate-700 dark:text-slate-300"
+            disabled
+              ? "text-slate-400 cursor-not-allowed"
+              : "text-slate-700 dark:text-slate-300",
           )}
         >
           {label}
@@ -84,7 +93,7 @@ const FilterCheckbox = React.forwardRef<HTMLInputElement, FilterCheckboxProps>(
         )}
       </div>
     );
-  }
+  },
 );
 FilterCheckbox.displayName = "FilterCheckbox";
 
@@ -128,7 +137,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
           size={16}
           className={cn(
             "text-slate-500 transition-transform duration-200",
-            expanded && "rotate-180"
+            expanded && "rotate-180",
           )}
           aria-hidden="true"
         />
@@ -161,12 +170,9 @@ interface ProjectFiltersAccessibleProps {
   onFiltersChange?: () => void;
 }
 
-export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> = ({
-  projects = [],
-  owners = [],
-  teamMembers = [],
-  onFiltersChange,
-}) => {
+export const ProjectFiltersAccessible: React.FC<
+  ProjectFiltersAccessibleProps
+> = ({ projects = [], owners = [], teamMembers = [], onFiltersChange }) => {
   const {
     status,
     priority,
@@ -212,7 +218,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
       }
       onFiltersChange?.();
     },
-    [setSearchQuery, announceFilterChange, onFiltersChange]
+    [setSearchQuery, announceFilterChange, onFiltersChange],
   );
 
   // Reset all filters with announcement
@@ -237,7 +243,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
       announceFilterChange(`Status filter ${action}: ${statusValue}`);
       onFiltersChange?.();
     },
-    [status, setStatus, announceFilterChange, onFiltersChange]
+    [status, setStatus, announceFilterChange, onFiltersChange],
   );
 
   // Priority filter handlers with announcements
@@ -251,7 +257,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
       announceFilterChange(`Priority filter ${action}: ${priorityValue}`);
       onFiltersChange?.();
     },
-    [priority, setPriority, announceFilterChange, onFiltersChange]
+    [priority, setPriority, announceFilterChange, onFiltersChange],
   );
 
   // Health filter handlers with announcements
@@ -265,7 +271,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
       announceFilterChange(`Health filter ${action}: ${healthValue}`);
       onFiltersChange?.();
     },
-    [health, setHealth, announceFilterChange, onFiltersChange]
+    [health, setHealth, announceFilterChange, onFiltersChange],
   );
 
   // Owner filter handlers
@@ -280,7 +286,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
       announceFilterChange(`Owner filter ${action}: ${ownerName}`);
       onFiltersChange?.();
     },
-    [owner, setOwner, owners, announceFilterChange, onFiltersChange]
+    [owner, setOwner, owners, announceFilterChange, onFiltersChange],
   );
 
   // Team members filter handlers
@@ -290,22 +296,34 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
         ? [...selectedTeamMembers, memberId]
         : selectedTeamMembers.filter((m) => m !== memberId);
       setTeamMembers(newMembers);
-      const memberName = teamMembers.find((m) => m.id === memberId)?.name || memberId;
+      const memberName =
+        teamMembers.find((m) => m.id === memberId)?.name || memberId;
       const action = checked ? "added" : "removed";
       announceFilterChange(`Team member filter ${action}: ${memberName}`);
       onFiltersChange?.();
     },
-    [selectedTeamMembers, setTeamMembers, teamMembers, announceFilterChange, onFiltersChange]
+    [
+      selectedTeamMembers,
+      setTeamMembers,
+      teamMembers,
+      announceFilterChange,
+      onFiltersChange,
+    ],
   );
 
   // Sort handler with announcement
   const handleSortChange = useCallback(
     (newSortBy: string, newSortOrder?: string) => {
-      setSort(newSortBy as "status" | "name" | "priority" | "progress" | "dueDate", (newSortOrder as "asc" | "desc") || sortOrder);
-      announceFilterChange(`Sorted by ${newSortBy} in ${newSortOrder || sortOrder} order`);
+      setSort(
+        newSortBy as "status" | "name" | "priority" | "progress" | "dueDate",
+        (newSortOrder as "asc" | "desc") || sortOrder,
+      );
+      announceFilterChange(
+        `Sorted by ${newSortBy} in ${newSortOrder || sortOrder} order`,
+      );
       onFiltersChange?.();
     },
-    [sortBy, sortOrder, setSort, announceFilterChange, onFiltersChange]
+    [sortBy, sortOrder, setSort, announceFilterChange, onFiltersChange],
   );
 
   return (
@@ -388,7 +406,8 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
           aria-describedby="filters-description"
         >
           <div id="filters-description" className="sr-only">
-            Use the checkboxes below to filter projects by status, priority, health, owner, and team members.
+            Use the checkboxes below to filter projects by status, priority,
+            health, owner, and team members.
           </div>
 
           <div className="space-y-0 max-h-96 overflow-y-auto">
@@ -399,13 +418,19 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
                   <FilterCheckbox
                     key={statusValue}
                     id={`status-${statusValue}`}
-                    label={statusValue.charAt(0).toUpperCase() + statusValue.slice(1)}
+                    label={
+                      statusValue.charAt(0).toUpperCase() + statusValue.slice(1)
+                    }
                     checked={status.includes(statusValue)}
-                    onChange={(checked) => handleStatusChange(statusValue, checked)}
-                    count={projects.filter((p) => p.status === statusValue).length}
+                    onChange={(checked) =>
+                      handleStatusChange(statusValue, checked)
+                    }
+                    count={
+                      projects.filter((p) => p.status === statusValue).length
+                    }
                     ariaLabel={`Filter by ${statusValue} status`}
                   />
-                )
+                ),
               )}
             </FilterSection>
 
@@ -415,10 +440,17 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
                 <FilterCheckbox
                   key={priorityValue}
                   id={`priority-${priorityValue}`}
-                  label={priorityValue.charAt(0).toUpperCase() + priorityValue.slice(1)}
+                  label={
+                    priorityValue.charAt(0).toUpperCase() +
+                    priorityValue.slice(1)
+                  }
                   checked={priority.includes(priorityValue)}
-                  onChange={(checked) => handlePriorityChange(priorityValue, checked)}
-                  count={projects.filter((p) => p.priority === priorityValue).length}
+                  onChange={(checked) =>
+                    handlePriorityChange(priorityValue, checked)
+                  }
+                  count={
+                    projects.filter((p) => p.priority === priorityValue).length
+                  }
                   ariaLabel={`Filter by ${priorityValue} priority`}
                 />
               ))}
@@ -430,10 +462,17 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
                 <FilterCheckbox
                   key={healthValue}
                   id={`health-${healthValue}`}
-                  label={healthValue.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                  label={healthValue
+                    .split("-")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ")}
                   checked={health.includes(healthValue)}
-                  onChange={(checked) => handleHealthChange(healthValue, checked)}
-                  count={projects.filter((p) => p.health === healthValue).length}
+                  onChange={(checked) =>
+                    handleHealthChange(healthValue, checked)
+                  }
+                  count={
+                    projects.filter((p) => p.health === healthValue).length
+                  }
                   ariaLabel={`Filter by ${healthValue} health`}
                 />
               ))}
@@ -448,8 +487,12 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
                     id={`owner-${ownerItem.id}`}
                     label={ownerItem.name}
                     checked={owner.includes(ownerItem.id)}
-                    onChange={(checked) => handleOwnerChange(ownerItem.id, checked)}
-                    count={projects.filter((p) => p.ownerId === ownerItem.id).length}
+                    onChange={(checked) =>
+                      handleOwnerChange(ownerItem.id, checked)
+                    }
+                    count={
+                      projects.filter((p) => p.ownerId === ownerItem.id).length
+                    }
                     ariaLabel={`Filter by owner: ${ownerItem.name}`}
                   />
                 ))}
@@ -465,7 +508,9 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
                     id={`team-${member.id}`}
                     label={member.name}
                     checked={selectedTeamMembers.includes(member.id)}
-                    onChange={(checked) => handleTeamMembersChange(member.id, checked)}
+                    onChange={(checked) =>
+                      handleTeamMembersChange(member.id, checked)
+                    }
                     ariaLabel={`Filter by team member: ${member.name}`}
                   />
                 ))}
@@ -505,7 +550,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
                       "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500",
                       sortOrder === "asc"
                         ? "bg-blue-500 text-white"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700",
                     )}
                   >
                     Ascending
@@ -517,7 +562,7 @@ export const ProjectFiltersAccessible: React.FC<ProjectFiltersAccessibleProps> =
                       "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500",
                       sortOrder === "desc"
                         ? "bg-blue-500 text-white"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700",
                     )}
                   >
                     Descending

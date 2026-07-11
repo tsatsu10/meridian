@@ -29,12 +29,14 @@ export function initSentry() {
       // Filter out known errors
       beforeSend(event, _hint) {
         // Filter out browser extension errors
-        if (event.exception?.values?.[0]?.value?.includes('Extension context')) {
+        if (
+          event.exception?.values?.[0]?.value?.includes("Extension context")
+        ) {
           return null;
         }
 
         // Filter out network errors (let query library handle these)
-        if (event.message?.includes('NetworkError')) {
+        if (event.message?.includes("NetworkError")) {
           return null;
         }
 
@@ -44,16 +46,16 @@ export function initSentry() {
       // Set user context (if available)
       beforeBreadcrumb(breadcrumb) {
         // Don't log sensitive data in breadcrumbs
-        if (breadcrumb.category === 'console') {
+        if (breadcrumb.category === "console") {
           return null;
         }
         return breadcrumb;
       },
     });
 
-    logger.info('📊 Sentry error monitoring initialized');
+    logger.info("📊 Sentry error monitoring initialized");
   } else {
-    logger.info('🔧 Sentry disabled in development mode');
+    logger.info("🔧 Sentry disabled in development mode");
   }
 }
 

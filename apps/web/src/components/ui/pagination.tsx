@@ -1,7 +1,13 @@
 // @epic-3.4-teams: Pagination component for teams, members, and users
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  MoreHorizontal,
+} from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export interface MeridianPaginationProps {
@@ -86,12 +92,15 @@ export function MeridianPagination({
   }
 
   return (
-    <div className={cn("flex items-center justify-between gap-4 flex-wrap", className)}>
+    <div
+      className={cn(
+        "flex items-center justify-between gap-4 flex-wrap",
+        className,
+      )}
+    >
       {/* Page info and size selector */}
       <div className="flex items-center gap-4">
-        <p className="text-sm text-muted-foreground">
-          Showing {pageInfo}
-        </p>
+        <p className="text-sm text-muted-foreground">Showing {pageInfo}</p>
         <div className="flex items-center gap-2">
           <label className="text-sm text-muted-foreground">Per page:</label>
           <select
@@ -138,7 +147,10 @@ export function MeridianPagination({
         {getPageNumbers().map((page, index) => {
           if (page === "...") {
             return (
-              <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+              <span
+                key={`ellipsis-${index}`}
+                className="px-2 text-muted-foreground"
+              >
                 ...
               </span>
             );
@@ -186,37 +198,51 @@ export function MeridianPagination({
 }
 
 // Shadcn-style Pagination wrapper component for projects.tsx and other pages
-export const Pagination = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
-  ({ className, ...props }, ref) => (
-    <nav
-      ref={ref}
-      role="navigation"
-      aria-label="pagination"
-      className={cn("mx-auto flex w-full justify-center", className)}
-      {...props}
-    />
-  )
-);
+export const Pagination = forwardRef<
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement>
+>(({ className, ...props }, ref) => (
+  <nav
+    ref={ref}
+    role="navigation"
+    aria-label="pagination"
+    className={cn("mx-auto flex w-full justify-center", className)}
+    {...props}
+  />
+));
 Pagination.displayName = "Pagination";
 
 // Export shadcn-compatible pagination components for backward compatibility
-export const PaginationContent = forwardRef<HTMLUListElement, React.HTMLAttributes<HTMLUListElement>>(
-  ({ className, ...props }, ref) => (
-    <ul ref={ref} className={cn("flex flex-row items-center gap-1", className)} {...props} />
-  )
-);
+export const PaginationContent = forwardRef<
+  HTMLUListElement,
+  React.HTMLAttributes<HTMLUListElement>
+>(({ className, ...props }, ref) => (
+  <ul
+    ref={ref}
+    className={cn("flex flex-row items-center gap-1", className)}
+    {...props}
+  />
+));
 PaginationContent.displayName = "PaginationContent";
 
-export const PaginationItem = forwardRef<HTMLLIElement, React.HTMLAttributes<HTMLLIElement>>(
-  ({ className, ...props }, ref) => <li ref={ref} className={cn("", className)} {...props} />
-);
+export const PaginationItem = forwardRef<
+  HTMLLIElement,
+  React.HTMLAttributes<HTMLLIElement>
+>(({ className, ...props }, ref) => (
+  <li ref={ref} className={cn("", className)} {...props} />
+));
 PaginationItem.displayName = "PaginationItem";
 
 type PaginationLinkProps = {
   isActive?: boolean;
 } & React.ComponentProps<typeof Button>;
 
-export const PaginationLink = ({ className, isActive, size = "icon", ...props }: PaginationLinkProps) => (
+export const PaginationLink = ({
+  className,
+  isActive,
+  size = "icon",
+  ...props
+}: PaginationLinkProps) => (
   <Button
     aria-current={isActive ? "page" : undefined}
     variant={isActive ? "default" : "outline"}
@@ -227,24 +253,47 @@ export const PaginationLink = ({ className, isActive, size = "icon", ...props }:
 );
 PaginationLink.displayName = "PaginationLink";
 
-export const PaginationPrevious = ({ className, ...props }: React.ComponentProps<typeof Button>) => (
-  <Button variant="outline" size="sm" className={cn("gap-1", className)} {...props}>
+export const PaginationPrevious = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) => (
+  <Button
+    variant="outline"
+    size="sm"
+    className={cn("gap-1", className)}
+    {...props}
+  >
     <ChevronLeft className="h-4 w-4" />
     <span>Previous</span>
   </Button>
 );
 PaginationPrevious.displayName = "PaginationPrevious";
 
-export const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof Button>) => (
-  <Button variant="outline" size="sm" className={cn("gap-1", className)} {...props}>
+export const PaginationNext = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) => (
+  <Button
+    variant="outline"
+    size="sm"
+    className={cn("gap-1", className)}
+    {...props}
+  >
     <span>Next</span>
     <ChevronRight className="h-4 w-4" />
   </Button>
 );
 PaginationNext.displayName = "PaginationNext";
 
-export const PaginationEllipsis = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
-  <span aria-hidden className={cn("flex h-9 w-9 items-center justify-center", className)} {...props}>
+export const PaginationEllipsis = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement>) => (
+  <span
+    aria-hidden
+    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    {...props}
+  >
     <MoreHorizontal className="h-4 w-4" />
     <span className="sr-only">More pages</span>
   </span>

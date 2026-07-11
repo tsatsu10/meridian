@@ -51,7 +51,9 @@ export function dedupeWorkspaceUserListRows<
 }
 
 /** Dedupe rows that only have userEmail as stable user key (e.g. active workspace users). */
-export function dedupeByUserEmail<T extends { userEmail: string }>(rows: T[]): T[] {
+export function dedupeByUserEmail<T extends { userEmail: string }>(
+  rows: T[],
+): T[] {
   const map = new Map<string, T>();
   for (const row of rows) {
     const key = row.userEmail.trim().toLowerCase();

@@ -29,4 +29,3 @@ function useBatchDelete() {
 }
 
 export default useBatchDelete;
-

@@ -26,4 +26,3 @@ async function getActiveWorkspaceUsers(workspaceId: string) {
 }
 
 export default getActiveWorkspaceUsers;
-

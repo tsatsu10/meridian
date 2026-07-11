@@ -3,7 +3,13 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -24,10 +30,14 @@ import {
   RefreshCw,
   Activity,
   Target,
-  Archive
+  Archive,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNavigate, createFileRoute, useSearch } from "@tanstack/react-router";
+import {
+  useNavigate,
+  createFileRoute,
+  useSearch,
+} from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ErrorBoundary } from "react-error-boundary";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
@@ -42,10 +52,13 @@ import useDeleteProject from "@/hooks/mutations/project/use-delete-project";
 import { useArchiveProject } from "@/hooks/mutations/project/use-archive-project";
 import ProjectFiltersAccessible from "@/components/dashboard/project-filters-accessible";
 import { useFilterStore } from "@/store/project-filters";
-import { BulkSelectAllCheckbox, useBulkKeyboardShortcuts } from "@/components/dashboard/bulk-select-checkbox";
+import {
+  BulkSelectAllCheckbox,
+  useBulkKeyboardShortcuts,
+} from "@/components/dashboard/bulk-select-checkbox";
 import { BulkActionToolbar } from "@/components/dashboard/bulk-action-toolbar";
 import { useBulkOperations } from "@/hooks/use-bulk-operations-api";
-import { ViewToggle, ViewMode } from "@/components/projects/view-toggle";
+import { ViewToggle, type ViewMode } from "@/components/projects/view-toggle";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useProjectFavorites } from "@/hooks/use-project-favorites";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
@@ -85,11 +98,13 @@ function ProjectsPage() {
   const [currentPage, setCurrentPage] = useState(() => urlSearch.page ?? 1);
   const [pageSize, setPageSize] = useState(() => urlSearch.ps ?? 12);
 
-  const [showArchived, setShowArchived] = useState(() => urlSearch.archived ?? false);
+  const [showArchived, setShowArchived] = useState(
+    () => urlSearch.archived ?? false,
+  );
 
   // View mode state with database persistence
   const { projectsViewMode, updateProjectsViewMode } = useUserPreferences();
-  
+
   const viewMode = projectsViewMode as ViewMode;
 
   // Save view preference to database
@@ -102,7 +117,8 @@ function ProjectsPage() {
   const canViewAnalytics = hasPermission("canViewAnalytics");
 
   // Favorites/Pinning
-  const { pinnedProjects, togglePin, isPinned, sortWithPinned } = useProjectFavorites();
+  const { pinnedProjects, togglePin, isPinned, sortWithPinned } =
+    useProjectFavorites();
 
   // Search ref for keyboard shortcut
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -122,32 +138,36 @@ function ProjectsPage() {
   // Keyboard shortcuts
   const keyboardShortcuts = useMemo(() => {
     const shortcuts = [];
-    
+
     if (canCreateProjects) {
       shortcuts.push({
-        key: 'n',
+        key: "n",
         ctrl: true,
         action: handleCreateProject,
-        description: 'Create new project'
+        description: "Create new project",
       });
     }
-    
+
     shortcuts.push({
-      key: 'k',
+      key: "k",
       ctrl: true,
       action: () => searchInputRef.current?.focus(),
-      description: 'Focus search'
+      description: "Focus search",
     });
-    
+
     return shortcuts;
   }, [canCreateProjects]);
-  
-  useKeyboardShortcuts(keyboardShortcuts);
 
+  useKeyboardShortcuts(keyboardShortcuts);
 
   const { data: projectStats } = useWorkspaceProjectStats();
 
-  const { data: projectsData, isLoading, error, refetch } = useGetProjects({
+  const {
+    data: projectsData,
+    isLoading,
+    error,
+    refetch,
+  } = useGetProjects({
     workspaceId: workspace?.id || "",
     limit: pageSize,
     offset: (currentPage - 1) * pageSize,
@@ -166,11 +186,17 @@ function ProjectsPage() {
     if (typeof projectsData === "object" && "projects" in projectsData) {
       return (projectsData.projects || []) as ProjectDashboardRow[];
     }
-    return Array.isArray(projectsData) ? (projectsData as ProjectDashboardRow[]) : [];
+    return Array.isArray(projectsData)
+      ? (projectsData as ProjectDashboardRow[])
+      : [];
   }, [projectsData]);
 
   const pagination = useMemo(() => {
-    if (typeof projectsData === "object" && projectsData && "pagination" in projectsData) {
+    if (
+      typeof projectsData === "object" &&
+      projectsData &&
+      "pagination" in projectsData
+    ) {
       return projectsData.pagination;
     }
     return null;
@@ -208,7 +234,10 @@ function ProjectsPage() {
     showArchived,
   ]);
 
-  const handleProjectAction = async (action: string, project: ProjectDashboardRow) => {
+  const handleProjectAction = async (
+    action: string,
+    project: ProjectDashboardRow,
+  ) => {
     if (!workspace?.id) {
       toast.error("No workspace selected");
       return;
@@ -216,79 +245,83 @@ function ProjectsPage() {
 
     try {
       switch (action) {
-        case 'view':
+        case "view":
           navigate({
-            to: '/dashboard/workspace/$workspaceId/project/$projectId',
-            params: { 
-              workspaceId: workspace.id, 
-              projectId: project.id 
-            }
+            to: "/dashboard/workspace/$workspaceId/project/$projectId",
+            params: {
+              workspaceId: workspace.id,
+              projectId: project.id,
+            },
           });
           toast.success(`Navigating to ${project.name} overview...`);
           break;
-        
-        case 'tasks':
+
+        case "tasks":
           navigate({
-            to: '/dashboard/workspace/$workspaceId/project/$projectId/list',
-            params: { 
-              workspaceId: workspace.id, 
-              projectId: project.id 
-            }
+            to: "/dashboard/workspace/$workspaceId/project/$projectId/list",
+            params: {
+              workspaceId: workspace.id,
+              projectId: project.id,
+            },
           });
           toast.success(`Navigating to project tasks...`);
           break;
-        
-        case 'board':
+
+        case "board":
           navigate({
-            to: '/dashboard/workspace/$workspaceId/project/$projectId/board',
-            params: { 
-              workspaceId: workspace.id, 
-              projectId: project.id 
-            }
+            to: "/dashboard/workspace/$workspaceId/project/$projectId/board",
+            params: {
+              workspaceId: workspace.id,
+              projectId: project.id,
+            },
           });
           break;
-        
-        case 'settings':
+
+        case "settings":
           navigate({
-            to: '/dashboard/workspace/$workspaceId/project/$projectId/settings',
-            params: { 
-              workspaceId: workspace.id, 
-              projectId: project.id 
-            }
+            to: "/dashboard/workspace/$workspaceId/project/$projectId/settings",
+            params: {
+              workspaceId: workspace.id,
+              projectId: project.id,
+            },
           });
           toast.success(`Opening ${project.name} settings...`);
           break;
-        
-        case 'team':
+
+        case "team":
           navigate({
-            to: '/dashboard/workspace/$workspaceId/project/$projectId/teams',
-            params: { 
-              workspaceId: workspace.id, 
-              projectId: project.id 
-            }
+            to: "/dashboard/workspace/$workspaceId/project/$projectId/teams",
+            params: {
+              workspaceId: workspace.id,
+              projectId: project.id,
+            },
           });
           break;
-        
-        case 'analytics':
+
+        case "analytics":
           navigate({
-            to: '/dashboard/workspace/$workspaceId/project/$projectId/analytics',
-            params: { 
-              workspaceId: workspace.id, 
-              projectId: project.id 
-            }
+            to: "/dashboard/workspace/$workspaceId/project/$projectId/analytics",
+            params: {
+              workspaceId: workspace.id,
+              projectId: project.id,
+            },
           });
           break;
-        
-        case 'archive':
+
+        case "archive":
           // Confirm before archiving
-          if (window.confirm(`Archive project "${project.name}"?\n\nArchived projects are hidden from the main view but can be restored later.`)) {
+          if (
+            window.confirm(
+              `Archive project "${project.name}"?\n\nArchived projects are hidden from the main view but can be restored later.`,
+            )
+          ) {
             archiveProjectMutation.mutate({
               projectId: project.id,
-              workspaceId: workspace?.id || '',
+              workspaceId: workspace?.id || "",
             });
           }
           break;
-        
+
         case "duplicate": {
           if (!canCreateProjects) {
             toast.error("You don't have permission to duplicate projects");
@@ -314,15 +347,15 @@ function ProjectsPage() {
       toast.error("No workspace selected");
       return;
     }
-    
+
     // Navigate to project settings
     try {
       navigate({
-        to: '/dashboard/workspace/$workspaceId/project/$projectId/settings',
-        params: { 
-          workspaceId: workspace.id, 
-          projectId: project.id 
-        }
+        to: "/dashboard/workspace/$workspaceId/project/$projectId/settings",
+        params: {
+          workspaceId: workspace.id,
+          projectId: project.id,
+        },
       });
       toast.success(`Editing ${project.name}...`);
     } catch (error) {
@@ -334,7 +367,7 @@ function ProjectsPage() {
   const handleShareProject = async (project: ProjectDashboardRow) => {
     try {
       const shareUrl = `${window.location.origin}/dashboard/workspace/${workspace?.id}/project/${project.id}`;
-      
+
       // Try to use the Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(shareUrl);
@@ -350,7 +383,7 @@ function ProjectsPage() {
         document.body.appendChild(textArea);
         textArea.select();
         try {
-          document.execCommand('copy');
+          document.execCommand("copy");
           toast.success(`Share link copied to clipboard!`, {
             description: `Anyone with access can view ${project.name}`,
           });
@@ -370,7 +403,7 @@ function ProjectsPage() {
   const handleDeleteProject = async (project: ProjectDashboardRow) => {
     // Use a confirmation dialog
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${project.name}"?\n\nThis will permanently delete:\n• All project tasks\n• All project files\n• All project data\n\nThis action cannot be undone.`
+      `Are you sure you want to delete "${project.name}"?\n\nThis will permanently delete:\n• All project tasks\n• All project files\n• All project data\n\nThis action cannot be undone.`,
     );
 
     if (!confirmed) {
@@ -379,12 +412,16 @@ function ProjectsPage() {
 
     // Delete the project using the mutation
     try {
-      await deleteProjectMutation.mutateAsync({ id: project.id, workspaceId: project.workspaceId });
+      await deleteProjectMutation.mutateAsync({
+        id: project.id,
+        workspaceId: project.workspaceId,
+      });
       toast.success(`${project.name} deleted successfully`);
       refetch(); // Refresh project list
     } catch (error) {
       toast.error(`Failed to delete ${project.name}`, {
-        description: error instanceof Error ? error.message : 'An error occurred'
+        description:
+          error instanceof Error ? error.message : "An error occurred",
       });
     }
   };
@@ -397,7 +434,9 @@ function ProjectsPage() {
             <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto" />
             <div>
               <h3 className="text-lg font-semibold">No Workspace Selected</h3>
-              <p className="text-muted-foreground">Please select a workspace to view projects</p>
+              <p className="text-muted-foreground">
+                Please select a workspace to view projects
+              </p>
             </div>
           </div>
         </div>
@@ -454,7 +493,7 @@ function ProjectsPage() {
         <div className="flex items-center space-x-2 flex-wrap">
           {/* View Toggle */}
           <ViewToggle view={viewMode} onViewChange={handleViewChange} />
-          
+
           {/* Archive Toggle */}
           <Button
             variant={showArchived ? "default" : "outline"}
@@ -470,27 +509,39 @@ function ProjectsPage() {
           </Button>
 
           {/* Bulk Select All Checkbox */}
-          <BulkSelectAllCheckbox 
-            totalProjects={filteredProjects.length}
-          />
+          <BulkSelectAllCheckbox totalProjects={filteredProjects.length} />
 
           {/* New Advanced Filters Component */}
           <ProjectFiltersAccessible
             projects={projects || []}
             owners={
               projects
-                ?.map((p) => ({ id: p.ownerId ?? "", name: p.ownerName ?? "Owner" }))
-                .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) || []
+                ?.map((p) => ({
+                  id: p.ownerId ?? "",
+                  name: p.ownerName ?? "Owner",
+                }))
+                .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) ||
+              []
             }
             teamMembers={
               projects
-                ?.flatMap((p) => (p.members || []).map((m) => ({ id: m.id ?? m.email ?? "", name: m.name ?? m.email ?? "Member" })))
-                .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) || []
+                ?.flatMap((p) =>
+                  (p.members || []).map((m) => ({
+                    id: m.id ?? m.email ?? "",
+                    name: m.name ?? m.email ?? "Member",
+                  })),
+                )
+                .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) ||
+              []
             }
             onFiltersChange={() => setCurrentPage(1)}
           />
-          
-          <Button onClick={handleRefreshProjects} variant="outline" className="glass-card">
+
+          <Button
+            onClick={handleRefreshProjects}
+            variant="outline"
+            className="glass-card"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -512,24 +563,34 @@ function ProjectsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Projects</p>
-                    <p className="text-2xl font-bold text-foreground">{totalProjects}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Projects
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {totalProjects}
+                    </p>
                     <p className="text-xs text-blue-500 flex items-center mt-1">
                       <TrendingUp className="h-3 w-3 mr-1" />
-                      {totalProjects > 0 ? "Active workspace" : "No projects yet"}
+                      {totalProjects > 0
+                        ? "Active workspace"
+                        : "No projects yet"}
                     </p>
                   </div>
                   <FolderOpen className="h-8 w-8 text-primary" />
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="glass-card border-border/50">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Projects</p>
-                    <p className="text-2xl font-bold text-foreground">{activeProjects}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Active Projects
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {activeProjects}
+                    </p>
                     <p className="text-xs text-green-500 flex items-center mt-1">
                       <Zap className="h-3 w-3 mr-1" />
                       {activeProjects > 0 ? "In progress" : "None active"}
@@ -539,13 +600,17 @@ function ProjectsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="glass-card border-border/50">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Avg Progress</p>
-                    <p className="text-2xl font-bold text-foreground">{avgProgress}%</p>
+                    <p className="text-sm text-muted-foreground">
+                      Avg Progress
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {avgProgress}%
+                    </p>
                     <p className="text-xs text-purple-500 flex items-center mt-1">
                       <Award className="h-3 w-3 mr-1" />
                       {avgProgress > 70 ? "Good progress" : "Needs attention"}
@@ -555,16 +620,20 @@ function ProjectsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="glass-card border-border/50">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Completed</p>
-                    <p className="text-2xl font-bold text-foreground">{completedProjects}</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {completedProjects}
+                    </p>
                     <p className="text-xs text-orange-500 flex items-center mt-1">
                       <CheckCircle2 className="h-3 w-3 mr-1" />
-                      {completedProjects > 0 ? "Projects finished" : "None completed"}
+                      {completedProjects > 0
+                        ? "Projects finished"
+                        : "None completed"}
                     </p>
                   </div>
                   <CheckCircle2 className="h-8 w-8 text-orange-500" />
@@ -600,14 +669,14 @@ function ProjectsPage() {
         {viewMode === "list" && (
           <ProjectListView
             projects={filteredProjects}
-            onProjectClick={(p) => handleProjectAction('view', p)}
+            onProjectClick={(p) => handleProjectAction("view", p)}
             pinnedProjects={pinnedProjects}
             onTogglePin={togglePin}
-            onDuplicate={(p) => handleProjectAction('duplicate', p)}
-            onArchive={(p) => handleProjectAction('archive', p)}
+            onDuplicate={(p) => handleProjectAction("duplicate", p)}
+            onArchive={(p) => handleProjectAction("archive", p)}
             onEdit={handleEditProject}
             onShare={handleShareProject}
-            onSettings={(p) => handleProjectAction('settings', p)}
+            onSettings={(p) => handleProjectAction("settings", p)}
             onDelete={handleDeleteProject}
           />
         )}
@@ -629,9 +698,8 @@ function ProjectsPage() {
                 <h3 className="text-lg font-semibold">No Projects Found</h3>
                 <p className="text-muted-foreground">
                   {projects && projects.length === 0
-                    ? "Create your first project to get started" 
-                    : "No projects match your filters"
-                  }
+                    ? "Create your first project to get started"
+                    : "No projects match your filters"}
                 </p>
               </div>
               {canCreateProjects && (!projects || projects.length === 0) && (
@@ -654,7 +722,7 @@ function ProjectsPage() {
                 <Select
                   value={pageSize.toString()}
                   onValueChange={(value) => {
-                    setPageSize(parseInt(value));
+                    setPageSize(Number.parseInt(value));
                     setCurrentPage(1); // Reset to first page when changing size
                   }}
                 >
@@ -671,9 +739,11 @@ function ProjectsPage() {
 
               {/* Count and Pagination */}
               <div className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, pagination.total)} of {pagination.total}
+                Showing {(currentPage - 1) * pageSize + 1}-
+                {Math.min(currentPage * pageSize, pagination.total)} of{" "}
+                {pagination.total}
               </div>
-              
+
               <div className="ml-auto">
                 {pagination.pages > 1 ? (
                   <Pagination>
@@ -684,47 +754,58 @@ function ProjectsPage() {
                             e.preventDefault();
                             if (currentPage > 1) {
                               setCurrentPage(currentPage - 1);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                              window.scrollTo({ top: 0, behavior: "smooth" });
                             }
                           }}
                           className={cn(
-                            currentPage === 1 && "pointer-events-none opacity-50"
+                            currentPage === 1 &&
+                              "pointer-events-none opacity-50",
                           )}
                         />
                       </PaginationItem>
 
-                      {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                        let pageNum;
-                        if (pagination.pages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= pagination.pages - 2) {
-                          pageNum = pagination.pages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
+                      {Array.from(
+                        { length: Math.min(5, pagination.pages) },
+                        (_, i) => {
+                          let pageNum;
+                          if (pagination.pages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= pagination.pages - 2) {
+                            pageNum = pagination.pages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
 
-                        return (
-                          <PaginationItem key={i}>
-                            {(pageNum === 1 && currentPage > 3 && pagination.pages > 5) ||
-                            (pageNum === pagination.pages && currentPage < pagination.pages - 2 && pagination.pages > 5) ? (
-                              <PaginationEllipsis />
-                            ) : (
-                              <PaginationLink
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCurrentPage(pageNum as number);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                                isActive={currentPage === pageNum}
-                              >
-                                {pageNum}
-                              </PaginationLink>
-                            )}
-                          </PaginationItem>
-                        );
-                      })}
+                          return (
+                            <PaginationItem key={i}>
+                              {(pageNum === 1 &&
+                                currentPage > 3 &&
+                                pagination.pages > 5) ||
+                              (pageNum === pagination.pages &&
+                                currentPage < pagination.pages - 2 &&
+                                pagination.pages > 5) ? (
+                                <PaginationEllipsis />
+                              ) : (
+                                <PaginationLink
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(pageNum as number);
+                                    window.scrollTo({
+                                      top: 0,
+                                      behavior: "smooth",
+                                    });
+                                  }}
+                                  isActive={currentPage === pageNum}
+                                >
+                                  {pageNum}
+                                </PaginationLink>
+                              )}
+                            </PaginationItem>
+                          );
+                        },
+                      )}
 
                       <PaginationItem>
                         <PaginationNext
@@ -732,11 +813,12 @@ function ProjectsPage() {
                             e.preventDefault();
                             if (currentPage < pagination.pages) {
                               setCurrentPage(currentPage + 1);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                              window.scrollTo({ top: 0, behavior: "smooth" });
                             }
                           }}
                           className={cn(
-                            currentPage === pagination.pages && "pointer-events-none opacity-50"
+                            currentPage === pagination.pages &&
+                              "pointer-events-none opacity-50",
                           )}
                         />
                       </PaginationItem>
@@ -784,8 +866,8 @@ function ProjectsPage() {
       />
 
       {/* Create Project Modal */}
-      <CreateProjectModal 
-        open={isCreateProjectOpen} 
+      <CreateProjectModal
+        open={isCreateProjectOpen}
         onClose={() => setIsCreateProjectOpen(false)}
       />
     </LazyDashboardLayout>
@@ -793,7 +875,10 @@ function ProjectsPage() {
 }
 
 // Error fallback for Projects
-function ProjectsErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+function ProjectsErrorFallback({
+  error,
+  resetErrorBoundary,
+}: { error: Error; resetErrorBoundary: () => void }) {
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-lg">
@@ -805,7 +890,7 @@ function ProjectsErrorFallback({ error, resetErrorBoundary }: { error: Error; re
             <div>
               <h3 className="font-semibold text-lg mb-2">Projects Error</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                {error.message || 'Something went wrong loading projects'}
+                {error.message || "Something went wrong loading projects"}
               </p>
             </div>
             <div className="flex gap-2">
@@ -813,7 +898,10 @@ function ProjectsErrorFallback({ error, resetErrorBoundary }: { error: Error; re
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
               </Button>
-              <Button onClick={() => window.location.reload()} variant="outline">
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+              >
                 Reload Page
               </Button>
             </div>
@@ -841,4 +929,4 @@ export const Route = createFileRoute("/dashboard/projects")({
     archived: search.archived === "true" || search.archived === true,
   }),
   component: ProjectsPageWithErrorBoundary,
-}); 
+});

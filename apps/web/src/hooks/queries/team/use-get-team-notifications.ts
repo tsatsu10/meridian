@@ -15,7 +15,10 @@ export interface NotificationPreferences {
 }
 
 // @epic-3.4-teams: Hook for fetching team notification preferences
-export function useGetTeamNotifications(teamId: string | undefined, userId?: string) {
+export function useGetTeamNotifications(
+  teamId: string | undefined,
+  userId?: string,
+) {
   return useQuery<{ preferences: NotificationPreferences }>({
     queryKey: ["team-notifications", teamId, userId],
     queryFn: async () => {
@@ -28,4 +31,3 @@ export function useGetTeamNotifications(teamId: string | undefined, userId?: str
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
-

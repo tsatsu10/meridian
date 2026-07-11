@@ -1,6 +1,6 @@
 /**
  * 👥 Enhanced Teams Component
- * 
+ *
  * Shows team memberships with roles, tenure, and primary team
  */
 
@@ -8,7 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Crown, Calendar } from "lucide-react";
-import { getTeamCollaborations, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
+import {
+  getTeamCollaborations,
+  smartProfileKeys,
+} from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
 
@@ -30,7 +33,12 @@ export function TeamsEnhanced({ userId, className }: TeamsEnhancedProps) {
     staleTime: 3 * 60 * 1000,
   });
 
-  const teamsData = data?.data || { teams: [], totalTeams: 0, leadingTeams: 0, primaryTeam: null };
+  const teamsData = data?.data || {
+    teams: [],
+    totalTeams: 0,
+    leadingTeams: 0,
+    primaryTeam: null,
+  };
 
   if (isLoading) {
     return (
@@ -80,7 +88,10 @@ export function TeamsEnhanced({ userId, className }: TeamsEnhancedProps) {
           <div className="ml-auto flex items-center gap-2">
             <Badge variant="secondary">{teamsData.totalTeams} teams</Badge>
             {teamsData.leadingTeams > 0 && (
-              <Badge variant="outline" className="bg-purple-50 dark:bg-purple-950/30">
+              <Badge
+                variant="outline"
+                className="bg-purple-50 dark:bg-purple-950/30"
+              >
                 <Crown className="h-3 w-3 mr-1" />
                 {teamsData.leadingTeams} lead
               </Badge>
@@ -95,14 +106,17 @@ export function TeamsEnhanced({ userId, className }: TeamsEnhancedProps) {
               key={team.id}
               className={cn(
                 "p-4 rounded-lg border transition-all hover:border-primary",
-                team.isPrimaryTeam && "border-primary bg-primary/5"
+                team.isPrimaryTeam && "border-primary bg-primary/5",
               )}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div
                     className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold"
-                    style={{ backgroundColor: team.color + "30", color: team.color }}
+                    style={{
+                      backgroundColor: team.color + "30",
+                      color: team.color,
+                    }}
                   >
                     {team.name.charAt(0)}
                   </div>
@@ -118,7 +132,13 @@ export function TeamsEnhanced({ userId, className }: TeamsEnhancedProps) {
                     </div>
                   </div>
                 </div>
-                <Badge variant="outline" className={cn("text-xs", roleColors[team.role as keyof typeof roleColors])}>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs",
+                    roleColors[team.role as keyof typeof roleColors],
+                  )}
+                >
                   {team.role}
                 </Badge>
               </div>
@@ -132,7 +152,12 @@ export function TeamsEnhanced({ userId, className }: TeamsEnhancedProps) {
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {team.tenureDays > 0
-                    ? formatDistanceToNow(new Date(Date.now() - team.tenureDays * 24 * 60 * 60 * 1000), { addSuffix: true })
+                    ? formatDistanceToNow(
+                        new Date(
+                          Date.now() - team.tenureDays * 24 * 60 * 60 * 1000,
+                        ),
+                        { addSuffix: true },
+                      )
                     : "Just joined"}
                 </span>
               </div>
@@ -143,4 +168,3 @@ export function TeamsEnhanced({ userId, className }: TeamsEnhancedProps) {
     </Card>
   );
 }
-

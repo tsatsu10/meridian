@@ -28,7 +28,7 @@ function Column({ column }: ColumnProps) {
 
         {/* Simplified background */}
         <div className="absolute inset-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm rounded-lg border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm" />
-        
+
         {/* Main column content */}
         <div className="relative flex flex-col h-full rounded-lg overflow-hidden">
           {/* Compact header */}

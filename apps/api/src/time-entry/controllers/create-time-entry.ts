@@ -51,4 +51,3 @@ async function createTimeEntry({
 }
 
 export default createTimeEntry;
-

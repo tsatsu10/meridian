@@ -1,188 +1,203 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { EmailVerificationBanner } from '../email-verification-banner'
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { EmailVerificationBanner } from "../email-verification-banner";
 
 // Mock fetch
-global.fetch = vi.fn()
+global.fetch = vi.fn();
 
-describe('EmailVerificationBanner', () => {
-  const mockOnResend = vi.fn()
-  const mockOnDismiss = vi.fn()
+// The component runs a 60s countdown on an interval. Fake timers with
+// shouldAdvanceTime keep the clock moving with real time (so userEvent's
+// internal delays and pending microtasks still elapse) while letting the
+// countdown tests fast-forward 60s instantly.
+const setupUser = () => userEvent.setup();
+
+const flushAsync = () =>
+  act(async () => {
+    await Promise.resolve();
+  });
+
+describe("EmailVerificationBanner", () => {
+  const mockOnResend = vi.fn();
+  const mockOnDismiss = vi.fn();
   const defaultProps = {
-    userEmail: 'test@example.com',
+    userEmail: "test@example.com",
     onResend: mockOnResend,
     onDismiss: mockOnDismiss,
-  }
+  };
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(global.fetch as any).mockClear()
-    vi.useFakeTimers()
-  })
+    vi.clearAllMocks();
+    (global.fetch as any).mockClear();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
 
   afterEach(() => {
-    vi.restoreAllMocks()
-  })
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
-  describe('Rendering', () => {
-    it('should display user email in banner', () => {
-      render(<EmailVerificationBanner {...defaultProps} />)
+  describe("Rendering", () => {
+    it("should display user email in banner", () => {
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      expect(screen.getByText('test@example.com')).toBeInTheDocument()
-    })
+      expect(screen.getByText("test@example.com")).toBeInTheDocument();
+    });
 
-    it('should render resend email button', () => {
-      render(<EmailVerificationBanner {...defaultProps} />)
+    it("should render resend email button", () => {
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /resend email/i })).toBeInTheDocument()
-    })
+      expect(
+        screen.getByRole("button", { name: /resend email/i }),
+      ).toBeInTheDocument();
+    });
 
-    it('should render help link', () => {
-      render(<EmailVerificationBanner {...defaultProps} />)
+    it("should render help link", () => {
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      const helpLink = screen.getByRole('link', { name: /need help/i })
-      expect(helpLink).toBeInTheDocument()
-      expect(helpLink).toHaveAttribute('href', '/help/email-verification')
-    })
+      const helpLink = screen.getByRole("link", { name: /need help/i });
+      expect(helpLink).toBeInTheDocument();
+      expect(helpLink).toHaveAttribute("href", "/help/email-verification");
+    });
 
-    it('should render dismiss button when onDismiss provided', () => {
-      render(<EmailVerificationBanner {...defaultProps} />)
+    it("should render dismiss button when onDismiss provided", () => {
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /dismiss/i })).toBeInTheDocument()
-    })
+      expect(
+        screen.getByRole("button", { name: /dismiss/i }),
+      ).toBeInTheDocument();
+    });
 
-    it('should not render dismiss button when onDismiss not provided', () => {
-      render(<EmailVerificationBanner userEmail="test@example.com" />)
+    it("should not render dismiss button when onDismiss not provided", () => {
+      render(<EmailVerificationBanner userEmail="test@example.com" />);
 
-      expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument()
-    })
-  })
+      expect(
+        screen.queryByRole("button", { name: /dismiss/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
 
-  describe('Resend Functionality', () => {
-    // Skip: These tests have async/fetch timing issues that need investigation
-    it.skip('should send verification email successfully [ASYNC ISSUE]', async () => {
-      ;(global.fetch as any).mockResolvedValueOnce({
+  describe("Resend Functionality", () => {
+    it("should send verification email successfully", async () => {
+      const user = setupUser();
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      })
+      });
 
-      render(<EmailVerificationBanner {...defaultProps} />)
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i })
-      await userEvent.click(resendButton)
+      await user.click(screen.getByRole("button", { name: /resend email/i }));
+      await flushAsync();
 
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/auth/resend-verification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'test@example.com' }),
-        })
-      })
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/auth/resend-verification",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "test@example.com" }),
+        },
+      );
+      expect(
+        screen.getByText(/✅ Verification email sent!/i),
+      ).toBeInTheDocument();
+      expect(mockOnResend).toHaveBeenCalled();
+    });
 
-      // Match the actual message with emoji
-      await waitFor(() => {
-        expect(screen.getByText(/✅ Verification email sent!/i)).toBeInTheDocument()
-      })
-      expect(mockOnResend).toHaveBeenCalled()
-    })
-
-    it.skip('should show error message on failure [ASYNC ISSUE]', async () => {
-      ;(global.fetch as any).mockResolvedValueOnce({
+    it("should show error message on failure", async () => {
+      const user = setupUser();
+      (global.fetch as any).mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ error: 'Rate limit exceeded' }),
-      })
+        json: async () => ({ error: "Rate limit exceeded" }),
+      });
 
-      render(<EmailVerificationBanner {...defaultProps} />)
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i })
-      await userEvent.click(resendButton)
+      await user.click(screen.getByRole("button", { name: /resend email/i }));
+      await flushAsync();
 
-      // The component shows the error message from the API response
-      await waitFor(() => {
-        expect(screen.getByText(/rate limit exceeded/i)).toBeInTheDocument()
-      }, { timeout: 2000 })
-    })
+      expect(screen.getByText(/rate limit exceeded/i)).toBeInTheDocument();
+    });
 
-    it.skip('should show countdown timer after sending [ASYNC ISSUE]', async () => {
-      ;(global.fetch as any).mockResolvedValueOnce({
+    it("should show countdown timer after sending", async () => {
+      const user = setupUser();
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      })
+      });
 
-      render(<EmailVerificationBanner {...defaultProps} />)
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i })
-      await userEvent.click(resendButton)
+      const resendButton = screen.getByRole("button", {
+        name: /resend email/i,
+      });
+      await user.click(resendButton);
+      await flushAsync();
 
-      // Wait for the countdown to appear in the button text
-      await waitFor(() => {
-        expect(resendButton).toHaveTextContent(/resend in/i)
-      }, { timeout: 2000 })
+      expect(resendButton).toHaveTextContent(/resend in 60s/i);
+      expect(resendButton).toBeDisabled();
+    });
 
-      expect(resendButton).toBeDisabled()
-    })
-
-    it.skip('should disable button during countdown [ASYNC ISSUE]', async () => {
-      ;(global.fetch as any).mockResolvedValueOnce({
+    it("should disable button during countdown", async () => {
+      const user = setupUser();
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      })
+      });
 
-      render(<EmailVerificationBanner {...defaultProps} />)
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i })
-      
+      const resendButton = screen.getByRole("button", {
+        name: /resend email/i,
+      });
+
       // Initially not disabled
-      expect(resendButton).not.toBeDisabled()
+      expect(resendButton).not.toBeDisabled();
 
-      await userEvent.click(resendButton)
+      await user.click(resendButton);
+      await flushAsync();
 
-      // Wait for button to show countdown and be disabled
-      await waitFor(() => {
-        expect(resendButton).toBeDisabled()
-        expect(resendButton).toHaveTextContent(/resend in/i)
-      }, { timeout: 2000 })
-    })
+      expect(resendButton).toBeDisabled();
+      expect(resendButton).toHaveTextContent(/resend in/i);
+    });
 
-    it('should re-enable button after countdown completes', async () => {
-      ;(global.fetch as any).mockResolvedValueOnce({
+    it("should re-enable button after countdown completes", async () => {
+      const user = setupUser();
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      })
+      });
 
-      render(<EmailVerificationBanner {...defaultProps} />)
+      render(<EmailVerificationBanner {...defaultProps} />);
 
-      const resendButton = screen.getByRole('button', { name: /resend email/i })
-      await userEvent.click(resendButton)
+      const resendButton = screen.getByRole("button", {
+        name: /resend email/i,
+      });
+      await user.click(resendButton);
+      await flushAsync();
 
-      // Wait for countdown to start
-      await waitFor(() => {
-        expect(screen.getByText(/resend in 60s/i)).toBeInTheDocument()
-      })
+      expect(screen.getByText(/resend in 60s/i)).toBeInTheDocument();
 
-      // Fast-forward 60 seconds
-      vi.advanceTimersByTime(60000)
+      // Fast-forward through the 60 second cooldown
+      await act(async () => {
+        vi.advanceTimersByTime(60000);
+      });
 
-      await waitFor(() => {
-        const button = screen.getByRole('button', { name: /resend email/i })
-        expect(button).not.toBeDisabled()
-      })
-    })
-  })
+      expect(
+        screen.getByRole("button", { name: /resend email/i }),
+      ).not.toBeDisabled();
+    });
+  });
 
-  describe('Dismiss Functionality', () => {
-    it('should call onDismiss when dismiss button clicked', async () => {
-      render(<EmailVerificationBanner {...defaultProps} />)
+  describe("Dismiss Functionality", () => {
+    it("should call onDismiss when dismiss button clicked", async () => {
+      const user = setupUser();
+      render(<EmailVerificationBanner {...defaultProps} />);
 
       // The dismiss button has aria-label="Dismiss"
-      const dismissButton = screen.getByRole('button', { name: /dismiss/i })
-      await userEvent.click(dismissButton)
+      await user.click(screen.getByRole("button", { name: /dismiss/i }));
 
-      await waitFor(() => {
-        expect(mockOnDismiss).toHaveBeenCalled()
-      }, { timeout: 1000 })
-    })
-  })
-})
-
+      expect(mockOnDismiss).toHaveBeenCalled();
+    });
+  });
+});

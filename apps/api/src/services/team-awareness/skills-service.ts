@@ -4,16 +4,28 @@
  * Phase 2 - Team Awareness Features
  */
 
-import { getDatabase } from '../../database/connection';
-import { userSkills } from '../../database/schema/team-awareness';
-import { users } from '../../database/schema';
-import { eq, desc, and, sql, inArray, like } from 'drizzle-orm';
-import { Logger } from '../logging/logger';
-import { CacheService, CacheTTL } from '../cache/cache-service';
-import { createId } from '@paralleldrive/cuid2';
+import { getDatabase } from "../../database/connection";
+import { userSkills } from "../../database/schema/team-awareness";
+import { users } from "../../database/schema";
+import { eq, desc, and, sql, inArray, like } from "drizzle-orm";
+import { Logger } from "../logging/logger";
+import { CacheService, CacheTTL } from "../cache/cache-service";
+import { createId } from "@paralleldrive/cuid2";
 
-export type ProficiencyLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
-export type SkillCategory = 'frontend' | 'backend' | 'design' | 'management' | 'devops' | 'data' | 'mobile' | 'other';
+export type ProficiencyLevel =
+  | "beginner"
+  | "intermediate"
+  | "advanced"
+  | "expert";
+export type SkillCategory =
+  | "frontend"
+  | "backend"
+  | "design"
+  | "management"
+  | "devops"
+  | "data"
+  | "mobile"
+  | "other";
 
 export interface AddSkillParams {
   userId: string;
@@ -54,12 +66,13 @@ export class SkillsService {
   /**
    * Proficiency level to score mapping
    */
-  private static readonly PROFICIENCY_SCORES: Record<ProficiencyLevel, number> = {
-    beginner: 1,
-    intermediate: 2,
-    advanced: 3,
-    expert: 5,
-  };
+  private static readonly PROFICIENCY_SCORES: Record<ProficiencyLevel, number> =
+    {
+      beginner: 1,
+      intermediate: 2,
+      advanced: 3,
+      expert: 5,
+    };
 
   /**
    * Add skill to user profile
@@ -87,9 +100,11 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${params.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${params.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${params.workspaceId}*`,
+      );
 
-      Logger.business('Skill added', {
+      Logger.business("Skill added", {
         userId: params.userId,
         skillName: params.skillName,
         proficiencyLevel: params.proficiencyLevel,
@@ -97,7 +112,7 @@ export class SkillsService {
 
       return newSkill;
     } catch (error) {
-      Logger.error('Failed to add skill', error, params);
+      Logger.error("Failed to add skill", error, params);
       throw error;
     }
   }
@@ -117,14 +132,14 @@ export class SkillsService {
           .where(
             and(
               eq(userSkills.userId, userId),
-              eq(userSkills.workspaceId, workspaceId)
-            )
+              eq(userSkills.workspaceId, workspaceId),
+            ),
           )
           .orderBy(desc(userSkills.proficiencyScore), userSkills.skillName);
 
         return skills;
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
   }
 
@@ -152,11 +167,15 @@ export class SkillsService {
         }
 
         if (filters.proficiencyLevel) {
-          conditions.push(eq(userSkills.proficiencyLevel, filters.proficiencyLevel));
+          conditions.push(
+            eq(userSkills.proficiencyLevel, filters.proficiencyLevel),
+          );
         }
 
         if (filters.minProficiencyScore) {
-          conditions.push(sql`${userSkills.proficiencyScore} >= ${filters.minProficiencyScore}`);
+          conditions.push(
+            sql`${userSkills.proficiencyScore} >= ${filters.minProficiencyScore}`,
+          );
         }
 
         if (filters.isVerified !== undefined) {
@@ -199,7 +218,7 @@ export class SkillsService {
 
         return skills;
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
   }
 
@@ -215,14 +234,14 @@ export class SkillsService {
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
       const endorsements = (skill.endorsements as any[]) || [];
 
       // Check if already endorsed
       const existingIndex = endorsements.findIndex(
-        (e: any) => e.userId === params.endorserId
+        (e: any) => e.userId === params.endorserId,
       );
 
       if (existingIndex > -1) {
@@ -252,16 +271,18 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.business('Skill endorsed', {
+      Logger.business("Skill endorsed", {
         skillId: params.skillId,
         endorserId: params.endorserId,
       });
 
       return endorsements;
     } catch (error) {
-      Logger.error('Failed to endorse skill', error, params);
+      Logger.error("Failed to endorse skill", error, params);
       throw error;
     }
   }
@@ -278,7 +299,7 @@ export class SkillsService {
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
       await this.getDb()
@@ -293,11 +314,13 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.business('Skill verified', { skillId, verifierId });
+      Logger.business("Skill verified", { skillId, verifierId });
     } catch (error) {
-      Logger.error('Failed to verify skill', error, { skillId, verifierId });
+      Logger.error("Failed to verify skill", error, { skillId, verifierId });
       throw error;
     }
   }
@@ -313,7 +336,7 @@ export class SkillsService {
       yearsOfExperience: number;
       isPublic: boolean;
       skillCategory: SkillCategory;
-    }>
+    }>,
   ) {
     try {
       const [skill] = await this.getDb()
@@ -323,7 +346,7 @@ export class SkillsService {
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
       await this.getDb()
@@ -336,11 +359,13 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.info('Skill updated', { skillId, updates });
+      Logger.info("Skill updated", { skillId, updates });
     } catch (error) {
-      Logger.error('Failed to update skill', error, { skillId, updates });
+      Logger.error("Failed to update skill", error, { skillId, updates });
       throw error;
     }
   }
@@ -357,23 +382,25 @@ export class SkillsService {
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
       // Only skill owner can delete
       if (skill.userId !== userId) {
-        throw new Error('Only the skill owner can delete');
+        throw new Error("Only the skill owner can delete");
       }
 
       await this.getDb().delete(userSkills).where(eq(userSkills.id, skillId));
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.info('Skill deleted', { skillId, userId });
+      Logger.info("Skill deleted", { skillId, userId });
     } catch (error) {
-      Logger.error('Failed to delete skill', error, { skillId, userId });
+      Logger.error("Failed to delete skill", error, { skillId, userId });
       throw error;
     }
   }
@@ -396,25 +423,28 @@ export class SkillsService {
         const matrix: Record<string, any[]> = {};
 
         for (const skill of skills) {
-          const bucket = matrix[skill.skillName] ?? (matrix[skill.skillName] = []);
+          const bucket =
+            matrix[skill.skillName] ?? (matrix[skill.skillName] = []);
           bucket.push(skill);
         }
 
         // Sort by proficiency
         for (const skillName in matrix) {
-          matrix[skillName]?.sort((a, b) => b.proficiencyScore - a.proficiencyScore);
+          matrix[skillName]?.sort(
+            (a, b) => b.proficiencyScore - a.proficiencyScore,
+          );
         }
 
         return matrix;
       },
-      CacheTTL.LONG
+      CacheTTL.LONG,
     );
   }
 
   /**
    * Get most common skills
    */
-  static async getPopularSkills(workspaceId: string, limit: number = 10) {
+  static async getPopularSkills(workspaceId: string, limit = 10) {
     const cacheKey = `skills:workspace:${workspaceId}:popular`;
 
     return CacheService.getOrCompute(
@@ -434,7 +464,7 @@ export class SkillsService {
 
         return popularSkills;
       },
-      CacheTTL.LONG
+      CacheTTL.LONG,
     );
   }
 
@@ -456,14 +486,14 @@ export class SkillsService {
 
         return experts;
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
   }
 
   /**
    * Get skill gaps (skills with low coverage)
    */
-  static async getSkillGaps(workspaceId: string, threshold: number = 2) {
+  static async getSkillGaps(workspaceId: string, threshold = 2) {
     const cacheKey = `skills:workspace:${workspaceId}:gaps`;
 
     return CacheService.getOrCompute(
@@ -481,17 +511,14 @@ export class SkillsService {
 
         // Find skills with low coverage or low proficiency
         const gaps = skillCounts.filter(
-          skill => skill.count < threshold || skill.avgProficiency < 2.5
+          (skill) => skill.count < threshold || skill.avgProficiency < 2.5,
         );
 
         return gaps;
       },
-      CacheTTL.LONG
+      CacheTTL.LONG,
     );
   }
 }
 
 export default SkillsService;
-
-
-

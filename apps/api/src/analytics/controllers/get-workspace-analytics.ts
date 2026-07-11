@@ -1,19 +1,25 @@
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
-import { taskTable, projectTable, timeEntryTable, workspaceTable, workspaceUserTable } from "../../database/schema";
+import {
+  taskTable,
+  projectTable,
+  timeEntryTable,
+  workspaceTable,
+  workspaceUserTable,
+} from "../../database/schema";
 import { eq, and, gte, lte, count, sum, avg, desc } from "drizzle-orm";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // @epic-3.1-analytics: Workspace-level analytics for executives
 // @role-workspace-manager: Workspace manager needs organization-wide insights
 // @permission-canViewWorkspaceAnalytics
 
 export async function getWorkspaceAnalytics(c: Context) {
-  const workspaceId = c.req.param('id');
-  const timeRange = c.req.query('timeRange') || '30d';
+  const workspaceId = c.req.param("id");
+  const timeRange = c.req.query("timeRange") || "30d";
 
   if (!workspaceId) {
-    return c.json({ error: 'Workspace ID required' }, 400);
+    return c.json({ error: "Workspace ID required" }, 400);
   }
 
   try {
@@ -22,14 +28,19 @@ export async function getWorkspaceAnalytics(c: Context) {
     const now = new Date();
     const getDaysBack = (range: string) => {
       switch (range) {
-        case '7d': return 7;
-        case '30d': return 30;
-        case '90d': return 90;
-        case '1y': return 365;
-        default: return 30;
+        case "7d":
+          return 7;
+        case "30d":
+          return 30;
+        case "90d":
+          return 90;
+        case "1y":
+          return 365;
+        default:
+          return 30;
       }
     };
-    
+
     const daysBack = getDaysBack(timeRange);
     const startDate = new Date(now);
     startDate.setDate(startDate.getDate() - daysBack);
@@ -42,7 +53,7 @@ export async function getWorkspaceAnalytics(c: Context) {
       .limit(1);
 
     if (!workspace.length) {
-      return c.json({ error: 'Workspace not found' }, 404);
+      return c.json({ error: "Workspace not found" }, 404);
     }
 
     // Get all projects in workspace
@@ -51,17 +62,25 @@ export async function getWorkspaceAnalytics(c: Context) {
         id: projectTable.id,
         name: projectTable.name,
         status: projectTable.status,
-        createdAt: projectTable.createdAt
+        createdAt: projectTable.createdAt,
       })
       .from(projectTable)
       .where(eq(projectTable.workspaceId, workspaceId));
 
     const projectMetrics = {
       total: projects.length,
-      active: projects.filter((p: { status: string | null }) => p.status === 'active').length,
-      completed: projects.filter((p: { status: string | null }) => p.status === 'completed').length,
-      onHold: projects.filter((p: { status: string | null }) => p.status === 'on-hold').length,
-      planning: projects.filter((p: { status: string | null }) => p.status === 'planning').length
+      active: projects.filter(
+        (p: { status: string | null }) => p.status === "active",
+      ).length,
+      completed: projects.filter(
+        (p: { status: string | null }) => p.status === "completed",
+      ).length,
+      onHold: projects.filter(
+        (p: { status: string | null }) => p.status === "on-hold",
+      ).length,
+      planning: projects.filter(
+        (p: { status: string | null }) => p.status === "planning",
+      ).length,
     };
 
     // Get all tasks across all projects in workspace
@@ -72,7 +91,7 @@ export async function getWorkspaceAnalytics(c: Context) {
         priority: taskTable.priority,
         dueDate: taskTable.dueDate,
         createdAt: taskTable.createdAt,
-        projectId: taskTable.projectId
+        projectId: taskTable.projectId,
       })
       .from(taskTable)
       .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
@@ -81,13 +100,15 @@ export async function getWorkspaceAnalytics(c: Context) {
     type TaskRow = (typeof allTasks)[number];
     const productivityMetrics = {
       totalTasks: allTasks.length,
-      completedTasks: allTasks.filter((t: TaskRow) => t.status === 'done').length,
+      completedTasks: allTasks.filter((t: TaskRow) => t.status === "done")
+        .length,
       overdueTasks: allTasks.filter(
-        (t: TaskRow) => t.dueDate && new Date(t.dueDate) < now && t.status !== 'done',
+        (t: TaskRow) =>
+          t.dueDate && new Date(t.dueDate) < now && t.status !== "done",
       ).length,
       highPriorityTasks: allTasks.filter(
-        (t: TaskRow) => t.priority === 'high' || t.priority === 'urgent',
-      ).length
+        (t: TaskRow) => t.priority === "high" || t.priority === "urgent",
+      ).length,
     };
 
     // Get team metrics
@@ -95,7 +116,7 @@ export async function getWorkspaceAnalytics(c: Context) {
       .select({
         userEmail: workspaceUserTable.userEmail,
         role: workspaceUserTable.role,
-        status: workspaceUserTable.status
+        status: workspaceUserTable.status,
       })
       .from(workspaceUserTable)
       .where(eq(workspaceUserTable.workspaceId, workspaceId));
@@ -103,15 +124,18 @@ export async function getWorkspaceAnalytics(c: Context) {
     type MemberRow = (typeof teamMembers)[number];
     const teamMetrics = {
       totalMembers: teamMembers.length,
-      activeMembers: teamMembers.filter((m: MemberRow) => m.status === 'active').length,
-      pendingMembers: teamMembers.filter((m: MemberRow) => m.status === 'pending').length
+      activeMembers: teamMembers.filter((m: MemberRow) => m.status === "active")
+        .length,
+      pendingMembers: teamMembers.filter(
+        (m: MemberRow) => m.status === "pending",
+      ).length,
     };
 
     // Get time entries for the workspace
     const timeEntries = await db
       .select({
         duration: timeEntryTable.duration,
-        createdAt: timeEntryTable.createdAt
+        createdAt: timeEntryTable.createdAt,
       })
       .from(timeEntryTable)
       .innerJoin(taskTable, eq(timeEntryTable.taskId, taskTable.id))
@@ -119,8 +143,8 @@ export async function getWorkspaceAnalytics(c: Context) {
       .where(
         and(
           eq(projectTable.workspaceId, workspaceId),
-          gte(timeEntryTable.createdAt, startDate)
-        )
+          gte(timeEntryTable.createdAt, startDate),
+        ),
       );
 
     type TimeRow = (typeof timeEntries)[number];
@@ -135,27 +159,37 @@ export async function getWorkspaceAnalytics(c: Context) {
     for (let i = daysBack - 1; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const tasksCreated = allTasks.filter((t: TaskRow) =>
-        t.createdAt && new Date(t.createdAt).toISOString().split('T')[0] === dateStr
+      const dateStr = date.toISOString().split("T")[0];
+
+      const tasksCreated = allTasks.filter(
+        (t: TaskRow) =>
+          t.createdAt &&
+          new Date(t.createdAt).toISOString().split("T")[0] === dateStr,
       ).length;
 
-      const tasksCompleted = allTasks.filter((t: TaskRow) =>
-        t.status === 'done' && t.createdAt && new Date(t.createdAt).toISOString().split('T')[0] === dateStr
+      const tasksCompleted = allTasks.filter(
+        (t: TaskRow) =>
+          t.status === "done" &&
+          t.createdAt &&
+          new Date(t.createdAt).toISOString().split("T")[0] === dateStr,
       ).length;
 
-      const dayTimeEntries = timeEntries.filter((t: TimeRow) =>
-        t.createdAt && new Date(t.createdAt).toISOString().split('T')[0] === dateStr
+      const dayTimeEntries = timeEntries.filter(
+        (t: TimeRow) =>
+          t.createdAt &&
+          new Date(t.createdAt).toISOString().split("T")[0] === dateStr,
       );
       const dayHours =
-        dayTimeEntries.reduce((sum: number, entry: TimeRow) => sum + (entry.duration || 0), 0) / 60;
+        dayTimeEntries.reduce(
+          (sum: number, entry: TimeRow) => sum + (entry.duration || 0),
+          0,
+        ) / 60;
 
       productivityTrend.push({
         date: dateStr,
         tasks: tasksCreated,
         completed: tasksCompleted,
-        hours: dayHours
+        hours: dayHours,
       });
     }
 
@@ -165,20 +199,20 @@ export async function getWorkspaceAnalytics(c: Context) {
         workspace: {
           id: workspace[0]!.id,
           name: workspace[0]!.name,
-          description: workspace[0]!.description
+          description: workspace[0]!.description,
         },
         timeRange,
         projectMetrics,
         productivityMetrics,
         teamMetrics,
         totalHours,
-        productivityTrend
-      }
+        productivityTrend,
+      },
     };
 
     return c.json(response);
   } catch (error: any) {
-    logger.error('Error fetching workspace analytics:', error);
-    return c.json({ error: 'Failed to fetch workspace analytics' }, 500);
+    logger.error("Error fetching workspace analytics:", error);
+    return c.json({ error: "Failed to fetch workspace analytics" }, 500);
   }
-} 
+}

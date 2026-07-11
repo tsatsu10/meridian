@@ -1,12 +1,18 @@
 /**
  * 🎯 Enhanced Member Details Modal
- * 
+ *
  * @epic-3.4-teams - Comprehensive member activity and performance view
  * @persona-sarah - PM needs visibility into team member contributions
  * @persona-david - Team lead needs detailed performance insights
  */
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,9 +20,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Clock, 
-  FileText, 
+import {
+  Clock,
+  FileText,
   Calendar,
   Mail,
   Video,
@@ -29,11 +35,20 @@ import {
   File,
   Plus,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useGetMemberActivity } from "@/hooks/queries/workspace-user/use-get-member-activity";
-import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
+import {
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 interface ProjectMember {
   id: string;
@@ -75,23 +90,23 @@ export function EnhancedMemberDetailsModal({
   roleColors,
   availableRoles,
 }: EnhancedMemberDetailsModalProps) {
-  const { data: activityData, isLoading, error } = useGetMemberActivity(
-    workspaceId,
-    member?.id || '',
-    open && !!member
-  );
+  const {
+    data: activityData,
+    isLoading,
+    error,
+  } = useGetMemberActivity(workspaceId, member?.id || "", open && !!member);
 
   if (!member) return null;
 
   const getActivityIcon = (icon: string) => {
     const iconMap: Record<string, typeof Activity> = {
       plus: Plus,
-      'check-circle': CheckCircle,
+      "check-circle": CheckCircle,
       edit: Edit,
-      'message-square': MessageSquare,
+      "message-square": MessageSquare,
       file: File,
       clock: Clock,
-      'arrow-right': ArrowRight,
+      "arrow-right": ArrowRight,
       activity: Activity,
     };
     const IconComponent = iconMap[icon] || Activity;
@@ -100,14 +115,18 @@ export function EnhancedMemberDetailsModal({
 
   const getActivityColorClass = (color: string) => {
     const colorMap: Record<string, string> = {
-      blue: 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700',
-      green: 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700',
-      yellow: 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700',
-      purple: 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700',
-      orange: 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700',
-      cyan: 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700',
-      indigo: 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700',
-      gray: 'border-gray-500 bg-gray-50 dark:bg-gray-900/20 text-gray-700',
+      blue: "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700",
+      green: "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700",
+      yellow:
+        "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700",
+      purple:
+        "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700",
+      orange:
+        "border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700",
+      cyan: "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700",
+      indigo:
+        "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700",
+      gray: "border-gray-500 bg-gray-50 dark:bg-gray-900/20 text-gray-700",
     };
     return colorMap[color] || colorMap.gray;
   };
@@ -119,11 +138,11 @@ export function EnhancedMemberDetailsModal({
   };
 
   const getContributionColor = (count: number) => {
-    if (count === 0) return 'bg-gray-100 dark:bg-gray-800';
-    if (count <= 2) return 'bg-green-200 dark:bg-green-900';
-    if (count <= 5) return 'bg-green-400 dark:bg-green-700';
-    if (count <= 8) return 'bg-green-600 dark:bg-green-500';
-    return 'bg-green-800 dark:bg-green-300';
+    if (count === 0) return "bg-gray-100 dark:bg-gray-800";
+    if (count <= 2) return "bg-green-200 dark:bg-green-900";
+    if (count <= 5) return "bg-green-400 dark:bg-green-700";
+    if (count <= 8) return "bg-green-600 dark:bg-green-500";
+    return "bg-green-800 dark:bg-green-300";
   };
 
   return (
@@ -139,14 +158,20 @@ export function EnhancedMemberDetailsModal({
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 <span>{member.name}</span>
-                <Badge 
-                  variant="outline" 
-                  className={cn("text-xs", roleColors[member.role] || roleColors.member)}
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs",
+                    roleColors[member.role] || roleColors.member,
+                  )}
                 >
-                  {availableRoles.find(r => r.value === member.role)?.label || member.role}
+                  {availableRoles.find((r) => r.value === member.role)?.label ||
+                    member.role}
                 </Badge>
               </div>
-              <div className="text-sm font-normal text-muted-foreground">{member.email}</div>
+              <div className="text-sm font-normal text-muted-foreground">
+                {member.email}
+              </div>
             </div>
           </DialogTitle>
           <DialogDescription>
@@ -187,7 +212,9 @@ export function EnhancedMemberDetailsModal({
                       <div className="text-2xl font-bold text-blue-600">
                         {activityData.taskStats.inProgress}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">Active Tasks</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Active Tasks
+                      </div>
                     </CardContent>
                   </Card>
                   <Card>
@@ -195,7 +222,9 @@ export function EnhancedMemberDetailsModal({
                       <div className="text-2xl font-bold text-green-600">
                         {activityData.taskStats.completed}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">Completed</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Completed
+                      </div>
                     </CardContent>
                   </Card>
                   <Card>
@@ -203,7 +232,9 @@ export function EnhancedMemberDetailsModal({
                       <div className="text-2xl font-bold text-purple-600">
                         {activityData.timeStats.totalHoursLogged}h
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">Hours Logged</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Hours Logged
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -216,20 +247,36 @@ export function EnhancedMemberDetailsModal({
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Total Tasks:</span>
-                        <span className="font-medium">{activityData.taskStats.total}</span>
+                        <span className="text-sm text-muted-foreground">
+                          Total Tasks:
+                        </span>
+                        <span className="font-medium">
+                          {activityData.taskStats.total}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">High Priority:</span>
-                        <span className="font-medium text-red-600">{activityData.taskStats.highPriority}</span>
+                        <span className="text-sm text-muted-foreground">
+                          High Priority:
+                        </span>
+                        <span className="font-medium text-red-600">
+                          {activityData.taskStats.highPriority}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">This Week:</span>
-                        <span className="font-medium text-green-600">{activityData.taskStats.completedThisWeek}</span>
+                        <span className="text-sm text-muted-foreground">
+                          This Week:
+                        </span>
+                        <span className="font-medium text-green-600">
+                          {activityData.taskStats.completedThisWeek}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">This Month:</span>
-                        <span className="font-medium text-blue-600">{activityData.taskStats.completedThisMonth}</span>
+                        <span className="text-sm text-muted-foreground">
+                          This Month:
+                        </span>
+                        <span className="font-medium text-blue-600">
+                          {activityData.taskStats.completedThisMonth}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -238,19 +285,31 @@ export function EnhancedMemberDetailsModal({
                 {/* Quick Actions */}
                 <div className="flex items-center space-x-2">
                   {onSendMessage && (
-                    <Button variant="outline" size="sm" onClick={() => onSendMessage(member)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onSendMessage(member)}
+                    >
                       <Mail className="h-4 w-4 mr-2" />
                       Message
                     </Button>
                   )}
                   {onStartVideoCall && (
-                    <Button variant="outline" size="sm" onClick={() => onStartVideoCall(member)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onStartVideoCall(member)}
+                    >
                       <Video className="h-4 w-4 mr-2" />
                       Video Call
                     </Button>
                   )}
                   {canChangeRoles && onChangeRole && (
-                    <Button variant="outline" size="sm" onClick={() => onChangeRole(member)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onChangeRole(member)}
+                    >
                       <Settings className="h-4 w-4 mr-2" />
                       Change Role
                     </Button>
@@ -278,13 +337,13 @@ export function EnhancedMemberDetailsModal({
                         key={activity.id}
                         className={cn(
                           "flex items-start space-x-3 p-3 rounded-lg border-l-2",
-                          getActivityColorClass(activity.color)
+                          getActivityColorClass(activity.color),
                         )}
                       >
                         <IconComponent className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium capitalize">
-                            {activity.action.replace(/_/g, ' ')}
+                            {activity.action.replace(/_/g, " ")}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
                             {activity.details}
@@ -304,7 +363,8 @@ export function EnhancedMemberDetailsModal({
                   <Activity className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="font-medium mb-2">No Recent Activity</h3>
                   <p className="text-sm text-muted-foreground">
-                    This member hasn't had any recorded activity in the last 30 days
+                    This member hasn't had any recorded activity in the last 30
+                    days
                   </p>
                 </CardContent>
               </Card>
@@ -319,7 +379,9 @@ export function EnhancedMemberDetailsModal({
               <>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm">Weekly Performance Trends</CardTitle>
+                    <CardTitle className="text-sm">
+                      Weekly Performance Trends
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={250}>
@@ -328,18 +390,18 @@ export function EnhancedMemberDetailsModal({
                         <XAxis dataKey="week" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
                         <RechartsTooltip />
-                        <Legend wrapperStyle={{ fontSize: '12px' }} />
-                        <Line 
-                          type="monotone" 
-                          dataKey="tasksCompleted" 
-                          stroke="#3b82f6" 
+                        <Legend wrapperStyle={{ fontSize: "12px" }} />
+                        <Line
+                          type="monotone"
+                          dataKey="tasksCompleted"
+                          stroke="#3b82f6"
                           strokeWidth={2}
                           name="Tasks Completed"
                         />
-                        <Line 
-                          type="monotone" 
-                          dataKey="hoursLogged" 
-                          stroke="#8b5cf6" 
+                        <Line
+                          type="monotone"
+                          dataKey="hoursLogged"
+                          stroke="#8b5cf6"
                           strokeWidth={2}
                           name="Hours Logged"
                         />
@@ -351,20 +413,24 @@ export function EnhancedMemberDetailsModal({
                 {/* Contribution Graph */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm">30-Day Contribution History</CardTitle>
+                    <CardTitle className="text-sm">
+                      30-Day Contribution History
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-10 gap-1">
-                      {activityData.contributionGraph.slice(-30).map((day, index) => (
-                        <div
-                          key={index}
-                          className={cn(
-                            "w-full aspect-square rounded",
-                            getContributionColor(day.count)
-                          )}
-                          title={`${day.date}: ${day.count} contributions`}
-                        />
-                      ))}
+                      {activityData.contributionGraph
+                        .slice(-30)
+                        .map((day, index) => (
+                          <div
+                            key={index}
+                            className={cn(
+                              "w-full aspect-square rounded",
+                              getContributionColor(day.count),
+                            )}
+                            title={`${day.date}: ${day.count} contributions`}
+                          />
+                        ))}
                     </div>
                     <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
                       <span>Less</span>
@@ -386,7 +452,9 @@ export function EnhancedMemberDetailsModal({
                     <CardContent className="pt-4">
                       <div className="flex items-center space-x-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Avg per Week</span>
+                        <span className="text-xs text-muted-foreground">
+                          Avg per Week
+                        </span>
                       </div>
                       <div className="text-xl font-bold mt-2">
                         {activityData.timeStats.averageHoursPerWeek}h
@@ -397,7 +465,9 @@ export function EnhancedMemberDetailsModal({
                     <CardContent className="pt-4">
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Time Entries</span>
+                        <span className="text-xs text-muted-foreground">
+                          Time Entries
+                        </span>
                       </div>
                       <div className="text-xl font-bold mt-2">
                         {activityData.timeStats.timeEntriesCount}
@@ -417,7 +487,8 @@ export function EnhancedMemberDetailsModal({
                   <Skeleton key={i} className="h-16 w-full" />
                 ))}
               </div>
-            ) : activityData?.attachments && activityData.attachments.length > 0 ? (
+            ) : activityData?.attachments &&
+              activityData.attachments.length > 0 ? (
               <ScrollArea className="h-[400px] pr-4">
                 <div className="space-y-2">
                   {activityData.attachments.map((file) => (
@@ -428,9 +499,12 @@ export function EnhancedMemberDetailsModal({
                       <div className="flex items-center space-x-3 flex-1 min-w-0">
                         <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{file.fileName}</div>
+                          <div className="text-sm font-medium truncate">
+                            {file.fileName}
+                          </div>
                           <div className="text-xs text-muted-foreground">
-                            {formatFileSize(file.fileSize)} • {new Date(file.createdAt).toLocaleDateString()}
+                            {formatFileSize(file.fileSize)} •{" "}
+                            {new Date(file.createdAt).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
@@ -458,4 +532,3 @@ export function EnhancedMemberDetailsModal({
     </Dialog>
   );
 }
-

@@ -29,13 +29,13 @@ function CreateWorkspaceModal({ open, onClose }: CreateWorkspaceModalProps) {
     try {
       const createdWorkspace = (await mutateAsync()) as { id: string };
       toast.success("Workspace created successfully");
-      
+
       // Set as active workspace
       setActiveWorkspaceId(createdWorkspace.id);
-      
+
       // Invalidate queries to refresh workspace list
       await queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-      
+
       // Reset form and close modal
       setName("");
       onClose();
@@ -82,7 +82,8 @@ function CreateWorkspaceModal({ open, onClose }: CreateWorkspaceModalProps) {
                   <span>New Workspace</span>
                 </Dialog.Title>
                 <Dialog.Description className="text-lg text-muted-foreground">
-                  Create a new workspace to organize your projects and collaborate with your team
+                  Create a new workspace to organize your projects and
+                  collaborate with your team
                 </Dialog.Description>
               </div>
 

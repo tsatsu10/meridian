@@ -5,7 +5,7 @@
  * Gets all goals for team members with aggregated progress
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { goals } from "../../database/schema/goals";
 import { teams, teamMembers } from "../../database/schema";
@@ -25,7 +25,11 @@ export async function getTeamGoals(c: Context) {
       return c.json({ error: "Team id is required" }, 400);
     }
 
-    const [team] = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1);
+    const [team] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
 
     if (!team) {
       return c.json({ error: "Team not found" }, 404);
@@ -38,7 +42,10 @@ export async function getTeamGoals(c: Context) {
 
     const isMember = members.some((m) => m.userId === userId);
     if (!isMember) {
-      return c.json({ error: "Access denied - you must be a team member" }, 403);
+      return c.json(
+        { error: "Access denied - you must be a team member" },
+        403,
+      );
     }
 
     const memberUserIds = members.map((m) => m.userId);
@@ -73,7 +80,8 @@ export async function getTeamGoals(c: Context) {
       averageProgress:
         teamGoals.length > 0
           ? Math.round(
-              teamGoals.reduce((sum, g) => sum + (g.progress ?? 0), 0) / teamGoals.length,
+              teamGoals.reduce((sum, g) => sum + (g.progress ?? 0), 0) /
+                teamGoals.length,
             )
           : 0,
       completedGoals: teamGoals.filter((g) => (g.progress ?? 0) >= 100).length,
@@ -101,7 +109,10 @@ export async function getTeamGoals(c: Context) {
     return c.json(
       {
         error: "Failed to fetch team goals",
-        details: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        details:
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
       },
       500,
     );

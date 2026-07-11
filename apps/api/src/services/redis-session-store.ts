@@ -1,6 +1,6 @@
 /**
  * Redis Session Storage Service
- * 
+ *
  * Provides scalable session management using Redis:
  * - High performance with in-memory storage
  * - Horizontal scalability across multiple servers
@@ -9,56 +9,58 @@
  * - Connection pooling and failover
  */
 
-import Redis, { RedisOptions } from 'ioredis'
-import { nanoid } from 'nanoid'
-import logger from '../utils/logger'
+import Redis, { type RedisOptions } from "ioredis";
+import { nanoid } from "nanoid";
+import logger from "../utils/logger";
 
 export interface SessionData {
-  userId: string
-  email: string
-  role: string
-  workspaceId: string
-  permissions?: string[]
-  lastActivity: number
-  ipAddress?: string
-  userAgent?: string
-  metadata?: Record<string, any>
+  userId: string;
+  email: string;
+  role: string;
+  workspaceId: string;
+  permissions?: string[];
+  lastActivity: number;
+  ipAddress?: string;
+  userAgent?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface SessionStoreOptions {
-  host?: string
-  port?: number
-  password?: string
-  db?: number
-  keyPrefix?: string
-  ttl?: number // Time to live in seconds
-  maxRetries?: number
-  retryDelayOnFailover?: number
-  enableOfflineQueue?: boolean
-  lazyConnect?: boolean
+  host?: string;
+  port?: number;
+  password?: string;
+  db?: number;
+  keyPrefix?: string;
+  ttl?: number; // Time to live in seconds
+  maxRetries?: number;
+  retryDelayOnFailover?: number;
+  enableOfflineQueue?: boolean;
+  lazyConnect?: boolean;
 }
 
 class RedisSessionStore {
-  private redis: Redis
+  private redis: Redis;
   // password stays optional — Required<> would force a dummy value
-  private options: Required<Omit<SessionStoreOptions, 'password'>> & { password?: string }
-  private connected: boolean = false
+  private options: Required<Omit<SessionStoreOptions, "password">> & {
+    password?: string;
+  };
+  private connected = false;
 
   constructor(options: SessionStoreOptions = {}) {
     this.options = {
-      host: options.host || process.env.REDIS_HOST || 'localhost',
+      host: options.host || process.env.REDIS_HOST || "localhost",
       port: options.port || Number(process.env.REDIS_PORT) || 6379,
       password: options.password || process.env.REDIS_PASSWORD || undefined,
       db: options.db || Number(process.env.REDIS_DB) || 0,
-      keyPrefix: options.keyPrefix || 'meridian:session:',
+      keyPrefix: options.keyPrefix || "meridian:session:",
       ttl: options.ttl || 86400, // 24 hours default
       maxRetries: options.maxRetries || 3,
       retryDelayOnFailover: options.retryDelayOnFailover || 100,
       enableOfflineQueue: options.enableOfflineQueue ?? true,
       lazyConnect: options.lazyConnect ?? true,
-    }
+    };
 
-    this.redis = this.initializeRedis()
+    this.redis = this.initializeRedis();
   }
 
   private initializeRedis(): Redis {
@@ -79,75 +81,77 @@ class RedisSessionStore {
       keepAlive: 10000, // ms — ioredis expects a number
       // Reconnection settings
       enableReadyCheck: true,
-    }
+    };
 
-    const redis = new Redis(redisOptions)
+    const redis = new Redis(redisOptions);
 
     // Event handlers
-    redis.on('connect', () => {
-      this.connected = true
-      logger.info('✅ Redis session store connected')
-    })
+    redis.on("connect", () => {
+      this.connected = true;
+      logger.info("✅ Redis session store connected");
+    });
 
-    redis.on('ready', () => {
-      logger.info('🚀 Redis session store ready')
-    })
+    redis.on("ready", () => {
+      logger.info("🚀 Redis session store ready");
+    });
 
-    redis.on('error', (error) => {
-      this.connected = false
-      logger.error('❌ Redis session store error:', error)
-    })
+    redis.on("error", (error) => {
+      this.connected = false;
+      logger.error("❌ Redis session store error:", error);
+    });
 
-    redis.on('close', () => {
-      this.connected = false
-      logger.warn('⚠️ Redis session store connection closed')
-    })
+    redis.on("close", () => {
+      this.connected = false;
+      logger.warn("⚠️ Redis session store connection closed");
+    });
 
-    redis.on('reconnecting', () => {
-      logger.info('🔄 Redis session store reconnecting...')
-    })
+    redis.on("reconnecting", () => {
+      logger.info("🔄 Redis session store reconnecting...");
+    });
 
-    redis.on('end', () => {
-      this.connected = false
-      logger.info('📴 Redis session store connection ended')
-    })
+    redis.on("end", () => {
+      this.connected = false;
+      logger.info("📴 Redis session store connection ended");
+    });
 
-    return redis
+    return redis;
   }
 
   /**
    * Create a new session
    */
-  async createSession(sessionData: Omit<SessionData, 'lastActivity'>): Promise<string> {
+  async createSession(
+    sessionData: Omit<SessionData, "lastActivity">,
+  ): Promise<string> {
     try {
-      const sessionId = nanoid(32) // Generate secure session ID
-      const sessionKey = this.getSessionKey(sessionId)
+      const sessionId = nanoid(32); // Generate secure session ID
+      const sessionKey = this.getSessionKey(sessionId);
 
       const fullSessionData: SessionData = {
         ...sessionData,
         lastActivity: Date.now(),
-      }
+      };
 
-      const serializedData = JSON.stringify(fullSessionData)
-      
+      const serializedData = JSON.stringify(fullSessionData);
+
       // Store session with expiration
-      await this.redis.setex(sessionKey, this.options.ttl, serializedData)
+      await this.redis.setex(sessionKey, this.options.ttl, serializedData);
 
       // Create user session index for easy lookup
-      const userSessionKey = this.getUserSessionKey(sessionData.userId)
-      await this.redis.sadd(userSessionKey, sessionId)
-      await this.redis.expire(userSessionKey, this.options.ttl)
+      const userSessionKey = this.getUserSessionKey(sessionData.userId);
+      await this.redis.sadd(userSessionKey, sessionId);
+      await this.redis.expire(userSessionKey, this.options.ttl);
 
       logger.info(`📝 Created session for user ${sessionData.userId}`, {
         sessionId,
         userId: sessionData.userId,
         ttl: this.options.ttl,
-      })
+      });
 
-      return sessionId
+      return sessionId;
     } catch (error) {
-      logger.error('❌ Failed to create session:', error)
-      throw new Error('Failed to create session')
+      logger.error("❌ Failed to create session:", error);
+      throw new Error("Failed to create session");
     }
   }
 
@@ -156,55 +160,66 @@ class RedisSessionStore {
    */
   async getSession(sessionId: string): Promise<SessionData | null> {
     try {
-      const sessionKey = this.getSessionKey(sessionId)
-      const data = await this.redis.get(sessionKey)
+      const sessionKey = this.getSessionKey(sessionId);
+      const data = await this.redis.get(sessionKey);
 
       if (!data) {
-        return null
+        return null;
       }
 
-      const sessionData: SessionData = JSON.parse(data)
+      const sessionData: SessionData = JSON.parse(data);
 
       // Update last activity
-      sessionData.lastActivity = Date.now()
-      await this.redis.setex(sessionKey, this.options.ttl, JSON.stringify(sessionData))
+      sessionData.lastActivity = Date.now();
+      await this.redis.setex(
+        sessionKey,
+        this.options.ttl,
+        JSON.stringify(sessionData),
+      );
 
-      return sessionData
+      return sessionData;
     } catch (error) {
-      logger.error('❌ Failed to get session:', error)
-      return null
+      logger.error("❌ Failed to get session:", error);
+      return null;
     }
   }
 
   /**
    * Update session data
    */
-  async updateSession(sessionId: string, updates: Partial<SessionData>): Promise<boolean> {
+  async updateSession(
+    sessionId: string,
+    updates: Partial<SessionData>,
+  ): Promise<boolean> {
     try {
-      const sessionKey = this.getSessionKey(sessionId)
-      const existingData = await this.redis.get(sessionKey)
+      const sessionKey = this.getSessionKey(sessionId);
+      const existingData = await this.redis.get(sessionKey);
 
       if (!existingData) {
-        return false
+        return false;
       }
 
-      const sessionData: SessionData = JSON.parse(existingData)
+      const sessionData: SessionData = JSON.parse(existingData);
       const updatedData: SessionData = {
         ...sessionData,
         ...updates,
         lastActivity: Date.now(),
-      }
+      };
 
-      await this.redis.setex(sessionKey, this.options.ttl, JSON.stringify(updatedData))
+      await this.redis.setex(
+        sessionKey,
+        this.options.ttl,
+        JSON.stringify(updatedData),
+      );
 
       logger.info(`🔄 Updated session ${sessionId}`, {
         updates: Object.keys(updates),
-      })
+      });
 
-      return true
+      return true;
     } catch (error) {
-      logger.error('❌ Failed to update session:', error)
-      return false
+      logger.error("❌ Failed to update session:", error);
+      return false;
     }
   }
 
@@ -213,26 +228,26 @@ class RedisSessionStore {
    */
   async deleteSession(sessionId: string): Promise<boolean> {
     try {
-      const sessionKey = this.getSessionKey(sessionId)
-      
+      const sessionKey = this.getSessionKey(sessionId);
+
       // Get session data to remove from user index
-      const sessionData = await this.getSession(sessionId)
+      const sessionData = await this.getSession(sessionId);
       if (sessionData) {
-        const userSessionKey = this.getUserSessionKey(sessionData.userId)
-        await this.redis.srem(userSessionKey, sessionId)
+        const userSessionKey = this.getUserSessionKey(sessionData.userId);
+        await this.redis.srem(userSessionKey, sessionId);
       }
 
-      const deleted = await this.redis.del(sessionKey)
+      const deleted = await this.redis.del(sessionKey);
 
       if (deleted > 0) {
-        logger.info(`🗑️ Deleted session ${sessionId}`)
-        return true
+        logger.info(`🗑️ Deleted session ${sessionId}`);
+        return true;
       }
 
-      return false
+      return false;
     } catch (error) {
-      logger.error('❌ Failed to delete session:', error)
-      return false
+      logger.error("❌ Failed to delete session:", error);
+      return false;
     }
   }
 
@@ -241,49 +256,51 @@ class RedisSessionStore {
    */
   async deleteUserSessions(userId: string): Promise<number> {
     try {
-      const userSessionKey = this.getUserSessionKey(userId)
-      const sessionIds = await this.redis.smembers(userSessionKey)
+      const userSessionKey = this.getUserSessionKey(userId);
+      const sessionIds = await this.redis.smembers(userSessionKey);
 
-      let deletedCount = 0
-      
+      let deletedCount = 0;
+
       if (sessionIds.length > 0) {
         // Delete all session data
-        const sessionKeys = sessionIds.map(id => this.getSessionKey(id))
-        deletedCount = await this.redis.del(...sessionKeys)
+        const sessionKeys = sessionIds.map((id) => this.getSessionKey(id));
+        deletedCount = await this.redis.del(...sessionKeys);
 
         // Delete user session index
-        await this.redis.del(userSessionKey)
+        await this.redis.del(userSessionKey);
       }
 
-      logger.info(`🗑️ Deleted ${deletedCount} sessions for user ${userId}`)
-      return deletedCount
+      logger.info(`🗑️ Deleted ${deletedCount} sessions for user ${userId}`);
+      return deletedCount;
     } catch (error) {
-      logger.error('❌ Failed to delete user sessions:', error)
-      return 0
+      logger.error("❌ Failed to delete user sessions:", error);
+      return 0;
     }
   }
 
   /**
    * Get all sessions for a user
    */
-  async getUserSessions(userId: string): Promise<Array<{ sessionId: string; data: SessionData }>> {
+  async getUserSessions(
+    userId: string,
+  ): Promise<Array<{ sessionId: string; data: SessionData }>> {
     try {
-      const userSessionKey = this.getUserSessionKey(userId)
-      const sessionIds = await this.redis.smembers(userSessionKey)
+      const userSessionKey = this.getUserSessionKey(userId);
+      const sessionIds = await this.redis.smembers(userSessionKey);
 
-      const sessions: Array<{ sessionId: string; data: SessionData }> = []
+      const sessions: Array<{ sessionId: string; data: SessionData }> = [];
 
       for (const sessionId of sessionIds) {
-        const sessionData = await this.getSession(sessionId)
+        const sessionData = await this.getSession(sessionId);
         if (sessionData) {
-          sessions.push({ sessionId, data: sessionData })
+          sessions.push({ sessionId, data: sessionData });
         }
       }
 
-      return sessions
+      return sessions;
     } catch (error) {
-      logger.error('❌ Failed to get user sessions:', error)
-      return []
+      logger.error("❌ Failed to get user sessions:", error);
+      return [];
     }
   }
 
@@ -292,11 +309,11 @@ class RedisSessionStore {
    */
   async getUserSessionCount(userId: string): Promise<number> {
     try {
-      const userSessionKey = this.getUserSessionKey(userId)
-      return await this.redis.scard(userSessionKey)
+      const userSessionKey = this.getUserSessionKey(userId);
+      return await this.redis.scard(userSessionKey);
     } catch (error) {
-      logger.error('❌ Failed to get user session count:', error)
-      return 0
+      logger.error("❌ Failed to get user session count:", error);
+      return 0;
     }
   }
 
@@ -305,12 +322,12 @@ class RedisSessionStore {
    */
   async refreshSession(sessionId: string): Promise<boolean> {
     try {
-      const sessionKey = this.getSessionKey(sessionId)
-      const ttl = await this.redis.expire(sessionKey, this.options.ttl)
-      return ttl === 1
+      const sessionKey = this.getSessionKey(sessionId);
+      const ttl = await this.redis.expire(sessionKey, this.options.ttl);
+      return ttl === 1;
     } catch (error) {
-      logger.error('❌ Failed to refresh session:', error)
-      return false
+      logger.error("❌ Failed to refresh session:", error);
+      return false;
     }
   }
 
@@ -319,11 +336,11 @@ class RedisSessionStore {
    */
   async getSessionTTL(sessionId: string): Promise<number> {
     try {
-      const sessionKey = this.getSessionKey(sessionId)
-      return await this.redis.ttl(sessionKey)
+      const sessionKey = this.getSessionKey(sessionId);
+      return await this.redis.ttl(sessionKey);
     } catch (error) {
-      logger.error('❌ Failed to get session TTL:', error)
-      return -1
+      logger.error("❌ Failed to get session TTL:", error);
+      return -1;
     }
   }
 
@@ -332,12 +349,12 @@ class RedisSessionStore {
    */
   async getTotalSessionCount(): Promise<number> {
     try {
-      const pattern = `${this.options.keyPrefix}*`
-      const keys = await this.redis.keys(pattern)
-      return keys.filter(key => !key.includes(':user:')).length
+      const pattern = `${this.options.keyPrefix}*`;
+      const keys = await this.redis.keys(pattern);
+      return keys.filter((key) => !key.includes(":user:")).length;
     } catch (error) {
-      logger.error('❌ Failed to get total session count:', error)
-      return 0
+      logger.error("❌ Failed to get total session count:", error);
+      return 0;
     }
   }
 
@@ -346,27 +363,28 @@ class RedisSessionStore {
    */
   async cleanupExpiredSessions(): Promise<number> {
     try {
-      const pattern = `${this.options.keyPrefix}*`
-      const keys = await this.redis.keys(pattern)
-      
-      let cleanedCount = 0
-      
+      const pattern = `${this.options.keyPrefix}*`;
+      const keys = await this.redis.keys(pattern);
+
+      let cleanedCount = 0;
+
       for (const key of keys) {
-        const ttl = await this.redis.ttl(key)
-        if (ttl === -2) { // Key expired
-          await this.redis.del(key)
-          cleanedCount++
+        const ttl = await this.redis.ttl(key);
+        if (ttl === -2) {
+          // Key expired
+          await this.redis.del(key);
+          cleanedCount++;
         }
       }
 
       if (cleanedCount > 0) {
-        logger.info(`🧹 Cleaned up ${cleanedCount} expired sessions`)
+        logger.info(`🧹 Cleaned up ${cleanedCount} expired sessions`);
       }
 
-      return cleanedCount
+      return cleanedCount;
     } catch (error) {
-      logger.error('❌ Failed to cleanup expired sessions:', error)
-      return 0
+      logger.error("❌ Failed to cleanup expired sessions:", error);
+      return 0;
     }
   }
 
@@ -374,42 +392,45 @@ class RedisSessionStore {
    * Get Redis connection status
    */
   isConnected(): boolean {
-    return this.connected && this.redis.status === 'ready'
+    return this.connected && this.redis.status === "ready";
   }
 
   /**
    * Get Redis connection info
    */
   async getConnectionInfo(): Promise<{
-    status: string
-    host: string
-    port: number
-    db: number
-    memory: { used: string; peak: string } | null
+    status: string;
+    host: string;
+    port: number;
+    db: number;
+    memory: { used: string; peak: string } | null;
   }> {
     try {
-      const info = await this.redis.info('memory')
-      const memoryMatch = info.match(/used_memory_human:([^\r\n]+)/)?.[1]
-      const peakMatch = info.match(/used_memory_peak_human:([^\r\n]+)/)?.[1]
+      const info = await this.redis.info("memory");
+      const memoryMatch = info.match(/used_memory_human:([^\r\n]+)/)?.[1];
+      const peakMatch = info.match(/used_memory_peak_human:([^\r\n]+)/)?.[1];
 
       return {
         status: this.redis.status,
         host: this.options.host,
         port: this.options.port,
         db: this.options.db,
-        memory: memoryMatch && peakMatch ? {
-          used: memoryMatch.trim(),
-          peak: peakMatch.trim()
-        } : null
-      }
+        memory:
+          memoryMatch && peakMatch
+            ? {
+                used: memoryMatch.trim(),
+                peak: peakMatch.trim(),
+              }
+            : null,
+      };
     } catch (error) {
       return {
         status: this.redis.status,
         host: this.options.host,
         port: this.options.port,
         db: this.options.db,
-        memory: null
-      }
+        memory: null,
+      };
     }
   }
 
@@ -418,43 +439,46 @@ class RedisSessionStore {
    */
   async close(): Promise<void> {
     try {
-      await this.redis.quit()
-      logger.info('📴 Redis session store connection closed')
+      await this.redis.quit();
+      logger.info("📴 Redis session store connection closed");
     } catch (error) {
-      logger.error('❌ Error closing Redis connection:', error)
-      this.redis.disconnect()
+      logger.error("❌ Error closing Redis connection:", error);
+      this.redis.disconnect();
     }
   }
 
   private getSessionKey(sessionId: string): string {
-    return `session:${sessionId}`
+    return `session:${sessionId}`;
   }
 
   private getUserSessionKey(userId: string): string {
-    return `user:${userId}:sessions`
+    return `user:${userId}:sessions`;
   }
 }
 
 // Singleton instance
-let sessionStore: RedisSessionStore | null = null
+let sessionStore: RedisSessionStore | null = null;
 
 /**
  * Get singleton Redis session store instance
  */
-export function getSessionStore(options?: SessionStoreOptions): RedisSessionStore {
+export function getSessionStore(
+  options?: SessionStoreOptions,
+): RedisSessionStore {
   if (!sessionStore) {
-    sessionStore = new RedisSessionStore(options)
+    sessionStore = new RedisSessionStore(options);
   }
-  return sessionStore
+  return sessionStore;
 }
 
 /**
  * Initialize session store with custom options
  */
-export function initializeSessionStore(options: SessionStoreOptions): RedisSessionStore {
-  sessionStore = new RedisSessionStore(options)
-  return sessionStore
+export function initializeSessionStore(
+  options: SessionStoreOptions,
+): RedisSessionStore {
+  sessionStore = new RedisSessionStore(options);
+  return sessionStore;
 }
 
-export default RedisSessionStore
-
+export default RedisSessionStore;

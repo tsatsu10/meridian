@@ -24,7 +24,7 @@ export function ShineBorder({
 
   // Create keyframe style string
   const keyframeId = `shine-${Math.random().toString(36).substr(2, 9)}`;
-  
+
   return (
     <>
       <style>
@@ -42,7 +42,7 @@ export function ShineBorder({
       <div
         className={cn(
           "relative overflow-hidden rounded-lg bg-background p-[1px]",
-          className
+          className,
         )}
         style={{
           borderRadius: `${borderRadius}px`,
@@ -67,4 +67,4 @@ export function ShineBorder({
       </div>
     </>
   );
-} 
+}

@@ -26,7 +26,7 @@ const forgotPasswordSchema: ZodType<ForgotPasswordFormValues> = z.object({
 export function ForgotPasswordForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  
+
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
@@ -38,8 +38,8 @@ export function ForgotPasswordForm() {
     setIsPending(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       setIsSubmitted(true);
       toast.success("Password reset email sent!");
     } catch (error) {
@@ -127,4 +127,4 @@ export function ForgotPasswordForm() {
       </Button>
     </div>
   );
-} 
+}

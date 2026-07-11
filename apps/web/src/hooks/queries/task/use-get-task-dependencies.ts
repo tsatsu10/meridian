@@ -21,4 +21,4 @@ function useGetTaskDependencies(taskId: string) {
   });
 }
 
-export default useGetTaskDependencies; 
+export default useGetTaskDependencies;

@@ -3,7 +3,7 @@ import { getDatabase } from "../database/connection";
 import { userTable, sessions as sessionsTable } from "../database/schema";
 import { eq, and, gte, desc, count, sql } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const sessionRoutes = new Hono();
 
@@ -153,11 +153,13 @@ sessionRoutes.post("/terminate-all", authMiddleware, async (c) => {
       .where(
         and(
           eq(sessionsTable.userId, currentUser.id),
-          sql`${sessionsTable.id} != ${currentSessionId}`
-        )
+          sql`${sessionsTable.id} != ${currentSessionId}`,
+        ),
       );
 
-    logger.debug(`All sessions terminated for user ${userEmail} except current session`);
+    logger.debug(
+      `All sessions terminated for user ${userEmail} except current session`,
+    );
 
     return c.json({
       success: true,
@@ -170,5 +172,3 @@ sessionRoutes.post("/terminate-all", authMiddleware, async (c) => {
 });
 
 export default sessionRoutes;
-
-

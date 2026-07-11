@@ -19,7 +19,9 @@ export function useArchiveTeam() {
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.workspaceId],
+      });
       toast.success("Team archived successfully");
     },
     onError: (error: any) => {
@@ -27,4 +29,3 @@ export function useArchiveTeam() {
     },
   });
 }
-

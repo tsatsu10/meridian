@@ -3,8 +3,8 @@
  * Type definitions for profession-based project templates
  */
 
-export type TemplateDifficulty = 'beginner' | 'intermediate' | 'advanced';
-export type DependencyType = 'blocks' | 'blocked_by';
+export type TemplateDifficulty = "beginner" | "intermediate" | "advanced";
+export type DependencyType = "blocks" | "blocked_by";
 
 /**
  * Project Template
@@ -45,7 +45,7 @@ export interface TemplateTask {
   title: string;
   description?: string;
   position: number;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: "low" | "medium" | "high" | "urgent";
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
   relativeStartDay?: number; // days after project start
@@ -124,7 +124,7 @@ export interface CreateTemplateTaskInput {
   title: string;
   description?: string;
   position: number;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  priority?: "low" | "medium" | "high" | "urgent";
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
   relativeStartDay?: number;
@@ -160,8 +160,8 @@ export interface TemplateFilterOptions {
   searchQuery?: string;
   isOfficial?: boolean;
   minRating?: number;
-  sortBy?: 'popular' | 'recent' | 'rating' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "popular" | "recent" | "rating" | "name";
+  sortOrder?: "asc" | "desc";
 }
 
 /**
@@ -187,5 +187,3 @@ export interface TemplateStats {
   highestRatedTemplate: ProjectTemplate | null;
   recentlyAdded: ProjectTemplate[];
 }
-
-
