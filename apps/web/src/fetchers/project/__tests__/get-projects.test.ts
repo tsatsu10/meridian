@@ -32,7 +32,7 @@ describe("getProjects", () => {
       json: async () => mockProjects,
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     const result = await getProjects({ workspaceId: "workspace-123" });
 
@@ -61,7 +61,7 @@ describe("getProjects", () => {
       json: async () => mockPaginatedResponse,
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     const result = await getProjects({ workspaceId: "workspace-123" });
 
@@ -74,7 +74,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({ workspaceId: "workspace-123", limit: 10 });
 
@@ -92,7 +92,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({ workspaceId: "workspace-123", offset: 20 });
 
@@ -110,7 +110,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({
       workspaceId: "workspace-123",
@@ -133,7 +133,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({
       workspaceId: "workspace-123",
@@ -154,7 +154,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({
       workspaceId: "workspace-123",
@@ -179,7 +179,9 @@ describe("getProjects", () => {
   });
 
   it("should return empty array when workspaceId is undefined", async () => {
-    const result = await getProjects({ workspaceId: undefined as any });
+    const result = await getProjects({
+      workspaceId: undefined as unknown as string,
+    });
 
     expect(result).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -193,7 +195,7 @@ describe("getProjects", () => {
       text: async () => "Failed to fetch projects: Workspace not found",
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await expect(
       getProjects({ workspaceId: "invalid-workspace" }),
@@ -210,7 +212,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     const result = await getProjects({ workspaceId: "workspace-123" });
 
@@ -223,7 +225,7 @@ describe("getProjects", () => {
       json: async () => null,
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     const result = await getProjects({ workspaceId: "workspace-123" });
 
@@ -236,7 +238,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({ workspaceId: "workspace-123", limit: 25 });
 
@@ -251,7 +253,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({ workspaceId: "workspace-123", offset: 100 });
 
@@ -266,7 +268,7 @@ describe("getProjects", () => {
       json: async () => [],
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({
       workspaceId: "workspace-123",
@@ -289,7 +291,7 @@ describe("getProjects", () => {
       }),
     });
 
-    (client.project.$get as any) = mockGet;
+    (client.project as unknown as { $get: typeof mockGet }).$get = mockGet;
 
     await getProjects({
       workspaceId: "workspace-123",
