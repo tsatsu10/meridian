@@ -4,6 +4,7 @@ import {
   useBulkOperationsStore,
   useSelectedProjectIds,
   useBulkOperationsStats,
+  type BulkOperationResult,
 } from "@/store/use-bulk-operations";
 import { Button } from "@/components/ui/button";
 import { X, Copy, Trash2, Edit, Undo2, Redo2, Download } from "lucide-react";
@@ -32,9 +33,12 @@ import {
  */
 
 interface BulkActionToolbarProps {
-  onBulkUpdate?: (projectIds: string[], updates: any) => Promise<any>;
-  onBulkDelete?: (projectIds: string[]) => Promise<any>;
-  onBulkDuplicate?: (projectIds: string[]) => Promise<any>;
+  onBulkUpdate?: (
+    projectIds: string[],
+    updates: Record<string, unknown>,
+  ) => Promise<unknown>;
+  onBulkDelete?: (projectIds: string[]) => Promise<unknown>;
+  onBulkDuplicate?: (projectIds: string[]) => Promise<unknown>;
   onBulkExport?: (projectIds: string[]) => void;
   className?: string;
 }
@@ -69,7 +73,9 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
 
     startOperation();
     try {
-      const result = await onBulkDelete(selectedProjectIds);
+      const result = (await onBulkDelete(
+        selectedProjectIds,
+      )) as BulkOperationResult;
       endOperation(result);
 
       if (result.success) {
@@ -87,7 +93,10 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
     startOperation();
     try {
       const updates = { [updateField]: updateValue };
-      const result = await onBulkUpdate(selectedProjectIds, updates);
+      const result = (await onBulkUpdate(
+        selectedProjectIds,
+        updates,
+      )) as BulkOperationResult;
       endOperation(result);
 
       if (result.success) {
@@ -105,7 +114,9 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
 
     startOperation();
     try {
-      const result = await onBulkDuplicate(selectedProjectIds);
+      const result = (await onBulkDuplicate(
+        selectedProjectIds,
+      )) as BulkOperationResult;
       endOperation(result);
 
       if (result.success) {
