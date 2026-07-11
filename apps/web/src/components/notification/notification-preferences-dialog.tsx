@@ -218,8 +218,12 @@ export default function NotificationPreferencesDialog({
                 </Label>
                 <Select
                   value={preferences.defaultView}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultView: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultView:
+                        value as NotificationPreferences["defaultView"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-view">
@@ -243,8 +247,12 @@ export default function NotificationPreferencesDialog({
                 </Label>
                 <Select
                   value={preferences.defaultFilter}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultFilter: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultFilter:
+                        value as NotificationPreferences["defaultFilter"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-filter">
@@ -271,8 +279,12 @@ export default function NotificationPreferencesDialog({
                 </Label>
                 <Select
                   value={preferences.defaultSort}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultSort: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultSort:
+                        value as NotificationPreferences["defaultSort"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-sort">
@@ -296,8 +308,12 @@ export default function NotificationPreferencesDialog({
                 </Label>
                 <Select
                   value={preferences.defaultGroupBy}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultGroupBy: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultGroupBy:
+                        value as NotificationPreferences["defaultGroupBy"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-groupby">
