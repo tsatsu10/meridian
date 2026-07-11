@@ -35,7 +35,7 @@ type LabelColor =
   | "pink"
   | "red";
 
-type Label = {
+type TaskLabelData = {
   id: string;
   name: string;
   color: string;
@@ -68,7 +68,7 @@ function TaskLabels({
   // ✅ FIX: Use stable dependency to prevent infinite loop
   // Only update when the actual label IDs change, not the array reference
   useEffect(() => {
-    const labelIds = labels?.map((label: Label) => label.id) ?? [];
+    const labelIds = labels?.map((label: TaskLabelData) => label.id) ?? [];
     const labelIdsString = JSON.stringify(labelIds.sort()); // Stable comparison
     const currentIdsString = JSON.stringify([...taskLabels].sort());
 
@@ -77,14 +77,15 @@ function TaskLabels({
     }
   }, [labels]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredLabels = labels.filter((label: Label) =>
+  const filteredLabels = labels.filter((label: TaskLabelData) =>
     label.name.toLowerCase().includes(searchValue.toLowerCase()),
   );
 
   const isCreatingNewLabel =
     searchValue &&
     !labels.some(
-      (label: Label) => label.name.toLowerCase() === searchValue.toLowerCase(),
+      (label: TaskLabelData) =>
+        label.name.toLowerCase() === searchValue.toLowerCase(),
     );
 
   useEffect(() => {
@@ -109,7 +110,7 @@ function TaskLabels({
   const toggleLabel = async (labelId: string) => {
     setIsSaving(true);
     try {
-      const label = labels.find((l: Label) => l.id === labelId);
+      const label = labels.find((l: TaskLabelData) => l.id === labelId);
       if (!label) {
         throw new Error("Label not found");
       }
@@ -136,7 +137,7 @@ function TaskLabels({
       console.error(error);
 
       if (labels?.length) {
-        setTaskLabels(labels.map((label: Label) => label.id));
+        setTaskLabels(labels.map((label: TaskLabelData) => label.id));
       }
     } finally {
       setIsSaving(false);
@@ -179,8 +180,8 @@ function TaskLabels({
       <Label>Labels</Label>
       <div className="flex flex-wrap gap-2 mt-1">
         {labels
-          .filter((label: Label) => taskLabels.includes(label.id))
-          .map((label: Label) => (
+          .filter((label: TaskLabelData) => taskLabels.includes(label.id))
+          .map((label: TaskLabelData) => (
             <Badge
               key={label.id}
               badgeColor={label.color as LabelColor}
@@ -251,7 +252,7 @@ function TaskLabels({
               >
                 {filteredLabels.length > 0 ? (
                   <div className="py-1">
-                    {filteredLabels.map((label: Label) => (
+                    {filteredLabels.map((label: TaskLabelData) => (
                       <button
                         key={label.id}
                         type="button"

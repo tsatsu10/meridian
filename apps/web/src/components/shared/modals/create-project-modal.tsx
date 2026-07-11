@@ -463,7 +463,7 @@ export default function CreateProjectModal({
                 {templatesLoading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
                       <p className="mt-2 text-muted-foreground">
                         Loading templates...
                       </p>
@@ -1049,7 +1049,7 @@ export default function CreateProjectModal({
                         <Label>Team Members</Label>
                         {isLoadingMembers ? (
                           <div className="flex items-center justify-center p-4">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                           </div>
                         ) : availableMembers.length === 0 ? (
                           <div className="text-center p-4 text-sm text-muted-foreground">

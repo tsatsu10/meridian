@@ -126,7 +126,7 @@ export function TwoFactorStatusWidget() {
       <Card className="glass-card">
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
             <span className="ml-2 text-muted-foreground">
               Loading 2FA status...
             </span>
@@ -300,7 +300,7 @@ export function TwoFactorStatusWidget() {
               <ScrollArea className="h-[400px] pr-4">
                 {usersLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                   </div>
                 ) : (
                   <div className="space-y-2">

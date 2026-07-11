@@ -807,11 +807,11 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
             />
             <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-1 bg-red-500 rounded"></div>
+                <div className="w-4 h-1 bg-red-500 rounded" />
                 <span>Actual</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-1 bg-blue-500 rounded border border-blue-500"></div>
+                <div className="w-4 h-1 bg-blue-500 rounded border border-blue-500" />
                 <span>Ideal</span>
               </div>
             </div>

@@ -150,7 +150,7 @@ healthRoute.get("/projects/:projectId/history", async (c) => {
       return c.json({ error: "Project ID is required" }, { status: 400 });
     }
 
-    if (isNaN(days) || days < 1 || days > 365) {
+    if (Number.isNaN(days) || days < 1 || days > 365) {
       return c.json(
         { error: "Invalid days parameter (1-365)" },
         { status: 400 },

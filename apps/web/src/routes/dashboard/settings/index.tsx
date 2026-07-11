@@ -185,8 +185,8 @@ function SettingsIndex() {
     <LazyDashboardLayout>
       <div className="min-h-full bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50 dark:from-slate-950 dark:via-blue-950/50 dark:to-indigo-950 overflow-y-auto">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-grid-slate-200 dark:bg-grid-slate-800 opacity-20"></div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-grid-slate-200 dark:bg-grid-slate-800 opacity-20" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
 
         <div className="relative p-4 md:p-6 lg:p-8 max-w-7xl mx-auto pb-16">
           {/* Header */}
@@ -231,7 +231,7 @@ function SettingsIndex() {
                   {/* Gradient background */}
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}
-                  ></div>
+                  />
 
                   {/* Icon */}
                   <div
@@ -254,7 +254,7 @@ function SettingsIndex() {
                   </div>
 
                   {/* Hover effect overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                 </Link>
               </motion.div>
             ))}

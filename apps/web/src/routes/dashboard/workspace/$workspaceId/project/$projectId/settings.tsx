@@ -187,7 +187,7 @@ class TeamsAPI {
       localStorage.getItem("auth-token") ||
       sessionStorage.getItem("auth-token");
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const response = await fetch(`${TeamsAPI.baseUrl}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -209,14 +209,14 @@ class TeamsAPI {
   }
 
   static async getProjectTeams(projectId: string): Promise<ProjectTeam[]> {
-    return await this.request(`/api/projects/${projectId}/teams`);
+    return await TeamsAPI.request(`/api/projects/${projectId}/teams`);
   }
 
   static async createTeam(
     projectId: string,
     team: Omit<ProjectTeam, "id" | "createdAt">,
   ): Promise<ProjectTeam> {
-    return await this.request(`/api/projects/${projectId}/teams`, {
+    return await TeamsAPI.request(`/api/projects/${projectId}/teams`, {
       method: "POST",
       body: JSON.stringify(team),
     });
@@ -227,14 +227,17 @@ class TeamsAPI {
     teamId: string,
     updates: Partial<ProjectTeam>,
   ): Promise<ProjectTeam> {
-    return await this.request(`/api/projects/${projectId}/teams/${teamId}`, {
-      method: "PATCH",
-      body: JSON.stringify(updates),
-    });
+    return await TeamsAPI.request(
+      `/api/projects/${projectId}/teams/${teamId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+      },
+    );
   }
 
   static async deleteTeam(projectId: string, teamId: string): Promise<void> {
-    await this.request(`/api/projects/${projectId}/teams/${teamId}`, {
+    await TeamsAPI.request(`/api/projects/${projectId}/teams/${teamId}`, {
       method: "DELETE",
     });
   }
@@ -244,7 +247,7 @@ class TeamsAPI {
     teamId: string,
     member: Omit<TeamMember, "id" | "joinedAt">,
   ): Promise<TeamMember> {
-    return await this.request(
+    return await TeamsAPI.request(
       `/api/projects/${projectId}/teams/${teamId}/members`,
       {
         method: "POST",
@@ -258,7 +261,7 @@ class TeamsAPI {
     teamId: string,
     memberId: string,
   ): Promise<void> {
-    await this.request(
+    await TeamsAPI.request(
       `/api/projects/${projectId}/teams/${teamId}/members/${memberId}`,
       {
         method: "DELETE",
@@ -272,7 +275,7 @@ class TeamsAPI {
     memberId: string,
     role: UserRole,
   ): Promise<TeamMember> {
-    return await this.request(
+    return await TeamsAPI.request(
       `/api/projects/${projectId}/teams/${teamId}/members/${memberId}/role`,
       {
         method: "PATCH",

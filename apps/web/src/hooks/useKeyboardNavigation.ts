@@ -247,7 +247,7 @@ export function useKeyboardNavigation(
       }
 
       // Quick group switching with number keys
-      if (!isNaN(Number(key)) && altKey) {
+      if (!Number.isNaN(Number(key)) && altKey) {
         const groupIndex = Number(key) - 1;
         const groups = [
           ...new Set(

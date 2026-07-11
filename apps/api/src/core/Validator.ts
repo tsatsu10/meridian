@@ -310,7 +310,8 @@ export class Validator {
         if (value === "true") return [key, true];
         if (value === "false") return [key, false];
         // Handle number parameters
-        if (!isNaN(Number(value)) && value !== "") return [key, Number(value)];
+        if (!Number.isNaN(Number(value)) && value !== "")
+          return [key, Number(value)];
         // Default to string
         return [key, value];
       }),

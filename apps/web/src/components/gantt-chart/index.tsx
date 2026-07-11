@@ -478,7 +478,7 @@ function GanttChart({ tasks }: GanttChartProps) {
       <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg border-2 border-gray-200">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
-            <div className="w-8 h-8 bg-gray-400 rounded"></div>
+            <div className="w-8 h-8 bg-gray-400 rounded" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">
             No Timeline Data Available
@@ -507,7 +507,7 @@ function GanttChart({ tasks }: GanttChartProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded"></div>
+              <div className="w-4 h-4 bg-white rounded" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">
@@ -528,15 +528,15 @@ function GanttChart({ tasks }: GanttChartProps) {
           {/* Compact Legend */}
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
+              <div className="w-3 h-3 bg-red-500 rounded" />
               <span>Critical</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
+              <div className="w-3 h-3 bg-blue-500 rounded" />
               <span>In Progress</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
+              <div className="w-3 h-3 bg-green-500 rounded" />
               <span>Done</span>
             </div>
           </div>
@@ -599,7 +599,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                   <div className="flex items-center justify-between text-xs bg-gray-50 rounded-lg p-2 border border-gray-200">
                     <div className="flex items-center gap-2 text-gray-700">
                       <div className="w-4 h-4 bg-gray-400 rounded-md flex items-center justify-center shadow-sm">
-                        <div className="w-2 h-2 bg-white rounded-sm"></div>
+                        <div className="w-2 h-2 bg-white rounded-sm" />
                       </div>
                       <span className="font-semibold">
                         {format(task.startDate, "MMM d")} -{" "}
@@ -690,7 +690,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Previous period"
                   >
-                    <div className="w-3 h-3 border-l-2 border-b-2 border-current transform rotate-45"></div>
+                    <div className="w-3 h-3 border-l-2 border-b-2 border-current transform rotate-45" />
                   </button>
                   <button
                     type="button"
@@ -698,7 +698,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                     title="Next period"
                   >
-                    <div className="w-3 h-3 border-r-2 border-b-2 border-current transform -rotate-45"></div>
+                    <div className="w-3 h-3 border-r-2 border-b-2 border-current transform -rotate-45" />
                   </button>
                 </div>
               </div>

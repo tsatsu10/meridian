@@ -686,7 +686,7 @@ export default function MilestoneDashboard({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               {metrics.overdue > 0 && (
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-red-500 rounded-full" />
                   <span>
                     {metrics.overdue} overdue milestones requiring immediate
                     attention
@@ -695,7 +695,7 @@ export default function MilestoneDashboard({
               )}
               {metrics.atRisk > 0 && (
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full" />
                   <span>
                     {metrics.atRisk} milestones at risk of missing deadlines
                   </span>

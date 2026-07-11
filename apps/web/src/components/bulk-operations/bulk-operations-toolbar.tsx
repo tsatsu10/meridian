@@ -71,7 +71,7 @@ export function BulkOperationsToolbar() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
             <div className="w-4 h-4 border-2 border-current rounded flex items-center justify-center">
-              <div className="w-2 h-2 bg-current rounded-sm"></div>
+              <div className="w-2 h-2 bg-current rounded-sm" />
             </div>
             <span>{selectedTasks.size} selected</span>
           </div>
@@ -86,7 +86,7 @@ export function BulkOperationsToolbar() {
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
             >
               <div className="w-4 h-4 flex items-center justify-center">
-                <div className="w-3 h-2 border-l-2 border-b-2 border-current transform rotate-[-45deg] translate-y-[-1px]"></div>
+                <div className="w-3 h-2 border-l-2 border-b-2 border-current transform rotate-[-45deg] translate-y-[-1px]" />
               </div>
               Status
             </button>
@@ -118,8 +118,8 @@ export function BulkOperationsToolbar() {
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-md hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
             >
               <div className="w-4 h-4 flex items-center justify-start">
-                <div className="w-3 h-2 bg-current rounded-r"></div>
-                <div className="w-px h-3 bg-current ml-[-1px]"></div>
+                <div className="w-3 h-2 bg-current rounded-r" />
+                <div className="w-px h-3 bg-current ml-[-1px]" />
               </div>
               Priority
             </button>
@@ -151,8 +151,8 @@ export function BulkOperationsToolbar() {
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
             >
               <div className="w-4 h-4 flex items-center justify-center">
-                <div className="w-2.5 h-2.5 bg-current rounded-full mb-1"></div>
-                <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1"></div>
+                <div className="w-2.5 h-2.5 bg-current rounded-full mb-1" />
+                <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1" />
               </div>
               Assign
             </button>
@@ -169,8 +169,8 @@ export function BulkOperationsToolbar() {
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md"
                   >
                     <div className="w-4 h-4 flex items-center justify-center text-zinc-400">
-                      <div className="w-2.5 h-2.5 bg-current rounded-full mb-1"></div>
-                      <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1"></div>
+                      <div className="w-2.5 h-2.5 bg-current rounded-full mb-1" />
+                      <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1" />
                     </div>
                     {assignee.name}
                   </button>
@@ -191,8 +191,8 @@ export function BulkOperationsToolbar() {
           >
             <div className="w-4 h-4 flex items-center justify-center">
               <div className="w-3 h-3 border border-current rounded relative">
-                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-0.5 bg-current rounded"></div>
-                <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-px h-1.5 bg-current"></div>
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-0.5 bg-current rounded" />
+                <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-px h-1.5 bg-current" />
               </div>
             </div>
             Delete
@@ -217,8 +217,8 @@ export function BulkOperationsToolbar() {
           >
             <div className="w-4 h-4 flex items-center justify-center">
               <div className="relative">
-                <div className="w-3 h-0.5 bg-current transform rotate-45 absolute"></div>
-                <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute"></div>
+                <div className="w-3 h-0.5 bg-current transform rotate-45 absolute" />
+                <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute" />
               </div>
             </div>
           </button>

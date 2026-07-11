@@ -7,6 +7,7 @@
   },
   "files": {
     "ignore": [
+      "**/routeTree.gen.ts",
       "**/node_modules",
       "**/dist",
       "**/.next",
@@ -28,7 +29,22 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "warn"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "warn"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "warn"
+      },
+      "a11y": {
+        "useSemanticElements": "warn",
+        "useKeyWithClickEvents": "warn",
+        "noLabelWithoutControl": "warn"
+      }
     }
   },
   "organizeImports": {
@@ -41,6 +57,16 @@
         "parser": {
           "allowComments": true,
           "allowTrailingCommas": true
+        }
+      }
+    },
+    {
+      "include": ["apps/api/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "warn"
+          }
         }
       }
     }

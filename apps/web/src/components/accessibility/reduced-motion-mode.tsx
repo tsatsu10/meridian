@@ -195,7 +195,7 @@ export function ReducedMotionMode() {
                     "h-12 w-12 rounded-full border-4 border-blue-600 border-t-transparent",
                     !isReducedMotion && "animate-spin",
                   )}
-                ></div>
+                />
                 <span className="text-xs text-muted-foreground">Spinning</span>
               </div>
             </div>
@@ -208,7 +208,7 @@ export function ReducedMotionMode() {
                     "h-12 w-12 rounded-full bg-green-600",
                     !isReducedMotion && "animate-pulse",
                   )}
-                ></div>
+                />
                 <span className="text-xs text-muted-foreground">Pulsing</span>
               </div>
             </div>
@@ -221,7 +221,7 @@ export function ReducedMotionMode() {
                     "h-12 w-12 rounded-lg bg-purple-600",
                     !isReducedMotion && "animate-bounce",
                   )}
-                ></div>
+                />
                 <span className="text-xs text-muted-foreground">Bouncing</span>
               </div>
             </div>
@@ -234,7 +234,7 @@ export function ReducedMotionMode() {
                     "h-12 w-12 rounded-lg bg-orange-600",
                     !isReducedMotion && "animate-pulse opacity-50",
                   )}
-                ></div>
+                />
                 <span className="text-xs text-muted-foreground">Fading</span>
               </div>
             </div>

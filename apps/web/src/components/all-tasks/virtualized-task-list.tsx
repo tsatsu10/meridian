@@ -648,7 +648,7 @@ const TaskListHeader: React.FC<{
       }}
       className="px-4 py-3 bg-muted/30 border-b border-border text-sm font-medium text-muted-foreground"
     >
-      <div></div> {/* Drag handle space */}
+      <div /> {/* Drag handle space */}
       <div>
         <input
           type="checkbox"

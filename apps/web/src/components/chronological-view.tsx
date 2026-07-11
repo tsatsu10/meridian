@@ -219,15 +219,15 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
 
         <div className="flex items-center gap-4 text-sm text-gray-600">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-blue-500 rounded-full" />
             <span>Today</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-gray-400 rounded-full" />
             <span>Past</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full" />
             <span>Future</span>
           </div>
         </div>
@@ -239,7 +239,7 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
           <div key={dayGroup.date.getTime()} className="relative">
             {/* Timeline connector */}
             {dayIndex < dayGroups.length - 1 && (
-              <div className="absolute left-6 top-16 w-0.5 h-full bg-gray-200 z-0"></div>
+              <div className="absolute left-6 top-16 w-0.5 h-full bg-gray-200 z-0" />
             )}
 
             {/* Day header */}

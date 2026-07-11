@@ -16,13 +16,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+      # Pin to the repo's Biome (apps/web devDependency) — "latest" installed
+      # Biome 2.x, which rejects the 1.x config schema outright (masked for
+      # months by continue-on-error).
       - name: Setup Biome
         uses: biomejs/setup-biome@v2
         with:
-          version: latest
-      # Scope to application sources. Non-blocking until Biome backlog is cleared (see job log).
+          version: 1.9.4
+      # BLOCKING ratchet: every rule at error severity is at zero violations.
+      # The remaining backlog is downgraded to "warn" in biome.json (noExplicitAny,
+      # noArrayIndexKey, useExhaustiveDependencies, noStaticOnlyClass, the a11y
+      # trio, and api-only noNonNullAssertion) — burn those down per-rule, then
+      # promote them back to error.
       - name: Run Biome
-        continue-on-error: true
         run: biome ci apps/web apps/api packages/libs
 
   typecheck-and-test:
@@ -53,9 +59,14 @@ jobs:
         working-directory: apps/web
         run: npx tsc --noEmit -p tsconfig.app.json
 
+      # Blocking: suite is green (DB-integration suites skip when no test DB).
       - name: Unit tests (api)
-        continue-on-error: true
         run: npm run test:run --workspace=@meridian/api
+
+      # Blocking: suite is green (76 files, ~1k tests, <2 min after the
+      # runaway-test fix).
+      - name: Unit tests (web)
+        run: npm run test:unit --workspace=@meridian/web
 
       - name: Build api
         run: npm run build --workspace=@meridian/api

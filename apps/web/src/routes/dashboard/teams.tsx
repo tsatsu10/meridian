@@ -2769,7 +2769,7 @@ function MembersList({
                 <th className="text-left p-4 font-medium text-sm">
                   Last Active
                 </th>
-                <th className="text-left p-4 font-medium text-sm"></th>
+                <th className="text-left p-4 font-medium text-sm" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

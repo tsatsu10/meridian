@@ -161,7 +161,7 @@ export function SecurityDashboard() {
   if (loading && !events.length) {
     return (
       <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         <p className="mt-2 text-gray-600">Loading security dashboard...</p>
       </div>
     );

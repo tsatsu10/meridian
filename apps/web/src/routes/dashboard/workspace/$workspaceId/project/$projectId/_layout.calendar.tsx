@@ -466,7 +466,7 @@ function ProjectCalendar() {
       <div className="flex flex-col h-full">
         {/* Week header */}
         <div className="grid grid-cols-8 border-b border-border">
-          <div className="p-2"></div>
+          <div className="p-2" />
           {weekDays.map((day) => (
             <div
               key={day.toISOString()}
