@@ -16,6 +16,7 @@ import {
 } from "../../database/schema";
 import { eq, and } from "drizzle-orm";
 import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 // Valid workspace roles based on RBAC system
 const VALID_ROLES = [
@@ -236,12 +237,12 @@ export async function changeMemberRole(c: Context) {
         updatedAt: new Date().toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("❌ Error changing member role:", error);
     return c.json(
       {
         error: "Failed to change role",
-        details: error.message,
+        details: getErrorMessage(error),
       },
       500,
     );
