@@ -77,12 +77,15 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
   const q = options?.q?.trim();
   if (q) {
     const term = `%${q}%`;
-    whereConditions.push(
-      or(
-        ilike(projectTable.name, term),
-        ilike(projectTable.description, term),
-      )!,
+    const searchCondition = or(
+      ilike(projectTable.name, term),
+      ilike(projectTable.description, term),
     );
+    // or() only returns undefined when called with zero conditions; both
+    // are always passed above.
+    if (searchCondition) {
+      whereConditions.push(searchCondition);
+    }
   }
 
   if (options?.status?.length) {
@@ -102,10 +105,9 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
   }
   if (options?.teamMemberIds?.length) {
     const ids = options.teamMemberIds;
-    whereConditions.push(
-      or(
-        inArray(projectTable.ownerId, ids),
-        sql`EXISTS (
+    const teamMemberCondition = or(
+      inArray(projectTable.ownerId, ids),
+      sql`EXISTS (
           SELECT 1 FROM ${taskTable} t
           WHERE t.project_id = ${projectTable.id}
           AND t.assignee_id IN (${sql.join(
@@ -113,7 +115,7 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
             sql`, `,
           )})
         )`,
-        sql`EXISTS (
+      sql`EXISTS (
           SELECT 1 FROM ${projectMembers} pm
           INNER JOIN ${userTable} u ON pm.user_email = u.email
           WHERE pm.project_id = ${projectTable.id}
@@ -122,8 +124,12 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
             sql`, `,
           )})
         )`,
-      )!,
     );
+    // or() only returns undefined when called with zero conditions; three
+    // are always passed above.
+    if (teamMemberCondition) {
+      whereConditions.push(teamMemberCondition);
+    }
   }
   const whereClause = and(...whereConditions);
 

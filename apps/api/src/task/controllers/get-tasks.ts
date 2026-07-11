@@ -71,14 +71,18 @@ async function getTasks(projectId: string) {
 
   // Fetch users separately and create lookup map
   const userEmails = [
-    ...new Set(tasksFromDb.map((t) => t.userEmail).filter(Boolean)),
+    ...new Set(
+      tasksFromDb
+        .map((t) => t.userEmail)
+        .filter((email): email is string => Boolean(email)),
+    ),
   ];
   const users =
     userEmails.length > 0
       ? await db
           .select()
           .from(userTable)
-          .where(or(...userEmails.map((email) => eq(userTable.email, email!))))
+          .where(or(...userEmails.map((email) => eq(userTable.email, email))))
       : [];
   const userMap = new Map(users.map((u) => [u.email, u]));
 

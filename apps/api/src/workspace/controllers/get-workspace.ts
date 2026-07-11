@@ -62,9 +62,7 @@ async function getWorkspace(userEmail: string, workspaceId: string) {
     )
     .limit(1);
 
-  const isWorkspaceExisting = Boolean(existingWorkspace);
-
-  if (!isWorkspaceExisting) {
+  if (!existingWorkspace) {
     logger.debug(
       `🚨 SECURITY: User ${userEmail} attempted unauthorized access to workspace ${workspaceId}`,
     );
@@ -74,7 +72,7 @@ async function getWorkspace(userEmail: string, workspaceId: string) {
   }
 
   logger.debug(
-    `✅ Authorized workspace access: ${existingWorkspace!.name} for user ${userEmail}`,
+    `✅ Authorized workspace access: ${existingWorkspace.name} for user ${userEmail}`,
   );
   return existingWorkspace;
 }
