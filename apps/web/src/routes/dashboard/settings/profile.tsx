@@ -53,6 +53,21 @@ interface FormErrors {
   bio?: string;
 }
 
+interface RawProfileData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  location?: string;
+  bio?: string;
+  jobTitle?: string;
+  company?: string;
+  timezone?: string;
+  language?: string;
+  profilePicture?: string;
+  avatar?: string | null;
+}
+
 function ProfileSettings() {
   const { user } = useAuth();
   const workspace = useWorkspaceStore((state) => state.workspace);
@@ -60,7 +75,7 @@ function ProfileSettings() {
   const queryClient = useQueryClient();
 
   // Normalize API data to prevent null values in form inputs
-  const normalizeProfileData = (data: any) => {
+  const normalizeProfileData = (data: RawProfileData | null | undefined) => {
     return {
       name: data?.name || "",
       email: data?.email || "",
@@ -72,7 +87,7 @@ function ProfileSettings() {
       company: data?.company || "",
       timezone: data?.timezone || "UTC",
       language: data?.language || "en",
-      avatar: data?.profilePicture || data?.avatar || null,
+      avatar: data?.profilePicture || data?.avatar || undefined,
     };
   };
 
@@ -233,10 +248,10 @@ function ProfileSettings() {
     field: keyof typeof localSettings,
     value: string,
   ) => {
-    setLocalSettings((prev: any) => ({ ...prev, [field]: value }));
+    setLocalSettings((prev) => ({ ...prev, [field]: value }));
 
     if (errors[field as keyof FormErrors]) {
-      setErrors((prev: any) => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
