@@ -17,7 +17,11 @@ import {
 } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { HeatmapData, MemberSchedule } from "@/types/schedule";
+import type {
+  HeatmapData,
+  MemberSchedule,
+  CalendarEvent,
+} from "@/types/schedule";
 import { Activity, TrendingUp, AlertTriangle } from "lucide-react";
 
 interface WorkloadHeatmapProps {
@@ -301,7 +305,7 @@ export function WorkloadHeatmap({
 function generateTooltip(
   memberName: string,
   date: Date,
-  events: any[],
+  events: CalendarEvent[],
   totalHours: number,
   workloadPercentage: number,
 ): string {
