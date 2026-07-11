@@ -52,7 +52,10 @@ import { Progress } from "@/components/ui/progress";
 import MilestoneDashboard from "@/components/dashboard/milestone-dashboard";
 import { useMilestones } from "@/hooks/use-milestones";
 import { useRiskMonitor } from "@/hooks/queries/risk/use-risk-detection";
-import { useTaskStatusMonitor } from "@/hooks/mutations/task/use-auto-status-update";
+import {
+  useTaskStatusMonitor,
+  type DependencyAwareTask,
+} from "@/hooks/mutations/task/use-auto-status-update";
 import { getNotificationsFromStore } from "@/hooks/mutations/task/use-auto-status-update";
 import DashboardPopup from "@/components/dashboard/dashboard-popup";
 import { useRBACAuth } from "@/lib/permissions";
@@ -259,7 +262,12 @@ function ProjectOverview() {
   // Task status change handler with auto-updates
   void useCallback(
     (taskId: string, newStatus: string, oldStatus: string) => {
-      handleTaskStatusChange(taskId, newStatus, oldStatus, allTasks);
+      handleTaskStatusChange(
+        taskId,
+        newStatus,
+        oldStatus,
+        allTasks as unknown as DependencyAwareTask[],
+      );
     },
     [handleTaskStatusChange, allTasks],
   );
