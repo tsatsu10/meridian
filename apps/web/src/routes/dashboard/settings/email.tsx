@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { getErrorMessage } from "@/lib/error-utils";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -221,8 +222,8 @@ function EmailSettings() {
       } else {
         toast.error(result.data.message);
       }
-    } catch (error: any) {
-      toast.error(`Connection test failed: ${error.message}`);
+    } catch (error) {
+      toast.error(`Connection test failed: ${getErrorMessage(error)}`);
     } finally {
       setTestingConnection(false);
     }
@@ -260,8 +261,8 @@ function EmailSettings() {
       } else {
         toast.error(result.data.message);
       }
-    } catch (error: any) {
-      toast.error(`Failed to send test email: ${error.message}`);
+    } catch (error) {
+      toast.error(`Failed to send test email: ${getErrorMessage(error)}`);
     } finally {
       setSendingTestEmail(false);
     }

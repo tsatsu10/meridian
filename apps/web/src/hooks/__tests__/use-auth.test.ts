@@ -11,6 +11,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useState, useEffect } from "react";
+import { toError } from "@/lib/error-utils";
 
 // Mock useAuth hook
 function useAuth() {
@@ -30,8 +31,8 @@ function useAuth() {
           typeof window !== "undefined" ? (window as any).__mockUser : null;
 
         setUser(storedUser);
-      } catch (err: any) {
-        setError(err);
+      } catch (err) {
+        setError(toError(err));
       } finally {
         setIsLoading(false);
       }
@@ -60,8 +61,8 @@ function useAuth() {
       }
 
       setUser(mockUser);
-    } catch (err: any) {
-      setError(err);
+    } catch (err) {
+      setError(toError(err));
       throw err;
     } finally {
       setIsLoading(false);

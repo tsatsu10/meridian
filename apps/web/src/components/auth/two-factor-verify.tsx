@@ -5,6 +5,7 @@
  */
 
 import type React from "react";
+import { getErrorMessage } from "@/lib/error-utils";
 import { useState, useRef, useEffect } from "react";
 import { Shield, AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
@@ -120,8 +121,8 @@ export function TwoFactorVerify({
       }
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(getErrorMessage(err));
       setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {

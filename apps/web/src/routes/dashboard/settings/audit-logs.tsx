@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { getErrorMessage } from "@/lib/error-utils";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -320,8 +321,8 @@ function AuditLogsSettings() {
       document.body.removeChild(a);
 
       toast.success("Audit logs exported successfully");
-    } catch (error: any) {
-      toast.error(`Failed to export logs: ${error.message}`);
+    } catch (error) {
+      toast.error(`Failed to export logs: ${getErrorMessage(error)}`);
     }
   };
 
