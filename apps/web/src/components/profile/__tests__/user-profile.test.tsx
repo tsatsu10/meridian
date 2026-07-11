@@ -28,7 +28,7 @@ interface UserProfileProps {
     language?: string;
   };
   isEditable?: boolean;
-  onSave?: (updates: any) => Promise<void>;
+  onSave?: (updates: Record<string, unknown>) => Promise<void>;
   onAvatarUpload?: (file: File) => Promise<string>;
 }
 

@@ -9,7 +9,7 @@ import { useAuth } from "../../providers/unified-context-provider";
 vi.mock("../../providers/unified-context-provider");
 vi.mock("../../../hooks/mutations/use-sign-in");
 vi.mock("lucide-react", async (importOriginal) => {
-  const actual = (await importOriginal()) as any;
+  const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
     Mail: vi.fn(() => <div data-testid="mail-icon" />),

@@ -1,17 +1,33 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+import type { ElementType, ReactNode } from "react";
 import DashboardStats from "../DashboardStats";
 
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({
+      children,
+      ...props
+    }: { children?: ReactNode; [key: string]: unknown }) => (
+      <div {...props}>{children}</div>
+    ),
   },
 }));
 
 // Mock the AnimatedStatsCard component
 vi.mock("@/components/dashboard/animated-stats-card", () => ({
-  default: ({ title, value, description, icon: Icon }: any) => (
+  default: ({
+    title,
+    value,
+    description,
+    icon: Icon,
+  }: {
+    title: string;
+    value?: ReactNode;
+    description?: ReactNode;
+    icon?: ElementType;
+  }) => (
     <div data-testid={`stats-card-${title.toLowerCase().replace(/\s+/g, "-")}`}>
       <div data-testid="stats-title">{title}</div>
       <div data-testid="stats-value">{value}</div>

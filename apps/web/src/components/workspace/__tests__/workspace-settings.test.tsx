@@ -21,7 +21,7 @@ interface WorkspaceSettingsProps {
     name: string;
     description?: string;
   };
-  onSave?: (data: any) => Promise<void>;
+  onSave?: (data: Record<string, unknown>) => Promise<void>;
 }
 
 function WorkspaceSettings({ workspace, onSave }: WorkspaceSettingsProps) {

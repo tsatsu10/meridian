@@ -26,7 +26,7 @@ interface Task {
 interface TaskListProps {
   tasks?: Task[];
   onTaskClick?: (taskId: string) => void;
-  onFilterChange?: (filters: any) => void;
+  onFilterChange?: (filters: Record<string, unknown>) => void;
 }
 
 function TaskList({ tasks = [], onTaskClick }: TaskListProps) {

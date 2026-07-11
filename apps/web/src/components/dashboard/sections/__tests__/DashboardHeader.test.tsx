@@ -1,10 +1,19 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { ComponentProps, ReactNode } from "react";
 import DashboardHeader from "../DashboardHeader";
 
 // Mock the UniversalHeader component
 vi.mock("@/components/dashboard/universal-header", () => ({
-  default: ({ title, subtitle, customActions }: any) => (
+  default: ({
+    title,
+    subtitle,
+    customActions,
+  }: {
+    title?: string;
+    subtitle?: string;
+    customActions?: ReactNode;
+  }) => (
     <div data-testid="universal-header">
       <h1>{title}</h1>
       <p>{subtitle}</p>
@@ -15,7 +24,10 @@ vi.mock("@/components/dashboard/universal-header", () => ({
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
-  RefreshCw: ({ className, ...props }: any) => (
+  RefreshCw: ({
+    className,
+    ...props
+  }: { className?: string; [key: string]: unknown }) => (
     <div data-testid="refresh-icon" className={className} {...props} />
   ),
   AlertTriangle: ({ ...props }) => (
@@ -134,7 +146,16 @@ describe("DashboardHeader", () => {
   });
 
   it("handles undefined risk data gracefully", () => {
-    render(<DashboardHeader {...defaultProps} riskData={undefined as any} />);
+    render(
+      <DashboardHeader
+        {...defaultProps}
+        riskData={
+          undefined as unknown as ComponentProps<
+            typeof DashboardHeader
+          >["riskData"]
+        }
+      />,
+    );
 
     expect(screen.queryByText("Risks Detected")).not.toBeInTheDocument();
     expect(

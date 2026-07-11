@@ -16,7 +16,7 @@ import { TestWrapper } from "../../../test-utils/test-wrapper";
 import React from "react";
 
 interface FilterBarProps {
-  onFilterChange?: (filters: any) => void;
+  onFilterChange?: (filters: Record<string, string[]>) => void;
   showStatusFilter?: boolean;
   showPriorityFilter?: boolean;
   showAssigneeFilter?: boolean;
@@ -43,7 +43,7 @@ function FilterBar({
         : [...filters[category as keyof typeof filters], value],
     };
 
-    setFilters(newFilters as any);
+    setFilters(newFilters);
     onFilterChange?.(newFilters);
   };
 

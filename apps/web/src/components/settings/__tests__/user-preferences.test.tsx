@@ -52,7 +52,10 @@ function UserPreferencesComponent({
     setHasChanges(changed);
   }, [preferences, initialPreferences]);
 
-  const handleChange = (key: keyof UserPreferences, value: any) => {
+  const handleChange = (
+    key: keyof UserPreferences,
+    value: UserPreferences[keyof UserPreferences],
+  ) => {
     setPreferences((prev) => ({ ...prev, [key]: value }));
     setSaveSuccess(false);
   };
