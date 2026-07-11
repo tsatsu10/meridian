@@ -10,7 +10,7 @@ const generateUniqueId = (prefix = ""): string => {
   return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
-interface AutoStatusUpdateData {
+export interface AutoStatusUpdateData {
   taskId: string;
   newStatus: string;
   reason: string;
@@ -18,7 +18,7 @@ interface AutoStatusUpdateData {
   dependentTasks?: string[];
 }
 
-interface NotificationData {
+export interface NotificationData {
   id: string;
   type: "auto-status-update";
   title: string;

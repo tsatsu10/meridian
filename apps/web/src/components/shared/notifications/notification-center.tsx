@@ -14,6 +14,7 @@ import {
   getNotificationsFromStore,
   markNotificationAsRead,
   clearAllNotifications,
+  type NotificationData,
 } from "@/hooks/mutations/task/use-auto-status-update";
 
 // @epic-2.3-notifications: Unified notification system for all alerts
@@ -29,7 +30,7 @@ interface NotificationCenterProps {
   maxNotifications?: number;
 }
 
-const getNotificationIcon = (notification: any) => {
+const getNotificationIcon = (notification: NotificationData) => {
   if (
     notification.title.includes("🚨") ||
     notification.data?.reason === "risk-detected"
@@ -82,7 +83,7 @@ export default function NotificationCenter({
   maxNotifications = 50,
 }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
 
   // Refresh notifications periodically
   useEffect(() => {
@@ -106,7 +107,7 @@ export default function NotificationCenter({
 
   // Group notifications by date
   const groupedNotifications = useMemo(() => {
-    const groups: { [key: string]: any[] } = {};
+    const groups: { [key: string]: NotificationData[] } = {};
 
     for (const notification of notifications) {
       const date = new Date(notification.timestamp);
@@ -136,7 +137,7 @@ export default function NotificationCenter({
       (n.title.includes("🚨") || n.data?.reason === "risk-detected"),
   ).length;
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: NotificationData) => {
     if (!notification.isRead) {
       markNotificationAsRead(notification.id);
       // Refresh local state
