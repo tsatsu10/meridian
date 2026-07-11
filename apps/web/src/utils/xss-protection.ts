@@ -103,10 +103,12 @@ export function sanitizeHtml(html: string): string {
  * @param obj - The object to sanitize
  * @returns Sanitized object
  */
-export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
+export function sanitizeObject<T extends object>(obj: T): T {
   if (!obj || typeof obj !== "object") return obj;
 
-  const sanitized: any = Array.isArray(obj) ? [] : {};
+  const sanitized: Record<string, unknown> = (
+    Array.isArray(obj) ? [] : {}
+  ) as Record<string, unknown>;
 
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === "string") {
@@ -118,7 +120,7 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
     }
   }
 
-  return sanitized;
+  return sanitized as T;
 }
 
 /**
