@@ -810,7 +810,7 @@ function GlobalCalendar() {
               <div className="text-lg font-semibold">
                 {format(new Date(dateKey), "EEEE, MMMM d")}
               </div>
-              <div className="h-px flex-1 bg-border"></div>
+              <div className="h-px flex-1 bg-border" />
               <div className="text-sm text-muted-foreground">
                 {events.length} event{events.length !== 1 ? "s" : ""}
               </div>
@@ -826,7 +826,7 @@ function GlobalCalendar() {
                   <div
                     className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: event.color }}
-                  ></div>
+                  />
                   <div className="flex-1">
                     <div className="font-medium">{event.title}</div>
                     <div className="text-sm text-muted-foreground">
@@ -915,7 +915,7 @@ function GlobalCalendar() {
                     member.status === "away" && "bg-yellow-500",
                     member.status === "offline" && "bg-gray-500",
                   )}
-                ></div>
+                />
                 <div>
                   <div className="font-medium">{member.name}</div>
                   <div className="text-sm text-muted-foreground capitalize">
@@ -940,7 +940,7 @@ function GlobalCalendar() {
                       member.workload >= 80 && "bg-red-500",
                     )}
                     style={{ width: `${member.workload}%` }}
-                  ></div>
+                  />
                 </div>
 
                 {member.currentTask && (
@@ -1019,7 +1019,7 @@ function GlobalCalendar() {
       <div className="p-4 space-y-4 overflow-auto">
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border"></div>
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border" />
 
           {timelineEvents.map((event, _index) => (
             <div
@@ -1034,7 +1034,7 @@ function GlobalCalendar() {
                 <div
                   className="absolute inset-1 rounded-full"
                   style={{ backgroundColor: event.color }}
-                ></div>
+                />
               </div>
 
               {/* Event content */}
@@ -1070,7 +1070,7 @@ function GlobalCalendar() {
                       <div
                         className="w-2 h-2 rounded-full"
                         style={{ backgroundColor: event.project.color }}
-                      ></div>
+                      />
                       <span className="text-xs text-muted-foreground">
                         {event.project.name}
                       </span>
@@ -1189,22 +1189,22 @@ function GlobalCalendar() {
         <div className="flex items-center justify-between p-4 bg-muted/30 border-b">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <div className="w-3 h-3 rounded-full bg-blue-500" />
               <span className="text-sm">{calendarStats.today} Today</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500" />
               <span className="text-sm">
                 {calendarStats.thisWeek} This Week
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+              <div className="w-3 h-3 rounded-full bg-orange-500" />
               <span className="text-sm">{calendarStats.upcoming} Upcoming</span>
             </div>
             {calendarStats.overdue > 0 && (
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-red-500" />
                 <span className="text-sm text-red-600">
                   {calendarStats.overdue} Overdue
                 </span>

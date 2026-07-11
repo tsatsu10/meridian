@@ -294,10 +294,10 @@ describe("GetTasks Controller", () => {
 
       // Assert
       for (const column of result.columns) {
-                expect(column).toHaveProperty("color");
-                expect(typeof column.color).toBe("string");
-                expect(column.color).toMatch(/^#[0-9a-f]{6}$/i);
-              }
+        expect(column).toHaveProperty("color");
+        expect(typeof column.color).toBe("string");
+        expect(column.color).toMatch(/^#[0-9a-f]{6}$/i);
+      }
     });
 
     it("should include position for each status column", async () => {
@@ -314,9 +314,9 @@ describe("GetTasks Controller", () => {
 
       // Assert
       for (const column of result.columns) {
-                expect(column).toHaveProperty("position");
-                expect(typeof column.position).toBe("number");
-              }
+        expect(column).toHaveProperty("position");
+        expect(typeof column.position).toBe("number");
+      }
     });
   });
 });

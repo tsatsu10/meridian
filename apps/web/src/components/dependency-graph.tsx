@@ -346,19 +346,19 @@ export function DependencyGraph({
         {/* Legend */}
         <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-500"></div>
+            <div className="w-4 h-4 rounded bg-green-500" />
             <span className="text-muted-foreground">Complete</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-500"></div>
+            <div className="w-4 h-4 rounded bg-blue-500" />
             <span className="text-muted-foreground">In Progress</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-orange-500"></div>
+            <div className="w-4 h-4 rounded bg-orange-500" />
             <span className="text-muted-foreground">Upcoming</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-500"></div>
+            <div className="w-4 h-4 rounded bg-gray-500" />
             <span className="text-muted-foreground">Pending</span>
           </div>
           <div className="flex items-center gap-2">

@@ -238,7 +238,7 @@ export function ColorBlindMode() {
                 <div key={color.name} className="space-y-2">
                   <div
                     className={cn("h-16 rounded-lg shadow-sm", color.class)}
-                  ></div>
+                  />
                   <div className="text-center text-xs font-medium">
                     {color.name}
                   </div>
@@ -252,9 +252,9 @@ export function ColorBlindMode() {
         <div className="space-y-3">
           <h4 className="text-sm font-semibold">Gradient Preview</h4>
           <div className="space-y-2">
-            <div className="h-12 rounded-lg bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
-            <div className="h-12 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-            <div className="h-12 rounded-lg bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500"></div>
+            <div className="h-12 rounded-lg bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" />
+            <div className="h-12 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+            <div className="h-12 rounded-lg bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500" />
           </div>
         </div>
 
@@ -297,7 +297,7 @@ export function ColorBlindMode() {
                     index % 4 === 3 && "bg-orange-500",
                   )}
                   style={{ height: `${height}%` }}
-                ></div>
+                />
               ))}
             </div>
           </div>

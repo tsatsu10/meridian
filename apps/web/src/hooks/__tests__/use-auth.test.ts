@@ -75,7 +75,7 @@ function useAuth() {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (typeof window !== "undefined") {
-        delete (window as any).__mockUser;
+        (window as any).__mockUser = undefined;
       }
 
       setUser(null);
@@ -102,7 +102,7 @@ function useAuth() {
 describe("useAuth Hook", () => {
   beforeEach(() => {
     if (typeof window !== "undefined") {
-      delete (window as any).__mockUser;
+      (window as any).__mockUser = undefined;
     }
   });
 

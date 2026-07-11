@@ -18,7 +18,7 @@ const sanitizeForJSON = (obj: any): any => {
   // Handle objects
   const cleaned: any = {};
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const value = obj[key];
 
       // Skip functions, symbols, and undefined

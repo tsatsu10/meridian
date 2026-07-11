@@ -181,19 +181,19 @@ function RoadmapView({ tasks, milestones }: RoadmapViewProps) {
 
         <div className="flex items-center gap-4 text-sm text-gray-600">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full" />
             <span>Completed</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-blue-500 rounded-full" />
             <span>In Progress</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-gray-400 rounded-full" />
             <span>Upcoming</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-red-500 rounded-full" />
             <span>Delayed</span>
           </div>
         </div>
@@ -205,7 +205,7 @@ function RoadmapView({ tasks, milestones }: RoadmapViewProps) {
           <div key={phase.id} className="relative">
             {/* Timeline connector */}
             {index < roadmapPhases.length - 1 && (
-              <div className="absolute left-6 top-32 w-0.5 h-16 bg-gray-300 z-0"></div>
+              <div className="absolute left-6 top-32 w-0.5 h-16 bg-gray-300 z-0" />
             )}
 
             <div className="flex gap-6">

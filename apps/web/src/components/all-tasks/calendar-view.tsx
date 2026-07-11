@@ -251,18 +251,15 @@ export function AllTasksCalendarView({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
           <div className="flex space-x-2">
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
           </div>
         </div>
         <div className="grid grid-cols-7 gap-1">
           {[...Array(35)].map((_, i) => (
-            <div
-              key={i}
-              className="h-24 bg-gray-100 rounded animate-pulse"
-            ></div>
+            <div key={i} className="h-24 bg-gray-100 rounded animate-pulse" />
           ))}
         </div>
       </div>

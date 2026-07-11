@@ -144,7 +144,7 @@ function SecurityDashboardPage() {
           <Suspense
             fallback={
               <Card className="glass-card">
-                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted"></CardContent>
+                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted" />
               </Card>
             }
           >
@@ -156,7 +156,7 @@ function SecurityDashboardPage() {
           <Suspense
             fallback={
               <Card className="glass-card">
-                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted"></CardContent>
+                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted" />
               </Card>
             }
           >
@@ -168,7 +168,7 @@ function SecurityDashboardPage() {
           <Suspense
             fallback={
               <Card className="glass-card">
-                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted"></CardContent>
+                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted" />
               </Card>
             }
           >
@@ -180,7 +180,7 @@ function SecurityDashboardPage() {
           <Suspense
             fallback={
               <Card className="glass-card">
-                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted"></CardContent>
+                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted" />
               </Card>
             }
           >
@@ -192,7 +192,7 @@ function SecurityDashboardPage() {
           <Suspense
             fallback={
               <Card className="glass-card">
-                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted"></CardContent>
+                <CardContent className="h-64 animate-pulse bg-gray-100 dark:bg-muted" />
               </Card>
             }
           >

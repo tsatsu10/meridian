@@ -71,9 +71,13 @@ export function initializeSentry(config: SentryConfig) {
       beforeSend(event: any, hint: any) {
         // Filter out sensitive data
         if (event.request) {
-          delete event.request.cookies;
-          delete event.request.headers?.authorization;
-          delete event.request.headers?.cookie;
+          // Assign undefined instead of delete — undefined keys are dropped
+          // at serialization, and it avoids delete's hidden-class churn.
+          event.request.cookies = undefined;
+          if (event.request.headers) {
+            event.request.headers.authorization = undefined;
+            event.request.headers.cookie = undefined;
+          }
         }
 
         return event;
@@ -82,8 +86,8 @@ export function initializeSentry(config: SentryConfig) {
       beforeBreadcrumb(breadcrumb: any) {
         // Filter sensitive breadcrumbs
         if (breadcrumb.category === "http" && breadcrumb.data) {
-          delete breadcrumb.data.Authorization;
-          delete breadcrumb.data.Cookie;
+          breadcrumb.data.Authorization = undefined;
+          breadcrumb.data.Cookie = undefined;
         }
 
         return breadcrumb;

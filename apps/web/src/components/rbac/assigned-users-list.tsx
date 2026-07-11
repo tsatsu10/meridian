@@ -112,7 +112,7 @@ export function AssignedUsersList({
   if (isLoading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
         <p className="mt-2 text-muted-foreground">Loading users...</p>
       </div>
     );
@@ -147,7 +147,7 @@ export function AssignedUsersList({
                 <TableHead>User</TableHead>
                 <TableHead>Assigned Date</TableHead>
                 <TableHead>Assigned By</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                <TableHead className="w-[50px]" />
               </TableRow>
             </TableHeader>
             <TableBody>

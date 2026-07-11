@@ -156,7 +156,7 @@ export class SettingsAPI {
       const settings = await api.load(userId);
       if (settings) {
         // Merge with defaults to ensure all required fields exist
-        return this.mergeWithDefaults(settings);
+        return SettingsAPI.mergeWithDefaults(settings);
       }
 
       // Initialize with defaults for new users
@@ -165,7 +165,7 @@ export class SettingsAPI {
       return newSettings;
     } catch (error) {
       console.warn("Settings API unavailable, using local fallback:", error);
-      return this.getLocalFallback(userId);
+      return SettingsAPI.getLocalFallback(userId);
     }
   }
 
@@ -175,7 +175,7 @@ export class SettingsAPI {
     updates: Partial<AllSettings[keyof AllSettings]>,
   ): Promise<{ settings: AllSettings; conflicts?: any[] }> {
     try {
-      const currentSettings = await this.getSettings(userId);
+      const currentSettings = await SettingsAPI.getSettings(userId);
       const updatedSettings = {
         ...currentSettings,
         [section]: {
@@ -192,7 +192,7 @@ export class SettingsAPI {
       };
     } catch (error) {
       console.warn("Settings update failed, using local fallback:", error);
-      return this.updateLocalFallback(userId, section, updates);
+      return SettingsAPI.updateLocalFallback(userId, section, updates);
     }
   }
 
@@ -206,7 +206,7 @@ export class SettingsAPI {
       console.warn(
         "Settings validation API unavailable, using client-side validation",
       );
-      return this.clientSideValidation(section, settings);
+      return SettingsAPI.clientSideValidation(section, settings);
     }
   }
 
@@ -214,7 +214,7 @@ export class SettingsAPI {
     userId: string,
     section: keyof AllSettings,
   ): Promise<AllSettings> {
-    const currentSettings = await this.getSettings(userId);
+    const currentSettings = await SettingsAPI.getSettings(userId);
     const resetSettings = {
       ...currentSettings,
       [section]: defaultSettings[section],
@@ -224,7 +224,7 @@ export class SettingsAPI {
       await api.save(userId, resetSettings);
     } catch (error) {
       console.warn("Settings reset failed, using local fallback:", error);
-      this.saveLocalFallback(userId, resetSettings);
+      SettingsAPI.saveLocalFallback(userId, resetSettings);
     }
 
     return resetSettings;
@@ -236,7 +236,7 @@ export class SettingsAPI {
       const stored = localStorage.getItem(`meridian-settings-${userId}`);
       if (stored) {
         const settings = JSON.parse(stored);
-        return this.mergeWithDefaults(settings);
+        return SettingsAPI.mergeWithDefaults(settings);
       }
     } catch (error) {
       console.warn("Local storage unavailable:", error);
@@ -249,7 +249,7 @@ export class SettingsAPI {
     section: keyof AllSettings,
     updates: Partial<AllSettings[keyof AllSettings]>,
   ): Promise<{ settings: AllSettings; conflicts?: any[] }> {
-    const currentSettings = this.getLocalFallback(userId);
+    const currentSettings = SettingsAPI.getLocalFallback(userId);
     const updatedSettings = {
       ...currentSettings,
       [section]: {
@@ -258,7 +258,7 @@ export class SettingsAPI {
       },
     };
 
-    this.saveLocalFallback(userId, updatedSettings);
+    SettingsAPI.saveLocalFallback(userId, updatedSettings);
 
     return {
       settings: updatedSettings,
@@ -308,7 +308,7 @@ export class SettingsAPI {
     if (section === "profile") {
       const profile = settings as any;
 
-      if (profile.email && !this.isValidEmail(profile.email)) {
+      if (profile.email && !SettingsAPI.isValidEmail(profile.email)) {
         errors.push({
           field: "email",
           message: "Please enter a valid email address",
@@ -316,7 +316,7 @@ export class SettingsAPI {
         });
       }
 
-      if (profile.website && !this.isValidUrl(profile.website)) {
+      if (profile.website && !SettingsAPI.isValidUrl(profile.website)) {
         errors.push({
           field: "website",
           message: "Please enter a valid URL",

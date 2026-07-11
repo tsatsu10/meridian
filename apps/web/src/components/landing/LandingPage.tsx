@@ -753,9 +753,9 @@ export default function LandingPage() {
                 {/* Browser Chrome */}
                 <div className="flex items-center px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b">
                   <div className="flex space-x-2">
-                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-red-400 rounded-full" />
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full" />
+                    <div className="w-3 h-3 bg-green-400 rounded-full" />
                   </div>
                   <div className="flex-1 text-center">
                     <div className="inline-flex items-center gap-2 text-sm text-muted-foreground bg-background/50 px-4 py-1 rounded-lg">

@@ -47,14 +47,14 @@ function DependencyCard({
         <div className="flex items-center gap-2">
           {type === "blocks" ? (
             <div className="w-4 h-4 flex items-center justify-center text-blue-500">
-              <div className="w-2 h-2 border border-current rounded-full"></div>
-              <div className="w-2 h-2 border border-current rounded-full ml-1"></div>
-              <div className="w-1 h-px bg-current absolute"></div>
+              <div className="w-2 h-2 border border-current rounded-full" />
+              <div className="w-2 h-2 border border-current rounded-full ml-1" />
+              <div className="w-1 h-px bg-current absolute" />
             </div>
           ) : (
             <div className="w-4 h-4 flex items-center justify-center text-orange-500">
               <div className="w-3 h-3 border-2 border-current rounded-sm relative">
-                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 border border-current rounded-full bg-current"></div>
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 border border-current rounded-full bg-current" />
               </div>
             </div>
           )}
@@ -90,8 +90,8 @@ function DependencyCard({
       >
         <div className="w-4 h-4 flex items-center justify-center">
           <div className="relative">
-            <div className="w-3 h-0.5 bg-current transform rotate-45 absolute"></div>
-            <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute"></div>
+            <div className="w-3 h-0.5 bg-current transform rotate-45 absolute" />
+            <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute" />
           </div>
         </div>
       </Button>
@@ -169,8 +169,8 @@ function AddDependency({
       >
         <div className="w-4 h-4 flex items-center justify-center">
           <div className="relative">
-            <div className="w-3 h-0.5 bg-current absolute"></div>
-            <div className="w-0.5 h-3 bg-current absolute"></div>
+            <div className="w-3 h-0.5 bg-current absolute" />
+            <div className="w-0.5 h-3 bg-current absolute" />
           </div>
         </div>
         Add {type === "blocks" ? "Blocking" : "Blocked By"}
@@ -194,8 +194,8 @@ function AddDependency({
         >
           <div className="w-4 h-4 flex items-center justify-center">
             <div className="relative">
-              <div className="w-3 h-0.5 bg-current transform rotate-45 absolute"></div>
-              <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute"></div>
+              <div className="w-3 h-0.5 bg-current transform rotate-45 absolute" />
+              <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute" />
             </div>
           </div>
         </Button>
@@ -204,7 +204,7 @@ function AddDependency({
       <div className="relative">
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400 flex items-center justify-center">
           <div className="w-3 h-3 border border-current rounded-full relative">
-            <div className="absolute -bottom-0.5 -right-0.5 w-1 h-1 border border-current transform rotate-45"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-1 h-1 border border-current transform rotate-45" />
           </div>
         </div>
         <Input
@@ -294,9 +294,9 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 flex items-center justify-center text-blue-500">
-              <div className="w-2 h-2 border border-current rounded-full"></div>
-              <div className="w-2 h-2 border border-current rounded-full ml-1"></div>
-              <div className="w-1 h-px bg-current absolute"></div>
+              <div className="w-2 h-2 border border-current rounded-full" />
+              <div className="w-2 h-2 border border-current rounded-full ml-1" />
+              <div className="w-1 h-px bg-current absolute" />
             </div>
             <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
               This task blocks ({blocks.length})
@@ -330,7 +330,7 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 flex items-center justify-center text-orange-500">
               <div className="w-3 h-3 border-2 border-current rounded-sm relative">
-                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 border border-current rounded-full bg-current"></div>
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 border border-current rounded-full bg-current" />
               </div>
             </div>
             <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
@@ -363,9 +363,9 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
         <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
           <div className="flex flex-col items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center text-zinc-300 dark:text-zinc-600">
-              <div className="w-4 h-4 border border-current rounded-full"></div>
-              <div className="w-4 h-4 border border-current rounded-full ml-2"></div>
-              <div className="w-2 h-px bg-current absolute"></div>
+              <div className="w-4 h-4 border border-current rounded-full" />
+              <div className="w-4 h-4 border border-current rounded-full ml-2" />
+              <div className="w-2 h-px bg-current absolute" />
             </div>
             <p className="text-sm">No dependencies yet</p>
             <p className="text-xs">

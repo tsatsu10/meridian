@@ -213,7 +213,7 @@ describe("Date Helpers", () => {
   describe("parseDate", () => {
     const parseDate = (str: string): Date | null => {
       const date = new Date(str);
-      return isNaN(date.getTime()) ? null : date;
+      return Number.isNaN(date.getTime()) ? null : date;
     };
 
     it("should parse valid date strings", () => {

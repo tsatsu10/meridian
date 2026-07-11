@@ -391,7 +391,7 @@ export class SettingsAPI {
         body: JSON.stringify({
           settings: localSettings,
           lastSynced,
-          deviceId: this.getDeviceId(),
+          deviceId: SettingsAPI.getDeviceId(),
         }),
       },
     );

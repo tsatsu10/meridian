@@ -290,16 +290,18 @@ function WorkspaceSettings() {
       await uploadLogoMutation.mutateAsync(logoFile);
     }
 
-    // Update settings
-    const updates = { ...formData };
-    delete updates.id;
-    delete updates.ownerId;
-    delete updates.ownerEmail;
-    delete updates.ownerName;
-    delete updates.createdAt;
-    delete updates.updatedAt;
-    delete updates.memberCount;
-    delete updates.logo; // Logo is handled separately
+    // Update settings — omit server-managed fields (logo is handled separately)
+    const {
+      id: _id,
+      ownerId: _ownerId,
+      ownerEmail: _ownerEmail,
+      ownerName: _ownerName,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      memberCount: _memberCount,
+      logo: _logo,
+      ...updates
+    } = formData;
 
     updateSettingsMutation.mutate(updates);
   };
@@ -370,7 +372,7 @@ function WorkspaceSettings() {
       <LazyDashboardLayout>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
             <p className="text-muted-foreground">
               Loading workspace settings...
             </p>

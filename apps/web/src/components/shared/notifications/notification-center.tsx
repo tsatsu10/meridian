@@ -176,7 +176,7 @@ export default function NotificationCenter({
           </Badge>
         )}
         {criticalCount > 0 && (
-          <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+          <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
         )}
       </Button>
     ) : (
@@ -191,7 +191,7 @@ export default function NotificationCenter({
           </Badge>
         )}
         {criticalCount > 0 && (
-          <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+          <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
         )}
       </Button>
     );
@@ -288,7 +288,7 @@ export default function NotificationCenter({
                         </div>
                       </div>
                       {!notification.isRead && (
-                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2" />
                       )}
                     </div>
                   </div>
@@ -371,7 +371,7 @@ export default function NotificationCenter({
                               </div>
                             </div>
                             {!notification.isRead && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
                             )}
                           </div>
                         ))}
