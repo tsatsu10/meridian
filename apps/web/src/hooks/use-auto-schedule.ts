@@ -52,7 +52,9 @@ export function useAutoSchedule(tasks: TaskWithSubtasks[]) {
         scheduledEndDate: originalEnd,
         duration,
         dependencies:
-          task.blockedBy?.map((dep: any) => dep.dependentTaskId) || [],
+          task.blockedBy?.map(
+            (dep: { dependentTaskId: string }) => dep.dependentTaskId,
+          ) || [],
         hasSchedulingConflict: false,
       };
 
