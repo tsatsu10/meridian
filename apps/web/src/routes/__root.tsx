@@ -16,13 +16,13 @@ export const Route = createRootRouteWithContext<{
   component: RootComponent,
   async beforeLoad({ context: { user }, location }) {
     // Skip auth checks in E2E test mode
-    if (import.meta.env.VITE_E2E_MODE === 'true') {
-      console.log('🧪 E2E mode: Skipping auth guard');
+    if (import.meta.env.VITE_E2E_MODE === "true") {
+      console.log("🧪 E2E mode: Skipping auth guard");
       return;
     }
 
     const isRouteUnprotected = location.pathname.includes("auth");
-    void (location.pathname.includes("dashboard"));
+    void location.pathname.includes("dashboard");
     const isLandingPage = location.pathname === "/";
 
     // Allow access to landing page without authentication

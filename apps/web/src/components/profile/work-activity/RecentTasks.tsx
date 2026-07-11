@@ -1,6 +1,6 @@
 /**
  * ✅ Recent Tasks Component
- * 
+ *
  * Displays last completed, currently assigned, and overdue tasks
  */
 
@@ -11,7 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Circle, Clock, AlertCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import useWorkspaceStore from "@/store/workspace";
-import { getRecentTasks, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
+import {
+  getRecentTasks,
+  smartProfileKeys,
+} from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
 
@@ -23,7 +26,8 @@ interface RecentTasksProps {
 const priorityColors = {
   urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  medium:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   low: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
 };
 
@@ -83,9 +87,11 @@ export function RecentTasks({ userId, className }: RecentTasksProps) {
                 No currently assigned tasks
               </p>
             ) : (
-              tasksData.currentlyAssigned.slice(0, 5).map((task: any) => (
-                <TaskItem key={task.id} task={task} icon={Circle} />
-              ))
+              tasksData.currentlyAssigned
+                .slice(0, 5)
+                .map((task: any) => (
+                  <TaskItem key={task.id} task={task} icon={Circle} />
+                ))
             )}
           </TabsContent>
 
@@ -108,7 +114,12 @@ export function RecentTasks({ userId, className }: RecentTasksProps) {
               </p>
             ) : (
               tasksData.overdue.map((task: any) => (
-                <TaskItem key={task.id} task={task} icon={AlertCircle} isOverdue />
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  icon={AlertCircle}
+                  isOverdue
+                />
               ))
             )}
           </TabsContent>
@@ -137,14 +148,15 @@ function TaskItem({
       <div
         className={cn(
           "p-3 rounded-lg border hover:border-primary transition-colors",
-          isOverdue && "border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/20"
+          isOverdue &&
+            "border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/20",
         )}
       >
         <div className="flex items-start gap-3">
           <Icon
             className={cn(
               "h-4 w-4 mt-0.5 flex-shrink-0",
-              isOverdue && "text-red-600 dark:text-red-400"
+              isOverdue && "text-red-600 dark:text-red-400",
             )}
           />
           <div className="flex-1 min-w-0">
@@ -155,7 +167,10 @@ function TaskItem({
               </span>
               <Badge
                 variant="outline"
-                className={cn("text-xs", priorityColors[task.priority as keyof typeof priorityColors])}
+                className={cn(
+                  "text-xs",
+                  priorityColors[task.priority as keyof typeof priorityColors],
+                )}
               >
                 {task.priority}
               </Badge>
@@ -163,12 +178,18 @@ function TaskItem({
             {task.dueDate && (
               <p className="text-xs text-muted-foreground mt-1">
                 <Clock className="h-3 w-3 inline mr-1" />
-                Due {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
+                Due{" "}
+                {formatDistanceToNow(new Date(task.dueDate), {
+                  addSuffix: true,
+                })}
               </p>
             )}
             {task.completedAt && (
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                Completed {formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}
+                Completed{" "}
+                {formatDistanceToNow(new Date(task.completedAt), {
+                  addSuffix: true,
+                })}
               </p>
             )}
           </div>
@@ -177,4 +198,3 @@ function TaskItem({
     </Link>
   );
 }
-

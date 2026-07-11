@@ -21,12 +21,15 @@ export function useUpdateTeamNotifications() {
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["team-notifications", variables.teamId] });
+      queryClient.invalidateQueries({
+        queryKey: ["team-notifications", variables.teamId],
+      });
       toast.success("Notification preferences updated");
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Failed to update notification preferences");
+      toast.error(
+        error?.message || "Failed to update notification preferences",
+      );
     },
   });
 }
-

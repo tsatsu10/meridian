@@ -1,191 +1,201 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect, useRef } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Upload, 
-  Save, 
-  X, 
-  User, 
-  MapPin, 
-  Edit3, 
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Upload,
+  Save,
+  X,
+  User,
+  MapPin,
+  Edit3,
   Loader2,
   Bell,
   Phone,
   Mail,
   Globe,
   ArrowLeft,
-} from 'lucide-react'
-import { useSettingsStore } from '@/store/settings'
-import { toast } from 'sonner'
-import useAuth from '@/components/providers/auth-provider/hooks/use-auth'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import getProfile, { getProfileKey } from '@/fetchers/profile/get-profile'
-import { 
-  updateProfile, 
-  uploadProfilePicture, 
-  type ProfileData
-} from '@/fetchers/profile/profile-mutations'
-import { NotificationPreferences } from '@/components/notifications/notification-preferences'
-import { useWorkspaceStore } from '@/store/workspace'
+} from "lucide-react";
+import { useSettingsStore } from "@/store/settings";
+import { toast } from "sonner";
+import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import getProfile, { getProfileKey } from "@/fetchers/profile/get-profile";
+import {
+  updateProfile,
+  uploadProfilePicture,
+  type ProfileData,
+} from "@/fetchers/profile/profile-mutations";
+import { NotificationPreferences } from "@/components/notifications/notification-preferences";
+import { useWorkspaceStore } from "@/store/workspace";
 
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/profile')({
+export const Route = createFileRoute("/dashboard/settings/profile")({
   component: withErrorBoundary(ProfileSettings, "Profile Settings"),
-})
+});
 
 interface FormErrors {
-  name?: string
-  email?: string
-  phone?: string
-  website?: string
-  bio?: string
+  name?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  bio?: string;
 }
 
 function ProfileSettings() {
-  const { user } = useAuth()
-  const workspace = useWorkspaceStore((state) => state.workspace)
-  const { settings, updateSettings, addRecentlyViewed } = useSettingsStore()
-  const queryClient = useQueryClient()
+  const { user } = useAuth();
+  const workspace = useWorkspaceStore((state) => state.workspace);
+  const { settings, updateSettings, addRecentlyViewed } = useSettingsStore();
+  const queryClient = useQueryClient();
 
   // Normalize API data to prevent null values in form inputs
   const normalizeProfileData = (data: any) => {
     return {
-      name: data?.name || '',
-      email: data?.email || '',
-      phone: data?.phone || '',
-      website: data?.website || '',
-      location: data?.location || '',
-      bio: data?.bio || '',
-      jobTitle: data?.jobTitle || '',
-      company: data?.company || '',
-      timezone: data?.timezone || 'UTC',
-      language: data?.language || 'en',
+      name: data?.name || "",
+      email: data?.email || "",
+      phone: data?.phone || "",
+      website: data?.website || "",
+      location: data?.location || "",
+      bio: data?.bio || "",
+      jobTitle: data?.jobTitle || "",
+      company: data?.company || "",
+      timezone: data?.timezone || "UTC",
+      language: data?.language || "en",
       avatar: data?.profilePicture || data?.avatar || null,
-    }
-  }
+    };
+  };
 
   // State
-  const [localSettings, setLocalSettings] = useState(() => normalizeProfileData(settings.profile))
-  const [isEditing, setIsEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [profileImage, setProfileImage] = useState<string | null>(settings.profile.avatar || null)
-  const [_uploadProgress, setUploadProgress] = useState(0)
-  const [isUploading, setIsUploading] = useState(false)
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [activeTab, setActiveTab] = useState("profile")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [localSettings, setLocalSettings] = useState(() =>
+    normalizeProfileData(settings.profile),
+  );
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(
+    settings.profile.avatar || null,
+  );
+  const [_uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [activeTab, setActiveTab] = useState("profile");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // API Data fetching
   const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: [getProfileKey()],
     queryFn: () => getProfile(),
     enabled: !!user,
-  })
+  });
 
   // Mutations
   const updateProfileMutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [getProfileKey()] })
-      toast.success('Profile updated successfully!')
-      setIsEditing(false)
+      queryClient.invalidateQueries({ queryKey: [getProfileKey()] });
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
     },
     onError: (error) => {
-      toast.error('Failed to update profile')
-      console.error('Profile update error:', error)
-    }
-  })
+      toast.error("Failed to update profile");
+      console.error("Profile update error:", error);
+    },
+  });
 
   const uploadPictureMutation = useMutation({
     mutationFn: uploadProfilePicture,
     onSuccess: (data) => {
-      setProfileImage(data.url)
-      queryClient.invalidateQueries({ queryKey: [getProfileKey()] })
-      toast.success('Profile picture uploaded successfully!')
+      setProfileImage(data.url);
+      queryClient.invalidateQueries({ queryKey: [getProfileKey()] });
+      toast.success("Profile picture uploaded successfully!");
     },
     onError: (error) => {
-      toast.error('Failed to upload profile picture')
-      console.error('Picture upload error:', error)
-    }
-  })
+      toast.error("Failed to upload profile picture");
+      console.error("Picture upload error:", error);
+    },
+  });
 
   // Update profile data when API data is loaded or store changes
   useEffect(() => {
     let newSettings;
-    
+
     if (profileData && !profileLoading) {
       newSettings = normalizeProfileData(profileData);
     } else if (user && (!settings.profile.name || !settings.profile.email)) {
       newSettings = normalizeProfileData({
         ...settings.profile,
-        name: settings.profile.name || user.name || '',
-        email: settings.profile.email || user.email || '',
+        name: settings.profile.name || user.name || "",
+        email: settings.profile.email || user.email || "",
       });
-      updateSettings('profile', newSettings);
+      updateSettings("profile", newSettings);
     } else {
       newSettings = normalizeProfileData(settings.profile);
     }
-    
+
     setLocalSettings(newSettings);
     setProfileImage(newSettings.avatar || null);
-  }, [profileData, profileLoading, settings.profile, user, updateSettings])
+  }, [profileData, profileLoading, settings.profile, user, updateSettings]);
 
   useEffect(() => {
-    addRecentlyViewed('profile')
-  }, [addRecentlyViewed])
+    addRecentlyViewed("profile");
+  }, [addRecentlyViewed]);
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
-    
+    const newErrors: FormErrors = {};
+
     if (!localSettings.name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = "Name is required";
     } else if (localSettings.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters'
+      newErrors.name = "Name must be at least 2 characters";
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!localSettings.email.trim()) {
-      newErrors.email = 'Email is required'
+      newErrors.email = "Email is required";
     } else if (!emailRegex.test(localSettings.email)) {
-      newErrors.email = 'Please enter a valid email address'
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (localSettings.phone && localSettings.phone.trim()) {
-      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
-      if (!phoneRegex.test(localSettings.phone.replace(/[\s\-\(\)]/g, ''))) {
-        newErrors.phone = 'Please enter a valid phone number'
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      if (!phoneRegex.test(localSettings.phone.replace(/[\s\-\(\)]/g, ""))) {
+        newErrors.phone = "Please enter a valid phone number";
       }
     }
 
     if (localSettings.website && localSettings.website.trim()) {
       try {
-        new URL(localSettings.website)
+        new URL(localSettings.website);
       } catch {
-        newErrors.website = 'Please enter a valid website URL'
+        newErrors.website = "Please enter a valid website URL";
       }
     }
 
     if (localSettings.bio && localSettings.bio.length > 500) {
-      newErrors.bio = 'Bio must be less than 500 characters'
+      newErrors.bio = "Bio must be less than 500 characters";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSave = async () => {
     if (!validateForm()) {
-      toast.error('Please fix the validation errors')
-      return
+      toast.error("Please fix the validation errors");
+      return;
     }
 
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       const profileData: ProfileData = {
         bio: localSettings.bio,
@@ -196,92 +206,96 @@ function ProfileSettings() {
         language: localSettings.language,
         jobTitle: localSettings.jobTitle,
         company: localSettings.company,
-      }
-      
-      await updateProfileMutation.mutateAsync(profileData)
-      
+      };
+
+      await updateProfileMutation.mutateAsync(profileData);
+
       // Also update the settings store for consistency
-      await updateSettings('profile', {
+      await updateSettings("profile", {
         ...localSettings,
-        avatar: profileImage || undefined
-      })
+        avatar: profileImage || undefined,
+      });
     } catch (error) {
       // Error handling is in the mutation
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setLocalSettings(normalizeProfileData(settings.profile))
-    setProfileImage(settings.profile.avatar || null)
-    setErrors({})
-    setIsEditing(false)
-  }
+    setLocalSettings(normalizeProfileData(settings.profile));
+    setProfileImage(settings.profile.avatar || null);
+    setErrors({});
+    setIsEditing(false);
+  };
 
-  const handleInputChange = (field: keyof typeof localSettings, value: string) => {
-    setLocalSettings((prev: any) => ({ ...prev, [field]: value }))
-    
+  const handleInputChange = (
+    field: keyof typeof localSettings,
+    value: string,
+  ) => {
+    setLocalSettings((prev: any) => ({ ...prev, [field]: value }));
+
     if (errors[field as keyof FormErrors]) {
-      setErrors((prev: any) => ({ ...prev, [field]: undefined }))
+      setErrors((prev: any) => ({ ...prev, [field]: undefined }));
     }
-  }
+  };
 
   const handlePhotoUpload = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB')
-      return
-    }
-    
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file')
-      return
+      toast.error("File size must be less than 5MB");
+      return;
     }
 
-    setIsUploading(true)
-    setUploadProgress(0)
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
       // Create a preview for immediate UI feedback
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        setProfileImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+        setProfileImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
 
       // Simulate upload progress
       for (let i = 0; i <= 90; i += 10) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-        setUploadProgress(i)
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        setUploadProgress(i);
       }
-      
+
       // Upload to server
-      await uploadPictureMutation.mutateAsync(file)
-      setUploadProgress(100)
-      
+      await uploadPictureMutation.mutateAsync(file);
+      setUploadProgress(100);
     } catch (error) {
       // Reset preview if upload failed
-      setProfileImage(settings.profile.avatar || null)
+      setProfileImage(settings.profile.avatar || null);
     } finally {
-      setIsUploading(false)
-      setUploadProgress(0)
+      setIsUploading(false);
+      setUploadProgress(0);
     }
-  }
+  };
 
   const removeProfilePhoto = () => {
-    setProfileImage(null)
+    setProfileImage(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = "";
     }
-    toast.success('Profile photo removed')
-  }
+    toast.success("Profile photo removed");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-6 lg:p-8">
@@ -305,15 +319,15 @@ function ProfileSettings() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          
+
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 p-1">
                 <div className="w-full h-full rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden">
                   {profileImage ? (
-                    <img 
-                      src={profileImage} 
-                      alt="Profile" 
+                    <img
+                      src={profileImage}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -352,7 +366,10 @@ function ProfileSettings() {
               <User className="w-4 h-4" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <TabsTrigger
+              value="notifications"
+              className="flex items-center gap-2"
+            >
               <Bell className="w-4 h-4" />
               Notifications
             </TabsTrigger>
@@ -377,7 +394,7 @@ function ProfileSettings() {
                   onClick={() => setIsEditing(!isEditing)}
                 >
                   <Edit3 className="w-4 h-4 mr-2" />
-                  {isEditing ? 'Cancel' : 'Edit'}
+                  {isEditing ? "Cancel" : "Edit"}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -390,16 +407,18 @@ function ProfileSettings() {
                     <Input
                       id="name"
                       value={localSettings.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       disabled={!isEditing}
-                      className={errors.name ? 'border-red-500' : ''}
+                      className={errors.name ? "border-red-500" : ""}
                       placeholder="Enter your full name"
                     />
                     {errors.name && (
                       <p className="text-sm text-red-600">{errors.name}</p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="email" className="flex items-center gap-2">
                       <Mail className="w-4 h-4" />
@@ -409,16 +428,18 @@ function ProfileSettings() {
                       id="email"
                       type="email"
                       value={localSettings.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       disabled={!isEditing}
-                      className={errors.email ? 'border-red-500' : ''}
+                      className={errors.email ? "border-red-500" : ""}
                       placeholder="your.email@example.com"
                     />
                     {errors.email && (
                       <p className="text-sm text-red-600">{errors.email}</p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="flex items-center gap-2">
                       <Phone className="w-4 h-4" />
@@ -427,80 +448,96 @@ function ProfileSettings() {
                     <Input
                       id="phone"
                       value={localSettings.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
                       disabled={!isEditing}
-                      className={errors.phone ? 'border-red-500' : ''}
+                      className={errors.phone ? "border-red-500" : ""}
                       placeholder="+1 (555) 123-4567"
                     />
                     {errors.phone && (
                       <p className="text-sm text-red-600">{errors.phone}</p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="location" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="location"
+                      className="flex items-center gap-2"
+                    >
                       <MapPin className="w-4 h-4" />
                       Location
                     </Label>
                     <Input
                       id="location"
                       value={localSettings.location}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("location", e.target.value)
+                      }
                       disabled={!isEditing}
                       placeholder="City, Country"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="website" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="website"
+                      className="flex items-center gap-2"
+                    >
                       <Globe className="w-4 h-4" />
                       Website
                     </Label>
                     <Input
                       id="website"
                       value={localSettings.website}
-                      onChange={(e) => handleInputChange('website', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("website", e.target.value)
+                      }
                       disabled={!isEditing}
-                      className={errors.website ? 'border-red-500' : ''}
+                      className={errors.website ? "border-red-500" : ""}
                       placeholder="https://yourwebsite.com"
                     />
                     {errors.website && (
                       <p className="text-sm text-red-600">{errors.website}</p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="jobTitle">Job Title</Label>
                     <Input
                       id="jobTitle"
                       value={localSettings.jobTitle}
-                      onChange={(e) => handleInputChange('jobTitle', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("jobTitle", e.target.value)
+                      }
                       disabled={!isEditing}
                       placeholder="Your role"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="company">Company</Label>
                     <Input
                       id="company"
                       value={localSettings.company}
-                      onChange={(e) => handleInputChange('company', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("company", e.target.value)
+                      }
                       disabled={!isEditing}
                       placeholder="Your company"
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea
                     id="bio"
                     value={localSettings.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    onChange={(e) => handleInputChange("bio", e.target.value)}
                     disabled={!isEditing}
                     rows={4}
-                    className={errors.bio ? 'border-red-500' : ''}
+                    className={errors.bio ? "border-red-500" : ""}
                     placeholder="Tell us about yourself..."
                   />
                   <div className="flex items-center justify-between">
@@ -512,11 +549,14 @@ function ProfileSettings() {
                     </p>
                   </div>
                 </div>
-                
+
                 {isEditing && (
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={handleSave} disabled={isSaving || updateProfileMutation.isPending}>
-                      {(isSaving || updateProfileMutation.isPending) ? (
+                    <Button
+                      onClick={handleSave}
+                      disabled={isSaving || updateProfileMutation.isPending}
+                    >
+                      {isSaving || updateProfileMutation.isPending ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
                         <Save className="w-4 h-4 mr-2" />
@@ -527,8 +567,8 @@ function ProfileSettings() {
                       Cancel
                     </Button>
                     {profileImage && (
-                      <Button 
-                        variant="destructive" 
+                      <Button
+                        variant="destructive"
                         onClick={removeProfilePhoto}
                         className="ml-auto"
                       >
@@ -545,14 +585,14 @@ function ProfileSettings() {
           {/* Notifications Tab - real API-backed preferences */}
           <TabsContent value="notifications" className="space-y-6">
             <NotificationPreferences
-              userId={user?.id || ''}
-              workspaceId={workspace?.id || ''}
-              onSave={() => toast.success('Notification preferences saved!')}
+              userId={user?.id || ""}
+              workspaceId={workspace?.id || ""}
+              onSave={() => toast.success("Notification preferences saved!")}
               className="border rounded-xl"
             />
           </TabsContent>
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

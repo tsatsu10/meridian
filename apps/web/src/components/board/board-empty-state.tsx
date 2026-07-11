@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Target, Search, AlertCircle, Plus, X } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type EmptyStateType = 'no-tasks' | 'no-results' | 'error';
+export type EmptyStateType = "no-tasks" | "no-results" | "error";
 
 interface BoardEmptyStateProps {
   type: EmptyStateType;
@@ -18,7 +18,7 @@ interface BoardEmptyStateProps {
 }
 
 const emptyStateConfigs = {
-  'no-tasks': {
+  "no-tasks": {
     icon: Target,
     iconColor: "text-blue-500",
     bgColor: "bg-blue-50 dark:bg-blue-950/20",
@@ -27,24 +27,26 @@ const emptyStateConfigs = {
     actionLabel: "Create Task",
     actionIcon: Plus,
   },
-  'no-results': {
+  "no-results": {
     icon: Search,
     iconColor: "text-orange-500",
     bgColor: "bg-orange-50 dark:bg-orange-950/20",
     title: "No tasks match your filters",
-    description: "Try adjusting your search or filters to find what you're looking for",
+    description:
+      "Try adjusting your search or filters to find what you're looking for",
     actionLabel: "Clear Filters",
     actionIcon: X,
   },
-  'error': {
+  error: {
     icon: AlertCircle,
     iconColor: "text-destructive",
     bgColor: "bg-destructive/10",
     title: "Unable to load tasks",
-    description: "There was an error loading your tasks. Please try refreshing the page.",
+    description:
+      "There was an error loading your tasks. Please try refreshing the page.",
     actionLabel: "Refresh",
     actionIcon: null,
-  }
+  },
 };
 
 export default function BoardEmptyState({
@@ -53,18 +55,18 @@ export default function BoardEmptyState({
   onClearFilters,
   onRefresh,
   searchQuery,
-  filterCount = 0
+  filterCount = 0,
 }: BoardEmptyStateProps) {
   const config = emptyStateConfigs[type];
   const Icon = config.icon;
   const ActionIcon = config.actionIcon;
 
   const handleAction = () => {
-    if (type === 'no-tasks' && onCreateTask) {
+    if (type === "no-tasks" && onCreateTask) {
       onCreateTask();
-    } else if (type === 'no-results' && onClearFilters) {
+    } else if (type === "no-results" && onClearFilters) {
       onClearFilters();
-    } else if (type === 'error' && onRefresh) {
+    } else if (type === "error" && onRefresh) {
       onRefresh();
     }
   };
@@ -97,20 +99,24 @@ export default function BoardEmptyState({
           </p>
 
           {/* Additional context for no-results */}
-          {type === 'no-results' && (searchQuery || filterCount > 0) && (
+          {type === "no-results" && (searchQuery || filterCount > 0) && (
             <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-border">
               <div className="text-sm space-y-2">
                 {searchQuery && (
                   <div className="flex items-center justify-center gap-2">
                     <Search className="w-4 h-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      Searching for: <span className="font-medium text-foreground">"{searchQuery}"</span>
+                      Searching for:{" "}
+                      <span className="font-medium text-foreground">
+                        "{searchQuery}"
+                      </span>
                     </span>
                   </div>
                 )}
                 {filterCount > 0 && (
                   <div className="text-muted-foreground">
-                    {filterCount} active filter{filterCount > 1 ? 's' : ''} applied
+                    {filterCount} active filter{filterCount > 1 ? "s" : ""}{" "}
+                    applied
                   </div>
                 )}
               </div>
@@ -119,17 +125,13 @@ export default function BoardEmptyState({
         </div>
 
         {/* Action Button */}
-        <Button
-          onClick={handleAction}
-          size="lg"
-          className="mt-4 gap-2"
-        >
+        <Button onClick={handleAction} size="lg" className="mt-4 gap-2">
           {ActionIcon && <ActionIcon className="w-5 h-5" />}
           {config.actionLabel}
         </Button>
 
         {/* Secondary action for error state */}
-        {type === 'error' && (
+        {type === "error" && (
           <p className="text-sm text-muted-foreground mt-4">
             If the problem persists, please contact support
           </p>
@@ -138,4 +140,3 @@ export default function BoardEmptyState({
     </motion.div>
   );
 }
-

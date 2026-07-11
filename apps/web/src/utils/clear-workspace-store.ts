@@ -2,7 +2,7 @@
 // @persona-sarah: PM needs clean workspace state for testing
 // @persona-david: Team lead needs reliable workspace initialization
 
-import useWorkspaceStore from '@/store/workspace';
+import useWorkspaceStore from "@/store/workspace";
 
 /**
  * Clear the workspace store from localStorage
@@ -11,10 +11,11 @@ import useWorkspaceStore from '@/store/workspace';
 export function clearWorkspaceStore() {
   try {
     // Clear the workspace from localStorage
-    localStorage.removeItem('meridian-workspace');// Also clear the workspace from the store
+    localStorage.removeItem("meridian-workspace"); // Also clear the workspace from the store
     const { setWorkspace } = useWorkspaceStore.getState();
-    setWorkspace(undefined);} catch (error) {
-    console.error('❌ Failed to clear workspace store:', error);
+    setWorkspace(undefined);
+  } catch (error) {
+    console.error("❌ Failed to clear workspace store:", error);
   }
 }
 
@@ -25,13 +26,14 @@ export function setDemoWorkspace() {
   try {
     const { setWorkspace } = useWorkspaceStore.getState();
     setWorkspace({
-      id: 'demo-workspace-123',
-      name: 'Meridian Development',
-      description: 'Main development workspace for Meridian project management',
+      id: "demo-workspace-123",
+      name: "Meridian Development",
+      description: "Main development workspace for Meridian project management",
       ownerId: null,
-      ownerEmail: 'elidegbotse@gmail.com',
+      ownerEmail: "elidegbotse@gmail.com",
       createdAt: new Date().toISOString(),
-    });} catch (error) {
-    console.error('❌ Failed to set demo workspace:', error);
+    });
+  } catch (error) {
+    console.error("❌ Failed to set demo workspace:", error);
   }
-} 
+}

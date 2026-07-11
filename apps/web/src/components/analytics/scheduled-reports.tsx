@@ -2,30 +2,30 @@
 // @persona-jennifer: Executive needs automated report delivery
 // @persona-david: Team lead needs regular performance reports
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   Clock,
   Calendar,
@@ -39,173 +39,179 @@ import {
   AlertCircle,
   Check,
   FileText,
-  Users
-} from 'lucide-react'
-import { cn } from '@/lib/cn'
-import { toast } from 'sonner'
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/cn";
+import { toast } from "sonner";
 
 interface ScheduledReport {
-  id: string
-  name: string
-  description?: string
-  frequency: 'daily' | 'weekly' | 'monthly'
-  time: string // HH:MM format
-  dayOfWeek?: number // 0-6 for weekly
-  dayOfMonth?: number // 1-31 for monthly
-  recipients: string[] // Email addresses
-  format: 'pdf' | 'excel' | 'csv'
-  sections: string[] // Which analytics sections to include
-  isActive: boolean
-  lastRun?: string
-  nextRun?: string
-  createdAt: string
-  createdBy: string
+  id: string;
+  name: string;
+  description?: string;
+  frequency: "daily" | "weekly" | "monthly";
+  time: string; // HH:MM format
+  dayOfWeek?: number; // 0-6 for weekly
+  dayOfMonth?: number; // 1-31 for monthly
+  recipients: string[]; // Email addresses
+  format: "pdf" | "excel" | "csv";
+  sections: string[]; // Which analytics sections to include
+  isActive: boolean;
+  lastRun?: string;
+  nextRun?: string;
+  createdAt: string;
+  createdBy: string;
 }
 
 interface ScheduledReportsProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
-  const [reports, setReports] = useState<ScheduledReport[]>([])
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [editingReport, setEditingReport] = useState<ScheduledReport | null>(null)
-  
+  const [reports, setReports] = useState<ScheduledReport[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingReport, setEditingReport] = useState<ScheduledReport | null>(
+    null,
+  );
+
   // Form state
-  const [formName, setFormName] = useState('')
-  const [formDescription, setFormDescription] = useState('')
-  const [formFrequency, setFormFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly')
-  const [formTime, setFormTime] = useState('09:00')
-  const [formDayOfWeek, setFormDayOfWeek] = useState(1) // Monday
-  const [formDayOfMonth, setFormDayOfMonth] = useState(1)
-  const [formRecipients, setFormRecipients] = useState('')
-  const [formFormat, setFormFormat] = useState<'pdf' | 'excel' | 'csv'>('excel')
+  const [formName, setFormName] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [formFrequency, setFormFrequency] = useState<
+    "daily" | "weekly" | "monthly"
+  >("weekly");
+  const [formTime, setFormTime] = useState("09:00");
+  const [formDayOfWeek, setFormDayOfWeek] = useState(1); // Monday
+  const [formDayOfMonth, setFormDayOfMonth] = useState(1);
+  const [formRecipients, setFormRecipients] = useState("");
+  const [formFormat, setFormFormat] = useState<"pdf" | "excel" | "csv">(
+    "excel",
+  );
   const [formSections, setFormSections] = useState({
     overview: true,
     projects: true,
     team: true,
     time: true,
     insights: false,
-  })
-  const [formIsActive, setFormIsActive] = useState(true)
+  });
+  const [formIsActive, setFormIsActive] = useState(true);
 
   // Load reports from localStorage
   useEffect(() => {
-    const savedReports = localStorage.getItem('scheduledReports')
+    const savedReports = localStorage.getItem("scheduledReports");
     if (savedReports) {
-      setReports(JSON.parse(savedReports))
+      setReports(JSON.parse(savedReports));
     }
-  }, [])
+  }, []);
 
   // Save reports to localStorage
   const saveReports = (updatedReports: ScheduledReport[]) => {
-    setReports(updatedReports)
-    localStorage.setItem('scheduledReports', JSON.stringify(updatedReports))
-  }
+    setReports(updatedReports);
+    localStorage.setItem("scheduledReports", JSON.stringify(updatedReports));
+  };
 
   // Reset form
   const resetForm = () => {
-    setFormName('')
-    setFormDescription('')
-    setFormFrequency('weekly')
-    setFormTime('09:00')
-    setFormDayOfWeek(1)
-    setFormDayOfMonth(1)
-    setFormRecipients('')
-    setFormFormat('excel')
+    setFormName("");
+    setFormDescription("");
+    setFormFrequency("weekly");
+    setFormTime("09:00");
+    setFormDayOfWeek(1);
+    setFormDayOfMonth(1);
+    setFormRecipients("");
+    setFormFormat("excel");
     setFormSections({
       overview: true,
       projects: true,
       team: true,
       time: true,
       insights: false,
-    })
-    setFormIsActive(true)
-    setEditingReport(null)
-  }
+    });
+    setFormIsActive(true);
+    setEditingReport(null);
+  };
 
   // Load report for editing
   const loadReportForEditing = (report: ScheduledReport) => {
-    setFormName(report.name)
-    setFormDescription(report.description || '')
-    setFormFrequency(report.frequency)
-    setFormTime(report.time)
-    setFormDayOfWeek(report.dayOfWeek || 1)
-    setFormDayOfMonth(report.dayOfMonth || 1)
-    setFormRecipients(report.recipients.join(', '))
-    setFormFormat(report.format)
+    setFormName(report.name);
+    setFormDescription(report.description || "");
+    setFormFrequency(report.frequency);
+    setFormTime(report.time);
+    setFormDayOfWeek(report.dayOfWeek || 1);
+    setFormDayOfMonth(report.dayOfMonth || 1);
+    setFormRecipients(report.recipients.join(", "));
+    setFormFormat(report.format);
     // Map sections array to form state
     setFormSections({
-      overview: report.sections.includes('overview'),
-      projects: report.sections.includes('projects'),
-      team: report.sections.includes('team'),
-      time: report.sections.includes('time'),
-      insights: report.sections.includes('insights'),
-    })
-    setFormIsActive(report.isActive)
-    setEditingReport(report)
-    setShowCreateModal(true)
-  }
+      overview: report.sections.includes("overview"),
+      projects: report.sections.includes("projects"),
+      team: report.sections.includes("team"),
+      time: report.sections.includes("time"),
+      insights: report.sections.includes("insights"),
+    });
+    setFormIsActive(report.isActive);
+    setEditingReport(report);
+    setShowCreateModal(true);
+  };
 
   // Calculate next run time
   const calculateNextRun = (
     frequency: string,
     time: string,
     dayOfWeek?: number,
-    dayOfMonth?: number
+    dayOfMonth?: number,
   ): string => {
-    const now = new Date()
-    const [hours, minutes] = time.split(':').map(Number)
-    const next = new Date()
-    next.setHours(hours, minutes, 0, 0)
+    const now = new Date();
+    const [hours, minutes] = time.split(":").map(Number);
+    const next = new Date();
+    next.setHours(hours, minutes, 0, 0);
 
-    if (frequency === 'daily') {
+    if (frequency === "daily") {
       if (next <= now) {
-        next.setDate(next.getDate() + 1)
+        next.setDate(next.getDate() + 1);
       }
-    } else if (frequency === 'weekly' && dayOfWeek !== undefined) {
-      const currentDay = now.getDay()
-      const daysUntilNext = (dayOfWeek - currentDay + 7) % 7
-      next.setDate(now.getDate() + (daysUntilNext || 7))
+    } else if (frequency === "weekly" && dayOfWeek !== undefined) {
+      const currentDay = now.getDay();
+      const daysUntilNext = (dayOfWeek - currentDay + 7) % 7;
+      next.setDate(now.getDate() + (daysUntilNext || 7));
       if (daysUntilNext === 0 && next <= now) {
-        next.setDate(next.getDate() + 7)
+        next.setDate(next.getDate() + 7);
       }
-    } else if (frequency === 'monthly' && dayOfMonth !== undefined) {
-      next.setDate(dayOfMonth)
+    } else if (frequency === "monthly" && dayOfMonth !== undefined) {
+      next.setDate(dayOfMonth);
       if (next <= now) {
-        next.setMonth(next.getMonth() + 1)
+        next.setMonth(next.getMonth() + 1);
       }
     }
 
-    return next.toISOString()
-  }
+    return next.toISOString();
+  };
 
   // Create or update report
   const handleSaveReport = () => {
     // Validation
     if (!formName.trim()) {
-      toast.error('Report name is required')
-      return
+      toast.error("Report name is required");
+      return;
     }
-    
+
     const recipientEmails = formRecipients
-      .split(',')
-      .map(email => email.trim())
-      .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    
+      .split(",")
+      .map((email) => email.trim())
+      .filter((email) => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+
     if (recipientEmails.length === 0) {
-      toast.error('At least one valid email recipient is required')
-      return
+      toast.error("At least one valid email recipient is required");
+      return;
     }
 
     const selectedSections = Object.entries(formSections)
       .filter(([_, selected]) => selected)
-      .map(([section]) => section)
+      .map(([section]) => section);
 
     if (selectedSections.length === 0) {
-      toast.error('At least one report section must be selected')
-      return
+      toast.error("At least one report section must be selected");
+      return;
     }
 
     const reportData = {
@@ -213,8 +219,8 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
       description: formDescription.trim(),
       frequency: formFrequency,
       time: formTime,
-      ...(formFrequency === 'weekly' && { dayOfWeek: formDayOfWeek }),
-      ...(formFrequency === 'monthly' && { dayOfMonth: formDayOfMonth }),
+      ...(formFrequency === "weekly" && { dayOfWeek: formDayOfWeek }),
+      ...(formFrequency === "monthly" && { dayOfMonth: formDayOfMonth }),
       recipients: recipientEmails,
       format: formFormat,
       sections: selectedSections,
@@ -223,84 +229,94 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
         formFrequency,
         formTime,
         formDayOfWeek,
-        formDayOfMonth
+        formDayOfMonth,
       ),
-    }
+    };
 
     if (editingReport) {
       // Update existing report
-      const updatedReports = reports.map(r =>
-        r.id === editingReport.id
-          ? { ...r, ...reportData }
-          : r
-      )
-      saveReports(updatedReports)
-      toast.success('Report updated successfully')
+      const updatedReports = reports.map((r) =>
+        r.id === editingReport.id ? { ...r, ...reportData } : r,
+      );
+      saveReports(updatedReports);
+      toast.success("Report updated successfully");
     } else {
       // Create new report
       const newReport: ScheduledReport = {
         id: `report-${Date.now()}`,
         ...reportData,
         createdAt: new Date().toISOString(),
-        createdBy: 'current-user', // TODO: Get from auth context
-      }
-      saveReports([...reports, newReport])
-      toast.success('Report scheduled successfully')
+        createdBy: "current-user", // TODO: Get from auth context
+      };
+      saveReports([...reports, newReport]);
+      toast.success("Report scheduled successfully");
     }
 
-    resetForm()
-    setShowCreateModal(false)
-  }
+    resetForm();
+    setShowCreateModal(false);
+  };
 
   // Toggle report active status
   const toggleReportStatus = (reportId: string) => {
-    const updatedReports = reports.map(r =>
-      r.id === reportId ? { ...r, isActive: !r.isActive } : r
-    )
-    saveReports(updatedReports)
+    const updatedReports = reports.map((r) =>
+      r.id === reportId ? { ...r, isActive: !r.isActive } : r,
+    );
+    saveReports(updatedReports);
     toast.success(
-      updatedReports.find(r => r.id === reportId)?.isActive
-        ? 'Report activated'
-        : 'Report paused'
-    )
-  }
+      updatedReports.find((r) => r.id === reportId)?.isActive
+        ? "Report activated"
+        : "Report paused",
+    );
+  };
 
   // Delete report
   const handleDeleteReport = (reportId: string) => {
-    const updatedReports = reports.filter(r => r.id !== reportId)
-    saveReports(updatedReports)
-    toast.success('Report deleted')
-  }
+    const updatedReports = reports.filter((r) => r.id !== reportId);
+    saveReports(updatedReports);
+    toast.success("Report deleted");
+  };
 
   // Run report now
   const handleRunNow = (report: ScheduledReport) => {
-    toast.info('Generating report...', {
-      description: 'This will be sent to all recipients shortly',
-    })
+    toast.info("Generating report...", {
+      description: "This will be sent to all recipients shortly",
+    });
     // TODO: Implement actual report generation and sending
-    const updatedReports = reports.map(r =>
-      r.id === report.id
-        ? { ...r, lastRun: new Date().toISOString() }
-        : r
-    )
-    saveReports(updatedReports)
+    const updatedReports = reports.map((r) =>
+      r.id === report.id ? { ...r, lastRun: new Date().toISOString() } : r,
+    );
+    saveReports(updatedReports);
     setTimeout(() => {
-      toast.success('Report sent successfully')
-    }, 2000)
-  }
+      toast.success("Report sent successfully");
+    }, 2000);
+  };
 
   // Get frequency display text
   const getFrequencyDisplay = (report: ScheduledReport): string => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    if (report.frequency === 'daily') {
-      return `Daily at ${report.time}`
-    } else if (report.frequency === 'weekly' && report.dayOfWeek !== undefined) {
-      return `Every ${days[report.dayOfWeek]} at ${report.time}`
-    } else if (report.frequency === 'monthly' && report.dayOfMonth !== undefined) {
-      return `Monthly on day ${report.dayOfMonth} at ${report.time}`
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    if (report.frequency === "daily") {
+      return `Daily at ${report.time}`;
+    } else if (
+      report.frequency === "weekly" &&
+      report.dayOfWeek !== undefined
+    ) {
+      return `Every ${days[report.dayOfWeek]} at ${report.time}`;
+    } else if (
+      report.frequency === "monthly" &&
+      report.dayOfMonth !== undefined
+    ) {
+      return `Monthly on day ${report.dayOfMonth} at ${report.time}`;
     }
-    return report.frequency
-  }
+    return report.frequency;
+  };
 
   return (
     <>
@@ -320,12 +336,13 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
             {/* Header Actions */}
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {reports.length} scheduled {reports.length === 1 ? 'report' : 'reports'}
+                {reports.length} scheduled{" "}
+                {reports.length === 1 ? "report" : "reports"}
               </div>
               <Button
                 onClick={() => {
-                  resetForm()
-                  setShowCreateModal(true)
+                  resetForm();
+                  setShowCreateModal(true);
                 }}
                 className="gap-2"
               >
@@ -339,14 +356,17 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
               {reports.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-semibold mb-2">No scheduled reports yet</h3>
+                  <h3 className="font-semibold mb-2">
+                    No scheduled reports yet
+                  </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Create your first automated report to receive regular analytics updates
+                    Create your first automated report to receive regular
+                    analytics updates
                   </p>
                   <Button
                     onClick={() => {
-                      resetForm()
-                      setShowCreateModal(true)
+                      resetForm();
+                      setShowCreateModal(true);
                     }}
                     variant="outline"
                     className="gap-2"
@@ -358,17 +378,26 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
               ) : (
                 <div className="space-y-3 pr-4">
                   {reports.map((report) => (
-                    <Card key={report.id} className={cn(
-                      "transition-all",
-                      !report.isActive && "opacity-60"
-                    )}>
+                    <Card
+                      key={report.id}
+                      className={cn(
+                        "transition-all",
+                        !report.isActive && "opacity-60",
+                      )}
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <CardTitle className="text-base">{report.name}</CardTitle>
-                              <Badge variant={report.isActive ? "default" : "secondary"}>
-                                {report.isActive ? 'Active' : 'Paused'}
+                              <CardTitle className="text-base">
+                                {report.name}
+                              </CardTitle>
+                              <Badge
+                                variant={
+                                  report.isActive ? "default" : "secondary"
+                                }
+                              >
+                                {report.isActive ? "Active" : "Paused"}
                               </Badge>
                               <Badge variant="outline" className="gap-1">
                                 <FileText className="w-3 h-3" />
@@ -430,7 +459,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Users className="w-4 h-4" />
-                            {report.recipients.length} {report.recipients.length === 1 ? 'recipient' : 'recipients'}
+                            {report.recipients.length}{" "}
+                            {report.recipients.length === 1
+                              ? "recipient"
+                              : "recipients"}
                           </div>
                           {report.nextRun && (
                             <div className="flex items-center gap-2 text-muted-foreground">
@@ -447,7 +479,11 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                         </div>
                         <div className="flex flex-wrap gap-1 mt-3">
                           {report.sections.map((section) => (
-                            <Badge key={section} variant="secondary" className="text-xs">
+                            <Badge
+                              key={section}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               {section}
                             </Badge>
                           ))}
@@ -474,16 +510,21 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
       </Dialog>
 
       {/* Create/Edit Report Modal */}
-      <Dialog open={showCreateModal} onOpenChange={(open) => {
-        if (!open) {
-          resetForm()
-        }
-        setShowCreateModal(open)
-      }}>
+      <Dialog
+        open={showCreateModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            resetForm();
+          }
+          setShowCreateModal(open);
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>
-              {editingReport ? 'Edit Report Schedule' : 'Create Report Schedule'}
+              {editingReport
+                ? "Edit Report Schedule"
+                : "Create Report Schedule"}
             </DialogTitle>
             <DialogDescription>
               Configure automated analytics report delivery
@@ -521,11 +562,14 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
               {/* Schedule */}
               <div className="space-y-4">
                 <h4 className="font-medium">Schedule</h4>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="frequency">Frequency *</Label>
-                    <Select value={formFrequency} onValueChange={(value: any) => setFormFrequency(value)}>
+                    <Select
+                      value={formFrequency}
+                      onValueChange={(value: any) => setFormFrequency(value)}
+                    >
                       <SelectTrigger id="frequency">
                         <SelectValue />
                       </SelectTrigger>
@@ -548,10 +592,15 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                   </div>
                 </div>
 
-                {formFrequency === 'weekly' && (
+                {formFrequency === "weekly" && (
                   <div className="space-y-2">
                     <Label htmlFor="day-of-week">Day of Week *</Label>
-                    <Select value={formDayOfWeek.toString()} onValueChange={(value) => setFormDayOfWeek(parseInt(value))}>
+                    <Select
+                      value={formDayOfWeek.toString()}
+                      onValueChange={(value) =>
+                        setFormDayOfWeek(Number.parseInt(value))
+                      }
+                    >
                       <SelectTrigger id="day-of-week">
                         <SelectValue />
                       </SelectTrigger>
@@ -568,19 +617,26 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                   </div>
                 )}
 
-                {formFrequency === 'monthly' && (
+                {formFrequency === "monthly" && (
                   <div className="space-y-2">
                     <Label htmlFor="day-of-month">Day of Month *</Label>
-                    <Select value={formDayOfMonth.toString()} onValueChange={(value) => setFormDayOfMonth(parseInt(value))}>
+                    <Select
+                      value={formDayOfMonth.toString()}
+                      onValueChange={(value) =>
+                        setFormDayOfMonth(Number.parseInt(value))
+                      }
+                    >
                       <SelectTrigger id="day-of-month">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                          <SelectItem key={day} value={day.toString()}>
-                            {day}
-                          </SelectItem>
-                        ))}
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                          (day) => (
+                            <SelectItem key={day} value={day.toString()}>
+                              {day}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -609,7 +665,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
               {/* Format */}
               <div className="space-y-2">
                 <Label htmlFor="format">Export Format *</Label>
-                <Select value={formFormat} onValueChange={(value: any) => setFormFormat(value)}>
+                <Select
+                  value={formFormat}
+                  onValueChange={(value: any) => setFormFormat(value)}
+                >
                   <SelectTrigger id="format">
                     <SelectValue />
                   </SelectTrigger>
@@ -626,11 +685,14 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
               {/* Sections */}
               <div className="space-y-4">
                 <Label>Report Sections *</Label>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="section-overview" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="section-overview"
+                        className="font-normal cursor-pointer"
+                      >
                         Overview & Key Metrics
                       </Label>
                       <p className="text-xs text-muted-foreground">
@@ -648,7 +710,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="section-projects" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="section-projects"
+                        className="font-normal cursor-pointer"
+                      >
                         Project Health
                       </Label>
                       <p className="text-xs text-muted-foreground">
@@ -666,7 +731,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="section-team" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="section-team"
+                        className="font-normal cursor-pointer"
+                      >
                         Team Performance
                       </Label>
                       <p className="text-xs text-muted-foreground">
@@ -684,7 +752,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="section-time" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="section-time"
+                        className="font-normal cursor-pointer"
+                      >
                         Time Tracking
                       </Label>
                       <p className="text-xs text-muted-foreground">
@@ -702,7 +773,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="section-insights" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="section-insights"
+                        className="font-normal cursor-pointer"
+                      >
                         AI Insights & Predictions
                       </Label>
                       <p className="text-xs text-muted-foreground">
@@ -744,8 +818,8 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
             <Button
               variant="outline"
               onClick={() => {
-                resetForm()
-                setShowCreateModal(false)
+                resetForm();
+                setShowCreateModal(false);
               }}
             >
               <X className="w-4 h-4 mr-2" />
@@ -753,12 +827,11 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
             </Button>
             <Button onClick={handleSaveReport}>
               <Save className="w-4 h-4 mr-2" />
-              {editingReport ? 'Update Report' : 'Create Report'}
+              {editingReport ? "Update Report" : "Create Report"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
-

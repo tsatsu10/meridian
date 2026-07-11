@@ -26,4 +26,4 @@ function usePinNotification() {
   });
 }
 
-export default usePinNotification; 
+export default usePinNotification;

@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +19,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, Tag, Repeat, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Users,
+  Tag,
+  Repeat,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useCreateEvent } from "@/hooks/mutations/calendar/use-create-event";
 import useWorkspaceStore from "@/store/workspace";
@@ -29,14 +43,22 @@ interface CreateEventModalProps {
 interface EventFormData {
   title: string;
   description: string;
-  type: 'meeting' | 'deadline' | 'time-off' | 'workload' | 'milestone';
+  type: "meeting" | "deadline" | "time-off" | "workload" | "milestone";
   date: string;
   time: string;
   duration: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: "low" | "medium" | "high" | "urgent";
   attendees: string[];
   estimatedHours: number;
-  recurring: 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+  recurring:
+    | "none"
+    | "daily"
+    | "weekly"
+    | "biweekly"
+    | "monthly"
+    | "quarterly"
+    | "yearly"
+    | "custom";
   reminderMinutes: number;
 }
 
@@ -47,29 +69,39 @@ interface Team {
 }
 
 const eventTypes = [
-  { value: 'meeting', label: 'Meeting', icon: Users, color: 'bg-blue-500' },
-  { value: 'deadline', label: 'Deadline', icon: AlertCircle, color: 'bg-red-500' },
-  { value: 'time-off', label: 'Time Off', icon: Calendar, color: 'bg-green-500' },
-  { value: 'workload', label: 'Workload', icon: Clock, color: 'bg-orange-500' },
-  { value: 'milestone', label: 'Milestone', icon: Tag, color: 'bg-purple-500' },
+  { value: "meeting", label: "Meeting", icon: Users, color: "bg-blue-500" },
+  {
+    value: "deadline",
+    label: "Deadline",
+    icon: AlertCircle,
+    color: "bg-red-500",
+  },
+  {
+    value: "time-off",
+    label: "Time Off",
+    icon: Calendar,
+    color: "bg-green-500",
+  },
+  { value: "workload", label: "Workload", icon: Clock, color: "bg-orange-500" },
+  { value: "milestone", label: "Milestone", icon: Tag, color: "bg-purple-500" },
 ];
 
 const priorityOptions = [
-  { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-800' },
-  { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
-  { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' },
+  { value: "low", label: "Low", color: "bg-gray-100 text-gray-800" },
+  { value: "medium", label: "Medium", color: "bg-yellow-100 text-yellow-800" },
+  { value: "high", label: "High", color: "bg-orange-100 text-orange-800" },
+  { value: "urgent", label: "Urgent", color: "bg-red-100 text-red-800" },
 ];
 
 const recurringTypes = [
-  { value: 'none', label: 'No Repeat' },
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'biweekly', label: 'Every 2 weeks' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'yearly', label: 'Yearly' },
-  { value: 'custom', label: 'Custom...' },
+  { value: "none", label: "No Repeat" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "biweekly", label: "Every 2 weeks" },
+  { value: "monthly", label: "Monthly" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "yearly", label: "Yearly" },
+  { value: "custom", label: "Custom..." },
 ];
 
 export default function CreateEventModal({
@@ -81,23 +113,25 @@ export default function CreateEventModal({
 }: CreateEventModalProps) {
   const workspace = useWorkspaceStore((state) => state.workspace);
   const createEvent = useCreateEvent();
-  
+
   const [formData, setFormData] = useState<EventFormData>({
-    title: '',
-    description: '',
-    type: 'meeting',
-    date: selectedDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-    time: '09:00',
-    duration: '60',
-    priority: 'medium',
+    title: "",
+    description: "",
+    type: "meeting",
+    date:
+      selectedDate?.toISOString().split("T")[0] ||
+      new Date().toISOString().split("T")[0],
+    time: "09:00",
+    duration: "60",
+    priority: "medium",
     attendees: [],
     estimatedHours: 1,
-    recurring: 'none',
+    recurring: "none",
     reminderMinutes: 15,
   });
 
   const [recurringOptions, setRecurringOptions] = useState({
-    endDate: '',
+    endDate: "",
     occurrences: 10,
     interval: 1,
     weekdays: [] as string[],
@@ -109,19 +143,19 @@ export default function CreateEventModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = "Title is required";
     }
 
     if (!formData.date) {
-      newErrors.date = 'Date is required';
+      newErrors.date = "Date is required";
     }
 
     if (!formData.time) {
-      newErrors.time = 'Time is required';
+      newErrors.time = "Time is required";
     }
 
     if (formData.estimatedHours <= 0) {
-      newErrors.estimatedHours = 'Estimated hours must be greater than 0';
+      newErrors.estimatedHours = "Estimated hours must be greater than 0";
     }
 
     setErrors(newErrors);
@@ -130,20 +164,22 @@ export default function CreateEventModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     if (!selectedTeam?.id || !workspace?.id) {
-      console.error('Missing team or workspace ID');
+      console.error("Missing team or workspace ID");
       return;
     }
 
     try {
       // Prepare event data
       const startDateTime = new Date(`${formData.date}T${formData.time}`);
-      const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.duration) * 60000);
+      const endDateTime = new Date(
+        startDateTime.getTime() + Number.parseInt(formData.duration) * 60000,
+      );
 
       const eventData = {
         title: formData.title,
@@ -158,14 +194,17 @@ export default function CreateEventModal({
         estimatedHours: formData.estimatedHours,
         attendees: formData.attendees,
         reminderMinutes: formData.reminderMinutes,
-        isRecurring: formData.recurring !== 'none',
-        recurringPattern: formData.recurring !== 'none' ? {
-          frequency: formData.recurring,
-          interval: recurringOptions.interval,
-          endDate: recurringOptions.endDate || undefined,
-          occurrences: recurringOptions.occurrences,
-          weekdays: recurringOptions.weekdays.map(Number),
-        } : undefined,
+        isRecurring: formData.recurring !== "none",
+        recurringPattern:
+          formData.recurring !== "none"
+            ? {
+                frequency: formData.recurring,
+                interval: recurringOptions.interval,
+                endDate: recurringOptions.endDate || undefined,
+                occurrences: recurringOptions.occurrences,
+                weekdays: recurringOptions.weekdays.map(Number),
+              }
+            : undefined,
       };
 
       // Call the API
@@ -176,49 +215,49 @@ export default function CreateEventModal({
 
       // Call the parent handler (for any additional logic)
       onCreateEvent?.(formData);
-      
+
       // Close modal
       onClose();
-      
+
       // Reset form
       setFormData({
-        title: '',
-        description: '',
-        type: 'meeting',
-        date: new Date().toISOString().split('T')[0],
-        time: '09:00',
-        duration: '60',
-        priority: 'medium',
+        title: "",
+        description: "",
+        type: "meeting",
+        date: new Date().toISOString().split("T")[0],
+        time: "09:00",
+        duration: "60",
+        priority: "medium",
         attendees: [],
         estimatedHours: 1,
-        recurring: 'none',
+        recurring: "none",
         reminderMinutes: 15,
       });
       setErrors({});
     } catch (error) {
-      console.error('Failed to create event:', error);
+      console.error("Failed to create event:", error);
       // Error is already handled by the mutation hook with toast
     }
   };
 
   const handleAttendeeAdd = (attendee: string) => {
     if (attendee && !formData.attendees.includes(attendee)) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        attendees: [...prev.attendees, attendee]
+        attendees: [...prev.attendees, attendee],
       }));
     }
   };
 
   const handleAttendeeRemove = (attendee: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      attendees: prev.attendees.filter(a => a !== attendee)
+      attendees: prev.attendees.filter((a) => a !== attendee),
     }));
   };
 
-  void (eventTypes.find(type => type.value === formData.type));
-  void (priorityOptions.find(p => p.value === formData.priority));
+  void eventTypes.find((type) => type.value === formData.type);
+  void priorityOptions.find((p) => p.value === formData.priority);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -229,7 +268,7 @@ export default function CreateEventModal({
             <span>Create New Event</span>
           </DialogTitle>
           <DialogDescription>
-            Schedule a new event for {selectedTeam?.name || 'your team'}
+            Schedule a new event for {selectedTeam?.name || "your team"}
           </DialogDescription>
         </DialogHeader>
 
@@ -237,17 +276,21 @@ export default function CreateEventModal({
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="font-medium text-sm">Basic Information</h3>
-            
+
             <div className="space-y-2">
               <Label htmlFor="title">Event Title *</Label>
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, title: e.target.value }))
+                }
                 placeholder="Enter event title..."
                 className={cn(errors.title && "border-red-500")}
               />
-              {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
+              {errors.title && (
+                <p className="text-sm text-red-500">{errors.title}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -255,7 +298,12 @@ export default function CreateEventModal({
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Add event description..."
                 rows={3}
               />
@@ -264,9 +312,11 @@ export default function CreateEventModal({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Event Type *</Label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, type: value }))}
+                <Select
+                  value={formData.type}
+                  onValueChange={(value: any) =>
+                    setFormData((prev) => ({ ...prev, type: value }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -277,7 +327,9 @@ export default function CreateEventModal({
                       return (
                         <SelectItem key={type.value} value={type.value}>
                           <div className="flex items-center space-x-2">
-                            <div className={cn("w-3 h-3 rounded-full", type.color)} />
+                            <div
+                              className={cn("w-3 h-3 rounded-full", type.color)}
+                            />
                             <IconComponent className="h-4 w-4" />
                             <span>{type.label}</span>
                           </div>
@@ -290,9 +342,11 @@ export default function CreateEventModal({
 
               <div className="space-y-2">
                 <Label>Priority *</Label>
-                <Select 
-                  value={formData.priority} 
-                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, priority: value }))}
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value: any) =>
+                    setFormData((prev) => ({ ...prev, priority: value }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -300,7 +354,9 @@ export default function CreateEventModal({
                   <SelectContent>
                     {priorityOptions.map((priority) => (
                       <SelectItem key={priority.value} value={priority.value}>
-                        <Badge className={priority.color}>{priority.label}</Badge>
+                        <Badge className={priority.color}>
+                          {priority.label}
+                        </Badge>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -312,7 +368,7 @@ export default function CreateEventModal({
           {/* Date and Time */}
           <div className="space-y-4">
             <h3 className="font-medium text-sm">Date & Time</h3>
-            
+
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date">Date *</Label>
@@ -320,10 +376,14 @@ export default function CreateEventModal({
                   id="date"
                   type="date"
                   value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, date: e.target.value }))
+                  }
                   className={cn(errors.date && "border-red-500")}
                 />
-                {errors.date && <p className="text-sm text-red-500">{errors.date}</p>}
+                {errors.date && (
+                  <p className="text-sm text-red-500">{errors.date}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -332,10 +392,14 @@ export default function CreateEventModal({
                   id="time"
                   type="time"
                   value={formData.time}
-                  onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, time: e.target.value }))
+                  }
                   className={cn(errors.time && "border-red-500")}
                 />
-                {errors.time && <p className="text-sm text-red-500">{errors.time}</p>}
+                {errors.time && (
+                  <p className="text-sm text-red-500">{errors.time}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -344,7 +408,12 @@ export default function CreateEventModal({
                   id="duration"
                   type="number"
                   value={formData.duration}
-                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      duration: e.target.value,
+                    }))
+                  }
                   placeholder="60"
                   min="15"
                   step="15"
@@ -359,20 +428,31 @@ export default function CreateEventModal({
                   id="estimatedHours"
                   type="number"
                   value={formData.estimatedHours}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: Number(e.target.value) }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      estimatedHours: Number(e.target.value),
+                    }))
+                  }
                   placeholder="1"
                   min="0.5"
                   step="0.5"
                   className={cn(errors.estimatedHours && "border-red-500")}
                 />
-                {errors.estimatedHours && <p className="text-sm text-red-500">{errors.estimatedHours}</p>}
+                {errors.estimatedHours && (
+                  <p className="text-sm text-red-500">
+                    {errors.estimatedHours}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>Recurring</Label>
-                <Select 
-                  value={formData.recurring} 
-                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, recurring: value }))}
+                <Select
+                  value={formData.recurring}
+                  onValueChange={(value: any) =>
+                    setFormData((prev) => ({ ...prev, recurring: value }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -392,54 +472,81 @@ export default function CreateEventModal({
             </div>
 
             {/* Recurring Event Options */}
-            {formData.recurring !== 'none' && (
+            {formData.recurring !== "none" && (
               <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                 <h4 className="font-medium text-sm">Recurring Event Options</h4>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="recurring-end-date">End Date (optional)</Label>
+                    <Label htmlFor="recurring-end-date">
+                      End Date (optional)
+                    </Label>
                     <Input
                       id="recurring-end-date"
                       type="date"
                       value={recurringOptions.endDate}
-                      onChange={(e) => setRecurringOptions(prev => ({ ...prev, endDate: e.target.value }))}
+                      onChange={(e) =>
+                        setRecurringOptions((prev) => ({
+                          ...prev,
+                          endDate: e.target.value,
+                        }))
+                      }
                       min={formData.date}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="recurring-occurrences">Number of Occurrences</Label>
+                    <Label htmlFor="recurring-occurrences">
+                      Number of Occurrences
+                    </Label>
                     <Input
                       id="recurring-occurrences"
                       type="number"
                       value={recurringOptions.occurrences}
-                      onChange={(e) => setRecurringOptions(prev => ({ ...prev, occurrences: Number(e.target.value) }))}
+                      onChange={(e) =>
+                        setRecurringOptions((prev) => ({
+                          ...prev,
+                          occurrences: Number(e.target.value),
+                        }))
+                      }
                       min="1"
                       max="365"
                     />
                   </div>
                 </div>
 
-                {formData.recurring === 'weekly' && (
+                {formData.recurring === "weekly" && (
                   <div className="space-y-2">
                     <Label>Repeat on Days</Label>
                     <div className="flex flex-wrap gap-2">
-                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                        <label key={day} className="flex items-center space-x-1 cursor-pointer">
+                      {[
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday",
+                      ].map((day) => (
+                        <label
+                          key={day}
+                          className="flex items-center space-x-1 cursor-pointer"
+                        >
                           <input
                             type="checkbox"
                             checked={recurringOptions.weekdays.includes(day)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setRecurringOptions(prev => ({ 
-                                  ...prev, 
-                                  weekdays: [...prev.weekdays, day] 
+                                setRecurringOptions((prev) => ({
+                                  ...prev,
+                                  weekdays: [...prev.weekdays, day],
                                 }));
                               } else {
-                                setRecurringOptions(prev => ({ 
-                                  ...prev, 
-                                  weekdays: prev.weekdays.filter(d => d !== day) 
+                                setRecurringOptions((prev) => ({
+                                  ...prev,
+                                  weekdays: prev.weekdays.filter(
+                                    (d) => d !== day,
+                                  ),
                                 }));
                               }
                             }}
@@ -452,7 +559,7 @@ export default function CreateEventModal({
                   </div>
                 )}
 
-                {formData.recurring === 'custom' && (
+                {formData.recurring === "custom" && (
                   <div className="space-y-2">
                     <Label htmlFor="recurring-interval">Repeat every</Label>
                     <div className="flex items-center space-x-2">
@@ -460,7 +567,12 @@ export default function CreateEventModal({
                         id="recurring-interval"
                         type="number"
                         value={recurringOptions.interval}
-                        onChange={(e) => setRecurringOptions(prev => ({ ...prev, interval: Number(e.target.value) }))}
+                        onChange={(e) =>
+                          setRecurringOptions((prev) => ({
+                            ...prev,
+                            interval: Number(e.target.value),
+                          }))
+                        }
                         min="1"
                         max="30"
                         className="w-20"
@@ -481,12 +593,12 @@ export default function CreateEventModal({
                 )}
 
                 <div className="text-sm text-muted-foreground p-2 bg-background rounded">
-                  <strong>Preview:</strong> { 
-                    `Repeats ${formData.recurring}${
-                      recurringOptions.endDate ? ` until ${new Date(recurringOptions.endDate).toLocaleDateString()}` :
-                      ` for ${recurringOptions.occurrences} occurrences`
-                    }`
-                  }
+                  <strong>Preview:</strong>{" "}
+                  {`Repeats ${formData.recurring}${
+                    recurringOptions.endDate
+                      ? ` until ${new Date(recurringOptions.endDate).toLocaleDateString()}`
+                      : ` for ${recurringOptions.occurrences} occurrences`
+                  }`}
                 </div>
               </div>
             )}
@@ -496,12 +608,15 @@ export default function CreateEventModal({
           {selectedTeam && (
             <div className="space-y-4">
               <h3 className="font-medium text-sm">Attendees</h3>
-              
+
               <div className="space-y-2">
                 <Label>Team Members</Label>
                 <div className="space-y-2">
                   {selectedTeam.members.map((member) => (
-                    <div key={member.id} className="flex items-center space-x-2">
+                    <div
+                      key={member.id}
+                      className="flex items-center space-x-2"
+                    >
                       <input
                         type="checkbox"
                         id={`member-${member.id}`}
@@ -515,7 +630,10 @@ export default function CreateEventModal({
                         }}
                         className="rounded"
                       />
-                      <Label htmlFor={`member-${member.id}`} className="font-normal">
+                      <Label
+                        htmlFor={`member-${member.id}`}
+                        className="font-normal"
+                      >
                         {member.name} ({member.role})
                       </Label>
                     </div>
@@ -525,10 +643,12 @@ export default function CreateEventModal({
                 {formData.attendees.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {formData.attendees.map((attendeeId) => {
-                      const member = selectedTeam.members.find(m => m.id === attendeeId);
+                      const member = selectedTeam.members.find(
+                        (m) => m.id === attendeeId,
+                      );
                       return (
-                        <Badge 
-                          key={attendeeId} 
+                        <Badge
+                          key={attendeeId}
                           variant="secondary"
                           className="cursor-pointer"
                           onClick={() => handleAttendeeRemove(attendeeId)}
@@ -546,12 +666,17 @@ export default function CreateEventModal({
           {/* Reminder */}
           <div className="space-y-4">
             <h3 className="font-medium text-sm">Reminder</h3>
-            
+
             <div className="space-y-2">
               <Label htmlFor="reminder">Remind me</Label>
-              <Select 
-                value={formData.reminderMinutes.toString()} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, reminderMinutes: Number(value) }))}
+              <Select
+                value={formData.reminderMinutes.toString()}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    reminderMinutes: Number(value),
+                  }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -570,12 +695,19 @@ export default function CreateEventModal({
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose} disabled={createEvent.isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={createEvent.isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={createEvent.isPending}>
-              {createEvent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {createEvent.isPending ? 'Creating...' : 'Create Event'}
+              {createEvent.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {createEvent.isPending ? "Creating..." : "Create Event"}
             </Button>
           </div>
         </form>

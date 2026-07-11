@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -24,26 +30,26 @@ interface EditEventModalProps {
 }
 
 const eventTypes = [
-  { value: 'meeting', label: 'Meeting' },
-  { value: 'deadline', label: 'Deadline' },
-  { value: 'time-off', label: 'Time Off' },
-  { value: 'workload', label: 'Workload' },
-  { value: 'milestone', label: 'Milestone' },
-  { value: 'other', label: 'Other' },
+  { value: "meeting", label: "Meeting" },
+  { value: "deadline", label: "Deadline" },
+  { value: "time-off", label: "Time Off" },
+  { value: "workload", label: "Workload" },
+  { value: "milestone", label: "Milestone" },
+  { value: "other", label: "Other" },
 ];
 
 const priorityOptions = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "urgent", label: "Urgent" },
 ];
 
 const statusOptions = [
-  { value: 'scheduled', label: 'Scheduled' },
-  { value: 'in-progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: "scheduled", label: "Scheduled" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 export default function EditEventModal({
@@ -51,20 +57,24 @@ export default function EditEventModal({
   onClose,
   eventId,
 }: EditEventModalProps) {
-  const { data, isLoading: isLoadingEvent, error } = useGetEvent(eventId, { enabled: open });
+  const {
+    data,
+    isLoading: isLoadingEvent,
+    error,
+  } = useGetEvent(eventId, { enabled: open });
   const updateEvent = useUpdateEvent();
-  
+
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    type: 'meeting',
-    status: 'scheduled',
-    date: '',
-    time: '',
-    duration: '60',
-    priority: 'medium',
-    location: '',
-    meetingLink: '',
+    title: "",
+    description: "",
+    type: "meeting",
+    status: "scheduled",
+    date: "",
+    time: "",
+    duration: "60",
+    priority: "medium",
+    location: "",
+    meetingLink: "",
     estimatedHours: 1,
   });
 
@@ -75,21 +85,21 @@ export default function EditEventModal({
     if (event) {
       const startDate = new Date(event.startTime);
       const endDate = event.endTime ? new Date(event.endTime) : null;
-      const duration = endDate 
-        ? Math.round((endDate.getTime() - startDate.getTime()) / 60000) 
+      const duration = endDate
+        ? Math.round((endDate.getTime() - startDate.getTime()) / 60000)
         : 60;
 
       setFormData({
-        title: event.title || '',
-        description: event.description || '',
-        type: event.type || 'meeting',
-        status: event.status || 'scheduled',
-        date: format(startDate, 'yyyy-MM-dd'),
-        time: format(startDate, 'HH:mm'),
+        title: event.title || "",
+        description: event.description || "",
+        type: event.type || "meeting",
+        status: event.status || "scheduled",
+        date: format(startDate, "yyyy-MM-dd"),
+        time: format(startDate, "HH:mm"),
         duration: String(duration),
-        priority: event.priority || 'medium',
-        location: event.location || '',
-        meetingLink: event.meetingLink || '',
+        priority: event.priority || "medium",
+        location: event.location || "",
+        meetingLink: event.meetingLink || "",
         estimatedHours: event.estimatedHours || 1,
       });
     }
@@ -104,7 +114,9 @@ export default function EditEventModal({
 
     try {
       const startDateTime = new Date(`${formData.date}T${formData.time}`);
-      const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.duration) * 60000);
+      const endDateTime = new Date(
+        startDateTime.getTime() + Number.parseInt(formData.duration) * 60000,
+      );
 
       await updateEvent.mutateAsync({
         eventId,
@@ -124,7 +136,7 @@ export default function EditEventModal({
 
       onClose();
     } catch (error) {
-      console.error('Failed to update event:', error);
+      console.error("Failed to update event:", error);
     }
   };
 
@@ -146,7 +158,9 @@ export default function EditEventModal({
         <DialogContent className="sm:max-w-[500px]">
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
-            <p className="text-sm text-muted-foreground">Failed to load event</p>
+            <p className="text-sm text-muted-foreground">
+              Failed to load event
+            </p>
             <Button onClick={onClose}>Close</Button>
           </div>
         </DialogContent>
@@ -171,7 +185,9 @@ export default function EditEventModal({
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               placeholder="Enter event title"
               required
             />
@@ -183,7 +199,12 @@ export default function EditEventModal({
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               placeholder="Add event description..."
               rows={3}
             />
@@ -195,13 +216,15 @@ export default function EditEventModal({
               <Label htmlFor="type">Type</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, type: value }))
+                }
               >
                 <SelectTrigger id="type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {eventTypes.map(type => (
+                  {eventTypes.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
@@ -214,13 +237,15 @@ export default function EditEventModal({
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, status: value }))
+                }
               >
                 <SelectTrigger id="status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {statusOptions.map(status => (
+                  {statusOptions.map((status) => (
                     <SelectItem key={status.value} value={status.value}>
                       {status.label}
                     </SelectItem>
@@ -233,13 +258,15 @@ export default function EditEventModal({
               <Label htmlFor="priority">Priority</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, priority: value }))
+                }
               >
                 <SelectTrigger id="priority">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {priorityOptions.map(priority => (
+                  {priorityOptions.map((priority) => (
                     <SelectItem key={priority.value} value={priority.value}>
                       {priority.label}
                     </SelectItem>
@@ -257,7 +284,9 @@ export default function EditEventModal({
                 id="date"
                 type="date"
                 value={formData.date}
-                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, date: e.target.value }))
+                }
                 required
               />
             </div>
@@ -268,7 +297,9 @@ export default function EditEventModal({
                 id="time"
                 type="time"
                 value={formData.time}
-                onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, time: e.target.value }))
+                }
                 required
               />
             </div>
@@ -279,7 +310,9 @@ export default function EditEventModal({
                 id="duration"
                 type="number"
                 value={formData.duration}
-                onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, duration: e.target.value }))
+                }
                 min="15"
                 step="15"
               />
@@ -292,7 +325,9 @@ export default function EditEventModal({
             <Input
               id="location"
               value={formData.location}
-              onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, location: e.target.value }))
+              }
               placeholder="Physical location or address"
             />
           </div>
@@ -304,7 +339,12 @@ export default function EditEventModal({
               id="meetingLink"
               type="url"
               value={formData.meetingLink}
-              onChange={(e) => setFormData(prev => ({ ...prev, meetingLink: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  meetingLink: e.target.value,
+                }))
+              }
               placeholder="https://meet.google.com/..."
             />
           </div>
@@ -316,7 +356,12 @@ export default function EditEventModal({
               id="estimatedHours"
               type="number"
               value={formData.estimatedHours}
-              onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: Number(e.target.value) }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  estimatedHours: Number(e.target.value),
+                }))
+              }
               min="0"
               step="0.5"
             />
@@ -324,17 +369,19 @@ export default function EditEventModal({
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onClose}
               disabled={updateEvent.isPending}
             >
               Cancel
             </Button>
             <Button type="submit" disabled={updateEvent.isPending}>
-              {updateEvent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {updateEvent.isPending ? 'Saving...' : 'Save Changes'}
+              {updateEvent.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {updateEvent.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
@@ -342,4 +389,3 @@ export default function EditEventModal({
     </Dialog>
   );
 }
-

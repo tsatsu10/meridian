@@ -1,6 +1,6 @@
 /**
  * 🎨 Dashboard Management Hook
- * 
+ *
  * Manages multiple dashboards per user with CRUD operations
  */
 
@@ -50,7 +50,7 @@ export const DASHBOARD_TEMPLATES: DashboardTemplate[] = [
     description: "Start from scratch and add your own widgets",
     icon: "Layout",
     widgets: [],
-    category: "general"
+    category: "general",
   },
   {
     id: "analytics",
@@ -61,30 +61,25 @@ export const DASHBOARD_TEMPLATES: DashboardTemplate[] = [
       "performance-metrics",
       "velocity-tracker",
       "time-tracking-summary",
-      "burndown-chart"
+      "burndown-chart",
     ],
-    category: "analytics"
+    category: "analytics",
   },
   {
     id: "team",
     name: "Team Dashboard",
     description: "Monitor team health, collaboration, and communication",
     icon: "Users",
-    widgets: [
-      "team-health-monitor",
-      "team-capacity-planner"
-    ],
-    category: "team"
+    widgets: ["team-health-monitor", "team-capacity-planner"],
+    category: "team",
   },
   {
     id: "personal",
     name: "Personal Dashboard",
     description: "Track your tasks and progress",
     icon: "User",
-    widgets: [
-      "my-tasks",
-    ],
-    category: "personal"
+    widgets: ["my-tasks"],
+    category: "personal",
   },
   {
     id: "project-manager",
@@ -97,9 +92,9 @@ export const DASHBOARD_TEMPLATES: DashboardTemplate[] = [
       "project-budget-tracker",
       "risk-monitor",
       "milestone-tracker",
-      "resource-allocation"
+      "resource-allocation",
     ],
-    category: "management"
+    category: "management",
   },
 ];
 
@@ -107,13 +102,17 @@ export function useDashboards() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { workspace } = useWorkspaceStore();
-  const [selectedDashboardId, setSelectedDashboardId] = useState<string | null>(null);
+  const [selectedDashboardId, setSelectedDashboardId] = useState<string | null>(
+    null,
+  );
 
   // Fetch user's dashboards
   const { data, isLoading, error } = useQuery({
-    queryKey: ['dashboards', user?.email, workspace?.id],
+    queryKey: ["dashboards", user?.email, workspace?.id],
     queryFn: async () => {
-      const response = await api.get(`/api/settings/dashboards/${user?.email}/${workspace?.id}`);
+      const response = await api.get(
+        `/api/settings/dashboards/${user?.email}/${workspace?.id}`,
+      );
       return response?.data || response;
     },
     enabled: !!user?.email && !!workspace?.id,
@@ -143,7 +142,8 @@ export function useDashboards() {
       : false;
 
     if (!exists) {
-      const fallback = dashboards.find((dashboard) => dashboard.isDefault) || dashboards[0];
+      const fallback =
+        dashboards.find((dashboard) => dashboard.isDefault) || dashboards[0];
       if (fallback && fallback.id !== selectedDashboardId) {
         setSelectedDashboardId(fallback.id);
       }
@@ -162,13 +162,13 @@ export function useDashboards() {
 
   // Create new dashboard
   const createMutation = useMutation({
-    mutationFn: async (params: { 
-      name: string; 
-      description?: string; 
+    mutationFn: async (params: {
+      name: string;
+      description?: string;
       templateId?: string;
       icon?: string;
     }) => {
-      const response = await api.post('/api/settings/dashboards', {
+      const response = await api.post("/api/settings/dashboards", {
         userId: user?.id,
         userEmail: user?.email,
         workspaceId: workspace?.id,
@@ -177,44 +177,55 @@ export function useDashboards() {
       return response?.data || response;
     },
     onSuccess: (result) => {
-      const createdDashboard = unwrapDashboardResponse(result) as Dashboard | undefined;
+      const createdDashboard = unwrapDashboardResponse(result) as
+        | Dashboard
+        | undefined;
       const createdId = createdDashboard?.id;
       if (createdId) {
         setSelectedDashboardId(createdId);
       }
       toast.success("Dashboard created successfully!");
-      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : "Failed to create dashboard");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create dashboard",
+      );
     },
   });
 
   // Update dashboard
   const updateMutation = useMutation({
-    mutationFn: async (params: { 
-      dashboardId: string; 
-      name?: string; 
+    mutationFn: async (params: {
+      dashboardId: string;
+      name?: string;
       description?: string;
       icon?: string;
       layout?: Record<string, unknown> | null;
     }) => {
-      const response = await api.put(`/api/settings/dashboards/${params.dashboardId}`, params);
+      const response = await api.put(
+        `/api/settings/dashboards/${params.dashboardId}`,
+        params,
+      );
       return response?.data || response;
     },
     onSuccess: () => {
       toast.success("Dashboard updated!");
-      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : "Failed to update dashboard");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update dashboard",
+      );
     },
   });
 
   // Delete dashboard
   const deleteMutation = useMutation({
     mutationFn: async (dashboardId: string) => {
-      const response = await api.delete(`/api/settings/dashboards/${dashboardId}`);
+      const response = await api.delete(
+        `/api/settings/dashboards/${dashboardId}`,
+      );
       return response?.data || response;
     },
     onSuccess: (_, dashboardId) => {
@@ -222,50 +233,68 @@ export function useDashboards() {
         setSelectedDashboardId(null);
       }
       toast.success("Dashboard deleted!");
-      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : "Failed to delete dashboard");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete dashboard",
+      );
     },
   });
 
   // Set default dashboard
   const setDefaultMutation = useMutation({
     mutationFn: async (dashboardId: string) => {
-      const response = await api.post(`/api/settings/dashboards/${dashboardId}/set-default`);
+      const response = await api.post(
+        `/api/settings/dashboards/${dashboardId}/set-default`,
+      );
       return response?.data || response;
     },
     onSuccess: (result) => {
-      const updatedDashboard = unwrapDashboardResponse(result) as Dashboard | undefined;
+      const updatedDashboard = unwrapDashboardResponse(result) as
+        | Dashboard
+        | undefined;
       const updatedId = updatedDashboard?.id;
       if (updatedId) {
         setSelectedDashboardId(updatedId);
       }
       toast.success("Default dashboard updated!");
-      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : "Failed to set default dashboard");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to set default dashboard",
+      );
     },
   });
 
   // Duplicate dashboard
   const duplicateMutation = useMutation({
     mutationFn: async (dashboardId: string) => {
-      const response = await api.post(`/api/settings/dashboards/${dashboardId}/duplicate`);
+      const response = await api.post(
+        `/api/settings/dashboards/${dashboardId}/duplicate`,
+      );
       return response?.data || response;
     },
     onSuccess: (result) => {
-      const duplicatedDashboard = unwrapDashboardResponse(result) as Dashboard | undefined;
+      const duplicatedDashboard = unwrapDashboardResponse(result) as
+        | Dashboard
+        | undefined;
       const duplicatedId = duplicatedDashboard?.id;
       if (duplicatedId) {
         setSelectedDashboardId(duplicatedId);
       }
       toast.success("Dashboard duplicated!");
-      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : "Failed to duplicate dashboard");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to duplicate dashboard",
+      );
     },
   });
 
@@ -287,4 +316,3 @@ export function useDashboards() {
     templates: DASHBOARD_TEMPLATES,
   };
 }
-

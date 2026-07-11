@@ -86,7 +86,9 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
             state.selectedProjectIds.size === projectIds.length &&
             projectIds.every((id) => state.selectedProjectIds.has(id));
 
-          const newSelected = allSelected ? new Set<string>() : new Set(projectIds);
+          const newSelected = allSelected
+            ? new Set<string>()
+            : new Set(projectIds);
 
           // Create history entry
           const newHistory = state.history.slice(0, state.historyIndex + 1);
@@ -254,7 +256,9 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
               state: {
                 ...parsed.state,
                 // Convert stored array back to Set
-                selectedProjectIds: new Set(parsed.state.selectedProjectIds || []),
+                selectedProjectIds: new Set(
+                  parsed.state.selectedProjectIds || [],
+                ),
                 history: parsed.state.history.map((h: any) => ({
                   ...h,
                   projectIds: new Set(h.projectIds || []),
@@ -273,7 +277,9 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
               state: {
                 ...value.state,
                 // Convert Set to array for storage
-                selectedProjectIds: Array.from(value.state.selectedProjectIds || []),
+                selectedProjectIds: Array.from(
+                  value.state.selectedProjectIds || [],
+                ),
                 history: value.state.history.map((h: any) => ({
                   ...h,
                   projectIds: Array.from(h.projectIds || []),
@@ -291,28 +297,34 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
       },
       merge: (persistedState, currentState) => {
         // Merge persisted state with current state, handling Set conversion
-        if (persistedState && typeof persistedState === "object" && "selectedProjectIds" in persistedState) {
+        if (
+          persistedState &&
+          typeof persistedState === "object" &&
+          "selectedProjectIds" in persistedState
+        ) {
           return {
             ...currentState,
             ...persistedState,
             selectedProjectIds: new Set(
               Array.isArray((persistedState as any).selectedProjectIds)
                 ? (persistedState as any).selectedProjectIds
-                : []
+                : [],
             ),
           };
         }
         return currentState;
       },
-    }
-  )
+    },
+  ),
 );
 
 /**
  * Hook to safely get selected IDs as array
  */
 export function useSelectedProjectIds(): string[] {
-  const selectedProjectIds = useBulkOperationsStore((state) => state.selectedProjectIds);
+  const selectedProjectIds = useBulkOperationsStore(
+    (state) => state.selectedProjectIds,
+  );
   return Array.from(selectedProjectIds);
 }
 
@@ -320,8 +332,12 @@ export function useSelectedProjectIds(): string[] {
  * Hook to get bulk operations stats
  */
 export function useBulkOperationsStats() {
-  const selectedCount = useBulkOperationsStore((state) => state.selectedProjectIds.size);
-  const operationInProgress = useBulkOperationsStore((state) => state.operationInProgress);
+  const selectedCount = useBulkOperationsStore(
+    (state) => state.selectedProjectIds.size,
+  );
+  const operationInProgress = useBulkOperationsStore(
+    (state) => state.operationInProgress,
+  );
   const canUndo = useBulkOperationsStore((state) => state.canUndo());
   const canRedo = useBulkOperationsStore((state) => state.canRedo());
 

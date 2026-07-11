@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Mail,
   Server,
@@ -12,17 +12,29 @@ import {
   RotateCcw,
   TestTube,
   Send,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -31,14 +43,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { useWorkspaceStore } from '@/store/workspace';
-import { API_BASE_URL } from '@/constants/urls';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { useWorkspaceStore } from "@/store/workspace";
+import { API_BASE_URL } from "@/constants/urls";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/email')({
+export const Route = createFileRoute("/dashboard/settings/email")({
   component: withErrorBoundary(EmailSettings, "Email Settings"),
 });
 
@@ -85,27 +97,30 @@ function EmailSettings() {
   // Fix: Use workspace directly instead of broken currentWorkspace getter
   const workspace = useWorkspaceStore((state) => state.workspace);
   const currentWorkspace = workspace;
-  
+
   const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState<Partial<EmailSettingsData>>({});
   const [testingConnection, setTestingConnection] = useState(false);
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
-  const [testEmail, setTestEmail] = useState('');
+  const [testEmail, setTestEmail] = useState("");
 
   // Fetch email settings
   const { data: settings, isLoading } = useQuery({
-    queryKey: ['email-settings', currentWorkspace?.id],
+    queryKey: ["email-settings", currentWorkspace?.id],
     queryFn: async () => {
-      if (!currentWorkspace) throw new Error('No workspace selected');
-      
-      const response = await fetch(`${API_BASE_URL}/settings/email/${currentWorkspace.id}`, {
-        credentials: 'include',
-      });
-      
+      if (!currentWorkspace) throw new Error("No workspace selected");
+
+      const response = await fetch(
+        `${API_BASE_URL}/settings/email/${currentWorkspace.id}`,
+        {
+          credentials: "include",
+        },
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to fetch email settings');
+        throw new Error("Failed to fetch email settings");
       }
-      
+
       const result = await response.json();
       return result.data as EmailSettingsData;
     },
@@ -121,25 +136,30 @@ function EmailSettings() {
   // Update settings mutation
   const updateSettingsMutation = useMutation({
     mutationFn: async (updates: Partial<EmailSettingsData>) => {
-      if (!currentWorkspace) throw new Error('No workspace selected');
-      
-      const response = await fetch(`${API_BASE_URL}/settings/email/${currentWorkspace.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(updates),
-      });
-      
+      if (!currentWorkspace) throw new Error("No workspace selected");
+
+      const response = await fetch(
+        `${API_BASE_URL}/settings/email/${currentWorkspace.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(updates),
+        },
+      );
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update settings');
+        throw new Error(error.error || "Failed to update settings");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-settings', currentWorkspace?.id] });
-      toast.success('Email settings updated successfully');
+      queryClient.invalidateQueries({
+        queryKey: ["email-settings", currentWorkspace?.id],
+      });
+      toast.success("Email settings updated successfully");
       setHasChanges(false);
     },
     onError: (error: Error) => {
@@ -148,7 +168,7 @@ function EmailSettings() {
   });
 
   const handleChange = (field: keyof EmailSettingsData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -160,34 +180,42 @@ function EmailSettings() {
     if (settings) {
       setFormData(settings);
       setHasChanges(false);
-      toast.info('Changes reset');
+      toast.info("Changes reset");
     }
   };
 
   const handleTestConnection = async () => {
-    if (!formData.smtpHost || !formData.smtpPort || !formData.smtpUsername || !formData.smtpPassword) {
-      toast.error('Please fill in all SMTP configuration fields');
+    if (
+      !formData.smtpHost ||
+      !formData.smtpPort ||
+      !formData.smtpUsername ||
+      !formData.smtpPassword
+    ) {
+      toast.error("Please fill in all SMTP configuration fields");
       return;
     }
 
     setTestingConnection(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/settings/email/test-connection`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          host: formData.smtpHost,
-          port: formData.smtpPort,
-          secure: formData.smtpSecure,
-          username: formData.smtpUsername,
-          password: formData.smtpPassword,
-          fromEmail: formData.smtpFromEmail,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/settings/email/test-connection`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            host: formData.smtpHost,
+            port: formData.smtpPort,
+            secure: formData.smtpSecure,
+            username: formData.smtpUsername,
+            password: formData.smtpPassword,
+            fromEmail: formData.smtpFromEmail,
+          }),
+        },
+      );
 
       const result = await response.json();
-      
+
       if (result.data.success) {
         toast.success(result.data.message);
       } else {
@@ -202,16 +230,16 @@ function EmailSettings() {
 
   const handleSendTestEmail = async () => {
     if (!testEmail) {
-      toast.error('Please enter an email address');
+      toast.error("Please enter an email address");
       return;
     }
 
     setSendingTestEmail(true);
     try {
       const response = await fetch(`${API_BASE_URL}/settings/email/send-test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           host: formData.smtpHost,
           port: formData.smtpPort,
@@ -225,10 +253,10 @@ function EmailSettings() {
       });
 
       const result = await response.json();
-      
+
       if (result.data.success) {
         toast.success(result.data.message);
-        setTestEmail('');
+        setTestEmail("");
       } else {
         toast.error(result.data.message);
       }
@@ -258,14 +286,20 @@ function EmailSettings() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button onClick={() => navigate({ to: '/dashboard/settings' })} variant='ghost' size='sm'>
+            <Button
+              onClick={() => navigate({ to: "/dashboard/settings" })}
+              variant="ghost"
+              size="sm"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
             </Button>
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                 <Mail className="h-8 w-8" /> Email & Communication Settings
               </h1>
-              <p className="text-muted-foreground">Configure email, messaging, and notification preferences</p>
+              <p className="text-muted-foreground">
+                Configure email, messaging, and notification preferences
+              </p>
             </div>
           </div>
           {hasChanges && (
@@ -273,9 +307,15 @@ function EmailSettings() {
               <Button onClick={handleReset} variant="outline" size="sm">
                 <RotateCcw className="h-4 w-4 mr-2" /> Reset
               </Button>
-              <Button onClick={handleSave} size="sm" disabled={updateSettingsMutation.isPending}>
+              <Button
+                onClick={handleSave}
+                size="sm"
+                disabled={updateSettingsMutation.isPending}
+              >
                 <Save className="h-4 w-4 mr-2" />
-                {updateSettingsMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateSettingsMutation.isPending
+                  ? "Saving..."
+                  : "Save Changes"}
               </Button>
             </div>
           )}
@@ -305,31 +345,39 @@ function EmailSettings() {
                   <Server className="h-5 w-5" />
                   SMTP Server Configuration
                 </CardTitle>
-                <CardDescription>Configure your SMTP server for sending emails</CardDescription>
+                <CardDescription>
+                  Configure your SMTP server for sending emails
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Enable SMTP</Label>
-                    <p className="text-sm text-muted-foreground">Use custom SMTP server for sending emails</p>
+                    <p className="text-sm text-muted-foreground">
+                      Use custom SMTP server for sending emails
+                    </p>
                   </div>
                   <Switch
                     checked={formData.smtpEnabled ?? false}
-                    onCheckedChange={(checked) => handleChange('smtpEnabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("smtpEnabled", checked)
+                    }
                   />
                 </div>
 
                 {formData.smtpEnabled && (
                   <>
                     <Separator />
-                    
+
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="smtpHost">SMTP Host *</Label>
                         <Input
                           id="smtpHost"
-                          value={formData.smtpHost || ''}
-                          onChange={(e) => handleChange('smtpHost', e.target.value)}
+                          value={formData.smtpHost || ""}
+                          onChange={(e) =>
+                            handleChange("smtpHost", e.target.value)
+                          }
                           placeholder="smtp.gmail.com"
                         />
                       </div>
@@ -340,7 +388,12 @@ function EmailSettings() {
                           id="smtpPort"
                           type="number"
                           value={formData.smtpPort || 587}
-                          onChange={(e) => handleChange('smtpPort', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleChange(
+                              "smtpPort",
+                              Number.parseInt(e.target.value),
+                            )
+                          }
                           placeholder="587"
                         />
                       </div>
@@ -349,11 +402,15 @@ function EmailSettings() {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Use SSL/TLS</Label>
-                        <p className="text-sm text-muted-foreground">Enable secure connection</p>
+                        <p className="text-sm text-muted-foreground">
+                          Enable secure connection
+                        </p>
                       </div>
                       <Switch
                         checked={formData.smtpSecure ?? true}
-                        onCheckedChange={(checked) => handleChange('smtpSecure', checked)}
+                        onCheckedChange={(checked) =>
+                          handleChange("smtpSecure", checked)
+                        }
                       />
                     </div>
 
@@ -362,8 +419,10 @@ function EmailSettings() {
                         <Label htmlFor="smtpUsername">SMTP Username *</Label>
                         <Input
                           id="smtpUsername"
-                          value={formData.smtpUsername || ''}
-                          onChange={(e) => handleChange('smtpUsername', e.target.value)}
+                          value={formData.smtpUsername || ""}
+                          onChange={(e) =>
+                            handleChange("smtpUsername", e.target.value)
+                          }
                           placeholder="your-email@example.com"
                         />
                       </div>
@@ -373,8 +432,10 @@ function EmailSettings() {
                         <Input
                           id="smtpPassword"
                           type="password"
-                          value={formData.smtpPassword || ''}
-                          onChange={(e) => handleChange('smtpPassword', e.target.value)}
+                          value={formData.smtpPassword || ""}
+                          onChange={(e) =>
+                            handleChange("smtpPassword", e.target.value)
+                          }
                           placeholder="••••••••"
                         />
                       </div>
@@ -386,8 +447,10 @@ function EmailSettings() {
                         <Input
                           id="smtpFromEmail"
                           type="email"
-                          value={formData.smtpFromEmail || ''}
-                          onChange={(e) => handleChange('smtpFromEmail', e.target.value)}
+                          value={formData.smtpFromEmail || ""}
+                          onChange={(e) =>
+                            handleChange("smtpFromEmail", e.target.value)
+                          }
                           placeholder="noreply@example.com"
                         />
                       </div>
@@ -396,8 +459,10 @@ function EmailSettings() {
                         <Label htmlFor="smtpFromName">From Name</Label>
                         <Input
                           id="smtpFromName"
-                          value={formData.smtpFromName || ''}
-                          onChange={(e) => handleChange('smtpFromName', e.target.value)}
+                          value={formData.smtpFromName || ""}
+                          onChange={(e) =>
+                            handleChange("smtpFromName", e.target.value)
+                          }
                           placeholder="Meridian Notifications"
                         />
                       </div>
@@ -412,7 +477,7 @@ function EmailSettings() {
                         disabled={testingConnection}
                       >
                         <TestTube className="h-4 w-4 mr-2" />
-                        {testingConnection ? 'Testing...' : 'Test Connection'}
+                        {testingConnection ? "Testing..." : "Test Connection"}
                       </Button>
 
                       <Dialog>
@@ -446,7 +511,9 @@ function EmailSettings() {
                               onClick={handleSendTestEmail}
                               disabled={sendingTestEmail}
                             >
-                              {sendingTestEmail ? 'Sending...' : 'Send Test Email'}
+                              {sendingTestEmail
+                                ? "Sending..."
+                                : "Send Test Email"}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -460,17 +527,23 @@ function EmailSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>Email Preferences</CardTitle>
-                <CardDescription>Configure general email settings</CardDescription>
+                <CardDescription>
+                  Configure general email settings
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Enable Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Send email notifications to users</p>
+                    <p className="text-sm text-muted-foreground">
+                      Send email notifications to users
+                    </p>
                   </div>
                   <Switch
                     checked={formData.enableEmailNotifications ?? true}
-                    onCheckedChange={(checked) => handleChange('enableEmailNotifications', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("enableEmailNotifications", checked)
+                    }
                   />
                 </div>
 
@@ -478,8 +551,10 @@ function EmailSettings() {
                   <Label htmlFor="emailSignature">Email Signature</Label>
                   <Textarea
                     id="emailSignature"
-                    value={formData.emailSignature || ''}
-                    onChange={(e) => handleChange('emailSignature', e.target.value)}
+                    value={formData.emailSignature || ""}
+                    onChange={(e) =>
+                      handleChange("emailSignature", e.target.value)
+                    }
                     placeholder="Best regards,\nThe Meridian Team"
                     rows={4}
                   />
@@ -490,11 +565,15 @@ function EmailSettings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Auto-Reply</Label>
-                    <p className="text-sm text-muted-foreground">Automatically reply to incoming emails</p>
+                    <p className="text-sm text-muted-foreground">
+                      Automatically reply to incoming emails
+                    </p>
                   </div>
                   <Switch
                     checked={formData.autoReplyEnabled ?? false}
-                    onCheckedChange={(checked) => handleChange('autoReplyEnabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("autoReplyEnabled", checked)
+                    }
                   />
                 </div>
 
@@ -503,8 +582,10 @@ function EmailSettings() {
                     <Label htmlFor="autoReplyMessage">Auto-Reply Message</Label>
                     <Textarea
                       id="autoReplyMessage"
-                      value={formData.autoReplyMessage || ''}
-                      onChange={(e) => handleChange('autoReplyMessage', e.target.value)}
+                      value={formData.autoReplyMessage || ""}
+                      onChange={(e) =>
+                        handleChange("autoReplyMessage", e.target.value)
+                      }
                       placeholder="Thank you for your email. We'll get back to you soon."
                       rows={3}
                     />
@@ -514,11 +595,15 @@ function EmailSettings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Email Forwarding</Label>
-                    <p className="text-sm text-muted-foreground">Forward emails to another address</p>
+                    <p className="text-sm text-muted-foreground">
+                      Forward emails to another address
+                    </p>
                   </div>
                   <Switch
                     checked={formData.forwardingEnabled ?? false}
-                    onCheckedChange={(checked) => handleChange('forwardingEnabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("forwardingEnabled", checked)
+                    }
                   />
                 </div>
 
@@ -528,8 +613,10 @@ function EmailSettings() {
                     <Input
                       id="forwardingEmail"
                       type="email"
-                      value={formData.forwardingEmail || ''}
-                      onChange={(e) => handleChange('forwardingEmail', e.target.value)}
+                      value={formData.forwardingEmail || ""}
+                      onChange={(e) =>
+                        handleChange("forwardingEmail", e.target.value)
+                      }
                       placeholder="forward@example.com"
                     />
                   </div>
@@ -546,17 +633,23 @@ function EmailSettings() {
                   <Bell className="h-5 w-5" />
                   Daily Digest
                 </CardTitle>
-                <CardDescription>Receive a daily summary of activity</CardDescription>
+                <CardDescription>
+                  Receive a daily summary of activity
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Enable Daily Digest</Label>
-                    <p className="text-sm text-muted-foreground">Send daily email summaries</p>
+                    <p className="text-sm text-muted-foreground">
+                      Send daily email summaries
+                    </p>
                   </div>
                   <Switch
                     checked={formData.dailyDigestEnabled ?? false}
-                    onCheckedChange={(checked) => handleChange('dailyDigestEnabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("dailyDigestEnabled", checked)
+                    }
                   />
                 </div>
 
@@ -566,8 +659,10 @@ function EmailSettings() {
                     <Input
                       id="dailyDigestTime"
                       type="time"
-                      value={formData.dailyDigestTime || '09:00'}
-                      onChange={(e) => handleChange('dailyDigestTime', e.target.value)}
+                      value={formData.dailyDigestTime || "09:00"}
+                      onChange={(e) =>
+                        handleChange("dailyDigestTime", e.target.value)
+                      }
                     />
                   </div>
                 )}
@@ -580,17 +675,23 @@ function EmailSettings() {
                   <Bell className="h-5 w-5" />
                   Weekly Digest
                 </CardTitle>
-                <CardDescription>Receive a weekly summary of activity</CardDescription>
+                <CardDescription>
+                  Receive a weekly summary of activity
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Enable Weekly Digest</Label>
-                    <p className="text-sm text-muted-foreground">Send weekly email summaries</p>
+                    <p className="text-sm text-muted-foreground">
+                      Send weekly email summaries
+                    </p>
                   </div>
                   <Switch
                     checked={formData.weeklyDigestEnabled ?? false}
-                    onCheckedChange={(checked) => handleChange('weeklyDigestEnabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("weeklyDigestEnabled", checked)
+                    }
                   />
                 </div>
 
@@ -599,14 +700,24 @@ function EmailSettings() {
                     <div className="space-y-2">
                       <Label htmlFor="weeklyDigestDay">Day of Week</Label>
                       <Select
-                        value={formData.weeklyDigestDay || 'monday'}
-                        onValueChange={(value) => handleChange('weeklyDigestDay', value)}
+                        value={formData.weeklyDigestDay || "monday"}
+                        onValueChange={(value) =>
+                          handleChange("weeklyDigestDay", value)
+                        }
                       >
                         <SelectTrigger id="weeklyDigestDay">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                          {[
+                            "monday",
+                            "tuesday",
+                            "wednesday",
+                            "thursday",
+                            "friday",
+                            "saturday",
+                            "sunday",
+                          ].map((day) => (
                             <SelectItem key={day} value={day}>
                               {day.charAt(0).toUpperCase() + day.slice(1)}
                             </SelectItem>
@@ -620,8 +731,10 @@ function EmailSettings() {
                       <Input
                         id="weeklyDigestTime"
                         type="time"
-                        value={formData.weeklyDigestTime || '09:00'}
-                        onChange={(e) => handleChange('weeklyDigestTime', e.target.value)}
+                        value={formData.weeklyDigestTime || "09:00"}
+                        onChange={(e) =>
+                          handleChange("weeklyDigestTime", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -632,14 +745,18 @@ function EmailSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>Digest Content</CardTitle>
-                <CardDescription>Choose what to include in digest emails</CardDescription>
+                <CardDescription>
+                  Choose what to include in digest emails
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>Include Projects</Label>
                   <Switch
                     checked={formData.digestIncludeProjects ?? true}
-                    onCheckedChange={(checked) => handleChange('digestIncludeProjects', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("digestIncludeProjects", checked)
+                    }
                   />
                 </div>
 
@@ -647,7 +764,9 @@ function EmailSettings() {
                   <Label>Include Tasks</Label>
                   <Switch
                     checked={formData.digestIncludeTasks ?? true}
-                    onCheckedChange={(checked) => handleChange('digestIncludeTasks', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("digestIncludeTasks", checked)
+                    }
                   />
                 </div>
 
@@ -655,7 +774,9 @@ function EmailSettings() {
                   <Label>Include Messages</Label>
                   <Switch
                     checked={formData.digestIncludeMessages ?? true}
-                    onCheckedChange={(checked) => handleChange('digestIncludeMessages', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("digestIncludeMessages", checked)
+                    }
                   />
                 </div>
 
@@ -663,7 +784,9 @@ function EmailSettings() {
                   <Label>Include Activities</Label>
                   <Switch
                     checked={formData.digestIncludeActivities ?? true}
-                    onCheckedChange={(checked) => handleChange('digestIncludeActivities', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("digestIncludeActivities", checked)
+                    }
                   />
                 </div>
               </CardContent>
@@ -672,17 +795,23 @@ function EmailSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>Notification Schedule</CardTitle>
-                <CardDescription>Set quiet hours for notifications</CardDescription>
+                <CardDescription>
+                  Set quiet hours for notifications
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Enable Quiet Hours</Label>
-                    <p className="text-sm text-muted-foreground">Pause notifications during specific hours</p>
+                    <p className="text-sm text-muted-foreground">
+                      Pause notifications during specific hours
+                    </p>
                   </div>
                   <Switch
                     checked={formData.notificationQuietHoursEnabled ?? false}
-                    onCheckedChange={(checked) => handleChange('notificationQuietHoursEnabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("notificationQuietHoursEnabled", checked)
+                    }
                   />
                 </div>
 
@@ -690,22 +819,38 @@ function EmailSettings() {
                   <>
                     <div className="grid gap-4 md:grid-cols-2 pl-6">
                       <div className="space-y-2">
-                        <Label htmlFor="notificationQuietHoursStart">Start Time</Label>
+                        <Label htmlFor="notificationQuietHoursStart">
+                          Start Time
+                        </Label>
                         <Input
                           id="notificationQuietHoursStart"
                           type="time"
-                          value={formData.notificationQuietHoursStart || '22:00'}
-                          onChange={(e) => handleChange('notificationQuietHoursStart', e.target.value)}
+                          value={
+                            formData.notificationQuietHoursStart || "22:00"
+                          }
+                          onChange={(e) =>
+                            handleChange(
+                              "notificationQuietHoursStart",
+                              e.target.value,
+                            )
+                          }
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="notificationQuietHoursEnd">End Time</Label>
+                        <Label htmlFor="notificationQuietHoursEnd">
+                          End Time
+                        </Label>
                         <Input
                           id="notificationQuietHoursEnd"
                           type="time"
-                          value={formData.notificationQuietHoursEnd || '08:00'}
-                          onChange={(e) => handleChange('notificationQuietHoursEnd', e.target.value)}
+                          value={formData.notificationQuietHoursEnd || "08:00"}
+                          onChange={(e) =>
+                            handleChange(
+                              "notificationQuietHoursEnd",
+                              e.target.value,
+                            )
+                          }
                         />
                       </div>
                     </div>
@@ -713,17 +858,30 @@ function EmailSettings() {
                     <div className="space-y-2 pl-6">
                       <Label>Active Days</Label>
                       <div className="flex flex-wrap gap-2">
-                        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                        {[
+                          "monday",
+                          "tuesday",
+                          "wednesday",
+                          "thursday",
+                          "friday",
+                          "saturday",
+                          "sunday",
+                        ].map((day) => (
                           <Badge
                             key={day}
-                            variant={formData.notificationDaysEnabled?.includes(day) ? 'default' : 'outline'}
+                            variant={
+                              formData.notificationDaysEnabled?.includes(day)
+                                ? "default"
+                                : "outline"
+                            }
                             className="cursor-pointer"
                             onClick={() => {
-                              const current = formData.notificationDaysEnabled || [];
+                              const current =
+                                formData.notificationDaysEnabled || [];
                               const updated = current.includes(day)
-                                ? current.filter(d => d !== day)
+                                ? current.filter((d) => d !== day)
                                 : [...current, day];
-                              handleChange('notificationDaysEnabled', updated);
+                              handleChange("notificationDaysEnabled", updated);
                             }}
                           >
                             {day.charAt(0).toUpperCase() + day.slice(1)}
@@ -745,50 +903,71 @@ function EmailSettings() {
                   <MessageSquare className="h-5 w-5" />
                   Messaging Settings
                 </CardTitle>
-                <CardDescription>Configure workspace messaging preferences</CardDescription>
+                <CardDescription>
+                  Configure workspace messaging preferences
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Allow Direct Messages</Label>
-                    <p className="text-sm text-muted-foreground">Enable person-to-person messaging</p>
+                    <p className="text-sm text-muted-foreground">
+                      Enable person-to-person messaging
+                    </p>
                   </div>
                   <Switch
                     checked={formData.allowDirectMessages ?? true}
-                    onCheckedChange={(checked) => handleChange('allowDirectMessages', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("allowDirectMessages", checked)
+                    }
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Allow Channel Creation</Label>
-                    <p className="text-sm text-muted-foreground">Members can create new channels</p>
+                    <p className="text-sm text-muted-foreground">
+                      Members can create new channels
+                    </p>
                   </div>
                   <Switch
                     checked={formData.allowChannelCreation ?? true}
-                    onCheckedChange={(checked) => handleChange('allowChannelCreation', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("allowChannelCreation", checked)
+                    }
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Require Message Approval</Label>
-                    <p className="text-sm text-muted-foreground">Messages need approval before posting</p>
+                    <p className="text-sm text-muted-foreground">
+                      Messages need approval before posting
+                    </p>
                   </div>
                   <Switch
                     checked={formData.requireMessageApproval ?? false}
-                    onCheckedChange={(checked) => handleChange('requireMessageApproval', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("requireMessageApproval", checked)
+                    }
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="messageRetentionDays">Message Retention (Days)</Label>
+                  <Label htmlFor="messageRetentionDays">
+                    Message Retention (Days)
+                  </Label>
                   <Input
                     id="messageRetentionDays"
                     type="number"
                     min="1"
-                    value={formData.messageRetentionDays || ''}
-                    onChange={(e) => handleChange('messageRetentionDays', e.target.value ? parseInt(e.target.value) : null)}
+                    value={formData.messageRetentionDays || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        "messageRetentionDays",
+                        e.target.value ? Number.parseInt(e.target.value) : null,
+                      )
+                    }
                     placeholder="Unlimited"
                   />
                   <p className="text-sm text-muted-foreground">
@@ -801,48 +980,80 @@ function EmailSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>File Sharing</CardTitle>
-                <CardDescription>Configure file sharing settings</CardDescription>
+                <CardDescription>
+                  Configure file sharing settings
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Allow File Sharing</Label>
-                    <p className="text-sm text-muted-foreground">Enable file uploads in messages</p>
+                    <p className="text-sm text-muted-foreground">
+                      Enable file uploads in messages
+                    </p>
                   </div>
                   <Switch
                     checked={formData.allowFileSharing ?? true}
-                    onCheckedChange={(checked) => handleChange('allowFileSharing', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("allowFileSharing", checked)
+                    }
                   />
                 </div>
 
                 {formData.allowFileSharing && (
                   <>
                     <div className="space-y-2 pl-6">
-                      <Label htmlFor="maxFileSize">Maximum File Size (MB)</Label>
+                      <Label htmlFor="maxFileSize">
+                        Maximum File Size (MB)
+                      </Label>
                       <Input
                         id="maxFileSize"
                         type="number"
                         min="1"
                         max="100"
                         value={formData.maxFileSize || 10}
-                        onChange={(e) => handleChange('maxFileSize', parseInt(e.target.value))}
+                        onChange={(e) =>
+                          handleChange(
+                            "maxFileSize",
+                            Number.parseInt(e.target.value),
+                          )
+                        }
                       />
                     </div>
 
                     <div className="space-y-2 pl-6">
                       <Label>Allowed File Types</Label>
                       <div className="flex flex-wrap gap-2">
-                        {['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'zip'].map((type) => (
+                        {[
+                          "pdf",
+                          "doc",
+                          "docx",
+                          "xls",
+                          "xlsx",
+                          "ppt",
+                          "pptx",
+                          "txt",
+                          "csv",
+                          "jpg",
+                          "jpeg",
+                          "png",
+                          "gif",
+                          "zip",
+                        ].map((type) => (
                           <Badge
                             key={type}
-                            variant={formData.allowedFileTypes?.includes(type) ? 'default' : 'outline'}
+                            variant={
+                              formData.allowedFileTypes?.includes(type)
+                                ? "default"
+                                : "outline"
+                            }
                             className="cursor-pointer"
                             onClick={() => {
                               const current = formData.allowedFileTypes || [];
                               const updated = current.includes(type)
-                                ? current.filter(t => t !== type)
+                                ? current.filter((t) => t !== type)
                                 : [...current, type];
-                              handleChange('allowedFileTypes', updated);
+                              handleChange("allowedFileTypes", updated);
                             }}
                           >
                             {type}

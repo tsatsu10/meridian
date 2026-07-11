@@ -1,16 +1,26 @@
-import { useState } from 'react';
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { apiClient } from '@/lib/api-client';
-import { toast } from 'sonner';
-import { Shield, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
-import { MeridianMark } from '@/components/branding/meridian-mark';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import {
+  createFileRoute,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
+import { Shield, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { MeridianMark } from "@/components/branding/meridian-mark";
+import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute('/auth/verify-2fa')({
+export const Route = createFileRoute("/auth/verify-2fa")({
   component: Verify2FA,
   validateSearch: (search: Record<string, unknown>) => {
     return {
@@ -21,50 +31,50 @@ export const Route = createFileRoute('/auth/verify-2fa')({
 });
 
 function Verify2FA() {
-  const [code, setCode] = useState('');
-  const [backupCode, setBackupCode] = useState('');
+  const [code, setCode] = useState("");
+  const [backupCode, setBackupCode] = useState("");
   const [useBackupCode, setUseBackupCode] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const navigate = useNavigate();
-  void (useRouter());
+  void useRouter();
   const search = Route.useSearch();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!search.userId) {
-      setError('Invalid session. Please sign in again.');
+      setError("Invalid session. Please sign in again.");
       return;
     }
 
     if (!useBackupCode && code.length !== 6) {
-      setError('Please enter a valid 6-digit code');
+      setError("Please enter a valid 6-digit code");
       return;
     }
 
     if (useBackupCode && !backupCode) {
-      setError('Please enter a backup code');
+      setError("Please enter a backup code");
       return;
     }
 
     setIsLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
       await apiClient.auth.twoFactor.verifyLogin({
         userId: search.userId,
         token: useBackupCode ? undefined : code,
         backupCode: useBackupCode ? backupCode : undefined,
       });
-      
-      toast.success('Verification successful!');
-      navigate({ to: '/dashboard' });
+
+      toast.success("Verification successful!");
+      navigate({ to: "/dashboard" });
     } catch (error) {
-      const errorMessage = useBackupCode 
-        ? 'Invalid backup code. Please try again.'
-        : 'Invalid verification code. Please try again.';
+      const errorMessage = useBackupCode
+        ? "Invalid backup code. Please try again."
+        : "Invalid verification code. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -73,7 +83,7 @@ function Verify2FA() {
   };
 
   const handleBackToLogin = () => {
-    navigate({ to: '/auth/sign-in' });
+    navigate({ to: "/auth/sign-in" });
   };
 
   return (
@@ -91,12 +101,12 @@ function Verify2FA() {
               Two-Factor Authentication
             </CardTitle>
             <CardDescription className="text-center">
-              {useBackupCode 
-                ? 'Enter one of your backup codes' 
-                : 'Enter the code from your authenticator app'}
+              {useBackupCode
+                ? "Enter one of your backup codes"
+                : "Enter the code from your authenticator app"}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleVerify} className="space-y-6">
               {error && (
@@ -116,9 +126,9 @@ function Verify2FA() {
                     placeholder="000000"
                     value={code}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
+                      const value = e.target.value.replace(/\D/g, "");
                       setCode(value);
-                      setError('');
+                      setError("");
                     }}
                     className="text-center text-2xl tracking-widest font-mono"
                     autoFocus
@@ -138,7 +148,7 @@ function Verify2FA() {
                     value={backupCode}
                     onChange={(e) => {
                       setBackupCode(e.target.value.toUpperCase());
-                      setError('');
+                      setError("");
                     }}
                     className="text-center text-xl tracking-wider font-mono"
                     autoFocus
@@ -150,10 +160,14 @@ function Verify2FA() {
                 </div>
               )}
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
-                disabled={isLoading || (!useBackupCode && code.length !== 6) || (useBackupCode && !backupCode)}
+                disabled={
+                  isLoading ||
+                  (!useBackupCode && code.length !== 6) ||
+                  (useBackupCode && !backupCode)
+                }
               >
                 {isLoading ? (
                   <>
@@ -161,7 +175,7 @@ function Verify2FA() {
                     Verifying...
                   </>
                 ) : (
-                  'Verify and Continue'
+                  "Verify and Continue"
                 )}
               </Button>
 
@@ -171,15 +185,15 @@ function Verify2FA() {
                   className="text-sm text-primary hover:underline w-full text-center"
                   onClick={() => {
                     setUseBackupCode(!useBackupCode);
-                    setCode('');
-                    setBackupCode('');
-                    setError('');
+                    setCode("");
+                    setBackupCode("");
+                    setError("");
                   }}
                   disabled={isLoading}
                 >
-                  {useBackupCode 
-                    ? '← Back to authenticator code' 
-                    : 'Use backup code instead →'}
+                  {useBackupCode
+                    ? "← Back to authenticator code"
+                    : "Use backup code instead →"}
                 </button>
 
                 <button
@@ -199,7 +213,7 @@ function Verify2FA() {
         {/* Help Section */}
         <div className="mt-4 text-center">
           <p className="text-sm text-muted-foreground">
-            Lost access to your authenticator?{' '}
+            Lost access to your authenticator?{" "}
             <button className="text-primary hover:underline">
               Contact support
             </button>
@@ -211,4 +225,3 @@ function Verify2FA() {
 }
 
 export default Verify2FA;
-

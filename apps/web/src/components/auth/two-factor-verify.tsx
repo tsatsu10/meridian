@@ -4,12 +4,19 @@
  * Phase 1 - Two-Factor Authentication
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Shield, AlertTriangle, ArrowLeft } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Alert, AlertDescription } from '../ui/alert';
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { Shield, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Alert, AlertDescription } from "../ui/alert";
 
 interface TwoFactorVerifyProps {
   userId: string;
@@ -17,13 +24,17 @@ interface TwoFactorVerifyProps {
   onCancel?: () => void;
 }
 
-export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerifyProps) {
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+export function TwoFactorVerify({
+  userId,
+  onSuccess,
+  onCancel,
+}: TwoFactorVerifyProps) {
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showBackupCode, setShowBackupCode] = useState(false);
-  const [backupCode, setBackupCode] = useState('');
-  
+  const [backupCode, setBackupCode] = useState("");
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Focus first input on mount
@@ -36,8 +47,8 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
    */
   const handleCodeChange = (index: number, value: string) => {
     // Only allow digits
-    const digit = value.replace(/\D/g, '').slice(0, 1);
-    
+    const digit = value.replace(/\D/g, "").slice(0, 1);
+
     const newCode = [...code];
     newCode[index] = digit;
     setCode(newCode);
@@ -49,8 +60,8 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
     }
 
     // Auto-submit when all 6 digits entered
-    if (newCode.every(d => d !== '') && index === 5) {
-      handleVerify(newCode.join(''));
+    if (newCode.every((d) => d !== "") && index === 5) {
+      handleVerify(newCode.join(""));
     }
   };
 
@@ -58,7 +69,7 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
    * Handle backspace
    */
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
@@ -68,10 +79,13 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
    */
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
     if (pastedData.length === 6) {
-      const newCode = pastedData.split('');
+      const newCode = pastedData.split("");
       setCode(newCode);
       handleVerify(pastedData);
     }
@@ -85,9 +99,9 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
     setError(null);
 
     try {
-      const response = await fetch('/api/2fa/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
           code: verificationCode,
@@ -97,18 +111,18 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Invalid code');
+        throw new Error(data.error || "Invalid code");
       }
 
       // Show warning if backup code was used
       if (data.usedBackupCode) {
-        console.warn('⚠️  Backup code used:', data.message);
+        console.warn("⚠️  Backup code used:", data.message);
       }
 
       onSuccess();
     } catch (err: any) {
       setError(err.message);
-      setCode(['', '', '', '', '', '']);
+      setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
@@ -120,7 +134,7 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
    */
   const handleVerifyBackupCode = async () => {
     if (backupCode.length < 6) {
-      setError('Please enter a valid backup code');
+      setError("Please enter a valid backup code");
       return;
     }
 
@@ -135,10 +149,9 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
           <div>
             <CardTitle>Two-Factor Authentication</CardTitle>
             <CardDescription>
-              {showBackupCode 
-                ? 'Enter a backup code' 
-                : 'Enter the code from your authenticator app'
-              }
+              {showBackupCode
+                ? "Enter a backup code"
+                : "Enter the code from your authenticator app"}
             </CardDescription>
           </div>
         </div>
@@ -194,7 +207,7 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
               disabled={loading || backupCode.length < 6}
               className="w-full"
             >
-              {loading ? 'Verifying...' : 'Verify Backup Code'}
+              {loading ? "Verifying..." : "Verify Backup Code"}
             </Button>
           </>
         )}
@@ -213,8 +226,8 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
             onClick={() => {
               setShowBackupCode(!showBackupCode);
               setError(null);
-              setCode(['', '', '', '', '', '']);
-              setBackupCode('');
+              setCode(["", "", "", "", "", ""]);
+              setBackupCode("");
             }}
             className="text-sm"
           >
@@ -224,7 +237,7 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
                 Use authenticator app
               </>
             ) : (
-              'Use backup code instead'
+              "Use backup code instead"
             )}
           </Button>
 
@@ -248,4 +261,3 @@ export function TwoFactorVerify({ userId, onSuccess, onCancel }: TwoFactorVerify
     </Card>
   );
 }
-

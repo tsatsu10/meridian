@@ -45,9 +45,9 @@ function ListView({ project }: ListViewProps) {
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({
-    "todo": true,
-    "in_progress": true,
-    "done": true,
+    todo: true,
+    in_progress: true,
+    done: true,
   });
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string | null>(null);
@@ -75,12 +75,15 @@ function ListView({ project }: ListViewProps) {
       );
       const destinationColumn = draft.columns?.find(
         (col: any) =>
-          col.id === overId || col.tasks.some((task: any) => task.id === overId),
+          col.id === overId ||
+          col.tasks.some((task: any) => task.id === overId),
       );
 
       if (!sourceColumn || !destinationColumn) return;
 
-      const taskIndex = sourceColumn.tasks.findIndex((t: any) => t.id === activeId);
+      const taskIndex = sourceColumn.tasks.findIndex(
+        (t: any) => t.id === activeId,
+      );
       const task = sourceColumn.tasks[taskIndex];
 
       sourceColumn.tasks.splice(taskIndex, 1);
@@ -141,7 +144,9 @@ function ListView({ project }: ListViewProps) {
       }
 
       const updatedProject = produce(project, (draft: any) => {
-        const doneColumn = draft?.columns?.find((col: any) => col.id === "done");
+        const doneColumn = draft?.columns?.find(
+          (col: any) => col.id === "done",
+        );
         if (!doneColumn) return;
 
         for (const task of doneColumn.tasks) {

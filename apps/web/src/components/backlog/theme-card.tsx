@@ -1,28 +1,33 @@
-import { useState } from 'react';
-import { MeridianCard, MeridianCardHeader, MeridianCardTitle, MeridianCardContent } from '@/components/ui/meridian-card';
-import { StatusBadge, PriorityBadge } from '@/components/ui/meridian-badge';
-import { MeridianButton } from '@/components/ui/meridian-button';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useState } from "react";
+import {
+  MeridianCard,
+  MeridianCardHeader,
+  MeridianCardTitle,
+  MeridianCardContent,
+} from "@/components/ui/meridian-card";
+import { StatusBadge, PriorityBadge } from "@/components/ui/meridian-badge";
+import { MeridianButton } from "@/components/ui/meridian-button";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Plus, 
+} from "@/components/ui/dropdown-menu";
+import {
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Plus,
   Target,
   CheckCircle,
   Calendar,
-  Users
-} from 'lucide-react';
-import { cn } from '@/lib/cn';
-import type { ThemeWithProgress, EnhancedTask } from '@/types/backlog';
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/cn";
+import type { ThemeWithProgress, EnhancedTask } from "@/types/backlog";
 
 interface ThemeCardProps {
   theme: ThemeWithProgress;
@@ -32,9 +37,9 @@ interface ThemeCardProps {
   onEdit?: (theme: ThemeWithProgress) => void;
   onDelete?: (themeId: string) => void;
   onAddTask?: (themeId: string) => void;
-  variant?: 'default' | 'compact' | 'detailed';
+  variant?: "default" | "compact" | "detailed";
   showActions?: boolean;
-  persona?: 'pm' | 'tl' | 'exec' | 'dev' | 'design';
+  persona?: "pm" | "tl" | "exec" | "dev" | "design";
 }
 
 // @epic-1.1-subtasks @persona-sarah - PM needs visual theme management
@@ -46,9 +51,9 @@ export function ThemeCard({
   onEdit,
   onDelete,
   onAddTask,
-  variant = 'default',
+  variant = "default",
   showActions = true,
-  persona = 'pm'
+  persona = "pm",
 }: ThemeCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -68,26 +73,35 @@ export function ThemeCard({
   };
 
   const getThemePriority = () => {
-    const highPriorityTasks = tasks.filter(task => task.priority === 'high' || task.priority === 'urgent').length;
-    if (highPriorityTasks > 0) return 'high';
-    
-    const mediumPriorityTasks = tasks.filter(task => task.priority === 'medium').length;
-    if (mediumPriorityTasks > 0) return 'medium';
-    
-    return 'low';
+    const highPriorityTasks = tasks.filter(
+      (task) => task.priority === "high" || task.priority === "urgent",
+    ).length;
+    if (highPriorityTasks > 0) return "high";
+
+    const mediumPriorityTasks = tasks.filter(
+      (task) => task.priority === "medium",
+    ).length;
+    if (mediumPriorityTasks > 0) return "medium";
+
+    return "low";
   };
 
   const getThemeStatus = () => {
-    const completedTasks = tasks.filter(task => task.status === 'completed').length;
-    if (completedTasks === tasks.length && tasks.length > 0) return 'completed';
-    if (completedTasks > 0) return 'active';
-    if (tasks.length === 0) return 'draft';
-    return 'pending';
+    const completedTasks = tasks.filter(
+      (task) => task.status === "completed",
+    ).length;
+    if (completedTasks === tasks.length && tasks.length > 0) return "completed";
+    if (completedTasks > 0) return "active";
+    if (tasks.length === 0) return "draft";
+    return "pending";
   };
 
-  const progressValue = tasks.length > 0 ? (theme.progress?.progressPercentage ?? 0) : 0;
+  const progressValue =
+    tasks.length > 0 ? (theme.progress?.progressPercentage ?? 0) : 0;
   const taskCount = tasks.length;
-  const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  const completedTasks = tasks.filter(
+    (task) => task.status === "completed",
+  ).length;
 
   return (
     <MeridianCard
@@ -98,8 +112,8 @@ export function ThemeCard({
       className={cn(
         "transition-all duration-200 cursor-pointer group",
         isSelected && "ring-2 ring-meridian-primary ring-offset-2",
-        variant === 'compact' && "p-4",
-        variant === 'detailed' && "p-8"
+        variant === "compact" && "p-4",
+        variant === "detailed" && "p-8",
       )}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -111,14 +125,14 @@ export function ThemeCard({
             <MeridianCardTitle className="text-h5 truncate">
               {theme.name}
             </MeridianCardTitle>
-            
+
             <div className="flex items-center gap-2">
               <StatusBadge status={getThemeStatus()} size="xs" />
               <PriorityBadge priority={getThemePriority()} size="xs" />
             </div>
           </div>
 
-          {theme.description && variant !== 'compact' && (
+          {theme.description && variant !== "compact" && (
             <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
               {theme.description}
             </p>
@@ -133,7 +147,7 @@ export function ThemeCard({
                 size="icon-sm"
                 className={cn(
                   "opacity-0 group-hover:opacity-100 transition-opacity",
-                  isHovered && "opacity-100"
+                  isHovered && "opacity-100",
                 )}
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -149,7 +163,10 @@ export function ThemeCard({
                 Add Task
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleDelete} className="text-meridian-error">
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-meridian-error"
+              >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Theme
               </DropdownMenuItem>
@@ -167,10 +184,7 @@ export function ThemeCard({
               {Math.round(progressValue)}%
             </span>
           </div>
-          <Progress 
-            value={progressValue} 
-            className="h-2"
-          />
+          <Progress value={progressValue} className="h-2" />
         </div>
 
         {/* Stats Section */}
@@ -182,7 +196,7 @@ export function ThemeCard({
               <p className="text-sm font-medium">{taskCount}</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-meridian-success" />
             <div>
@@ -193,7 +207,7 @@ export function ThemeCard({
         </div>
 
         {/* Due Date and Team */}
-        {variant === 'detailed' && (
+        {variant === "detailed" && (
           <div className="space-y-3">
             {theme.dueDate && (
               <div className="flex items-center gap-2 text-sm">
@@ -209,13 +223,20 @@ export function ThemeCard({
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <div className="flex -space-x-1">
-                  {theme.assignees.slice(0, 3).map((assignee: any, index: any) => (
-                    <Avatar key={index} className="h-6 w-6 border-2 border-background">
-                      <AvatarFallback className="text-xs">
-                        {String(assignee?.name ?? assignee).charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
+                  {theme.assignees
+                    .slice(0, 3)
+                    .map((assignee: any, index: any) => (
+                      <Avatar
+                        key={index}
+                        className="h-6 w-6 border-2 border-background"
+                      >
+                        <AvatarFallback className="text-xs">
+                          {String(assignee?.name ?? assignee)
+                            .charAt(0)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
                   {theme.assignees.length > 3 && (
                     <div className="h-6 w-6 rounded-full bg-meridian-neutral-100 border-2 border-background flex items-center justify-center">
                       <span className="text-xs text-meridian-neutral-600">
@@ -230,7 +251,7 @@ export function ThemeCard({
         )}
 
         {/* Action Buttons */}
-        {variant !== 'compact' && (
+        {variant !== "compact" && (
           <div className="flex gap-2 mt-4 pt-4 border-t border-border">
             <MeridianButton
               variant="outline"
@@ -254,4 +275,4 @@ export function ThemeCard({
       </MeridianCardContent>
     </MeridianCard>
   );
-} 
+}

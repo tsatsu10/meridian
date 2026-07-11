@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn } from '@/lib/cn';
+import type React from "react";
+import { cn } from "@/lib/cn";
 
 // Base skeleton component
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -10,8 +10,8 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-md bg-gray-200 dark:bg-gray-700',
-        className
+        "animate-pulse rounded-md bg-gray-200 dark:bg-gray-700",
+        className,
       )}
       {...props}
     />
@@ -21,7 +21,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
 // Card skeleton
 export function CardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('rounded-lg border bg-card p-6', className)}>
+    <div className={cn("rounded-lg border bg-card p-6", className)}>
       <div className="space-y-4">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
@@ -66,7 +66,10 @@ export function ChartSkeleton(_props: { height?: number } = {}) {
 }
 
 // Table skeleton
-export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
+export function TableSkeleton({
+  rows = 5,
+  columns = 4,
+}: { rows?: number; columns?: number }) {
   return (
     <div className="rounded-lg border bg-card">
       <div className="p-6">
@@ -90,7 +93,10 @@ export function ListSkeleton({ items = 5 }: { items?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: items }).map((_, i) => (
-        <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg">
+        <div
+          key={i}
+          className="flex items-center space-x-4 p-4 border rounded-lg"
+        >
           <Skeleton className="h-10 w-10 rounded-full" />
           <div className="space-y-2 flex-1">
             <Skeleton className="h-4 w-3/4" />
@@ -117,9 +123,9 @@ export function MilestoneSkeleton() {
           <Skeleton className="h-10 w-32" />
         </div>
       </div>
-      
+
       <StatsSkeleton />
-      
+
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="border rounded-lg p-6">
@@ -146,32 +152,35 @@ export function MilestoneSkeleton() {
 }
 
 // Loading spinner
-export function LoadingSpinner({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {
+export function LoadingSpinner({
+  size = "md",
+  className,
+}: { size?: "sm" | "md" | "lg"; className?: string }) {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-6 w-6',
-    lg: 'h-8 w-8',
+    sm: "h-4 w-4",
+    md: "h-6 w-6",
+    lg: "h-8 w-8",
   };
 
   return (
     <div
       className={cn(
-        'animate-spin rounded-full border-2 border-gray-300 border-t-blue-600',
+        "animate-spin rounded-full border-2 border-gray-300 border-t-blue-600",
         sizeClasses[size],
-        className
+        className,
       )}
     />
   );
 }
 
 // Loading overlay
-export function LoadingOverlay({ 
-  isLoading, 
-  children, 
-  message = 'Loading...' 
-}: { 
-  isLoading: boolean; 
-  children: React.ReactNode; 
+export function LoadingOverlay({
+  isLoading,
+  children,
+  message = "Loading...",
+}: {
+  isLoading: boolean;
+  children: React.ReactNode;
   message?: string;
 }) {
   return (
@@ -190,15 +199,15 @@ export function LoadingOverlay({
 }
 
 // Empty state component
-export function EmptyState({ 
-  icon: Icon, 
-  title, 
-  description, 
-  action 
-}: { 
-  icon: React.ComponentType<{ className?: string }>; 
-  title: string; 
-  description: string; 
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
   action?: React.ReactNode;
 }) {
   return (
@@ -207,27 +216,21 @@ export function EmptyState({
       <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
         {title}
       </h3>
-      <p className="mt-2 text-gray-500 dark:text-gray-400">
-        {description}
-      </p>
-      {action && (
-        <div className="mt-6">
-          {action}
-        </div>
-      )}
+      <p className="mt-2 text-gray-500 dark:text-gray-400">{description}</p>
+      {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }
 
 // Error state component
-export function ErrorState({ 
-  title = 'Something went wrong', 
-  description = 'We encountered an error while loading this content.', 
+export function ErrorState({
+  title = "Something went wrong",
+  description = "We encountered an error while loading this content.",
   onRetry,
-  action 
-}: { 
-  title?: string; 
-  description?: string; 
+  action,
+}: {
+  title?: string;
+  description?: string;
   onRetry?: () => void;
   action?: React.ReactNode;
 }) {
@@ -235,15 +238,18 @@ export function ErrorState({
     <div className="text-center py-12">
       <div className="mx-auto h-12 w-12 text-red-400">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
       </div>
       <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
         {title}
       </h3>
-      <p className="mt-2 text-gray-500 dark:text-gray-400">
-        {description}
-      </p>
+      <p className="mt-2 text-gray-500 dark:text-gray-400">{description}</p>
       {(onRetry || action) && (
         <div className="mt-6">
           {onRetry && (

@@ -4,13 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Key, 
-  Copy, 
-  Eye, 
-  EyeOff, 
-  Trash2, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Key,
+  Copy,
+  Eye,
+  EyeOff,
+  Trash2,
   Plus,
   Calendar,
   Activity,
@@ -18,7 +24,7 @@ import {
   Code,
   Shield,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
@@ -55,7 +61,7 @@ function ApiAccessSettings() {
   const workspace = useWorkspaceStore((state) => state.workspace);
   const currentWorkspace = workspace;
   const queryClient = useQueryClient();
-  
+
   const [showKeys, setShowKeys] = useState<{ [key: string]: boolean }>({});
   const [newKeyName, setNewKeyName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -68,7 +74,7 @@ function ApiAccessSettings() {
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE_URL}/api-keys?workspaceId=${currentWorkspace?.id}`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch API keys");
       return response.json();
@@ -129,7 +135,10 @@ function ApiAccessSettings() {
 
   // Toggle key active status mutation
   const toggleKeyMutation = useMutation({
-    mutationFn: async ({ keyId, isActive }: { keyId: string; isActive: boolean }) => {
+    mutationFn: async ({
+      keyId,
+      isActive,
+    }: { keyId: string; isActive: boolean }) => {
       const response = await fetch(`${API_BASE_URL}/api-keys/${keyId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -199,7 +208,8 @@ function ApiAccessSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Access our comprehensive API documentation to integrate Meridian with your applications.
+              Access our comprehensive API documentation to integrate Meridian
+              with your applications.
             </p>
             <Button variant="outline" className="gap-2">
               <Globe className="w-4 h-4" />
@@ -234,7 +244,10 @@ function ApiAccessSettings() {
                   onKeyDown={(e) => e.key === "Enter" && handleGenerateKey()}
                 />
               </div>
-              <Button onClick={handleGenerateKey} disabled={isCreating || !newKeyName.trim()}>
+              <Button
+                onClick={handleGenerateKey}
+                disabled={isCreating || !newKeyName.trim()}
+              >
                 {isCreating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -264,22 +277,24 @@ function ApiAccessSettings() {
             ) : (
               <div className="space-y-4">
                 {apiKeys.map((key) => (
-                  <div
-                    key={key.id}
-                    className="border rounded-lg p-4 space-y-3"
-                  >
+                  <div key={key.id} className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-medium">{key.name}</h4>
-                          <Badge variant={key.status === "active" ? "default" : "secondary"}>
+                          <Badge
+                            variant={
+                              key.status === "active" ? "default" : "secondary"
+                            }
+                          >
                             {key.status}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            Created {new Date(key.createdAt).toLocaleDateString()}
+                            Created{" "}
+                            {new Date(key.createdAt).toLocaleDateString()}
                           </span>
                           <span className="flex items-center gap-1">
                             <Activity className="w-3 h-3" />
@@ -291,7 +306,10 @@ function ApiAccessSettings() {
                         <Switch
                           checked={key.status === "active"}
                           onCheckedChange={(checked) =>
-                            toggleKeyMutation.mutate({ keyId: key.id, isActive: checked })
+                            toggleKeyMutation.mutate({
+                              keyId: key.id,
+                              isActive: checked,
+                            })
                           }
                         />
                         <Button
@@ -307,7 +325,9 @@ function ApiAccessSettings() {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 flex items-center gap-2 bg-muted px-3 py-2 rounded-md font-mono text-sm">
                         <span className="flex-1 truncate">
-                          {showKeys[key.id] ? key.key || "••••••••••••••••••••••••" : "••••••••••••••••••••••••"}
+                          {showKeys[key.id]
+                            ? key.key || "••••••••••••••••••••••••"
+                            : "••••••••••••••••••••••••"}
                         </span>
                       </div>
                       <Button
@@ -327,7 +347,11 @@ function ApiAccessSettings() {
                     {key.scopes && key.scopes.length > 0 && (
                       <div className="flex gap-1 flex-wrap">
                         {key.scopes.map((scope: string, index: number) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {scope}
                           </Badge>
                         ))}
@@ -349,11 +373,18 @@ function ApiAccessSettings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>• Never share your API keys publicly or commit them to version control</p>
+            <p>
+              • Never share your API keys publicly or commit them to version
+              control
+            </p>
             <p>• Rotate keys regularly and delete unused keys</p>
-            <p>• Use separate keys for development and production environments</p>
+            <p>
+              • Use separate keys for development and production environments
+            </p>
             <p>• Monitor API key usage in the activity logs</p>
-            <p>• Revoke keys immediately if you suspect they've been compromised</p>
+            <p>
+              • Revoke keys immediately if you suspect they've been compromised
+            </p>
           </CardContent>
         </Card>
 
@@ -366,7 +397,8 @@ function ApiAccessSettings() {
                 Save Your API Key
               </DialogTitle>
               <DialogDescription>
-                This is the only time you'll see this key. Copy it now and store it securely.
+                This is the only time you'll see this key. Copy it now and store
+                it securely.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">

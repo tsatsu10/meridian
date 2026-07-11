@@ -1,6 +1,6 @@
 /**
  * Project Card Component Tests
- * 
+ *
  * Tests project card display and interactions:
  * - Project information display
  * - Progress indicators
@@ -9,11 +9,11 @@
  * - Accessibility
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { TestWrapper } from '../../../test-utils/test-wrapper';
-import React from 'react';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { TestWrapper } from "../../../test-utils/test-wrapper";
+import React from "react";
 
 interface ProjectCardProps {
   project: {
@@ -33,35 +33,42 @@ interface ProjectCardProps {
   onArchive?: (projectId: string) => void;
 }
 
-function ProjectCard({ project, onNavigate, onEdit, onArchive }: ProjectCardProps) {
+function ProjectCard({
+  project,
+  onNavigate,
+  onEdit,
+  onArchive,
+}: ProjectCardProps) {
   const [showActions, setShowActions] = React.useState(false);
 
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
-      low: 'bg-gray-500',
-      medium: 'bg-yellow-500',
-      high: 'bg-orange-500',
-      urgent: 'bg-red-500',
+      low: "bg-gray-500",
+      medium: "bg-yellow-500",
+      high: "bg-orange-500",
+      urgent: "bg-red-500",
     };
-    return colors[priority] || 'bg-gray-500';
+    return colors[priority] || "bg-gray-500";
   };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      active: 'text-green-600',
-      in_progress: 'text-blue-600',
-      completed: 'text-gray-600',
-      archived: 'text-gray-400',
+      active: "text-green-600",
+      in_progress: "text-blue-600",
+      completed: "text-gray-600",
+      archived: "text-gray-400",
     };
-    return colors[status] || 'text-gray-600';
+    return colors[status] || "text-gray-600";
   };
 
-  const isDueSoon = project.dueDate && 
+  const isDueSoon =
+    project.dueDate &&
     project.dueDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000;
 
-  const isOverdue = project.dueDate && 
-    project.dueDate.getTime() < Date.now() && 
-    project.status !== 'completed';
+  const isOverdue =
+    project.dueDate &&
+    project.dueDate.getTime() < Date.now() &&
+    project.status !== "completed";
 
   return (
     <div
@@ -73,14 +80,16 @@ function ProjectCard({ project, onNavigate, onEdit, onArchive }: ProjectCardProp
       onMouseLeave={() => setShowActions(false)}
     >
       <div className="project-header">
-        <h3 
+        <h3
           className="project-name cursor-pointer"
           onClick={() => onNavigate?.(project.id)}
         >
           {project.name}
         </h3>
         <div className="project-badges">
-          <span className={`priority-badge ${getPriorityColor(project.priority)}`}>
+          <span
+            className={`priority-badge ${getPriorityColor(project.priority)}`}
+          >
             {project.priority}
           </span>
           <span className={`status-badge ${getStatusColor(project.status)}`}>
@@ -94,7 +103,10 @@ function ProjectCard({ project, onNavigate, onEdit, onArchive }: ProjectCardProp
       )}
 
       <div className="project-stats">
-        <div className="stat" aria-label={`${project.completedTaskCount} of ${project.taskCount} tasks completed`}>
+        <div
+          className="stat"
+          aria-label={`${project.completedTaskCount} of ${project.taskCount} tasks completed`}
+        >
           <span className="stat-label">Tasks:</span>
           <span className="stat-value">
             {project.completedTaskCount} / {project.taskCount}
@@ -112,22 +124,38 @@ function ProjectCard({ project, onNavigate, onEdit, onArchive }: ProjectCardProp
         </div>
       </div>
 
-      <div className="progress-bar-container" role="progressbar" aria-valuenow={project.progress} aria-valuemin={0} aria-valuemax={100}>
-        <div 
+      <div
+        className="progress-bar-container"
+        role="progressbar"
+        aria-valuenow={project.progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
           className="progress-bar"
           style={{ width: `${project.progress}%` }}
         />
       </div>
 
       {project.dueDate && (
-        <div className={`due-date ${isOverdue ? 'overdue' : isDueSoon ? 'due-soon' : ''}`}>
+        <div
+          className={`due-date ${isOverdue ? "overdue" : isDueSoon ? "due-soon" : ""}`}
+        >
           <span>Due: {project.dueDate.toLocaleDateString()}</span>
-          {isOverdue && <span className="overdue-indicator" aria-label="Overdue">⚠️</span>}
+          {isOverdue && (
+            <span className="overdue-indicator" aria-label="Overdue">
+              ⚠️
+            </span>
+          )}
         </div>
       )}
 
       {showActions && (
-        <div className="project-actions" role="group" aria-label="Project actions">
+        <div
+          className="project-actions"
+          role="group"
+          aria-label="Project actions"
+        >
           <button
             onClick={() => onEdit?.(project.id)}
             aria-label="Edit project"
@@ -146,85 +174,91 @@ function ProjectCard({ project, onNavigate, onEdit, onArchive }: ProjectCardProp
   );
 }
 
-describe('Project Card Component', () => {
+describe("Project Card Component", () => {
   const mockProject = {
-    id: 'project-123',
-    name: 'Test Project',
-    description: 'A test project description',
-    status: 'active',
-    priority: 'high',
+    id: "project-123",
+    name: "Test Project",
+    description: "A test project description",
+    status: "active",
+    priority: "high",
     progress: 65,
     taskCount: 20,
     completedTaskCount: 13,
     teamSize: 5,
   };
 
-  it('should render project name', () => {
+  it("should render project name", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Test Project')).toBeInTheDocument();
+    expect(screen.getByText("Test Project")).toBeInTheDocument();
   });
 
-  it('should render project description', () => {
+  it("should render project description", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('A test project description')).toBeInTheDocument();
+    expect(screen.getByText("A test project description")).toBeInTheDocument();
   });
 
-  it('should display project status', () => {
+  it("should display project status", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('active')).toBeInTheDocument();
+    expect(screen.getByText("active")).toBeInTheDocument();
   });
 
-  it('should display project priority', () => {
+  it("should display project priority", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('high')).toBeInTheDocument();
+    expect(screen.getByText("high")).toBeInTheDocument();
   });
 
-  it('should display task completion stats', () => {
+  it("should display task completion stats", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
-    expect(screen.getByLabelText(/13 of 20 tasks completed/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/13 of 20 tasks completed/i),
+    ).toBeInTheDocument();
   });
 
-  it('should display team size', () => {
+  it("should display team size", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
     expect(screen.getByLabelText(/5 team members/i)).toBeInTheDocument();
   });
 
-  it('should display progress percentage', () => {
+  it("should display progress percentage", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
     expect(screen.getByLabelText(/65% complete/i)).toBeInTheDocument();
   });
 
-  it('should render progress bar with correct width', () => {
-    const { container } = render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
+  it("should render progress bar with correct width", () => {
+    const { container } = render(<ProjectCard project={mockProject} />, {
+      wrapper: TestWrapper,
+    });
 
-    const progressBar = container.querySelector('.progress-bar');
-    expect(progressBar).toHaveStyle({ width: '65%' });
+    const progressBar = container.querySelector(".progress-bar");
+    expect(progressBar).toHaveStyle({ width: "65%" });
   });
 
-  it('should display due date when present', () => {
+  it("should display due date when present", () => {
     const projectWithDueDate = {
       ...mockProject,
-      dueDate: new Date('2025-12-31'),
+      dueDate: new Date("2025-12-31"),
     };
 
-    render(<ProjectCard project={projectWithDueDate} />, { wrapper: TestWrapper });
+    render(<ProjectCard project={projectWithDueDate} />, {
+      wrapper: TestWrapper,
+    });
 
     expect(screen.getByText(/due:/i)).toBeInTheDocument();
   });
 
-  it('should highlight overdue projects', () => {
+  it("should highlight overdue projects", () => {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const overdueProject = {
       ...mockProject,
       dueDate: yesterday,
-      status: 'active',
+      status: "active",
     };
 
     render(<ProjectCard project={overdueProject} />, { wrapper: TestWrapper });
@@ -232,89 +266,100 @@ describe('Project Card Component', () => {
     expect(screen.getByLabelText(/overdue/i)).toBeInTheDocument();
   });
 
-  it('should highlight projects due soon', () => {
+  it("should highlight projects due soon", () => {
     const inThreeDays = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
     const dueSoonProject = {
       ...mockProject,
       dueDate: inThreeDays,
     };
 
-    const { container } = render(<ProjectCard project={dueSoonProject} />, { wrapper: TestWrapper });
+    const { container } = render(<ProjectCard project={dueSoonProject} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(container.querySelector('.due-soon')).toBeInTheDocument();
+    expect(container.querySelector(".due-soon")).toBeInTheDocument();
   });
 
-  it('should handle project navigation', async () => {
+  it("should handle project navigation", async () => {
     const user = userEvent.setup();
     const onNavigate = vi.fn();
 
-    render(
-      <ProjectCard project={mockProject} onNavigate={onNavigate} />,
-      { wrapper: TestWrapper }
-    );
+    render(<ProjectCard project={mockProject} onNavigate={onNavigate} />, {
+      wrapper: TestWrapper,
+    });
 
-    await user.click(screen.getByText('Test Project'));
+    await user.click(screen.getByText("Test Project"));
 
-    expect(onNavigate).toHaveBeenCalledWith('project-123');
+    expect(onNavigate).toHaveBeenCalledWith("project-123");
   });
 
-  it('should show actions on hover', async () => {
+  it("should show actions on hover", async () => {
     const user = userEvent.setup();
 
-    const { container } = render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
+    const { container } = render(<ProjectCard project={mockProject} />, {
+      wrapper: TestWrapper,
+    });
 
-    const card = container.querySelector('.project-card');
-    
+    const card = container.querySelector(".project-card");
+
     // Simulate mouse enter
     await user.hover(card!);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /edit project/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /archive project/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /edit project/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /archive project/i }),
+      ).toBeInTheDocument();
     });
   });
 
-  // Skip: Hover actions may not trigger callbacks in test environment  
-  it.skip('should handle edit action [HOVER INTERACTION]', async () => {
+  // Skip: Hover actions may not trigger callbacks in test environment
+  it.skip("should handle edit action [HOVER INTERACTION]", async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
 
     const { container } = render(
       <ProjectCard project={mockProject} onEdit={onEdit} />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
     // Note: Hover-triggered actions may not work reliably in jsdom
-    const card = container.querySelector('.project-card')!;
+    const card = container.querySelector(".project-card")!;
     await user.hover(card);
 
-    const editButton = await screen.findByRole('button', { name: /edit project/i });
+    const editButton = await screen.findByRole("button", {
+      name: /edit project/i,
+    });
     await user.click(editButton);
 
-    expect(onEdit).toHaveBeenCalledWith('project-123');
+    expect(onEdit).toHaveBeenCalledWith("project-123");
   });
 
   // Skip: Hover actions may not trigger callbacks in test environment
-  it.skip('should handle archive action [HOVER INTERACTION]', async () => {
+  it.skip("should handle archive action [HOVER INTERACTION]", async () => {
     const user = userEvent.setup();
     const onArchive = vi.fn();
 
     const { container } = render(
       <ProjectCard project={mockProject} onArchive={onArchive} />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
     // Note: Hover-triggered actions may not work reliably in jsdom
-    const card = container.querySelector('.project-card')!;
+    const card = container.querySelector(".project-card")!;
     await user.hover(card);
 
-    const archiveButton = await screen.findByRole('button', { name: /archive project/i });
+    const archiveButton = await screen.findByRole("button", {
+      name: /archive project/i,
+    });
     await user.click(archiveButton);
 
-    expect(onArchive).toHaveBeenCalledWith('project-123');
+    expect(onArchive).toHaveBeenCalledWith("project-123");
   });
 
-  it('should handle project without description', () => {
+  it("should handle project without description", () => {
     const projectNoDesc = {
       ...mockProject,
       description: undefined,
@@ -322,10 +367,12 @@ describe('Project Card Component', () => {
 
     render(<ProjectCard project={projectNoDesc} />, { wrapper: TestWrapper });
 
-    expect(screen.queryByText('A test project description')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("A test project description"),
+    ).not.toBeInTheDocument();
   });
 
-  it('should display 0% progress', () => {
+  it("should display 0% progress", () => {
     const newProject = {
       ...mockProject,
       progress: 0,
@@ -337,7 +384,7 @@ describe('Project Card Component', () => {
     expect(screen.getByLabelText(/0% complete/i)).toBeInTheDocument();
   });
 
-  it('should display 100% progress', () => {
+  it("should display 100% progress", () => {
     const completedProject = {
       ...mockProject,
       progress: 100,
@@ -345,30 +392,34 @@ describe('Project Card Component', () => {
       taskCount: 20,
     };
 
-    render(<ProjectCard project={completedProject} />, { wrapper: TestWrapper });
+    render(<ProjectCard project={completedProject} />, {
+      wrapper: TestWrapper,
+    });
 
     expect(screen.getByLabelText(/100% complete/i)).toBeInTheDocument();
   });
 
-  it('should be accessible', () => {
+  it("should be accessible", () => {
     render(<ProjectCard project={mockProject} />, { wrapper: TestWrapper });
 
     // Card should have article role
-    expect(screen.getByRole('article', { name: /project: test project/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("article", { name: /project: test project/i }),
+    ).toBeInTheDocument();
 
     // Progress bar should have progressbar role
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    
-    const progressBar = screen.getByRole('progressbar');
-    expect(progressBar).toHaveAttribute('aria-valuenow', '65');
-    expect(progressBar).toHaveAttribute('aria-valuemin', '0');
-    expect(progressBar).toHaveAttribute('aria-valuemax', '100');
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+
+    const progressBar = screen.getByRole("progressbar");
+    expect(progressBar).toHaveAttribute("aria-valuenow", "65");
+    expect(progressBar).toHaveAttribute("aria-valuemin", "0");
+    expect(progressBar).toHaveAttribute("aria-valuemax", "100");
   });
 
-  it('should apply correct priority colors', () => {
-    const priorities = ['low', 'medium', 'high', 'urgent'];
+  it("should apply correct priority colors", () => {
+    const priorities = ["low", "medium", "high", "urgent"];
 
-    priorities.forEach(priority => {
+    priorities.forEach((priority) => {
       const projectWithPriority = {
         ...mockProject,
         priority,
@@ -376,10 +427,10 @@ describe('Project Card Component', () => {
 
       const { container, unmount } = render(
         <ProjectCard project={projectWithPriority} />,
-        { wrapper: TestWrapper }
+        { wrapper: TestWrapper },
       );
 
-      const badge = container.querySelector('.priority-badge');
+      const badge = container.querySelector(".priority-badge");
       expect(badge).toBeInTheDocument();
       expect(badge?.textContent).toBe(priority);
 
@@ -387,10 +438,10 @@ describe('Project Card Component', () => {
     });
   });
 
-  it('should apply correct status colors', () => {
-    const statuses = ['active', 'in_progress', 'completed', 'archived'];
+  it("should apply correct status colors", () => {
+    const statuses = ["active", "in_progress", "completed", "archived"];
 
-    statuses.forEach(status => {
+    statuses.forEach((status) => {
       const projectWithStatus = {
         ...mockProject,
         status,
@@ -398,10 +449,10 @@ describe('Project Card Component', () => {
 
       const { container, unmount } = render(
         <ProjectCard project={projectWithStatus} />,
-        { wrapper: TestWrapper }
+        { wrapper: TestWrapper },
       );
 
-      const badge = container.querySelector('.status-badge');
+      const badge = container.querySelector(".status-badge");
       expect(badge).toBeInTheDocument();
       expect(badge?.textContent).toBe(status);
 
@@ -409,4 +460,3 @@ describe('Project Card Component', () => {
     });
   });
 });
-

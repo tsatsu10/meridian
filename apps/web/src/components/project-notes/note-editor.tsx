@@ -4,24 +4,16 @@
  * NOTE: Uses simple textarea for now - should be upgraded to TipTap/ProseMirror rich text editor
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import {
-  Save,
-  X,
-  Pin,
-  History,
-  MessageSquare,
-  Tag,
-  Clock,
-} from 'lucide-react';
-import { API_BASE_URL } from '@/constants/urls';
-import { formatDistanceToNow } from 'date-fns';
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Save, X, Pin, History, MessageSquare, Tag, Clock } from "lucide-react";
+import { API_BASE_URL } from "@/constants/urls";
+import { formatDistanceToNow } from "date-fns";
 
 interface ProjectNote {
   id: string;
@@ -54,20 +46,22 @@ export function NoteEditor({
   onShowVersions,
   onShowComments,
 }: NoteEditorProps) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
+    null,
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  void (useRef<NodeJS.Timeout | null>(null));
+  void useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (note) {
       setTitle(note.title);
-      setContent(note.content || '');
+      setContent(note.content || "");
       setTags(note.tags || []);
       setIsPinned(note.isPinned);
     }
@@ -98,7 +92,7 @@ export function NoteEditor({
 
   const handleSave = async (silent = false) => {
     if (!title.trim()) {
-      toast.error('Please enter a title');
+      toast.error("Please enter a title");
       return;
     }
 
@@ -108,47 +102,55 @@ export function NoteEditor({
       let response;
       if (note) {
         // Update existing note
-        response = await fetch(`${API_BASE_URL}/project-notes/notes/${note.id}`, {
-          method: 'PATCH',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title,
-            content,
-            tags,
-            isPinned,
-          }),
-        });
+        response = await fetch(
+          `${API_BASE_URL}/project-notes/notes/${note.id}`,
+          {
+            method: "PATCH",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title,
+              content,
+              tags,
+              isPinned,
+            }),
+          },
+        );
       } else {
         // Create new note
-        response = await fetch(`${API_BASE_URL}/project-notes/projects/${projectId}/notes`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title,
-            content,
-            tags,
-            isPinned,
-          }),
-        });
+        response = await fetch(
+          `${API_BASE_URL}/project-notes/projects/${projectId}/notes`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title,
+              content,
+              tags,
+              isPinned,
+            }),
+          },
+        );
       }
 
-      if (!response.ok) throw new Error('Failed to save note');
+      if (!response.ok) throw new Error("Failed to save note");
 
       const data = await response.json();
-      
+
       if (!silent) {
-        toast.success(note ? 'Note updated successfully' : 'Note created successfully');
+        toast.success(
+          note ? "Note updated successfully" : "Note created successfully",
+        );
       }
-      
+
       if (onSave) {
         onSave(data.data);
       }
     } catch (error) {
-      console.error('Failed to save note:', error);
+      console.error("Failed to save note:", error);
       if (!silent) {
-        toast.error('Failed to save note');
+        toast.error("Failed to save note");
       }
     } finally {
       setSaving(false);
@@ -158,7 +160,7 @@ export function NoteEditor({
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
-      setTagInput('');
+      setTagInput("");
     }
   };
 
@@ -167,7 +169,7 @@ export function NoteEditor({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleAddTag();
     }
@@ -181,11 +183,10 @@ export function NoteEditor({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CardTitle className="flex items-center gap-2">
-                {note ? 'Edit Note' : 'New Note'}
+                {note ? "Edit Note" : "New Note"}
               </CardTitle>
-              
             </div>
-            
+
             <div className="flex items-center gap-2">
               {note && (
                 <>
@@ -204,26 +205,31 @@ export function NoteEditor({
                 size="icon"
                 onClick={() => setIsPinned(!isPinned)}
               >
-                <Pin className={`w-4 h-4 ${isPinned ? 'fill-current text-primary' : ''}`} />
+                <Pin
+                  className={`w-4 h-4 ${isPinned ? "fill-current text-primary" : ""}`}
+                />
               </Button>
               <Button variant="outline" size="icon" onClick={onCancel}>
                 <X className="w-4 h-4" />
               </Button>
               <Button onClick={() => handleSave()} disabled={saving}>
                 <Save className="w-4 h-4 mr-2" />
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             {note && (
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <Clock className="w-3 h-3" />
-                Last updated {formatDistanceToNow(new Date(note.updatedAt || note.createdAt))} ago
+                Last updated{" "}
+                {formatDistanceToNow(
+                  new Date(note.updatedAt || note.createdAt),
+                )}{" "}
+                ago
               </div>
             )}
-            
           </div>
         </CardHeader>
       </Card>
@@ -281,14 +287,16 @@ export function NoteEditor({
               className="min-h-[400px] resize-none font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              💡 Tip: A rich text editor will be available soon. For now, you can use Markdown formatting.
+              💡 Tip: A rich text editor will be available soon. For now, you
+              can use Markdown formatting.
             </p>
           </div>
 
           {/* Footer Info */}
           <div className="flex items-center justify-between pt-4 border-t text-xs text-muted-foreground">
             <div>
-              {content.length} characters • {content.split(/\s+/).filter(Boolean).length} words
+              {content.length} characters •{" "}
+              {content.split(/\s+/).filter(Boolean).length} words
             </div>
             <div>Auto-saves every 2 seconds</div>
           </div>
@@ -297,4 +305,3 @@ export function NoteEditor({
     </div>
   );
 }
-

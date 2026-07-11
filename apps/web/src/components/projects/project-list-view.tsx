@@ -132,7 +132,8 @@ function ProjectListItem({
     }).length ?? 0;
 
   const totalTasks = project.tasks?.length ?? 0;
-  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const progress =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const members = project.members ?? [];
 
@@ -152,7 +153,11 @@ function ProjectListItem({
               onTogglePin(project.id);
             }}
           >
-            <Star className={isPinned ? "h-4 w-4 fill-yellow-500 text-yellow-500" : "h-4 w-4"} />
+            <Star
+              className={
+                isPinned ? "h-4 w-4 fill-yellow-500 text-yellow-500" : "h-4 w-4"
+              }
+            />
           </Button>
         )}
 
@@ -168,7 +173,9 @@ function ProjectListItem({
             </Badge>
           </div>
           {project.description && (
-            <p className="text-sm text-muted-foreground truncate">{project.description}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {project.description}
+            </p>
           )}
         </div>
 
@@ -200,9 +207,14 @@ function ProjectListItem({
             <Users className="h-4 w-4 text-muted-foreground" />
             <div className="flex -space-x-2">
               {members.slice(0, 3).map((member: any) => (
-                <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
+                <Avatar
+                  key={member.id}
+                  className="h-6 w-6 border-2 border-background"
+                >
                   <AvatarImage src={member.avatar ?? undefined} />
-                  <AvatarFallback className="text-xs">{member.name?.charAt(0) ?? "?"}</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    {member.name?.charAt(0) ?? "?"}
+                  </AvatarFallback>
                 </Avatar>
               ))}
               {members.length > 3 && (

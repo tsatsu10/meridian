@@ -71,7 +71,7 @@ function TaskLabels({
     const labelIds = labels?.map((label: Label) => label.id) ?? [];
     const labelIdsString = JSON.stringify(labelIds.sort()); // Stable comparison
     const currentIdsString = JSON.stringify([...taskLabels].sort());
-    
+
     if (labelIdsString !== currentIdsString) {
       setTaskLabels(labelIds);
     }

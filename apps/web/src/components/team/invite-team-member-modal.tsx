@@ -32,25 +32,77 @@ type Props = {
 
 // @epic-1.1-rbac: Complete list of available roles for invitation
 const AVAILABLE_ROLES = [
-  { value: "guest", label: "Guest", description: "Temporary access with limited permissions" },
-  { value: "stakeholder", label: "Stakeholder", description: "External stakeholder with project visibility" },
-  { value: "contractor", label: "Contractor", description: "External contractor with specific project access" },
-  { value: "client", label: "Client", description: "External client with project visibility" },
-  { value: "member", label: "Member", description: "Standard team member with basic participation" },
-  { value: "team-lead", label: "Team Lead", description: "Team coordination and task assignment" },
-  { value: "project-viewer", label: "Project Viewer", description: "Read-only project access" },
-  { value: "project-manager", label: "Project Manager", description: "Full control over assigned projects" },
-  { value: "workspace-viewer", label: "Workspace Viewer", description: "Read-only workspace access" },
-  { value: "department-head", label: "Department Head", description: "Department oversight across multiple projects" },
-  { value: "workspace-manager", label: "Workspace Manager", description: "Full workspace control and management" }
+  {
+    value: "guest",
+    label: "Guest",
+    description: "Temporary access with limited permissions",
+  },
+  {
+    value: "stakeholder",
+    label: "Stakeholder",
+    description: "External stakeholder with project visibility",
+  },
+  {
+    value: "contractor",
+    label: "Contractor",
+    description: "External contractor with specific project access",
+  },
+  {
+    value: "client",
+    label: "Client",
+    description: "External client with project visibility",
+  },
+  {
+    value: "member",
+    label: "Member",
+    description: "Standard team member with basic participation",
+  },
+  {
+    value: "team-lead",
+    label: "Team Lead",
+    description: "Team coordination and task assignment",
+  },
+  {
+    value: "project-viewer",
+    label: "Project Viewer",
+    description: "Read-only project access",
+  },
+  {
+    value: "project-manager",
+    label: "Project Manager",
+    description: "Full control over assigned projects",
+  },
+  {
+    value: "workspace-viewer",
+    label: "Workspace Viewer",
+    description: "Read-only workspace access",
+  },
+  {
+    value: "department-head",
+    label: "Department Head",
+    description: "Department oversight across multiple projects",
+  },
+  {
+    value: "workspace-manager",
+    label: "Workspace Manager",
+    description: "Full workspace control and management",
+  },
 ] as const;
 
 const teamMemberSchema = z.object({
   userEmail: z.string().email(),
   role: z.enum([
-    "guest", "stakeholder", "contractor", "client", "member", 
-    "team-lead", "project-viewer", "project-manager", 
-    "workspace-viewer", "department-head", "workspace-manager"
+    "guest",
+    "stakeholder",
+    "contractor",
+    "client",
+    "member",
+    "team-lead",
+    "project-viewer",
+    "project-manager",
+    "workspace-viewer",
+    "department-head",
+    "workspace-manager",
   ] as const),
 });
 
@@ -75,7 +127,9 @@ function InviteTeamMemberModal({ open, onClose, workspaceId }: Props) {
         queryKey: ["workspace-users", workspaceId],
       });
 
-      toast.success(`Invitation sent successfully with ${AVAILABLE_ROLES.find(r => r.value === role)?.label} role`);
+      toast.success(
+        `Invitation sent successfully with ${AVAILABLE_ROLES.find((r) => r.value === role)?.label} role`,
+      );
 
       resetInviteTeamMember();
       onClose();
@@ -151,7 +205,10 @@ function InviteTeamMemberModal({ open, onClose, workspaceId }: Props) {
                           <FormLabel className="block text-sm font-medium text-zinc-900 dark:text-zinc-300 mb-1">
                             Role
                           </FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger className="bg-white dark:bg-zinc-800/50">
                                 <SelectValue placeholder="Select a role" />
@@ -161,8 +218,12 @@ function InviteTeamMemberModal({ open, onClose, workspaceId }: Props) {
                               {AVAILABLE_ROLES.map((role) => (
                                 <SelectItem key={role.value} value={role.value}>
                                   <div className="flex flex-col">
-                                    <span className="font-medium">{role.label}</span>
-                                    <span className="text-xs text-muted-foreground">{role.description}</span>
+                                    <span className="font-medium">
+                                      {role.label}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {role.description}
+                                    </span>
                                   </div>
                                 </SelectItem>
                               ))}

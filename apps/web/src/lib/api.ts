@@ -2,7 +2,10 @@ import { fetchApi } from "./fetch";
 
 // API client interface
 interface ApiClient {
-  get: (endpoint: string, options?: { params?: Record<string, string> }) => Promise<any>;
+  get: (
+    endpoint: string,
+    options?: { params?: Record<string, string> },
+  ) => Promise<any>;
   post: (endpoint: string, data?: any, options?: RequestInit) => Promise<any>;
   put: (endpoint: string, data?: any, options?: RequestInit) => Promise<any>;
   delete: (endpoint: string, options?: RequestInit) => Promise<any>;
@@ -10,7 +13,10 @@ interface ApiClient {
 
 // Create API client instance
 export const api: ApiClient = {
-  get: async (endpoint: string, options?: { params?: Record<string, string> }) => {
+  get: async (
+    endpoint: string,
+    options?: { params?: Record<string, string> },
+  ) => {
     return fetchApi(endpoint, {
       method: "GET",
       params: options?.params,

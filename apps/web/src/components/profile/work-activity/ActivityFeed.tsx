@@ -4,8 +4,17 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, CheckCircle2, MessageSquare, FileText, UserPlus } from "lucide-react";
-import { getActivityFeed, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
+import {
+  Activity,
+  CheckCircle2,
+  MessageSquare,
+  FileText,
+  UserPlus,
+} from "lucide-react";
+import {
+  getActivityFeed,
+  smartProfileKeys,
+} from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
 
@@ -33,7 +42,11 @@ const activityColors: Record<string, string> = {
   project_joined: "text-indigo-600 dark:text-indigo-400",
 };
 
-export function ActivityFeed({ userId, limit = 20, className }: ActivityFeedProps) {
+export function ActivityFeed({
+  userId,
+  limit = 20,
+  className,
+}: ActivityFeedProps) {
   const { data, isLoading } = useQuery({
     queryKey: smartProfileKeys.activity(userId),
     queryFn: () => getActivityFeed(userId, { limit }),
@@ -105,7 +118,9 @@ export function ActivityFeed({ userId, limit = 20, className }: ActivityFeedProp
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {activity.type.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                    {activity.type
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                   </p>
                   {activity.taskTitle && (
                     <p className="text-sm text-muted-foreground truncate">
@@ -119,7 +134,9 @@ export function ActivityFeed({ userId, limit = 20, className }: ActivityFeedProp
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(activity.createdAt), {
+                    addSuffix: true,
+                  })}
                 </span>
               </div>
             );
@@ -129,4 +146,3 @@ export function ActivityFeed({ userId, limit = 20, className }: ActivityFeedProp
     </Card>
   );
 }
-

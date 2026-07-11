@@ -56,13 +56,17 @@ export default function TaskCardContextMenuContent({
   task,
   taskCardContext,
 }: TaskCardContextMenuContentProps) {
-  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] = useState(false);
+  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] =
+    useState(false);
   const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
-  
+
   // Use bulk operations if available, otherwise provide defaults
   let isSelectionMode = false;
   let enterSelectionMode = () => {};
-  let selectAllSubtasks = (_parentTaskId: string, _subtasks: TaskWithSubtasks[]) => {};
+  let selectAllSubtasks = (
+    _parentTaskId: string,
+    _subtasks: TaskWithSubtasks[],
+  ) => {};
 
   try {
     const bulkOps = useBulkOperations();
@@ -83,7 +87,9 @@ export default function TaskCardContextMenuContent({
   const { mutateAsync: deleteTask } = useDeleteTask(taskCardContext.projectId);
 
   // useGetProjects returns either a bare array or { projects, pagination }
-  const projectList = Array.isArray(projects) ? projects : (projects as any)?.projects;
+  const projectList = Array.isArray(projects)
+    ? projects
+    : (projects as any)?.projects;
 
   const projectsOptions = useMemo(() => {
     return projectList?.map((project: any) => {
@@ -194,7 +200,9 @@ export default function TaskCardContextMenuContent({
       toast.success("Task removed from parent successfully");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to remove task from parent",
+        error instanceof Error
+          ? error.message
+          : "Failed to remove task from parent",
       );
     }
   };
@@ -210,17 +218,19 @@ export default function TaskCardContextMenuContent({
         onOpenChange={setIsCreateSubtaskModalOpen}
         status={task.status}
         parentTaskId={task.id}
-        projectContext={projectList?.find((p: any) => p.id === taskCardContext.projectId)}
+        projectContext={projectList?.find(
+          (p: any) => p.id === taskCardContext.projectId,
+        )}
         hideProjectSelection={true}
       />
-      
+
       <EditTaskModal
         open={isEditTaskModalOpen}
         onClose={() => setIsEditTaskModalOpen(false)}
         task={task}
         workspaceId={taskCardContext.worskpaceId}
       />
-      
+
       <ContextMenuContent className="w-56">
         {/* 🎯 QUICK ACTIONS: Primary task operations */}
         <ContextMenuItem
@@ -284,154 +294,154 @@ export default function TaskCardContextMenuContent({
         <ContextMenuSeparator />
 
         {/* ⚡ QUICK EDITS: Change properties without opening modal */}
-      <ContextMenuSub>
-        <ContextMenuSubTrigger className="flex items-center gap-2">
-          <Tags className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
-          <span className="flex-1">Priority</span>
-          <kbd className="text-xs text-muted-foreground">P</kbd>
-        </ContextMenuSubTrigger>
-        <ContextMenuSubContent>
-          <ContextMenuCheckboxItem
-            onClick={() => handleChange("priority", "low")}
-            className="flex items-center gap-2 cursor-pointer"
-            checked={task.priority === "low"}
-          >
-            <Flag className="w-3.5 h-3.5 text-blue-400" />
-            Low
-          </ContextMenuCheckboxItem>
-          <ContextMenuCheckboxItem
-            onClick={() => handleChange("priority", "medium")}
-            className="flex items-center gap-2 cursor-pointer"
-            checked={task.priority === "medium"}
-          >
-            <Flag className="w-3.5 h-3.5 text-yellow-400" />
-            Medium
-          </ContextMenuCheckboxItem>
-          <ContextMenuCheckboxItem
-            onClick={() => handleChange("priority", "high")}
-            className="flex items-center gap-2 cursor-pointer"
-            checked={task.priority === "high"}
-          >
-            <Flag className="w-3.5 h-3.5 text-red-400" />
-            High
-          </ContextMenuCheckboxItem>
-          <ContextMenuCheckboxItem
-            onClick={() => handleChange("priority", "urgent")}
-            className="flex items-center gap-2 cursor-pointer"
-            checked={task.priority === "urgent"}
-          >
-            <Flag className="w-3.5 h-3.5 text-red-400" />
-            Urgent
-          </ContextMenuCheckboxItem>
-        </ContextMenuSubContent>
-      </ContextMenuSub>
-
-      <ContextMenuSub>
-        <ContextMenuSubTrigger className="flex items-center gap-2">
-          <ListTodo className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
-          <span className="flex-1">Status</span>
-          <kbd className="text-xs text-muted-foreground">S</kbd>
-        </ContextMenuSubTrigger>
-        <ContextMenuSubContent>
-          {statusOptions.map((status) => (
-            <ContextMenuCheckboxItem
-              key={status.value}
-              checked={task.status === status.value}
-              onCheckedChange={() => handleChange("status", status.value)}
-              className="flex items-center justify-between cursor-pointer"
-            >
-              {status.label}
-            </ContextMenuCheckboxItem>
-          ))}
-        </ContextMenuSubContent>
-      </ContextMenuSub>
-
-      <ContextMenuSub>
-        <ContextMenuSubTrigger className="flex items-center gap-2">
-          <User className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
-          <span className="flex-1">Assignee</span>
-          <kbd className="text-xs text-muted-foreground">A</kbd>
-        </ContextMenuSubTrigger>
-
-        {usersOptions && (
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="flex items-center gap-2">
+            <Tags className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span className="flex-1">Priority</span>
+            <kbd className="text-xs text-muted-foreground">P</kbd>
+          </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            {usersOptions.map((user: any) => (
+            <ContextMenuCheckboxItem
+              onClick={() => handleChange("priority", "low")}
+              className="flex items-center gap-2 cursor-pointer"
+              checked={task.priority === "low"}
+            >
+              <Flag className="w-3.5 h-3.5 text-blue-400" />
+              Low
+            </ContextMenuCheckboxItem>
+            <ContextMenuCheckboxItem
+              onClick={() => handleChange("priority", "medium")}
+              className="flex items-center gap-2 cursor-pointer"
+              checked={task.priority === "medium"}
+            >
+              <Flag className="w-3.5 h-3.5 text-yellow-400" />
+              Medium
+            </ContextMenuCheckboxItem>
+            <ContextMenuCheckboxItem
+              onClick={() => handleChange("priority", "high")}
+              className="flex items-center gap-2 cursor-pointer"
+              checked={task.priority === "high"}
+            >
+              <Flag className="w-3.5 h-3.5 text-red-400" />
+              High
+            </ContextMenuCheckboxItem>
+            <ContextMenuCheckboxItem
+              onClick={() => handleChange("priority", "urgent")}
+              className="flex items-center gap-2 cursor-pointer"
+              checked={task.priority === "urgent"}
+            >
+              <Flag className="w-3.5 h-3.5 text-red-400" />
+              Urgent
+            </ContextMenuCheckboxItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="flex items-center gap-2">
+            <ListTodo className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span className="flex-1">Status</span>
+            <kbd className="text-xs text-muted-foreground">S</kbd>
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent>
+            {statusOptions.map((status) => (
               <ContextMenuCheckboxItem
-                key={user.value}
-                checked={task.userEmail === user.value}
-                onCheckedChange={() =>
-                  handleChange("userEmail", user.value ?? "")
-                }
+                key={status.value}
+                checked={task.status === status.value}
+                onCheckedChange={() => handleChange("status", status.value)}
                 className="flex items-center justify-between cursor-pointer"
               >
-                {user.label}
+                {status.label}
               </ContextMenuCheckboxItem>
             ))}
-            <ContextMenuCheckboxItem
-              checked={!task.userEmail}
-              onCheckedChange={() => handleChange("userEmail", "")}
-              className="flex items-center justify-between cursor-pointer"
-            >
-              Unassigned
-            </ContextMenuCheckboxItem>
           </ContextMenuSubContent>
-        )}
-      </ContextMenuSub>
+        </ContextMenuSub>
 
-      <ContextMenuSub>
-        <ContextMenuSubTrigger className="flex items-center gap-2">
-          <CalendarIcon className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
-          <span className="flex-1">Due date</span>
-          <kbd className="text-xs text-muted-foreground">D</kbd>
-        </ContextMenuSubTrigger>
-        {projectsOptions && (
-          <ContextMenuSubContent>
-            <Calendar
-              mode="single"
-              selected={task.dueDate ? new Date(task.dueDate) : undefined}
-              onSelect={(value) => handleChange("dueDate", String(value))}
-              className="w-auto border-none"
-              autoFocus
-            />
-          </ContextMenuSubContent>
-        )}
-      </ContextMenuSub>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="flex items-center gap-2">
+            <User className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span className="flex-1">Assignee</span>
+            <kbd className="text-xs text-muted-foreground">A</kbd>
+          </ContextMenuSubTrigger>
+
+          {usersOptions && (
+            <ContextMenuSubContent>
+              {usersOptions.map((user: any) => (
+                <ContextMenuCheckboxItem
+                  key={user.value}
+                  checked={task.userEmail === user.value}
+                  onCheckedChange={() =>
+                    handleChange("userEmail", user.value ?? "")
+                  }
+                  className="flex items-center justify-between cursor-pointer"
+                >
+                  {user.label}
+                </ContextMenuCheckboxItem>
+              ))}
+              <ContextMenuCheckboxItem
+                checked={!task.userEmail}
+                onCheckedChange={() => handleChange("userEmail", "")}
+                className="flex items-center justify-between cursor-pointer"
+              >
+                Unassigned
+              </ContextMenuCheckboxItem>
+            </ContextMenuSubContent>
+          )}
+        </ContextMenuSub>
+
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="flex items-center gap-2">
+            <CalendarIcon className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span className="flex-1">Due date</span>
+            <kbd className="text-xs text-muted-foreground">D</kbd>
+          </ContextMenuSubTrigger>
+          {projectsOptions && (
+            <ContextMenuSubContent>
+              <Calendar
+                mode="single"
+                selected={task.dueDate ? new Date(task.dueDate) : undefined}
+                onSelect={(value) => handleChange("dueDate", String(value))}
+                className="w-auto border-none"
+                autoFocus
+              />
+            </ContextMenuSubContent>
+          )}
+        </ContextMenuSub>
 
         <ContextMenuSeparator />
 
         {/* 🔄 ADVANCED: Mirror and bulk operations */}
-      <ContextMenuSub>
-        <ContextMenuSubTrigger className="flex items-center gap-2">
-          <FlipHorizontal2 className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
-          <span className="flex-1">Mirror</span>
-        </ContextMenuSubTrigger>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="flex items-center gap-2">
+            <FlipHorizontal2 className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span className="flex-1">Mirror</span>
+          </ContextMenuSubTrigger>
 
-        {projectsOptions && (
-          <ContextMenuSubContent>
-            {projectsOptions.map((project: any) => (
-              <ContextMenuItem
-                key={project.value}
-                onClick={() => handleDuplicateTask(project.value)}
-                className="flex items-center justify-between cursor-pointer"
-              >
-                {project.label}
-              </ContextMenuItem>
-            ))}
-          </ContextMenuSubContent>
-        )}
-      </ContextMenuSub>
+          {projectsOptions && (
+            <ContextMenuSubContent>
+              {projectsOptions.map((project: any) => (
+                <ContextMenuItem
+                  key={project.value}
+                  onClick={() => handleDuplicateTask(project.value)}
+                  className="flex items-center justify-between cursor-pointer"
+                >
+                  {project.label}
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          )}
+        </ContextMenuSub>
 
         <ContextMenuSeparator />
 
-      <ContextMenuItem
-        onClick={handleDeleteTask}
-        className="flex items-center transition-all duration-200 gap-2 cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-      >
-        <Trash className="w-3.5 h-3.5" />
-        <span className="flex-1">Delete Task</span>
-        <kbd className="text-xs">⌦</kbd>
-      </ContextMenuItem>
-    </ContextMenuContent>
+        <ContextMenuItem
+          onClick={handleDeleteTask}
+          className="flex items-center transition-all duration-200 gap-2 cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+        >
+          <Trash className="w-3.5 h-3.5" />
+          <span className="flex-1">Delete Task</span>
+          <kbd className="text-xs">⌦</kbd>
+        </ContextMenuItem>
+      </ContextMenuContent>
     </>
   );
 }

@@ -2,11 +2,12 @@
 // @persona-sarah: PM needs proper workspace loading for project management
 // @persona-david: Team lead needs reliable workspace access across sessions
 
-import React, { useEffect } from 'react';
-import useWorkspaceStore from '@/store/workspace';
-import useAuth from './auth-provider/hooks/use-auth';
-import useGetWorkspaces from '@/hooks/queries/workspace/use-get-workspaces';
-import { useUserPreferencesStore } from '@/store/user-preferences';
+import type React from "react";
+import { useEffect } from "react";
+import useWorkspaceStore from "@/store/workspace";
+import useAuth from "./auth-provider/hooks/use-auth";
+import useGetWorkspaces from "@/hooks/queries/workspace/use-get-workspaces";
+import { useUserPreferencesStore } from "@/store/user-preferences";
 
 interface WorkspaceProviderProps {
   children: React.ReactNode;
@@ -26,7 +27,9 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
     // If we have an active workspace ID, try to find and set that workspace
     if (activeWorkspaceId) {
-      const selectedWorkspace = workspaces.find((w: any) => w.id === activeWorkspaceId);
+      const selectedWorkspace = workspaces.find(
+        (w: any) => w.id === activeWorkspaceId,
+      );
       if (selectedWorkspace) {
         setWorkspace(selectedWorkspace);
         return;
@@ -50,9 +53,16 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
       setActiveWorkspaceId(null);
       useWorkspaceStore.getState().setWorkspace(undefined);
     }
-  }, [user, workspaces, isLoading, activeWorkspaceId, setWorkspace, setActiveWorkspaceId]);
+  }, [
+    user,
+    workspaces,
+    isLoading,
+    activeWorkspaceId,
+    setWorkspace,
+    setActiveWorkspaceId,
+  ]);
 
   return <>{children}</>;
 }
 
-export default WorkspaceProvider; 
+export default WorkspaceProvider;

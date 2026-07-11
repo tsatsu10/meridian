@@ -26,4 +26,3 @@ function useDeleteNotification() {
 }
 
 export default useDeleteNotification;
-

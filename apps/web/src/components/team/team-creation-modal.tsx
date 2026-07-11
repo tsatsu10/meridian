@@ -11,11 +11,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Users, 
-  Target,
-  Palette
-} from "lucide-react";
+import { Users, Target, Palette } from "lucide-react";
 import { cn } from "@/lib/cn";
 import useWorkspaceStore from "@/store/workspace";
 import {
@@ -33,7 +29,7 @@ interface TeamData {
   name: string;
   description: string;
   color: string;
-  type: 'development' | 'design' | 'marketing' | 'management' | 'other';
+  type: "development" | "design" | "marketing" | "management" | "other";
   projectId?: string;
 }
 
@@ -50,36 +46,51 @@ interface TeamMember {
   email: string;
   role: string;
   avatar?: string;
-  status?: 'existing' | 'invited';
+  status?: "existing" | "invited";
 }
 
 // Available members will be fetched from workspace API
 // Remove hardcoded data
 
-void ([
+void [
   {
     id: "dev",
     name: "Development Team",
     description: "Full-stack development team",
     color: "bg-blue-500",
     icon: "💻",
-    suggestedRoles: ["Team Lead", "Senior Developer", "Developer", "QA Engineer"]
+    suggestedRoles: [
+      "Team Lead",
+      "Senior Developer",
+      "Developer",
+      "QA Engineer",
+    ],
   },
   {
     id: "design",
-    name: "Design Team", 
+    name: "Design Team",
     description: "UI/UX and creative team",
     color: "bg-purple-500",
     icon: "🎨",
-    suggestedRoles: ["Design Lead", "Senior Designer", "UX Researcher", "Visual Designer"]
+    suggestedRoles: [
+      "Design Lead",
+      "Senior Designer",
+      "UX Researcher",
+      "Visual Designer",
+    ],
   },
   {
     id: "product",
     name: "Product Team",
     description: "Product management and strategy",
-    color: "bg-green-500", 
+    color: "bg-green-500",
     icon: "📊",
-    suggestedRoles: ["Product Manager", "Product Owner", "Business Analyst", "Data Analyst"]
+    suggestedRoles: [
+      "Product Manager",
+      "Product Owner",
+      "Business Analyst",
+      "Data Analyst",
+    ],
   },
   {
     id: "marketing",
@@ -87,41 +98,64 @@ void ([
     description: "Marketing and growth team",
     color: "bg-orange-500",
     icon: "📈",
-    suggestedRoles: ["Marketing Manager", "Content Creator", "SEO Specialist", "Social Media Manager"]
-  }
-]);
+    suggestedRoles: [
+      "Marketing Manager",
+      "Content Creator",
+      "SEO Specialist",
+      "Social Media Manager",
+    ],
+  },
+];
 
 const TEAM_TYPES = [
-  { value: 'development', label: 'Development Team', description: 'Software engineering and technical work' },
-  { value: 'design', label: 'Design Team', description: 'UI/UX design and creative work' },
-  { value: 'marketing', label: 'Marketing Team', description: 'Marketing and promotional activities' },
-  { value: 'management', label: 'Management Team', description: 'Project management and coordination' },
-  { value: 'other', label: 'Other', description: 'Custom team type' }
+  {
+    value: "development",
+    label: "Development Team",
+    description: "Software engineering and technical work",
+  },
+  {
+    value: "design",
+    label: "Design Team",
+    description: "UI/UX design and creative work",
+  },
+  {
+    value: "marketing",
+    label: "Marketing Team",
+    description: "Marketing and promotional activities",
+  },
+  {
+    value: "management",
+    label: "Management Team",
+    description: "Project management and coordination",
+  },
+  { value: "other", label: "Other", description: "Custom team type" },
 ];
 
 const TEAM_COLORS = [
-  '#3B82F6', // Blue
-  '#10B981', // Emerald
-  '#8B5CF6', // Violet
-  '#F59E0B', // Amber
-  '#EF4444', // Red
-  '#06B6D4', // Cyan
-  '#84CC16', // Lime
-  '#F97316', // Orange
+  "#3B82F6", // Blue
+  "#10B981", // Emerald
+  "#8B5CF6", // Violet
+  "#F59E0B", // Amber
+  "#EF4444", // Red
+  "#06B6D4", // Cyan
+  "#84CC16", // Lime
+  "#F97316", // Orange
 ];
 
-export default function TeamCreationModal({ 
-  open, 
-  onClose, 
-  onTeamCreated 
+export default function TeamCreationModal({
+  open,
+  onClose,
+  onTeamCreated,
 }: TeamCreationModalProps) {
-  const [_step, setStep] = useState<"template" | "details" | "members">("template");
+  const [_step, setStep] = useState<"template" | "details" | "members">(
+    "template",
+  );
   const [_selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [_teamData, setTeamData] = useState({
     name: "",
     description: "",
     projectId: "",
-    color: "bg-blue-500"
+    color: "bg-blue-500",
   });
   const [selectedMembers, setSelectedMembers] = useState<TeamMember[]>([]);
   const [searchTerm, _setSearchTerm] = useState("");
@@ -129,7 +163,7 @@ export default function TeamCreationModal({
   const [_showInviteForm, setShowInviteForm] = useState(false);
   const [_inviteData, setInviteData] = useState({
     name: "",
-    email: ""
+    email: "",
   });
   // Fetch available members from workspace API
   const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
@@ -145,14 +179,16 @@ export default function TeamCreationModal({
       setIsLoadingMembers(true);
       try {
         const users = await fetchApi(`/workspace-user/${workspace.id}`);
-        const members: TeamMember[] = (Array.isArray(users) ? users : []).map((u: any) => ({
-          id: u.id || u.userId,
-          name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
-          email: u.email || u.userEmail,
-          role: u.role || "member",
-          avatar: u.avatar,
-          status: "existing" as const,
-        }));
+        const members: TeamMember[] = (Array.isArray(users) ? users : []).map(
+          (u: any) => ({
+            id: u.id || u.userId,
+            name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
+            email: u.email || u.userEmail,
+            role: u.role || "member",
+            avatar: u.avatar,
+            status: "existing" as const,
+          }),
+        );
 
         setAvailableMembers(members);
       } catch (error) {
@@ -166,24 +202,29 @@ export default function TeamCreationModal({
     fetchWorkspaceMembers();
   }, [open, workspace?.id]);
   const [formData, setFormData] = useState<TeamData>({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     color: TEAM_COLORS[0],
-    type: 'development'
+    type: "development",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  void availableMembers.filter(
+    (member) =>
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
-  void (availableMembers.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ));
-
-              const resetForm = () => {
+  const resetForm = () => {
     setStep("template");
     setSelectedTemplate(null);
-    setTeamData({ name: "", description: "", projectId: "", color: "bg-blue-500" });
+    setTeamData({
+      name: "",
+      description: "",
+      projectId: "",
+      color: "bg-blue-500",
+    });
     setSelectedMembers([]);
     setMemberRoles({});
     setShowInviteForm(false);
@@ -206,15 +247,15 @@ export default function TeamCreationModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Team name is required';
+      newErrors.name = "Team name is required";
     } else if (formData.name.length < 2) {
-      newErrors.name = 'Team name must be at least 2 characters';
+      newErrors.name = "Team name must be at least 2 characters";
     } else if (formData.name.length > 50) {
-      newErrors.name = 'Team name must be less than 50 characters';
+      newErrors.name = "Team name must be less than 50 characters";
     }
 
     if (formData.description && formData.description.length > 200) {
-      newErrors.description = 'Description must be less than 200 characters';
+      newErrors.description = "Description must be less than 200 characters";
     }
 
     setErrors(newErrors);
@@ -223,11 +264,12 @@ export default function TeamCreationModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     if (!workspace?.id) {
-      const message = "No workspace selected. Please choose a workspace before creating a team.";
+      const message =
+        "No workspace selected. Please choose a workspace before creating a team.";
       setErrors((prev) => ({ ...prev, submit: message }));
       toast.error(message);
       return;
@@ -256,7 +298,9 @@ export default function TeamCreationModal({
     } catch (error) {
       console.error("Failed to create team:", error);
       const message =
-        error instanceof Error ? error.message : "Failed to create team. Please try again.";
+        error instanceof Error
+          ? error.message
+          : "Failed to create team. Please try again.";
       setErrors((prev) => ({ ...prev, submit: message }));
       toast.error(message);
     } finally {
@@ -265,14 +309,14 @@ export default function TeamCreationModal({
   };
 
   const handleInputChange = (field: keyof TeamData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
-  const selectedTeamType = TEAM_TYPES.find(t => t.value === formData.type);
+  const selectedTeamType = TEAM_TYPES.find((t) => t.value === formData.type);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -286,33 +330,42 @@ export default function TeamCreationModal({
                 <span>Create New Team</span>
               </DialogTitle>
               <DialogDescription className="text-lg">
-                Create a new team to organize members and collaborate on projects.
+                Create a new team to organize members and collaborate on
+                projects.
               </DialogDescription>
             </div>
 
             <div className="max-h-[70vh] overflow-y-auto space-y-8 pr-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-              <form onSubmit={handleSubmit} className="space-y-8 w-full max-w-none">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-8 w-full max-w-none"
+              >
                 {/* Team Details */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-start space-x-3">
                     <Target className="h-5 w-5 text-emerald-600" />
                     <h3 className="text-xl font-semibold">Team Details</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Team Name */}
                     <div className="space-y-3">
-                      <Label htmlFor="name" className="text-sm font-medium flex items-center">
+                      <Label
+                        htmlFor="name"
+                        className="text-sm font-medium flex items-center"
+                      >
                         Team Name *
                       </Label>
                       <Input
                         id="name"
                         placeholder="Frontend Development"
                         value={formData.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
                         className={cn(
                           "glass-card h-11 w-full font-medium",
-                          errors.name && "border-red-500"
+                          errors.name && "border-red-500",
                         )}
                         maxLength={50}
                       />
@@ -323,13 +376,16 @@ export default function TeamCreationModal({
 
                     {/* Team Type */}
                     <div className="space-y-3">
-                      <Label htmlFor="type" className="text-sm font-medium flex items-center">
+                      <Label
+                        htmlFor="type"
+                        className="text-sm font-medium flex items-center"
+                      >
                         Team Type
                       </Label>
                       <Select
                         value={formData.type}
-                        onValueChange={(value: TeamData['type']) => 
-                          handleInputChange('type', value)
+                        onValueChange={(value: TeamData["type"]) =>
+                          handleInputChange("type", value)
                         }
                       >
                         <SelectTrigger className="glass-card h-11">
@@ -340,7 +396,9 @@ export default function TeamCreationModal({
                             <SelectItem key={type.value} value={type.value}>
                               <div>
                                 <div className="font-medium">{type.label}</div>
-                                <div className="text-xs text-muted-foreground">{type.description}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {type.description}
+                                </div>
                               </div>
                             </SelectItem>
                           ))}
@@ -351,23 +409,30 @@ export default function TeamCreationModal({
 
                   {/* Description */}
                   <div className="space-y-3">
-                    <Label htmlFor="description" className="text-sm font-medium flex items-center">
+                    <Label
+                      htmlFor="description"
+                      className="text-sm font-medium flex items-center"
+                    >
                       Description (Optional)
                     </Label>
                     <Textarea
                       id="description"
                       placeholder="Describe the team's responsibilities and goals..."
                       value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("description", e.target.value)
+                      }
                       className={cn(
                         "resize-none glass-card w-full min-h-[90px]",
-                        errors.description && "border-red-500"
+                        errors.description && "border-red-500",
                       )}
                       rows={3}
                       maxLength={200}
                     />
                     {errors.description && (
-                      <p className="text-sm text-red-500">{errors.description}</p>
+                      <p className="text-sm text-red-500">
+                        {errors.description}
+                      </p>
                     )}
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Help others understand what this team does</span>
@@ -382,7 +447,7 @@ export default function TeamCreationModal({
                     <Palette className="h-5 w-5 text-purple-600" />
                     <h3 className="text-xl font-semibold">Team Appearance</h3>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <Label className="text-sm font-medium flex items-center">
                       Team Color
@@ -392,12 +457,12 @@ export default function TeamCreationModal({
                         <button
                           key={color}
                           type="button"
-                          onClick={() => handleInputChange('color', color)}
+                          onClick={() => handleInputChange("color", color)}
                           className={cn(
                             "w-10 h-10 rounded-lg border-2 transition-all duration-200",
-                            formData.color === color 
-                              ? "border-foreground scale-110" 
-                              : "border-transparent hover:scale-105"
+                            formData.color === color
+                              ? "border-foreground scale-110"
+                              : "border-transparent hover:scale-105",
                           )}
                           style={{ backgroundColor: color }}
                         />
@@ -413,11 +478,11 @@ export default function TeamCreationModal({
                       <Users className="h-5 w-5 text-indigo-600" />
                       <h3 className="text-xl font-semibold">Preview</h3>
                     </div>
-                    
+
                     <div className="p-4 glass-card rounded-lg border border-border/50">
                       <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-4 h-4 rounded-full" 
+                        <div
+                          className="w-4 h-4 rounded-full"
                           style={{ backgroundColor: formData.color }}
                         />
                         <span className="font-medium">{formData.name}</span>
@@ -437,7 +502,9 @@ export default function TeamCreationModal({
                 {/* Submit Error */}
                 {errors.submit && (
                   <div className="p-4 glass-card border border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/20">
-                    <p className="text-sm text-red-600 dark:text-red-400">{errors.submit}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400">
+                      {errors.submit}
+                    </p>
                   </div>
                 )}
 
@@ -457,7 +524,7 @@ export default function TeamCreationModal({
                       disabled={isLoading || !formData.name.trim()}
                       className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium px-6"
                     >
-                      {isLoading ? 'Creating...' : 'Create Team'}
+                      {isLoading ? "Creating..." : "Create Team"}
                     </Button>
                   </div>
                 </DialogFooter>
@@ -468,4 +535,4 @@ export default function TeamCreationModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

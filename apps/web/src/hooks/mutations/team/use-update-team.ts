@@ -24,7 +24,9 @@ export function useUpdateTeam() {
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.workspaceId],
+      });
       toast.success("Team updated successfully");
     },
     onError: (error: any) => {

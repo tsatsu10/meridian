@@ -1,8 +1,16 @@
 import { useMemo } from "react";
-import { format, startOfDay, addHours, isAfter, isBefore, isSameDay, endOfDay } from "date-fns";
+import {
+  format,
+  startOfDay,
+  addHours,
+  isAfter,
+  isBefore,
+  isSameDay,
+  endOfDay,
+} from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
-import { CalendarEvent } from "@/types/schedule";
+import type { CalendarEvent } from "@/types/schedule";
 import { Clock, Video, AlertCircle, CheckCircle2, MapPin } from "lucide-react";
 
 interface DayViewProps {
@@ -30,14 +38,21 @@ const eventTypeIcons = {
   task: Clock,
 };
 
-export default function DayView({ events, currentDate, onEventClick, className }: DayViewProps) {
+export default function DayView({
+  events,
+  currentDate,
+  onEventClick,
+  className,
+}: DayViewProps) {
   const dayStart = startOfDay(currentDate);
-  
+
   const eventsForDay = useMemo(() => {
     const dayEnd = endOfDay(currentDate);
-    return events.filter(event => {
+    return events.filter((event) => {
       const eventStart = new Date(event.startTime ?? event.date ?? 0);
-      const eventEnd = new Date(event.endTime ?? event.startTime ?? event.date ?? 0);
+      const eventEnd = new Date(
+        event.endTime ?? event.startTime ?? event.date ?? 0,
+      );
       // Include events that start on this day OR span across this day
       return (
         isSameDay(eventStart, currentDate) ||
@@ -50,11 +65,13 @@ export default function DayView({ events, currentDate, onEventClick, className }
   const getEventsForHour = (hour: number) => {
     const hourStart = addHours(dayStart, hour);
     const hourEnd = addHours(hourStart, 1);
-    
-    return eventsForDay.filter(event => {
+
+    return eventsForDay.filter((event) => {
       const eventStart = new Date(event.startTime ?? event.date ?? 0);
-      const eventEnd = new Date(event.endTime ?? event.startTime ?? event.date ?? 0);
-      
+      const eventEnd = new Date(
+        event.endTime ?? event.startTime ?? event.date ?? 0,
+      );
+
       return (
         (isAfter(eventStart, hourStart) && isBefore(eventStart, hourEnd)) ||
         (isAfter(eventEnd, hourStart) && isBefore(eventEnd, hourEnd)) ||
@@ -69,7 +86,7 @@ export default function DayView({ events, currentDate, onEventClick, className }
 
   const getCurrentHour = () => {
     const now = new Date();
-    if (format(now, 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd')) {
+    if (format(now, "yyyy-MM-dd") === format(currentDate, "yyyy-MM-dd")) {
       return now.getHours();
     }
     return -1;
@@ -84,9 +101,12 @@ export default function DayView({ events, currentDate, onEventClick, className }
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">{format(currentDate, 'EEEE, MMMM d, yyyy')}</h3>
+              <h3 className="text-lg font-semibold">
+                {format(currentDate, "EEEE, MMMM d, yyyy")}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                {eventsForDay.length} event{eventsForDay.length !== 1 ? 's' : ''} scheduled
+                {eventsForDay.length} event
+                {eventsForDay.length !== 1 ? "s" : ""} scheduled
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -113,20 +133,22 @@ export default function DayView({ events, currentDate, onEventClick, className }
                   isCurrentHour && "bg-blue-500/5 border-l-blue-500",
                   !isCurrentHour && isWorking && "bg-background",
                   !isCurrentHour && !isWorking && "bg-muted/30",
-                  !isCurrentHour && "border-l-transparent"
+                  !isCurrentHour && "border-l-transparent",
                 )}
               >
                 {/* Time Label */}
                 <div className="w-20 flex-shrink-0 p-3 text-right border-r">
                   <div className="flex flex-col items-end">
-                    <span className={cn(
-                      "text-sm font-medium",
-                      isCurrentHour && "text-blue-600 dark:text-blue-400"
-                    )}>
-                      {format(addHours(dayStart, hour), 'h:mm')}
+                    <span
+                      className={cn(
+                        "text-sm font-medium",
+                        isCurrentHour && "text-blue-600 dark:text-blue-400",
+                      )}
+                    >
+                      {format(addHours(dayStart, hour), "h:mm")}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {format(addHours(dayStart, hour), 'a')}
+                      {format(addHours(dayStart, hour), "a")}
                     </span>
                   </div>
                 </div>
@@ -136,30 +158,55 @@ export default function DayView({ events, currentDate, onEventClick, className }
                   {hourEvents.length > 0 ? (
                     <div className="space-y-1">
                       {hourEvents.map((event) => {
-                        const Icon = eventTypeIcons[event.type as keyof typeof eventTypeIcons];
+                        const Icon =
+                          eventTypeIcons[
+                            event.type as keyof typeof eventTypeIcons
+                          ];
                         return (
                           <button
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className={cn(
                               "w-full text-left p-3 rounded-lg border transition-all",
-                              eventTypeStyles[event.type as keyof typeof eventTypeStyles],
-                              "hover:shadow-md group"
+                              eventTypeStyles[
+                                event.type as keyof typeof eventTypeStyles
+                              ],
+                              "hover:shadow-md group",
                             )}
                           >
                             <div className="flex items-start gap-2">
                               <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <p className="font-medium text-sm truncate">{event.title}</p>
-                                  <Badge variant="secondary" className="text-xs">
+                                  <p className="font-medium text-sm truncate">
+                                    {event.title}
+                                  </p>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
                                     {event.type}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
-                                    {format(new Date(event.startTime ?? event.date ?? 0), 'h:mm a')} - {format(new Date(event.endTime ?? event.startTime ?? event.date ?? 0), 'h:mm a')}
+                                    {format(
+                                      new Date(
+                                        event.startTime ?? event.date ?? 0,
+                                      ),
+                                      "h:mm a",
+                                    )}{" "}
+                                    -{" "}
+                                    {format(
+                                      new Date(
+                                        event.endTime ??
+                                          event.startTime ??
+                                          event.date ??
+                                          0,
+                                      ),
+                                      "h:mm a",
+                                    )}
                                   </span>
                                   {event.location && (
                                     <span className="flex items-center gap-1 truncate">
@@ -168,26 +215,31 @@ export default function DayView({ events, currentDate, onEventClick, className }
                                     </span>
                                   )}
                                 </div>
-                                {event.attendees && event.attendees.length > 0 && (
-                                  <div className="flex items-center gap-1 mt-2">
-                                    <div className="flex -space-x-2">
-                                      {event.attendees.slice(0, 3).map((participant: any, i: any) => (
-                                        <div
-                                          key={i}
-                                          className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-xs font-semibold"
-                                          title={participant}
-                                        >
-                                          {String(participant).charAt(0).toUpperCase()}
-                                        </div>
-                                      ))}
-                                      {event.attendees.length > 3 && (
-                                        <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium">
-                                          +{event.attendees.length - 3}
-                                        </div>
-                                      )}
+                                {event.attendees &&
+                                  event.attendees.length > 0 && (
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <div className="flex -space-x-2">
+                                        {event.attendees
+                                          .slice(0, 3)
+                                          .map((participant: any, i: any) => (
+                                            <div
+                                              key={i}
+                                              className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-xs font-semibold"
+                                              title={participant}
+                                            >
+                                              {String(participant)
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                            </div>
+                                          ))}
+                                        {event.attendees.length > 3 && (
+                                          <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium">
+                                            +{event.attendees.length - 3}
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
                               </div>
                             </div>
                           </button>
@@ -196,7 +248,9 @@ export default function DayView({ events, currentDate, onEventClick, className }
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground/50">No events</p>
+                      <p className="text-xs text-muted-foreground/50">
+                        No events
+                      </p>
                     </div>
                   )}
                 </div>
@@ -208,5 +262,3 @@ export default function DayView({ events, currentDate, onEventClick, className }
     </div>
   );
 }
-
-

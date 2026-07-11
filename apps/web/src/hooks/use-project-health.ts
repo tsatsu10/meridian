@@ -16,7 +16,9 @@ export interface HealthMetrics {
  * Calculate project health based on tasks and deadlines
  * Uses local project data - NO API calls
  */
-export function useProjectHealth(project: ProjectDashboardRow | null | undefined): HealthMetrics {
+export function useProjectHealth(
+  project: ProjectDashboardRow | null | undefined,
+): HealthMetrics {
   return useMemo(() => {
     if (!project) {
       return {
@@ -32,7 +34,7 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
     // Use tasks from project data (already included)
     const tasks = project.tasks || [];
     const totalTasks = tasks.length;
-    
+
     if (totalTasks === 0) {
       // No tasks - consider as starting/planning
       return {
@@ -68,7 +70,8 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
     if (project.dueDate) {
       const projectDue = new Date(project.dueDate);
       const projectStatus = project.status?.toLowerCase();
-      const isComplete = projectStatus === "completed" || projectStatus === "done";
+      const isComplete =
+        projectStatus === "completed" || projectStatus === "done";
       projectOverdue = !isComplete && projectDue < now;
     }
 
@@ -141,7 +144,8 @@ export function getProjectHealthFilterKey(project: {
   if (project.dueDate) {
     const projectDue = new Date(project.dueDate);
     const projectStatus = project.status?.toLowerCase();
-    const isComplete = projectStatus === "completed" || projectStatus === "done";
+    const isComplete =
+      projectStatus === "completed" || projectStatus === "done";
     projectOverdue = !isComplete && projectDue < now;
   }
   let score = completionRate;
@@ -159,4 +163,3 @@ export function getProjectHealthFilterKey(project: {
 }
 
 export default useProjectHealth;
-

@@ -1,5 +1,4 @@
-
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -9,17 +8,17 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Target, 
-  Users, 
-  TrendingUp, 
-  Clock, 
+import {
+  Target,
+  Users,
+  TrendingUp,
+  Clock,
   AlertTriangle,
   CheckCircle,
   BarChart3,
   Activity,
   FileText,
-} from 'lucide-react';
+} from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useMilestones } from "@/hooks/use-milestones";
 
@@ -33,7 +32,7 @@ interface DashboardPopupProps {
   projectId?: string;
   projectName?: string;
   title?: string;
-  variant?: 'milestones' | 'team' | 'timeline' | 'full';
+  variant?: "milestones" | "team" | "timeline" | "full";
   realProjectStats?: any;
   realTasks?: any[];
   realTeamMembers?: any[];
@@ -45,10 +44,10 @@ export default function DashboardPopup({
   projectId,
   projectName,
   title = "Project Analytics",
-  variant = 'full',
+  variant = "full",
   realProjectStats,
-  
-  realTeamMembers
+
+  realTeamMembers,
 }: DashboardPopupProps) {
   const { stats: milestoneStats } = useMilestones(projectId);
 
@@ -61,7 +60,7 @@ export default function DashboardPopup({
     teamMembers: 6,
     velocity: 3.2,
     healthScore: 85,
-    efficiency: 92
+    efficiency: 92,
   };
 
   const getHealthColor = (score: number) => {
@@ -90,7 +89,9 @@ export default function DashboardPopup({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Achieved</p>
-                <p className="text-2xl font-bold text-green-600">{milestoneStats.achieved}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {milestoneStats.achieved}
+                </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
@@ -102,7 +103,9 @@ export default function DashboardPopup({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Upcoming</p>
-                <p className="text-2xl font-bold text-blue-600">{milestoneStats.upcoming}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {milestoneStats.upcoming}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-blue-500" />
             </div>
@@ -114,7 +117,9 @@ export default function DashboardPopup({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">High Risk</p>
-                <p className="text-2xl font-bold text-red-600">{milestoneStats.highRisk}</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {milestoneStats.highRisk}
+                </p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-500" />
             </div>
@@ -131,11 +136,22 @@ export default function DashboardPopup({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Completion Rate</span>
-              <span>{milestoneStats.total > 0 ? Math.round((milestoneStats.achieved / milestoneStats.total) * 100) : 0}%</span>
+              <span>
+                {milestoneStats.total > 0
+                  ? Math.round(
+                      (milestoneStats.achieved / milestoneStats.total) * 100,
+                    )
+                  : 0}
+                %
+              </span>
             </div>
-            <Progress 
-              value={milestoneStats.total > 0 ? (milestoneStats.achieved / milestoneStats.total) * 100 : 0} 
-              className="h-2" 
+            <Progress
+              value={
+                milestoneStats.total > 0
+                  ? (milestoneStats.achieved / milestoneStats.total) * 100
+                  : 0
+              }
+              className="h-2"
             />
           </div>
         </CardContent>
@@ -145,13 +161,23 @@ export default function DashboardPopup({
 
   const renderTeamMetrics = () => {
     // Calculate additional insights from team members if available
-    const activeMembers = realTeamMembers?.filter(m => m.status === 'online').length || 0;
-    const overloadedMembers = realTeamMembers?.filter(m => m.workloadStatus === 'overloaded').length || 0;
-    const avgProductivity = realTeamMembers?.length 
-      ? Math.round(realTeamMembers.reduce((sum, m) => sum + (m.productivity || 0), 0) / realTeamMembers.length)
+    const activeMembers =
+      realTeamMembers?.filter((m) => m.status === "online").length || 0;
+    const overloadedMembers =
+      realTeamMembers?.filter((m) => m.workloadStatus === "overloaded")
+        .length || 0;
+    const avgProductivity = realTeamMembers?.length
+      ? Math.round(
+          realTeamMembers.reduce((sum, m) => sum + (m.productivity || 0), 0) /
+            realTeamMembers.length,
+        )
       : projectStats.healthScore;
     const topPerformer = realTeamMembers?.length
-      ? realTeamMembers.reduce((prev, current) => ((current.productivity || 0) > (prev.productivity || 0)) ? current : prev)
+      ? realTeamMembers.reduce((prev, current) =>
+          (current.productivity || 0) > (prev.productivity || 0)
+            ? current
+            : prev,
+        )
       : null;
 
     return (
@@ -163,7 +189,9 @@ export default function DashboardPopup({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Team Size</p>
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{projectStats.teamMembers}</p>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                    {projectStats.teamMembers}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {activeMembers} active now
                   </p>
@@ -178,7 +206,9 @@ export default function DashboardPopup({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Productivity</p>
-                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{avgProductivity}%</p>
+                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    {avgProductivity}%
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     team average
                   </p>
@@ -193,7 +223,9 @@ export default function DashboardPopup({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">{projectStats.completedTasks}</p>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    {projectStats.completedTasks}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     of {projectStats.totalTasks} tasks
                   </p>
@@ -208,7 +240,9 @@ export default function DashboardPopup({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Avg Tasks</p>
-                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{projectStats.velocity}</p>
+                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+                    {projectStats.velocity}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     per member
                   </p>
@@ -228,12 +262,11 @@ export default function DashboardPopup({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Overall Progress</span>
-                <span className="font-semibold">{projectStats.efficiency}%</span>
+                <span className="font-semibold">
+                  {projectStats.efficiency}%
+                </span>
               </div>
-              <Progress 
-                value={projectStats.efficiency} 
-                className="h-2" 
-              />
+              <Progress value={projectStats.efficiency} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -250,7 +283,8 @@ export default function DashboardPopup({
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                     <span className="text-sm font-medium text-red-900 dark:text-red-100">
-                      {overloadedMembers} overloaded {overloadedMembers === 1 ? 'member' : 'members'}
+                      {overloadedMembers} overloaded{" "}
+                      {overloadedMembers === 1 ? "member" : "members"}
                     </span>
                   </div>
                   <Badge variant="destructive" className="text-xs">
@@ -259,8 +293,8 @@ export default function DashboardPopup({
                 </div>
               )}
               <div className="text-xs text-muted-foreground">
-                {overloadedMembers === 0 
-                  ? "✓ Team workload is well balanced" 
+                {overloadedMembers === 0
+                  ? "✓ Team workload is well balanced"
                   : "Consider redistributing tasks to balance workload"}
               </div>
             </CardContent>
@@ -285,7 +319,9 @@ export default function DashboardPopup({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-primary">{topPerformer.productivity}%</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {topPerformer.productivity}%
+                  </p>
                   <p className="text-xs text-muted-foreground">productivity</p>
                 </div>
               </div>
@@ -310,7 +346,9 @@ export default function DashboardPopup({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Tasks</p>
-                  <p className="text-2xl font-bold">{projectStats.totalTasks}</p>
+                  <p className="text-2xl font-bold">
+                    {projectStats.totalTasks}
+                  </p>
                 </div>
                 <FileText className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -322,7 +360,12 @@ export default function DashboardPopup({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Health Score</p>
-                  <p className={cn("text-2xl font-bold", getHealthColor(projectStats.healthScore))}>
+                  <p
+                    className={cn(
+                      "text-2xl font-bold",
+                      getHealthColor(projectStats.healthScore),
+                    )}
+                  >
                     {projectStats.healthScore}
                   </p>
                 </div>
@@ -355,11 +398,11 @@ export default function DashboardPopup({
 
   const renderContent = () => {
     switch (variant) {
-      case 'milestones':
+      case "milestones":
         return renderMilestoneMetrics();
-      case 'team':
+      case "team":
         return renderTeamMetrics();
-      case 'timeline':
+      case "timeline":
         return renderMilestoneMetrics(); // Timeline focuses on milestones
       default:
         return renderFullMetrics();
@@ -380,11 +423,9 @@ export default function DashboardPopup({
             </DialogDescription>
           )}
         </DialogHeader>
-        
-        <div className="mt-6">
-          {renderContent()}
-        </div>
+
+        <div className="mt-6">{renderContent()}</div>
       </DialogContent>
     </Dialog>
   );
-} 
+}

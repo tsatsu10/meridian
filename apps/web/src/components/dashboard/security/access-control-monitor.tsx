@@ -14,7 +14,19 @@ import {
   UserCog,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 interface RoleDistribution {
   role: string;
@@ -41,7 +53,7 @@ interface AccessStats {
   recentChanges: number;
 }
 
-void ({
+void {
   "workspace-manager": "#ef4444", // red
   admin: "#f59e0b", // orange
   "department-head": "#eab308", // yellow
@@ -50,7 +62,7 @@ void ({
   member: "#8b5cf6", // purple
   guest: "#6b7280", // gray
   "project-viewer": "#ec4899", // pink
-});
+};
 
 const ROLE_LABELS = {
   "workspace-manager": "Workspace Manager",
@@ -77,7 +89,9 @@ export function AccessControlMonitor() {
   });
 
   // Fetch role distribution
-  const { data: roleDistribution, isLoading: distributionLoading } = useQuery<RoleDistribution[]>({
+  const { data: roleDistribution, isLoading: distributionLoading } = useQuery<
+    RoleDistribution[]
+  >({
     queryKey: ["role-distribution"],
     queryFn: async () => {
       const response = await fetch("/api/rbac/distribution");
@@ -87,7 +101,9 @@ export function AccessControlMonitor() {
   });
 
   // Fetch recent permission changes
-  const { data: recentChanges, isLoading: changesLoading } = useQuery<PermissionChange[]>({
+  const { data: recentChanges, isLoading: changesLoading } = useQuery<
+    PermissionChange[]
+  >({
     queryKey: ["permission-changes"],
     queryFn: async () => {
       const response = await fetch("/api/rbac/recent-changes");
@@ -102,7 +118,9 @@ export function AccessControlMonitor() {
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span className="ml-2 text-muted-foreground">Loading access control data...</span>
+            <span className="ml-2 text-muted-foreground">
+              Loading access control data...
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -138,8 +156,13 @@ export function AccessControlMonitor() {
 
           <div className="p-4 border border-border rounded-lg bg-background/50">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Active Users</span>
+              <CheckCircle
+                className="h-4 w-4 text-green-600"
+                aria-hidden="true"
+              />
+              <span className="text-xs text-muted-foreground">
+                Active Users
+              </span>
             </div>
             <div className="text-2xl font-bold">{stats?.activeUsers || 0}</div>
           </div>
@@ -147,7 +170,9 @@ export function AccessControlMonitor() {
           <div className="p-4 border border-border rounded-lg bg-background/50">
             <div className="flex items-center gap-2 mb-2">
               <Key className="h-4 w-4 text-purple-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Unique Roles</span>
+              <span className="text-xs text-muted-foreground">
+                Unique Roles
+              </span>
             </div>
             <div className="text-2xl font-bold">{stats?.rolesCount || 0}</div>
           </div>
@@ -155,9 +180,13 @@ export function AccessControlMonitor() {
           <div className="p-4 border border-border rounded-lg bg-background/50">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-4 w-4 text-orange-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Recent Changes</span>
+              <span className="text-xs text-muted-foreground">
+                Recent Changes
+              </span>
             </div>
-            <div className="text-2xl font-bold">{stats?.recentChanges || 0}</div>
+            <div className="text-2xl font-bold">
+              {stats?.recentChanges || 0}
+            </div>
           </div>
         </div>
 
@@ -207,7 +236,10 @@ export function AccessControlMonitor() {
                 <h3 className="text-sm font-medium mb-4">User Count by Role</h3>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={roleDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-muted"
+                    />
                     <XAxis
                       dataKey="role"
                       tick={{ fontSize: 12 }}
@@ -244,7 +276,10 @@ export function AccessControlMonitor() {
                         style={{ backgroundColor: role.color }}
                         aria-hidden="true"
                       />
-                      <span className="font-medium">{ROLE_LABELS[role.role as keyof typeof ROLE_LABELS] || role.role}</span>
+                      <span className="font-medium">
+                        {ROLE_LABELS[role.role as keyof typeof ROLE_LABELS] ||
+                          role.role}
+                      </span>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-muted-foreground">
@@ -267,17 +302,32 @@ export function AccessControlMonitor() {
                 <table className="w-full">
                   <thead className="bg-muted/50 sticky top-0 z-10">
                     <tr>
-                      <th className="text-left p-3 text-xs font-medium">Role</th>
-                      <th className="text-center p-3 text-xs font-medium">Projects</th>
-                      <th className="text-center p-3 text-xs font-medium">Tasks</th>
-                      <th className="text-center p-3 text-xs font-medium">Users</th>
-                      <th className="text-center p-3 text-xs font-medium">Settings</th>
-                      <th className="text-center p-3 text-xs font-medium">Analytics</th>
+                      <th className="text-left p-3 text-xs font-medium">
+                        Role
+                      </th>
+                      <th className="text-center p-3 text-xs font-medium">
+                        Projects
+                      </th>
+                      <th className="text-center p-3 text-xs font-medium">
+                        Tasks
+                      </th>
+                      <th className="text-center p-3 text-xs font-medium">
+                        Users
+                      </th>
+                      <th className="text-center p-3 text-xs font-medium">
+                        Settings
+                      </th>
+                      <th className="text-center p-3 text-xs font-medium">
+                        Analytics
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.entries(ROLE_LABELS).map(([roleKey, roleLabel]) => (
-                      <tr key={roleKey} className="border-t border-border hover:bg-muted/30">
+                      <tr
+                        key={roleKey}
+                        className="border-t border-border hover:bg-muted/30"
+                      >
                         <td className="p-3 text-sm font-medium">{roleLabel}</td>
                         <td className="text-center p-3">
                           {getPermissionIcon(roleKey, "projects")}
@@ -331,30 +381,42 @@ export function AccessControlMonitor() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <UserCog className="h-4 w-4 text-blue-600" aria-hidden="true" />
-                          <span className="font-medium text-sm">{change.userName}</span>
+                          <UserCog
+                            className="h-4 w-4 text-blue-600"
+                            aria-hidden="true"
+                          />
+                          <span className="font-medium text-sm">
+                            {change.userName}
+                          </span>
                           <Badge variant="outline" className="text-xs">
                             {change.userEmail}
                           </Badge>
                         </div>
-                        
+
                         <p className="text-sm text-muted-foreground mb-2">
                           {change.action}
                         </p>
-                        
+
                         {change.oldRole && change.newRole && (
                           <div className="flex items-center gap-2 text-xs">
                             <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                              {ROLE_LABELS[change.oldRole as keyof typeof ROLE_LABELS] || change.oldRole}
+                              {ROLE_LABELS[
+                                change.oldRole as keyof typeof ROLE_LABELS
+                              ] || change.oldRole}
                             </Badge>
-                            <TrendingUp className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                            <TrendingUp
+                              className="h-3 w-3 text-muted-foreground"
+                              aria-hidden="true"
+                            />
                             <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                              {ROLE_LABELS[change.newRole as keyof typeof ROLE_LABELS] || change.newRole}
+                              {ROLE_LABELS[
+                                change.newRole as keyof typeof ROLE_LABELS
+                              ] || change.newRole}
                             </Badge>
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="text-right">
                         <div className="text-xs text-muted-foreground mb-1">
                           by {change.performedBy}
@@ -369,7 +431,10 @@ export function AccessControlMonitor() {
 
                 {(!recentChanges || recentChanges.length === 0) && (
                   <div className="text-center py-8 text-muted-foreground">
-                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
+                    <Clock
+                      className="h-8 w-8 mx-auto mb-2 opacity-50"
+                      aria-hidden="true"
+                    />
                     <p className="text-sm">No recent permission changes</p>
                   </div>
                 )}
@@ -385,7 +450,10 @@ export function AccessControlMonitor() {
 // Helper function to get permission icon
 function getPermissionIcon(role: string, resource: string) {
   // Define permission levels
-  const permissions: Record<string, Record<string, "full" | "limited" | "none">> = {
+  const permissions: Record<
+    string,
+    Record<string, "full" | "limited" | "none">
+  > = {
     "workspace-manager": {
       projects: "full",
       tasks: "full",
@@ -448,15 +516,26 @@ function getPermissionIcon(role: string, resource: string) {
 
   switch (level) {
     case "full":
-      return <CheckCircle className="h-4 w-4 text-green-600" aria-label="Full access" />;
+      return (
+        <CheckCircle
+          className="h-4 w-4 text-green-600"
+          aria-label="Full access"
+        />
+      );
     case "limited":
-      return <AlertCircle className="h-4 w-4 text-yellow-600" aria-label="Limited access" />;
+      return (
+        <AlertCircle
+          className="h-4 w-4 text-yellow-600"
+          aria-label="Limited access"
+        />
+      );
     case "none":
       return (
         <div className="w-4 h-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-          <span className="text-red-600 text-xs" aria-label="No access">×</span>
+          <span className="text-red-600 text-xs" aria-label="No access">
+            ×
+          </span>
         </div>
       );
   }
 }
-

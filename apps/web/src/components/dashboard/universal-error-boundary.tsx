@@ -4,11 +4,11 @@
  * Prevents full page crashes and provides consistent error UX
  */
 
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import * as Sentry from '@sentry/react';
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import * as Sentry from "@sentry/react";
 
 interface Props {
   children: ReactNode;
@@ -38,19 +38,19 @@ export class UniversalErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('❌ Error Boundary caught error:', error, errorInfo);
+    console.error("❌ Error Boundary caught error:", error, errorInfo);
 
     // Send to Sentry
     Sentry.captureException(error, {
       tags: {
-        component: 'UniversalErrorBoundary',
-        route: this.props.routeName || 'unknown',
+        component: "UniversalErrorBoundary",
+        route: this.props.routeName || "unknown",
       },
       extra: {
         componentStack: errorInfo.componentStack,
         errorInfo,
       },
-      level: 'error',
+      level: "error",
     });
 
     this.setState({
@@ -85,10 +85,13 @@ export class UniversalErrorBoundary extends Component<Props, State> {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-2">
-                    {this.props.routeName ? `${this.props.routeName} Error` : 'Something Went Wrong'}
+                    {this.props.routeName
+                      ? `${this.props.routeName} Error`
+                      : "Something Went Wrong"}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {this.state.error?.message || 'An unexpected error occurred'}
+                    {this.state.error?.message ||
+                      "An unexpected error occurred"}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -96,7 +99,10 @@ export class UniversalErrorBoundary extends Component<Props, State> {
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Try Again
                   </Button>
-                  <Button onClick={() => window.location.href = '/dashboard'} variant="outline">
+                  <Button
+                    onClick={() => (window.location.href = "/dashboard")}
+                    variant="outline"
+                  >
                     <Home className="h-4 w-4 mr-2" />
                     Go Home
                   </Button>
@@ -120,7 +126,7 @@ export class UniversalErrorBoundary extends Component<Props, State> {
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  routeName?: string
+  routeName?: string,
 ) {
   return function WrappedComponent(props: P) {
     return (
@@ -130,4 +136,3 @@ export function withErrorBoundary<P extends object>(
     );
   };
 }
-

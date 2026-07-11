@@ -4,7 +4,7 @@
  * Phase 2.4 - Mobile Optimization
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 // Tailwind-compatible breakpoints
 export const BREAKPOINTS = {
@@ -13,7 +13,7 @@ export const BREAKPOINTS = {
   md: 768,
   lg: 1024,
   xl: 1280,
-  '2xl': 1536,
+  "2xl": 1536,
 } as const;
 
 export type Breakpoint = keyof typeof BREAKPOINTS;
@@ -22,30 +22,30 @@ export type Breakpoint = keyof typeof BREAKPOINTS;
  * Hook to detect current breakpoint
  */
 export function useBreakpoint(): Breakpoint {
-  const [breakpoint, setBreakpoint] = useState<Breakpoint>('xl');
+  const [breakpoint, setBreakpoint] = useState<Breakpoint>("xl");
 
   useEffect(() => {
     const updateBreakpoint = () => {
       const width = window.innerWidth;
-      
+
       if (width < BREAKPOINTS.sm) {
-        setBreakpoint('xs');
+        setBreakpoint("xs");
       } else if (width < BREAKPOINTS.md) {
-        setBreakpoint('sm');
+        setBreakpoint("sm");
       } else if (width < BREAKPOINTS.lg) {
-        setBreakpoint('md');
+        setBreakpoint("md");
       } else if (width < BREAKPOINTS.xl) {
-        setBreakpoint('lg');
-      } else if (width < BREAKPOINTS['2xl']) {
-        setBreakpoint('xl');
+        setBreakpoint("lg");
+      } else if (width < BREAKPOINTS["2xl"]) {
+        setBreakpoint("xl");
       } else {
-        setBreakpoint('2xl');
+        setBreakpoint("2xl");
       }
     };
 
     updateBreakpoint();
-    window.addEventListener('resize', updateBreakpoint);
-    return () => window.removeEventListener('resize', updateBreakpoint);
+    window.addEventListener("resize", updateBreakpoint);
+    return () => window.removeEventListener("resize", updateBreakpoint);
   }, []);
 
   return breakpoint;
@@ -63,8 +63,8 @@ export function useIsMobile(): boolean {
     };
 
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   return isMobile;
@@ -83,8 +83,8 @@ export function useIsTablet(): boolean {
     };
 
     checkTablet();
-    window.addEventListener('resize', checkTablet);
-    return () => window.removeEventListener('resize', checkTablet);
+    window.addEventListener("resize", checkTablet);
+    return () => window.removeEventListener("resize", checkTablet);
   }, []);
 
   return isTablet;
@@ -93,25 +93,25 @@ export function useIsTablet(): boolean {
 /**
  * Hook to get screen size category
  */
-export function useScreenSize(): 'mobile' | 'tablet' | 'desktop' {
-  const [size, setSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+export function useScreenSize(): "mobile" | "tablet" | "desktop" {
+  const [size, setSize] = useState<"mobile" | "tablet" | "desktop">("desktop");
 
   useEffect(() => {
     const updateSize = () => {
       const width = window.innerWidth;
-      
+
       if (width < BREAKPOINTS.md) {
-        setSize('mobile');
+        setSize("mobile");
       } else if (width < BREAKPOINTS.lg) {
-        setSize('tablet');
+        setSize("tablet");
       } else {
-        setSize('desktop');
+        setSize("desktop");
       }
     };
 
     updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
   }, []);
 
   return size;
@@ -125,10 +125,10 @@ export function useIsTouchDevice(): boolean {
 
   useEffect(() => {
     setIsTouch(
-      'ontouchstart' in window ||
-      navigator.maxTouchPoints > 0 ||
-      // @ts-ignore - Legacy IE check
-      navigator.msMaxTouchPoints > 0
+      "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0 ||
+        // @ts-ignore - Legacy IE check
+        navigator.msMaxTouchPoints > 0,
     );
   }, []);
 
@@ -140,8 +140,8 @@ export function useIsTouchDevice(): boolean {
  */
 export function useViewport() {
   const [viewport, setViewport] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+    width: typeof window !== "undefined" ? window.innerWidth : 0,
+    height: typeof window !== "undefined" ? window.innerHeight : 0,
   });
 
   useEffect(() => {
@@ -152,8 +152,8 @@ export function useViewport() {
       });
     };
 
-    window.addEventListener('resize', updateViewport);
-    return () => window.removeEventListener('resize', updateViewport);
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
   }, []);
 
   return viewport;
@@ -162,23 +162,25 @@ export function useViewport() {
 /**
  * Hook to detect orientation
  */
-export function useOrientation(): 'portrait' | 'landscape' {
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
+export function useOrientation(): "portrait" | "landscape" {
+  const [orientation, setOrientation] = useState<"portrait" | "landscape">(
+    "portrait",
+  );
 
   useEffect(() => {
     const updateOrientation = () => {
       setOrientation(
-        window.innerHeight > window.innerWidth ? 'portrait' : 'landscape'
+        window.innerHeight > window.innerWidth ? "portrait" : "landscape",
       );
     };
 
     updateOrientation();
-    window.addEventListener('resize', updateOrientation);
-    window.addEventListener('orientationchange', updateOrientation);
-    
+    window.addEventListener("resize", updateOrientation);
+    window.addEventListener("orientationchange", updateOrientation);
+
     return () => {
-      window.removeEventListener('resize', updateOrientation);
-      window.removeEventListener('orientationchange', updateOrientation);
+      window.removeEventListener("resize", updateOrientation);
+      window.removeEventListener("orientationchange", updateOrientation);
     };
   }, []);
 
@@ -193,17 +195,17 @@ export function useMediaQuery(query: string): boolean {
 
   useEffect(() => {
     const media = window.matchMedia(query);
-    
+
     const updateMatches = () => {
       setMatches(media.matches);
     };
 
     updateMatches();
-    
+
     // Modern browsers
     if (media.addEventListener) {
-      media.addEventListener('change', updateMatches);
-      return () => media.removeEventListener('change', updateMatches);
+      media.addEventListener("change", updateMatches);
+      return () => media.removeEventListener("change", updateMatches);
     } else {
       // Legacy browsers
       // @ts-ignore
@@ -231,4 +233,3 @@ export function useMaxBreakpoint(breakpoint: Breakpoint): boolean {
 }
 
 export default useBreakpoint;
-

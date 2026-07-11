@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { type LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface SecurityMetricsCardProps {
   title: string;
@@ -40,15 +40,21 @@ export function SecurityMetricsCard({
     info: "text-gray-600 dark:text-gray-400",
   };
 
-  const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
-  const trendColor = trend === "up" ? "text-red-600" : trend === "down" ? "text-green-600" : "text-gray-600";
+  const TrendIcon =
+    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
+  const trendColor =
+    trend === "up"
+      ? "text-red-600"
+      : trend === "down"
+        ? "text-green-600"
+        : "text-gray-600";
 
   return (
     <Card
       className={cn(
         "glass-card transition-all duration-200 hover:shadow-lg",
         severityStyles[severity],
-        onClick && "cursor-pointer"
+        onClick && "cursor-pointer",
       )}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -65,7 +71,10 @@ export function SecurityMetricsCard({
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <Icon className={cn("h-5 w-5", iconStyles[severity])} aria-hidden="true" />
+          <Icon
+            className={cn("h-5 w-5", iconStyles[severity])}
+            aria-hidden="true"
+          />
         </div>
       </CardHeader>
       <CardContent>
@@ -73,7 +82,9 @@ export function SecurityMetricsCard({
           <div>
             <div className="text-3xl font-bold">{value}</div>
             {description && (
-              <p className="text-xs text-muted-foreground mt-1">{description}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {description}
+              </p>
             )}
           </div>
           {trend && trendValue && (
@@ -87,4 +98,3 @@ export function SecurityMetricsCard({
     </Card>
   );
 }
-

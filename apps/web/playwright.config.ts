@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * E2E against the Vite app (`npm run dev`, port 5174).
@@ -9,10 +9,11 @@ import { defineConfig, devices } from '@playwright/test';
  * @see https://playwright.dev/docs/test-configuration
  */
 const startApi =
-  process.env.PLAYWRIGHT_START_API === '1' || process.env.PLAYWRIGHT_FULL_APP === '1';
+  process.env.PLAYWRIGHT_START_API === "1" ||
+  process.env.PLAYWRIGHT_FULL_APP === "1";
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./e2e",
   /* Full journey + signup flows can exceed default 30s */
   timeout: 120_000,
   /* Run tests in files in parallel */
@@ -24,44 +25,44 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5174',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5174",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
 
   /* Configure projects for major browsers */
   projects: process.env.PLAYWRIGHT_ALL_BROWSERS
     ? [
         {
-          name: 'chromium',
-          use: { ...devices['Desktop Chrome'] },
+          name: "chromium",
+          use: { ...devices["Desktop Chrome"] },
         },
         {
-          name: 'firefox',
-          use: { ...devices['Desktop Firefox'] },
+          name: "firefox",
+          use: { ...devices["Desktop Firefox"] },
         },
         {
-          name: 'webkit',
-          use: { ...devices['Desktop Safari'] },
+          name: "webkit",
+          use: { ...devices["Desktop Safari"] },
         },
         {
-          name: 'Mobile Chrome',
-          use: { ...devices['Pixel 5'] },
+          name: "Mobile Chrome",
+          use: { ...devices["Pixel 5"] },
         },
         {
-          name: 'Mobile Safari',
-          use: { ...devices['iPhone 12'] },
+          name: "Mobile Safari",
+          use: { ...devices["iPhone 12"] },
         },
       ]
     : [
         {
-          name: 'chromium',
-          use: { ...devices['Desktop Chrome'] },
+          name: "chromium",
+          use: { ...devices["Desktop Chrome"] },
         },
       ],
 
@@ -69,23 +70,25 @@ export default defineConfig({
   webServer: startApi
     ? [
         {
-          command: 'npm run dev',
-          url: process.env.PLAYWRIGHT_API_URL ?? 'http://localhost:3005/api/health',
+          command: "npm run dev",
+          url:
+            process.env.PLAYWRIGHT_API_URL ??
+            "http://localhost:3005/api/health",
           reuseExistingServer: !process.env.CI,
-          cwd: '../api',
+          cwd: "../api",
           timeout: 180_000,
         },
         {
-          command: 'npm run dev',
-          url: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5174',
+          command: "npm run dev",
+          url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5174",
           reuseExistingServer: !process.env.CI,
           timeout: 180_000,
         },
       ]
     : [
         {
-          command: 'npm run dev',
-          url: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5174',
+          command: "npm run dev",
+          url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5174",
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
         },

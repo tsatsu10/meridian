@@ -11,7 +11,9 @@ export function SidebarHeader() {
     <div
       className={cn(
         "flex gap-3 p-4 border-b border-white/[0.08]",
-        isSidebarOpened ? "flex-row items-center" : "flex-col items-center justify-center"
+        isSidebarOpened
+          ? "flex-row items-center"
+          : "flex-col items-center justify-center",
       )}
     >
       {/* Toggle Button */}
@@ -24,7 +26,7 @@ export function SidebarHeader() {
           "after:absolute after:inset-0 after:rounded-xl after:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] after:opacity-0 after:transition-opacity",
           "hover:after:opacity-100",
           "focus:outline-none focus:ring-2 focus:ring-blue-500/50",
-          "active:scale-95"
+          "active:scale-95",
         )}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

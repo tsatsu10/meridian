@@ -22,8 +22,12 @@ export function useUpdateMemberRole() {
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["team-metrics", variables.workspaceId] });
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.workspaceId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["team-metrics", variables.workspaceId],
+      });
       toast.success("Member role updated successfully");
     },
     onError: (error: any) => {
@@ -31,4 +35,3 @@ export function useUpdateMemberRole() {
     },
   });
 }
-

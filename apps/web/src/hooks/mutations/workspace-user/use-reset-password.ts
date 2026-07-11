@@ -11,9 +11,12 @@ interface ResetPasswordData {
 export function useResetPassword() {
   return useMutation({
     mutationFn: async ({ userEmail }: ResetPasswordData) => {
-      const response = await fetchApi(`/workspace-user/${userEmail}/reset-password`, {
-        method: "POST",
-      });
+      const response = await fetchApi(
+        `/workspace-user/${userEmail}/reset-password`,
+        {
+          method: "POST",
+        },
+      );
       return response;
     },
     onSuccess: (data) => {
@@ -28,4 +31,3 @@ export function useResetPassword() {
     },
   });
 }
-

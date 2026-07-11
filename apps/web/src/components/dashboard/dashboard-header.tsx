@@ -1,8 +1,5 @@
-
 import { Input } from "@/components/ui/input";
-import { 
-  Search, 
-} from "lucide-react";
+import { Search } from "lucide-react";
 import PageHeaderActions from "@/components/dashboard/page-header-actions";
 import { cn } from "@/lib/cn";
 import { useNavigate } from "@tanstack/react-router";
@@ -19,21 +16,23 @@ interface DashboardHeaderProps {
   variant?: "default" | "minimal" | "compact";
 }
 
-export default function DashboardHeader({ 
+export default function DashboardHeader({
   title,
   subtitle,
   showSearch = false, // Changed default to false since dock handles navigation
   className,
   children,
-  variant = "default"
+  variant = "default",
 }: DashboardHeaderProps) {
-  void (useNavigate());
+  void useNavigate();
 
   // Variant-based styling
   const headerVariants = {
-    default: "flex items-center justify-between p-6 bg-white dark:bg-card border-b border-border glass-card",
+    default:
+      "flex items-center justify-between p-6 bg-white dark:bg-card border-b border-border glass-card",
     minimal: "flex items-center justify-between px-4 py-3 bg-transparent",
-    compact: "flex items-center justify-between px-4 py-2 bg-white/50 dark:bg-card/50 backdrop-blur-sm border-b border-border/50"
+    compact:
+      "flex items-center justify-between px-4 py-2 bg-white/50 dark:bg-card/50 backdrop-blur-sm border-b border-border/50",
   };
 
   return (
@@ -42,24 +41,22 @@ export default function DashboardHeader({
       <div className="flex items-center space-x-4">
         {title && (
           <div>
-            <h1 className={cn(
-              "font-bold text-foreground gradient-text",
-              variant === "compact" ? "text-lg" : "text-2xl"
-            )}>
+            <h1
+              className={cn(
+                "font-bold text-foreground gradient-text",
+                variant === "compact" ? "text-lg" : "text-2xl",
+              )}
+            >
               {title}
             </h1>
             {subtitle && (
-              <p className="text-muted-foreground text-sm mt-1">
-                {subtitle}
-              </p>
+              <p className="text-muted-foreground text-sm mt-1">{subtitle}</p>
             )}
           </div>
         )}
-        
+
         {children && (
-          <div className="flex items-center space-x-2">
-            {children}
-          </div>
+          <div className="flex items-center space-x-2">{children}</div>
         )}
       </div>
 
@@ -82,19 +79,16 @@ export default function DashboardHeader({
       {/* Right Section - Actions & User Menu */}
       <div className="flex items-center gap-2">
         {/* Performance Badge - Desktop only */}
-        {variant !== 'minimal' && (
+        {variant !== "minimal" && (
           <div className="hidden lg:block">
-            <PerformanceBadge 
-              showDetails={false}
-              enableTracking={true}
-            />
+            <PerformanceBadge showDetails={false} enableTracking={true} />
           </div>
         )}
-        
+
         {/* Offline Indicator */}
-        
+
         <PageHeaderActions />
       </div>
     </header>
   );
-} 
+}

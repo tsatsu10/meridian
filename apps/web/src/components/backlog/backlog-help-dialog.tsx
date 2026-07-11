@@ -14,7 +14,10 @@ interface BacklogHelpDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function BacklogHelpDialog({ open, onOpenChange }: BacklogHelpDialogProps) {
+export function BacklogHelpDialog({
+  open,
+  onOpenChange,
+}: BacklogHelpDialogProps) {
   const shortcuts = [
     {
       category: "Navigation",
@@ -87,7 +90,9 @@ export function BacklogHelpDialog({ open, onOpenChange }: BacklogHelpDialogProps
                             {key}
                           </Badge>
                           {keyIndex < shortcut.keys.length - 1 && (
-                            <span className="text-xs text-muted-foreground">+</span>
+                            <span className="text-xs text-muted-foreground">
+                              +
+                            </span>
                           )}
                         </div>
                       ))}
@@ -101,11 +106,14 @@ export function BacklogHelpDialog({ open, onOpenChange }: BacklogHelpDialogProps
 
         <div className="mt-6 p-3 bg-muted/50 rounded-md">
           <p className="text-xs text-muted-foreground">
-            💡 <strong>Tip:</strong> Press <Badge variant="outline" className="mx-1 text-xs">?</Badge> at any time to show this dialog
+            💡 <strong>Tip:</strong> Press{" "}
+            <Badge variant="outline" className="mx-1 text-xs">
+              ?
+            </Badge>{" "}
+            at any time to show this dialog
           </p>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

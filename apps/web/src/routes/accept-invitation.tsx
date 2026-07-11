@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { Check, X, Mail, Building, UserCheck, AlertCircle } from "lucide-react";
 import { useAcceptInvitation } from "../lib/api/workspace-invitations";
 import { toast } from "sonner";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
 
 export interface InvitationSearchParams {
   token?: string;
@@ -21,7 +25,7 @@ function AcceptInvitationPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/accept-invitation" });
   const invitationToken = search.token;
-  
+
   const [hasAttempted, setHasAttempted] = useState(false);
   const acceptInvitation = useAcceptInvitation();
 
@@ -92,13 +96,18 @@ function AcceptInvitationPage() {
             Welcome to {data.workspaceName}!
           </h1>
           <p className="text-gray-600 mb-6">
-            You've successfully joined the workspace as a <span className="font-medium">{data.role}</span>.
+            You've successfully joined the workspace as a{" "}
+            <span className="font-medium">{data.role}</span>.
           </p>
           <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg mb-6">
             <UserCheck className="w-5 h-5 text-green-600" />
             <div className="text-left">
-              <div className="font-medium text-green-900">Invitation Accepted</div>
-              <div className="text-sm text-green-700">You now have access to all workspace features</div>
+              <div className="font-medium text-green-900">
+                Invitation Accepted
+              </div>
+              <div className="text-sm text-green-700">
+                You now have access to all workspace features
+              </div>
             </div>
           </div>
           <button
@@ -131,16 +140,18 @@ function AcceptInvitationPage() {
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
             {isExpired ? "Invitation Expired" : "Invitation Error"}
           </h1>
-          <p className="text-gray-600 mb-6">
-            {error.message}
-          </p>
-          
+          <p className="text-gray-600 mb-6">{error.message}</p>
+
           {isExpired && (
             <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-lg mb-6">
               <Mail className="w-5 h-5 text-amber-600 mt-0.5" />
               <div className="text-left">
-                <div className="font-medium text-amber-900">Need a New Invitation?</div>
-                <div className="text-sm text-amber-700">Contact the workspace owner to send you a new invitation</div>
+                <div className="font-medium text-amber-900">
+                  Need a New Invitation?
+                </div>
+                <div className="text-sm text-amber-700">
+                  Contact the workspace owner to send you a new invitation
+                </div>
               </div>
             </div>
           )}
@@ -176,10 +187,8 @@ function AcceptInvitationPage() {
         <h1 className="text-xl font-semibold text-gray-900 mb-2">
           Workspace Invitation
         </h1>
-        <p className="text-gray-600">
-          Processing your invitation...
-        </p>
+        <p className="text-gray-600">Processing your invitation...</p>
       </div>
     </div>
   );
-} 
+}

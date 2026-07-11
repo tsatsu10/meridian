@@ -1,6 +1,6 @@
 /**
  * Dashboard Charts Component Tests
- * 
+ *
  * Tests dashboard chart components:
  * - Task completion charts
  * - Velocity charts
@@ -8,9 +8,9 @@
  * - Team performance charts
  */
 
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { TestWrapper } from '../../../test-utils/test-wrapper';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { TestWrapper } from "../../../test-utils/test-wrapper";
 
 interface TaskCompletionChartProps {
   data?: Array<{ date: string; completed: number }>;
@@ -41,9 +41,10 @@ interface VelocityChartProps {
 }
 
 function VelocityChart({ weeklyData = [] }: VelocityChartProps) {
-  const avgVelocity = weeklyData.length > 0
-    ? weeklyData.reduce((sum, w) => sum + w.velocity, 0) / weeklyData.length
-    : 0;
+  const avgVelocity =
+    weeklyData.length > 0
+      ? weeklyData.reduce((sum, w) => sum + w.velocity, 0) / weeklyData.length
+      : 0;
 
   return (
     <div role="img" aria-label="Team velocity chart">
@@ -60,34 +61,36 @@ function VelocityChart({ weeklyData = [] }: VelocityChartProps) {
   );
 }
 
-describe('Dashboard Charts', () => {
-  describe('TaskCompletionChart', () => {
-    it('should render chart', () => {
+describe("Dashboard Charts", () => {
+  describe("TaskCompletionChart", () => {
+    it("should render chart", () => {
       render(<TaskCompletionChart />, { wrapper: TestWrapper });
 
-      expect(screen.getByRole('img', { name: /task completion chart/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("img", { name: /task completion chart/i }),
+      ).toBeInTheDocument();
     });
 
-    it('should display chart data', () => {
+    it("should display chart data", () => {
       const data = [
-        { date: '2025-01-01', completed: 10 },
-        { date: '2025-01-02', completed: 15 },
-        { date: '2025-01-03', completed: 12 },
+        { date: "2025-01-01", completed: 10 },
+        { date: "2025-01-02", completed: 15 },
+        { date: "2025-01-03", completed: 12 },
       ];
 
       render(<TaskCompletionChart data={data} />, { wrapper: TestWrapper });
 
-      expect(screen.getByTestId('bar-0')).toHaveTextContent('10');
-      expect(screen.getByTestId('bar-1')).toHaveTextContent('15');
+      expect(screen.getByTestId("bar-0")).toHaveTextContent("10");
+      expect(screen.getByTestId("bar-1")).toHaveTextContent("15");
     });
 
-    it('should show empty state when no data', () => {
+    it("should show empty state when no data", () => {
       render(<TaskCompletionChart data={[]} />, { wrapper: TestWrapper });
 
       expect(screen.getByText(/no data available/i)).toBeInTheDocument();
     });
 
-    it('should handle large datasets', () => {
+    it("should handle large datasets", () => {
       const data = Array.from({ length: 30 }, (_, i) => ({
         date: `2025-01-${i + 1}`,
         completed: Math.floor(Math.random() * 20),
@@ -95,18 +98,20 @@ describe('Dashboard Charts', () => {
 
       render(<TaskCompletionChart data={data} />, { wrapper: TestWrapper });
 
-      expect(document.querySelectorAll('.chart-bar')).toHaveLength(30);
+      expect(document.querySelectorAll(".chart-bar")).toHaveLength(30);
     });
   });
 
-  describe('VelocityChart', () => {
-    it('should render velocity chart', () => {
+  describe("VelocityChart", () => {
+    it("should render velocity chart", () => {
       render(<VelocityChart />, { wrapper: TestWrapper });
 
-      expect(screen.getByRole('img', { name: /team velocity chart/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("img", { name: /team velocity chart/i }),
+      ).toBeInTheDocument();
     });
 
-    it('should display weekly velocity', () => {
+    it("should display weekly velocity", () => {
       const data = [
         { week: 1, velocity: 10 },
         { week: 2, velocity: 12 },
@@ -115,11 +120,11 @@ describe('Dashboard Charts', () => {
 
       render(<VelocityChart weeklyData={data} />, { wrapper: TestWrapper });
 
-      expect(screen.getByTestId('week-1')).toHaveTextContent('10 tasks');
-      expect(screen.getByTestId('week-2')).toHaveTextContent('12 tasks');
+      expect(screen.getByTestId("week-1")).toHaveTextContent("10 tasks");
+      expect(screen.getByTestId("week-2")).toHaveTextContent("12 tasks");
     });
 
-    it('should calculate average velocity', () => {
+    it("should calculate average velocity", () => {
       const data = [
         { week: 1, velocity: 10 },
         { week: 2, velocity: 20 },
@@ -127,16 +132,15 @@ describe('Dashboard Charts', () => {
 
       render(<VelocityChart weeklyData={data} />, { wrapper: TestWrapper });
 
-      expect(screen.getByTestId('avg-velocity')).toHaveTextContent('15.0');
+      expect(screen.getByTestId("avg-velocity")).toHaveTextContent("15.0");
     });
 
-    it('should handle zero velocity', () => {
+    it("should handle zero velocity", () => {
       const data = [{ week: 1, velocity: 0 }];
 
       render(<VelocityChart weeklyData={data} />, { wrapper: TestWrapper });
 
-      expect(screen.getByTestId('avg-velocity')).toHaveTextContent('0.0');
+      expect(screen.getByTestId("avg-velocity")).toHaveTextContent("0.0");
     });
   });
 });
-

@@ -19,23 +19,27 @@ initSentry();
 // Initialize Web Vitals monitoring
 // Note: Run 'pnpm install' to install web-vitals package
 if (import.meta.env.PROD) {
-  import('./lib/web-vitals').then(({ initWebVitals }) => {
-    initWebVitals();
-  }).catch((_error) => {
-    console.info('Web Vitals monitoring disabled. Install with: pnpm install');
-  });
+  import("./lib/web-vitals")
+    .then(({ initWebVitals }) => {
+      initWebVitals();
+    })
+    .catch((_error) => {
+      console.info(
+        "Web Vitals monitoring disabled. Install with: pnpm install",
+      );
+    });
 }
 
 // Lazy load heavy components
 const ReactQueryDevtools = lazy(() =>
-  import("@tanstack/react-query-devtools").then(module => ({
-    default: module.ReactQueryDevtools
-  }))
+  import("@tanstack/react-query-devtools").then((module) => ({
+    default: module.ReactQueryDevtools,
+  })),
 );
 const Toaster = lazy(() =>
-  import("./components/ui/sonner").then(module => ({
-    default: module.Toaster
-  }))
+  import("./components/ui/sonner").then((module) => ({
+    default: module.Toaster,
+  })),
 );
 // Create QueryClient instance with optimized defaults for performance
 const queryClient = new QueryClient({
@@ -59,8 +63,12 @@ function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-gray-900 dark:text-gray-100 mb-4">404</h1>
-        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-4">Page Not Found</h2>
+        <h1 className="text-6xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          404
+        </h1>
+        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
+          Page Not Found
+        </h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
           The page you're looking for doesn't exist or has been moved.
         </p>
@@ -106,34 +114,42 @@ const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
   // 🚨 EMERGENCY: Make emergency cleanup available immediately
   (window as any).__REACT_QUERY_CLIENT__ = queryClient;
-  
+
   // Make workspace utilities available globally
-  import('./utils/clear-workspace-store').then(({ clearWorkspaceStore, setDemoWorkspace }) => {
-    (window as any).clearWorkspaceStore = clearWorkspaceStore;
-    (window as any).setDemoWorkspace = setDemoWorkspace;
-  });
-  
+  import("./utils/clear-workspace-store").then(
+    ({ clearWorkspaceStore, setDemoWorkspace }) => {
+      (window as any).clearWorkspaceStore = clearWorkspaceStore;
+      (window as any).setDemoWorkspace = setDemoWorkspace;
+    },
+  );
+
   // Log emergency instructions
 
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-            <ThemeProvider>
-              <TooltipProvider>
-                <AuthProvider>
-                  <RBACProvider>
-                    <WorkspaceProvider>
-                      <App />
-                    </WorkspaceProvider>
-                  </RBACProvider>
-                </AuthProvider>
-              </TooltipProvider>
-              <Suspense fallback={null}>
-                <Toaster />
-              </Suspense>
-            </ThemeProvider>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          }
+        >
+          <ThemeProvider>
+            <TooltipProvider>
+              <AuthProvider>
+                <RBACProvider>
+                  <WorkspaceProvider>
+                    <App />
+                  </WorkspaceProvider>
+                </RBACProvider>
+              </AuthProvider>
+            </TooltipProvider>
+            <Suspense fallback={null}>
+              <Toaster />
+            </Suspense>
+          </ThemeProvider>
           {import.meta.env.DEV && (
             <Suspense fallback={null}>
               <ReactQueryDevtools initialIsOpen={false} />

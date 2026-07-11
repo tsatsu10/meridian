@@ -2,7 +2,9 @@ import { client } from "@meridian/libs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 async function deleteDependency(dependencyId: string) {
-  const response = await (client as any).task.dependencies[":dependencyId"].$delete({
+  const response = await (client as any).task.dependencies[
+    ":dependencyId"
+  ].$delete({
     param: { dependencyId },
   });
 
@@ -31,4 +33,4 @@ function useDeleteDependency() {
   });
 }
 
-export default useDeleteDependency; 
+export default useDeleteDependency;

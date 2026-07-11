@@ -1,6 +1,6 @@
 /**
  * Kanban Column Component Tests
- * 
+ *
  * Tests Kanban board column functionality:
  * - Column rendering
  * - Task cards display
@@ -9,11 +9,11 @@
  * - Column header actions
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { TestWrapper } from '../../../test-utils/test-wrapper';
-import React from 'react';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { TestWrapper } from "../../../test-utils/test-wrapper";
+import React from "react";
 
 // Mock Kanban Column Component
 interface KanbanColumnProps {
@@ -42,12 +42,12 @@ function KanbanColumn({
   onDrop,
 }: KanbanColumnProps) {
   const [isAddingTask, setIsAddingTask] = React.useState(false);
-  const [newTaskTitle, setNewTaskTitle] = React.useState('');
+  const [newTaskTitle, setNewTaskTitle] = React.useState("");
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && onAddTask) {
       onAddTask(column.id);
-      setNewTaskTitle('');
+      setNewTaskTitle("");
       setIsAddingTask(false);
     }
   };
@@ -58,14 +58,14 @@ function KanbanColumn({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const taskId = e.dataTransfer.getData('taskId');
+    const taskId = e.dataTransfer.getData("taskId");
     if (taskId && onDrop) {
       onDrop(taskId, column.id);
     }
   };
 
   return (
-    <div 
+    <div
       className="kanban-column"
       data-column-id={column.id}
       onDragOver={handleDragOver}
@@ -75,10 +75,13 @@ function KanbanColumn({
     >
       <div className="column-header">
         <h3>{column.title}</h3>
-        <span className="task-count" aria-label={`${column.tasks.length} tasks`}>
+        <span
+          className="task-count"
+          aria-label={`${column.tasks.length} tasks`}
+        >
           {column.tasks.length}
         </span>
-        <button 
+        <button
           onClick={() => setIsAddingTask(true)}
           aria-label={`Add task to ${column.title}`}
         >
@@ -113,12 +116,8 @@ function KanbanColumn({
             aria-label={`Task: ${task.title}`}
           >
             <h4>{task.title}</h4>
-            <span className={`priority-${task.priority}`}>
-              {task.priority}
-            </span>
-            {task.assignee && (
-              <span className="assignee">{task.assignee}</span>
-            )}
+            <span className={`priority-${task.priority}`}>{task.priority}</span>
+            {task.assignee && <span className="assignee">{task.assignee}</span>}
           </div>
         ))}
 
@@ -132,59 +131,59 @@ function KanbanColumn({
   );
 }
 
-describe('Kanban Column Component', () => {
+describe("Kanban Column Component", () => {
   const mockColumn = {
-    id: 'col-todo',
-    title: 'To Do',
-    status: 'todo',
+    id: "col-todo",
+    title: "To Do",
+    status: "todo",
     tasks: [
       {
-        id: 'task-1',
-        title: 'Task 1',
-        priority: 'high',
-        assignee: 'John Doe',
+        id: "task-1",
+        title: "Task 1",
+        priority: "high",
+        assignee: "John Doe",
       },
       {
-        id: 'task-2',
-        title: 'Task 2',
-        priority: 'medium',
+        id: "task-2",
+        title: "Task 2",
+        priority: "medium",
       },
     ],
   };
 
-  it('should render column with title', () => {
+  it("should render column with title", () => {
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('To Do')).toBeInTheDocument();
+    expect(screen.getByText("To Do")).toBeInTheDocument();
   });
 
-  it('should display task count', () => {
+  it("should display task count", () => {
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
 
     expect(screen.getByLabelText(/2 tasks/i)).toBeInTheDocument();
   });
 
-  it('should render all tasks', () => {
+  it("should render all tasks", () => {
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Task 1')).toBeInTheDocument();
-    expect(screen.getByText('Task 2')).toBeInTheDocument();
+    expect(screen.getByText("Task 1")).toBeInTheDocument();
+    expect(screen.getByText("Task 2")).toBeInTheDocument();
   });
 
-  it('should display task priority', () => {
+  it("should display task priority", () => {
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('high')).toBeInTheDocument();
-    expect(screen.getByText('medium')).toBeInTheDocument();
+    expect(screen.getByText("high")).toBeInTheDocument();
+    expect(screen.getByText("medium")).toBeInTheDocument();
   });
 
-  it('should display task assignee when present', () => {
+  it("should display task assignee when present", () => {
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText("John Doe")).toBeInTheDocument();
   });
 
-  it('should show empty state when no tasks', () => {
+  it("should show empty state when no tasks", () => {
     const emptyColumn = {
       ...mockColumn,
       tasks: [],
@@ -196,21 +195,20 @@ describe('Kanban Column Component', () => {
     expect(screen.getByText(/no tasks/i)).toBeInTheDocument();
   });
 
-  it('should handle task click', async () => {
+  it("should handle task click", async () => {
     const user = userEvent.setup();
     const onTaskClick = vi.fn();
 
-    render(
-      <KanbanColumn column={mockColumn} onTaskClick={onTaskClick} />,
-      { wrapper: TestWrapper }
-    );
+    render(<KanbanColumn column={mockColumn} onTaskClick={onTaskClick} />, {
+      wrapper: TestWrapper,
+    });
 
     await user.click(screen.getByLabelText(/task: task 1/i));
 
-    expect(onTaskClick).toHaveBeenCalledWith('task-1');
+    expect(onTaskClick).toHaveBeenCalledWith("task-1");
   });
 
-  it('should show add task form when clicking add button', async () => {
+  it("should show add task form when clicking add button", async () => {
     const user = userEvent.setup();
 
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
@@ -218,117 +216,120 @@ describe('Kanban Column Component', () => {
     await user.click(screen.getByLabelText(/add task to to do/i));
 
     expect(screen.getByLabelText(/new task title/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter task title/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/enter task title/i),
+    ).toBeInTheDocument();
   });
 
-  it('should handle adding a new task', async () => {
+  it("should handle adding a new task", async () => {
     const user = userEvent.setup();
     const onAddTask = vi.fn();
 
-    render(
-      <KanbanColumn column={mockColumn} onAddTask={onAddTask} />,
-      { wrapper: TestWrapper }
-    );
+    render(<KanbanColumn column={mockColumn} onAddTask={onAddTask} />, {
+      wrapper: TestWrapper,
+    });
 
     // Click add button
     await user.click(screen.getByLabelText(/add task to to do/i));
 
     // Type task title
     const input = screen.getByLabelText(/new task title/i);
-    await user.type(input, 'New Task');
+    await user.type(input, "New Task");
 
     // Click add
-    await user.click(screen.getByRole('button', { name: /^add$/i }));
+    await user.click(screen.getByRole("button", { name: /^add$/i }));
 
-    expect(onAddTask).toHaveBeenCalledWith('col-todo');
+    expect(onAddTask).toHaveBeenCalledWith("col-todo");
   });
 
-  it('should cancel adding a task', async () => {
+  it("should cancel adding a task", async () => {
     const user = userEvent.setup();
     const onAddTask = vi.fn();
 
-    render(
-      <KanbanColumn column={mockColumn} onAddTask={onAddTask} />,
-      { wrapper: TestWrapper }
-    );
+    render(<KanbanColumn column={mockColumn} onAddTask={onAddTask} />, {
+      wrapper: TestWrapper,
+    });
 
     // Open add form
     await user.click(screen.getByLabelText(/add task to to do/i));
 
     // Type something
-    await user.type(screen.getByLabelText(/new task title/i), 'New Task');
+    await user.type(screen.getByLabelText(/new task title/i), "New Task");
 
     // Cancel
-    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
 
     // Form should be gone
     expect(screen.queryByLabelText(/new task title/i)).not.toBeInTheDocument();
     expect(onAddTask).not.toHaveBeenCalled();
   });
 
-  it('should prevent adding empty tasks', async () => {
+  it("should prevent adding empty tasks", async () => {
     const user = userEvent.setup();
     const onAddTask = vi.fn();
 
-    render(
-      <KanbanColumn column={mockColumn} onAddTask={onAddTask} />,
-      { wrapper: TestWrapper }
-    );
+    render(<KanbanColumn column={mockColumn} onAddTask={onAddTask} />, {
+      wrapper: TestWrapper,
+    });
 
     await user.click(screen.getByLabelText(/add task to to do/i));
-    
+
     // Try to add without typing anything
-    await user.click(screen.getByRole('button', { name: /^add$/i }));
+    await user.click(screen.getByRole("button", { name: /^add$/i }));
 
     expect(onAddTask).not.toHaveBeenCalled();
   });
 
-  it('should handle drag start', async () => {
+  it("should handle drag start", async () => {
     const onDragStart = vi.fn();
 
     const { container } = render(
       <KanbanColumn column={mockColumn} onDragStart={onDragStart} />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    const taskCard = container.querySelector('.task-card');
+    const taskCard = container.querySelector(".task-card");
     expect(taskCard).toBeInTheDocument();
 
     // Simulate drag start
-    const dragStartEvent = new Event('dragstart', { bubbles: true });
+    const dragStartEvent = new Event("dragstart", { bubbles: true });
     taskCard?.dispatchEvent(dragStartEvent);
 
     expect(onDragStart).toHaveBeenCalled();
   });
 
-  it('should be accessible', () => {
+  it("should be accessible", () => {
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
 
     // Column should have region role
-    expect(screen.getByRole('region', { name: /to do column/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /to do column/i }),
+    ).toBeInTheDocument();
 
     // Task list should have list role
-    expect(screen.getByRole('list')).toBeInTheDocument();
+    expect(screen.getByRole("list")).toBeInTheDocument();
 
     // Tasks should have listitem role
-    const taskItems = screen.getAllByRole('listitem');
+    const taskItems = screen.getAllByRole("listitem");
     expect(taskItems).toHaveLength(2);
 
     // Buttons should have accessible labels
     expect(screen.getByLabelText(/add task to to do/i)).toBeInTheDocument();
   });
 
-  it('should update task count dynamically', () => {
-    const { rerender } = render(
-      <KanbanColumn column={mockColumn} />,
-      { wrapper: TestWrapper }
-    );
+  it("should update task count dynamically", () => {
+    const { rerender } = render(<KanbanColumn column={mockColumn} />, {
+      wrapper: TestWrapper,
+    });
 
     expect(screen.getByLabelText(/2 tasks/i)).toBeInTheDocument();
 
     const updatedColumn = {
       ...mockColumn,
-      tasks: [...mockColumn.tasks, { id: 'task-3', title: 'Task 3', priority: 'low' }],
+      tasks: [
+        ...mockColumn.tasks,
+        { id: "task-3", title: "Task 3", priority: "low" },
+      ],
     };
 
     rerender(<KanbanColumn column={updatedColumn} />);
@@ -336,11 +337,11 @@ describe('Kanban Column Component', () => {
     expect(screen.getByLabelText(/3 tasks/i)).toBeInTheDocument();
   });
 
-  it('should handle columns with many tasks', () => {
+  it("should handle columns with many tasks", () => {
     const manyTasks = Array.from({ length: 50 }, (_, i) => ({
       id: `task-${i}`,
       title: `Task ${i}`,
-      priority: 'medium',
+      priority: "medium",
     }));
 
     const columnWithManyTasks = {
@@ -348,25 +349,26 @@ describe('Kanban Column Component', () => {
       tasks: manyTasks,
     };
 
-    render(<KanbanColumn column={columnWithManyTasks} />, { wrapper: TestWrapper });
+    render(<KanbanColumn column={columnWithManyTasks} />, {
+      wrapper: TestWrapper,
+    });
 
     expect(screen.getByLabelText(/50 tasks/i)).toBeInTheDocument();
-    expect(screen.getAllByRole('listitem')).toHaveLength(50);
+    expect(screen.getAllByRole("listitem")).toHaveLength(50);
   });
 
-  it('should apply correct CSS classes', () => {
-    const { container } = render(
-      <KanbanColumn column={mockColumn} />,
-      { wrapper: TestWrapper }
-    );
+  it("should apply correct CSS classes", () => {
+    const { container } = render(<KanbanColumn column={mockColumn} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(container.querySelector('.kanban-column')).toBeInTheDocument();
-    expect(container.querySelector('.column-header')).toBeInTheDocument();
-    expect(container.querySelector('.task-list')).toBeInTheDocument();
-    expect(container.querySelector('.task-card')).toBeInTheDocument();
+    expect(container.querySelector(".kanban-column")).toBeInTheDocument();
+    expect(container.querySelector(".column-header")).toBeInTheDocument();
+    expect(container.querySelector(".task-list")).toBeInTheDocument();
+    expect(container.querySelector(".task-card")).toBeInTheDocument();
   });
 
-  it('should focus input when opening add task form', async () => {
+  it("should focus input when opening add task form", async () => {
     const user = userEvent.setup();
 
     render(<KanbanColumn column={mockColumn} />, { wrapper: TestWrapper });
@@ -377,4 +379,3 @@ describe('Kanban Column Component', () => {
     expect(input).toHaveFocus();
   });
 });
-

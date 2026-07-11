@@ -37,7 +37,8 @@ export const BulkSelectCheckbox: React.FC<BulkSelectCheckboxProps> = ({
   className,
   ariaLabel,
 }) => {
-  const { isProjectSelected, toggleProjectSelection } = useBulkOperationsStore();
+  const { isProjectSelected, toggleProjectSelection } =
+    useBulkOperationsStore();
   const isSelected = isProjectSelected(projectId);
 
   const handleChange = (checked: boolean) => {
@@ -62,7 +63,7 @@ export const BulkSelectCheckbox: React.FC<BulkSelectCheckboxProps> = ({
         "w-12 h-12 rounded-lg",
         "focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500",
         "transition-all duration-200",
-        className
+        className,
       )}
       role="none"
     >
@@ -75,7 +76,7 @@ export const BulkSelectCheckbox: React.FC<BulkSelectCheckboxProps> = ({
         className={cn(
           "w-6 h-6",
           isSelected && "ring-2 ring-blue-500 ring-offset-1",
-          disabled && "opacity-50 cursor-not-allowed"
+          disabled && "opacity-50 cursor-not-allowed",
         )}
       />
       {/* Hidden description for screen readers */}
@@ -111,7 +112,9 @@ export const BulkSelectAllCheckbox: React.FC<BulkSelectAllCheckboxProps> = ({
   const isAllSelected = selectedCount === totalProjects && totalProjects > 0;
 
   const handleChange = () => {
-    toggleSelectAll(Array.from({ length: totalProjects }, (_, i) => i.toString()));
+    toggleSelectAll(
+      Array.from({ length: totalProjects }, (_, i) => i.toString()),
+    );
     onChange?.(!isAllSelected);
 
     // Announce select all action to screen readers
@@ -138,7 +141,7 @@ export const BulkSelectAllCheckbox: React.FC<BulkSelectAllCheckboxProps> = ({
         "w-12 h-12 rounded-lg",
         "focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500",
         "transition-all duration-200",
-        className
+        className,
       )}
       role="none"
     >
@@ -150,8 +153,9 @@ export const BulkSelectAllCheckbox: React.FC<BulkSelectAllCheckboxProps> = ({
         aria-describedby="bulk-select-all-desc"
         className={cn(
           "w-6 h-6",
-          (isAllSelected || isIndeterminate) && "ring-2 ring-blue-500 ring-offset-1",
-          disabled && "opacity-50 cursor-not-allowed"
+          (isAllSelected || isIndeterminate) &&
+            "ring-2 ring-blue-500 ring-offset-1",
+          disabled && "opacity-50 cursor-not-allowed",
         )}
       />
       {/* Hidden description for screen readers */}
@@ -184,9 +188,10 @@ export function useBulkKeyboardShortcuts() {
         if ((event.ctrlKey || event.metaKey) && event.key === "a") {
           event.preventDefault();
           // Get all project IDs from the page
-          const projectCheckboxes = document.querySelectorAll("[data-project-id]");
+          const projectCheckboxes =
+            document.querySelectorAll("[data-project-id]");
           const projectIds = Array.from(projectCheckboxes).map((cb) =>
-            cb.getAttribute("data-project-id")
+            cb.getAttribute("data-project-id"),
           ) as string[];
           toggleSelectAll(projectIds);
         }

@@ -1,24 +1,30 @@
 /**
  * 🛡️ RBAC System Explanation
- * 
+ *
  * Explains how role permissions work in the current system structure
  * and how department integration would enhance it.
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Building, 
-  FolderOpen, 
-  CheckSquare, 
-  Users, 
+import {
+  Building,
+  FolderOpen,
+  CheckSquare,
+  Users,
   ArrowRight,
   Zap,
   AlertTriangle,
   CheckCircle2,
-  XCircle
+  XCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/rbac-explanation")({
@@ -34,7 +40,8 @@ function RBACExplanationPage() {
           🛡️ RBAC System: Current vs Full Integration
         </h1>
         <p className="text-muted-foreground">
-          Understanding how role-based permissions work in your current system structure.
+          Understanding how role-based permissions work in your current system
+          structure.
         </p>
       </div>
 
@@ -66,7 +73,7 @@ function RBACExplanationPage() {
               <span className="font-semibold">Tasks</span>
             </div>
           </div>
-          
+
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <h4 className="font-semibold text-blue-600">Workspace Level</h4>
@@ -118,11 +125,15 @@ function RBACExplanationPage() {
                 <Badge variant="secondary">project-manager</Badge>
                 Example: How Two Project Managers Differ
               </h4>
-              
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <div className="font-medium text-blue-600">Jennifer Williams</div>
-                  <div className="text-sm text-muted-foreground">Assigned to: Web App, Mobile App</div>
+                  <div className="font-medium text-blue-600">
+                    Jennifer Williams
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Assigned to: Web App, Mobile App
+                  </div>
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-3 w-3 text-green-600" />
@@ -138,10 +149,12 @@ function RBACExplanationPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="font-medium text-blue-600">Mike Manager</div>
-                  <div className="text-sm text-muted-foreground">Assigned to: API, Infrastructure</div>
+                  <div className="text-sm text-muted-foreground">
+                    Assigned to: API, Infrastructure
+                  </div>
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-3 w-3 text-green-600" />
@@ -166,11 +179,15 @@ function RBACExplanationPage() {
                 <Badge variant="secondary">team-lead</Badge>
                 Example: How Two Team Leads Differ
               </h4>
-              
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <div className="font-medium text-purple-600">Lisa Rodriguez</div>
-                  <div className="text-sm text-muted-foreground">Projects: Design System, UX Research</div>
+                  <div className="font-medium text-purple-600">
+                    Lisa Rodriguez
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Projects: Design System, UX Research
+                  </div>
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2">
                       <Zap className="h-3 w-3 text-yellow-600" />
@@ -186,10 +203,14 @@ function RBACExplanationPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <div className="font-medium text-purple-600">Tom Leadership</div>
-                  <div className="text-sm text-muted-foreground">Projects: API, Infrastructure</div>
+                  <div className="font-medium text-purple-600">
+                    Tom Leadership
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Projects: API, Infrastructure
+                  </div>
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2">
                       <Zap className="h-3 w-3 text-yellow-600" />
@@ -226,7 +247,9 @@ function RBACExplanationPage() {
           <div className="space-y-6">
             {/* Enhanced Hierarchy */}
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-semibold mb-3 text-blue-800">Enhanced 4-Tier Hierarchy</h4>
+              <h4 className="font-semibold mb-3 text-blue-800">
+                Enhanced 4-Tier Hierarchy
+              </h4>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-blue-600">
                   <Building className="h-5 w-5" />
@@ -253,41 +276,65 @@ function RBACExplanationPage() {
             {/* Department Benefits */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-3">
-                <h4 className="font-semibold text-green-600">✅ Benefits of Departments</h4>
+                <h4 className="font-semibold text-green-600">
+                  ✅ Benefits of Departments
+                </h4>
                 <ul className="text-sm space-y-2">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span><strong>Clear Hierarchy:</strong> Sarah heads Product dept, David heads Engineering</span>
+                    <span>
+                      <strong>Clear Hierarchy:</strong> Sarah heads Product
+                      dept, David heads Engineering
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span><strong>Team Organization:</strong> Groups projects by business function</span>
+                    <span>
+                      <strong>Team Organization:</strong> Groups projects by
+                      business function
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span><strong>Budget Control:</strong> Department-level budget management</span>
+                    <span>
+                      <strong>Budget Control:</strong> Department-level budget
+                      management
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span><strong>Analytics:</strong> Department performance metrics</span>
+                    <span>
+                      <strong>Analytics:</strong> Department performance metrics
+                    </span>
                   </li>
                 </ul>
               </div>
-              
+
               <div className="space-y-3">
-                <h4 className="font-semibold text-orange-600">⚠️ Current Workarounds</h4>
+                <h4 className="font-semibold text-orange-600">
+                  ⚠️ Current Workarounds
+                </h4>
                 <ul className="text-sm space-y-2">
                   <li className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" />
-                    <span><strong>Project-based scope:</strong> Using project assignments instead</span>
+                    <span>
+                      <strong>Project-based scope:</strong> Using project
+                      assignments instead
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" />
-                    <span><strong>Manual organization:</strong> Grouping projects by naming</span>
+                    <span>
+                      <strong>Manual organization:</strong> Grouping projects by
+                      naming
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" />
-                    <span><strong>Role confusion:</strong> Department heads act like project managers</span>
+                    <span>
+                      <strong>Role confusion:</strong> Department heads act like
+                      project managers
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -307,7 +354,9 @@ function RBACExplanationPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="p-4 border rounded-lg">
-              <h4 className="font-semibold text-blue-600 mb-2">Option 1: Keep Current (Simpler)</h4>
+              <h4 className="font-semibold text-blue-600 mb-2">
+                Option 1: Keep Current (Simpler)
+              </h4>
               <ul className="text-sm space-y-1 text-muted-foreground">
                 <li>• Use project-based permissions</li>
                 <li>• Remove department-head role</li>
@@ -318,18 +367,18 @@ function RBACExplanationPage() {
                 Simplify System
               </Button>
             </div>
-            
+
             <div className="p-4 border rounded-lg">
-              <h4 className="font-semibold text-green-600 mb-2">Option 2: Add Department UI (Enhanced)</h4>
+              <h4 className="font-semibold text-green-600 mb-2">
+                Option 2: Add Department UI (Enhanced)
+              </h4>
               <ul className="text-sm space-y-1 text-muted-foreground">
                 <li>• Create department management pages</li>
                 <li>• Add department navigation</li>
                 <li>• Implement department analytics</li>
                 <li>• Full organizational structure</li>
               </ul>
-              <Button className="mt-3 w-full">
-                Implement Departments
-              </Button>
+              <Button className="mt-3 w-full">Implement Departments</Button>
             </div>
           </div>
         </CardContent>
@@ -342,15 +391,17 @@ function RBACExplanationPage() {
         </CardHeader>
         <CardContent>
           <p className="text-blue-700">
-            <strong>Same roles CAN have different permissions</strong> - this is correct RBAC design! 
-            The difference comes from <strong>scope assignments</strong> (which projects/departments users can access), 
-            not from the base role permissions themselves.
+            <strong>Same roles CAN have different permissions</strong> - this is
+            correct RBAC design! The difference comes from{" "}
+            <strong>scope assignments</strong> (which projects/departments users
+            can access), not from the base role permissions themselves.
           </p>
           <div className="mt-4 p-3 bg-blue-100 rounded-md">
             <p className="text-sm text-blue-800">
-              <strong>Current State:</strong> Your system uses project-based scoping. 
-              Lisa and Tom (both team-leads) have different project assignments, 
-              so they appear to have different permissions - this is intentional and secure!
+              <strong>Current State:</strong> Your system uses project-based
+              scoping. Lisa and Tom (both team-leads) have different project
+              assignments, so they appear to have different permissions - this
+              is intentional and secure!
             </p>
           </div>
         </CardContent>

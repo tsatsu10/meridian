@@ -15,7 +15,10 @@ test.describe("@smoke sign-in (optional)", () => {
   test.describe.configure({ mode: "serial", timeout: 120_000 });
 
   test("sign in with existing user", async ({ page }) => {
-    test.skip(!hasCreds, "Set E2E_SMOKE_EMAIL and E2E_SMOKE_PASSWORD to run this test");
+    test.skip(
+      !hasCreds,
+      "Set E2E_SMOKE_EMAIL and E2E_SMOKE_PASSWORD to run this test",
+    );
 
     await page.goto("/auth/sign-in");
     await page.locator('input[name="email"]').fill(email!);
@@ -26,7 +29,9 @@ test.describe("@smoke sign-in (optional)", () => {
 
     const meResponse = await page.request.get("/api/users/me");
     expect(meResponse.ok()).toBeTruthy();
-    const body = (await meResponse.json()) as { user?: { email?: string } | null };
+    const body = (await meResponse.json()) as {
+      user?: { email?: string } | null;
+    };
     expect(body.user?.email).toBe(email);
   });
 });

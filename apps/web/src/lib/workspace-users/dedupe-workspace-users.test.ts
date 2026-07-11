@@ -25,7 +25,12 @@ describe("dedupeWorkspaceUsersForList", () => {
   it("dedupes by email when ids differ only by join miss", () => {
     const rows = [
       { id: null, email: "b@example.com", status: "pending", joinedAt: null },
-      { id: "u2", email: "b@example.com", status: "active", joinedAt: "2024-06-01" },
+      {
+        id: "u2",
+        email: "b@example.com",
+        status: "active",
+        joinedAt: "2024-06-01",
+      },
     ];
     const out = dedupeWorkspaceUsersForList(rows);
     expect(out).toHaveLength(1);

@@ -1,6 +1,6 @@
 // @epic-3.4-teams: Get single calendar event query hook
-import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL, } from '@/constants/urls';
+import { useQuery } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/constants/urls";
 
 interface CalendarEvent {
   id: string;
@@ -39,16 +39,16 @@ interface GetEventResponse {
 
 async function getEvent(eventId: string): Promise<GetEventResponse> {
   const response = await fetch(`${API_BASE_URL}/calendar/events/${eventId}`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.details || error.error || 'Failed to fetch event');
+    throw new Error(error.details || error.error || "Failed to fetch event");
   }
 
   return response.json();
@@ -56,10 +56,9 @@ async function getEvent(eventId: string): Promise<GetEventResponse> {
 
 export function useGetEvent(eventId: string, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ['event', eventId],
+    queryKey: ["event", eventId],
     queryFn: () => getEvent(eventId),
     enabled: options?.enabled !== false && !!eventId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
-

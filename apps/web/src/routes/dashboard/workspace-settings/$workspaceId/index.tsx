@@ -149,7 +149,7 @@ function RouteComponent() {
 
   return (
     <LazyDashboardLayout>
-      <UniversalHeader 
+      <UniversalHeader
         title={`${workspace?.name} Settings`}
         subtitle="Manage workspace configuration and preferences"
         variant="default"

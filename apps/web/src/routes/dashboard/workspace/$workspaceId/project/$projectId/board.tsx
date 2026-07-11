@@ -68,10 +68,10 @@ function RouteComponent() {
   // Calculate if filters are active and total task count
   const hasActiveFilters = Boolean(
     filters.search ||
-    filters.assignee ||
-    filters.priority ||
-    filters.dueDate ||
-    filters.sortBy
+      filters.assignee ||
+      filters.priority ||
+      filters.dueDate ||
+      filters.sortBy,
   );
 
   // 🎹 KEYBOARD SHORTCUTS: Enhance productivity with keyboard navigation
@@ -90,7 +90,9 @@ function RouteComponent() {
       key: "/",
       description: "Focus search",
       action: () => {
-        const searchInput = document.querySelector('input[placeholder="Search tasks..."]') as HTMLInputElement;
+        const searchInput = document.querySelector(
+          'input[placeholder="Search tasks..."]',
+        ) as HTMLInputElement;
         searchInput?.focus();
       },
     },
@@ -103,13 +105,22 @@ function RouteComponent() {
     },
   ]);
 
-  const totalTasks = project?.columns?.reduce((acc: number, col: any) => acc + (col.tasks?.length || 0), 0) || 0;
-  const activeFilterCount = [filters.assignee, filters.priority, filters.dueDate, filters.sortBy].filter(Boolean).length;
+  const totalTasks =
+    project?.columns?.reduce(
+      (acc: number, col: any) => acc + (col.tasks?.length || 0),
+      0,
+    ) || 0;
+  const activeFilterCount = [
+    filters.assignee,
+    filters.priority,
+    filters.dueDate,
+    filters.sortBy,
+  ].filter(Boolean).length;
 
   // Helper function to flatten hierarchical tasks for filtering
   const flattenTasksForFiltering = (tasks: Task[]): Task[] => {
     const flattened: Task[] = [];
-    
+
     const flatten = (taskList: Task[]) => {
       for (const task of taskList) {
         flattened.push(task);
@@ -118,7 +129,7 @@ function RouteComponent() {
         }
       }
     };
-    
+
     flatten(tasks);
     return flattened;
   };
@@ -154,7 +165,7 @@ function RouteComponent() {
     const filterTasks = (tasks: Task[]): Task[] => {
       // First, flatten all tasks (including subtasks) for filtering
       const allTasks = flattenTasksForFiltering(tasks);
-      
+
       let filteredTasks = allTasks
         .filter((task) => {
           if (
@@ -181,7 +192,10 @@ function RouteComponent() {
                 const weekStart = startOfWeek(today);
                 const weekEnd = endOfWeek(today);
                 if (
-                  !isWithinInterval(taskDate, { start: weekStart, end: weekEnd })
+                  !isWithinInterval(taskDate, {
+                    start: weekStart,
+                    end: weekEnd,
+                  })
                 ) {
                   return false;
                 }
@@ -214,7 +228,7 @@ function RouteComponent() {
           assigneeName: (task as any).userName ?? null,
           assignedTeamId: (task as any).teamId ?? null,
           assignedTeam: (task as any).team ?? null,
-          position: task.position ?? 0
+          position: task.position ?? 0,
         }));
 
       if (filters.sortBy && filters.sortOrder) {
@@ -228,10 +242,12 @@ function RouteComponent() {
             case "priority": {
               const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
               const aPriority = a.priority
-                ? (priorityOrder[a.priority as keyof typeof priorityOrder] ?? 999)
+                ? (priorityOrder[a.priority as keyof typeof priorityOrder] ??
+                  999)
                 : 999;
               const bPriority = b.priority
-                ? (priorityOrder[b.priority as keyof typeof priorityOrder] ?? 999)
+                ? (priorityOrder[b.priority as keyof typeof priorityOrder] ??
+                  999)
                 : 999;
               return sortOrder * (aPriority - bPriority);
             }
@@ -273,7 +289,11 @@ function RouteComponent() {
     };
   }, [project, filters]); // Only recompute when project or filters change
 
-  const visibleTasks = filteredProject?.columns?.reduce((acc: number, col: any) => acc + (col.tasks?.length || 0), 0) || 0;
+  const visibleTasks =
+    filteredProject?.columns?.reduce(
+      (acc: number, col: any) => acc + (col.tasks?.length || 0),
+      0,
+    ) || 0;
 
   if (isLoading) {
     return (
@@ -286,7 +306,9 @@ function RouteComponent() {
   if (!filteredProject) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-zinc-500 dark:text-zinc-400">Project not found</div>
+        <div className="text-zinc-500 dark:text-zinc-400">
+          Project not found
+        </div>
       </div>
     );
   }
@@ -308,17 +330,33 @@ function RouteComponent() {
               <span className="hidden sm:inline">Back to Project</span>
               <span className="sm:hidden">Back</span>
             </Link>
-            
+
             {/* Center: Project Title - Hidden on mobile */}
             <h1 className="hidden md:block text-xl font-semibold text-foreground truncate">
-              {filteredProject?.name || 'Project'} Board
+              {filteredProject?.name || "Project"} Board
             </h1>
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
               <NotificationBell />
-              <Button onClick={() => setIsTaskModalOpen(true)} size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9">
-                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+              <Button
+                onClick={() => setIsTaskModalOpen(true)}
+                size="sm"
+                className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
+              >
+                <svg
+                  className="w-3 h-3 sm:w-4 sm:h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
                 <span className="hidden sm:inline">New Task</span>
                 <span className="sm:hidden">Task</span>
               </Button>
@@ -333,8 +371,8 @@ function RouteComponent() {
         {/* @mcp-future: Context7 for smart search, TaskMaster AI for quick actions, Exa for global search */}
 
         {/* 🔊 ACCESSIBILITY: Main content area with proper ARIA labels */}
-        <main 
-          className="flex-1 overflow-hidden" 
+        <main
+          className="flex-1 overflow-hidden"
           role="main"
           aria-label="Task board view"
         >

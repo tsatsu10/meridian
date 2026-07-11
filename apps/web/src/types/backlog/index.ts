@@ -8,7 +8,7 @@ export interface TaskTheme {
   color: string;
   tasks: Task[];
   targetRelease?: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
+  priority: "critical" | "high" | "medium" | "low";
   createdAt: string;
   updatedAt: string;
   projectId: string;
@@ -20,7 +20,7 @@ export interface EnhancedTask extends Task {
   storyPoints?: number;
   businessValue?: number;
   effort?: number;
-  refinementStatus: 'draft' | 'refined' | 'ready';
+  refinementStatus: "draft" | "refined" | "ready";
   labels: string[];
   acceptanceCriteria: string[];
   ageInDays?: number;
@@ -37,7 +37,7 @@ export interface PriorityScore {
 
 export interface TaskWithPriority extends EnhancedTask {
   priorityScore?: PriorityScore;
-  moscowCategory?: 'must' | 'should' | 'could' | 'wont';
+  moscowCategory?: "must" | "should" | "could" | "wont";
 }
 
 // @epic-1.2-gantt @persona-jennifer - Executive needs backlog health metrics
@@ -49,8 +49,8 @@ export interface BacklogHealth {
   oldestTask: number;
   refinementPercentage: number;
   readyPercentage: number;
-  velocityTrend: 'up' | 'down' | 'stable';
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  velocityTrend: "up" | "down" | "stable";
+  riskLevel: "low" | "medium" | "high" | "critical";
 }
 
 // @epic-1.1-subtasks @persona-sarah - PM needs sprint planning capabilities
@@ -60,7 +60,7 @@ export interface SprintCapacity {
   committedPoints: number;
   teamVelocity: number;
   sprintGoal?: string;
-  warningLevel: 'none' | 'approaching' | 'over';
+  warningLevel: "none" | "approaching" | "over";
 }
 
 // Filtering and view options
@@ -69,18 +69,18 @@ export interface BacklogFilters {
   themeId?: string;
   priority?: string;
   assignee?: string;
-  refinementStatus?: 'draft' | 'refined' | 'ready';
-  moscowCategory?: 'must' | 'should' | 'could' | 'wont';
+  refinementStatus?: "draft" | "refined" | "ready";
+  moscowCategory?: "must" | "should" | "could" | "wont";
   ageRange?: { min: number; max: number };
   storyPointRange?: { min: number; max: number };
   labels?: string[];
 }
 
 export interface BacklogViewOptions {
-  viewMode: 'list' | 'themes' | 'priority-matrix' | 'timeline' | 'releases';
-  groupBy?: 'theme' | 'priority' | 'assignee' | 'release' | 'refinement';
-  sortBy?: 'priority' | 'age' | 'storyPoints' | 'businessValue' | 'effort';
-  sortOrder: 'asc' | 'desc';
+  viewMode: "list" | "themes" | "priority-matrix" | "timeline" | "releases";
+  groupBy?: "theme" | "priority" | "assignee" | "release" | "refinement";
+  sortBy?: "priority" | "age" | "storyPoints" | "businessValue" | "effort";
+  sortOrder: "asc" | "desc";
 }
 
 // Theme management
@@ -99,6 +99,6 @@ export interface ThemeWithProgress extends TaskTheme {
   dueDate?: string;
   assignees?: Array<{ name?: string } | string>;
   progress: ThemeProgress;
-  health: 'excellent' | 'good' | 'warning' | 'critical';
+  health: "excellent" | "good" | "warning" | "critical";
   risks: string[];
-} 
+}

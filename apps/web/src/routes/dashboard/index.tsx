@@ -3,19 +3,27 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { validateDashboardDataWithMetadata } from "@/schemas/dashboard";
 import { ErrorRecovery } from "@/components/dashboard/error-recovery";
-import { DashboardStatsLoading, ProjectListLoading } from "@/components/dashboard/loading-states";
+import {
+  DashboardStatsLoading,
+  ProjectListLoading,
+} from "@/components/dashboard/loading-states";
 import { logger } from "@/lib/logger";
 import useWorkspaceStore from "@/store/workspace";
 import { useDashboardData } from "@/hooks/queries/dashboard/use-dashboard-data";
 import { useRiskMonitor } from "@/hooks/queries/risk/use-risk-detection";
-import { useOptionalRBACAuth, type RBACAuthContextType } from "@/lib/permissions";
+import {
+  useOptionalRBACAuth,
+  type RBACAuthContextType,
+} from "@/lib/permissions";
 import { flattenTasksFromProjects } from "@/lib/dashboard/flatten-project-tasks";
 import { useWorkspaceDashboardForOverview } from "@/hooks/dashboard/use-workspace-dashboard-for-overview";
 import { useDashboardActivityFeed } from "@/hooks/dashboard/use-dashboard-activity-feed";
 import { useDashboardOverviewRefresh } from "@/hooks/dashboard/use-dashboard-overview-refresh";
 import { DashboardOverviewLoaded } from "@/components/dashboard/overview/dashboard-overview-loaded";
 
-const LazyDashboardLayout = lazy(() => import("@/components/performance/lazy-dashboard-layout"));
+const LazyDashboardLayout = lazy(
+  () => import("@/components/performance/lazy-dashboard-layout"),
+);
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardOverviewPage,
@@ -26,13 +34,18 @@ const denyAllPermissions: RBACAuthContextType["hasPermission"] = () => false;
 export function DashboardOverviewPage() {
   const { workspace } = useWorkspaceStore();
   const navigate = useNavigate();
-  
+
   const rbacAuth = useOptionalRBACAuth();
   const hasPermission = rbacAuth?.hasPermission ?? denyAllPermissions;
 
   const { activeDashboard } = useWorkspaceDashboardForOverview();
 
-  const { data: dashboardDataRaw, isLoading, error, refetch } = useDashboardData(undefined, {
+  const {
+    data: dashboardDataRaw,
+    isLoading,
+    error,
+    refetch,
+  } = useDashboardData(undefined, {
     dashboardId: activeDashboard?.id,
     dashboardName: activeDashboard?.name ?? undefined,
   });
@@ -57,7 +70,9 @@ export function DashboardOverviewPage() {
     deferUntilIdle: true,
   });
 
-  const activityFeedWindow = useDashboardActivityFeed(dashboardData?.activities);
+  const activityFeedWindow = useDashboardActivityFeed(
+    dashboardData?.activities,
+  );
 
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -81,9 +96,12 @@ export function DashboardOverviewPage() {
     return (
       <div className="flex flex-1 items-center justify-center min-h-[50vh] p-6 bg-gray-50/50 dark:bg-gradient-dark">
         <div className="max-w-md rounded-xl border border-border/60 bg-card p-8 text-center shadow-sm">
-          <h1 className="text-lg font-semibold text-foreground">No workspace selected</h1>
+          <h1 className="text-lg font-semibold text-foreground">
+            No workspace selected
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Choose a workspace to load your dashboard, or open workspace settings to create or join one.
+            Choose a workspace to load your dashboard, or open workspace
+            settings to create or join one.
           </p>
           <Button asChild className="mt-6">
             <Link to="/dashboard/settings/workspace">Workspace settings</Link>
@@ -141,16 +159,27 @@ export function DashboardOverviewPage() {
     return (
       <div className="flex flex-1 items-center justify-center min-h-[50vh] p-6 bg-gray-50/50 dark:bg-gradient-dark">
         <div className="max-w-md rounded-xl border border-border/60 bg-card p-8 text-center shadow-sm">
-          <h1 className="text-lg font-semibold text-foreground">Couldn&apos;t load dashboard data</h1>
+          <h1 className="text-lg font-semibold text-foreground">
+            Couldn&apos;t load dashboard data
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            The overview didn&apos;t return usable data. This may be a temporary network issue or permissions
-            mismatch. Try again, or refresh the page.
+            The overview didn&apos;t return usable data. This may be a temporary
+            network issue or permissions mismatch. Try again, or refresh the
+            page.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Button type="button" variant="default" onClick={() => void refetch()}>
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => void refetch()}
+            >
               Retry
             </Button>
-            <Button type="button" variant="outline" onClick={() => void softRefreshDashboard()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void softRefreshDashboard()}
+            >
               Invalidate cache
             </Button>
           </div>
@@ -166,16 +195,20 @@ export function DashboardOverviewPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex-1 p-6 bg-gray-50/50 dark:bg-gradient-dark" aria-busy="true" aria-label="Loading dashboard layout">
-        <div className="animate-pulse space-y-6">
+        <div
+          className="flex-1 p-6 bg-gray-50/50 dark:bg-gradient-dark"
+          aria-busy="true"
+          aria-label="Loading dashboard layout"
+        >
+          <div className="animate-pulse space-y-6">
             <div className="h-8 bg-muted rounded w-1/4" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="h-24 bg-muted rounded glass-card" />
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
       }
     >
       <LazyDashboardLayout>
@@ -195,4 +228,4 @@ export function DashboardOverviewPage() {
       </LazyDashboardLayout>
     </Suspense>
   );
-} 
+}

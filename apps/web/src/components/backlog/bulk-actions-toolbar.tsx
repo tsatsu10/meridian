@@ -8,14 +8,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  X, 
-  Trash2, 
-  Archive, 
-  ArrowRight, 
+import {
+  X,
+  Trash2,
+  Archive,
+  ArrowRight,
   Tag,
   AlertTriangle,
-  MoreHorizontal
+  MoreHorizontal,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,7 +25,7 @@ interface BulkActionsToolbarProps {
   onBulkDelete: () => void;
   onBulkArchive: () => void;
   onBulkMoveToSprint: () => void;
-  onBulkSetPriority: (priority: 'low' | 'medium' | 'high' | 'urgent') => void;
+  onBulkSetPriority: (priority: "low" | "medium" | "high" | "urgent") => void;
 }
 
 export function BulkActionsToolbar({
@@ -49,11 +49,14 @@ export function BulkActionsToolbar({
           <div className="bg-card border shadow-2xl rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4 min-w-[320px] sm:min-w-[500px]">
             {/* Selection Count */}
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="font-semibold text-sm sm:text-base">
+              <Badge
+                variant="secondary"
+                className="font-semibold text-sm sm:text-base"
+              >
                 {selectedCount}
               </Badge>
               <span className="text-sm sm:text-base font-medium hidden sm:inline">
-                {selectedCount === 1 ? 'item' : 'items'} selected
+                {selectedCount === 1 ? "item" : "items"} selected
               </span>
               <span className="text-sm font-medium sm:hidden">selected</span>
             </div>
@@ -100,19 +103,19 @@ export function BulkActionsToolbar({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   {/* Priority Submenu */}
-                  <DropdownMenuItem onClick={() => onBulkSetPriority('high')}>
+                  <DropdownMenuItem onClick={() => onBulkSetPriority("high")}>
                     <AlertTriangle className="w-4 h-4 mr-2 text-red-600" />
                     Set High Priority
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onBulkSetPriority('medium')}>
+                  <DropdownMenuItem onClick={() => onBulkSetPriority("medium")}>
                     <AlertTriangle className="w-4 h-4 mr-2 text-amber-600" />
                     Set Medium Priority
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onBulkSetPriority('low')}>
+                  <DropdownMenuItem onClick={() => onBulkSetPriority("low")}>
                     <AlertTriangle className="w-4 h-4 mr-2 text-blue-600" />
                     Set Low Priority
                   </DropdownMenuItem>
-                  
+
                   <DropdownMenuSeparator />
 
                   {/* Add Labels */}
@@ -120,11 +123,11 @@ export function BulkActionsToolbar({
                     <Tag className="w-4 h-4 mr-2" />
                     Add Labels...
                   </DropdownMenuItem>
-                  
+
                   <DropdownMenuSeparator />
-                  
+
                   {/* Delete */}
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={onBulkDelete}
                     className="text-red-600 focus:text-red-600"
                   >
@@ -152,4 +155,3 @@ export function BulkActionsToolbar({
     </AnimatePresence>
   );
 }
-

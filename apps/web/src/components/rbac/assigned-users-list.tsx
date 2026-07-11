@@ -1,17 +1,17 @@
 /**
  * 👥 Assigned Users List Component
- * 
+ *
  * Displays users assigned to a role with management actions.
- * 
+ *
  * @phase Phase-3-Week-9
  */
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { API_BASE_URL } from '@/constants/urls';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/constants/urls";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -19,15 +19,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Search, MoreVertical, UserMinus, UserPlus, Mail } from 'lucide-react';
-import { toast } from 'sonner';
+} from "@/components/ui/dropdown-menu";
+import { Search, MoreVertical, UserMinus, UserPlus, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 // ==========================================
 // TYPES
@@ -49,61 +49,66 @@ interface AssignedUsersListProps {
 // COMPONENT
 // ==========================================
 
-export function AssignedUsersList({ roleId, onAssignMore }: AssignedUsersListProps) {
+export function AssignedUsersList({
+  roleId,
+  onAssignMore,
+}: AssignedUsersListProps) {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  
+  const [search, setSearch] = useState("");
+
   // Fetch assigned users
   const { data: users, isLoading } = useQuery({
-    queryKey: ['role-users', roleId],
+    queryKey: ["role-users", roleId],
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE_URL}/roles/assignments?roleId=${roleId}`,
-        { credentials: 'include' }
+        { credentials: "include" },
       );
-      if (!response.ok) throw new Error('Failed to fetch users');
+      if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       return data.assignments as AssignedUser[];
     },
   });
-  
+
   // Remove assignment mutation
   const removeAssignmentMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
       const response = await fetch(
         `${API_BASE_URL}/roles/assignments/${assignmentId}`,
         {
-          method: 'DELETE',
-          credentials: 'include',
-        }
+          method: "DELETE",
+          credentials: "include",
+        },
       );
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to remove assignment');
+        throw new Error(error.error || "Failed to remove assignment");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['role-users', roleId] });
-      queryClient.invalidateQueries({ queryKey: ['role', roleId] });
-      toast.success('User removed from role');
+      queryClient.invalidateQueries({ queryKey: ["role-users", roleId] });
+      queryClient.invalidateQueries({ queryKey: ["role", roleId] });
+      toast.success("User removed from role");
     },
     onError: (error: Error) => {
       toast.error(error.message);
     },
   });
-  
+
   const handleRemoveUser = (assignmentId: string) => {
-    if (confirm('Are you sure you want to remove this user from the role?')) {
+    if (confirm("Are you sure you want to remove this user from the role?")) {
       removeAssignmentMutation.mutate(assignmentId);
     }
   };
-  
-  const filteredUsers = users?.filter((user) =>
-    search === '' ||
-    user.userId.toLowerCase().includes(search.toLowerCase())
-  ) || [];
-  
+
+  const filteredUsers =
+    users?.filter(
+      (user) =>
+        search === "" ||
+        user.userId.toLowerCase().includes(search.toLowerCase()),
+    ) || [];
+
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -112,7 +117,7 @@ export function AssignedUsersList({ roleId, onAssignMore }: AssignedUsersListPro
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -126,13 +131,13 @@ export function AssignedUsersList({ roleId, onAssignMore }: AssignedUsersListPro
             className="pl-10"
           />
         </div>
-        
+
         <Button onClick={onAssignMore}>
           <UserPlus className="h-4 w-4 mr-2" />
           Assign Users
         </Button>
       </div>
-      
+
       {/* Users Table */}
       {filteredUsers.length > 0 ? (
         <div className="border rounded-lg">
@@ -198,7 +203,9 @@ export function AssignedUsersList({ roleId, onAssignMore }: AssignedUsersListPro
           <UserPlus className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No users assigned</h3>
           <p className="text-muted-foreground mb-4">
-            {search ? 'No users match your search' : 'Get started by assigning users to this role'}
+            {search
+              ? "No users match your search"
+              : "Get started by assigning users to this role"}
           </p>
           {!search && (
             <Button onClick={onAssignMore}>
@@ -211,4 +218,3 @@ export function AssignedUsersList({ roleId, onAssignMore }: AssignedUsersListPro
     </div>
   );
 }
-

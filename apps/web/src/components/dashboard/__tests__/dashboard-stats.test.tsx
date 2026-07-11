@@ -1,6 +1,6 @@
 /**
  * Dashboard Stats Component Tests
- * 
+ *
  * Tests dashboard statistics display:
  * - Data rendering
  * - Loading states
@@ -9,9 +9,9 @@
  * - Accessibility
  */
 
-import { describe, it, expect, } from 'vitest';
-import { render, screen, } from '@testing-library/react';
-import { TestWrapper } from '../../../test-utils/test-wrapper';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { TestWrapper } from "../../../test-utils/test-wrapper";
 
 // Mock dashboard stats component
 function DashboardStats({ data, isLoading, error }: any) {
@@ -60,7 +60,7 @@ function DashboardStats({ data, isLoading, error }: any) {
   );
 }
 
-describe('Dashboard Stats Component', () => {
+describe("Dashboard Stats Component", () => {
   const mockData = {
     totalProjects: 15,
     activeTasks: 42,
@@ -68,49 +68,50 @@ describe('Dashboard Stats Component', () => {
     teamMembers: 8,
   };
 
-  it('should render all stat cards', () => {
-    render(
-      <DashboardStats data={mockData} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
-    );
+  it("should render all stat cards", () => {
+    render(<DashboardStats data={mockData} isLoading={false} error={null} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByText('Total Projects')).toBeInTheDocument();
-    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.getByText("Total Projects")).toBeInTheDocument();
+    expect(screen.getByText("15")).toBeInTheDocument();
 
-    expect(screen.getByText('Active Tasks')).toBeInTheDocument();
-    expect(screen.getByText('42')).toBeInTheDocument();
+    expect(screen.getByText("Active Tasks")).toBeInTheDocument();
+    expect(screen.getByText("42")).toBeInTheDocument();
 
-    expect(screen.getByText('Completion Rate')).toBeInTheDocument();
-    expect(screen.getByText('78%')).toBeInTheDocument();
+    expect(screen.getByText("Completion Rate")).toBeInTheDocument();
+    expect(screen.getByText("78%")).toBeInTheDocument();
 
-    expect(screen.getByText('Team Members')).toBeInTheDocument();
-    expect(screen.getByText('8')).toBeInTheDocument();
+    expect(screen.getByText("Team Members")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
   });
 
-  it('should display loading state', () => {
-    render(
-      <DashboardStats data={null} isLoading={true} error={null} />,
-      { wrapper: TestWrapper }
-    );
+  it("should display loading state", () => {
+    render(<DashboardStats data={null} isLoading={true} error={null} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByRole('status', { name: /loading dashboard/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading dashboard/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 
-  it('should display error state', () => {
-    const error = new Error('Failed to fetch dashboard data');
-    
-    render(
-      <DashboardStats data={null} isLoading={false} error={error} />,
-      { wrapper: TestWrapper }
-    );
+  it("should display error state", () => {
+    const error = new Error("Failed to fetch dashboard data");
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    render(<DashboardStats data={null} isLoading={false} error={error} />, {
+      wrapper: TestWrapper,
+    });
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.getByText(/error loading dashboard/i)).toBeInTheDocument();
-    expect(screen.getByText(/failed to fetch dashboard data/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/failed to fetch dashboard data/i),
+    ).toBeInTheDocument();
   });
 
-  it('should handle zero values', () => {
+  it("should handle zero values", () => {
     const zeroData = {
       totalProjects: 0,
       activeTasks: 0,
@@ -118,16 +119,15 @@ describe('Dashboard Stats Component', () => {
       teamMembers: 0,
     };
 
-    render(
-      <DashboardStats data={zeroData} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
-    );
+    render(<DashboardStats data={zeroData} isLoading={false} error={null} />, {
+      wrapper: TestWrapper,
+    });
 
-    const statValues = screen.getAllByText('0');
+    const statValues = screen.getAllByText("0");
     expect(statValues.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('should handle large numbers', () => {
+  it("should handle large numbers", () => {
     const largeData = {
       totalProjects: 1234,
       activeTasks: 5678,
@@ -135,40 +135,45 @@ describe('Dashboard Stats Component', () => {
       teamMembers: 234,
     };
 
-    render(
-      <DashboardStats data={largeData} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
-    );
+    render(<DashboardStats data={largeData} isLoading={false} error={null} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByText('1234')).toBeInTheDocument();
-    expect(screen.getByText('5678')).toBeInTheDocument();
-    expect(screen.getByText('99%')).toBeInTheDocument();
-    expect(screen.getByText('234')).toBeInTheDocument();
+    expect(screen.getByText("1234")).toBeInTheDocument();
+    expect(screen.getByText("5678")).toBeInTheDocument();
+    expect(screen.getByText("99%")).toBeInTheDocument();
+    expect(screen.getByText("234")).toBeInTheDocument();
   });
 
-  it('should be accessible', () => {
-    render(
-      <DashboardStats data={mockData} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
-    );
+  it("should be accessible", () => {
+    render(<DashboardStats data={mockData} isLoading={false} error={null} />, {
+      wrapper: TestWrapper,
+    });
 
     // Each stat card should have an accessible region
-    expect(screen.getByRole('region', { name: /total projects/i })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: /active tasks/i })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: /completion rate/i })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: /team members/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /total projects/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /active tasks/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /completion rate/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /team members/i }),
+    ).toBeInTheDocument();
   });
 
-  it('should handle missing data gracefully', () => {
-    render(
-      <DashboardStats data={null} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
-    );
+  it("should handle missing data gracefully", () => {
+    render(<DashboardStats data={null} isLoading={false} error={null} />, {
+      wrapper: TestWrapper,
+    });
 
     expect(screen.getByText(/no data available/i)).toBeInTheDocument();
   });
 
-  it('should handle partial data', () => {
+  it("should handle partial data", () => {
     const partialData = {
       totalProjects: 10,
       activeTasks: 20,
@@ -177,63 +182,58 @@ describe('Dashboard Stats Component', () => {
 
     render(
       <DashboardStats data={partialData} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByText('10')).toBeInTheDocument();
-    expect(screen.getByText('20')).toBeInTheDocument();
+    expect(screen.getByText("10")).toBeInTheDocument();
+    expect(screen.getByText("20")).toBeInTheDocument();
   });
 
-  it('should update when data changes', () => {
+  it("should update when data changes", () => {
     const { rerender } = render(
       <DashboardStats data={mockData} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.getByText("15")).toBeInTheDocument();
 
     const newData = {
       ...mockData,
       totalProjects: 20,
     };
 
-    rerender(
-      <DashboardStats data={newData} isLoading={false} error={null} />
-    );
+    rerender(<DashboardStats data={newData} isLoading={false} error={null} />);
 
-    expect(screen.getByText('20')).toBeInTheDocument();
-    expect(screen.queryByText('15')).not.toBeInTheDocument();
+    expect(screen.getByText("20")).toBeInTheDocument();
+    expect(screen.queryByText("15")).not.toBeInTheDocument();
   });
 
-  it('should transition from loading to data', () => {
+  it("should transition from loading to data", () => {
     const { rerender } = render(
       <DashboardStats data={null} isLoading={true} error={null} />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
 
-    rerender(
-      <DashboardStats data={mockData} isLoading={false} error={null} />
-    );
+    rerender(<DashboardStats data={mockData} isLoading={false} error={null} />);
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByText("15")).toBeInTheDocument();
   });
 
-  it('should have proper semantic HTML structure', () => {
+  it("should have proper semantic HTML structure", () => {
     const { container } = render(
       <DashboardStats data={mockData} isLoading={false} error={null} />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    const statCards = container.querySelectorAll('.stat-card');
+    const statCards = container.querySelectorAll(".stat-card");
     expect(statCards).toHaveLength(4);
 
-    statCards.forEach(card => {
-      expect(card.querySelector('h3')).toBeInTheDocument();
-      expect(card.querySelector('.stat-value')).toBeInTheDocument();
+    statCards.forEach((card) => {
+      expect(card.querySelector("h3")).toBeInTheDocument();
+      expect(card.querySelector(".stat-value")).toBeInTheDocument();
     });
   });
 });
-

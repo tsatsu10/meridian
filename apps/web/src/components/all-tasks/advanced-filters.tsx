@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
@@ -15,44 +21,118 @@ import { format } from "date-fns";
 
 // Icon components with proper typing
 const FilterIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"
+    />
   </svg>
 );
 
-const XIcon = ({ className, onClick }: { className?: string; onClick?: () => void }) => (
-  <svg className={className} onClick={onClick} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+const XIcon = ({
+  className,
+  onClick,
+}: { className?: string; onClick?: () => void }) => (
+  <svg
+    className={className}
+    onClick={onClick}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
   </svg>
 );
 
 const UserIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+    />
   </svg>
 );
 
 const ClockIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
   </svg>
 );
 
 const FlagIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 2H21l-3 6 3 6h-8.5l-1-2H5a2 2 0 00-2 2zm9-13.5V9" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 2H21l-3 6 3 6h-8.5l-1-2H5a2 2 0 00-2 2zm9-13.5V9"
+    />
   </svg>
 );
 
 const FolderIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+    />
   </svg>
 );
 
 const CalendarIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
   </svg>
 );
 
@@ -106,17 +186,17 @@ const statusLabels: Record<string, string> = {
 };
 
 const priorityLabels = {
-  "low": "Low",
-  "medium": "Medium",
-  "high": "High", 
-  "urgent": "Urgent",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  urgent: "Urgent",
 };
 
 const priorityColors = {
-  "low": "bg-gray-100 text-gray-800",
-  "medium": "bg-yellow-100 text-yellow-800",
-  "high": "bg-orange-100 text-orange-800",
-  "urgent": "bg-red-100 text-red-800",
+  low: "bg-gray-100 text-gray-800",
+  medium: "bg-yellow-100 text-yellow-800",
+  high: "bg-orange-100 text-orange-800",
+  urgent: "bg-red-100 text-red-800",
 };
 
 const statusColors: Record<string, string> = {
@@ -134,10 +214,10 @@ export function AdvancedFilters({
 }: AdvancedFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const activeFiltersCount = Object.values(filters).filter(value => {
+  const activeFiltersCount = Object.values(filters).filter((value) => {
     if (Array.isArray(value)) return value.length > 0;
-    if (typeof value === 'boolean') return value;
-    return value !== undefined && value !== null && value !== '';
+    if (typeof value === "boolean") return value;
+    return value !== undefined && value !== null && value !== "";
   }).length;
 
   const updateFilter = <K extends keyof AllTasksFilters>(
@@ -150,14 +230,16 @@ export function AdvancedFilters({
   const toggleArrayFilter = (key: keyof AllTasksFilters, value: string) => {
     const currentArray = (filters[key] as string[]) || [];
     const newArray = currentArray.includes(value)
-      ? currentArray.filter(item => item !== value)
+      ? currentArray.filter((item) => item !== value)
       : [...currentArray, value];
     updateFilter(key, newArray.length > 0 ? newArray : undefined);
   };
 
   const removeFilter = (key: keyof AllTasksFilters, value?: string) => {
     if (value && Array.isArray(filters[key])) {
-      const newArray = (filters[key] as string[]).filter(item => item !== value);
+      const newArray = (filters[key] as string[]).filter(
+        (item) => item !== value,
+      );
       updateFilter(key, newArray.length > 0 ? newArray : undefined);
     } else {
       updateFilter(key, undefined);
@@ -198,12 +280,12 @@ export function AdvancedFilters({
               Assigned to me
               <XIcon
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => removeFilter('assignedToMe')}
+                onClick={() => removeFilter("assignedToMe")}
               />
             </Badge>
           )}
 
-          {filters.status?.map(status => (
+          {filters.status?.map((status) => (
             <Badge
               key={status}
               variant="secondary"
@@ -216,35 +298,44 @@ export function AdvancedFilters({
               {statusLabels[status] ?? status}
               <XIcon
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => removeFilter('status', status)}
+                onClick={() => removeFilter("status", status)}
               />
             </Badge>
           ))}
 
-          {filters.priority?.map(priority => (
+          {filters.priority?.map((priority) => (
             <Badge
               key={priority}
               variant="secondary"
-              className={cn("flex items-center gap-1", priorityColors[priority as keyof typeof priorityColors])}
+              className={cn(
+                "flex items-center gap-1",
+                priorityColors[priority as keyof typeof priorityColors],
+              )}
             >
               <FlagIcon className="h-3 w-3" />
               {priorityLabels[priority as keyof typeof priorityLabels]}
               <XIcon
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => removeFilter('priority', priority)}
+                onClick={() => removeFilter("priority", priority)}
               />
             </Badge>
           ))}
 
-          {filters.projectIds?.map(projectId => {
-            const project = filterOptions.projects.find(p => p.id === projectId);
+          {filters.projectIds?.map((projectId) => {
+            const project = filterOptions.projects.find(
+              (p) => p.id === projectId,
+            );
             return project ? (
-              <Badge key={projectId} variant="secondary" className="flex items-center gap-1">
+              <Badge
+                key={projectId}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
                 <FolderIcon className="h-3 w-3" />
                 {project.name}
                 <XIcon
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => removeFilter('projectIds', projectId)}
+                  onClick={() => removeFilter("projectIds", projectId)}
                 />
               </Badge>
             ) : null;
@@ -256,7 +347,7 @@ export function AdvancedFilters({
               Due after {format(filters.dueAfter, "MMM d")}
               <XIcon
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => removeFilter('dueAfter')}
+                onClick={() => removeFilter("dueAfter")}
               />
             </Badge>
           )}
@@ -267,7 +358,7 @@ export function AdvancedFilters({
               Due before {format(filters.dueBefore, "MMM d")}
               <XIcon
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => removeFilter('dueBefore')}
+                onClick={() => removeFilter("dueBefore")}
               />
             </Badge>
           )}
@@ -285,7 +376,9 @@ export function AdvancedFilters({
                 <Switch
                   id="assigned-to-me"
                   checked={filters.assignedToMe || false}
-                  onCheckedChange={(checked) => updateFilter('assignedToMe', checked)}
+                  onCheckedChange={(checked) =>
+                    updateFilter("assignedToMe", checked)
+                  }
                 />
                 <Label htmlFor="assigned-to-me" className="text-sm">
                   Assigned to me
@@ -297,13 +390,13 @@ export function AdvancedFilters({
             <div className="space-y-2">
               <Label>Status</Label>
               <div className="space-y-2">
-                {filterOptions.statuses.map(status => (
+                {filterOptions.statuses.map((status) => (
                   <div key={status} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id={`status-${status}`}
                       checked={filters.status?.includes(status) || false}
-                      onChange={() => toggleArrayFilter('status', status)}
+                      onChange={() => toggleArrayFilter("status", status)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <Label htmlFor={`status-${status}`} className="text-sm">
@@ -318,13 +411,13 @@ export function AdvancedFilters({
             <div className="space-y-2">
               <Label>Priority</Label>
               <div className="space-y-2">
-                {filterOptions.priorities.map(priority => (
+                {filterOptions.priorities.map((priority) => (
                   <div key={priority} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id={`priority-${priority}`}
                       checked={filters.priority?.includes(priority) || false}
-                      onChange={() => toggleArrayFilter('priority', priority)}
+                      onChange={() => toggleArrayFilter("priority", priority)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <Label htmlFor={`priority-${priority}`} className="text-sm">
@@ -341,16 +434,21 @@ export function AdvancedFilters({
               <div className="flex gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.dueAfter ? format(filters.dueAfter, "MMM d") : "After..."}
+                      {filters.dueAfter
+                        ? format(filters.dueAfter, "MMM d")
+                        : "After..."}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={filters.dueAfter}
-                      onSelect={(date) => updateFilter('dueAfter', date)}
+                      onSelect={(date) => updateFilter("dueAfter", date)}
                       autoFocus
                     />
                   </PopoverContent>
@@ -358,16 +456,21 @@ export function AdvancedFilters({
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.dueBefore ? format(filters.dueBefore, "MMM d") : "Before..."}
+                      {filters.dueBefore
+                        ? format(filters.dueBefore, "MMM d")
+                        : "Before..."}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={filters.dueBefore}
-                      onSelect={(date) => updateFilter('dueBefore', date)}
+                      onSelect={(date) => updateFilter("dueBefore", date)}
                       autoFocus
                     />
                   </PopoverContent>
@@ -381,7 +484,7 @@ export function AdvancedFilters({
               <Select
                 value={filters.assignedTeamIds?.[0] || ""}
                 onValueChange={(value) =>
-                  updateFilter('assignedTeamIds', value ? [value] : undefined)
+                  updateFilter("assignedTeamIds", value ? [value] : undefined)
                 }
               >
                 <SelectTrigger>
@@ -404,7 +507,7 @@ export function AdvancedFilters({
               <Select
                 value={filters.assigneeEmails?.[0] || ""}
                 onValueChange={(value) =>
-                  updateFilter('assigneeEmails', value ? [value] : undefined)
+                  updateFilter("assigneeEmails", value ? [value] : undefined)
                 }
               >
                 <SelectTrigger>
@@ -426,4 +529,4 @@ export function AdvancedFilters({
       )}
     </div>
   );
-} 
+}

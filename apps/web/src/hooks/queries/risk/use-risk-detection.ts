@@ -13,14 +13,20 @@ import { addNotificationToStore } from "@/hooks/mutations/task/use-auto-status-u
 // @persona-sarah: PM needs early warning systems
 
 // Utility function to generate unique IDs
-const generateUniqueId = (prefix: string = ''): string => {
+const generateUniqueId = (prefix = ""): string => {
   return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
 interface RiskAlert {
   id: string;
-  type: 'overdue' | 'blocked' | 'resource_conflict' | 'deadline_risk' | 'dependency_chain' | 'quality_risk';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type:
+    | "overdue"
+    | "blocked"
+    | "resource_conflict"
+    | "deadline_risk"
+    | "dependency_chain"
+    | "quality_risk";
+  severity: "low" | "medium" | "high" | "critical";
   title: string;
   description: string;
   recommendation: string;
@@ -40,7 +46,7 @@ interface RiskAlert {
 
 interface RiskAnalysisResult {
   overallRiskScore: number;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskLevel: "low" | "medium" | "high" | "critical";
   alerts: RiskAlert[];
   summary: {
     totalRisks: number;
@@ -50,7 +56,7 @@ interface RiskAnalysisResult {
     lowRisks: number;
   };
   trends: {
-    riskTrend: 'improving' | 'stable' | 'worsening';
+    riskTrend: "improving" | "stable" | "worsening";
     newRisks: number;
     resolvedRisks: number;
   };
@@ -60,35 +66,42 @@ interface RiskAnalysisResult {
 const analyzeProjectRisks = async (
   tasks: any[],
   projects: any[],
-  _teamMembers: any[]
+  _teamMembers: any[],
 ): Promise<RiskAnalysisResult> => {
-  await new Promise(resolve => setTimeout(resolve, 300));
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
   const alerts: RiskAlert[] = [];
   const now = new Date();
 
   // 1. Overdue Task Detection
-  const overdueTasks = tasks.filter(task => {
-    if (!task.dueDate || task.status === 'done') return false;
+  const overdueTasks = tasks.filter((task) => {
+    if (!task.dueDate || task.status === "done") return false;
     return new Date(task.dueDate) < now;
   });
 
   if (overdueTasks.length > 0) {
-    const daysOverdue = Math.max(...overdueTasks.map(task => {
-      const diffTime = now.getTime() - new Date(task.dueDate).getTime();
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }));
+    const daysOverdue = Math.max(
+      ...overdueTasks.map((task) => {
+        const diffTime = now.getTime() - new Date(task.dueDate).getTime();
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }),
+    );
 
     alerts.push({
-      id: generateUniqueId('overdue'),
-      type: 'overdue',
-      severity: daysOverdue > 7 ? 'critical' : daysOverdue > 3 ? 'high' : 'medium',
+      id: generateUniqueId("overdue"),
+      type: "overdue",
+      severity:
+        daysOverdue > 7 ? "critical" : daysOverdue > 3 ? "high" : "medium",
       title: `${overdueTasks.length} Overdue Tasks Detected`,
       description: `${overdueTasks.length} tasks are past their due dates, with the oldest being ${daysOverdue} days overdue.`,
-      recommendation: "Immediately reassign resources or adjust project timeline. Review task priorities and consider scope reduction.",
-      affectedTasks: overdueTasks.map(t => t.id),
-      affectedProjects: [...new Set(overdueTasks.map(t => t.projectId))],
-      estimatedImpact: daysOverdue > 7 ? "Project timeline at risk, stakeholder confidence affected" : "Potential delays in dependent tasks",
+      recommendation:
+        "Immediately reassign resources or adjust project timeline. Review task priorities and consider scope reduction.",
+      affectedTasks: overdueTasks.map((t) => t.id),
+      affectedProjects: [...new Set(overdueTasks.map((t) => t.projectId))],
+      estimatedImpact:
+        daysOverdue > 7
+          ? "Project timeline at risk, stakeholder confidence affected"
+          : "Potential delays in dependent tasks",
       timeToResolve: daysOverdue > 7 ? "1-2 weeks" : "2-5 days",
       createdAt: new Date().toISOString(),
       metrics: {
@@ -100,24 +113,25 @@ const analyzeProjectRisks = async (
   }
 
   // 2. Blocked Dependencies Detection
-  const blockedTasks = tasks.filter(task => {
-    if (task.status === 'done' || !task.dependencies) return false;
+  const blockedTasks = tasks.filter((task) => {
+    if (task.status === "done" || !task.dependencies) return false;
     return task.dependencies.some((depId: string) => {
-      const depTask = tasks.find(t => t.id === depId);
-      return depTask && depTask.status !== 'done';
+      const depTask = tasks.find((t) => t.id === depId);
+      return depTask && depTask.status !== "done";
     });
   });
 
   if (blockedTasks.length > 0) {
     alerts.push({
-      id: generateUniqueId('blocked'),
-      type: 'blocked',
-      severity: blockedTasks.length > 5 ? 'high' : 'medium',
+      id: generateUniqueId("blocked"),
+      type: "blocked",
+      severity: blockedTasks.length > 5 ? "high" : "medium",
       title: `${blockedTasks.length} Tasks Blocked by Dependencies`,
       description: `${blockedTasks.length} tasks cannot proceed due to incomplete dependencies, creating potential bottlenecks.`,
-      recommendation: "Review dependency chains and consider parallel execution where possible. Prioritize blocking tasks.",
-      affectedTasks: blockedTasks.map(t => t.id),
-      affectedProjects: [...new Set(blockedTasks.map(t => t.projectId))],
+      recommendation:
+        "Review dependency chains and consider parallel execution where possible. Prioritize blocking tasks.",
+      affectedTasks: blockedTasks.map((t) => t.id),
+      affectedProjects: [...new Set(blockedTasks.map((t) => t.projectId))],
       estimatedImpact: "Workflow bottlenecks, potential cascade delays",
       timeToResolve: "1-2 weeks",
       createdAt: new Date().toISOString(),
@@ -131,7 +145,7 @@ const analyzeProjectRisks = async (
 
   // 3. Resource Conflict Detection
   const tasksByAssignee = tasks.reduce((acc: any, task) => {
-    if (task.assigneeId && task.status !== 'done') {
+    if (task.assigneeId && task.status !== "done") {
       if (!acc[task.assigneeId]) acc[task.assigneeId] = [];
       acc[task.assigneeId].push(task);
     }
@@ -139,23 +153,33 @@ const analyzeProjectRisks = async (
   }, {});
 
   const overloadedAssignees = Object.entries(tasksByAssignee).filter(
-    ([_, tasksArray]: [string, any]) => (tasksArray as any[]).length > 8
+    ([_, tasksArray]: [string, any]) => (tasksArray as any[]).length > 8,
   );
 
   if (overloadedAssignees.length > 0) {
     const totalOverloadedTasks = overloadedAssignees.reduce(
-      (sum, [_, tasks]) => sum + (tasks as any[]).length, 0
+      (sum, [_, tasks]) => sum + (tasks as any[]).length,
+      0,
     );
 
     alerts.push({
-      id: generateUniqueId('resource'),
-      type: 'resource_conflict',
-      severity: totalOverloadedTasks > 20 ? 'high' : 'medium',
+      id: generateUniqueId("resource"),
+      type: "resource_conflict",
+      severity: totalOverloadedTasks > 20 ? "high" : "medium",
       title: `${overloadedAssignees.length} Team Members Overloaded`,
       description: `${overloadedAssignees.length} team members have more than 8 active tasks, risking burnout and quality issues.`,
-      recommendation: "Redistribute workload, consider hiring, or adjust project scope. Schedule one-on-ones with overloaded team members.",
-      affectedTasks: overloadedAssignees.flatMap(([_, tasks]) => (tasks as any[]).map(t => t.id)),
-      affectedProjects: [...new Set(overloadedAssignees.flatMap(([_, tasks]) => (tasks as any[]).map(t => t.projectId)))],
+      recommendation:
+        "Redistribute workload, consider hiring, or adjust project scope. Schedule one-on-ones with overloaded team members.",
+      affectedTasks: overloadedAssignees.flatMap(([_, tasks]) =>
+        (tasks as any[]).map((t) => t.id),
+      ),
+      affectedProjects: [
+        ...new Set(
+          overloadedAssignees.flatMap(([_, tasks]) =>
+            (tasks as any[]).map((t) => t.projectId),
+          ),
+        ),
+      ],
       estimatedImpact: "Team burnout, quality degradation, potential turnover",
       timeToResolve: "2-4 weeks",
       createdAt: new Date().toISOString(),
@@ -167,59 +191,78 @@ const analyzeProjectRisks = async (
   }
 
   // 4. Project Deadline Risk
-  projects.forEach(project => {
+  projects.forEach((project) => {
     if (!project.deadline) return;
-    
-    const projectTasks = tasks.filter(t => t.projectId === project.id);
-    const completedTasks = projectTasks.filter(t => t.status === 'done');
-    const remainingTasks = projectTasks.filter(t => t.status !== 'done');
-    
+
+    const projectTasks = tasks.filter((t) => t.projectId === project.id);
+    const completedTasks = projectTasks.filter((t) => t.status === "done");
+    const remainingTasks = projectTasks.filter((t) => t.status !== "done");
+
     const daysToDeadline = Math.ceil(
-      (new Date(project.deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(project.deadline).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
     );
-    
-    void (projectTasks.length > 0 ? completedTasks.length / projectTasks.length : 1);
+
+    void (projectTasks.length > 0
+      ? completedTasks.length / projectTasks.length
+      : 1);
     const estimatedDaysToComplete = remainingTasks.length * 2; // Rough estimate
-    
+
     if (daysToDeadline > 0 && estimatedDaysToComplete > daysToDeadline) {
       alerts.push({
-        id: generateUniqueId('deadline'),
-        type: 'deadline_risk',
-        severity: daysToDeadline < 7 ? 'critical' : daysToDeadline < 14 ? 'high' : 'medium',
+        id: generateUniqueId("deadline"),
+        type: "deadline_risk",
+        severity:
+          daysToDeadline < 7
+            ? "critical"
+            : daysToDeadline < 14
+              ? "high"
+              : "medium",
         title: `Project "${project.name}" Deadline Risk`,
         description: `Project may miss deadline in ${daysToDeadline} days. ${remainingTasks.length} tasks remaining with estimated ${estimatedDaysToComplete} days needed.`,
-        recommendation: "Reduce scope, add resources, or negotiate deadline extension. Focus on critical path tasks.",
-        affectedTasks: remainingTasks.map(t => t.id),
+        recommendation:
+          "Reduce scope, add resources, or negotiate deadline extension. Focus on critical path tasks.",
+        affectedTasks: remainingTasks.map((t) => t.id),
         affectedProjects: [project.id],
-        estimatedImpact: "Project delivery delay, stakeholder impact, potential penalties",
+        estimatedImpact:
+          "Project delivery delay, stakeholder impact, potential penalties",
         timeToResolve: "Immediate action required",
         createdAt: new Date().toISOString(),
         dueDate: project.deadline,
         metrics: {
           tasksAffected: remainingTasks.length,
-          riskScore: Math.min(100, (estimatedDaysToComplete - daysToDeadline) * 10),
+          riskScore: Math.min(
+            100,
+            (estimatedDaysToComplete - daysToDeadline) * 10,
+          ),
         },
       });
     }
   });
 
   // Calculate overall risk score
-  const totalRiskScore = alerts.reduce((sum, alert) => sum + (alert.metrics?.riskScore || 0), 0);
+  const totalRiskScore = alerts.reduce(
+    (sum, alert) => sum + (alert.metrics?.riskScore || 0),
+    0,
+  );
   const avgRiskScore = alerts.length > 0 ? totalRiskScore / alerts.length : 0;
 
   // Determine risk level
-  let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
-  if (avgRiskScore > 70 || alerts.some(a => a.severity === 'critical')) riskLevel = 'critical';
-  else if (avgRiskScore > 50 || alerts.some(a => a.severity === 'high')) riskLevel = 'high';
-  else if (avgRiskScore > 25 || alerts.some(a => a.severity === 'medium')) riskLevel = 'medium';
+  let riskLevel: "low" | "medium" | "high" | "critical" = "low";
+  if (avgRiskScore > 70 || alerts.some((a) => a.severity === "critical"))
+    riskLevel = "critical";
+  else if (avgRiskScore > 50 || alerts.some((a) => a.severity === "high"))
+    riskLevel = "high";
+  else if (avgRiskScore > 25 || alerts.some((a) => a.severity === "medium"))
+    riskLevel = "medium";
 
   // Generate summary
   const summary = {
     totalRisks: alerts.length,
-    criticalRisks: alerts.filter(a => a.severity === 'critical').length,
-    highRisks: alerts.filter(a => a.severity === 'high').length,
-    mediumRisks: alerts.filter(a => a.severity === 'medium').length,
-    lowRisks: alerts.filter(a => a.severity === 'low').length,
+    criticalRisks: alerts.filter((a) => a.severity === "critical").length,
+    highRisks: alerts.filter((a) => a.severity === "high").length,
+    mediumRisks: alerts.filter((a) => a.severity === "medium").length,
+    lowRisks: alerts.filter((a) => a.severity === "low").length,
   };
 
   return {
@@ -228,7 +271,7 @@ const analyzeProjectRisks = async (
     alerts,
     summary,
     trends: {
-      riskTrend: 'stable', // Mock trend
+      riskTrend: "stable", // Mock trend
       newRisks: alerts.length,
       resolvedRisks: 0,
     },
@@ -264,7 +307,10 @@ function useIdleReady(deferUntilIdle: boolean | undefined): boolean {
         : window.setTimeout(run, 0);
     return () => {
       cancelled = true;
-      if (typeof cancelIdleCallback !== "undefined" && typeof handle === "number") {
+      if (
+        typeof cancelIdleCallback !== "undefined" &&
+        typeof handle === "number"
+      ) {
         cancelIdleCallback(handle);
       } else {
         clearTimeout(handle as unknown as ReturnType<typeof setTimeout>);
@@ -279,7 +325,7 @@ export default function useRiskDetection(
   tasks: any[] = [],
   projects: any[] = [],
   teamMembers: any[] = [],
-  options?: RiskDetectionOptions
+  options?: RiskDetectionOptions,
 ) {
   const queryEnabled =
     options?.enabled !== undefined ? options.enabled : tasks.length > 0;
@@ -293,22 +339,24 @@ export default function useRiskDetection(
     select: (data) => {
       // Add high/critical alerts to notification store
       data.alerts
-        .filter(alert => alert.severity === 'high' || alert.severity === 'critical')
-        .forEach(alert => {
+        .filter(
+          (alert) => alert.severity === "high" || alert.severity === "critical",
+        )
+        .forEach((alert) => {
           addNotificationToStore({
-            id: generateUniqueId('risk-'),
-            type: 'auto-status-update', // Reuse existing type for now
+            id: generateUniqueId("risk-"),
+            type: "auto-status-update", // Reuse existing type for now
             title: `🚨 ${alert.title}`,
             message: alert.description,
             data: {
-              taskId: alert.affectedTasks[0] || '',
-              newStatus: 'risk-detected',
+              taskId: alert.affectedTasks[0] || "",
+              newStatus: "risk-detected",
               reason: alert.title,
-              triggeredBy: 'risk-analysis',
+              triggeredBy: "risk-analysis",
             },
             timestamp: alert.createdAt,
             isRead: false,
-            priority: alert.severity === 'critical' ? 'high' : 'medium',
+            priority: alert.severity === "critical" ? "high" : "medium",
           });
         });
 
@@ -329,20 +377,26 @@ export type UseRiskMonitorOptions = {
 export const useRiskMonitor = (
   tasks: any[],
   projects: any[],
-  options?: UseRiskMonitorOptions
+  options?: UseRiskMonitorOptions,
 ) => {
   const idleReady = useIdleReady(options?.deferUntilIdle);
-  const enabled = (options?.deferUntilIdle ? idleReady : true) && tasks.length > 0;
+  const enabled =
+    (options?.deferUntilIdle ? idleReady : true) && tasks.length > 0;
   const riskData = useRiskDetection(tasks, projects, [], { enabled });
 
   const criticalRisks = useMemo(() => {
-    return riskData.data?.alerts.filter(alert => alert.severity === 'critical') || [];
+    return (
+      riskData.data?.alerts.filter((alert) => alert.severity === "critical") ||
+      []
+    );
   }, [riskData.data]);
 
   const highPriorityRisks = useMemo(() => {
-    return riskData.data?.alerts.filter(alert => 
-      alert.severity === 'high' || alert.severity === 'critical'
-    ) || [];
+    return (
+      riskData.data?.alerts.filter(
+        (alert) => alert.severity === "high" || alert.severity === "critical",
+      ) || []
+    );
   }, [riskData.data]);
 
   return {
@@ -352,4 +406,4 @@ export const useRiskMonitor = (
     hasHighRisk: highPriorityRisks.length > 0,
     hasCriticalRisk: criticalRisks.length > 0,
   };
-}; 
+};

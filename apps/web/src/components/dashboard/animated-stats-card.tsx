@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import NumberTicker from "@/components/magicui/number-ticker";
 import { cn } from "@/lib/cn";
-import { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface AnimatedStatsCardProps {
   title: string;
@@ -70,10 +70,11 @@ export default function AnimatedStatsCard({
   colorScheme = "primary",
 }: AnimatedStatsCardProps) {
   const colors = colorSchemes[colorScheme];
-  
-  const trendPercentage = previousValue && previousValue > 0 
-    ? ((value - previousValue) / previousValue) * 100 
-    : 0;
+
+  const trendPercentage =
+    previousValue && previousValue > 0
+      ? ((value - previousValue) / previousValue) * 100
+      : 0;
 
   const getTrendIcon = () => {
     if (trend === "up" || trendPercentage > 0) return "↗";
@@ -89,10 +90,12 @@ export default function AnimatedStatsCard({
 
   return (
     <BlurFade delay={delay} inView>
-      <Card className={cn(
-        "glass-card border-border/50 hover:shadow-lg transition-all duration-300 group",
-        className
-      )}>
+      <Card
+        className={cn(
+          "glass-card border-border/50 hover:shadow-lg transition-all duration-300 group",
+          className,
+        )}
+      >
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2 flex-1">
@@ -118,13 +121,15 @@ export default function AnimatedStatsCard({
                     </span>
                   )}
                 </div>
-                
+
                 {/* Trend indicator */}
                 {(trendValue || trendPercentage !== 0) && (
-                  <div className={cn(
-                    "flex items-center gap-1 text-xs font-medium",
-                    getTrendColor()
-                  )}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 text-xs font-medium",
+                      getTrendColor(),
+                    )}
+                  >
                     <span>{getTrendIcon()}</span>
                     <NumberTicker
                       value={trendValue || Math.abs(trendPercentage)}
@@ -136,30 +141,32 @@ export default function AnimatedStatsCard({
                   </div>
                 )}
               </div>
-              
+
               {description && (
-                <p className="text-xs text-muted-foreground">
-                  {description}
-                </p>
+                <p className="text-xs text-muted-foreground">{description}</p>
               )}
             </div>
-            
-            <div className={cn(
-              "relative p-3 rounded-xl transition-all duration-300 group-hover:scale-110",
-              colors.bg
-            )}>
+
+            <div
+              className={cn(
+                "relative p-3 rounded-xl transition-all duration-300 group-hover:scale-110",
+                colors.bg,
+              )}
+            >
               <Icon className={cn("w-6 h-6", colors.icon)} />
-              
+
               {/* Animated background */}
-              <div className={cn(
-                "absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300",
-                "bg-gradient-to-r",
-                colors.gradient
-              )} />
+              <div
+                className={cn(
+                  "absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300",
+                  "bg-gradient-to-r",
+                  colors.gradient,
+                )}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
     </BlurFade>
   );
-} 
+}

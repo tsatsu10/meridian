@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 export interface PerformanceMetrics {
   // Core Web Vitals
@@ -7,12 +7,12 @@ export interface PerformanceMetrics {
   cls?: number; // Cumulative Layout Shift
   fcp?: number; // First Contentful Paint
   ttfb?: number; // Time to First Byte
-  
+
   // Custom metrics
   componentMountTime?: number;
   dataLoadTime?: number;
   renderTime?: number;
-  
+
   // Resource timing
   jsLoadTime?: number;
   cssLoadTime?: number;
@@ -28,7 +28,9 @@ export interface PerformanceObserverOptions {
   onMetricsUpdate?: (metrics: PerformanceMetrics) => void;
 }
 
-export function usePerformanceMonitoring(options: PerformanceObserverOptions = {}) {
+export function usePerformanceMonitoring(
+  options: PerformanceObserverOptions = {},
+) {
   const {
     enableCoreWebVitals = true,
     enableCustomMetrics = true,
@@ -41,12 +43,12 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
   const componentMountTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {
+    if (typeof window === "undefined" || !("PerformanceObserver" in window)) {
       return;
     }
 
     const updateMetrics = (newMetrics: Partial<PerformanceMetrics>) => {
-      setMetrics(prev => {
+      setMetrics((prev) => {
         const updated = { ...prev, ...newMetrics };
         onMetricsUpdate?.(updated);
         return updated;
@@ -62,9 +64,9 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
           const lastEntry = entries[entries.length - 1] as any;
           updateMetrics({ lcp: lastEntry.startTime });
         });
-        lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+        lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
       } catch (e) {
-        console.warn('LCP observer not supported');
+        console.warn("LCP observer not supported");
       }
 
       // First Input Delay
@@ -75,9 +77,9 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
             updateMetrics({ fid: entry.processingStart - entry.startTime });
           });
         });
-        fidObserver.observe({ entryTypes: ['first-input'] });
+        fidObserver.observe({ entryTypes: ["first-input"] });
       } catch (e) {
-        console.warn('FID observer not supported');
+        console.warn("FID observer not supported");
       }
 
       // Cumulative Layout Shift
@@ -92,9 +94,9 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
           });
           updateMetrics({ cls: clsValue });
         });
-        clsObserver.observe({ entryTypes: ['layout-shift'] });
+        clsObserver.observe({ entryTypes: ["layout-shift"] });
       } catch (e) {
-        console.warn('CLS observer not supported');
+        console.warn("CLS observer not supported");
       }
 
       // First Contentful Paint
@@ -102,14 +104,14 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
         const fcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           entries.forEach((entry: any) => {
-            if (entry.name === 'first-contentful-paint') {
+            if (entry.name === "first-contentful-paint") {
               updateMetrics({ fcp: entry.startTime });
             }
           });
         });
-        fcpObserver.observe({ entryTypes: ['paint'] });
+        fcpObserver.observe({ entryTypes: ["paint"] });
       } catch (e) {
-        console.warn('FCP observer not supported');
+        console.warn("FCP observer not supported");
       }
     }
 
@@ -120,19 +122,19 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
           const entries = list.getEntries();
           entries.forEach((entry: any) => {
             const loadTime = entry.responseEnd - entry.requestStart;
-            
-            if (entry.name.endsWith('.js')) {
+
+            if (entry.name.endsWith(".js")) {
               updateMetrics({ jsLoadTime: loadTime });
-            } else if (entry.name.endsWith('.css')) {
+            } else if (entry.name.endsWith(".css")) {
               updateMetrics({ cssLoadTime: loadTime });
             } else if (entry.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
               updateMetrics({ imageLoadTime: loadTime });
             }
           });
         });
-        resourceObserver.observe({ entryTypes: ['resource'] });
+        resourceObserver.observe({ entryTypes: ["resource"] });
       } catch (e) {
-        console.warn('Resource observer not supported');
+        console.warn("Resource observer not supported");
       }
     }
 
@@ -144,7 +146,7 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
 
       // Navigation timing
       if (performance.navigation) {
-        const navTiming = performance.getEntriesByType('navigation')[0] as any;
+        const navTiming = performance.getEntriesByType("navigation")[0] as any;
         if (navTiming) {
           updateMetrics({
             ttfb: navTiming.responseStart - navTiming.requestStart,
@@ -158,11 +160,16 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
         observerRef.current.disconnect();
       }
     };
-  }, [enableCoreWebVitals, enableCustomMetrics, enableResourceTiming, onMetricsUpdate]);
+  }, [
+    enableCoreWebVitals,
+    enableCustomMetrics,
+    enableResourceTiming,
+    onMetricsUpdate,
+  ]);
 
   // Function to manually record custom metrics
   const recordMetric = (name: keyof PerformanceMetrics, value: number) => {
-    setMetrics(prev => {
+    setMetrics((prev) => {
       const updated = { ...prev, [name]: value };
       onMetricsUpdate?.(updated);
       return updated;
@@ -172,7 +179,7 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
   // Function to measure async operation performance
   const measureAsync = async <T>(
     operation: () => Promise<T>,
-    metricName: keyof PerformanceMetrics
+    metricName: keyof PerformanceMetrics,
   ): Promise<T> => {
     const startTime = performance.now();
     try {
@@ -188,7 +195,10 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
   };
 
   // Function to measure render performance
-  const measureRender = (renderFn: () => void, metricName: keyof PerformanceMetrics = 'renderTime') => {
+  const measureRender = (
+    renderFn: () => void,
+    metricName: keyof PerformanceMetrics = "renderTime",
+  ) => {
     const startTime = performance.now();
     renderFn();
     const endTime = performance.now();
@@ -198,38 +208,38 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
   // Function to get performance score
   const getPerformanceScore = (): number => {
     let score = 100;
-    
+
     // LCP scoring (0-100)
     if (metrics.lcp) {
       if (metrics.lcp > 4000) score -= 30;
       else if (metrics.lcp > 2500) score -= 20;
       else if (metrics.lcp > 1500) score -= 10;
     }
-    
+
     // FID scoring (0-100)
     if (metrics.fid) {
       if (metrics.fid > 300) score -= 30;
       else if (metrics.fid > 100) score -= 20;
       else if (metrics.fid > 50) score -= 10;
     }
-    
+
     // CLS scoring (0-100)
     if (metrics.cls) {
       if (metrics.cls > 0.25) score -= 30;
       else if (metrics.cls > 0.1) score -= 20;
       else if (metrics.cls > 0.05) score -= 10;
     }
-    
+
     return Math.max(0, score);
   };
 
   // Function to send metrics to analytics
   const sendMetricsToAnalytics = async (customData?: Record<string, any>) => {
     try {
-      await fetch('/api/analytics/performance', {
-        method: 'POST',
+      await fetch("/api/analytics/performance", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           metrics,
@@ -241,7 +251,7 @@ export function usePerformanceMonitoring(options: PerformanceObserverOptions = {
         }),
       });
     } catch (error) {
-      console.error('Failed to send performance metrics:', error);
+      console.error("Failed to send performance metrics:", error);
     }
   };
 
@@ -263,12 +273,18 @@ export function useComponentPerformance(componentName: string) {
   });
 
   const measureComponentRender = (renderFn: () => void) => {
-    measureRender(renderFn, `${componentName}RenderTime` as keyof PerformanceMetrics);
+    measureRender(
+      renderFn,
+      `${componentName}RenderTime` as keyof PerformanceMetrics,
+    );
   };
 
   const measureComponentMount = () => {
     const mountTime = performance.now();
-    recordMetric(`${componentName}MountTime` as keyof PerformanceMetrics, mountTime);
+    recordMetric(
+      `${componentName}MountTime` as keyof PerformanceMetrics,
+      mountTime,
+    );
   };
 
   useEffect(() => {
@@ -290,9 +306,12 @@ export function useApiPerformance() {
 
   const measureApiCall = async <T>(
     apiCall: () => Promise<T>,
-    endpoint: string
+    endpoint: string,
   ): Promise<T> => {
-    return measureAsync(apiCall, `${endpoint}LoadTime` as keyof PerformanceMetrics);
+    return measureAsync(
+      apiCall,
+      `${endpoint}LoadTime` as keyof PerformanceMetrics,
+    );
   };
 
   const recordApiError = (endpoint: string, _error: Error) => {

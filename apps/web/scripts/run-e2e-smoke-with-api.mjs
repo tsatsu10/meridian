@@ -7,7 +7,12 @@ process.env.PLAYWRIGHT_START_API = "1";
 
 const r = spawnSync(
   "npx",
-  ["playwright", "test", "e2e/smoke-auth-workspace.spec.ts", "--project=chromium"],
+  [
+    "playwright",
+    "test",
+    "e2e/smoke-auth-workspace.spec.ts",
+    "--project=chromium",
+  ],
   { stdio: "inherit", shell: true, env: process.env },
 );
 

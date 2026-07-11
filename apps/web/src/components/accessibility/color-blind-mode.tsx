@@ -4,16 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Eye,
-  Palette,
-  CheckCircle2,
-  RefreshCw,
-  Info,
-} from "lucide-react";
+import { Eye, Palette, CheckCircle2, RefreshCw, Info } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-type ColorBlindMode = "normal" | "protanopia" | "deuteranopia" | "tritanopia" | "achromatopsia";
+type ColorBlindMode =
+  | "normal"
+  | "protanopia"
+  | "deuteranopia"
+  | "tritanopia"
+  | "achromatopsia";
 
 interface ColorBlindProfile {
   id: ColorBlindMode;
@@ -95,7 +94,9 @@ const DEMO_COLORS = [
 export function ColorBlindMode() {
   const [selectedMode, setSelectedMode] = useState<ColorBlindMode>(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("color-blind-mode") as ColorBlindMode) || "normal";
+      return (
+        (localStorage.getItem("color-blind-mode") as ColorBlindMode) || "normal"
+      );
     }
     return "normal";
   });
@@ -103,7 +104,9 @@ export function ColorBlindMode() {
   // Apply color blind mode
   useEffect(() => {
     const root = document.documentElement;
-    const currentProfile = COLOR_BLIND_PROFILES.find(p => p.id === selectedMode);
+    const currentProfile = COLOR_BLIND_PROFILES.find(
+      (p) => p.id === selectedMode,
+    );
 
     if (currentProfile && currentProfile.cssFilter !== "none") {
       root.style.filter = currentProfile.cssFilter;
@@ -135,8 +138,11 @@ export function ColorBlindMode() {
           </CardTitle>
           <div className="flex items-center gap-3">
             {selectedMode !== "normal" && (
-              <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                {COLOR_BLIND_PROFILES.find(p => p.id === selectedMode)?.name}
+              <Badge
+                variant="outline"
+                className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+              >
+                {COLOR_BLIND_PROFILES.find((p) => p.id === selectedMode)?.name}
               </Badge>
             )}
             <Button
@@ -158,7 +164,10 @@ export function ColorBlindMode() {
         {/* Color Vision Profiles */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold">Select Color Vision Profile</h4>
-          <RadioGroup value={selectedMode} onValueChange={(value) => handleModeChange(value as ColorBlindMode)}>
+          <RadioGroup
+            value={selectedMode}
+            onValueChange={(value) => handleModeChange(value as ColorBlindMode)}
+          >
             <div className="space-y-3">
               {COLOR_BLIND_PROFILES.map((profile) => (
                 <div key={profile.id} className="relative">
@@ -167,12 +176,16 @@ export function ColorBlindMode() {
                       "p-4 border rounded-lg cursor-pointer transition-all",
                       selectedMode === profile.id
                         ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2"
-                        : "border-border hover:bg-muted/30"
+                        : "border-border hover:bg-muted/30",
                     )}
                     onClick={() => handleModeChange(profile.id)}
                   >
                     <div className="flex items-start gap-3">
-                      <RadioGroupItem value={profile.id} id={profile.id} className="mt-1" />
+                      <RadioGroupItem
+                        value={profile.id}
+                        id={profile.id}
+                        className="mt-1"
+                      />
                       <div className="flex-1">
                         <Label
                           htmlFor={profile.id}
@@ -188,12 +201,20 @@ export function ColorBlindMode() {
                         </p>
                         <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                           <div>
-                            <span className="text-muted-foreground">Affected:</span>
-                            <span className="ml-1 font-medium">{profile.affected}</span>
+                            <span className="text-muted-foreground">
+                              Affected:
+                            </span>
+                            <span className="ml-1 font-medium">
+                              {profile.affected}
+                            </span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Prevalence:</span>
-                            <span className="ml-1 font-medium">{profile.prevalence}</span>
+                            <span className="text-muted-foreground">
+                              Prevalence:
+                            </span>
+                            <span className="ml-1 font-medium">
+                              {profile.prevalence}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -215,8 +236,12 @@ export function ColorBlindMode() {
             <div className="grid grid-cols-3 gap-3">
               {DEMO_COLORS.map((color) => (
                 <div key={color.name} className="space-y-2">
-                  <div className={cn("h-16 rounded-lg shadow-sm", color.class)}></div>
-                  <div className="text-center text-xs font-medium">{color.name}</div>
+                  <div
+                    className={cn("h-16 rounded-lg shadow-sm", color.class)}
+                  ></div>
+                  <div className="text-center text-xs font-medium">
+                    {color.name}
+                  </div>
                 </div>
               ))}
             </div>
@@ -269,7 +294,7 @@ export function ColorBlindMode() {
                     index % 4 === 0 && "bg-blue-500",
                     index % 4 === 1 && "bg-green-500",
                     index % 4 === 2 && "bg-purple-500",
-                    index % 4 === 3 && "bg-orange-500"
+                    index % 4 === 3 && "bg-orange-500",
                   )}
                   style={{ height: `${height}%` }}
                 ></div>
@@ -283,10 +308,11 @@ export function ColorBlindMode() {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-900 dark:text-blue-200">
-              <strong>About Color Blind Modes:</strong> These filters simulate different types of color vision
-              deficiency to help designers and developers ensure their interfaces are accessible. The selected
-              mode affects the entire dashboard. Users with color blindness can select the appropriate mode
-              to enhance their viewing experience.
+              <strong>About Color Blind Modes:</strong> These filters simulate
+              different types of color vision deficiency to help designers and
+              developers ensure their interfaces are accessible. The selected
+              mode affects the entire dashboard. Users with color blindness can
+              select the appropriate mode to enhance their viewing experience.
             </div>
           </div>
         </div>
@@ -297,8 +323,11 @@ export function ColorBlindMode() {
             <div className="flex items-start gap-3">
               <Eye className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-purple-900 dark:text-purple-200">
-                <strong>Active Mode:</strong> You're currently viewing the dashboard in {COLOR_BLIND_PROFILES.find(p => p.id === selectedMode)?.name} mode.
-                This affects how colors are displayed across the entire interface. You can switch back to Normal Vision at any time.
+                <strong>Active Mode:</strong> You're currently viewing the
+                dashboard in{" "}
+                {COLOR_BLIND_PROFILES.find((p) => p.id === selectedMode)?.name}{" "}
+                mode. This affects how colors are displayed across the entire
+                interface. You can switch back to Normal Vision at any time.
               </div>
             </div>
           </div>
@@ -307,4 +336,3 @@ export function ColorBlindMode() {
     </Card>
   );
 }
-

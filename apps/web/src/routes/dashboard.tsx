@@ -37,10 +37,10 @@ function DashboardIndexRouteComponent() {
     <DashboardErrorBoundary>
       <div className="flex h-screen overflow-hidden">
         <PageTitle title="Dashboard" hideAppName={!workspace?.name} />
-        
+
         {/* Sidebar - Collapsible for responsive design */}
         <Sidebar />
-        
+
         {/* Main Content Area - Optimized for Dock Navigation */}
         <main className="flex-1 overflow-auto scroll-smooth flex flex-col">
           {/* Show production welcome alert for new users */}
@@ -52,7 +52,7 @@ function DashboardIndexRouteComponent() {
               dismissible={true}
             />
           )}
-          
+
           {/* Conditional workspace states */}
           {isOnWorkspaceRoute && (
             <>
@@ -62,7 +62,7 @@ function DashboardIndexRouteComponent() {
               )}
             </>
           )}
-          
+
           {/* Dynamic content with dock navigation support */}
           <div className="flex-1">
             <Outlet />

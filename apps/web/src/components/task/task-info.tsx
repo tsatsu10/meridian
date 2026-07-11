@@ -1,6 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useGetActiveWorkspaceUsers from "@/hooks/queries/workspace-users/use-active-workspace-users";
@@ -35,13 +41,16 @@ function TaskInfo({
   setIsSaving: (isSaving: boolean) => void;
 }) {
   const navigate = useNavigate();
-  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] = useState(false);
+  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] =
+    useState(false);
   const { project } = useProjectStore();
   const { mutateAsync: updateTask } = useUpdateTask();
-  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask(task.projectId);
+  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask(
+    task.projectId,
+  );
   const queryClient = useQueryClient();
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
-    project ? { workspaceId: project.workspaceId } : { workspaceId: "" }
+    project ? { workspaceId: project.workspaceId } : { workspaceId: "" },
   );
   const { user } = useAuth();
 
@@ -161,7 +170,10 @@ function TaskInfo({
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
                   {workspaceUsers?.map((user: any) => (
-                    <SelectItem key={user.userEmail} value={user.userEmail ?? "unassigned"}>
+                    <SelectItem
+                      key={user.userEmail}
+                      value={user.userEmail ?? "unassigned"}
+                    >
                       {user.userName ?? ""}
                     </SelectItem>
                   ))}
@@ -270,11 +282,15 @@ function TaskInfo({
         onOpenChange={setIsCreateSubtaskModalOpen}
         status={task.status}
         parentTaskId={task.id}
-        projectContext={typedProject ? {
-          id: typedProject.id,
-          name: typedProject.name,
-          slug: typedProject.slug
-        } : undefined}
+        projectContext={
+          typedProject
+            ? {
+                id: typedProject.id,
+                name: typedProject.name,
+                slug: typedProject.slug,
+              }
+            : undefined
+        }
       />
     </div>
   );

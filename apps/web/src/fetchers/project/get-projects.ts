@@ -54,7 +54,12 @@ async function getProjects(params: GetProjectsListParams) {
 
   const data = await response.json();
 
-  if (data && typeof data === "object" && "projects" in data && "pagination" in data) {
+  if (
+    data &&
+    typeof data === "object" &&
+    "projects" in data &&
+    "pagination" in data
+  ) {
     return data as {
       projects: unknown[];
       pagination: {

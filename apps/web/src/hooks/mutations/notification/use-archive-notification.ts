@@ -7,7 +7,9 @@ function useArchiveNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await (client as any).notification[":id"]["archive"].$patch({
+      const response = await (client as any).notification[":id"][
+        "archive"
+      ].$patch({
         param: { id: notificationId },
       });
 
@@ -29,4 +31,3 @@ function useArchiveNotification() {
 }
 
 export default useArchiveNotification;
-

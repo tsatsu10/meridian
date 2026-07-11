@@ -18,27 +18,34 @@ interface TaskDependenciesProps {
 
 interface DependencyCardProps {
   dependency: TaskDependency;
-  type: 'blocks' | 'blocked_by';
+  type: "blocks" | "blocked_by";
   onDelete: (dependencyId: string) => void;
   projectSlug?: string;
 }
 
-function DependencyCard({ dependency, type, onDelete, projectSlug }: DependencyCardProps) {
-  const relatedTask = type === 'blocks' ? dependency.requiredTask : dependency.dependentTask;
-  
+function DependencyCard({
+  dependency,
+  type,
+  onDelete,
+  projectSlug,
+}: DependencyCardProps) {
+  const relatedTask =
+    type === "blocks" ? dependency.requiredTask : dependency.dependentTask;
+
   if (!relatedTask) return null;
 
   const statusColors = {
-    'todo': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
-    'in_progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-    'done': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    todo: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+    in_progress:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+    done: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   };
 
   return (
     <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-700">
       <div className="flex items-center gap-3 flex-1">
         <div className="flex items-center gap-2">
-          {type === 'blocks' ? (
+          {type === "blocks" ? (
             <div className="w-4 h-4 flex items-center justify-center text-blue-500">
               <div className="w-2 h-2 border border-current rounded-full"></div>
               <div className="w-2 h-2 border border-current rounded-full ml-1"></div>
@@ -55,13 +62,15 @@ function DependencyCard({ dependency, type, onDelete, projectSlug }: DependencyC
             {projectSlug}-{relatedTask.number}
           </span>
         </div>
-        
+
         <div className="flex-1">
           <div className="font-medium text-sm text-zinc-900 dark:text-zinc-100 truncate">
             {relatedTask.title}
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`text-xs px-2 py-1 rounded-full ${statusColors[relatedTask.status as keyof typeof statusColors] || statusColors['todo']}`}>
+            <span
+              className={`text-xs px-2 py-1 rounded-full ${statusColors[relatedTask.status as keyof typeof statusColors] || statusColors["todo"]}`}
+            >
               {relatedTask.status}
             </span>
             {relatedTask.userEmail && (
@@ -72,7 +81,7 @@ function DependencyCard({ dependency, type, onDelete, projectSlug }: DependencyC
           </div>
         </div>
       </div>
-      
+
       <Button
         size="sm"
         variant="ghost"
@@ -92,12 +101,17 @@ function DependencyCard({ dependency, type, onDelete, projectSlug }: DependencyC
 
 interface AddDependencyProps {
   taskId: string;
-  type: 'blocks' | 'blocked_by';
+  type: "blocks" | "blocked_by";
   onSuccess: () => void;
   existingDependencies: TaskDependency[];
 }
 
-function AddDependency({ taskId, type, onSuccess, existingDependencies }: AddDependencyProps) {
+function AddDependency({
+  taskId,
+  type,
+  onSuccess,
+  existingDependencies,
+}: AddDependencyProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { project } = useProjectStore();
@@ -108,17 +122,20 @@ function AddDependency({ taskId, type, onSuccess, existingDependencies }: AddDep
   const allTasks = tasksData?.columns?.flatMap((col: any) => col.tasks) || [];
   const existingTaskIds = new Set([
     taskId,
-    ...existingDependencies.map(dep => 
-      type === 'blocks' ? dep.requiredTaskId : dep.dependentTaskId
-    )
+    ...existingDependencies.map((dep) =>
+      type === "blocks" ? dep.requiredTaskId : dep.dependentTaskId,
+    ),
   ]);
 
   const availableTasks = allTasks
     .filter((task: any) => !existingTaskIds.has(task.id))
-    .filter((task: any) => 
-      searchQuery === "" || 
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${project?.slug}-${task.number}`.toLowerCase().includes(searchQuery.toLowerCase())
+    .filter(
+      (task: any) =>
+        searchQuery === "" ||
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        `${project?.slug}-${task.number}`
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
     );
 
   const handleAddDependency = async (requiredTaskId: string) => {
@@ -128,13 +145,17 @@ function AddDependency({ taskId, type, onSuccess, existingDependencies }: AddDep
         requiredTaskId,
         type,
       });
-      
-      toast.success(`Dependency ${type === 'blocks' ? 'added' : 'created'} successfully`);
+
+      toast.success(
+        `Dependency ${type === "blocks" ? "added" : "created"} successfully`,
+      );
       setIsOpen(false);
       setSearchQuery("");
       onSuccess();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to add dependency");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add dependency",
+      );
     }
   };
 
@@ -152,7 +173,7 @@ function AddDependency({ taskId, type, onSuccess, existingDependencies }: AddDep
             <div className="w-0.5 h-3 bg-current absolute"></div>
           </div>
         </div>
-        Add {type === 'blocks' ? 'Blocking' : 'Blocked By'}
+        Add {type === "blocks" ? "Blocking" : "Blocked By"}
       </Button>
     );
   }
@@ -161,7 +182,7 @@ function AddDependency({ taskId, type, onSuccess, existingDependencies }: AddDep
     <div className="space-y-3 p-3 border border-zinc-200 dark:border-zinc-700 rounded-lg">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium">
-          Add {type === 'blocks' ? 'Blocking' : 'Blocked By'} Task
+          Add {type === "blocks" ? "Blocking" : "Blocked By"} Task
         </h4>
         <Button
           size="sm"
@@ -179,7 +200,7 @@ function AddDependency({ taskId, type, onSuccess, existingDependencies }: AddDep
           </div>
         </Button>
       </div>
-      
+
       <div className="relative">
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400 flex items-center justify-center">
           <div className="w-3 h-3 border border-current rounded-full relative">
@@ -193,7 +214,7 @@ function AddDependency({ taskId, type, onSuccess, existingDependencies }: AddDep
           className="pl-10"
         />
       </div>
-      
+
       <div className="max-h-48 overflow-y-auto space-y-1">
         {availableTasks.length === 0 ? (
           <div className="text-sm text-zinc-500 dark:text-zinc-400 text-center py-4">
@@ -250,7 +271,9 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
         <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
           Dependencies
         </h3>
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">Loading...</div>
+        <div className="text-sm text-zinc-500 dark:text-zinc-400">
+          Loading...
+        </div>
       </div>
     );
   }
@@ -264,7 +287,7 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
       <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
         Dependencies
       </h3>
-      
+
       {/* @epic-1.2-dependencies: Tasks this task blocks */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -279,9 +302,9 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
             </h4>
           </div>
         </div>
-        
+
         <div className="space-y-2">
-          {blocks.map(dependency => (
+          {blocks.map((dependency) => (
             <DependencyCard
               key={dependency.id}
               dependency={dependency}
@@ -290,7 +313,7 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
               projectSlug={project?.slug}
             />
           ))}
-          
+
           <AddDependency
             taskId={task.id}
             type="blocks"
@@ -299,7 +322,7 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
           />
         </div>
       </div>
-      
+
       {/* @epic-1.2-dependencies: Tasks that block this task */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -314,9 +337,9 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
             </h4>
           </div>
         </div>
-        
+
         <div className="space-y-2">
-          {blockedBy.map(dependency => (
+          {blockedBy.map((dependency) => (
             <DependencyCard
               key={dependency.id}
               dependency={dependency}
@@ -325,7 +348,7 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
               projectSlug={project?.slug}
             />
           ))}
-          
+
           <AddDependency
             taskId={task.id}
             type="blocked_by"
@@ -334,7 +357,7 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
           />
         </div>
       </div>
-      
+
       {blocks.length === 0 && blockedBy.length === 0 && (
         <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
           <div className="flex flex-col items-center gap-2">
@@ -344,7 +367,9 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
               <div className="w-2 h-px bg-current absolute"></div>
             </div>
             <p className="text-sm">No dependencies yet</p>
-            <p className="text-xs">Add dependencies to link this task with others</p>
+            <p className="text-xs">
+              Add dependencies to link this task with others
+            </p>
           </div>
         </div>
       )}
@@ -352,4 +377,4 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
   );
 }
 
-export default TaskDependencies; 
+export default TaskDependencies;

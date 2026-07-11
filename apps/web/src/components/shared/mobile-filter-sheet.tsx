@@ -10,14 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Filter,
-  X,
-  CheckCircle2,
-  Clock,
-  Flag,
-  SortAsc,
-} from "lucide-react";
+import { Filter, X, CheckCircle2, Clock, Flag, SortAsc } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 interface MobileFilterSheetProps {
@@ -39,8 +32,18 @@ interface MobileFilterSheetProps {
 const statusOptions = [
   { value: "", label: "All Status", icon: null },
   { value: "todo", label: "To Do", icon: Clock, color: "text-gray-500" },
-  { value: "in_progress", label: "In Progress", icon: Clock, color: "text-blue-500" },
-  { value: "in_review", label: "In Review", icon: CheckCircle2, color: "text-purple-500" },
+  {
+    value: "in_progress",
+    label: "In Progress",
+    icon: Clock,
+    color: "text-blue-500",
+  },
+  {
+    value: "in_review",
+    label: "In Review",
+    icon: CheckCircle2,
+    color: "text-purple-500",
+  },
   { value: "done", label: "Done", icon: CheckCircle2, color: "text-green-500" },
 ];
 
@@ -101,9 +104,7 @@ export function MobileFilterSheet({
       <SheetContent side="bottom" className="h-[80vh]">
         <SheetHeader>
           <SheetTitle>Filters & Sort</SheetTitle>
-          <SheetDescription>
-            Filter and sort your tasks
-          </SheetDescription>
+          <SheetDescription>Filter and sort your tasks</SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6 overflow-y-auto max-h-[calc(80vh-120px)] pb-4">
@@ -129,7 +130,7 @@ export function MobileFilterSheet({
               {statusOptions.map((option) => {
                 const Icon = option.icon;
                 const isSelected = statusFilter === option.value;
-                
+
                 return (
                   <button
                     key={option.value}
@@ -138,11 +139,16 @@ export function MobileFilterSheet({
                       "flex items-center gap-2 p-3 rounded-lg border transition-all",
                       isSelected
                         ? "border-primary bg-primary/10 font-medium"
-                        : "border-border hover:border-primary/50 hover:bg-muted"
+                        : "border-border hover:border-primary/50 hover:bg-muted",
                     )}
                     aria-pressed={isSelected}
                   >
-                    {Icon && <Icon className={cn("h-4 w-4", option.color)} aria-hidden="true" />}
+                    {Icon && (
+                      <Icon
+                        className={cn("h-4 w-4", option.color)}
+                        aria-hidden="true"
+                      />
+                    )}
                     <span className="text-sm">{option.label}</span>
                   </button>
                 );
@@ -173,7 +179,7 @@ export function MobileFilterSheet({
             <div className="grid grid-cols-2 gap-2">
               {priorityOptions.map((option) => {
                 const isSelected = priorityFilter === option.value;
-                
+
                 return (
                   <button
                     key={option.value}
@@ -182,7 +188,7 @@ export function MobileFilterSheet({
                       "flex items-center gap-2 p-3 rounded-lg border transition-all",
                       isSelected
                         ? "border-primary bg-primary/10 font-medium"
-                        : "border-border hover:border-primary/50 hover:bg-muted"
+                        : "border-border hover:border-primary/50 hover:bg-muted",
                     )}
                     aria-pressed={isSelected}
                   >
@@ -222,7 +228,7 @@ export function MobileFilterSheet({
             <div className="space-y-2">
               {sortOptions.map((option) => {
                 const isSelected = sortBy === option.value;
-                
+
                 return (
                   <button
                     key={option.value}
@@ -231,13 +237,16 @@ export function MobileFilterSheet({
                       "w-full flex items-center justify-between p-3 rounded-lg border transition-all text-left",
                       isSelected
                         ? "border-primary bg-primary/10 font-medium"
-                        : "border-border hover:border-primary/50 hover:bg-muted"
+                        : "border-border hover:border-primary/50 hover:bg-muted",
                     )}
                     aria-pressed={isSelected}
                   >
                     <span className="text-sm">{option.label}</span>
                     {isSelected && (
-                      <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden="true" />
+                      <CheckCircle2
+                        className="h-4 w-4 text-primary"
+                        aria-hidden="true"
+                      />
                     )}
                   </button>
                 );
@@ -272,4 +281,3 @@ export function MobileFilterSheet({
 }
 
 export default MobileFilterSheet;
-

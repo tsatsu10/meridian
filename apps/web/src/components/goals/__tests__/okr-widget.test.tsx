@@ -2,11 +2,11 @@
  * 🎯 OKR Widget - Component Tests
  */
 
-import { describe, it, } from 'vitest';
+import { describe, it } from "vitest";
 
 // Skip this test file due to module import issues
-describe.skip('OKR Widget Tests', () => {
-  it('skipped - module import issues need refactoring', () => {});
+describe.skip("OKR Widget Tests", () => {
+  it("skipped - module import issues need refactoring", () => {});
 });
 
 /* Original tests commented out:
@@ -79,4 +79,3 @@ describe('OKRWidget', () => {
   });
 });
 */
-

@@ -1,20 +1,20 @@
 /**
  * 📋 Permissions List Component
- * 
+ *
  * Displays permissions grouped by category.
- * 
+ *
  * @phase Phase-3-Week-9
  */
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Shield, Lock } from 'lucide-react';
+} from "@/components/ui/card";
+import { Shield, Lock } from "lucide-react";
 
 // ==========================================
 // TYPES
@@ -31,42 +31,47 @@ interface PermissionsListProps {
 
 function categorizePermissions(permissions: string[]) {
   const categories: Record<string, string[]> = {};
-  
-  permissions.forEach(permission => {
-    const parts = permission.split('.');
-    const category = parts[0] || 'other';
-    
+
+  permissions.forEach((permission) => {
+    const parts = permission.split(".");
+    const category = parts[0] || "other";
+
     if (!categories[category]) {
       categories[category] = [];
     }
     categories[category].push(permission);
   });
-  
+
   return Object.entries(categories).sort((a, b) => a[0].localeCompare(b[0]));
 }
 
 function getCategoryLabel(category: string): string {
   const labels: Record<string, string> = {
-    workspace: 'Workspace',
-    project: 'Projects',
-    task: 'Tasks',
-    user: 'Users',
-    file: 'Files',
-    report: 'Reports',
-    settings: 'Settings',
-    role: 'Roles',
-    other: 'Other',
+    workspace: "Workspace",
+    project: "Projects",
+    task: "Tasks",
+    user: "Users",
+    file: "Files",
+    report: "Reports",
+    settings: "Settings",
+    role: "Roles",
+    other: "Other",
   };
-  return labels[category] || category.charAt(0).toUpperCase() + category.slice(1);
+  return (
+    labels[category] || category.charAt(0).toUpperCase() + category.slice(1)
+  );
 }
 
 // ==========================================
 // COMPONENT
 // ==========================================
 
-export function PermissionsList({ permissions, isSystem }: PermissionsListProps) {
+export function PermissionsList({
+  permissions,
+  isSystem,
+}: PermissionsListProps) {
   const categorized = categorizePermissions(permissions);
-  
+
   if (permissions.length === 0) {
     return (
       <Card>
@@ -80,7 +85,7 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
       </Card>
     );
   }
-  
+
   return (
     <div className="space-y-4">
       {isSystem && (
@@ -93,12 +98,13 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
               </CardTitle>
             </div>
             <CardDescription className="text-amber-700 dark:text-amber-200">
-              Permissions for system roles are managed by the application and cannot be modified.
+              Permissions for system roles are managed by the application and
+              cannot be modified.
             </CardDescription>
           </CardHeader>
         </Card>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {categorized.map(([category, perms]) => (
           <Card key={category}>
@@ -108,7 +114,7 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
                 {getCategoryLabel(category)}
               </CardTitle>
               <CardDescription>
-                {perms.length} permission{perms.length !== 1 ? 's' : ''}
+                {perms.length} permission{perms.length !== 1 ? "s" : ""}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -120,7 +126,7 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
                   >
                     <span className="text-sm font-mono">{perm}</span>
                     <Badge variant="outline" className="text-xs">
-                      {perm.split('.')[1] || 'all'}
+                      {perm.split(".")[1] || "all"}
                     </Badge>
                   </div>
                 ))}
@@ -129,7 +135,7 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
           </Card>
         ))}
       </div>
-      
+
       {/* Summary */}
       <Card>
         <CardHeader>
@@ -139,7 +145,9 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <div className="text-2xl font-bold">{permissions.length}</div>
-              <div className="text-sm text-muted-foreground">Total Permissions</div>
+              <div className="text-sm text-muted-foreground">
+                Total Permissions
+              </div>
             </div>
             <div>
               <div className="text-2xl font-bold">{categorized.length}</div>
@@ -147,15 +155,26 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
             </div>
             <div>
               <div className="text-2xl font-bold">
-                {permissions.filter(p => p.includes('view')).length}
+                {permissions.filter((p) => p.includes("view")).length}
               </div>
-              <div className="text-sm text-muted-foreground">View Permissions</div>
+              <div className="text-sm text-muted-foreground">
+                View Permissions
+              </div>
             </div>
             <div>
               <div className="text-2xl font-bold">
-                {permissions.filter(p => p.includes('edit') || p.includes('create') || p.includes('delete')).length}
+                {
+                  permissions.filter(
+                    (p) =>
+                      p.includes("edit") ||
+                      p.includes("create") ||
+                      p.includes("delete"),
+                  ).length
+                }
               </div>
-              <div className="text-sm text-muted-foreground">Modify Permissions</div>
+              <div className="text-sm text-muted-foreground">
+                Modify Permissions
+              </div>
             </div>
           </div>
         </CardContent>
@@ -163,4 +182,3 @@ export function PermissionsList({ permissions, isSystem }: PermissionsListProps)
     </div>
   );
 }
-

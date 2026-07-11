@@ -5,7 +5,10 @@ interface BulkOperationsContextType {
   selectedTasks: Set<string>;
   isSelectionMode: boolean;
   toggleTaskSelection: (taskId: string) => void;
-  selectAllSubtasks: (parentTaskId: string, subtasks: TaskWithSubtasks[]) => void;
+  selectAllSubtasks: (
+    parentTaskId: string,
+    subtasks: TaskWithSubtasks[],
+  ) => void;
   clearSelection: () => void;
   enterSelectionMode: () => void;
   exitSelectionMode: () => void;
@@ -15,24 +18,29 @@ interface BulkOperationsContextType {
   bulkAssign: (userEmail: string) => void;
 }
 
-const BulkOperationsContext = createContext<BulkOperationsContextType | undefined>(undefined);
+const BulkOperationsContext = createContext<
+  BulkOperationsContextType | undefined
+>(undefined);
 
 interface BulkOperationsProviderProps {
   children: ReactNode;
-  onBulkUpdate?: (taskIds: string[], updates: Partial<TaskWithSubtasks>) => void;
+  onBulkUpdate?: (
+    taskIds: string[],
+    updates: Partial<TaskWithSubtasks>,
+  ) => void;
   onBulkDelete?: (taskIds: string[]) => void;
 }
 
-export function BulkOperationsProvider({ 
-  children, 
+export function BulkOperationsProvider({
+  children,
   onBulkUpdate,
-  onBulkDelete 
+  onBulkDelete,
 }: BulkOperationsProviderProps) {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const toggleTaskSelection = (taskId: string) => {
-    setSelectedTasks(prev => {
+    setSelectedTasks((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(taskId)) {
         newSet.delete(taskId);
@@ -43,11 +51,14 @@ export function BulkOperationsProvider({
     });
   };
 
-  const selectAllSubtasks = (_parentTaskId: string, subtasks: TaskWithSubtasks[]) => {
-    setSelectedTasks(prev => {
+  const selectAllSubtasks = (
+    _parentTaskId: string,
+    subtasks: TaskWithSubtasks[],
+  ) => {
+    setSelectedTasks((prev) => {
       const newSet = new Set(prev);
       const addSubtasks = (tasks: TaskWithSubtasks[]) => {
-        tasks.forEach(task => {
+        tasks.forEach((task) => {
           newSet.add(task.id);
           if (task.subtasks) {
             addSubtasks(task.subtasks);
@@ -124,7 +135,9 @@ export function BulkOperationsProvider({
 export function useBulkOperations() {
   const context = useContext(BulkOperationsContext);
   if (context === undefined) {
-    throw new Error("useBulkOperations must be used within a BulkOperationsProvider");
+    throw new Error(
+      "useBulkOperations must be used within a BulkOperationsProvider",
+    );
   }
   return context;
-} 
+}

@@ -19,8 +19,7 @@ function resolveApiOrigin(): string {
 
 export const API_URL = resolveApiOrigin();
 
-export const API_BASE_URL =
-  API_URL === "" ? "/api" : `${API_URL}/api`;
+export const API_BASE_URL = API_URL === "" ? "/api" : `${API_URL}/api`;
 
 export const WS_URL = (() => {
   const explicit = import.meta.env.VITE_WS_URL as string | undefined;
@@ -43,6 +42,9 @@ export const WS_URL = (() => {
   }
 })();
 
-export const isProductionMode = import.meta.env.VITE_PRODUCTION_MODE !== "false";
-export const enableAnalytics = import.meta.env.VITE_ENABLE_ANALYTICS !== "false";
-export const enableErrorReporting = import.meta.env.VITE_ENABLE_ERROR_REPORTING !== "false";
+export const isProductionMode =
+  import.meta.env.VITE_PRODUCTION_MODE !== "false";
+export const enableAnalytics =
+  import.meta.env.VITE_ENABLE_ANALYTICS !== "false";
+export const enableErrorReporting =
+  import.meta.env.VITE_ENABLE_ERROR_REPORTING !== "false";

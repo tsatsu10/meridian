@@ -57,7 +57,7 @@ export function useBulkUpdateProjects() {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:success", {
             detail: result,
-          })
+          }),
         );
       }
     },
@@ -66,8 +66,10 @@ export function useBulkUpdateProjects() {
       if (window.dispatchEvent) {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:error", {
-            detail: { error: error instanceof Error ? error.message : String(error) },
-          })
+            detail: {
+              error: error instanceof Error ? error.message : String(error),
+            },
+          }),
         );
       }
     },
@@ -106,7 +108,7 @@ export function useBulkDeleteProjects() {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:success", {
             detail: result,
-          })
+          }),
         );
       }
     },
@@ -115,8 +117,10 @@ export function useBulkDeleteProjects() {
       if (window.dispatchEvent) {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:error", {
-            detail: { error: error instanceof Error ? error.message : String(error) },
-          })
+            detail: {
+              error: error instanceof Error ? error.message : String(error),
+            },
+          }),
         );
       }
     },
@@ -165,7 +169,7 @@ export function useBulkCreateProjects() {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:success", {
             detail: result,
-          })
+          }),
         );
       }
     },
@@ -174,8 +178,10 @@ export function useBulkCreateProjects() {
       if (window.dispatchEvent) {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:error", {
-            detail: { error: error instanceof Error ? error.message : String(error) },
-          })
+            detail: {
+              error: error instanceof Error ? error.message : String(error),
+            },
+          }),
         );
       }
     },
@@ -188,9 +194,12 @@ export function useBulkCreateProjects() {
 export function useBulkExportProjects() {
   return useCallback(async (projectIds: string[]) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/projects?ids=${projectIds.join(",")}`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/projects?ids=${projectIds.join(",")}`,
+        {
+          credentials: "include",
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Export failed: ${response.statusText}`);
@@ -217,7 +226,7 @@ export function useBulkExportProjects() {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:success", {
             detail: { type: "export", count: projectIds.length },
-          })
+          }),
         );
       }
     } catch (error) {
@@ -225,8 +234,10 @@ export function useBulkExportProjects() {
       if (window.dispatchEvent) {
         window.dispatchEvent(
           new CustomEvent("bulk-operation:error", {
-            detail: { error: error instanceof Error ? error.message : String(error) },
-          })
+            detail: {
+              error: error instanceof Error ? error.message : String(error),
+            },
+          }),
         );
       }
     }
@@ -238,14 +249,23 @@ export function useBulkExportProjects() {
  */
 function generateProjectsCSV(projects: any[]): string {
   const headers = ["ID", "Name", "Status", "Priority", "Owner", "Created At"];
-  const rows = projects.map((p) => [p.id, p.name, p.status, p.priority, p.ownerId, p.createdAt]);
+  const rows = projects.map((p) => [
+    p.id,
+    p.name,
+    p.status,
+    p.priority,
+    p.ownerId,
+    p.createdAt,
+  ]);
 
   const csvContent = [
     headers.join(","),
     ...rows.map((row) =>
       row
-        .map((cell) => (typeof cell === "string" && cell.includes(",") ? `"${cell}"` : cell))
-        .join(",")
+        .map((cell) =>
+          typeof cell === "string" && cell.includes(",") ? `"${cell}"` : cell,
+        )
+        .join(","),
     ),
   ].join("\n");
 

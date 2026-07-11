@@ -1,6 +1,13 @@
 "use client";
 
-import { AnimatePresence, motion, useInView, useReducedMotion, Variants, UseInViewOptions } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+  type Variants,
+  type UseInViewOptions,
+} from "framer-motion";
 import { useRef } from "react";
 
 import { cn } from "@/lib/utils";

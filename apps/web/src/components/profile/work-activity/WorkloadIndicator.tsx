@@ -6,7 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, AlertTriangle } from "lucide-react";
-import { getUserWorkload, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
+import {
+  getUserWorkload,
+  smartProfileKeys,
+} from "@/fetchers/profile/smart-profile-fetchers";
 import NumberTicker from "@/components/magicui/number-ticker";
 import { cn } from "@/lib/cn";
 
@@ -16,12 +19,27 @@ interface WorkloadIndicatorProps {
 }
 
 const workloadConfig = {
-  low: { label: "Light", color: "text-green-600 dark:text-green-400", bgColor: "bg-green-100 dark:bg-green-900" },
-  medium: { label: "Moderate", color: "text-yellow-600 dark:text-yellow-400", bgColor: "bg-yellow-100 dark:bg-yellow-900" },
-  high: { label: "Heavy", color: "text-red-600 dark:text-red-400", bgColor: "bg-red-100 dark:bg-red-900" },
+  low: {
+    label: "Light",
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-100 dark:bg-green-900",
+  },
+  medium: {
+    label: "Moderate",
+    color: "text-yellow-600 dark:text-yellow-400",
+    bgColor: "bg-yellow-100 dark:bg-yellow-900",
+  },
+  high: {
+    label: "Heavy",
+    color: "text-red-600 dark:text-red-400",
+    bgColor: "bg-red-100 dark:bg-red-900",
+  },
 };
 
-export function WorkloadIndicator({ userId, className }: WorkloadIndicatorProps) {
+export function WorkloadIndicator({
+  userId,
+  className,
+}: WorkloadIndicatorProps) {
   const { data, isLoading } = useQuery({
     queryKey: smartProfileKeys.workload(userId),
     queryFn: () => getUserWorkload(userId),
@@ -29,7 +47,9 @@ export function WorkloadIndicator({ userId, className }: WorkloadIndicatorProps)
   });
 
   const workload = data?.data || {};
-  const config = workloadConfig[workload.workloadLevel as keyof typeof workloadConfig] || workloadConfig.low;
+  const config =
+    workloadConfig[workload.workloadLevel as keyof typeof workloadConfig] ||
+    workloadConfig.low;
 
   if (isLoading) {
     return (
@@ -62,9 +82,11 @@ export function WorkloadIndicator({ userId, className }: WorkloadIndicatorProps)
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">High Priority</span>
-            <span className="font-semibold">{workload.highPriorityTasks || 0}</span>
+            <span className="font-semibold">
+              {workload.highPriorityTasks || 0}
+            </span>
           </div>
-          
+
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Due This Week</span>
             <span className="font-semibold">{workload.dueThisWeek || 0}</span>
@@ -73,7 +95,9 @@ export function WorkloadIndicator({ userId, className }: WorkloadIndicatorProps)
           {(workload.totalEstimatedHours || 0) > 0 && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Estimated Hours</span>
-              <span className="font-semibold">{workload.totalEstimatedHours}h</span>
+              <span className="font-semibold">
+                {workload.totalEstimatedHours}h
+              </span>
             </div>
           )}
         </div>
@@ -90,4 +114,3 @@ export function WorkloadIndicator({ userId, className }: WorkloadIndicatorProps)
     </Card>
   );
 }
-

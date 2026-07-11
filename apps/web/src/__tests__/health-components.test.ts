@@ -180,7 +180,13 @@ describe("Health Component Rendering", () => {
     });
 
     it("should display category tag", () => {
-      const categories = ["performance", "timeline", "resources", "quality", "risk"];
+      const categories = [
+        "performance",
+        "timeline",
+        "resources",
+        "quality",
+        "risk",
+      ];
 
       categories.forEach((category) => {
         const props: RecommendationCardProps = {

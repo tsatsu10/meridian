@@ -8,17 +8,17 @@ import { useWorkspaceTaskStats } from "@/hooks/queries/task/use-workspace-task-s
 import { useBulkUpdateTaskStatus } from "@/hooks/mutations/task/use-bulk-update-task-status";
 import { AllTasksVirtualGrid } from "@/components/all-tasks/all-tasks-virtual-grid";
 import { AdvancedFilters } from "@/components/all-tasks/advanced-filters";
-import React, { useState, useMemo, } from "react";
-import { Card, CardContent, } from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  CheckSquare, 
-  Plus, 
-  Calendar, 
-  Users, 
+import {
+  CheckSquare,
+  Plus,
+  Calendar,
+  Users,
   Clock,
   TrendingUp,
   AlertCircle,
@@ -37,10 +37,10 @@ import {
   Copy,
   UserPlus,
   Layout,
-  X
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { motion, } from "framer-motion";
+import { motion } from "framer-motion";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { useRBACAuth } from "@/lib/permissions";
@@ -114,17 +114,40 @@ export const Route = createFileRoute("/dashboard/all-tasks")({
 
 // Task status mapping - aligned with database schema
 const TASK_STATUS = {
-  todo: { label: "To Do", color: "bg-gray-500", icon: Clock, textColor: "text-gray-600" },
-  in_progress: { label: "In Progress", color: "bg-blue-500", icon: Play, textColor: "text-blue-600" },
-  done: { label: "Done", color: "bg-green-500", icon: CheckCircle2, textColor: "text-green-600" },
+  todo: {
+    label: "To Do",
+    color: "bg-gray-500",
+    icon: Clock,
+    textColor: "text-gray-600",
+  },
+  in_progress: {
+    label: "In Progress",
+    color: "bg-blue-500",
+    icon: Play,
+    textColor: "text-blue-600",
+  },
+  done: {
+    label: "Done",
+    color: "bg-green-500",
+    icon: CheckCircle2,
+    textColor: "text-green-600",
+  },
 };
 
 // Task priority mapping
 const TASK_PRIORITY = {
   low: { label: "Low", color: "bg-gray-500", textColor: "text-gray-600" },
-  medium: { label: "Medium", color: "bg-yellow-500", textColor: "text-yellow-600" },
+  medium: {
+    label: "Medium",
+    color: "bg-yellow-500",
+    textColor: "text-yellow-600",
+  },
   high: { label: "High", color: "bg-red-500", textColor: "text-red-600" },
-  urgent: { label: "Urgent", color: "bg-purple-500", textColor: "text-purple-600" }
+  urgent: {
+    label: "Urgent",
+    color: "bg-purple-500",
+    textColor: "text-purple-600",
+  },
 };
 
 // Task Card Loading Skeleton Component
@@ -162,7 +185,13 @@ const TaskCardSkeleton = () => (
 );
 
 // Enhanced task card component
-const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
+const TaskCard = ({
+  task,
+  onAction,
+  showCheckbox,
+  isSelected,
+  onSelect,
+}: {
   task: Task;
   onAction: (action: string, task: Task) => void;
   showCheckbox?: boolean;
@@ -170,12 +199,16 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
   onSelect?: (taskId: string) => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const statusInfo = TASK_STATUS[task.status as keyof typeof TASK_STATUS] || TASK_STATUS.todo;
-  const priorityInfo = TASK_PRIORITY[task.priority as keyof typeof TASK_PRIORITY] || TASK_PRIORITY.medium;
+  const statusInfo =
+    TASK_STATUS[task.status as keyof typeof TASK_STATUS] || TASK_STATUS.todo;
+  const priorityInfo =
+    TASK_PRIORITY[task.priority as keyof typeof TASK_PRIORITY] ||
+    TASK_PRIORITY.medium;
 
   const getDueDateStatus = () => {
     if (!task.dueDate) return "no-date";
-    if (task.status === "completed" || task.status === "done") return "completed";
+    if (task.status === "completed" || task.status === "done")
+      return "completed";
     if (isPast(new Date(task.dueDate))) return "overdue";
     if (isToday(new Date(task.dueDate))) return "today";
     if (isTomorrow(new Date(task.dueDate))) return "tomorrow";
@@ -189,7 +222,7 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
     tomorrow: "text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",
     upcoming: "text-blue-500 bg-blue-50 dark:bg-blue-900/20",
     completed: "text-green-500 bg-green-50 dark:bg-green-900/20",
-    "no-date": "text-gray-500 bg-gray-50 dark:bg-gray-900/20"
+    "no-date": "text-gray-500 bg-gray-50 dark:bg-gray-900/20",
   };
 
   return (
@@ -200,11 +233,13 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
-      <Card className={cn(
-        "relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.01] glass-card border-border/50",
-        isHovered && "shadow-xl",
-        isSelected && "ring-2 ring-primary"
-      )}>
+      <Card
+        className={cn(
+          "relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.01] glass-card border-border/50",
+          isHovered && "shadow-xl",
+          isSelected && "ring-2 ring-primary",
+        )}
+      >
         <CardContent className="p-6">
           {/* Task Header */}
           <div className="flex items-start justify-between mb-4">
@@ -219,7 +254,9 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-2">
-                <h3 className="font-semibold text-foreground truncate">{task.title}</h3>
+                <h3 className="font-semibold text-foreground truncate">
+                  {task.title}
+                </h3>
                 <Badge className={cn("text-xs text-white", priorityInfo.color)}>
                   {priorityInfo.label}
                 </Badge>
@@ -228,37 +265,45 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
                 </Badge>
               </div>
               {task.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{task.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                  {task.description}
+                </p>
               )}
             </div>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass-card bg-background dark:bg-gray-900 border-border/50">
+              <DropdownMenuContent
+                align="end"
+                className="glass-card bg-background dark:bg-gray-900 border-border/50"
+              >
                 <DropdownMenuLabel>Task Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onAction('view', task)}>
+                <DropdownMenuItem onClick={() => onAction("view", task)}>
                   <ArrowRight className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onAction('edit', task)}>
+                <DropdownMenuItem onClick={() => onAction("edit", task)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Task
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onAction('assign', task)}>
+                <DropdownMenuItem onClick={() => onAction("assign", task)}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Reassign
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onAction('duplicate', task)}>
+                <DropdownMenuItem onClick={() => onAction("duplicate", task)}>
                   <Copy className="h-4 w-4 mr-2" />
                   Duplicate
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onAction('delete', task)} className="text-red-600">
+                <DropdownMenuItem
+                  onClick={() => onAction("delete", task)}
+                  className="text-red-600"
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Task
                 </DropdownMenuItem>
@@ -282,13 +327,19 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
                 </Badge>
               )}
             </div>
-            
+
             {task.dueDate && (
-              <div className={cn("px-2 py-1 rounded-full text-xs font-medium", dueDateColors[dueDateStatus])}>
+              <div
+                className={cn(
+                  "px-2 py-1 rounded-full text-xs font-medium",
+                  dueDateColors[dueDateStatus],
+                )}
+              >
                 {dueDateStatus === "overdue" && "Overdue"}
                 {dueDateStatus === "today" && "Due Today"}
                 {dueDateStatus === "tomorrow" && "Due Tomorrow"}
-                {dueDateStatus === "upcoming" && format(new Date(task.dueDate), "MMM d")}
+                {dueDateStatus === "upcoming" &&
+                  format(new Date(task.dueDate), "MMM d")}
                 {dueDateStatus === "completed" && "Completed"}
                 {dueDateStatus === "no-date" && "No due date"}
               </div>
@@ -301,15 +352,18 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
               <div className="flex items-center space-x-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {task.assignedTeam?.name || 'Assigned Team'}
+                  {task.assignedTeam?.name || "Assigned Team"}
                 </span>
               </div>
-            ) : task.assigneeEmail && task.assigneeEmail !== 'unassigned' ? (
+            ) : task.assigneeEmail && task.assigneeEmail !== "unassigned" ? (
               <div className="flex items-center space-x-2">
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={task.assigneeAvatar ?? undefined} />
                   <AvatarFallback>
-                    {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                    {task.assigneeName
+                      ?.split(" ")
+                      .map((n: string) => n[0])
+                      .join("") || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm text-muted-foreground">
@@ -319,7 +373,9 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
             ) : (
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Unassigned</span>
+                <span className="text-sm text-muted-foreground">
+                  Unassigned
+                </span>
               </div>
             )}
           </div>
@@ -342,7 +398,7 @@ const TaskCard = ({ task, onAction, showCheckbox, isSelected, onSelect }: {
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs"
-              onClick={() => onAction('view', task)}
+              onClick={() => onAction("view", task)}
             >
               <ArrowRight className="h-3 w-3" />
             </Button>
@@ -358,33 +414,35 @@ export default function AllTasksPage() {
   const { user } = useAuth();
   const { hasPermission } = useRBACAuth();
   const { workspace } = useWorkspaceStore();
-  const { data: projects = [] as Project[] } = useGetProjects({ workspaceId: workspace?.id ?? "" });
+  const { data: projects = [] as Project[] } = useGetProjects({
+    workspaceId: workspace?.id ?? "",
+  });
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(urlSearch.q ?? "");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [activeTab, setActiveTab] = useState(urlSearch.scope ?? "all");
-  const [advancedFilters, setAdvancedFilters] = useState<Partial<AllTasksFilters>>({});
+  const [advancedFilters, setAdvancedFilters] = useState<
+    Partial<AllTasksFilters>
+  >({});
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [_isDeleting, _setIsDeleting] = useState(false);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12); // Tasks per page
 
   // View mode state management with database persistence
-  const { 
-    allTasksViewMode, 
-    updateAllTasksViewMode 
-  } = useUserPreferences();
-  
+  const { allTasksViewMode, updateAllTasksViewMode } = useUserPreferences();
+
   const viewMode = allTasksViewMode as "list" | "kanban" | "calendar";
 
-  const { mutateAsync: bulkUpdateStatus, isPending: isBulkStatusPending } = useBulkUpdateTaskStatus();
+  const { mutateAsync: bulkUpdateStatus, isPending: isBulkStatusPending } =
+    useBulkUpdateTaskStatus();
 
   React.useEffect(() => {
     navigate({
@@ -396,7 +454,7 @@ export default function AllTasksPage() {
       replace: true,
     });
   }, [searchQuery, activeTab, navigate]);
-  
+
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
@@ -405,36 +463,45 @@ export default function AllTasksPage() {
   const canViewAllTasks = hasPermission("canViewAllTasks");
   const canEditTasks = hasPermission("canEditTasks");
   const canDeleteTasks = hasPermission("canDeleteTasks");
-  
+
   // Keyboard shortcuts (uses canCreateTasks)
   React.useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
         return;
       }
-      
+
       // N - New task
-      if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey) {
+      if (e.key.toLowerCase() === "n" && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         if (canCreateTasks) {
           handleCreateTask();
         }
       }
-      
+
       // F or / - Focus search
-      if ((e.key.toLowerCase() === 'f' || e.key === '/') && !e.ctrlKey && !e.metaKey) {
+      if (
+        (e.key.toLowerCase() === "f" || e.key === "/") &&
+        !e.ctrlKey &&
+        !e.metaKey
+      ) {
         e.preventDefault();
         document.getElementById("all-tasks-search")?.focus();
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [canCreateTasks]);
 
   // Task mutation hooks
-  const { mutateAsync: deleteTask, isPending: isDeletingTask } = useDeleteTask(selectedTask?.projectId || "");
+  const { mutateAsync: deleteTask, isPending: isDeletingTask } = useDeleteTask(
+    selectedTask?.projectId || "",
+  );
   const { mutateAsync: createTask } = useCreateTask();
 
   const apiFilters = useMemo((): AllTasksFilters => {
@@ -491,7 +558,12 @@ export default function AllTasksPage() {
     advancedFilters.dueBefore,
   ]);
 
-  const { data: allTasksData, isLoading, error, refetch } = useAllTasks(apiFilters);
+  const {
+    data: allTasksData,
+    isLoading,
+    error,
+    refetch,
+  } = useAllTasks(apiFilters);
 
   const { data: taskStatsData } = useWorkspaceTaskStats();
 
@@ -518,9 +590,11 @@ export default function AllTasksPage() {
 
   const handleTaskAction = async (action: string, task: Task) => {
     switch (action) {
-      case 'view':
+      case "view":
         if (!workspace?.id || !task.project?.id) {
-          toast.error("Unable to navigate to task - missing workspace or project information");
+          toast.error(
+            "Unable to navigate to task - missing workspace or project information",
+          );
           return;
         }
         try {
@@ -536,8 +610,8 @@ export default function AllTasksPage() {
           toast.error("Unable to navigate to task details");
         }
         break;
-        
-      case 'edit':
+
+      case "edit":
         if (!canEditTasks) {
           toast.error("You don't have permission to edit tasks");
           return;
@@ -545,8 +619,8 @@ export default function AllTasksPage() {
         setSelectedTask(task);
         setIsEditTaskOpen(true);
         break;
-        
-      case 'assign':
+
+      case "assign":
         if (!canEditTasks) {
           toast.error("You don't have permission to reassign tasks");
           return;
@@ -554,10 +628,12 @@ export default function AllTasksPage() {
         // Open edit modal focused on assignment
         setSelectedTask(task);
         setIsEditTaskOpen(true);
-        toast.info("Use the assignee dropdown in the edit modal to reassign this task");
+        toast.info(
+          "Use the assignee dropdown in the edit modal to reassign this task",
+        );
         break;
-        
-      case 'duplicate':
+
+      case "duplicate":
         if (!canCreateTasks) {
           toast.error("You don't have permission to create tasks");
           return;
@@ -577,19 +653,19 @@ export default function AllTasksPage() {
             priority: task.priority || "medium",
             parentId: task.parentId || undefined,
           });
-          
+
           toast.success(`Task "${task.title}" duplicated successfully!`);
           refetch(); // Refresh the task list
         } catch (error) {
           logger.error(
             "Failed to duplicate task",
-            error instanceof Error ? error : new Error(String(error))
+            error instanceof Error ? error : new Error(String(error)),
           );
           toast.error("Failed to duplicate task");
         }
         break;
-        
-      case 'delete':
+
+      case "delete":
         if (!canDeleteTasks) {
           toast.error("You don't have permission to delete tasks");
           return;
@@ -597,7 +673,7 @@ export default function AllTasksPage() {
         setTaskToDelete(task);
         setIsDeleteAlertOpen(true);
         break;
-        
+
       default:
         toast.info(`${action} functionality coming soon!`);
     }
@@ -605,7 +681,7 @@ export default function AllTasksPage() {
 
   const handleDeleteTask = async () => {
     if (!taskToDelete) return;
-    
+
     try {
       await deleteTask(taskToDelete.id);
       toast.success(`Task "${taskToDelete.title}" deleted successfully`);
@@ -627,9 +703,9 @@ export default function AllTasksPage() {
 
   // Task selection handlers
   const handleTaskSelect = (taskId: string) => {
-    setSelectedTasks(prev => {
+    setSelectedTasks((prev) => {
       if (prev.includes(taskId)) {
-        return prev.filter(id => id !== taskId);
+        return prev.filter((id) => id !== taskId);
       } else {
         return [...prev, taskId];
       }
@@ -640,25 +716,25 @@ export default function AllTasksPage() {
     if (selectedTasks.length === tasks.length) {
       setSelectedTasks([]);
     } else {
-      setSelectedTasks(tasks.map(t => t.id));
+      setSelectedTasks(tasks.map((t) => t.id));
     }
   };
 
   const handleBulkDelete = async () => {
     if (!canDeleteTasks || selectedTasks.length === 0) return;
-    
+
     try {
       // Delete all selected tasks
       await Promise.all(
-        selectedTasks.map(taskId => {
-          const task = tasks.find(t => t.id === taskId);
+        selectedTasks.map((taskId) => {
+          const task = tasks.find((t) => t.id === taskId);
           if (task?.projectId) {
             return deleteTask(taskId);
           }
           return Promise.resolve();
-        })
+        }),
       );
-      
+
       toast.success(`${selectedTasks.length} tasks deleted successfully`);
       setSelectedTasks([]);
       setShowBulkActions(false);
@@ -688,7 +764,7 @@ export default function AllTasksPage() {
       toast.error("Failed to update task status");
       logger.error(
         "Bulk status update failed",
-        err instanceof Error ? err : new Error(String(err))
+        err instanceof Error ? err : new Error(String(err)),
       );
     }
   };
@@ -703,16 +779,18 @@ export default function AllTasksPage() {
     isLoading,
     selectedTasks,
     onTaskSelect: handleTaskSelect,
-    projects: (Array.isArray(projects) ? projects : (projects as any)?.projects ?? []) as any,
+    projects: (Array.isArray(projects)
+      ? projects
+      : ((projects as any)?.projects ?? [])) as any,
   };
 
   // Pagination helper to generate page numbers
   const generatePageNumbers = () => {
     if (!pagination) return [];
-    
+
     const { pages, currentPage: current } = pagination;
     const pageNumbers: (number | string)[] = [];
-    
+
     if (pages <= 7) {
       // Show all pages if 7 or less
       for (let i = 1; i <= pages; i++) {
@@ -721,27 +799,27 @@ export default function AllTasksPage() {
     } else {
       // Always show first page
       pageNumbers.push(1);
-      
+
       if (current > 3) {
-        pageNumbers.push('...');
+        pageNumbers.push("...");
       }
-      
+
       // Show pages around current page
       const start = Math.max(2, current - 1);
       const end = Math.min(pages - 1, current + 1);
-      
+
       for (let i = start; i <= end; i++) {
         pageNumbers.push(i);
       }
-      
+
       if (current < pages - 2) {
-        pageNumbers.push('...');
+        pageNumbers.push("...");
       }
-      
+
       // Always show last page
       pageNumbers.push(pages);
     }
-    
+
     return pageNumbers;
   };
 
@@ -753,7 +831,9 @@ export default function AllTasksPage() {
             <CheckSquare className="h-16 w-16 text-muted-foreground mx-auto" />
             <div>
               <h3 className="text-lg font-semibold">No Workspace Selected</h3>
-              <p className="text-muted-foreground">Please select a workspace to view tasks</p>
+              <p className="text-muted-foreground">
+                Please select a workspace to view tasks
+              </p>
             </div>
           </div>
         </div>
@@ -769,7 +849,9 @@ export default function AllTasksPage() {
             <AlertCircle className="h-16 w-16 text-yellow-500 mx-auto" />
             <div>
               <h3 className="text-lg font-semibold">Access Restricted</h3>
-              <p className="text-muted-foreground">You don't have permission to view all tasks</p>
+              <p className="text-muted-foreground">
+                You don't have permission to view all tasks
+              </p>
             </div>
           </div>
         </div>
@@ -801,519 +883,611 @@ export default function AllTasksPage() {
       <LazyDashboardLayout loadingComponent="table" enablePerformanceMode>
         {/* Dashboard Header */}
         <DashboardHeader
-        title="All Tasks"
-        subtitle={`${taskStats.total} total tasks • ${taskStats.completed} completed • ${taskStats.overdue} overdue`}
-        variant="default"
-      >
-        <div className="flex items-center space-x-2">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="all-tasks-search"
-              placeholder="Search tasks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full min-w-0 sm:max-w-xs md:max-w-sm glass-card"
-            />
-          </div>
-
-          <Button onClick={handleCreateTask} className="glass-card">
-            <Plus className="h-4 w-4 mr-2" />
-            New Task
-          </Button>
-        </div>
-      </DashboardHeader>
-
-      <div className="space-y-6">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="glass-card border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Tasks</p>
-                  <p className="text-2xl font-bold text-foreground">{taskStats.total}</p>
-                  <p className="text-xs text-blue-500 flex items-center mt-1">
-                    <Target className="h-3 w-3 mr-1" />
-                    All assignments
-                  </p>
-                </div>
-                <CheckSquare className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">In Progress</p>
-                  <p className="text-2xl font-bold text-foreground">{taskStats.inProgress}</p>
-                  <p className="text-xs text-blue-500 flex items-center mt-1">
-                    <Zap className="h-3 w-3 mr-1" />
-                    Active work
-                  </p>
-                </div>
-                <Activity className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-foreground">{taskStats.completed}</p>
-                  <p className="text-xs text-green-500 flex items-center mt-1">
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    {taskStats.total > 0 ? Math.round((taskStats.completed / taskStats.total) * 100) : 0}% done
-                  </p>
-                </div>
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Overdue</p>
-                  <p className="text-2xl font-bold text-foreground">{taskStats.overdue}</p>
-                  <p className="text-xs text-red-500 flex items-center mt-1">
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    Needs attention
-                  </p>
-                </div>
-                <Clock className="h-8 w-8 text-red-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Scope + filters (buttons avoid duplicate TabsContent per scope) */}
-        <div className="space-y-6">
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 -mt-4 -mx-6 px-6 border-b mb-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap gap-2 rounded-lg border border-border/60 bg-muted/30 p-1 glass-card">
-                {(
-                  [
-                    { id: "all", label: "All Tasks" },
-                    { id: "my-tasks", label: "My Tasks" },
-                    { id: "overdue", label: "Overdue" },
-                    { id: "today", label: "Due Today" },
-                  ] as const
-                ).map((tab) => (
-                  <Button
-                    key={tab.id}
-                    type="button"
-                    variant={activeTab === tab.id ? "default" : "ghost"}
-                    size="sm"
-                    className="rounded-md"
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    {tab.label}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="flex items-center space-x-2">
-                {/* Status Filter */}
-                <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value)}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="todo">To Do</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Priority Filter */}
-                <Select value={filterPriority} onValueChange={(value) => setFilterPriority(value)}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="All Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Priority</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Clear Filters Button */}
-                {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setFilterStatus('all');
-                      setFilterPriority('all');
-                      setAdvancedFilters({});
-                    }}
-                    className="gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Clear Filters
-                  </Button>
-                )}
-              </div>
+          title="All Tasks"
+          subtitle={`${taskStats.total} total tasks • ${taskStats.completed} completed • ${taskStats.overdue} overdue`}
+          variant="default"
+        >
+          <div className="flex items-center space-x-2">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="all-tasks-search"
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-full min-w-0 sm:max-w-xs md:max-w-sm glass-card"
+              />
             </div>
-            {allTasksData?.filters && (
-              <div className="mt-4 max-w-4xl">
-                <AdvancedFilters
-                  filters={advancedFilters}
-                  filterOptions={{
-                    projects: allTasksData.filters.projects,
-                    teamMembers: allTasksData.filters.teamMembers,
-                    statuses: allTasksData.filters.statuses,
-                    priorities: allTasksData.filters.priorities,
-                  }}
-                  onFiltersChange={setAdvancedFilters}
-                  onClearFilters={() => setAdvancedFilters({})}
-                />
-              </div>
-            )}
-          </div>
-        
-          {/* NEW: View Mode Switcher */}
-          <BlurFade delay={0.1}>
-                          <Tabs value={viewMode} onValueChange={(value) => updateAllTasksViewMode(value as 'list' | 'kanban' | 'calendar')} className="space-y-6">
-              <div className="flex items-center justify-between">
-                <TabsList className="glass-card">
-                  <TabsTrigger value="list" className="flex items-center gap-2">
-                    <Layout className="h-4 w-4" />
-                    List View
-                  </TabsTrigger>
-                  <TabsTrigger value="kanban" className="flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Kanban Board
-                  </TabsTrigger>
-                  <TabsTrigger value="calendar" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Calendar View
-                  </TabsTrigger>
-                </TabsList>
-              </div>
 
-              {/* List View - Shows filtered content based on activeTab */}
-              <TabsContent value="list" className="space-y-6">
-                <BlurFade delay={0.3}>
-                  {/* Results Summary, Bulk Actions, and Page Size Selector */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm text-muted-foreground">
-                        {isLoading ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            Loading tasks...
-                          </span>
-                        ) : pagination ? (
-                          <span>
-                            Showing <span className="font-medium">{pagination.offset + 1}-{Math.min(pagination.offset + pagination.limit, pagination.total)}</span> of <span className="font-medium">{pagination.total}</span> tasks
-                          </span>
-                        ) : (
-                          <span>
-                            <span className="font-medium">{tasks.length}</span> task{tasks.length !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* Bulk Actions Toggle */}
-                      {!isLoading && tasks.length > 0 && (
-                        <Button
-                          variant={showBulkActions ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => {
-                            setShowBulkActions(!showBulkActions);
-                            setSelectedTasks([]);
-                          }}
-                        >
-                          {showBulkActions ? "Cancel Selection" : "Select Multiple"}
-                        </Button>
-                      )}
-                      
-                      {/* Bulk Action Buttons */}
-                      {showBulkActions && selectedTasks.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">
-                            {selectedTasks.length} selected
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleSelectAll}
-                          >
-                            {selectedTasks.length === tasks.length ? "Deselect All" : "Select All"}
-                          </Button>
-                          <Select onValueChange={handleBulkStatusChange} disabled={isBulkStatusPending}>
-                            <SelectTrigger className="w-[140px] h-8">
-                              <SelectValue placeholder="Change Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="todo">To Do</SelectItem>
-                              <SelectItem value="in_progress">In Progress</SelectItem>
-                              <SelectItem value="done">Done</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {canDeleteTasks && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={handleBulkDelete}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete ({selectedTasks.length})
-                            </Button>
+            <Button onClick={handleCreateTask} className="glass-card">
+              <Plus className="h-4 w-4 mr-2" />
+              New Task
+            </Button>
+          </div>
+        </DashboardHeader>
+
+        <div className="space-y-6">
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="glass-card border-border/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Tasks</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {taskStats.total}
+                    </p>
+                    <p className="text-xs text-blue-500 flex items-center mt-1">
+                      <Target className="h-3 w-3 mr-1" />
+                      All assignments
+                    </p>
+                  </div>
+                  <CheckSquare className="h-8 w-8 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-border/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">In Progress</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {taskStats.inProgress}
+                    </p>
+                    <p className="text-xs text-blue-500 flex items-center mt-1">
+                      <Zap className="h-3 w-3 mr-1" />
+                      Active work
+                    </p>
+                  </div>
+                  <Activity className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-border/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Completed</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {taskStats.completed}
+                    </p>
+                    <p className="text-xs text-green-500 flex items-center mt-1">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      {taskStats.total > 0
+                        ? Math.round(
+                            (taskStats.completed / taskStats.total) * 100,
+                          )
+                        : 0}
+                      % done
+                    </p>
+                  </div>
+                  <CheckCircle2 className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-border/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Overdue</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {taskStats.overdue}
+                    </p>
+                    <p className="text-xs text-red-500 flex items-center mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Needs attention
+                    </p>
+                  </div>
+                  <Clock className="h-8 w-8 text-red-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Scope + filters (buttons avoid duplicate TabsContent per scope) */}
+          <div className="space-y-6">
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 -mt-4 -mx-6 px-6 border-b mb-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap gap-2 rounded-lg border border-border/60 bg-muted/30 p-1 glass-card">
+                  {(
+                    [
+                      { id: "all", label: "All Tasks" },
+                      { id: "my-tasks", label: "My Tasks" },
+                      { id: "overdue", label: "Overdue" },
+                      { id: "today", label: "Due Today" },
+                    ] as const
+                  ).map((tab) => (
+                    <Button
+                      key={tab.id}
+                      type="button"
+                      variant={activeTab === tab.id ? "default" : "ghost"}
+                      size="sm"
+                      className="rounded-md"
+                      onClick={() => setActiveTab(tab.id)}
+                    >
+                      {tab.label}
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  {/* Status Filter */}
+                  <Select
+                    value={filterStatus}
+                    onValueChange={(value) => setFilterStatus(value)}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="todo">To Do</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="done">Done</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Priority Filter */}
+                  <Select
+                    value={filterPriority}
+                    onValueChange={(value) => setFilterPriority(value)}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="All Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Priority</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Clear Filters Button */}
+                  {(searchQuery ||
+                    filterStatus !== "all" ||
+                    filterPriority !== "all") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setFilterStatus("all");
+                        setFilterPriority("all");
+                        setAdvancedFilters({});
+                      }}
+                      className="gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {allTasksData?.filters && (
+                <div className="mt-4 max-w-4xl">
+                  <AdvancedFilters
+                    filters={advancedFilters}
+                    filterOptions={{
+                      projects: allTasksData.filters.projects,
+                      teamMembers: allTasksData.filters.teamMembers,
+                      statuses: allTasksData.filters.statuses,
+                      priorities: allTasksData.filters.priorities,
+                    }}
+                    onFiltersChange={setAdvancedFilters}
+                    onClearFilters={() => setAdvancedFilters({})}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* NEW: View Mode Switcher */}
+            <BlurFade delay={0.1}>
+              <Tabs
+                value={viewMode}
+                onValueChange={(value) =>
+                  updateAllTasksViewMode(
+                    value as "list" | "kanban" | "calendar",
+                  )
+                }
+                className="space-y-6"
+              >
+                <div className="flex items-center justify-between">
+                  <TabsList className="glass-card">
+                    <TabsTrigger
+                      value="list"
+                      className="flex items-center gap-2"
+                    >
+                      <Layout className="h-4 w-4" />
+                      List View
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="kanban"
+                      className="flex items-center gap-2"
+                    >
+                      <Target className="h-4 w-4" />
+                      Kanban Board
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="calendar"
+                      className="flex items-center gap-2"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Calendar View
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                {/* List View - Shows filtered content based on activeTab */}
+                <TabsContent value="list" className="space-y-6">
+                  <BlurFade delay={0.3}>
+                    {/* Results Summary, Bulk Actions, and Page Size Selector */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm text-muted-foreground">
+                          {isLoading ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Loading tasks...
+                            </span>
+                          ) : pagination ? (
+                            <span>
+                              Showing{" "}
+                              <span className="font-medium">
+                                {pagination.offset + 1}-
+                                {Math.min(
+                                  pagination.offset + pagination.limit,
+                                  pagination.total,
+                                )}
+                              </span>{" "}
+                              of{" "}
+                              <span className="font-medium">
+                                {pagination.total}
+                              </span>{" "}
+                              tasks
+                            </span>
+                          ) : (
+                            <span>
+                              <span className="font-medium">
+                                {tasks.length}
+                              </span>{" "}
+                              task{tasks.length !== 1 ? "s" : ""}
+                            </span>
                           )}
                         </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {!isLoading && tasks.length > 0 && (
-                        <>
-                          <span className="text-sm text-muted-foreground">Per page:</span>
-                          <Select
-                            value={pageSize.toString()}
-                            onValueChange={(value) => {
-                              setPageSize(parseInt(value));
-                              setCurrentPage(1);
+
+                        {/* Bulk Actions Toggle */}
+                        {!isLoading && tasks.length > 0 && (
+                          <Button
+                            variant={showBulkActions ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setShowBulkActions(!showBulkActions);
+                              setSelectedTasks([]);
                             }}
                           >
-                            <SelectTrigger className="w-20 h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="6">6</SelectItem>
-                              <SelectItem value="12">12</SelectItem>
-                              <SelectItem value="24">24</SelectItem>
-                              <SelectItem value="48">48</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {isLoading ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <TaskCardSkeleton key={i} />
-                      ))}
-                    </div>
-                  ) : tasks.length > 0 ? (
-                    <>
-                      <AllTasksVirtualGrid
-                        tasks={tasks}
-                        renderTask={(task) => (
-                          <TaskCard
-                            task={task}
-                            onAction={handleTaskAction}
-                            showCheckbox={showBulkActions}
-                            isSelected={selectedTasks.includes(task.id)}
-                            onSelect={handleTaskSelect}
-                          />
+                            {showBulkActions
+                              ? "Cancel Selection"
+                              : "Select Multiple"}
+                          </Button>
                         )}
-                      />
-                      
-                      {/* Pagination Controls */}
-                      {pagination && pagination.total >= 0 && (
-                        <div className="mt-8 border-t pt-6">
-                          <div className="flex items-center">
-                            <div className="text-sm text-muted-foreground">
-                              Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, pagination.total)} of {pagination.total}
-                            </div>
-                            <div className="ml-auto">
-                              {pagination.pages > 1 ? (
-                                <Pagination>
-                                  <PaginationContent>
-                                <PaginationItem>
-                                  <PaginationPrevious
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      if (currentPage > 1) {
-                                        setCurrentPage(currentPage - 1);
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                      }
-                                    }}
-                                    className={cn(
-                                      currentPage === 1 && "pointer-events-none opacity-50"
-                                    )}
-                                  />
-                                </PaginationItem>
-                                
-                                {generatePageNumbers().map((pageNum, idx) => (
-                                  <PaginationItem key={idx}>
-                                    {pageNum === '...' ? (
-                                      <PaginationEllipsis />
-                                    ) : (
-                                      <PaginationLink
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          setCurrentPage(pageNum as number);
-                                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                                        }}
-                                        isActive={currentPage === pageNum}
-                                      >
-                                        {pageNum}
-                                      </PaginationLink>
-                                    )}
-                                  </PaginationItem>
-                                ))}
-                                
-                                <PaginationItem>
-                                  <PaginationNext
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      if (currentPage < pagination.pages) {
-                                        setCurrentPage(currentPage + 1);
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                      }
-                                    }}
-                                    className={cn(
-                                      currentPage === pagination.pages && "pointer-events-none opacity-50"
-                                    )}
-                                  />
-                                </PaginationItem>
-                                  </PaginationContent>
-                                </Pagination>
-                              ) : (
-                                <div className="text-sm text-muted-foreground">
-                                  Page {currentPage} of {Math.max(1, pagination.pages)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center space-y-4">
-                        <CheckSquare className="h-16 w-16 text-muted-foreground mx-auto" />
-                        <div>
-                          <h3 className="text-lg font-semibold">
-                            {searchQuery || filterStatus !== 'all' || filterPriority !== 'all'
-                              ? 'No Tasks Match Your Filters'
-                              : 'No Tasks Yet'}
-                          </h3>
-                          <p className="text-muted-foreground mb-4">
-                            {searchQuery || filterStatus !== 'all' || filterPriority !== 'all'
-                              ? 'Try adjusting your filters or clearing them to see more tasks'
-                              : 'Get started by creating your first task'}
-                          </p>
-                          {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') ? (
+
+                        {/* Bulk Action Buttons */}
+                        {showBulkActions && selectedTasks.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">
+                              {selectedTasks.length} selected
+                            </span>
                             <Button
                               variant="outline"
-                              onClick={() => {
-                                setSearchQuery('');
-                                setFilterStatus('all');
-                                setFilterPriority('all');
+                              size="sm"
+                              onClick={handleSelectAll}
+                            >
+                              {selectedTasks.length === tasks.length
+                                ? "Deselect All"
+                                : "Select All"}
+                            </Button>
+                            <Select
+                              onValueChange={handleBulkStatusChange}
+                              disabled={isBulkStatusPending}
+                            >
+                              <SelectTrigger className="w-[140px] h-8">
+                                <SelectValue placeholder="Change Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="todo">To Do</SelectItem>
+                                <SelectItem value="in_progress">
+                                  In Progress
+                                </SelectItem>
+                                <SelectItem value="done">Done</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {canDeleteTasks && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={handleBulkDelete}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete ({selectedTasks.length})
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {!isLoading && tasks.length > 0 && (
+                          <>
+                            <span className="text-sm text-muted-foreground">
+                              Per page:
+                            </span>
+                            <Select
+                              value={pageSize.toString()}
+                              onValueChange={(value) => {
+                                setPageSize(Number.parseInt(value));
+                                setCurrentPage(1);
                               }}
                             >
-                              <X className="h-4 w-4 mr-2" />
-                              Clear All Filters
-                            </Button>
-                          ) : canCreateTasks ? (
-                            <Button onClick={handleCreateTask}>
-                              <Plus className="h-4 w-4 mr-2" />
-                              Create Your First Task
-                            </Button>
-                          ) : null}
-                        </div>
+                              <SelectTrigger className="w-20 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="6">6</SelectItem>
+                                <SelectItem value="12">12</SelectItem>
+                                <SelectItem value="24">24</SelectItem>
+                                <SelectItem value="48">48</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </>
+                        )}
                       </div>
                     </div>
-                  )}
-                </BlurFade>
-              </TabsContent>
 
-              <TabsContent value="kanban" className="space-y-6">
-                <BlurFade delay={0.3}>
-                  <AllTasksKanbanView
-                    {...commonViewProps}
-                  />
-                </BlurFade>
-              </TabsContent>
+                    {isLoading ? (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <TaskCardSkeleton key={i} />
+                        ))}
+                      </div>
+                    ) : tasks.length > 0 ? (
+                      <>
+                        <AllTasksVirtualGrid
+                          tasks={tasks}
+                          renderTask={(task) => (
+                            <TaskCard
+                              task={task}
+                              onAction={handleTaskAction}
+                              showCheckbox={showBulkActions}
+                              isSelected={selectedTasks.includes(task.id)}
+                              onSelect={handleTaskSelect}
+                            />
+                          )}
+                        />
 
-              <TabsContent value="calendar" className="space-y-6">
-                <BlurFade delay={0.3}>
-                  <AllTasksCalendarView
-                    {...commonViewProps}
-                  />
-                </BlurFade>
-              </TabsContent>
-            </Tabs>
-          </BlurFade>
+                        {/* Pagination Controls */}
+                        {pagination && pagination.total >= 0 && (
+                          <div className="mt-8 border-t pt-6">
+                            <div className="flex items-center">
+                              <div className="text-sm text-muted-foreground">
+                                Showing {(currentPage - 1) * pageSize + 1}-
+                                {Math.min(
+                                  currentPage * pageSize,
+                                  pagination.total,
+                                )}{" "}
+                                of {pagination.total}
+                              </div>
+                              <div className="ml-auto">
+                                {pagination.pages > 1 ? (
+                                  <Pagination>
+                                    <PaginationContent>
+                                      <PaginationItem>
+                                        <PaginationPrevious
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            if (currentPage > 1) {
+                                              setCurrentPage(currentPage - 1);
+                                              window.scrollTo({
+                                                top: 0,
+                                                behavior: "smooth",
+                                              });
+                                            }
+                                          }}
+                                          className={cn(
+                                            currentPage === 1 &&
+                                              "pointer-events-none opacity-50",
+                                          )}
+                                        />
+                                      </PaginationItem>
+
+                                      {generatePageNumbers().map(
+                                        (pageNum, idx) => (
+                                          <PaginationItem key={idx}>
+                                            {pageNum === "..." ? (
+                                              <PaginationEllipsis />
+                                            ) : (
+                                              <PaginationLink
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  setCurrentPage(
+                                                    pageNum as number,
+                                                  );
+                                                  window.scrollTo({
+                                                    top: 0,
+                                                    behavior: "smooth",
+                                                  });
+                                                }}
+                                                isActive={
+                                                  currentPage === pageNum
+                                                }
+                                              >
+                                                {pageNum}
+                                              </PaginationLink>
+                                            )}
+                                          </PaginationItem>
+                                        ),
+                                      )}
+
+                                      <PaginationItem>
+                                        <PaginationNext
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            if (
+                                              currentPage < pagination.pages
+                                            ) {
+                                              setCurrentPage(currentPage + 1);
+                                              window.scrollTo({
+                                                top: 0,
+                                                behavior: "smooth",
+                                              });
+                                            }
+                                          }}
+                                          className={cn(
+                                            currentPage === pagination.pages &&
+                                              "pointer-events-none opacity-50",
+                                          )}
+                                        />
+                                      </PaginationItem>
+                                    </PaginationContent>
+                                  </Pagination>
+                                ) : (
+                                  <div className="text-sm text-muted-foreground">
+                                    Page {currentPage} of{" "}
+                                    {Math.max(1, pagination.pages)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="text-center space-y-4">
+                          <CheckSquare className="h-16 w-16 text-muted-foreground mx-auto" />
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              {searchQuery ||
+                              filterStatus !== "all" ||
+                              filterPriority !== "all"
+                                ? "No Tasks Match Your Filters"
+                                : "No Tasks Yet"}
+                            </h3>
+                            <p className="text-muted-foreground mb-4">
+                              {searchQuery ||
+                              filterStatus !== "all" ||
+                              filterPriority !== "all"
+                                ? "Try adjusting your filters or clearing them to see more tasks"
+                                : "Get started by creating your first task"}
+                            </p>
+                            {searchQuery ||
+                            filterStatus !== "all" ||
+                            filterPriority !== "all" ? (
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setSearchQuery("");
+                                  setFilterStatus("all");
+                                  setFilterPriority("all");
+                                }}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Clear All Filters
+                              </Button>
+                            ) : canCreateTasks ? (
+                              <Button onClick={handleCreateTask}>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Create Your First Task
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </BlurFade>
+                </TabsContent>
+
+                <TabsContent value="kanban" className="space-y-6">
+                  <BlurFade delay={0.3}>
+                    <AllTasksKanbanView {...commonViewProps} />
+                  </BlurFade>
+                </TabsContent>
+
+                <TabsContent value="calendar" className="space-y-6">
+                  <BlurFade delay={0.3}>
+                    <AllTasksCalendarView {...commonViewProps} />
+                  </BlurFade>
+                </TabsContent>
+              </Tabs>
+            </BlurFade>
+          </div>
         </div>
-      </div>
 
-      {/* Create Task Modal */}
-      {isCreateTaskOpen && (
-        <CreateTaskModal
-          open={isCreateTaskOpen}
-          onClose={() => setIsCreateTaskOpen(false)}
-          hideProjectSelection={false}
-        />
-      )}
+        {/* Create Task Modal */}
+        {isCreateTaskOpen && (
+          <CreateTaskModal
+            open={isCreateTaskOpen}
+            onClose={() => setIsCreateTaskOpen(false)}
+            hideProjectSelection={false}
+          />
+        )}
 
-      {/* Edit Task Modal */}
-      {isEditTaskOpen && selectedTask && workspace && (
-        <EditTaskModal
-          open={isEditTaskOpen}
-          onClose={() => {
-            setIsEditTaskOpen(false);
-            setSelectedTask(null);
-          }}
-          task={selectedTask}
-          workspaceId={workspace.id}
-        />
-      )}
+        {/* Edit Task Modal */}
+        {isEditTaskOpen && selectedTask && workspace && (
+          <EditTaskModal
+            open={isEditTaskOpen}
+            onClose={() => {
+              setIsEditTaskOpen(false);
+              setSelectedTask(null);
+            }}
+            task={selectedTask}
+            workspaceId={workspace.id}
+          />
+        )}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Task</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{taskToDelete?.title}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsDeleteAlertOpen(false);
-                setTaskToDelete(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDeleteTask}
-              disabled={isDeletingTask}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeletingTask ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete Task"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Task</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{taskToDelete?.title}"? This
+                action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsDeleteAlertOpen(false);
+                  setTaskToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteTask}
+                disabled={isDeletingTask}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeletingTask ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Task"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </LazyDashboardLayout>
     </ErrorBoundary>
   );
-} 
+}

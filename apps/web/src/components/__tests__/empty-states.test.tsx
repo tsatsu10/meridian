@@ -1,6 +1,6 @@
 /**
  * Empty States Tests
- * 
+ *
  * Tests for empty state components:
  * - No data messages
  * - Call-to-action buttons
@@ -8,10 +8,10 @@
  * - Helpful guidance
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { TestWrapper } from '../../test-utils/test-wrapper';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { TestWrapper } from "../../test-utils/test-wrapper";
 
 interface EmptyStateProps {
   title: string;
@@ -21,7 +21,13 @@ interface EmptyStateProps {
   icon?: string;
 }
 
-function EmptyState({ title, description, actionLabel, onAction, icon }: EmptyStateProps) {
+function EmptyState({
+  title,
+  description,
+  actionLabel,
+  onAction,
+  icon,
+}: EmptyStateProps) {
   return (
     <div className="empty-state" role="region" aria-label="Empty state">
       {icon && <div className="icon">{icon}</div>}
@@ -34,81 +40,77 @@ function EmptyState({ title, description, actionLabel, onAction, icon }: EmptySt
   );
 }
 
-describe('Empty States', () => {
-  it('should render empty state', () => {
+describe("Empty States", () => {
+  it("should render empty state", () => {
     render(<EmptyState title="No tasks yet" />, { wrapper: TestWrapper });
 
-    expect(screen.getByRole('region', { name: /empty state/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /empty state/i }),
+    ).toBeInTheDocument();
   });
 
-  it('should display title', () => {
+  it("should display title", () => {
     render(<EmptyState title="No tasks yet" />, { wrapper: TestWrapper });
 
-    expect(screen.getByRole('heading', { name: 'No tasks yet' })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "No tasks yet" }),
+    ).toBeInTheDocument();
   });
 
-  it('should display description when provided', () => {
+  it("should display description when provided", () => {
     render(
-      <EmptyState 
-        title="No tasks" 
-        description="Create your first task to get started" 
+      <EmptyState
+        title="No tasks"
+        description="Create your first task to get started"
       />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
     expect(screen.getByText(/create your first task/i)).toBeInTheDocument();
   });
 
-  it('should display action button', () => {
+  it("should display action button", () => {
     render(
-      <EmptyState 
-        title="No tasks" 
+      <EmptyState
+        title="No tasks"
         actionLabel="Create Task"
         onAction={() => {}}
       />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByRole('button', { name: 'Create Task' })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Create Task" }),
+    ).toBeInTheDocument();
   });
 
-  it('should call action on button click', async () => {
+  it("should call action on button click", async () => {
     const user = userEvent.setup();
     const onAction = vi.fn();
 
     render(
-      <EmptyState 
-        title="No tasks" 
+      <EmptyState
+        title="No tasks"
         actionLabel="Create Task"
         onAction={onAction}
       />,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    await user.click(screen.getByRole('button', { name: 'Create Task' }));
+    await user.click(screen.getByRole("button", { name: "Create Task" }));
 
     expect(onAction).toHaveBeenCalled();
   });
 
-  it('should display icon when provided', () => {
-    render(
-      <EmptyState 
-        title="No tasks" 
-        icon="📋"
-      />,
-      { wrapper: TestWrapper }
-    );
+  it("should display icon when provided", () => {
+    render(<EmptyState title="No tasks" icon="📋" />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('📋')).toBeInTheDocument();
+    expect(screen.getByText("📋")).toBeInTheDocument();
   });
 
-  it('should not show button when no action', () => {
-    render(
-      <EmptyState title="No tasks" />,
-      { wrapper: TestWrapper }
-    );
+  it("should not show button when no action", () => {
+    render(<EmptyState title="No tasks" />, { wrapper: TestWrapper });
 
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
-

@@ -4,7 +4,9 @@ import type { WorkspaceMember } from "@/types/workspace-user";
 // The generated AppType is missing workspace-user[":workspaceId"], so type locally
 export type GetWorkspaceUsersRequest = { param: { workspaceId: string } };
 
-function normalizeWorkspaceMember(raw: Record<string, unknown>): WorkspaceMember {
+function normalizeWorkspaceMember(
+  raw: Record<string, unknown>,
+): WorkspaceMember {
   const emailRaw = (raw.email ?? raw.userEmail ?? "") as string;
   const email = String(emailRaw).trim().toLowerCase();
   const name = (raw.name ?? raw.userName ?? null) as string | null;
@@ -33,9 +35,11 @@ function normalizeWorkspaceMember(raw: Record<string, unknown>): WorkspaceMember
 }
 
 async function getWorkspaceUsers({ param }: GetWorkspaceUsersRequest) {
-  const response = await (client as any)["workspace-user"][":workspaceId"].$get({
-    param,
-  });
+  const response = await (client as any)["workspace-user"][":workspaceId"].$get(
+    {
+      param,
+    },
+  );
 
   if (!response.ok) {
     const error = await response.text();

@@ -10,9 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
+import {
   LayoutDashboard,
-  Users, 
+  Users,
   TrendingUp,
   Target,
   Plus,
@@ -72,8 +72,8 @@ interface Task {
   id: string;
   title: string;
   assignee: string;
-  status: 'todo' | 'in_progress' | 'review' | 'done';
-  priority: 'low' | 'medium' | 'high';
+  status: "todo" | "in_progress" | "review" | "done";
+  priority: "low" | "medium" | "high";
   dueDate: string;
   estimatedHours: number;
   actualHours?: number;
@@ -81,7 +81,12 @@ interface Task {
 
 interface TeamActivity {
   id: string;
-  type: 'task_completed' | 'member_joined' | 'milestone_reached' | 'comment_added' | 'file_uploaded';
+  type:
+    | "task_completed"
+    | "member_joined"
+    | "milestone_reached"
+    | "comment_added"
+    | "file_uploaded";
   message: string;
   user: string;
   timestamp: string;
@@ -92,23 +97,24 @@ interface TeamActivity {
 // Removed hardcoded sample data
 
 const statusColors = {
-  'todo': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-  'in_progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  'review': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-  'done': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+  todo: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+  in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  review:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  done: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
 };
 
 const priorityColors = {
-  'low': 'bg-gray-500',
-  'medium': 'bg-yellow-500',
-  'high': 'bg-red-500'
+  low: "bg-gray-500",
+  medium: "bg-yellow-500",
+  high: "bg-red-500",
 };
 
-export default function TeamDashboardModal({ 
-  open, 
-  onClose, 
+export default function TeamDashboardModal({
+  open,
+  onClose,
   selectedTeam = null,
-  allTeams = []
+  allTeams = [],
 }: TeamDashboardModalProps) {
   const [team, setTeam] = useState<Team | null>(selectedTeam);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -118,11 +124,11 @@ export default function TeamDashboardModal({
 
   // Get permissions for this team
   const teamPermissions = useTeamPermissions(team);
-  
+
   // Get timeline data for this team
   const { timelineData } = useProjectTimeline(allTeams);
-  const teamTimelineData = timelineData.find((tl: any) => 
-    tl.teams.some((t: any) => t.teamId === team?.id)
+  const teamTimelineData = timelineData.find((tl: any) =>
+    tl.teams.some((t: any) => t.teamId === team?.id),
   );
 
   // Update team when selectedTeam prop changes
@@ -142,32 +148,32 @@ export default function TeamDashboardModal({
       setIsLoadingTasks(true);
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/tasks?teamId=${team.id}`,
+          `${import.meta.env.VITE_API_URL || "http://localhost:3005"}/api/tasks?teamId=${team.id}`,
           {
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          }
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          },
         );
 
-        if (!response.ok) throw new Error('Failed to fetch tasks');
+        if (!response.ok) throw new Error("Failed to fetch tasks");
 
         const tasksData = await response.json();
-        
+
         // Transform API data to Task format
         const formattedTasks: Task[] = tasksData.map((t: any) => ({
           id: t.id,
           title: t.title || t.name,
-          assignee: t.assigneeName || t.assignee || 'Unassigned',
-          status: t.status || 'todo',
-          priority: t.priority || 'medium',
+          assignee: t.assigneeName || t.assignee || "Unassigned",
+          status: t.status || "todo",
+          priority: t.priority || "medium",
           dueDate: t.dueDate || t.deadline,
           estimatedHours: t.estimatedHours || t.estimate,
-          actualHours: t.actualHours || t.timeSpent || 0
+          actualHours: t.actualHours || t.timeSpent || 0,
         }));
 
         setTasks(formattedTasks);
       } catch (error) {
-        console.error('Error fetching team tasks:', error);
+        console.error("Error fetching team tasks:", error);
         setTasks([]);
       } finally {
         setIsLoadingTasks(false);
@@ -186,35 +192,39 @@ export default function TeamDashboardModal({
       try {
         // Try to fetch from team activity endpoint
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/teams/${team.id}/activity`,
+          `${import.meta.env.VITE_API_URL || "http://localhost:3005"}/api/teams/${team.id}/activity`,
           {
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          }
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          },
         );
 
         if (!response.ok) {
           // Fallback: generate activity from tasks if endpoint doesn't exist
-          console.warn('Team activity endpoint not available, using task-based activity');
+          console.warn(
+            "Team activity endpoint not available, using task-based activity",
+          );
           setActivity([]);
           return;
         }
 
         const activityData = await response.json();
-        
+
         // Transform API data to TeamActivity format
-        const formattedActivity: TeamActivity[] = activityData.map((a: any) => ({
-          id: a.id,
-          type: a.type || a.activityType || 'comment_added',
-          message: a.message || a.description,
-          user: a.userName || a.user || 'Unknown User',
-          timestamp: a.timestamp || a.createdAt,
-          icon: getActivityIcon(a.type || a.activityType)
-        }));
+        const formattedActivity: TeamActivity[] = activityData.map(
+          (a: any) => ({
+            id: a.id,
+            type: a.type || a.activityType || "comment_added",
+            message: a.message || a.description,
+            user: a.userName || a.user || "Unknown User",
+            timestamp: a.timestamp || a.createdAt,
+            icon: getActivityIcon(a.type || a.activityType),
+          }),
+        );
 
         setActivity(formattedActivity);
       } catch (error) {
-        console.error('Error fetching team activity:', error);
+        console.error("Error fetching team activity:", error);
         setActivity([]);
       } finally {
         setIsLoadingActivity(false);
@@ -227,38 +237,46 @@ export default function TeamDashboardModal({
   // Helper function to get activity icon
   const getActivityIcon = (type: string): string => {
     const iconMap: Record<string, string> = {
-      'task_completed': '✅',
-      'task_created': '📝',
-      'comment_added': '💬',
-      'member_joined': '👋',
-      'member_left': '👋',
-      'milestone_reached': '🎯',
-      'file_uploaded': '📎',
-      'meeting_scheduled': '📅'
+      task_completed: "✅",
+      task_created: "📝",
+      comment_added: "💬",
+      member_joined: "👋",
+      member_left: "👋",
+      milestone_reached: "🎯",
+      file_uploaded: "📎",
+      meeting_scheduled: "📅",
     };
-    return iconMap[type] || '📌';
+    return iconMap[type] || "📌";
   };
 
   const handleTeamSelect = (teamId: string) => {
-    const selectedTeam = allTeams.find(t => t.id === teamId);
+    const selectedTeam = allTeams.find((t) => t.id === teamId);
     if (selectedTeam) {
       setTeam(selectedTeam);
     }
   };
 
   const handleTaskStatusChange = (taskId: string, newStatus: string) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, status: newStatus as Task['status'] } : task
-    ));
+    setTasks(
+      tasks.map((task) =>
+        task.id === taskId
+          ? { ...task, status: newStatus as Task["status"] }
+          : task,
+      ),
+    );
   };
 
   const getTeamStats = () => {
     if (!team) return { completedTasks: 0, totalTasks: 0, avgPerformance: 0 };
-    
-    const completedTasks = tasks.filter(task => task.status === 'done').length;
+
+    const completedTasks = tasks.filter(
+      (task) => task.status === "done",
+    ).length;
     const totalTasks = tasks.length;
-    const avgPerformance = team.members.reduce((acc, member) => acc + member.performance, 0) / team.members.length;
-    
+    const avgPerformance =
+      team.members.reduce((acc, member) => acc + member.performance, 0) /
+      team.members.length;
+
     return { completedTasks, totalTasks, avgPerformance };
   };
 
@@ -273,7 +291,7 @@ export default function TeamDashboardModal({
               <LayoutDashboardIcon className="h-5 w-5" />
               <span>Team Dashboard</span>
             </div>
-            
+
             {/* Team Selector */}
             {allTeams.length > 0 && (
               <div className="flex items-center space-x-2">
@@ -293,29 +311,40 @@ export default function TeamDashboardModal({
             )}
           </DialogTitle>
           <DialogDescription>
-            View team performance, manage tasks, and track project progress in real-time.
+            View team performance, manage tasks, and track project progress in
+            real-time.
           </DialogDescription>
         </DialogHeader>
 
         {/* Team Info Bar */}
         {team && (
           <div className="flex items-center space-x-3 p-4 bg-muted/30 rounded-lg">
-            <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center", team.color)}>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-lg flex items-center justify-center",
+                team.color,
+              )}
+            >
               <UsersIcon className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{team.name}</h3>
               <p className="text-sm text-muted-foreground">
-                {team.projectName} • {team.members.length} members • Lead: {team.lead}
+                {team.projectName} • {team.members.length} members • Lead:{" "}
+                {team.lead}
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-center">
-                <div className="text-lg font-bold text-green-600">{team.performance}%</div>
+                <div className="text-lg font-bold text-green-600">
+                  {team.performance}%
+                </div>
                 <div className="text-xs text-muted-foreground">Performance</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">{team.workload}%</div>
+                <div className="text-lg font-bold text-blue-600">
+                  {team.workload}%
+                </div>
                 <div className="text-xs text-muted-foreground">Workload</div>
               </div>
             </div>
@@ -325,26 +354,34 @@ export default function TeamDashboardModal({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Team Overview & Stats */}
           <div className="lg:col-span-2 space-y-6">
-            
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Tasks Completed</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Tasks Completed
+                  </h4>
                   <CheckCircleIcon className="h-4 w-4 text-green-500" />
                 </div>
-                <div className="text-2xl font-bold">{stats.completedTasks}/{stats.totalTasks}</div>
+                <div className="text-2xl font-bold">
+                  {stats.completedTasks}/{stats.totalTasks}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  {Math.round((stats.completedTasks / stats.totalTasks) * 100)}% completion rate
+                  {Math.round((stats.completedTasks / stats.totalTasks) * 100)}%
+                  completion rate
                 </p>
               </div>
 
               <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Team Performance</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Team Performance
+                  </h4>
                   <TrendingUpIcon className="h-4 w-4 text-blue-500" />
                 </div>
-                <div className="text-2xl font-bold text-blue-600">{Math.round(stats.avgPerformance)}%</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {Math.round(stats.avgPerformance)}%
+                </div>
                 <p className="text-xs text-muted-foreground">
                   +3% from last week
                 </p>
@@ -352,11 +389,14 @@ export default function TeamDashboardModal({
 
               <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Active Members</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Active Members
+                  </h4>
                   <ActivityIcon className="h-4 w-4 text-purple-500" />
                 </div>
                 <div className="text-2xl font-bold text-purple-600">
-                  {team?.members.filter(m => m.status === 'online').length || 0}
+                  {team?.members.filter((m) => m.status === "online").length ||
+                    0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   of {team?.members.length || 0} total members
@@ -384,7 +424,12 @@ export default function TeamDashboardModal({
                     className="flex items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className={cn("w-3 h-3 rounded-full", priorityColors[task.priority])} />
+                      <div
+                        className={cn(
+                          "w-3 h-3 rounded-full",
+                          priorityColors[task.priority],
+                        )}
+                      />
                       <div>
                         <h4 className="font-medium text-sm">{task.title}</h4>
                         <div className="flex items-center space-x-2 text-xs text-muted-foreground">
@@ -396,16 +441,20 @@ export default function TeamDashboardModal({
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
-                      <Badge className={cn("text-xs", statusColors[task.status])}>
-                        {task.status.replace('-', ' ')}
+                      <Badge
+                        className={cn("text-xs", statusColors[task.status])}
+                      >
+                        {task.status.replace("-", " ")}
                       </Badge>
                       {/* Only allow status changes if user can assign tasks */}
                       {teamPermissions.permissions.canAssignTasks && (
                         <select
                           value={task.status}
-                          onChange={(e) => handleTaskStatusChange(task.id, e.target.value)}
+                          onChange={(e) =>
+                            handleTaskStatusChange(task.id, e.target.value)
+                          }
                           className="px-2 py-1 border border-input bg-background rounded text-xs"
                         >
                           <option value="todo">To Do</option>
@@ -425,31 +474,41 @@ export default function TeamDashboardModal({
               <div className="border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-3">
                   <AlertTriangleIcon className="h-5 w-5 text-yellow-600" />
-                  <h3 className="font-semibold text-lg text-yellow-800 dark:text-yellow-200">Timeline Risks</h3>
+                  <h3 className="font-semibold text-lg text-yellow-800 dark:text-yellow-200">
+                    Timeline Risks
+                  </h3>
                 </div>
                 <div className="space-y-2">
                   {teamTimelineData.riskFactors.map((risk: any, index: any) => (
-                    <div key={index} className="text-sm text-yellow-700 dark:text-yellow-300">
+                    <div
+                      key={index}
+                      className="text-sm text-yellow-700 dark:text-yellow-300"
+                    >
                       • {risk}
                     </div>
                   ))}
                 </div>
                 <div className="mt-3 text-xs text-yellow-600 dark:text-yellow-400">
-                  Project completion estimated: {teamTimelineData.estimatedCompletion} 
-                  ({Math.round(teamTimelineData.actualProgress)}% complete)
+                  Project completion estimated:{" "}
+                  {teamTimelineData.estimatedCompletion}(
+                  {Math.round(teamTimelineData.actualProgress)}% complete)
                 </div>
               </div>
             )}
 
             {/* Critical Path Status */}
-            {teamTimelineData?.teams.find((t: any) => t.teamId === team?.id)?.criticalPath && (
+            {teamTimelineData?.teams.find((t: any) => t.teamId === team?.id)
+              ?.criticalPath && (
               <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <TargetIcon className="h-5 w-5 text-red-600" />
-                  <h3 className="font-semibold text-red-800 dark:text-red-200">Critical Path Team</h3>
+                  <h3 className="font-semibold text-red-800 dark:text-red-200">
+                    Critical Path Team
+                  </h3>
                 </div>
                 <p className="text-sm text-red-700 dark:text-red-300">
-                  This team is on the critical path for project completion. Any delays may impact the overall timeline.
+                  This team is on the critical path for project completion. Any
+                  delays may impact the overall timeline.
                 </p>
               </div>
             )}
@@ -469,20 +528,32 @@ export default function TeamDashboardModal({
                           {member.name.charAt(0)}
                         </div>
                       </Avatar>
-                      <div className={cn(
-                        "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white",
-                        member.status === 'online' ? "bg-green-500" :
-                        member.status === 'busy' ? "bg-red-500" :
-                        member.status === 'away' ? "bg-yellow-500" : "bg-gray-400"
-                      )} />
+                      <div
+                        className={cn(
+                          "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white",
+                          member.status === "online"
+                            ? "bg-green-500"
+                            : member.status === "busy"
+                              ? "bg-red-500"
+                              : member.status === "away"
+                                ? "bg-yellow-500"
+                                : "bg-gray-400",
+                        )}
+                      />
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-sm">{member.name}</div>
-                      <div className="text-xs text-muted-foreground">{member.role}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {member.role}
+                      </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs font-medium">{member.currentTasks} tasks</div>
-                      <div className="text-xs text-muted-foreground">{member.workload}% load</div>
+                      <div className="text-xs font-medium">
+                        {member.currentTasks} tasks
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {member.workload}% load
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -492,7 +563,6 @@ export default function TeamDashboardModal({
 
           {/* Right Column - Activity & Communication */}
           <div className="space-y-6">
-            
             {/* Quick Actions */}
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
               <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
@@ -521,23 +591,24 @@ export default function TeamDashboardModal({
                     Team Settings
                   </Button>
                 )}
-                
+
                 {/* Show limited actions message if user has no permissions */}
-                {!teamPermissions.permissions.canCreateEvents && 
-                 !teamPermissions.permissions.canCreateReports && 
-                 !teamPermissions.permissions.canViewAnalytics && 
-                 !teamPermissions.permissions.canAccessSettings && (
-                  <div className="text-center p-4 text-muted-foreground">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <LockIcon className="h-4 w-4" />
-                      <span className="text-sm">Limited Access</span>
+                {!teamPermissions.permissions.canCreateEvents &&
+                  !teamPermissions.permissions.canCreateReports &&
+                  !teamPermissions.permissions.canViewAnalytics &&
+                  !teamPermissions.permissions.canAccessSettings && (
+                    <div className="text-center p-4 text-muted-foreground">
+                      <div className="flex items-center justify-center space-x-2 mb-2">
+                        <LockIcon className="h-4 w-4" />
+                        <span className="text-sm">Limited Access</span>
+                      </div>
+                      <p className="text-xs">
+                        Contact team lead for additional permissions
+                      </p>
                     </div>
-                    <p className="text-xs">Contact team lead for additional permissions</p>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
-
 
             {/* Achievements */}
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
@@ -547,21 +618,27 @@ export default function TeamDashboardModal({
                   <AwardIcon className="h-5 w-5 text-yellow-500" />
                   <div>
                     <div className="font-medium text-sm">Sprint Champion</div>
-                    <div className="text-xs text-muted-foreground">Completed all sprint goals</div>
+                    <div className="text-xs text-muted-foreground">
+                      Completed all sprint goals
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <ZapIcon className="h-5 w-5 text-blue-500" />
                   <div>
                     <div className="font-medium text-sm">High Performance</div>
-                    <div className="text-xs text-muted-foreground">90%+ team performance</div>
+                    <div className="text-xs text-muted-foreground">
+                      90%+ team performance
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <TargetIcon className="h-5 w-5 text-green-500" />
                   <div>
                     <div className="font-medium text-sm">Milestone Master</div>
-                    <div className="text-xs text-muted-foreground">Hit 3 milestones in a row</div>
+                    <div className="text-xs text-muted-foreground">
+                      Hit 3 milestones in a row
+                    </div>
                   </div>
                 </div>
               </div>
@@ -577,4 +654,4 @@ export default function TeamDashboardModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

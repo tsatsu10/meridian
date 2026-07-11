@@ -13,13 +13,18 @@ export function useToggleUserStatus() {
 
   return useMutation({
     mutationFn: async ({ workspaceId, userEmail }: ToggleUserStatusData) => {
-      const response = await fetchApi(`/workspace-user/${workspaceId}/${userEmail}/toggle-status`, {
-        method: "POST",
-      });
+      const response = await fetchApi(
+        `/workspace-user/${workspaceId}/${userEmail}/toggle-status`,
+        {
+          method: "POST",
+        },
+      );
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-users", variables.workspaceId] });
+      queryClient.invalidateQueries({
+        queryKey: ["workspace-users", variables.workspaceId],
+      });
       toast.success("User status updated successfully");
     },
     onError: (error: any) => {
@@ -27,4 +32,3 @@ export function useToggleUserStatus() {
     },
   });
 }
-

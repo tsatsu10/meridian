@@ -11,7 +11,7 @@ const Card = React.forwardRef<
       "card-meridian transition-all duration-200 ease-out",
       "rounded-xl border bg-card text-card-foreground shadow-meridian-sm",
       "hover:shadow-meridian-md hover:bg-card/95",
-      className
+      className,
     )}
     {...props}
   />
@@ -27,7 +27,7 @@ const CardHeader = React.forwardRef<
     className={cn(
       "flex flex-col space-y-1.5 p-6 pb-4",
       "border-b border-border/50",
-      className
+      className,
     )}
     {...props}
   />
@@ -42,7 +42,7 @@ const CardTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "text-h4 font-semibold leading-none tracking-tight text-foreground",
-      className
+      className,
     )}
     {...props}
   />
@@ -78,11 +78,18 @@ const CardFooter = React.forwardRef<
     className={cn(
       "flex items-center p-6 pt-4",
       "border-t border-border/50",
-      className
+      className,
     )}
     {...props}
   />
 ));
 CardFooter.displayName = "CardFooter";
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }; 
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+};

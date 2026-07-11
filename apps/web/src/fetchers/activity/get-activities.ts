@@ -43,7 +43,7 @@ export interface GetActivitiesResponse {
  * Fetch recent activities for a workspace
  */
 export async function getActivities(
-  params: GetActivitiesParams
+  params: GetActivitiesParams,
 ): Promise<GetActivitiesResponse> {
   try {
     const queryParams = new URLSearchParams();
@@ -71,7 +71,7 @@ export async function getActivities(
       {
         credentials: "include",
         headers,
-      }
+      },
     );
 
     if (!response.ok) {
@@ -85,4 +85,3 @@ export async function getActivities(
     throw error;
   }
 }
-

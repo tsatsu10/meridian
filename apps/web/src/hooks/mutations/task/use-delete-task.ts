@@ -11,8 +11,12 @@ function useDeleteTask(projectId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
       if (workspace?.id) {
-        queryClient.invalidateQueries({ queryKey: ["all-tasks", workspace.id] });
-        queryClient.invalidateQueries({ queryKey: ["all-tasks-stats", workspace.id] });
+        queryClient.invalidateQueries({
+          queryKey: ["all-tasks", workspace.id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["all-tasks-stats", workspace.id],
+        });
         invalidateDashboardQueriesForWorkspace(queryClient, workspace.id);
       }
     },

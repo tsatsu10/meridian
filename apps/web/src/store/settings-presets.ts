@@ -1,4 +1,4 @@
-import { AllSettings } from "./settings";
+import type { AllSettings } from "./settings";
 
 export interface SettingsPreset {
   id: string;
@@ -496,12 +496,14 @@ export const SETTINGS_PRESETS: SettingsPreset[] = [
   collaboratorPreset,
 ];
 
-export const POPULAR_PRESETS = SETTINGS_PRESETS.filter(preset => preset.popular);
+export const POPULAR_PRESETS = SETTINGS_PRESETS.filter(
+  (preset) => preset.popular,
+);
 
 export function getPresetById(id: string): SettingsPreset | undefined {
-  return SETTINGS_PRESETS.find(preset => preset.id === id);
+  return SETTINGS_PRESETS.find((preset) => preset.id === id);
 }
 
 export function getPresetsByPersona(persona: string): SettingsPreset[] {
-  return SETTINGS_PRESETS.filter(preset => preset.persona.includes(persona));
-} 
+  return SETTINGS_PRESETS.filter((preset) => preset.persona.includes(persona));
+}

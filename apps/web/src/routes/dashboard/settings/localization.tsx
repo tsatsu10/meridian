@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Languages,
   Globe,
@@ -10,18 +10,30 @@ import {
   Trash2,
   ArrowLeft,
   Settings as SettingsIcon,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +41,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,13 +51,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { useWorkspaceStore } from '@/store/workspace';
-import { API_BASE_URL } from '@/constants/urls';
+} from "@/components/ui/alert-dialog";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { useWorkspaceStore } from "@/store/workspace";
+import { API_BASE_URL } from "@/constants/urls";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/localization')({
+export const Route = createFileRoute("/dashboard/settings/localization")({
   component: withErrorBoundary(LocalizationSettingsPage, "Localization"),
 });
 
@@ -67,28 +79,33 @@ function LocalizationSettingsPage() {
 
   const [isAddLanguageDialogOpen, setIsAddLanguageDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
-  const [selectedLangCode, setSelectedLangCode] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(
+    null,
+  );
+  const [selectedLangCode, setSelectedLangCode] = useState("");
 
   // Fetch supported languages
   const { data: supportedResponse } = useQuery({
-    queryKey: ['supported-languages'],
+    queryKey: ["supported-languages"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/settings/localization/supported`, {
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/settings/localization/supported`,
+        {
+          credentials: "include",
+        },
+      );
       return response.ok ? response.json() : null;
     },
   });
 
   // Fetch workspace languages
   const { data: languagesResponse, isLoading: languagesLoading } = useQuery({
-    queryKey: ['languages', currentWorkspace?.id],
+    queryKey: ["languages", currentWorkspace?.id],
     queryFn: async () => {
       if (!currentWorkspace) return null;
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/languages`,
-        { credentials: 'include' }
+        { credentials: "include" },
       );
       return response.ok ? response.json() : null;
     },
@@ -97,12 +114,12 @@ function LocalizationSettingsPage() {
 
   // Fetch localization settings
   const { data: settingsResponse } = useQuery({
-    queryKey: ['localization-settings', currentWorkspace?.id],
+    queryKey: ["localization-settings", currentWorkspace?.id],
     queryFn: async () => {
       if (!currentWorkspace) return null;
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/settings`,
-        { credentials: 'include' }
+        { credentials: "include" },
       );
       return response.ok ? response.json() : null;
     },
@@ -116,101 +133,112 @@ function LocalizationSettingsPage() {
   // Add language mutation
   const addLanguageMutation = useMutation({
     mutationFn: async (languageCode: string) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/languages`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ languageCode }),
-        }
+        },
       );
-      if (!response.ok) throw new Error('Failed to add language');
+      if (!response.ok) throw new Error("Failed to add language");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Language added successfully');
-      queryClient.invalidateQueries({ queryKey: ['languages', currentWorkspace?.id] });
+      toast.success("Language added successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["languages", currentWorkspace?.id],
+      });
       setIsAddLanguageDialogOpen(false);
-      setSelectedLangCode('');
+      setSelectedLangCode("");
     },
     onError: () => {
-      toast.error('Failed to add language');
+      toast.error("Failed to add language");
     },
   });
 
   // Delete language mutation
   const deleteLanguageMutation = useMutation({
     mutationFn: async (languageCode: string) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/languages/${languageCode}`,
         {
-          method: 'DELETE',
-          credentials: 'include',
-        }
+          method: "DELETE",
+          credentials: "include",
+        },
       );
-      if (!response.ok) throw new Error('Failed to delete language');
+      if (!response.ok) throw new Error("Failed to delete language");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Language deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['languages', currentWorkspace?.id] });
+      toast.success("Language deleted successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["languages", currentWorkspace?.id],
+      });
       setIsDeleteDialogOpen(false);
     },
     onError: () => {
-      toast.error('Failed to delete language');
+      toast.error("Failed to delete language");
     },
   });
 
   // Update language mutation
   const updateLanguageMutation = useMutation({
-    mutationFn: async ({ languageCode, updates }: { languageCode: string; updates: any }) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+    mutationFn: async ({
+      languageCode,
+      updates,
+    }: { languageCode: string; updates: any }) => {
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/languages/${languageCode}`,
         {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(updates),
-        }
+        },
       );
-      if (!response.ok) throw new Error('Failed to update language');
+      if (!response.ok) throw new Error("Failed to update language");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Language updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['languages', currentWorkspace?.id] });
+      toast.success("Language updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["languages", currentWorkspace?.id],
+      });
     },
     onError: () => {
-      toast.error('Failed to update language');
+      toast.error("Failed to update language");
     },
   });
 
   // Update settings mutation
   const updateSettingsMutation = useMutation({
     mutationFn: async (updates: any) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/localization/${currentWorkspace.id}/settings`,
         {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(updates),
-        }
+        },
       );
-      if (!response.ok) throw new Error('Failed to update settings');
+      if (!response.ok) throw new Error("Failed to update settings");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Settings updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['localization-settings', currentWorkspace?.id] });
+      toast.success("Settings updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["localization-settings", currentWorkspace?.id],
+      });
     },
     onError: () => {
-      toast.error('Failed to update settings');
+      toast.error("Failed to update settings");
     },
   });
 
@@ -235,11 +263,11 @@ function LocalizationSettingsPage() {
   };
 
   const handleExportTranslations = () => {
-    toast.info('Export functionality coming soon!');
+    toast.info("Export functionality coming soon!");
   };
 
   const handleImportTranslations = () => {
-    toast.info('Import functionality coming soon!');
+    toast.info("Import functionality coming soon!");
   };
 
   return (
@@ -248,7 +276,11 @@ function LocalizationSettingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button onClick={() => navigate({ to: '/dashboard/settings' })} variant='ghost' size='sm'>
+            <Button
+              onClick={() => navigate({ to: "/dashboard/settings" })}
+              variant="ghost"
+              size="sm"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
             </Button>
             <div className="space-y-1">
@@ -261,11 +293,19 @@ function LocalizationSettingsPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleExportTranslations} variant="outline" size="sm">
+            <Button
+              onClick={handleExportTranslations}
+              variant="outline"
+              size="sm"
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button onClick={handleImportTranslations} variant="outline" size="sm">
+            <Button
+              onClick={handleImportTranslations}
+              variant="outline"
+              size="sm"
+            >
               <Upload className="h-4 w-4 mr-2" />
               Import
             </Button>
@@ -295,7 +335,9 @@ function LocalizationSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Workspace Languages</CardTitle>
-                    <CardDescription>Add and manage languages for your workspace</CardDescription>
+                    <CardDescription>
+                      Add and manage languages for your workspace
+                    </CardDescription>
                   </div>
                   <Button onClick={() => setIsAddLanguageDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -305,11 +347,15 @@ function LocalizationSettingsPage() {
               </CardHeader>
               <CardContent>
                 {languagesLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">Loading languages...</div>
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading languages...
+                  </div>
                 ) : languages.length === 0 ? (
                   <div className="text-center py-12">
                     <Languages className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium mb-2">No languages configured</p>
+                    <p className="text-lg font-medium mb-2">
+                      No languages configured
+                    </p>
                     <p className="text-muted-foreground mb-4">
                       Add your first language to get started
                     </p>
@@ -326,7 +372,9 @@ function LocalizationSettingsPage() {
                             <Globe className="h-5 w-5 text-muted-foreground" />
                             <div>
                               <div className="flex items-center gap-2">
-                                <h3 className="font-medium">{lang.languageName}</h3>
+                                <h3 className="font-medium">
+                                  {lang.languageName}
+                                </h3>
                                 <span className="text-sm text-muted-foreground">
                                   ({lang.languageCode})
                                 </span>
@@ -336,7 +384,10 @@ function LocalizationSettingsPage() {
                               </div>
                               <div className="mt-2">
                                 <div className="flex items-center gap-2">
-                                  <Progress value={lang.completionPercentage} className="w-32" />
+                                  <Progress
+                                    value={lang.completionPercentage}
+                                    className="w-32"
+                                  />
                                   <span className="text-xs text-muted-foreground">
                                     {lang.completionPercentage}% translated
                                   </span>
@@ -348,7 +399,10 @@ function LocalizationSettingsPage() {
 
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2">
-                            <Label htmlFor={`enabled-${lang.languageCode}`} className="text-sm">
+                            <Label
+                              htmlFor={`enabled-${lang.languageCode}`}
+                              className="text-sm"
+                            >
                               Enabled
                             </Label>
                             <Switch
@@ -374,7 +428,7 @@ function LocalizationSettingsPage() {
                                 }}
                                 size="sm"
                                 variant="outline"
-                                disabled={lang.languageCode === 'en'}
+                                disabled={lang.languageCode === "en"}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -401,9 +455,12 @@ function LocalizationSettingsPage() {
               <CardContent>
                 <div className="text-center py-12">
                   <Globe className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">Translation Editor Coming Soon!</p>
+                  <p className="text-lg font-medium mb-2">
+                    Translation Editor Coming Soon!
+                  </p>
                   <p className="text-muted-foreground">
-                    Full inline translation editor will be available in the next update
+                    Full inline translation editor will be available in the next
+                    update
                   </p>
                 </div>
               </CardContent>
@@ -415,14 +472,16 @@ function LocalizationSettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Regional Preferences</CardTitle>
-                <CardDescription>Configure date, time, and number formats</CardDescription>
+                <CardDescription>
+                  Configure date, time, and number formats
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Date Format */}
                 <div className="space-y-2">
                   <Label htmlFor="dateFormat">Date Format</Label>
                   <Select
-                    value={settings.dateFormat || 'YYYY-MM-DD'}
+                    value={settings.dateFormat || "YYYY-MM-DD"}
                     onValueChange={(value) =>
                       updateSettingsMutation.mutate({ dateFormat: value })
                     }
@@ -431,10 +490,18 @@ function LocalizationSettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="YYYY-MM-DD">2025-10-26 (YYYY-MM-DD)</SelectItem>
-                      <SelectItem value="MM/DD/YYYY">10/26/2025 (MM/DD/YYYY)</SelectItem>
-                      <SelectItem value="DD/MM/YYYY">26/10/2025 (DD/MM/YYYY)</SelectItem>
-                      <SelectItem value="DD.MM.YYYY">26.10.2025 (DD.MM.YYYY)</SelectItem>
+                      <SelectItem value="YYYY-MM-DD">
+                        2025-10-26 (YYYY-MM-DD)
+                      </SelectItem>
+                      <SelectItem value="MM/DD/YYYY">
+                        10/26/2025 (MM/DD/YYYY)
+                      </SelectItem>
+                      <SelectItem value="DD/MM/YYYY">
+                        26/10/2025 (DD/MM/YYYY)
+                      </SelectItem>
+                      <SelectItem value="DD.MM.YYYY">
+                        26.10.2025 (DD.MM.YYYY)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -443,7 +510,7 @@ function LocalizationSettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="timeFormat">Time Format</Label>
                   <Select
-                    value={settings.timeFormat || '24h'}
+                    value={settings.timeFormat || "24h"}
                     onValueChange={(value) =>
                       updateSettingsMutation.mutate({ timeFormat: value })
                     }
@@ -464,7 +531,9 @@ function LocalizationSettingsPage() {
                   <Select
                     value={String(settings.firstDayOfWeek ?? 0)}
                     onValueChange={(value) =>
-                      updateSettingsMutation.mutate({ firstDayOfWeek: parseInt(value) })
+                      updateSettingsMutation.mutate({
+                        firstDayOfWeek: Number.parseInt(value),
+                      })
                     }
                   >
                     <SelectTrigger id="firstDayOfWeek">
@@ -488,7 +557,7 @@ function LocalizationSettingsPage() {
                       </Label>
                       <Input
                         id="decimalSeparator"
-                        value={settings.numberFormat?.decimalSeparator || '.'}
+                        value={settings.numberFormat?.decimalSeparator || "."}
                         onChange={(e) =>
                           updateSettingsMutation.mutate({
                             numberFormat: {
@@ -506,7 +575,7 @@ function LocalizationSettingsPage() {
                       </Label>
                       <Input
                         id="thousandSeparator"
-                        value={settings.numberFormat?.thousandSeparator || ','}
+                        value={settings.numberFormat?.thousandSeparator || ","}
                         onChange={(e) =>
                           updateSettingsMutation.mutate({
                             numberFormat: {
@@ -520,8 +589,9 @@ function LocalizationSettingsPage() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Example: 1{settings.numberFormat?.thousandSeparator || ','}234
-                    {settings.numberFormat?.decimalSeparator || '.'}56
+                    Example: 1{settings.numberFormat?.thousandSeparator || ","}
+                    234
+                    {settings.numberFormat?.decimalSeparator || "."}56
                   </p>
                 </div>
 
@@ -535,7 +605,7 @@ function LocalizationSettingsPage() {
                       </Label>
                       <Input
                         id="currencySymbol"
-                        value={settings.currencyFormat?.symbol || '$'}
+                        value={settings.currencyFormat?.symbol || "$"}
                         onChange={(e) =>
                           updateSettingsMutation.mutate({
                             currencyFormat: {
@@ -551,7 +621,7 @@ function LocalizationSettingsPage() {
                         Symbol Position
                       </Label>
                       <Select
-                        value={settings.currencyFormat?.position || 'before'}
+                        value={settings.currencyFormat?.position || "before"}
                         onValueChange={(value) =>
                           updateSettingsMutation.mutate({
                             currencyFormat: {
@@ -577,19 +647,31 @@ function LocalizationSettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="timezone">Timezone</Label>
                   <Select
-                    value={settings.timezone || 'UTC'}
-                    onValueChange={(value) => updateSettingsMutation.mutate({ timezone: value })}
+                    value={settings.timezone || "UTC"}
+                    onValueChange={(value) =>
+                      updateSettingsMutation.mutate({ timezone: value })
+                    }
                   >
                     <SelectTrigger id="timezone">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                      <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                      <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                      <SelectItem value="Europe/London">London (GMT)</SelectItem>
+                      <SelectItem value="America/New_York">
+                        Eastern Time (ET)
+                      </SelectItem>
+                      <SelectItem value="America/Chicago">
+                        Central Time (CT)
+                      </SelectItem>
+                      <SelectItem value="America/Denver">
+                        Mountain Time (MT)
+                      </SelectItem>
+                      <SelectItem value="America/Los_Angeles">
+                        Pacific Time (PT)
+                      </SelectItem>
+                      <SelectItem value="Europe/London">
+                        London (GMT)
+                      </SelectItem>
                       <SelectItem value="Europe/Paris">Paris (CET)</SelectItem>
                       <SelectItem value="Asia/Tokyo">Tokyo (JST)</SelectItem>
                     </SelectContent>
@@ -601,7 +683,10 @@ function LocalizationSettingsPage() {
         </Tabs>
 
         {/* Add Language Dialog */}
-        <Dialog open={isAddLanguageDialogOpen} onOpenChange={setIsAddLanguageDialogOpen}>
+        <Dialog
+          open={isAddLanguageDialogOpen}
+          onOpenChange={setIsAddLanguageDialogOpen}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Language</DialogTitle>
@@ -612,25 +697,39 @@ function LocalizationSettingsPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="languageSelect">Language</Label>
-                <Select value={selectedLangCode} onValueChange={setSelectedLangCode}>
+                <Select
+                  value={selectedLangCode}
+                  onValueChange={setSelectedLangCode}
+                >
                   <SelectTrigger id="languageSelect">
                     <SelectValue placeholder="Select a language" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(supportedLanguages).map(([code, info]: [string, any]) => {
-                      const isAdded = languages.some((l: Language) => l.languageCode === code);
-                      return (
-                        <SelectItem key={code} value={code} disabled={isAdded}>
-                          {info.name} ({info.nativeName}) {isAdded && '✓'}
-                        </SelectItem>
-                      );
-                    })}
+                    {Object.entries(supportedLanguages).map(
+                      ([code, info]: [string, any]) => {
+                        const isAdded = languages.some(
+                          (l: Language) => l.languageCode === code,
+                        );
+                        return (
+                          <SelectItem
+                            key={code}
+                            value={code}
+                            disabled={isAdded}
+                          >
+                            {info.name} ({info.nativeName}) {isAdded && "✓"}
+                          </SelectItem>
+                        );
+                      },
+                    )}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddLanguageDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddLanguageDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button
@@ -648,18 +747,25 @@ function LocalizationSettingsPage() {
         </Dialog>
 
         {/* Delete Confirmation */}
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Language?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{selectedLanguage?.languageName}"? All
-                translations for this language will be permanently removed.
+                Are you sure you want to delete "
+                {selectedLanguage?.languageName}"? All translations for this
+                language will be permanently removed.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteLanguage} className="bg-destructive">
+              <AlertDialogAction
+                onClick={handleDeleteLanguage}
+                className="bg-destructive"
+              >
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>

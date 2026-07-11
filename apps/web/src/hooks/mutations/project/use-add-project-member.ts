@@ -36,7 +36,7 @@ function useAddProjectMember() {
       queryClient.invalidateQueries({
         queryKey: ["project-members", variables.projectId],
       });
-      
+
       // Also invalidate workspace users in case the member list affects it
       queryClient.invalidateQueries({
         queryKey: ["workspace-users"],
@@ -50,4 +50,4 @@ function useAddProjectMember() {
   });
 }
 
-export default useAddProjectMember; 
+export default useAddProjectMember;

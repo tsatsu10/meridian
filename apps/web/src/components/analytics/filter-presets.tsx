@@ -48,7 +48,10 @@ interface FilterPresetsProps {
 
 const PRESETS_STORAGE_KEY = "analytics-filter-presets";
 
-export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsProps) {
+export function FilterPresets({
+  currentFilters,
+  onApplyPreset,
+}: FilterPresetsProps) {
   const [presets, setPresets] = useState<FilterPreset[]>([]);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
@@ -96,31 +99,43 @@ export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsPr
     toast.success(`Filter preset "${newPreset.name}" saved`);
   }, [newPresetName, currentFilters, presets, savePresetsToStorage]);
 
-  const handleDeletePreset = useCallback((id: string) => {
-    const preset = presets.find((p) => p.id === id);
-    if (preset) {
-      const updatedPresets = presets.filter((p) => p.id !== id);
-      savePresetsToStorage(updatedPresets);
-      setDeletePresetId(null);
-      toast.success(`Filter preset "${preset.name}" deleted`);
-    }
-  }, [presets, savePresetsToStorage]);
+  const handleDeletePreset = useCallback(
+    (id: string) => {
+      const preset = presets.find((p) => p.id === id);
+      if (preset) {
+        const updatedPresets = presets.filter((p) => p.id !== id);
+        savePresetsToStorage(updatedPresets);
+        setDeletePresetId(null);
+        toast.success(`Filter preset "${preset.name}" deleted`);
+      }
+    },
+    [presets, savePresetsToStorage],
+  );
 
   const getPresetDescription = (preset: FilterPreset): string => {
     const parts: string[] = [];
-    
+
     // Time range
-    const timeRangeLabel = preset.timeRange === "7d" ? "7 days" : preset.timeRange === "30d" ? "30 days" : "90 days";
+    const timeRangeLabel =
+      preset.timeRange === "7d"
+        ? "7 days"
+        : preset.timeRange === "30d"
+          ? "30 days"
+          : "90 days";
     parts.push(timeRangeLabel);
 
     // Projects
     if (preset.selectedProjects.length > 0) {
-      parts.push(`${preset.selectedProjects.length} project${preset.selectedProjects.length > 1 ? 's' : ''}`);
+      parts.push(
+        `${preset.selectedProjects.length} project${preset.selectedProjects.length > 1 ? "s" : ""}`,
+      );
     }
 
     // Users
     if (preset.selectedUsers.length > 0) {
-      parts.push(`${preset.selectedUsers.length} user${preset.selectedUsers.length > 1 ? 's' : ''}`);
+      parts.push(
+        `${preset.selectedUsers.length} user${preset.selectedUsers.length > 1 ? "s" : ""}`,
+      );
     }
 
     // Comparison
@@ -149,7 +164,9 @@ export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsPr
       {presets.length === 0 ? (
         <Card className="p-4 text-center text-sm text-muted-foreground">
           <p>No saved presets yet.</p>
-          <p className="text-xs mt-1">Save your current filters to quickly apply them later.</p>
+          <p className="text-xs mt-1">
+            Save your current filters to quickly apply them later.
+          </p>
         </Card>
       ) : (
         <div className="space-y-2">
@@ -163,7 +180,9 @@ export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsPr
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <Star className="h-4 w-4 text-yellow-500 flex-shrink-0" />
-                    <h4 className="font-medium text-sm truncate">{preset.name}</h4>
+                    <h4 className="font-medium text-sm truncate">
+                      {preset.name}
+                    </h4>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {getPresetDescription(preset)}
@@ -196,7 +215,8 @@ export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsPr
               Save Filter Preset
             </DialogTitle>
             <DialogDescription>
-              Give your current filter configuration a name to save it for later use.
+              Give your current filter configuration a name to save it for later
+              use.
             </DialogDescription>
           </DialogHeader>
 
@@ -221,16 +241,22 @@ export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsPr
               <div className="space-y-1 text-xs text-muted-foreground">
                 <p>
                   <span className="font-medium">Time Range:</span>{" "}
-                  {currentFilters.timeRange === "7d" ? "7 days" : currentFilters.timeRange === "30d" ? "30 days" : "90 days"}
+                  {currentFilters.timeRange === "7d"
+                    ? "7 days"
+                    : currentFilters.timeRange === "30d"
+                      ? "30 days"
+                      : "90 days"}
                 </p>
                 {currentFilters.selectedProjects.length > 0 && (
                   <p>
-                    <span className="font-medium">Projects:</span> {currentFilters.selectedProjects.length} selected
+                    <span className="font-medium">Projects:</span>{" "}
+                    {currentFilters.selectedProjects.length} selected
                   </p>
                 )}
                 {currentFilters.selectedUsers.length > 0 && (
                   <p>
-                    <span className="font-medium">Users:</span> {currentFilters.selectedUsers.length} selected
+                    <span className="font-medium">Users:</span>{" "}
+                    {currentFilters.selectedUsers.length} selected
                   </p>
                 )}
                 {currentFilters.comparisonMode && (
@@ -255,19 +281,25 @@ export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsPr
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletePresetId} onOpenChange={() => setDeletePresetId(null)}>
+      <AlertDialog
+        open={!!deletePresetId}
+        onOpenChange={() => setDeletePresetId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Filter Preset?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete the filter preset "
-              {presets.find((p) => p.id === deletePresetId)?.name}". This action cannot be undone.
+              {presets.find((p) => p.id === deletePresetId)?.name}". This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deletePresetId && handleDeletePreset(deletePresetId)}
+              onClick={() =>
+                deletePresetId && handleDeletePreset(deletePresetId)
+              }
               className="bg-destructive hover:bg-destructive/90"
             >
               Delete
@@ -278,4 +310,3 @@ export function FilterPresets({ currentFilters, onApplyPreset }: FilterPresetsPr
     </div>
   );
 }
-

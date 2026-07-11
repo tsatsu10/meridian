@@ -1,5 +1,5 @@
-import { useState, } from "react";
-import { Card, CardContent, } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -15,7 +15,7 @@ import { SecurityMetricsCard } from "./security-metrics-card";
 import { SecurityAlertsList } from "./security-alerts-list";
 import { SecurityThreatChart } from "./security-threat-chart";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { SecurityMetrics, SecurityAlert } from "./types";
+import type { SecurityMetrics, SecurityAlert } from "./types";
 
 export function SecurityDashboardWidget() {
   const queryClient = useQueryClient();
@@ -23,21 +23,24 @@ export function SecurityDashboardWidget() {
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d">("7d");
 
   // Fetch security metrics
-  const { data: metrics, isLoading: metricsLoading } = useQuery<SecurityMetrics>({
-    queryKey: ["security-metrics"],
-    queryFn: async () => {
-      const response = await fetch("/api/security/metrics");
-      if (!response.ok) throw new Error("Failed to fetch security metrics");
-      return response.json();
-    },
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
+  const { data: metrics, isLoading: metricsLoading } =
+    useQuery<SecurityMetrics>({
+      queryKey: ["security-metrics"],
+      queryFn: async () => {
+        const response = await fetch("/api/security/metrics");
+        if (!response.ok) throw new Error("Failed to fetch security metrics");
+        return response.json();
+      },
+      refetchInterval: 30000, // Refresh every 30 seconds
+    });
 
   // Fetch security alerts
   const { data: alerts, isLoading: alertsLoading } = useQuery<SecurityAlert[]>({
     queryKey: ["security-alerts", timeRange],
     queryFn: async () => {
-      const response = await fetch(`/api/security/alerts?timeRange=${timeRange}`);
+      const response = await fetch(
+        `/api/security/alerts?timeRange=${timeRange}`,
+      );
       if (!response.ok) throw new Error("Failed to fetch security alerts");
       return response.json();
     },
@@ -48,7 +51,9 @@ export function SecurityDashboardWidget() {
   const { data: threatData, isLoading: threatLoading } = useQuery({
     queryKey: ["security-threats", timeRange],
     queryFn: async () => {
-      const response = await fetch(`/api/security/threats?timeRange=${timeRange}`);
+      const response = await fetch(
+        `/api/security/threats?timeRange=${timeRange}`,
+      );
       if (!response.ok) throw new Error("Failed to fetch threat data");
       return response.json();
     },
@@ -82,9 +87,9 @@ export function SecurityDashboardWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ timeRange }),
       });
-      
+
       if (!response.ok) throw new Error("Failed to export report");
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -99,7 +104,9 @@ export function SecurityDashboardWidget() {
     }
   };
 
-  const getSecurityScoreSeverity = (score: number): "critical" | "high" | "medium" | "low" | "info" => {
+  const getSecurityScoreSeverity = (
+    score: number,
+  ): "critical" | "high" | "medium" | "low" | "info" => {
     if (score < 40) return "critical";
     if (score < 60) return "high";
     if (score < 75) return "medium";
@@ -113,7 +120,9 @@ export function SecurityDashboardWidget() {
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Loading security dashboard...</span>
+            <span className="ml-2 text-muted-foreground">
+              Loading security dashboard...
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -133,7 +142,7 @@ export function SecurityDashboardWidget() {
             Monitor security metrics and respond to threats in real-time
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -164,10 +173,12 @@ export function SecurityDashboardWidget() {
           icon={Shield}
           severity={getSecurityScoreSeverity(metrics?.securityScore ?? 0)}
           description="Overall security health"
-          trend={metrics?.securityScore && metrics.securityScore > 75 ? "up" : "down"}
+          trend={
+            metrics?.securityScore && metrics.securityScore > 75 ? "up" : "down"
+          }
           trendValue={`${metrics?.securityScore ?? 0}/100`}
         />
-        
+
         <SecurityMetricsCard
           title="Active Threats"
           value={metrics?.activeThreats ?? 0}
@@ -176,12 +187,12 @@ export function SecurityDashboardWidget() {
             (metrics?.activeThreats ?? 0) > 10
               ? "critical"
               : (metrics?.activeThreats ?? 0) > 5
-              ? "high"
-              : "info"
+                ? "high"
+                : "info"
           }
           description="Requires attention"
         />
-        
+
         <SecurityMetricsCard
           title="Failed Logins"
           value={metrics?.failedLogins24h ?? 0}
@@ -190,13 +201,13 @@ export function SecurityDashboardWidget() {
             (metrics?.failedLogins24h ?? 0) > 50
               ? "high"
               : (metrics?.failedLogins24h ?? 0) > 20
-              ? "medium"
-              : "low"
+                ? "medium"
+                : "low"
           }
           description="Last 24 hours"
           trend={(metrics?.failedLogins24h ?? 0) > 20 ? "up" : "down"}
         />
-        
+
         <SecurityMetricsCard
           title="Active Sessions"
           value={metrics?.activeSessions ?? 0}
@@ -204,7 +215,7 @@ export function SecurityDashboardWidget() {
           severity="info"
           description="Current users online"
         />
-        
+
         <SecurityMetricsCard
           title="2FA Adoption"
           value={`${metrics?.twoFactorAdoption ?? 0}%`}
@@ -213,8 +224,8 @@ export function SecurityDashboardWidget() {
             (metrics?.twoFactorAdoption ?? 0) < 50
               ? "high"
               : (metrics?.twoFactorAdoption ?? 0) < 75
-              ? "medium"
-              : "low"
+                ? "medium"
+                : "low"
           }
           description="Team-wide adoption"
           trend={(metrics?.twoFactorAdoption ?? 0) > 50 ? "up" : "down"}
@@ -228,7 +239,7 @@ export function SecurityDashboardWidget() {
             Overview
           </TabsTrigger>
           <TabsTrigger value="alerts" className="text-sm">
-            Alerts ({alerts?.filter(a => !a.resolved).length ?? 0})
+            Alerts ({alerts?.filter((a) => !a.resolved).length ?? 0})
           </TabsTrigger>
           <TabsTrigger value="activity" className="text-sm">
             Activity
@@ -237,7 +248,10 @@ export function SecurityDashboardWidget() {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SecurityThreatChart data={threatData ?? []} timeRange={timeRange} />
+            <SecurityThreatChart
+              data={threatData ?? []}
+              timeRange={timeRange}
+            />
             <SecurityAlertsList
               alerts={alerts ?? []}
               maxItems={5}
@@ -272,7 +286,7 @@ export function SecurityDashboardWidget() {
               </Button>
             </div>
           </div>
-          
+
           <SecurityAlertsList
             alerts={alerts ?? []}
             maxItems={20}
@@ -287,4 +301,3 @@ export function SecurityDashboardWidget() {
     </div>
   );
 }
-
