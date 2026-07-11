@@ -346,7 +346,10 @@ export const useAuthStore = create<AuthStore>()(
       hasPermission: (action) => {
         const { user } = get();
         if (!user || !user.permissions) return false;
-        return (user.permissions as any)[action] === true;
+        return (
+          (user.permissions as unknown as Record<string, boolean>)[action] ===
+          true
+        );
       },
 
       canAccessResource: (_resource, level) => {
