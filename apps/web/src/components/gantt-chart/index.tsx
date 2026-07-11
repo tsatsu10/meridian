@@ -150,7 +150,9 @@ function GanttChart({ tasks }: GanttChartProps) {
   const taskListRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const [hoveredTask, setHoveredTask] = useState<GanttTask | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown> | null>(
+    null,
+  );
 
   // Calendar manipulation state
   const [viewMode, setViewMode] = useState<"days" | "weeks" | "months">("days");
