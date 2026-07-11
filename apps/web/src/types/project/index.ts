@@ -31,6 +31,8 @@ export type ProjectColumn = {
   name: string;
   tasks: Task[];
   dbId?: string;
+  color?: string;
+  position?: number;
   isDefault?: boolean;
 };
 

@@ -50,15 +50,14 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
   const deleteStatusColumn = useDeleteStatusColumn();
 
   // Type-safe task calculations
-  const taskCount = (column?.tasks as any[])?.length || 0;
+  const taskCount = column?.tasks?.length || 0;
   const completedTasks =
-    (column?.tasks as any[])?.filter((task: any) => task.status === "done")
-      .length || 0;
+    column?.tasks?.filter((task) => task.status === "done").length || 0;
   const progressPercentage =
     taskCount > 0 ? Math.round((completedTasks / taskCount) * 100) : 0;
 
   // 🚦 WIP LIMIT CALCULATIONS: Visual warnings for work-in-progress limits
-  const columnId = (column as any)?.id || "default";
+  const columnId = column?.id || "default";
   const wipLimit = WIP_LIMITS[columnId] || WIP_LIMITS.default;
   const wipPercentage = (taskCount / wipLimit) * 100;
   const isApproachingLimit = wipPercentage >= 75 && wipPercentage < 100;
@@ -80,9 +79,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
     if (!project?.columns) return undefined;
 
     // Find the current column in the columns array
-    const currentColumn = project.columns.find(
-      (col: any) => col.id === (column as any)?.id,
-    );
+    const currentColumn = project.columns.find((col) => col.id === column?.id);
     if (!currentColumn) return undefined;
 
     // For default columns, use their predictable positions + 1
@@ -101,11 +98,9 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
     // For custom columns, we need to find their actual visual position
     // Sort columns the same way the backend does: by position, with conflict resolution
-    const sortedColumns = [...project.columns].sort((a: any, b: any) => {
-      const posA =
-        "position" in a && typeof a.position === "number" ? a.position : 999;
-      const posB =
-        "position" in b && typeof b.position === "number" ? b.position : 999;
+    const sortedColumns = [...project.columns].sort((a, b) => {
+      const posA = typeof a.position === "number" ? a.position : 999;
+      const posB = typeof b.position === "number" ? b.position : 999;
 
       // If positions are equal, prioritize defaults first, then by creation order (ID)
       if (posA === posB) {
@@ -119,7 +114,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
     // Find the visual index of the current column
     const currentIndex = sortedColumns.findIndex(
-      (col: any) => col.id === (column as any)?.id,
+      (col) => col.id === column?.id,
     );
 
     // Insert after this column's visual position
@@ -138,7 +133,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
     try {
       // Move all tasks in this column to "archived" status
-      const tasksToArchive = (column?.tasks as any[]) || [];
+      const tasksToArchive = column?.tasks || [];
 
       for (const task of tasksToArchive) {
         await updateTask.mutateAsync({
@@ -159,14 +154,12 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
       // Update local state to remove the column
       setProject(
-        produce(project, (draft: any) => {
-          draft.columns = draft.columns.filter(
-            (col: any) => col.id !== (column as any)?.id,
-          );
+        produce(project, (draft) => {
+          draft.columns = draft.columns.filter((col) => col.id !== column?.id);
         }),
       );
 
-      toast.success(`"${(column as any)?.name}" column archived successfully`);
+      toast.success(`"${column?.name}" column archived successfully`);
     } catch (error) {
       toast.error("Failed to archive column");
       console.error(error);
@@ -174,7 +167,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
   };
 
   const handleDeleteColumn = async () => {
-    if (!project || !(column as any)?.id) return;
+    if (!project || !column?.id) return;
 
     // Check if column has tasks
     if (taskCount > 0) {
@@ -187,19 +180,17 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
     try {
       await deleteStatusColumn.mutateAsync({
         projectId: project.id,
-        columnId: (column as any)?.id,
+        columnId: column.id,
       });
 
       // Update local state to remove the column
       setProject(
-        produce(project, (draft: any) => {
-          draft.columns = draft.columns.filter(
-            (col: any) => col.id !== (column as any)?.id,
-          );
+        produce(project, (draft) => {
+          draft.columns = draft.columns.filter((col) => col.id !== column.id);
         }),
       );
 
-      toast.success(`"${(column as any)?.name}" column deleted successfully`);
+      toast.success(`"${column?.name}" column deleted successfully`);
     } catch (error) {
       toast.error("Failed to delete column");
       console.error(error);
@@ -223,22 +214,22 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
             <div
               className="w-3 h-3 rounded-full shadow-sm border border-white/20 dark:border-zinc-700/20 transition-all duration-200 group-hover/header:scale-110"
               style={{
-                backgroundColor: (column as any)?.color || "#6b7280",
-                boxShadow: `0 0 0 2px ${(column as any)?.color || "#6b7280"}20`,
+                backgroundColor: column?.color || "#6b7280",
+                boxShadow: `0 0 0 2px ${column?.color || "#6b7280"}20`,
               }}
             />
             {/* Subtle pulsing animation for active columns */}
             {taskCount > 0 && (
               <div
                 className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
-                style={{ backgroundColor: (column as any)?.color || "#6b7280" }}
+                style={{ backgroundColor: column?.color || "#6b7280" }}
               />
             )}
           </div>
 
           {/* Enhanced column title with better typography */}
           <h3 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 tracking-tight">
-            {(column as any)?.name}
+            {column?.name}
           </h3>
 
           {/* @persona-sarah: Enhanced task count badge for PM visibility */}
@@ -298,7 +289,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
             </TooltipProvider>
 
             {/* @persona-jennifer: Progress indicator for executive overview */}
-            {!(column as any)?.isDefault && progressPercentage > 0 && (
+            {!column?.isDefault && progressPercentage > 0 && (
               <Badge
                 variant="outline"
                 className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 shadow-sm"
@@ -326,7 +317,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
           </Button>
 
           {/* Enhanced Column Settings for custom columns */}
-          {!(column as any)?.isDefault && (
+          {!column?.isDefault && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

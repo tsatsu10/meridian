@@ -1,7 +1,11 @@
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
-import type { ProjectWithTasks } from "@/types/project";
-import type { TaskWithSubtasks, TaskWithDependencies } from "@/types/task";
+import type { ProjectColumn, ProjectWithTasks } from "@/types/project";
+import type {
+  TaskDependency,
+  TaskWithSubtasks,
+  TaskWithDependencies,
+} from "@/types/task";
 import {
   flattenTasks,
   findTaskInHierarchy,
@@ -45,12 +49,8 @@ interface KanbanBoardProps {
 // Type guard to ensure project has columns
 const hasColumns = (
   project: ProjectWithTasks,
-): project is ProjectWithTasks & { columns: Array<any> } => {
-  return (
-    project &&
-    Array.isArray((project as any).columns) &&
-    (project as any).columns.length > 0
-  );
+): project is ProjectWithTasks & { columns: ProjectColumn[] } => {
+  return Array.isArray(project.columns) && project.columns.length > 0;
 };
 
 // @epic-1.2-dependencies: Dependency validation for task movement
@@ -65,14 +65,16 @@ const validateTaskMove = (
 
   // Block completion if dependencies aren't done
   if (newStatus === "done") {
-    const incompleteBlockers = (task.blockedBy || []).filter((dep: any) => {
-      const requiredTask = allTasks.find((t) => t.id === dep.requiredTaskId);
-      return requiredTask && requiredTask.status !== "done";
-    });
+    const incompleteBlockers = (task.blockedBy || []).filter(
+      (dep: TaskDependency) => {
+        const requiredTask = allTasks.find((t) => t.id === dep.requiredTaskId);
+        return requiredTask && requiredTask.status !== "done";
+      },
+    );
 
     if (incompleteBlockers.length > 0) {
       const blockerNames = incompleteBlockers
-        .map((dep: any) => {
+        .map((dep: TaskDependency) => {
           const requiredTask = allTasks.find(
             (t) => t.id === dep.requiredTaskId,
           );
@@ -93,14 +95,16 @@ const validateTaskMove = (
 
   // Warn about starting blocked tasks
   if (newStatus === "in_progress") {
-    const incompleteBlockers = (task.blockedBy || []).filter((dep: any) => {
-      const requiredTask = allTasks.find((t) => t.id === dep.requiredTaskId);
-      return requiredTask && requiredTask.status !== "done";
-    });
+    const incompleteBlockers = (task.blockedBy || []).filter(
+      (dep: TaskDependency) => {
+        const requiredTask = allTasks.find((t) => t.id === dep.requiredTaskId);
+        return requiredTask && requiredTask.status !== "done";
+      },
+    );
 
     if (incompleteBlockers.length > 0) {
       const blockerNames = incompleteBlockers
-        .map((dep: any) => {
+        .map((dep: TaskDependency) => {
           const requiredTask = allTasks.find(
             (t) => t.id === dep.requiredTaskId,
           );
@@ -116,17 +120,21 @@ const validateTaskMove = (
 
   // Warn about moving tasks that block others
   if (newStatus === "todo" && task.status !== "todo") {
-    const dependentTasks = (task.dependencies || []).filter((dep: any) => {
-      const dependentTask = allTasks.find((t) => t.id === dep.dependentTaskId);
-      return (
-        dependentTask &&
-        ["in_progress", "done", "done"].includes(dependentTask.status)
-      );
-    });
+    const dependentTasks = (task.dependencies || []).filter(
+      (dep: TaskDependency) => {
+        const dependentTask = allTasks.find(
+          (t) => t.id === dep.dependentTaskId,
+        );
+        return (
+          dependentTask &&
+          ["in_progress", "done", "done"].includes(dependentTask.status)
+        );
+      },
+    );
 
     if (dependentTasks.length > 0) {
       const dependentNames = dependentTasks
-        .map((dep: any) => {
+        .map((dep: TaskDependency) => {
           const dependentTask = allTasks.find(
             (t) => t.id === dep.dependentTaskId,
           );
@@ -142,14 +150,18 @@ const validateTaskMove = (
 
   // Warning for reopening completed tasks
   if (task.status === "done" && newStatus !== "done") {
-    const dependentTasks = (task.dependencies || []).filter((dep: any) => {
-      const dependentTask = allTasks.find((t) => t.id === dep.dependentTaskId);
-      return dependentTask && dependentTask.status === "done";
-    });
+    const dependentTasks = (task.dependencies || []).filter(
+      (dep: TaskDependency) => {
+        const dependentTask = allTasks.find(
+          (t) => t.id === dep.dependentTaskId,
+        );
+        return dependentTask && dependentTask.status === "done";
+      },
+    );
 
     if (dependentTasks.length > 0) {
       const dependentNames = dependentTasks
-        .map((dep: any) => {
+        .map((dep: TaskDependency) => {
           const dependentTask = allTasks.find(
             (t) => t.id === dep.dependentTaskId,
           );
@@ -171,8 +183,7 @@ const validateTaskMove = (
 };
 
 function KanbanBoard({ project }: KanbanBoardProps) {
-  // TypeScript sometimes loses the type for project.id due to complex inference; force as any for id access
-  const projectId = (project as any).id;
+  const projectId = project.id;
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const { createMilestone } = useMilestones(projectId);
@@ -187,7 +198,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
     if (!hasColumns(project)) return;
 
     for (const taskId of taskIds) {
-      const allTasks = (project as any).columns.flatMap((col: any) =>
+      const allTasks = project.columns.flatMap((col) =>
         flattenTasks(col.tasks),
       );
       const task = findTaskInHierarchy(taskId, allTasks);
@@ -222,9 +233,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
     const overData = over.data.current;
 
     // Get all tasks for hierarchy validation
-    const allTasks = (project as any).columns.flatMap((col: any) =>
-      flattenTasks(col.tasks),
-    );
+    const allTasks = project.columns.flatMap((col) => flattenTasks(col.tasks));
 
     // Find the dragged task
     const draggedTask = findTaskInHierarchy(activeId, allTasks);
@@ -236,18 +245,16 @@ function KanbanBoard({ project }: KanbanBoardProps) {
 
     // Handle column drops and task reordering// Find source and destination columns
     // For subtasks, we need to find which column contains the task (not necessarily where the parent is)
-    const sourceColumn = (project as any).columns.find((col: any) => {
+    const sourceColumn = project.columns.find((col) => {
       const allTasksInColumn = flattenTasks(col.tasks);
-      const taskFound = allTasksInColumn.some(
-        (task: any) => task.id === activeId,
-      );
+      const taskFound = allTasksInColumn.some((task) => task.id === activeId);
       return taskFound;
     });
 
     // Check if dropping on a column by looking at overData.type first
     const destinationColumn =
       overData?.type === "column"
-        ? (project as any).columns.find((col: any) => col.id === overId)
+        ? project.columns.find((col) => col.id === overId)
         : null;
     if (!sourceColumn) {
       console.error("Source column not found for task:", activeId);
@@ -264,7 +271,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
           draggedTask as TaskWithDependencies,
           destinationColumn.id,
           allTasks,
-          (project as any).slug || "",
+          project.slug || "",
         );
 
         if (!validation.canMove) {
@@ -311,7 +318,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
             position: index + 1, // Will be recalculated by API
           };
           updateTask(updatedTask, {
-            onError: (error: any) => {
+            onError: (error: unknown) => {
               console.error(
                 `Failed to update task ${updatedTask.title}:`,
                 error,
@@ -346,9 +353,9 @@ function KanbanBoard({ project }: KanbanBoardProps) {
         }
 
         // Find which column the target task is in
-        const targetColumn = (project as any).columns.find((col: any) => {
+        const targetColumn = project.columns.find((col) => {
           const allTasksInColumn = flattenTasks(col.tasks);
-          return allTasksInColumn.some((task: any) => task.id === overId);
+          return allTasksInColumn.some((task) => task.id === overId);
         });
 
         if (!targetColumn) {
@@ -364,7 +371,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
         };
 
         updateTask(updatedTask, {
-          onError: (error: any) => {
+          onError: (error: unknown) => {
             console.error("Failed to reorder task:", error);
             toast.error("Failed to reorder task. Please try again.");
           },
@@ -426,9 +433,9 @@ function KanbanBoard({ project }: KanbanBoardProps) {
 
   const activeTask =
     activeId && hasColumns(project)
-      ? (project as any).columns
-          .flatMap((col: any) => flattenTasks(col.tasks))
-          .find((task: any) => task.id === activeId)
+      ? project.columns
+          .flatMap((col) => flattenTasks(col.tasks))
+          .find((task) => task.id === activeId)
       : null;
 
   return (
@@ -463,18 +470,17 @@ function KanbanBoard({ project }: KanbanBoardProps) {
             <div className="px-6 py-6 flex items-center justify-between">
               <div className="flex flex-col items-center justify-center gap-2 flex-1">
                 <h1 className="text-3xl font-extrabold bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-100 dark:to-zinc-400 bg-clip-text text-transparent tracking-tight">
-                  {(project as any)?.name || "Project"}
+                  {project.name || "Project"}
                 </h1>
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center gap-2 text-base text-zinc-500 dark:text-zinc-400">
                     <span className="font-semibold">
-                      {(project as any).columns?.length || 0} columns
+                      {project.columns?.length || 0} columns
                     </span>
                     <span>•</span>
                     <span>
-                      {(project as any).columns?.reduce(
-                        (acc: number, col: any) =>
-                          acc + (col.tasks?.length || 0),
+                      {project.columns?.reduce(
+                        (acc, col) => acc + (col.tasks?.length || 0),
                         0,
                       ) || 0}{" "}
                       tasks
@@ -508,11 +514,9 @@ function KanbanBoard({ project }: KanbanBoardProps) {
           <div className="flex-1 h-full overflow-auto relative z-10">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-3 sm:p-6 min-h-full">
               {hasColumns(project) ? (
-                (project as any).columns
-                  .sort(
-                    (a: any, b: any) => (a.position || 0) - (b.position || 0),
-                  )
-                  .map((column: any, index: number) => (
+                project.columns
+                  .sort((a, b) => (a.position || 0) - (b.position || 0))
+                  .map((column, index) => (
                     <BlurFade
                       key={column.id}
                       delay={0.1 + index * 0.05}
@@ -595,7 +599,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
         open={isMilestoneModalOpen}
         onClose={() => setIsMilestoneModalOpen(false)}
         projectId={projectId}
-        projectName={(project as any)?.name}
+        projectName={project.name}
         onMilestoneCreated={(milestone) => {
           createMilestone({
             ...milestone,
