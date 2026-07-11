@@ -165,7 +165,12 @@ const FilterSection: React.FC<FilterSectionProps> = ({
  * - Mobile accessible (48px touch targets)
  */
 interface ProjectFiltersAccessibleProps {
-  projects?: any[];
+  projects?: Array<{
+    status?: string | null;
+    priority?: string | null;
+    health?: string | null;
+    ownerId?: string | null;
+  }>;
   owners?: Array<{ id: string; name: string }>;
   teamMembers?: Array<{ id: string; name: string }>;
   onFiltersChange?: () => void;
