@@ -451,22 +451,28 @@ function ProfilePageRedesigned() {
                         </Badge>
                       </h3>
                       <div className="space-y-2">
-                        {profile.teams.map((team: any) => (
-                          <div
-                            key={team.id}
-                            className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-muted/50 to-transparent hover:from-muted hover:shadow-sm transition-all group cursor-pointer"
-                          >
-                            <span className="text-sm font-medium group-hover:text-primary transition-colors">
-                              {team.name}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className="text-xs group-hover:border-primary transition-colors"
+                        {profile.teams.map(
+                          (team: {
+                            id: string;
+                            name: string;
+                            role: string;
+                          }) => (
+                            <div
+                              key={team.id}
+                              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-muted/50 to-transparent hover:from-muted hover:shadow-sm transition-all group cursor-pointer"
                             >
-                              {team.role}
-                            </Badge>
-                          </div>
-                        ))}
+                              <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                                {team.name}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className="text-xs group-hover:border-primary transition-colors"
+                              >
+                                {team.role}
+                              </Badge>
+                            </div>
+                          ),
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -512,7 +518,7 @@ function ProfilePageRedesigned() {
                   <CardContent className="p-6">
                     <Tabs
                       value={activeTab}
-                      onValueChange={(v: any) => setActiveTab(v)}
+                      onValueChange={(v) => setActiveTab(v as typeof activeTab)}
                     >
                       <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted/50">
                         <TabsTrigger
@@ -561,22 +567,28 @@ function ProfilePageRedesigned() {
                               Projects ({profile.projects.length})
                             </h3>
                             <div className="grid gap-3">
-                              {profile.projects.map((project: any) => (
-                                <div
-                                  key={project.id}
-                                  className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-background to-muted/30 hover:shadow-md transition-all group cursor-pointer"
-                                >
-                                  <span className="text-sm font-medium group-hover:text-primary transition-colors">
-                                    {project.name}
-                                  </span>
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs group-hover:border-primary transition-colors"
+                              {profile.projects.map(
+                                (project: {
+                                  id: string;
+                                  name: string;
+                                  role: string;
+                                }) => (
+                                  <div
+                                    key={project.id}
+                                    className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-background to-muted/30 hover:shadow-md transition-all group cursor-pointer"
                                   >
-                                    {project.role}
-                                  </Badge>
-                                </div>
-                              ))}
+                                    <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                                      {project.name}
+                                    </span>
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs group-hover:border-primary transition-colors"
+                                    >
+                                      {project.role}
+                                    </Badge>
+                                  </div>
+                                ),
+                              )}
                             </div>
                           </div>
                         )}
@@ -627,7 +639,17 @@ function ProfilePageRedesigned() {
                         profile.goals.active.length > 0 ? (
                           <div className="space-y-4">
                             {profile.goals.active.map(
-                              (goal: any, _index: number) => (
+                              (
+                                goal: {
+                                  id: string;
+                                  title: string;
+                                  description?: string;
+                                  progress: number;
+                                  deadline?: string;
+                                  keyResults?: { isCompleted?: boolean }[];
+                                },
+                                _index: number,
+                              ) => (
                                 <Card
                                   key={goal.id}
                                   className="overflow-hidden group hover:shadow-xl hover:border-blue-500/50 transition-all cursor-pointer"
@@ -687,13 +709,13 @@ function ProfilePageRedesigned() {
                                             <Target className="h-3 w-3" />
                                             {goal.keyResults.length} key results
                                             {goal.keyResults.filter(
-                                              (kr: any) => kr.isCompleted,
+                                              (kr) => kr.isCompleted,
                                             ).length > 0 && (
                                               <span className="text-green-600">
                                                 ·{" "}
                                                 {
                                                   goal.keyResults.filter(
-                                                    (kr: any) => kr.isCompleted,
+                                                    (kr) => kr.isCompleted,
                                                   ).length
                                                 }{" "}
                                                 completed
