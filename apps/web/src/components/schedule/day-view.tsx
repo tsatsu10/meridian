@@ -222,7 +222,7 @@ export default function DayView({
                                       <div className="flex -space-x-2">
                                         {event.attendees
                                           .slice(0, 3)
-                                          .map((participant: any, i: any) => (
+                                          .map((participant: string, i: number) => (
                                             <div
                                               key={i}
                                               className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-xs font-semibold"
