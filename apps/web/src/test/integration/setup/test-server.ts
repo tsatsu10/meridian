@@ -64,7 +64,7 @@ export async function createTestUser(
   password: string,
 ): Promise<{
   token: string;
-  user: any;
+  user: unknown;
 }> {
   const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
     method: "POST",
