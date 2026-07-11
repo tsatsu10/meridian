@@ -42,6 +42,12 @@ interface SearchFiltersProps {
   resultCount?: number;
 }
 
+// Must be referentially stable: an inline `activeFilters = {}` default creates
+// a new object every render, so the sync effect below re-fires and setFilters
+// re-renders forever (passive-effect loops never trip React's update-depth
+// guard — the file span until the vitest worker OOM'd).
+const NO_ACTIVE_FILTERS: Record<string, string[]> = {};
+
 function SearchFilters({
   filterGroups = [],
   searchPlaceholder = "Search...",
@@ -49,7 +55,7 @@ function SearchFilters({
   onFilterChange,
   onClearAll,
   onSaveFilter,
-  activeFilters = {},
+  activeFilters = NO_ACTIVE_FILTERS,
   resultCount,
 }: SearchFiltersProps) {
   const [searchQuery, setSearchQuery] = React.useState("");

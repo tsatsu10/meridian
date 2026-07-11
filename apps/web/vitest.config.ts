@@ -19,7 +19,10 @@ export default defineConfig({
     pool: "forks",
     poolOptions: {
       forks: {
-        execArgv: ["--max-old-space-size=4096"],
+        // Headroom over Node's ~4GB default; a runaway test renders as heap
+        // exhaustion in whichever worker it lands in, so a higher ceiling only
+        // delays that crash — fix the test, don't raise this further.
+        execArgv: ["--max-old-space-size=6144"],
       },
     },
     // The orchestrator process also OOMs at Node's default ~4GB ceiling when it
