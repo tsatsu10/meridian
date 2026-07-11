@@ -156,7 +156,7 @@ const TaskCard = React.memo(
                 title="Drag to move task"
                 aria-label="Drag to reorder task"
               >
-                <svg
+                <svg aria-hidden="true"
                   className="w-3 h-3 text-muted-foreground"
                   fill="currentColor"
                   viewBox="0 0 20 20"
@@ -350,7 +350,7 @@ const TaskCard = React.memo(
                                 className="text-blue-500 hover:text-blue-700 p-0.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                 title="Edit Subtask (Team Lead)"
                               >
-                                <svg
+                                <svg aria-hidden="true"
                                   className="w-3 h-3"
                                   fill="none"
                                   stroke="currentColor"
@@ -376,7 +376,7 @@ const TaskCard = React.memo(
                                 className="text-red-500 hover:text-red-700 p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
                                 title="Delete Subtask (Team Lead)"
                               >
-                                <svg
+                                <svg aria-hidden="true"
                                   className="w-3 h-3"
                                   fill="none"
                                   stroke="currentColor"
@@ -408,7 +408,7 @@ const TaskCard = React.memo(
                       className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-md cursor-help"
                       title={`Blocks: ${(task.dependencies ?? []).map((dep) => dep.requiredTask?.title || "Unknown task").join(", ")}`}
                     >
-                      <svg
+                      <svg aria-hidden="true"
                         className="w-3 h-3 text-blue-500"
                         fill="none"
                         stroke="currentColor"
@@ -431,7 +431,7 @@ const TaskCard = React.memo(
                       className="flex items-center gap-1 px-2 py-1 bg-orange-50 dark:bg-orange-900/20 rounded-md cursor-help"
                       title={`Blocked by: ${(task.blockedBy ?? []).map((dep) => dep.dependentTask?.title || "Unknown task").join(", ")}`}
                     >
-                      <svg
+                      <svg aria-hidden="true"
                         className="w-3 h-3 text-orange-500"
                         fill="none"
                         stroke="currentColor"

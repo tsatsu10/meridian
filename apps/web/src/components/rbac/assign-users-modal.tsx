@@ -60,7 +60,13 @@ export function AssignUsersModal({
   // Fetch real workspace users
   const { data: workspaceUsersData, isLoading: isLoadingUsers } = useQuery({
     queryKey: ["workspace-users", workspace?.id],
-    queryFn: () => getWorkspaceUsers({ param: { workspaceId: workspace!.id } }),
+    queryFn: () => {
+      if (!workspace?.id) {
+        // `enabled` prevents this; guard instead of asserting non-null.
+        throw new Error("workspace is required to load workspace users");
+      }
+      return getWorkspaceUsers({ param: { workspaceId: workspace.id } });
+    },
     enabled: !!workspace?.id && open,
   });
 

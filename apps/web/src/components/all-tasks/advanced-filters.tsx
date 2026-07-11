@@ -21,7 +21,7 @@ import { format } from "date-fns";
 
 // Icon components with proper typing
 const FilterIcon = ({ className }: { className?: string }) => (
-  <svg
+  <svg aria-hidden="true"
     className={className}
     fill="none"
     stroke="currentColor"
@@ -40,7 +40,7 @@ const XIcon = ({
   className,
   onClick,
 }: { className?: string; onClick?: () => void }) => (
-  <svg
+  <svg aria-hidden="true"
     className={className}
     onClick={onClick}
     fill="none"
@@ -57,7 +57,7 @@ const XIcon = ({
 );
 
 const UserIcon = ({ className }: { className?: string }) => (
-  <svg
+  <svg aria-hidden="true"
     className={className}
     fill="none"
     stroke="currentColor"
@@ -73,7 +73,7 @@ const UserIcon = ({ className }: { className?: string }) => (
 );
 
 const ClockIcon = ({ className }: { className?: string }) => (
-  <svg
+  <svg aria-hidden="true"
     className={className}
     fill="none"
     stroke="currentColor"
@@ -89,7 +89,7 @@ const ClockIcon = ({ className }: { className?: string }) => (
 );
 
 const FlagIcon = ({ className }: { className?: string }) => (
-  <svg
+  <svg aria-hidden="true"
     className={className}
     fill="none"
     stroke="currentColor"
@@ -105,7 +105,7 @@ const FlagIcon = ({ className }: { className?: string }) => (
 );
 
 const FolderIcon = ({ className }: { className?: string }) => (
-  <svg
+  <svg aria-hidden="true"
     className={className}
     fill="none"
     stroke="currentColor"
@@ -121,7 +121,7 @@ const FolderIcon = ({ className }: { className?: string }) => (
 );
 
 const CalendarIcon = ({ className }: { className?: string }) => (
-  <svg
+  <svg aria-hidden="true"
     className={className}
     fill="none"
     stroke="currentColor"

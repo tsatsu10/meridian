@@ -537,7 +537,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
                   <div className="flex-1 flex items-center justify-center min-h-[400px]">
                     <div className="text-center space-y-4">
                       <div className="w-16 h-16 bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 rounded-full flex items-center justify-center mx-auto">
-                        <svg
+                        <svg aria-hidden="true"
                           className="w-8 h-8 text-zinc-400 dark:text-zinc-500"
                           fill="none"
                           stroke="currentColor"

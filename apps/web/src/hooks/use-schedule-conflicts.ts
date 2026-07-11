@@ -30,10 +30,12 @@ export function useScheduleConflicts({
     const memberEventMap = new Map<string, CalendarEvent[]>();
     events.forEach((event) => {
       event.attendees.forEach((memberId) => {
-        if (!memberEventMap.has(memberId)) {
-          memberEventMap.set(memberId, []);
+        let memberEvents = memberEventMap.get(memberId);
+        if (!memberEvents) {
+          memberEvents = [];
+          memberEventMap.set(memberId, memberEvents);
         }
-        memberEventMap.get(memberId)!.push(event);
+        memberEvents.push(event);
       });
     });
 

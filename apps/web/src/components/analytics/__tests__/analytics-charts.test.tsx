@@ -144,7 +144,7 @@ function AnalyticsCharts({
         role="img"
         aria-label={`${selectedType} chart showing ${title}`}
       >
-        <svg width="100%" height="100%" data-chart-type={selectedType}>
+        <svg aria-hidden="true" width="100%" height="100%" data-chart-type={selectedType}>
           {/* Simplified SVG representation */}
           <rect width="100%" height="100%" fill="#f5f5f5" />
           <text x="50%" y="50%" textAnchor="middle" fill="#666">

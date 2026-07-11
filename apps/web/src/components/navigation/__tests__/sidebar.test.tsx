@@ -86,6 +86,7 @@ function Sidebar({
             }
           }}
           role="button"
+          tabIndex={0}
           aria-current={isActive ? "page" : undefined}
           aria-expanded={hasChildren ? isExpanded : undefined}
         >
@@ -98,7 +99,9 @@ function Sidebar({
 
         {hasChildren && isExpanded && !isCollapsed && (
           <ul className="nav-children" >
-            {item.children!.map((child) => renderNavItem(child, depth + 1))}
+            {(item.children ?? []).map((child) =>
+              renderNavItem(child, depth + 1),
+            )}
           </ul>
         )}
       </li>

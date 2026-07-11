@@ -198,6 +198,7 @@ function FileUpload({
                       aria-valuemin={0}
                       aria-valuemax={100}
                       aria-label={`Upload progress: ${file.progress}%`}
+                      tabIndex={0}
                     />
                   </div>
                 )}

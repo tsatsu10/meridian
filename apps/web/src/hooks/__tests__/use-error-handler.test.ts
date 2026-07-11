@@ -62,7 +62,7 @@ describe("useErrorHandler", () => {
 
     await act(async () => {
       vi.advanceTimersByTime(1000);
-      await expect(firstAttempt!).rejects.toThrow("First attempt failed");
+      await expect(firstAttempt).rejects.toThrow("First attempt failed");
     });
 
     expect(result.current.retryCount).toBe(1);
@@ -75,7 +75,7 @@ describe("useErrorHandler", () => {
 
     await act(async () => {
       vi.advanceTimersByTime(1000);
-      await secondAttempt!;
+      await secondAttempt;
     });
 
     expect(result.current.error).toBeNull();
@@ -99,7 +99,7 @@ describe("useErrorHandler", () => {
       });
       await act(async () => {
         vi.advanceTimersByTime(1000);
-        await attempt!.catch(() => {
+        await attempt.catch(() => {
           // Expected to throw
         });
       });
@@ -160,7 +160,7 @@ describe("useApiCall", () => {
     expect(result.current.isLoading).toBe(true);
 
     await act(async () => {
-      await executePromise!;
+      await executePromise;
     });
 
     expect(result.current.data).toBe("API response");
@@ -180,7 +180,7 @@ describe("useApiCall", () => {
 
     await act(async () => {
       try {
-        await executePromise!;
+        await executePromise;
       } catch (error) {
         // Expected to throw
       }
@@ -206,7 +206,7 @@ describe("useApiCall", () => {
     });
     await act(async () => {
       vi.advanceTimersByTime(1000);
-      await expect(firstAttempt!).rejects.toThrow("First attempt failed");
+      await expect(firstAttempt).rejects.toThrow("First attempt failed");
     });
 
     // Second retry attempt succeeds
@@ -216,7 +216,7 @@ describe("useApiCall", () => {
     });
     await act(async () => {
       vi.advanceTimersByTime(1000);
-      await secondAttempt!;
+      await secondAttempt;
     });
 
     expect(result.current.data).toBe("Success");
@@ -247,7 +247,7 @@ describe("useAsyncOperation", () => {
     });
 
     await act(async () => {
-      await executePromise!;
+      await executePromise;
     });
 
     expect(mockOperation).toHaveBeenCalledWith("param1", "param2");
@@ -268,7 +268,7 @@ describe("useAsyncOperation", () => {
 
     await act(async () => {
       try {
-        await executePromise!;
+        await executePromise;
       } catch (error) {
         // Expected to throw
       }
@@ -305,7 +305,7 @@ describe("useFormSubmission", () => {
     expect(result.current.isSuccess).toBe(false);
 
     await act(async () => {
-      await submitPromise!;
+      await submitPromise;
     });
 
     expect(mockSubmitFn).toHaveBeenCalledWith(formData);
@@ -328,7 +328,7 @@ describe("useFormSubmission", () => {
 
     await act(async () => {
       try {
-        await submitPromise!;
+        await submitPromise;
       } catch (error) {
         // Expected to throw
       }
@@ -356,7 +356,7 @@ describe("useFormSubmission", () => {
     });
     await act(async () => {
       vi.advanceTimersByTime(1000);
-      await expect(firstAttempt!).rejects.toThrow("First attempt failed");
+      await expect(firstAttempt).rejects.toThrow("First attempt failed");
     });
 
     // Second retry attempt succeeds
@@ -366,7 +366,7 @@ describe("useFormSubmission", () => {
     });
     await act(async () => {
       vi.advanceTimersByTime(1000);
-      await secondAttempt!;
+      await secondAttempt;
     });
 
     expect(result.current.isSuccess).toBe(true);

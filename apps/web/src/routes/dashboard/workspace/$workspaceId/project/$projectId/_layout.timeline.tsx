@@ -544,7 +544,8 @@ function ProjectTimeline() {
     const stack = [...newDeps];
 
     while (stack.length > 0) {
-      const currentId = stack.pop()!;
+      const currentId = stack.pop();
+      if (currentId === undefined) break;
 
       if (visited.has(currentId)) continue;
       visited.add(currentId);

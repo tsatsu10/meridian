@@ -53,7 +53,8 @@ export function DependencyGraph({
 
     // Calculate levels (depth in dependency tree)
     const calculateLevel = (id: string): number => {
-      if (levels.has(id)) return levels.get(id)!;
+      const cached = levels.get(id);
+      if (cached !== undefined) return cached;
 
       const item = allItems.find((i) => i.id === id);
       if (!item) return 0;
@@ -81,7 +82,7 @@ export function DependencyGraph({
       if (!levelGroups.has(level)) {
         levelGroups.set(level, []);
       }
-      levelGroups.get(level)!.push(item.id);
+      levelGroups.get(level)?.push(item.id);
     });
 
     // Position nodes
@@ -243,7 +244,7 @@ export function DependencyGraph({
           className="relative overflow-auto border rounded-lg bg-muted/20"
           style={{ maxHeight: "600px" }}
         >
-          <svg
+          <svg aria-hidden="true"
             width="100%"
             height="600"
             viewBox={`0 0 ${maxX} ${maxY}`}

@@ -2002,10 +2002,10 @@ function ProjectSettings() {
                   const user = workspaceUsers?.find(
                     (u: any) => u.userEmail === value,
                   );
-                  if (user && selectedTeam) {
+                  if (user?.userEmail && selectedTeam) {
                     handleAddMember(selectedTeam.id, {
-                      userEmail: user.userEmail!,
-                      userName: user.userName!,
+                      userEmail: user.userEmail,
+                      userName: user.userName ?? user.userEmail,
                       role: "member",
                     });
                   }

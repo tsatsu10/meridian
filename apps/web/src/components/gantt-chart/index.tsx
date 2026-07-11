@@ -63,8 +63,9 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
   const earliestFinish = new Map<string, number>();
 
   function calculateEarliestTimes(taskId: string): number {
-    if (earliestFinish.has(taskId)) {
-      return earliestFinish.get(taskId)!;
+    const cached = earliestFinish.get(taskId);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const task = taskMap.get(taskId);
@@ -90,8 +91,9 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
   const latestFinish = new Map<string, number>();
 
   function calculateLatestTimes(taskId: string): number {
-    if (latestStart.has(taskId)) {
-      return latestStart.get(taskId)!;
+    const cached = latestStart.get(taskId);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const task = taskMap.get(taskId);
@@ -110,7 +112,7 @@ function calculateCriticalPath(tasks: GanttTask[]): Set<string> {
 
     const finish =
       minDependentStart === Number.POSITIVE_INFINITY
-        ? earliestFinish.get(taskId)!
+        ? (earliestFinish.get(taskId) ?? 0)
         : minDependentStart;
     const start = finish - task.duration;
 
@@ -940,7 +942,7 @@ function GanttChart({ tasks }: GanttChartProps) {
                     </div>
 
                     {/* Professional Dependency arrows */}
-                    <svg
+                    <svg aria-hidden="true"
                       className="absolute top-0 left-0 w-full h-full pointer-events-none"
                       style={{ zIndex: 15 }}
                     >

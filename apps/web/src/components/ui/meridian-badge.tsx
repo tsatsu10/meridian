@@ -195,7 +195,7 @@ const MeridianBadge = React.forwardRef<HTMLDivElement, MeridianBadgeProps>(
             className="flex-shrink-0 ml-1 hover:bg-black/10 rounded-full p-0.5 transition-colors"
             aria-label="Remove badge"
           >
-            <svg
+            <svg aria-hidden="true"
               className="w-3 h-3"
               fill="none"
               stroke="currentColor"

@@ -130,6 +130,7 @@ function ProjectCard({
         aria-valuenow={project.progress}
         aria-valuemin={0}
         aria-valuemax={100}
+        tabIndex={0}
       >
         <div
           className="progress-bar"
@@ -301,9 +302,10 @@ describe("Project Card Component", () => {
     });
 
     const card = container.querySelector(".project-card");
+    if (!card) throw new Error("project card not rendered");
 
     // Simulate mouse enter
-    await user.hover(card!);
+    await user.hover(card);
 
     await waitFor(() => {
       expect(
@@ -326,7 +328,8 @@ describe("Project Card Component", () => {
     );
 
     // Note: Hover-triggered actions may not work reliably in jsdom
-    const card = container.querySelector(".project-card")!;
+    const card = container.querySelector(".project-card");
+    if (!card) throw new Error("project card not rendered");
     await user.hover(card);
 
     const editButton = await screen.findByRole("button", {
@@ -348,7 +351,8 @@ describe("Project Card Component", () => {
     );
 
     // Note: Hover-triggered actions may not work reliably in jsdom
-    const card = container.querySelector(".project-card")!;
+    const card = container.querySelector(".project-card");
+    if (!card) throw new Error("project card not rendered");
     await user.hover(card);
 
     const archiveButton = await screen.findByRole("button", {

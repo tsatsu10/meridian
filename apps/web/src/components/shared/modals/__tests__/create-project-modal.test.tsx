@@ -137,8 +137,8 @@ describe("CreateProjectModal", () => {
           btn.textContent?.includes("Close") && !btn.querySelector(".lucide-x"),
       );
 
-      expect(mainCloseButton).toBeDefined();
-      await user.click(mainCloseButton!);
+      if (!mainCloseButton) throw new Error("modal close button not found");
+      await user.click(mainCloseButton);
 
       expect(mockOnClose).toHaveBeenCalled();
     });
@@ -219,9 +219,9 @@ describe("CreateProjectModal", () => {
       const customCard = screen
         .getByText(/build your own from scratch/i)
         .closest('div[class*="rounded-xl"]');
-      expect(customCard).toBeTruthy();
+      if (!customCard) throw new Error("custom project card not found");
 
-      await user.click(customCard!);
+      await user.click(customCard);
 
       await waitFor(() => {
         expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument();
@@ -265,7 +265,8 @@ describe("CreateProjectModal", () => {
       const customCard = screen
         .getByText(/build your own from scratch/i)
         .closest('div[class*="rounded-xl"]');
-      await user.click(customCard!);
+      if (!customCard) throw new Error("custom project card not found");
+      await user.click(customCard);
 
       await waitFor(async () => {
         const nameInput = screen.getByPlaceholderText(/enter project name/i);
@@ -448,7 +449,8 @@ describe("CreateProjectModal", () => {
       const customCard = screen
         .getByText(/build your own from scratch/i)
         .closest('div[class*="rounded-xl"]');
-      await user.click(customCard!);
+      if (!customCard) throw new Error("custom project card not found");
+      await user.click(customCard);
 
       await user.click(screen.getByRole("button", { name: /next/i }));
       await waitFor(() =>

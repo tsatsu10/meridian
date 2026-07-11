@@ -49,8 +49,8 @@ export function ProjectsBoardView({
       const key = p.isArchived
         ? "archived"
         : normalizeStatus(p.status ?? undefined);
-      const list = map.get(key) ?? map.get("other")!;
-      list.push(p);
+      const list = map.get(key) ?? map.get("other");
+      list?.push(p);
     }
     return map;
   }, [projects, showArchived]);

@@ -344,7 +344,7 @@ function RouteComponent() {
                 size="sm"
                 className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
               >
-                <svg
+                <svg aria-hidden="true"
                   className="w-3 h-3 sm:w-4 sm:h-4"
                   fill="none"
                   stroke="currentColor"

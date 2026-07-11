@@ -19,10 +19,11 @@ test.describe("@smoke sign-in (optional)", () => {
       !hasCreds,
       "Set E2E_SMOKE_EMAIL and E2E_SMOKE_PASSWORD to run this test",
     );
+    if (!email || !password) return; // unreachable past the skip; narrows types
 
     await page.goto("/auth/sign-in");
-    await page.locator('input[name="email"]').fill(email!);
-    await page.locator('input[name="password"]').fill(password!);
+    await page.locator('input[name="email"]').fill(email);
+    await page.locator('input[name="password"]').fill(password);
     await page.getByRole("button", { name: "Sign In" }).click();
 
     await page.waitForURL(/\/dashboard/, { timeout: 60_000 });

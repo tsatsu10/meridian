@@ -613,9 +613,13 @@ export default function TeamCalendarModal({
   };
 
   const handleFindBestTime = () => {
-    if (suggestions.length > 0 && suggestions[0].type === "best-time") {
+    if (
+      suggestions.length > 0 &&
+      suggestions[0].type === "best-time" &&
+      suggestions[0].suggestedDate
+    ) {
       toast.success(
-        `Best time: ${suggestions[0].suggestedTime} on ${format(suggestions[0].suggestedDate!, "MMM d")}`,
+        `Best time: ${suggestions[0].suggestedTime} on ${format(suggestions[0].suggestedDate, "MMM d")}`,
       );
     } else {
       toast.info("No optimal time found. Try adjusting filters.");

@@ -110,7 +110,10 @@ function App() {
   );
 }
 
-const rootElement = document.getElementById("root")!;
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error('Root element "#root" not found — index.html is broken');
+}
 if (!rootElement.innerHTML) {
   // 🚨 EMERGENCY: Make emergency cleanup available immediately
   (window as any).__REACT_QUERY_CLIENT__ = queryClient;

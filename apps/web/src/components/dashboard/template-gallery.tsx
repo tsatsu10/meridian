@@ -279,11 +279,13 @@ export function TemplateGallery({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category!}>
-                {category}
-              </SelectItem>
-            ))}
+            {categories
+              .filter((category): category is string => Boolean(category))
+              .map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

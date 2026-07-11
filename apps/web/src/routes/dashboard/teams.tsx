@@ -652,9 +652,9 @@ function TeamsPage() {
     enhancedTeams.forEach((team) => {
       team.members.forEach((member) => {
         const key = member.id || member.email;
-        if (memberMap.has(key)) {
+        const existing = memberMap.get(key);
+        if (existing) {
           // Member already exists, add this team to their teams list
-          const existing = memberMap.get(key)!;
           existing.teams.push({
             id: team.id,
             name: team.name,
