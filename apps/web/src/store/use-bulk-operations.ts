@@ -7,13 +7,19 @@ import { persist } from "zustand/middleware";
  * WCAG 2.1 AA compliant with screen reader support
  */
 
+export interface BulkOperationResult {
+  success: boolean;
+  count?: number;
+  error?: string;
+}
+
 export interface BulkOperationState {
   selectedProjectIds: Set<string>;
   isSelectAll: boolean;
   history: Array<{ projectIds: Set<string>; timestamp: Date }>;
   historyIndex: number;
   operationInProgress: boolean;
-  lastOperationResult: any | null;
+  lastOperationResult: BulkOperationResult | null;
 }
 
 export interface BulkOperationActions {
@@ -31,7 +37,7 @@ export interface BulkOperationActions {
 
   // Operation management
   startOperation: () => void;
-  endOperation: (result: any) => void;
+  endOperation: (result: BulkOperationResult) => void;
   getSelectedCount: () => number;
   isProjectSelected: (projectId: string) => boolean;
 }
@@ -213,7 +219,7 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
       },
 
       // End bulk operation (enable UI)
-      endOperation: (result: any) => {
+      endOperation: (result: BulkOperationResult) => {
         set({ operationInProgress: false, lastOperationResult: result });
 
         // Announce operation result to screen readers
@@ -259,10 +265,12 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
                 selectedProjectIds: new Set(
                   parsed.state.selectedProjectIds || [],
                 ),
-                history: parsed.state.history.map((h: any) => ({
-                  ...h,
-                  projectIds: new Set(h.projectIds || []),
-                })),
+                history: parsed.state.history.map(
+                  (h: { projectIds?: string[]; timestamp?: string }) => ({
+                    ...h,
+                    projectIds: new Set(h.projectIds || []),
+                  }),
+                ),
               },
               version: parsed.version,
             };
@@ -280,10 +288,12 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
                 selectedProjectIds: Array.from(
                   value.state.selectedProjectIds || [],
                 ),
-                history: value.state.history.map((h: any) => ({
-                  ...h,
-                  projectIds: Array.from(h.projectIds || []),
-                })),
+                history: value.state.history.map(
+                  (h: { projectIds?: Set<string>; timestamp?: Date }) => ({
+                    ...h,
+                    projectIds: Array.from(h.projectIds || []),
+                  }),
+                ),
               },
             };
             localStorage.setItem(name, JSON.stringify(serializable));
@@ -306,8 +316,8 @@ export const useBulkOperationsStore = create<BulkOperationsStore>()(
             ...currentState,
             ...persistedState,
             selectedProjectIds: new Set(
-              Array.isArray((persistedState as any).selectedProjectIds)
-                ? (persistedState as any).selectedProjectIds
+              Array.isArray(persistedState.selectedProjectIds)
+                ? persistedState.selectedProjectIds
                 : [],
             ),
           };
