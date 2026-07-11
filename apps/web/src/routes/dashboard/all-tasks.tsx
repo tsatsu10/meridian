@@ -778,9 +778,9 @@ export default function AllTasksPage() {
     isLoading,
     selectedTasks,
     onTaskSelect: handleTaskSelect,
-    projects: (Array.isArray(projects)
+    projects: Array.isArray(projects)
       ? projects
-      : ((projects as any)?.projects ?? [])) as any,
+      : (projects?.projects ?? []),
   };
 
   // Pagination helper to generate page numbers
