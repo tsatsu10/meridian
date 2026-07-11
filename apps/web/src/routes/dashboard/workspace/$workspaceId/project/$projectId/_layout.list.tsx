@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useMilestones } from "@/hooks/use-milestones";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
+import type Task from "@/types/task";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 // 🧠 MEMORY: Optimization utilities for large task lists
 import {
@@ -139,12 +140,14 @@ function ProjectListView() {
   void useMemo(
     () =>
       throttle(
-        async (task: any, updates: any) => {
+        async (task: Task, updates: Partial<Task>) => {
           try {
             await updateTask({
               ...task,
               ...updates,
-              dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+              dueDate: task.dueDate
+                ? new Date(task.dueDate).toISOString()
+                : null,
             });
             toast.success("Task updated successfully");
           } catch (error) {
@@ -161,18 +164,18 @@ function ProjectListView() {
   const allTasks = useMemo(() => {
     if (!columns) return [];
 
-    const columnArray = Array.isArray(columns)
+    const columnArray: Array<{ tasks?: unknown[] }> = Array.isArray(columns)
       ? columns
-      : columns && Array.isArray((columns as any).columns)
-        ? (columns as any).columns
+      : columns && Array.isArray(columns.columns)
+        ? columns.columns
         : [];
 
     // Use optimized flattening for large datasets
-    const flattened = columnArray.flatMap((col: any) => col.tasks || []);
+    const flattened = columnArray.flatMap((col) => col.tasks || []);
     const result = optimizedFlattenTasks(flattened);
 
     // Transform to match VirtualizedTaskList format
-    return result.map((task: any) => ({
+    return result.map((task) => ({
       ...task,
       number: task.number || 0,
       dueDate: task.dueDate ? new Date(task.dueDate) : null,
@@ -199,7 +202,7 @@ function ProjectListView() {
 
     const filtered = optimizedFilter(
       allTasks,
-      (task: any) => {
+      (task) => {
         const matchesSearch =
           task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -216,7 +219,7 @@ function ProjectListView() {
 
     // Apply sorting
     if (sortBy) {
-      filtered.sort((a: any, b: any) => {
+      filtered.sort((a, b) => {
         switch (sortBy) {
           case "title":
             return a.title.localeCompare(b.title);
@@ -720,7 +723,7 @@ function ProjectListView() {
             onSelectAll={handleSelectAll}
             onTaskUpdate={
               canEditTasks
-                ? async (taskId: string, updates: any) => {
+                ? async (taskId: string, updates) => {
                     const task = allTasks.find((t) => t.id === taskId);
                     if (!task) return;
 
