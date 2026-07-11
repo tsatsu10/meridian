@@ -78,20 +78,26 @@ export function useChangeMemberRole() {
       ]);
 
       // Optimistically update project members
-      queryClient.setQueryData(["project-members"], (old: any) => {
-        if (!old) return old;
-        return old.map((member: any) =>
-          member.id === memberId ? { ...member, role: newRole } : member,
-        );
-      });
+      queryClient.setQueryData(
+        ["project-members"],
+        (old: Array<{ id: string }> | undefined) => {
+          if (!old) return old;
+          return old.map((member) =>
+            member.id === memberId ? { ...member, role: newRole } : member,
+          );
+        },
+      );
 
       // Optimistically update workspace users
-      queryClient.setQueryData(["workspace-users", workspaceId], (old: any) => {
-        if (!old) return old;
-        return old.map((user: any) =>
-          user.id === memberId ? { ...user, role: newRole } : user,
-        );
-      });
+      queryClient.setQueryData(
+        ["workspace-users", workspaceId],
+        (old: Array<{ id: string }> | undefined) => {
+          if (!old) return old;
+          return old.map((user) =>
+            user.id === memberId ? { ...user, role: newRole } : user,
+          );
+        },
+      );
 
       return { previousMembers, previousWorkspaceUsers };
     },
