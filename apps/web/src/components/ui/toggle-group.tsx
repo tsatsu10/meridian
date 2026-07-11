@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 export interface ToggleGroupProps {
   type: "single" | "multiple";
   value?: string | string[];
-  onValueChange?: (value: any) => void;
+  onValueChange?: (value: string | string[]) => void;
   className?: string;
   children: React.ReactNode;
 }
@@ -19,7 +19,7 @@ export interface ToggleGroupItemProps {
 const ToggleGroupContext = React.createContext<{
   type: "single" | "multiple";
   value?: string | string[];
-  onValueChange?: (value: any) => void;
+  onValueChange?: (value: string | string[]) => void;
 }>({
   type: "single",
 });
