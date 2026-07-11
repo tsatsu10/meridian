@@ -20,6 +20,10 @@ export interface TimeSeriesDataPoint {
   };
 }
 
+// Flexible data point that keeps the known fields typed while allowing
+// arbitrary metric keys to be indexed (e.g. `d[metric]`).
+type FlexibleDataPoint = TimeSeriesDataPoint & Record<string, unknown>;
+
 export interface Prediction {
   date: string;
   value: number;
@@ -71,7 +75,7 @@ function exponentialSmoothing(data: number[], alpha = 0.3): number[] {
  * Predict future values using multiple methods and ensemble approach
  */
 export function predictFutureTrends(
-  historicalData: any[], // Accept any type to be flexible
+  historicalData: unknown[], // Accept any type to be flexible
   periodsAhead = 7,
   metric = "productivity",
 ): PredictionResult {
@@ -87,8 +91,9 @@ export function predictFutureTrends(
   }
 
   // Extract values for the specified metric
-  const values = historicalData.map((d) => Number(d[metric]) || 0);
-  const dates = historicalData.map((d) => d.date);
+  const data = historicalData as FlexibleDataPoint[];
+  const values = data.map((d) => Number(d[metric]) || 0);
+  const dates = data.map((d) => d.date);
 
   // Apply smoothing for better predictions
   const smoothedValues = exponentialSmoothing(values);
@@ -183,7 +188,7 @@ function calculateAccuracy(actual: number[], predicted: number[]): number {
  * Predict resource capacity needs
  */
 export function predictResourceNeeds(
-  historicalData: any[], // Accept any type to be flexible
+  historicalData: unknown[], // Accept any type to be flexible
   targetProductivity = 80,
 ): {
   currentCapacity: number;
@@ -200,7 +205,7 @@ export function predictResourceNeeds(
     };
   }
 
-  const recentData = historicalData.slice(-7); // Last 7 periods
+  const recentData = (historicalData as FlexibleDataPoint[]).slice(-7); // Last 7 periods
   const avgProductivity =
     recentData.reduce((sum, d) => sum + d.productivity, 0) / recentData.length;
   const avgActiveMembers =
@@ -242,7 +247,7 @@ export function predictResourceNeeds(
  * Identify seasonal patterns in the data
  */
 export function detectSeasonalPatterns(
-  historicalData: any[], // Accept any type to be flexible
+  historicalData: unknown[], // Accept any type to be flexible
   metric = "productivity",
 ): {
   hasPattern: boolean;
@@ -259,8 +264,9 @@ export function detectSeasonalPatterns(
     };
   }
 
-  const values = historicalData.map((d) => Number(d[metric]) || 0);
-  const dates = historicalData.map((d) => new Date(d.date));
+  const data = historicalData as FlexibleDataPoint[];
+  const values = data.map((d) => Number(d[metric]) || 0);
+  const dates = data.map((d) => new Date(d.date));
 
   // Check for weekly patterns (day of week)
   const dayOfWeekData: { [key: number]: number[] } = {};
