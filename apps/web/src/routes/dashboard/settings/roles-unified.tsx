@@ -251,7 +251,10 @@ function UnifiedRolesPage() {
         <Select
           value={filters.type}
           onValueChange={(value) =>
-            setFilters((prev) => ({ ...prev, type: value as any }))
+            setFilters((prev) => ({
+              ...prev,
+              type: value as "all" | "system" | "custom",
+            }))
           }
         >
           <SelectTrigger className="w-[180px]">
@@ -268,7 +271,10 @@ function UnifiedRolesPage() {
         <Select
           value={filters.status}
           onValueChange={(value) =>
-            setFilters((prev) => ({ ...prev, status: value as any }))
+            setFilters((prev) => ({
+              ...prev,
+              status: value as "all" | "active" | "inactive",
+            }))
           }
         >
           <SelectTrigger className="w-[180px]">
