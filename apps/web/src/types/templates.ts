@@ -21,7 +21,7 @@ export interface ProjectTemplate {
   rating: number; // 0-5
   ratingCount: number;
   tags: string[];
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   isPublic: boolean;
   isOfficial: boolean;
   createdBy?: string;
@@ -42,7 +42,7 @@ export interface TemplateTask {
   relativeStartDay?: number;
   relativeDueDay?: number;
   tags: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   subtasks: TemplateSubtask[];
@@ -57,7 +57,7 @@ export interface TemplateSubtask {
   position: number;
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
