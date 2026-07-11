@@ -27,7 +27,7 @@ interface UpdateEventData {
 }
 
 interface UpdateEventResponse {
-  event: any;
+  event: { id: string };
 }
 
 async function updateEvent(
