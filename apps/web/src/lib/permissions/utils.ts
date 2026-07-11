@@ -526,7 +526,7 @@ export function getEffectivePermissions(
           typeof value === "boolean" &&
           key.toLowerCase().includes(restriction.toLowerCase())
         ) {
-          (effectivePermissions as any)[key] = false;
+          (effectivePermissions as unknown as Record<string, boolean>)[key] = false;
         }
       }
     }
