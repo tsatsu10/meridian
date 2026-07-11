@@ -92,15 +92,25 @@ export function RoleHistory({ roleId }: RoleHistoryProps) {
       const data = await response.json();
 
       // Map API response to HistoryEntry format
-      return (data.history || []).map((entry: any) => ({
-        id: entry.id,
-        action: entry.action,
-        performedBy:
-          entry.performedByName || entry.performedByEmail || "Unknown",
-        performedAt: entry.createdAt,
-        changes: entry.changes,
-        reason: entry.reason,
-      })) as HistoryEntry[];
+      return (data.history || []).map(
+        (entry: {
+          id: string;
+          action: string;
+          changes?: unknown;
+          createdAt: string;
+          performedByEmail?: string;
+          performedByName?: string;
+          reason?: string;
+        }) => ({
+          id: entry.id,
+          action: entry.action,
+          performedBy:
+            entry.performedByName || entry.performedByEmail || "Unknown",
+          performedAt: entry.createdAt,
+          changes: entry.changes,
+          reason: entry.reason,
+        }),
+      ) as HistoryEntry[];
     },
   });
 
