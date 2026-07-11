@@ -199,12 +199,12 @@ export function EnhancedProjectGridCard({
           {members.length > 0 ? (
             <div className="flex items-center justify-between gap-2 min-w-0">
               <div className="flex -space-x-2 flex-shrink-0">
-                {members.slice(0, 4).map((member: any) => (
+                {members.slice(0, 4).map((member) => (
                   <Avatar
                     key={member.id}
                     className="h-8 w-8 border-2 border-background"
                   >
-                    <AvatarImage src={member.avatar} />
+                    <AvatarImage src={member.avatar ?? undefined} />
                     <AvatarFallback className="text-xs">
                       {member.name?.charAt(0) || "?"}
                     </AvatarFallback>
