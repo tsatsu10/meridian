@@ -267,7 +267,10 @@ function WorkspaceSettings() {
     },
   });
 
-  const handleChange = (field: keyof WorkspaceSettingsData, value: any) => {
+  const handleChange = (
+    field: keyof WorkspaceSettingsData,
+    value: WorkspaceSettingsData[keyof WorkspaceSettingsData],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
