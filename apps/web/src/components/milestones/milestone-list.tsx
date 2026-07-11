@@ -38,7 +38,7 @@ import { useDashboardData } from "@/hooks/queries/dashboard/use-dashboard-data";
 // Common shape for milestones rendered by this list, whether they come
 // from useMilestones' localStorage-backed MilestoneTask or are derived
 // on the fly from dashboard task data below.
-interface DisplayMilestone {
+export interface DisplayMilestone {
   id: string;
   title: string;
   description?: string;
