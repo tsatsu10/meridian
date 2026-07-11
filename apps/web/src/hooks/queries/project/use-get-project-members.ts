@@ -6,7 +6,7 @@ interface ProjectMember {
   projectId: string;
   userEmail: string;
   role: string;
-  permissions: Record<string, any> | null;
+  permissions: Record<string, unknown> | null;
   assignedAt: Date;
   assignedBy: string | null;
   hoursPerWeek: number;
@@ -16,8 +16,25 @@ interface ProjectMember {
   userCreatedAt: Date;
 }
 
+// The generated AppType is missing project[":projectId"].members, so type the
+// route locally instead of falling back to `any`.
+type ProjectMembersRoute = {
+  project: Record<
+    string,
+    {
+      members: {
+        $get: (arg: {
+          param: { projectId: string };
+        }) => Promise<Response>;
+      };
+    }
+  >;
+};
+
 async function getProjectMembers(projectId: string): Promise<ProjectMember[]> {
-  const response = await (client as any).project[":projectId"].members.$get({
+  const response = await (
+    client as unknown as ProjectMembersRoute
+  ).project[":projectId"].members.$get({
     param: { projectId },
   });
 
