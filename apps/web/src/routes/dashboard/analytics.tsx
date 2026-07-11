@@ -431,19 +431,29 @@ const ProjectHealthCard = ({
   );
 };
 
+// Insight items are supplied loosely (the current source is a string[] of
+// recommendations); the panel reads these optional object fields defensively.
+interface AnalyticsInsight {
+  id?: string;
+  type?: string;
+  title?: string;
+  description?: string;
+  action?: string;
+}
+
 // Enhanced insights panel with alert levels
 const EnhancedInsightsPanel = ({
   insights,
   alerts,
   onInsightAction,
 }: {
-  insights: any[];
+  insights: unknown[];
   alerts: Array<{
     type: "warning" | "critical" | "info";
     message: string;
     actionRequired: boolean;
   }>;
-  onInsightAction: (insight: any) => void;
+  onInsightAction: (insight: unknown) => void;
 }) => {
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -518,8 +528,9 @@ const EnhancedInsightsPanel = ({
       {insights && insights.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-foreground">AI Insights</h4>
-          {insights.map((insight, index) => {
-            const InsightIcon = getInsightIcon(insight.type);
+          {insights.map((insightRaw, index) => {
+            const insight = insightRaw as AnalyticsInsight;
+            const InsightIcon = getInsightIcon(insight.type ?? "");
             return (
               <div
                 key={insight.id || index}
@@ -582,7 +593,10 @@ const ChartSkeleton = ({ height = "h-64" }: { height?: string }) => (
 );
 
 // Export functions
-const exportToCSV = (data: any, filename: string) => {
+const exportToCSV = (
+  data: object | null | undefined,
+  filename: string,
+) => {
   if (!data) {
     toast.error("No data available to export");
     return;
@@ -1083,8 +1097,11 @@ function AnalyticsPage() {
             {/* Time Range Selector */}
             <Select
               value={state.timeRange}
-              onValueChange={(value: any) =>
-                dispatch({ type: "SET_TIME_RANGE", payload: value })
+              onValueChange={(value) =>
+                dispatch({
+                  type: "SET_TIME_RANGE",
+                  payload: value as AnalyticsState["timeRange"],
+                })
               }
             >
               <SelectTrigger className="w-[110px] sm:w-[130px] h-9">
@@ -1714,7 +1731,7 @@ function AnalyticsPage() {
                 {enhancedAnalytics?.timeSeriesData &&
                   enhancedAnalytics.timeSeriesData.length > 0 && (
                     <PredictiveInsights
-                      timeSeriesData={enhancedAnalytics.timeSeriesData as any}
+                      timeSeriesData={enhancedAnalytics.timeSeriesData}
                     />
                   )}
 
@@ -1752,8 +1769,11 @@ function AnalyticsPage() {
                 <Label htmlFor="export-format">Export Format</Label>
                 <Select
                   value={state.exportFormat}
-                  onValueChange={(value: any) =>
-                    dispatch({ type: "SET_EXPORT_FORMAT", payload: value })
+                  onValueChange={(value) =>
+                    dispatch({
+                      type: "SET_EXPORT_FORMAT",
+                      payload: value as AnalyticsState["exportFormat"],
+                    })
                   }
                 >
                   <SelectTrigger id="export-format">
@@ -1873,10 +1893,10 @@ function AnalyticsPage() {
                     </Label>
                     <Select
                       value={state.comparisonTimeRange}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value) =>
                         dispatch({
                           type: "SET_COMPARISON_TIME_RANGE",
-                          payload: value,
+                          payload: value as AnalyticsState["comparisonTimeRange"],
                         })
                       }
                     >
@@ -2114,8 +2134,11 @@ function AnalyticsPage() {
                     </Label>
                     <Select
                       value={state.timeRange}
-                      onValueChange={(value: any) =>
-                        dispatch({ type: "SET_TIME_RANGE", payload: value })
+                      onValueChange={(value) =>
+                        dispatch({
+                          type: "SET_TIME_RANGE",
+                          payload: value as AnalyticsState["timeRange"],
+                        })
                       }
                     >
                       <SelectTrigger>
@@ -2134,10 +2157,10 @@ function AnalyticsPage() {
                     <Label className="text-sm font-medium">Compare With</Label>
                     <Select
                       value={state.comparisonTimeRange}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value) =>
                         dispatch({
                           type: "SET_COMPARISON_TIME_RANGE",
-                          payload: value,
+                          payload: value as AnalyticsState["comparisonTimeRange"],
                         })
                       }
                     >
