@@ -18,8 +18,24 @@ import { toast } from "@/lib/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/fetch";
 
+interface RiskAlert {
+  id: string;
+  type?: string;
+  severity?: string;
+  title?: string;
+  description?: string;
+  affectedTasks?: unknown[];
+  metrics?: { riskScore?: number };
+}
+
 interface RiskAlertSectionProps {
-  riskData: any;
+  riskData: {
+    workspaceId?: string;
+    data?: {
+      alerts?: RiskAlert[];
+      summary?: { totalRisks?: number };
+    } | null;
+  };
 }
 
 interface AlertAction {
@@ -158,6 +174,9 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
     return null;
   }
 
+  const alerts = riskData.data.alerts;
+  const summary = riskData.data.summary;
+
   return (
     <BlurFade delay={0.5} inView>
       <Card className="border-red-200 bg-red-50/50 shadow-sm">
@@ -171,12 +190,12 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
               variant="secondary"
               className="text-xs bg-red-100 text-red-800"
             >
-              {riskData.data.summary?.totalRisks} risks
+              {summary?.totalRisks} risks
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {riskData.data.alerts.slice(0, 3).map((risk: any, index: number) => (
+          {alerts.slice(0, 3).map((risk, index: number) => (
             <div
               key={`dashboard-alert-risk-${risk.id}-${index}`}
               className="flex items-start gap-3 p-3 bg-white border border-red-200 rounded-lg"
@@ -191,7 +210,7 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
                 {/* Enhanced Alert Details */}
                 <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
                   <div className="flex items-center gap-1">
-                    {getTypeIcon(risk.type)}
+                    {getTypeIcon(risk.type || "")}
                     <span className="capitalize">
                       {risk.type?.replace("_", " ")}
                     </span>
@@ -205,7 +224,10 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
                 <div className="flex items-center justify-between mt-3">
                   <Badge
                     variant="outline"
-                    className={cn("text-xs", getSeverityColor(risk.severity))}
+                    className={cn(
+                      "text-xs",
+                      getSeverityColor(risk.severity || ""),
+                    )}
                   >
                     {risk.severity}
                   </Badge>
@@ -246,7 +268,7 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
           ))}
 
           {/* Bulk Actions for multiple alerts */}
-          {riskData.data.alerts.length > 1 && (
+          {alerts.length > 1 && (
             <div className="flex items-center justify-between pt-2 border-t border-red-200">
               <span className="text-xs text-red-600">Bulk Actions:</span>
               <div className="flex gap-1">
@@ -254,12 +276,8 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    if (
-                      confirm(
-                        `Acknowledge all ${riskData.data.alerts.length} alerts?`,
-                      )
-                    ) {
-                      for (const alert of riskData.data.alerts) {
+                    if (confirm(`Acknowledge all ${alerts.length} alerts?`)) {
+                      for (const alert of alerts) {
                         handleAlertAction(alert.id, "acknowledge");
                       }
                     }
@@ -276,12 +294,8 @@ export default function RiskAlertSection({ riskData }: RiskAlertSectionProps) {
                     const notes =
                       prompt("Resolution notes for all alerts (optional):") ||
                       "";
-                    if (
-                      confirm(
-                        `Resolve all ${riskData.data.alerts.length} alerts?`,
-                      )
-                    ) {
-                      for (const alert of riskData.data.alerts) {
+                    if (confirm(`Resolve all ${alerts.length} alerts?`)) {
+                      for (const alert of alerts) {
                         alertActionMutation.mutate({
                           alertId: alert.id,
                           action: "resolve",
