@@ -424,7 +424,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/projects': typeof DashboardProjectsRoute
   '/dashboard/rbac-explanation': typeof DashboardRbacExplanationRoute
   '/dashboard/security': typeof DashboardSecurityRoute
-  '/dashboard/settings': typeof DashboardSettingsLayoutRoute
+  '/dashboard/settings': typeof DashboardSettingsRouteWithChildren
   '/dashboard/teams': typeof DashboardTeamsRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
@@ -453,7 +453,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace-settings/$workspaceId/': typeof DashboardWorkspaceSettingsWorkspaceIdIndexRoute
   '/dashboard/teams/$workspaceId/members': typeof DashboardTeamsWorkspaceIdLayoutMembersRoute
   '/dashboard/teams/$workspaceId/roles': typeof DashboardTeamsWorkspaceIdLayoutRolesRoute
-  '/dashboard/workspace/$workspaceId/project/$projectId': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRouteWithChildren
+  '/dashboard/workspace/$workspaceId/project/$projectId': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdRouteWithChildren
   '/dashboard/workspace/$workspaceId/project/$projectId/analytics': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/backlog': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/board': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute

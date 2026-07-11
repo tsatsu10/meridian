@@ -58,155 +58,48 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        // Only self-contained leaf libraries get named chunks. Rollup (vite
+        // 6.4.3+) hard-fails on circular chunks, which the old directory-based
+        // app/vendor splits produced (app-team <-> app-dashboard, radix <->
+        // misc via cmdk/react-remove-scroll). App code is already code-split
+        // per route by TanStack Router's dynamic imports — leave it to rollup.
         manualChunks: (id) => {
-          // Core dependencies - CRITICAL: Keep these small and separate
-          if (id.includes("node_modules")) {
-            // React core (most critical - loaded on every page)
-            if (id.includes("react/") && !id.includes("react-dom")) {
-              return "vendor-react-core";
-            }
-            if (id.includes("react-dom")) {
-              return "vendor-react-dom";
-            }
-            if (id.includes("scheduler")) {
-              return "vendor-react-core";
-            }
-
-            // Router (needed early)
-            if (id.includes("@tanstack/react-router")) {
-              return "vendor-router";
-            }
-
-            // Query (needed early for data fetching)
-            if (id.includes("@tanstack/react-query")) {
-              return "vendor-query";
-            }
-
-            // UI Framework - Split Radix into smaller chunks
-            if (
-              id.includes("@radix-ui/react-dialog") ||
-              id.includes("@radix-ui/react-dropdown-menu")
-            ) {
-              return "vendor-radix-overlay";
-            }
-            if (
-              id.includes("@radix-ui/react-tooltip") ||
-              id.includes("@radix-ui/react-popover")
-            ) {
-              return "vendor-radix-float";
-            }
-            if (id.includes("@radix-ui")) {
-              return "vendor-radix-core";
-            }
-
-            // Heavy libraries - Separate to avoid blocking initial load
-            if (id.includes("framer-motion")) {
-              return "vendor-motion";
-            }
-            if (id.includes("recharts")) {
-              return "vendor-recharts";
-            }
-            if (id.includes("d3-")) {
-              return "vendor-d3";
-            }
-            // Rich text editor (rarely used)
-            if (id.includes("@tiptap") || id.includes("prosemirror")) {
-              return "vendor-editor";
-            }
-
-            // Forms and validation
-            if (id.includes("zod")) {
-              return "vendor-zod";
-            }
-            if (id.includes("react-hook-form")) {
-              return "vendor-forms";
-            }
-
-            // Real-time features
-            if (id.includes("socket.io-client")) {
-              return "vendor-socket";
-            }
-
-            // State management
-            if (id.includes("zustand")) {
-              return "vendor-state";
-            }
-
-            // Utilities
-            if (id.includes("date-fns")) {
-              return "vendor-date";
-            }
-            if (id.includes("lucide-react")) {
-              return "vendor-icons";
-            }
-            if (
-              id.includes("class-variance-authority") ||
-              id.includes("clsx") ||
-              id.includes("tailwind-merge")
-            ) {
-              return "vendor-utils";
-            }
-
-            // Analytics & monitoring
-            if (id.includes("@sentry") || id.includes("firebase")) {
-              return "vendor-monitoring";
-            }
-
-            // Highlight.js for code blocks (rarely used)
-            if (id.includes("highlight.js") || id.includes("lowlight")) {
-              return "vendor-highlight";
-            }
-
-            // All other node_modules - still separate but smaller now
-            return "vendor-misc";
-          }
-
-          // Application code splitting - More granular
-          if (id.includes("/components/chat/")) {
-            return "app-chat";
-          }
-          if (id.includes("/components/analytics/")) {
-            return "app-analytics";
+          if (!id.includes("node_modules")) {
+            return undefined;
           }
           if (
-            id.includes("/components/workflow/") ||
-            id.includes("/components/workflows/")
+            /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)
           ) {
-            return "app-workflow";
+            return "vendor-react";
           }
-          if (id.includes("/components/team/")) {
-            return "app-team";
+          if (id.includes("@tanstack/react-router")) {
+            return "vendor-router";
           }
-          if (id.includes("/components/ui/")) {
-            return "app-ui";
+          if (id.includes("@tanstack/react-query")) {
+            return "vendor-query";
           }
-          if (id.includes("/components/dashboard/")) {
-            return "app-dashboard";
+          if (id.includes("recharts") || id.includes("d3-")) {
+            return "vendor-charts";
           }
-          if (id.includes("/components/kanban")) {
-            return "app-kanban";
+          if (id.includes("@tiptap") || id.includes("prosemirror")) {
+            return "vendor-editor";
           }
-          if (id.includes("/components/magicui")) {
-            return "app-magicui";
+          if (id.includes("framer-motion")) {
+            return "vendor-motion";
           }
-          if (id.includes("/routes/dashboard/analytics/")) {
-            return "route-analytics";
+          if (id.includes("date-fns")) {
+            return "vendor-date";
           }
-          if (id.includes("/routes/dashboard/teams")) {
-            return "route-teams";
+          if (id.includes("lucide-react")) {
+            return "vendor-icons";
           }
-          if (id.includes("/routes/dashboard/projects")) {
-            return "route-projects";
+          if (id.includes("highlight.js") || id.includes("lowlight")) {
+            return "vendor-highlight";
           }
-          if (id.includes("/routes/dashboard/all-tasks")) {
-            return "route-tasks";
+          if (id.includes("@sentry")) {
+            return "vendor-monitoring";
           }
-          if (id.includes("/routes/dashboard/executive")) {
-            return "route-executive";
-          }
-          if (id.includes("/routes/workflows/")) {
-            return "route-workflows";
-          }
+          return "vendor-misc";
         },
       },
     },
