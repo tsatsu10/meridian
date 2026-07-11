@@ -10,6 +10,7 @@ import {
   MessageSquare,
   FileText,
   UserPlus,
+  type LucideIcon,
 } from "lucide-react";
 import {
   getActivityFeed,
@@ -24,7 +25,7 @@ interface ActivityFeedProps {
   className?: string;
 }
 
-const activityIcons: Record<string, any> = {
+const activityIcons: Record<string, LucideIcon> = {
   task_created: CheckCircle2,
   task_completed: CheckCircle2,
   task_updated: FileText,
@@ -104,43 +105,52 @@ export function ActivityFeed({
       </CardHeader>
       <CardContent>
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          {activities.map((activity: any) => {
-            const Icon = activityIcons[activity.type] || Activity;
-            const colorClass = activityColors[activity.type] || "text-gray-600";
+          {activities.map(
+            (activity: {
+              id: string;
+              type: string;
+              taskTitle?: string;
+              projectName?: string;
+              createdAt: string;
+            }) => {
+              const Icon = activityIcons[activity.type] || Activity;
+              const colorClass =
+                activityColors[activity.type] || "text-gray-600";
 
-            return (
-              <div
-                key={activity.id}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className={cn("mt-0.5", colorClass)}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {activity.type
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                  </p>
-                  {activity.taskTitle && (
-                    <p className="text-sm text-muted-foreground truncate">
-                      {activity.taskTitle}
+              return (
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className={cn("mt-0.5", colorClass)}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {activity.type
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                     </p>
-                  )}
-                  {activity.projectName && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {activity.projectName}
-                    </p>
-                  )}
+                    {activity.taskTitle && (
+                      <p className="text-sm text-muted-foreground truncate">
+                        {activity.taskTitle}
+                      </p>
+                    )}
+                    {activity.projectName && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {activity.projectName}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {formatDistanceToNow(new Date(activity.createdAt), {
+                      addSuffix: true,
+                    })}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {formatDistanceToNow(new Date(activity.createdAt), {
-                    addSuffix: true,
-                  })}
-                </span>
-              </div>
-            );
-          })}
+              );
+            },
+          )}
         </div>
       </CardContent>
     </Card>
