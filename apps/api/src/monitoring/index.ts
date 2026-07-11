@@ -131,18 +131,18 @@ monitoringRoutes.get("/endpoints", authMiddleware, async (c) => {
     for (const metric of allMetrics) {
       const key = `${metric.endpoint}:${metric.method}`;
 
-      if (!endpointStats.has(key)) {
-        endpointStats.set(key, {
+      let stats = endpointStats.get(key);
+      if (!stats) {
+        stats = {
           endpoint: metric.endpoint,
           method: metric.method,
           calls: 0,
           responseTimes: [],
           errors: 0,
           lastCalled: metric.timestamp,
-        });
+        };
+        endpointStats.set(key, stats);
       }
-
-      const stats = endpointStats.get(key)!;
       stats.calls++;
       stats.responseTimes.push(metric.responseTime);
       if (metric.statusCode >= 400) stats.errors++;
@@ -267,15 +267,15 @@ monitoringRoutes.get("/timeseries", authMiddleware, async (c) => {
       const bucketKey =
         Math.floor(metric.timestamp.getTime() / bucketMs) * bucketMs;
 
-      if (!buckets.has(bucketKey)) {
-        buckets.set(bucketKey, {
+      let bucket = buckets.get(bucketKey);
+      if (!bucket) {
+        bucket = {
           calls: 0,
           errors: 0,
           responseTimes: [],
-        });
+        };
+        buckets.set(bucketKey, bucket);
       }
-
-      const bucket = buckets.get(bucketKey)!;
       bucket.calls++;
       if (metric.statusCode >= 400) bucket.errors++;
       bucket.responseTimes.push(metric.responseTime);

@@ -202,7 +202,8 @@ describe("ErrorHandler", () => {
       const response = ErrorHandler.handle(error);
 
       expect(response.meta?.timestamp).toBeDefined();
-      expect(new Date(response.meta!.timestamp)).toBeInstanceOf(Date);
+      if (!response.meta) throw new Error("response.meta expected to be set");
+      expect(new Date(response.meta.timestamp)).toBeInstanceOf(Date);
     });
   });
 

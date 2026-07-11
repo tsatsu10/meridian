@@ -655,7 +655,10 @@ describe.skip("Notification System", () => {
         .returning();
 
       expect(notification.expiresAt).toBeDefined();
-      expect(notification.expiresAt!.getTime()).toBeGreaterThan(Date.now());
+      if (!notification.expiresAt) {
+        throw new Error("notification.expiresAt expected to be set");
+      }
+      expect(notification.expiresAt.getTime()).toBeGreaterThan(Date.now());
     });
 
     it("should identify expired notifications", async () => {

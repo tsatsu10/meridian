@@ -581,9 +581,12 @@ export class AuditLogger {
         .limit(10);
 
       const topUsers = topUserResults
-        .filter((result) => result.userEmail)
+        .filter(
+          (result): result is typeof result & { userEmail: string } =>
+            !!result.userEmail,
+        )
         .map((result) => ({
-          userEmail: result.userEmail!,
+          userEmail: result.userEmail,
           count: result.count,
         }));
 
@@ -600,9 +603,12 @@ export class AuditLogger {
         .limit(10);
 
       const topIPs = topIPResults
-        .filter((result) => result.ipAddress)
+        .filter(
+          (result): result is typeof result & { ipAddress: string } =>
+            !!result.ipAddress,
+        )
         .map((result) => ({
-          ipAddress: result.ipAddress!,
+          ipAddress: result.ipAddress,
           count: result.count,
         }));
 

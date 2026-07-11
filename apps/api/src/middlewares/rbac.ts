@@ -103,7 +103,7 @@ export function requirePermission(permission: PermissionAction) {
       let finalPermission = hasBasePermission;
       const latestCustom = customPermissions.sort(
         (a, b) =>
-          new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime(),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )[0];
       if (latestCustom) {
         finalPermission = latestCustom.granted;

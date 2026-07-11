@@ -60,16 +60,17 @@ export async function calculateFrequentCollaborators(
 
       for (const member of members) {
         const collabId = member.userEmail;
-        if (!collaboratorsMap.has(collabId)) {
-          collaboratorsMap.set(collabId, {
+        let collab = collaboratorsMap.get(collabId);
+        if (!collab) {
+          collab = {
             count: 0,
             sharedProjects: [],
             sharedTasks: [],
             lastCollaboration: new Date(),
-          });
+          };
+          collaboratorsMap.set(collabId, collab);
         }
 
-        const collab = collaboratorsMap.get(collabId)!;
         collab.count++;
         collab.sharedProjects.push(projectId);
       }

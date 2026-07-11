@@ -24,7 +24,12 @@ export function randomDate(start: Date, end: Date): Date {
  * Get random element from array
  */
 export function randomElement<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)]!;
+  if (array.length === 0) {
+    throw new Error("randomElement: array must not be empty");
+  }
+  // `index < array.length` is guaranteed by construction; noUncheckedIndexedAccess
+  // can't prove that for a computed index, so the cast documents it instead of `!`.
+  return array[Math.floor(Math.random() * array.length)] as T;
 }
 
 /**

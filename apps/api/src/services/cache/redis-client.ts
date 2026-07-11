@@ -109,12 +109,12 @@ class RedisClient {
    */
   async get<T>(key: string): Promise<T | null> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         Logger.warn("Redis not ready, skipping get", { key });
         return null;
       }
 
-      const value = await this.client!.get(key);
+      const value = await this.client.get(key);
 
       if (!value) {
         return null;
@@ -132,7 +132,7 @@ class RedisClient {
    */
   async set(key: string, value: any, ttlSeconds?: number): Promise<boolean> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         Logger.warn("Redis not ready, skipping set", { key });
         return false;
       }
@@ -140,9 +140,9 @@ class RedisClient {
       const serialized = JSON.stringify(value);
 
       if (ttlSeconds) {
-        await this.client!.setex(key, ttlSeconds, serialized);
+        await this.client.setex(key, ttlSeconds, serialized);
       } else {
-        await this.client!.set(key, serialized);
+        await this.client.set(key, serialized);
       }
 
       return true;
@@ -157,12 +157,12 @@ class RedisClient {
    */
   async del(...keys: string[]): Promise<number> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         Logger.warn("Redis not ready, skipping del", { keys });
         return 0;
       }
 
-      return await this.client!.del(...keys);
+      return await this.client.del(...keys);
     } catch (error) {
       Logger.error("Redis del failed", error, { keys });
       return 0;
@@ -174,11 +174,11 @@ class RedisClient {
    */
   async exists(...keys: string[]): Promise<number> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return 0;
       }
 
-      return await this.client!.exists(...keys);
+      return await this.client.exists(...keys);
     } catch (error) {
       Logger.error("Redis exists failed", error, { keys });
       return 0;
@@ -190,11 +190,11 @@ class RedisClient {
    */
   async expire(key: string, seconds: number): Promise<boolean> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return false;
       }
 
-      const result = await this.client!.expire(key, seconds);
+      const result = await this.client.expire(key, seconds);
       return result === 1;
     } catch (error) {
       Logger.error("Redis expire failed", error, { key });
@@ -207,11 +207,11 @@ class RedisClient {
    */
   async keys(pattern: string): Promise<string[]> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return [];
       }
 
-      return await this.client!.keys(pattern);
+      return await this.client.keys(pattern);
     } catch (error) {
       Logger.error("Redis keys failed", error, { pattern });
       return [];
@@ -223,7 +223,7 @@ class RedisClient {
    */
   async delPattern(pattern: string): Promise<number> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return 0;
       }
 
@@ -245,11 +245,11 @@ class RedisClient {
    */
   async incr(key: string): Promise<number> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return 0;
       }
 
-      return await this.client!.incr(key);
+      return await this.client.incr(key);
     } catch (error) {
       Logger.error("Redis incr failed", error, { key });
       return 0;
@@ -261,11 +261,11 @@ class RedisClient {
    */
   async incrby(key: string, increment: number): Promise<number> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return 0;
       }
 
-      return await this.client!.incrby(key, increment);
+      return await this.client.incrby(key, increment);
     } catch (error) {
       Logger.error("Redis incrby failed", error, { key });
       return 0;
@@ -277,11 +277,11 @@ class RedisClient {
    */
   async ttl(key: string): Promise<number> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return -1;
       }
 
-      return await this.client!.ttl(key);
+      return await this.client.ttl(key);
     } catch (error) {
       Logger.error("Redis ttl failed", error, { key });
       return -1;
@@ -293,11 +293,11 @@ class RedisClient {
    */
   async flushAll(): Promise<void> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return;
       }
 
-      await this.client!.flushall();
+      await this.client.flushall();
       Logger.warn("Redis flushed all data");
     } catch (error) {
       Logger.error("Redis flushAll failed", error);
@@ -309,11 +309,11 @@ class RedisClient {
    */
   async info(): Promise<string> {
     try {
-      if (!this.isReady()) {
+      if (!this.isConnected || !this.client) {
         return "";
       }
 
-      return await this.client!.info();
+      return await this.client.info();
     } catch (error) {
       Logger.error("Redis info failed", error);
       return "";

@@ -118,6 +118,33 @@ export async function seedUsersWithRoles() {
     const adminUser = createdUsers.find(
       (u) => u.email === "admin@meridian.app",
     );
+    if (!adminUser) {
+      throw new Error(
+        "Seed invariant violated: admin@meridian.app was not created above",
+      );
+    }
+    const managerUser = createdUsers.find(
+      (u) => u.email === "manager@meridian.app",
+    );
+    if (!managerUser) {
+      throw new Error(
+        "Seed invariant violated: manager@meridian.app was not created above",
+      );
+    }
+    const leadUser = createdUsers.find((u) => u.email === "lead@meridian.app");
+    if (!leadUser) {
+      throw new Error(
+        "Seed invariant violated: lead@meridian.app was not created above",
+      );
+    }
+    const globalMemberUser = createdUsers.find(
+      (u) => u.email === "member@meridian.app",
+    );
+    if (!globalMemberUser) {
+      throw new Error(
+        "Seed invariant violated: member@meridian.app was not created above",
+      );
+    }
 
     let workspace: typeof workspaces.$inferSelect;
     const existingWorkspace = await db
@@ -135,7 +162,7 @@ export async function seedUsersWithRoles() {
         .values({
           name: "Meridian Test Workspace",
           description: "Test workspace with various user roles and permissions",
-          ownerId: adminUser!.id,
+          ownerId: adminUser.id,
           slug: "meridian-test",
           isActive: true,
         })
@@ -179,19 +206,17 @@ export async function seedUsersWithRoles() {
       {
         name: "Mobile App Development",
         description: "iOS and Android app development project",
-        ownerId: createdUsers.find((u) => u.email === "manager@meridian.app")!
-          .id,
+        ownerId: managerUser.id,
       },
       {
         name: "Website Redesign",
         description: "Company website redesign and modernization",
-        ownerId: createdUsers.find((u) => u.email === "manager@meridian.app")!
-          .id,
+        ownerId: managerUser.id,
       },
       {
         name: "Marketing Campaign Q1",
         description: "Q1 marketing initiatives and campaigns",
-        ownerId: createdUsers.find((u) => u.email === "lead@meridian.app")!.id,
+        ownerId: leadUser.id,
       },
     ];
 
@@ -284,19 +309,19 @@ export async function seedUsersWithRoles() {
       {
         name: "Frontend Team",
         description: "Frontend development team",
-        leadId: createdUsers.find((u) => u.email === "lead@meridian.app")!.id,
+        leadId: leadUser.id,
         projectId: createdProjects[0].id, // Mobile App
       },
       {
         name: "Backend Team",
         description: "Backend development team",
-        leadId: createdUsers.find((u) => u.email === "lead@meridian.app")!.id,
+        leadId: leadUser.id,
         projectId: createdProjects[0].id, // Mobile App
       },
       {
         name: "Design Team",
         description: "UI/UX design team",
-        leadId: createdUsers.find((u) => u.email === "lead@meridian.app")!.id,
+        leadId: leadUser.id,
         projectId: createdProjects[1].id, // Website Redesign
       },
     ];
@@ -387,8 +412,7 @@ export async function seedUsersWithRoles() {
         title: "Design mobile app mockups",
         description: "Create initial design mockups for mobile app",
         projectId: createdProjects[0].id,
-        assigneeId: createdUsers.find((u) => u.email === "member@meridian.app")!
-          .id,
+        assigneeId: globalMemberUser.id,
         assigneeEmail: "member@meridian.app",
         status: "todo" as const,
         priority: "high" as const,
@@ -397,8 +421,7 @@ export async function seedUsersWithRoles() {
         title: "Set up API infrastructure",
         description: "Initialize backend API structure",
         projectId: createdProjects[0].id,
-        assigneeId: createdUsers.find((u) => u.email === "member@meridian.app")!
-          .id,
+        assigneeId: globalMemberUser.id,
         assigneeEmail: "member@meridian.app",
         status: "in_progress" as const,
         priority: "high" as const,
@@ -407,9 +430,7 @@ export async function seedUsersWithRoles() {
         title: "Review website wireframes",
         description: "Review and approve new website wireframes",
         projectId: createdProjects[1].id,
-        assigneeId: createdUsers.find(
-          (u) => u.email === "manager@meridian.app",
-        )!.id,
+        assigneeId: managerUser.id,
         assigneeEmail: "manager@meridian.app",
         status: "todo" as const,
         priority: "medium" as const,
@@ -432,7 +453,7 @@ export async function seedUsersWithRoles() {
       await db.insert(tasks).values({
         ...taskData,
         workspaceId: workspace.id,
-        createdBy: adminUser!.id,
+        createdBy: adminUser.id,
       });
 
       logger.debug(`   ✅ Created task "${taskData.title}"`);

@@ -145,13 +145,14 @@ export async function seedWorkspaces() {
     // Get all users
     const allUsers = await db.select().from(users);
 
-    if (allUsers.length === 0) {
+    const [firstUser] = allUsers;
+    if (!firstUser) {
       throw new Error("No users found. Run Phase 1 (users) first.");
     }
 
     const workspaceOwner =
-      allUsers.find((u) => u.email === "workspace.manager@meridian.app") ||
-      allUsers[0]!;
+      allUsers.find((u) => u.email === "workspace.manager@meridian.app") ??
+      firstUser;
 
     // 1. CREATE WORKSPACE
     logger.info("🏢 Creating workspace...");

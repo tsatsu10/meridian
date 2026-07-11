@@ -76,9 +76,14 @@ async function getAllTasks({
   }
 
   if (projectIds && projectIds.length > 0) {
-    conditions.push(
-      or(...projectIds.map((id) => eq(taskTable.projectId, id)))!,
+    const projectCondition = or(
+      ...projectIds.map((id) => eq(taskTable.projectId, id)),
     );
+    // or() only returns undefined when called with zero conditions;
+    // projectIds.length > 0 guarantees at least one above.
+    if (projectCondition) {
+      conditions.push(projectCondition);
+    }
   }
 
   if (dueAfter) {
@@ -90,12 +95,15 @@ async function getAllTasks({
   }
 
   if (search) {
-    conditions.push(
-      or(
-        sql`${taskTable.title} LIKE ${`%${search}%`}`,
-        sql`${taskTable.description} LIKE ${`%${search}%`}`,
-      )!,
+    const searchCondition = or(
+      sql`${taskTable.title} LIKE ${`%${search}%`}`,
+      sql`${taskTable.description} LIKE ${`%${search}%`}`,
     );
+    // or() only returns undefined when called with zero conditions; both
+    // are always passed above.
+    if (searchCondition) {
+      conditions.push(searchCondition);
+    }
   }
 
   // Get total count for pagination

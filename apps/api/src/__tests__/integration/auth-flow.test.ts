@@ -188,7 +188,10 @@ describe.skip("Authentication Flow Integration Tests", () => {
         .limit(1);
 
       expect(user[0].lastLoginAt).toBeDefined();
-      expect(user[0].lastLoginAt!.getTime()).toBeGreaterThanOrEqual(
+      if (!user[0].lastLoginAt) {
+        throw new Error("user[0].lastLoginAt expected to be set");
+      }
+      expect(user[0].lastLoginAt.getTime()).toBeGreaterThanOrEqual(
         beforeLogin.getTime(),
       );
     });
@@ -547,7 +550,10 @@ describe.skip("Authentication Flow Integration Tests", () => {
         .limit(1);
 
       expect(user[0].lastSeen).toBeDefined();
-      expect(user[0].lastSeen!.getTime()).toBeGreaterThanOrEqual(
+      if (!user[0].lastSeen) {
+        throw new Error("user[0].lastSeen expected to be set");
+      }
+      expect(user[0].lastSeen.getTime()).toBeGreaterThanOrEqual(
         now.getTime() - 1000,
       );
     });
@@ -572,8 +578,11 @@ describe.skip("Authentication Flow Integration Tests", () => {
 
       expect(user[0].lastLoginAt).toBeDefined();
       expect(user[0].lastSeen).toBeDefined();
-      expect(user[0].lastSeen!.getTime()).toBeGreaterThan(
-        user[0].lastLoginAt!.getTime(),
+      if (!user[0].lastSeen || !user[0].lastLoginAt) {
+        throw new Error("user[0].lastSeen/lastLoginAt expected to be set");
+      }
+      expect(user[0].lastSeen.getTime()).toBeGreaterThan(
+        user[0].lastLoginAt.getTime(),
       );
     });
   });

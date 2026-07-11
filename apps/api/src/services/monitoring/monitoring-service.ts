@@ -135,11 +135,11 @@ class MonitoringService extends EventEmitter {
     tags?: Record<string, string>,
   ): void {
     // Store in histogram
-    if (!this.histograms.has(name)) {
-      this.histograms.set(name, []);
+    let histogram = this.histograms.get(name);
+    if (!histogram) {
+      histogram = [];
+      this.histograms.set(name, histogram);
     }
-
-    const histogram = this.histograms.get(name)!;
     histogram.push(durationMs);
 
     // Keep last 1000 values
@@ -181,14 +181,33 @@ class MonitoringService extends EventEmitter {
     const sorted = [...values].sort((a, b) => a - b);
     const count = sorted.length;
 
+    const min = sorted[0];
+    const max = sorted[count - 1];
+    const p50 = sorted[Math.floor(count * 0.5)];
+    const p95 = sorted[Math.floor(count * 0.95)];
+    const p99 = sorted[Math.floor(count * 0.99)];
+    if (
+      min === undefined ||
+      max === undefined ||
+      p50 === undefined ||
+      p95 === undefined ||
+      p99 === undefined
+    ) {
+      // Unreachable: count > 0 (checked above) guarantees every index used
+      // here is within [0, count).
+      throw new Error(
+        "Histogram stats: unexpected undefined value in non-empty sorted array",
+      );
+    }
+
     return {
       count,
-      min: sorted[0]!,
-      max: sorted[count - 1]!,
+      min,
+      max,
       avg: sorted.reduce((a, b) => a + b, 0) / count,
-      p50: sorted[Math.floor(count * 0.5)]!,
-      p95: sorted[Math.floor(count * 0.95)]!,
-      p99: sorted[Math.floor(count * 0.99)]!,
+      p50,
+      p95,
+      p99,
     };
   }
 

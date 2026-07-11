@@ -145,8 +145,11 @@ describe.skip("Project CRUD Operations", () => {
 
       expect(project.startDate).toBeDefined();
       expect(project.dueDate).toBeDefined();
-      expect(new Date(project.startDate!).getTime()).toBe(startDate.getTime());
-      expect(new Date(project.dueDate!).getTime()).toBe(dueDate.getTime());
+      if (!project.startDate || !project.dueDate) {
+        throw new Error("project.startDate/dueDate expected to be set");
+      }
+      expect(new Date(project.startDate).getTime()).toBe(startDate.getTime());
+      expect(new Date(project.dueDate).getTime()).toBe(dueDate.getTime());
     });
 
     it("should create project with custom settings", async () => {
@@ -388,7 +391,9 @@ describe.skip("Project CRUD Operations", () => {
         .where(eq(projectTable.id, testProject.id));
 
       expect(updated.dueDate).toBeDefined();
-      expect(new Date(updated.dueDate!).getTime()).toBe(newDueDate.getTime());
+      if (!updated.dueDate)
+        throw new Error("updated.dueDate expected to be set");
+      expect(new Date(updated.dueDate).getTime()).toBe(newDueDate.getTime());
     });
 
     it("should update project settings", async () => {

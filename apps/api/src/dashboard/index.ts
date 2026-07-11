@@ -70,7 +70,7 @@ const dashboard = new Hono()
       // Time range filter
       if (filters.timeRange && filters.timeRange !== "all") {
         const now = new Date();
-        let dateFilter: Date;
+        let dateFilter: Date | undefined;
 
         switch (filters.timeRange) {
           case "today":
@@ -84,7 +84,7 @@ const dashboard = new Hono()
             break;
         }
 
-        if (dateFilter!) {
+        if (dateFilter) {
           filterConditions.push(
             sql`${taskTable.createdAt} >= ${dateFilter.toISOString()}`,
           );

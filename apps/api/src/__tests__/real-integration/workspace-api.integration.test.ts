@@ -150,10 +150,13 @@ describe.skip("Workspace API - REAL Integration Tests", () => {
       const afterCreate = new Date();
 
       expect(workspace.createdAt).toBeDefined();
-      expect(workspace.createdAt!.getTime()).toBeGreaterThanOrEqual(
+      if (!workspace.createdAt) {
+        throw new Error("workspace.createdAt expected to be set");
+      }
+      expect(workspace.createdAt.getTime()).toBeGreaterThanOrEqual(
         beforeCreate.getTime(),
       );
-      expect(workspace.createdAt!.getTime()).toBeLessThanOrEqual(
+      expect(workspace.createdAt.getTime()).toBeLessThanOrEqual(
         afterCreate.getTime(),
       );
 

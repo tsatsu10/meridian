@@ -187,7 +187,10 @@ describe.skipIf(!dbAvailable)("Authentication Flow", () => {
         .where(eq(userTable.id, testUser.id));
 
       expect(updatedUser.lastLoginAt).toBeDefined();
-      expect(updatedUser.lastLoginAt!.getTime()).toBeCloseTo(now.getTime(), -2);
+      if (!updatedUser.lastLoginAt) {
+        throw new Error("updatedUser.lastLoginAt expected to be set");
+      }
+      expect(updatedUser.lastLoginAt.getTime()).toBeCloseTo(now.getTime(), -2);
     });
 
     it("should fail with incorrect password", async () => {

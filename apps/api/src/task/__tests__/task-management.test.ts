@@ -126,7 +126,8 @@ describe.skip("Task Management", () => {
         .returning();
 
       expect(task.dueDate).toBeDefined();
-      expect(new Date(task.dueDate!).getTime()).toBe(dueDate.getTime());
+      if (!task.dueDate) throw new Error("task.dueDate expected to be set");
+      expect(new Date(task.dueDate).getTime()).toBe(dueDate.getTime());
     });
 
     it("should create task with estimated hours", async () => {
@@ -469,7 +470,10 @@ describe.skip("Task Management", () => {
 
       expect(task.estimatedHours).toBe(10);
       expect(task.actualHours).toBe(12);
-      expect(task.actualHours! > task.estimatedHours!).toBe(true);
+      if (task.actualHours === null || task.estimatedHours === null) {
+        throw new Error("actualHours/estimatedHours expected to be set");
+      }
+      expect(task.actualHours > task.estimatedHours).toBe(true);
     });
   });
 

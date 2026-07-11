@@ -158,8 +158,9 @@ export async function getMemberActivity(c: Context) {
       if (activity.createdAt) {
         const dateKey =
           new Date(activity.createdAt).toISOString().split("T")[0] ?? "";
-        if (contributionMap.has(dateKey)) {
-          contributionMap.set(dateKey, contributionMap.get(dateKey)! + 1);
+        const current = contributionMap.get(dateKey);
+        if (current !== undefined) {
+          contributionMap.set(dateKey, current + 1);
         }
       }
     }
@@ -169,9 +170,10 @@ export async function getMemberActivity(c: Context) {
       if (entry.startTime) {
         const dateKey =
           new Date(entry.startTime).toISOString().split("T")[0] ?? "";
-        if (contributionMap.has(dateKey)) {
+        const current = contributionMap.get(dateKey);
+        if (current !== undefined) {
           const hours = entry.duration ? Math.ceil(entry.duration / 3600) : 1; // Convert seconds to hours
-          contributionMap.set(dateKey, contributionMap.get(dateKey)! + hours);
+          contributionMap.set(dateKey, current + hours);
         }
       }
     }

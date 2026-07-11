@@ -376,7 +376,10 @@ describe.skip("RBAC Permission System", () => {
         .returning();
 
       expect(assignment.expiresAt).toBeDefined();
-      expect(assignment.expiresAt!.getTime()).toBeGreaterThan(Date.now());
+      if (!assignment.expiresAt) {
+        throw new Error("assignment.expiresAt expected to be set");
+      }
+      expect(assignment.expiresAt.getTime()).toBeGreaterThan(Date.now());
     });
   });
 
@@ -456,7 +459,10 @@ describe.skip("RBAC Permission System", () => {
         .returning();
 
       expect(override.expiresAt).toBeDefined();
-      expect(override.expiresAt!.getTime()).toBeGreaterThan(Date.now());
+      if (!override.expiresAt) {
+        throw new Error("override.expiresAt expected to be set");
+      }
+      expect(override.expiresAt.getTime()).toBeGreaterThan(Date.now());
     });
   });
 

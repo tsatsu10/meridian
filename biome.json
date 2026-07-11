@@ -59,16 +59,6 @@
           "allowTrailingCommas": true
         }
       }
-    },
-    {
-      "include": ["apps/api/**"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noNonNullAssertion": "warn"
-          }
-        }
-      }
     }
   ]
 }

@@ -362,7 +362,7 @@ export async function withRetry<T>(
     retryCondition = () => true,
   } = options;
 
-  let lastError: Error;
+  let lastError: Error | undefined;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -390,7 +390,13 @@ export async function withRetry<T>(
     }
   }
 
-  throw lastError!;
+  if (!lastError) {
+    // Unreachable: the loop above always runs at least once (attempt starts
+    // at 0, maxRetries defaults to 3) and only falls through here after
+    // assigning lastError in every caught iteration.
+    throw new Error("Retry loop exited without recording an error");
+  }
+  throw lastError;
 }
 
 // Database retry wrapper
