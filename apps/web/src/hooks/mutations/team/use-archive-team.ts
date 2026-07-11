@@ -24,7 +24,7 @@ export function useArchiveTeam() {
       });
       toast.success("Team archived successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to archive team");
     },
   });
