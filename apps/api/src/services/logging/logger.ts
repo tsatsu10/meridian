@@ -105,18 +105,14 @@ export class Logger {
   /**
    * Log info message
    */
-  static info(message: string, meta?: Record<string, any>) {
+  static info(message: string, meta?: object) {
     logger.info(message, meta);
   }
 
   /**
    * Log error message
    */
-  static error(
-    message: string,
-    error?: Error | any,
-    meta?: Record<string, any>,
-  ) {
+  static error(message: string, error?: unknown, meta?: object) {
     logger.error(message, {
       ...meta,
       error:
@@ -133,28 +129,28 @@ export class Logger {
   /**
    * Log warning message
    */
-  static warn(message: string, meta?: Record<string, any>) {
+  static warn(message: string, meta?: object) {
     logger.warn(message, meta);
   }
 
   /**
    * Log debug message
    */
-  static debug(message: string, meta?: Record<string, any>) {
+  static debug(message: string, meta?: object) {
     logger.debug(message, meta);
   }
 
   /**
    * Log HTTP request
    */
-  static http(message: string, meta?: Record<string, any>) {
+  static http(message: string, meta?: object) {
     logger.http(message, meta);
   }
 
   /**
    * Log database query
    */
-  static query(query: string, duration: number, meta?: Record<string, any>) {
+  static query(query: string, duration: number, meta?: object) {
     logger.debug("Database query", {
       ...meta,
       query,
@@ -166,12 +162,7 @@ export class Logger {
   /**
    * Log authentication event
    */
-  static auth(
-    event: string,
-    userId?: string,
-    success = true,
-    meta?: Record<string, any>,
-  ) {
+  static auth(event: string, userId?: string, success = true, meta?: object) {
     logger.info(`Auth: ${event}`, {
       ...meta,
       userId,
@@ -186,7 +177,7 @@ export class Logger {
   static security(
     event: string,
     severity: "low" | "medium" | "high" | "critical",
-    meta?: Record<string, any>,
+    meta?: object,
   ) {
     logger.warn(`Security: ${event}`, {
       ...meta,
@@ -203,7 +194,7 @@ export class Logger {
     path: string,
     statusCode: number,
     duration: number,
-    meta?: Record<string, any>,
+    meta?: object,
   ) {
     const level =
       statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "http";
@@ -225,7 +216,7 @@ export class Logger {
     metric: string,
     value: number,
     unit: string,
-    meta?: Record<string, any>,
+    meta?: object,
   ) {
     logger.info(`Performance: ${metric}`, {
       ...meta,
@@ -239,7 +230,7 @@ export class Logger {
   /**
    * Log business event
    */
-  static business(event: string, meta?: Record<string, any>) {
+  static business(event: string, meta?: object) {
     logger.info(`Business: ${event}`, {
       ...meta,
       type: "business",
@@ -254,7 +245,7 @@ export class Logger {
     operation: string,
     success: boolean,
     duration?: number,
-    meta?: Record<string, any>,
+    meta?: object,
   ) {
     logger.info(`External: ${service} - ${operation}`, {
       ...meta,
@@ -270,7 +261,7 @@ export class Logger {
 /**
  * Create child logger with context
  */
-export function createContextLogger(context: Record<string, any>) {
+export function createContextLogger(context: object) {
   return logger.child(context);
 }
 
