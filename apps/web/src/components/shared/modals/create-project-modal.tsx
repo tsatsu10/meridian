@@ -51,6 +51,7 @@ import {
   Search,
   ChevronRight,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "framer-motion";
@@ -136,13 +137,24 @@ export default function CreateProjectModal({
         if (!response.ok) throw new Error("Failed to fetch members");
 
         const users = await response.json();
-        const members = users.map((u: any) => ({
-          id: u.id || u.userId,
-          name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
-          role: u.role || "member",
-          email: u.email || u.userEmail,
-          avatar: u.avatar, // Custom avatar if exists, DiceBear will be used in component
-        }));
+        const members = users.map(
+          (u: {
+            id?: string;
+            userId?: string;
+            name?: string;
+            userName?: string;
+            email?: string;
+            userEmail?: string;
+            role?: string;
+            avatar?: string;
+          }) => ({
+            id: u.id || u.userId,
+            name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
+            role: u.role || "member",
+            email: u.email || u.userEmail,
+            avatar: u.avatar, // Custom avatar if exists, DiceBear will be used in component
+          }),
+        );
 
         setAvailableMembers(members);
       } catch (error) {
@@ -197,7 +209,7 @@ export default function CreateProjectModal({
         category:
           selectedTemplate === "custom"
             ? ("other" as const)
-            : (selectedTemplateData?.category as any) || ("other" as const),
+            : (selectedTemplateData?.category as string) || ("other" as const),
         priority: formData.priority as "low" | "medium" | "high" | "urgent",
 
         // Visibility and access
@@ -493,7 +505,7 @@ export default function CreateProjectModal({
 
                     // Get icon for profession
                     const getProfessionIcon = (prof: string) => {
-                      const iconMap: Record<string, any> = {
+                      const iconMap: Record<string, LucideIcon> = {
                         "Software Engineer": Code,
                         Designer: Palette,
                         Marketer: TrendingUp,
