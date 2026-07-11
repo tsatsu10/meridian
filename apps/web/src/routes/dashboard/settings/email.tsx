@@ -168,7 +168,10 @@ function EmailSettings() {
     },
   });
 
-  const handleChange = (field: keyof EmailSettingsData, value: any) => {
+  const handleChange = (
+    field: keyof EmailSettingsData,
+    value: EmailSettingsData[keyof EmailSettingsData],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
