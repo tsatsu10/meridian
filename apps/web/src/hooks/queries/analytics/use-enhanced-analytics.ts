@@ -24,8 +24,8 @@ interface EnhancedAnalyticsOptions {
 }
 
 interface ComparativeData {
-  current: any;
-  comparison: any;
+  current: number;
+  comparison: number;
   change: {
     absolute: number;
     percentage: number;
@@ -159,13 +159,13 @@ interface EnhancedAnalyticsResponse {
   performanceBenchmarks: AdvancedPerformanceBenchmarks;
   timeSeriesData: TimeSeriesDataPoint[];
 
-  departmentBreakdown?: any[];
-  skillGapAnalysis?: any[];
-  capacityPlanning?: any[];
-  riskAssessment?: any[];
+  departmentBreakdown?: unknown[];
+  skillGapAnalysis?: unknown[];
+  capacityPlanning?: unknown[];
+  riskAssessment?: unknown[];
 
   forecasting?: ForecastingData;
-  industryBenchmarks?: any;
+  industryBenchmarks?: unknown;
 
   summary: {
     timeRange: string;
