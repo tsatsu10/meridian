@@ -62,10 +62,16 @@ interface EventFormData {
   reminderMinutes: number;
 }
 
+interface EventTeamMember {
+  id: string;
+  name: string;
+  role?: string;
+}
+
 interface Team {
   id: string;
   name: string;
-  members: any[];
+  members: EventTeamMember[];
 }
 
 const eventTypes = [
@@ -314,8 +320,11 @@ export default function CreateEventModal({
                 <Label>Event Type *</Label>
                 <Select
                   value={formData.type}
-                  onValueChange={(value: any) =>
-                    setFormData((prev) => ({ ...prev, type: value }))
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      type: value as EventFormData["type"],
+                    }))
                   }
                 >
                   <SelectTrigger>
@@ -344,8 +353,11 @@ export default function CreateEventModal({
                 <Label>Priority *</Label>
                 <Select
                   value={formData.priority}
-                  onValueChange={(value: any) =>
-                    setFormData((prev) => ({ ...prev, priority: value }))
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      priority: value as EventFormData["priority"],
+                    }))
                   }
                 >
                   <SelectTrigger>
@@ -450,8 +462,11 @@ export default function CreateEventModal({
                 <Label>Recurring</Label>
                 <Select
                   value={formData.recurring}
-                  onValueChange={(value: any) =>
-                    setFormData((prev) => ({ ...prev, recurring: value }))
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      recurring: value as EventFormData["recurring"],
+                    }))
                   }
                 >
                   <SelectTrigger>
