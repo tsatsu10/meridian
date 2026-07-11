@@ -202,8 +202,9 @@ export async function seedUsers() {
     logger.info("\n📝 Creating user profiles...");
 
     for (let i = 0; i < createdUsers.length; i++) {
-      const user = createdUsers[i]!;
-      const userData = TEST_USERS[i]!;
+      const user = createdUsers[i];
+      const userData = TEST_USERS[i];
+      if (!user || !userData) continue; // parallel arrays; defensive against length drift
 
       const existing = await db
         .select()
@@ -258,7 +259,8 @@ export async function seedUsers() {
       );
 
       for (let i = 0; i < techSkillCount; i++) {
-        const skillName = TECHNICAL_SKILLS[i]!;
+        const skillName = TECHNICAL_SKILLS[i];
+        if (!skillName) continue;
 
         await db.insert(userSkill).values({
           userId: user.id,
@@ -276,7 +278,8 @@ export async function seedUsers() {
       const softSkillCount = randomInt(2, 4);
 
       for (let i = 0; i < softSkillCount; i++) {
-        const skillName = SOFT_SKILLS[i]!;
+        const skillName = SOFT_SKILLS[i];
+        if (!skillName) continue;
 
         await db.insert(userSkill).values({
           userId: user.id,
