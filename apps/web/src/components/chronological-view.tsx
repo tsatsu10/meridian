@@ -24,9 +24,17 @@ import {
 import { cn } from "@/lib/cn";
 import type { TaskWithSubtasks } from "@/types/task";
 
+interface ChronoMilestone {
+  id: string;
+  title: string;
+  date: string;
+  status?: string;
+  description?: string;
+}
+
 interface ChronologicalViewProps {
   tasks: TaskWithSubtasks[];
-  milestones: any[];
+  milestones: ChronoMilestone[];
 }
 
 interface TimelineItem {
@@ -39,7 +47,7 @@ interface TimelineItem {
   description?: string;
   userEmail?: string;
   number?: number;
-  data: TaskWithSubtasks | any;
+  data: TaskWithSubtasks | ChronoMilestone;
 }
 
 interface DayGroup {
@@ -86,7 +94,7 @@ function ChronologicalView({ tasks, milestones }: ChronologicalViewProps) {
           type: "milestone",
           date,
           title: milestone.title,
-          status: milestone.status,
+          status: milestone.status || "",
           description: milestone.description,
           data: milestone,
         });
