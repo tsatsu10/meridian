@@ -24,9 +24,16 @@ import {
 import { cn } from "@/lib/cn";
 import type { TaskWithSubtasks } from "@/types/task";
 
+interface RoadmapMilestone {
+  id: string;
+  title: string;
+  date: string;
+  status?: string;
+}
+
 interface RoadmapViewProps {
   tasks: TaskWithSubtasks[];
-  milestones: any[];
+  milestones: RoadmapMilestone[];
 }
 
 interface RoadmapPhase {
@@ -35,7 +42,7 @@ interface RoadmapPhase {
   startDate: Date;
   endDate: Date;
   tasks: TaskWithSubtasks[];
-  milestones: any[];
+  milestones: RoadmapMilestone[];
   progress: number;
   status: "upcoming" | "in_progress" | "completed" | "delayed";
 }
@@ -285,7 +292,7 @@ function RoadmapView({ tasks, milestones }: RoadmapViewProps) {
                         Key Milestones
                       </h4>
                       <div className="space-y-2">
-                        {phase.milestones.map((milestone: any) => (
+                        {phase.milestones.map((milestone) => (
                           <div
                             key={milestone.id}
                             className="flex items-center justify-between p-2 bg-orange-50 rounded-lg border border-orange-200"
