@@ -1,8 +1,24 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type Query } from "@tanstack/react-query";
 
 // @epic-3.2-time: Mike needs performance insights to optimize workflows
 // @role-member @role-senior: Members and Senior users need performance tracking for efficient work
+
+// Chrome-only, non-standard APIs with no lib.dom.d.ts types.
+interface PerformanceMemoryInfo {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+function getPerformanceMemory(): PerformanceMemoryInfo | undefined {
+  return (performance as unknown as { memory?: PerformanceMemoryInfo }).memory;
+}
+
+function getConnectionEffectiveType(): string | undefined {
+  return (navigator as unknown as { connection?: { effectiveType?: string } })
+    .connection?.effectiveType;
+}
 
 interface PerformanceMetrics {
   // React Query metrics
@@ -81,7 +97,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
       const staleQueries = allQueries.filter((query) => {
         const dataUpdatedAt = query.state.dataUpdatedAt || 0;
         const age = now - dataUpdatedAt;
-        return age > 120000 && !(query as any).isFetching; // 2 minutes
+        return age > 120000 && query.state.fetchStatus !== "fetching"; // 2 minutes
       });
 
       for (const query of staleQueries) {
@@ -92,9 +108,10 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
     }
 
     // Force garbage collection if available (Chrome DevTools)
-    if ("gc" in window && typeof (window as any).gc === "function") {
+    const maybeGc = (window as unknown as { gc?: unknown }).gc;
+    if (typeof maybeGc === "function") {
       try {
-        (window as any).gc();
+        maybeGc();
       } catch (e) {
         // Ignore errors - gc might not be available
       }
@@ -117,7 +134,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
     const queryCache = queryClient.getQueryCache();
     const queryStartTimes = new Map<string, number>();
 
-    const handleQueryStart = (query: any) => {
+    const handleQueryStart = (query: Query) => {
       const queryKey = JSON.stringify(query.queryKey);
       queryStartTimes.set(queryKey, performance.now());
 
@@ -130,7 +147,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
       }
     };
 
-    const handleQuerySuccess = (query: any) => {
+    const handleQuerySuccess = (query: Query) => {
       const queryKey = JSON.stringify(query.queryKey);
       const startTime = queryStartTimes.get(queryKey);
 
@@ -158,10 +175,14 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
       queryStartTimes.delete(queryKey);
     };
 
-    const unsubscribe = queryCache.subscribe((event: any) => {
-      if (event.type === "started") {
+    // react-query v5 reports fetch lifecycle as "updated" events with an
+    // action.type of "fetch" (start) / "success" (completion) -- the
+    // previous "started"/"success" top-level event.type check never
+    // matched any real QueryCacheNotifyEvent, so this tracker was dead.
+    const unsubscribe = queryCache.subscribe((event) => {
+      if (event.type === "updated" && event.action.type === "fetch") {
         handleQueryStart(event.query);
-      } else if (event.type === "success") {
+      } else if (event.type === "updated" && event.action.type === "success") {
         handleQuerySuccess(event.query);
       }
     });
@@ -216,7 +237,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
     if (!enableMemoryTracking || !("memory" in performance)) return;
 
     const updateMemoryUsage = () => {
-      const memory = (performance as any).memory;
+      const memory = getPerformanceMemory();
       if (memory) {
         const memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
         metricsRef.current.memoryUsage = memoryUsage;
@@ -300,17 +321,10 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
 
       // Runtime info
       isOnline: navigator.onLine,
-      connection: (navigator as any).connection?.effectiveType,
+      connection: getConnectionEffectiveType(),
 
       // Memory info
-      memoryInfo:
-        "memory" in performance
-          ? {
-              usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-              totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-              jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit,
-            }
-          : undefined,
+      memoryInfo: getPerformanceMemory(),
     };
   }, [currentMetrics, queryClient]);
 
