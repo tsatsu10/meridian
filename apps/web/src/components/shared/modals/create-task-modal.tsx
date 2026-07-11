@@ -140,7 +140,7 @@ interface WorkspaceTeam extends Team {
 }
 
 interface ProjectOption extends ProjectWithTasks {
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 // Quick date presets
