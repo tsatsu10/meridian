@@ -9,7 +9,7 @@ export interface APIResponse<T = any> {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   meta?: {
     timestamp: string;
@@ -51,7 +51,7 @@ export class APIResponseBuilder {
   static error(
     code: string,
     message: string,
-    details?: any,
+    details?: unknown,
     meta?: Partial<APIResponse["meta"]>,
   ): APIResponse {
     return {
