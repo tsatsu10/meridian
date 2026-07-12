@@ -121,6 +121,7 @@ export default function CreateMilestoneModal({
   const [taskSearchTerm, setTaskSearchTerm] = useState("");
 
   // Initialize form data when editing
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-initialize form each time the modal opens or the edited milestone changes
   useEffect(() => {
     if (editingMilestone) {
       setFormData({

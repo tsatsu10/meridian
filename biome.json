@@ -33,9 +33,6 @@
       "suspicious": {
         "noExplicitAny": "error"
       },
-      "correctness": {
-        "useExhaustiveDependencies": "warn"
-      },
       "complexity": {
         "noStaticOnlyClass": "warn"
       }

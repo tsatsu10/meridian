@@ -163,6 +163,21 @@ void [
   "#EC4899", // pink
 ];
 
+// Helper functions to safely resolve the project from context (module-scope = stable)
+const getContextProjectId = (
+  context: ProjectState | undefined,
+): string | undefined => {
+  return context?.id ?? context?.columns?.[0]?.tasks?.[0]?.projectId;
+};
+const getContextProjectLabel = (
+  context: ProjectState | undefined,
+): string | undefined => {
+  return context?.name ?? getContextProjectId(context);
+};
+const isValidProjectContext = (context: ProjectState | undefined): boolean => {
+  return !!getContextProjectId(context);
+};
+
 export default function CreateTaskModal({
   open,
   onOpenChange,
@@ -176,23 +191,6 @@ export default function CreateTaskModal({
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
   const createTaskMutation = useCreateTask();
-
-  // Helper functions to safely resolve the project from context
-  const getContextProjectId = (
-    context: ProjectState | undefined,
-  ): string | undefined => {
-    return context?.id ?? context?.columns?.[0]?.tasks?.[0]?.projectId;
-  };
-  const getContextProjectLabel = (
-    context: ProjectState | undefined,
-  ): string | undefined => {
-    return context?.name ?? getContextProjectId(context);
-  };
-  const isValidProjectContext = (
-    context: ProjectState | undefined,
-  ): boolean => {
-    return !!getContextProjectId(context);
-  };
 
   const [formData, setFormData] = useState<FormData>({
     title: "",

@@ -44,6 +44,7 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
   );
   const [loading, setLoading] = useState(true);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch versions when noteId changes; fetchVersions intentionally not a dep
   useEffect(() => {
     fetchVersions();
   }, [noteId]);

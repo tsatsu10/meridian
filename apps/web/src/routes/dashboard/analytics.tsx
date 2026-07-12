@@ -992,7 +992,7 @@ function AnalyticsPage() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [handleRefresh, state.comparisonMode, dispatch]); // ✅ Fixed: Added dispatch to dependencies
+  }, [handleRefresh, state.comparisonMode]);
 
   // Onboarding tour - show on first visit
   useEffect(() => {
@@ -1006,7 +1006,7 @@ function AnalyticsPage() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [workspace?.id, dispatch]); // ✅ Fixed: Added dispatch to dependencies
+  }, [workspace?.id]);
 
   const handleOnboardingComplete = useCallback(() => {
     localStorage.setItem("analytics-onboarding-completed", "true");

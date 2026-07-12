@@ -67,6 +67,7 @@ function TaskLabels({
 
   // ✅ FIX: Use stable dependency to prevent infinite loop
   // Only update when the actual label IDs change, not the array reference
+  // biome-ignore lint/correctness/useExhaustiveDependencies: taskLabels intentionally omitted; the effect writes it and guards via id comparison to avoid a loop
   useEffect(() => {
     const labelIds = labels?.map((label: TaskLabelData) => label.id) ?? [];
     const labelIdsString = JSON.stringify(labelIds.sort()); // Stable comparison

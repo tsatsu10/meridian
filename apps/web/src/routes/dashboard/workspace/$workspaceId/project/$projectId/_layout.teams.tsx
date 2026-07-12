@@ -800,6 +800,7 @@ function ProjectTeams() {
   };
 
   // Keyboard shortcuts
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyboard handler; handleExportTeam rebuilt each render, listener re-binds harmlessly to capture the latest
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;

@@ -279,6 +279,7 @@ export function VoiceControl() {
 
       setCurrentCommand("");
     },
+    // biome-ignore lint/correctness/useExhaustiveDependencies: commands is a static list rebuilt each render; keeping it as a dep is harmless and preserves latest handlers
     [commands, speak],
   );
 

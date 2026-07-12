@@ -141,6 +141,7 @@ function ProfileSettings() {
   });
 
   // Update profile data when API data is loaded or store changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: sync profile from API/store; normalizeProfileData is a pure transform, effect keyed on profileData/user/settings
   useEffect(() => {
     let newSettings: ReturnType<typeof normalizeProfileData> | undefined;
 

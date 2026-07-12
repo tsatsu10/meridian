@@ -26,7 +26,7 @@ import useGetProject from "@/hooks/queries/project/use-get-project";
  */
 export function useProjectPermissions(projectId: string, workspaceId?: string) {
   const { user } = useAuthStore();
-  const { data: project, isLoading } = useGetProject({
+  const { isLoading } = useGetProject({
     id: projectId,
     workspaceId: workspaceId || "",
   });
@@ -156,7 +156,7 @@ export function useProjectPermissions(projectId: string, workspaceId?: string) {
       userRole,
       isLoading,
     };
-  }, [user, project, isLoading]);
+  }, [user, isLoading]);
 
   return permissions;
 }

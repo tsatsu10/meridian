@@ -267,7 +267,7 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
         clearInterval(memoryCheckIntervalRef.current);
       }
     };
-  }, [enableMemoryTracking, performMemoryCleanup]);
+  }, [enableMemoryTracking]);
 
   // Calculate cache hit rate with cleanup
   useEffect(() => {

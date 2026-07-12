@@ -330,7 +330,7 @@ export const ProjectFiltersAccessible: React.FC<
       );
       onFiltersChange?.();
     },
-    [sortBy, sortOrder, setSort, announceFilterChange, onFiltersChange],
+    [sortOrder, setSort, announceFilterChange, onFiltersChange],
   );
 
   return (

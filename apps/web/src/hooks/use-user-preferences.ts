@@ -213,6 +213,7 @@ export function useUserPreferences() {
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Save preferences to API (debounced)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cacheToLocalStorage is a pure localStorage writer; excluded to keep savePreferences stable
   const savePreferences = useCallback(
     async (updates: Partial<UserPreferences>) => {
       if (!user?.email) return;

@@ -289,6 +289,7 @@ function ProjectListView() {
   };
 
   // 🔒 SECURITY: Throttled reorder to prevent API spam
+  // biome-ignore lint/correctness/useExhaustiveDependencies: throttled callback must capture latest allTasks/updateTask; biome under-detects usage through throttle()
   const handleTaskReorder = useCallback(
     throttle(
       async (taskId: string, newPosition: number) => {

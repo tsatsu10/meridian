@@ -150,6 +150,7 @@ function NotificationsPanel() {
   });
 
   // Preload notification sound on mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one-time preload on mount; soundEnabled read intentionally not a re-run trigger
   useEffect(() => {
     if (soundEnabled) {
       preloadNotificationSound();
@@ -324,6 +325,7 @@ function NotificationsPanel() {
   }, [notifications.length, soundEnabled, previousNotificationCount]);
 
   // Keyboard shortcuts
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyboard navigation handler; deps intentionally scoped to avoid re-binding the listener on every list/focus change
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input

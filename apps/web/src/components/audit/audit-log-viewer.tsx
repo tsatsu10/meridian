@@ -164,6 +164,7 @@ export function AuditLogViewer() {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch logs/stats when filters change; fetch fns intentionally not deps
   useEffect(() => {
     fetchAuditLogs(true);
     fetchAuditStats();

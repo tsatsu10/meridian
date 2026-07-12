@@ -37,12 +37,10 @@ import {
   Globe,
   type LucideIcon,
 } from "lucide-react";
-import { useRBACAuth } from "@/lib/permissions";
 import type { AllPermissions } from "@/lib/permissions/types";
 import useWorkspaceStore from "@/store/workspace";
 import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
 import type { Notification } from "@/types/notification";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
 
 // Navigation item interface with enhanced properties
 export interface NavigationItem {
@@ -79,12 +77,6 @@ export interface NavigationSection {
 
 // Dashboard navigation items with create functionality
 export const useDashboardNavigation = (): NavigationItem[] => {
-  const { hasPermission } = useRBACAuth();
-  const { workspace } = useWorkspaceStore();
-  const { data: projects } = useGetProjects({
-    workspaceId: workspace?.id || "",
-  });
-
   return useMemo(
     () => [
       {
@@ -134,7 +126,7 @@ export const useDashboardNavigation = (): NavigationItem[] => {
         permissions: ["canViewAnalytics"],
       },
     ],
-    [workspace?.id, projects, hasPermission],
+    [],
   );
 };
 
@@ -159,8 +151,6 @@ export const useUtilityNavigation = (): NavigationItem[] => {
 
 // Settings Navigation Items - Comprehensive with 22 pages organized into 5 categories
 export const useSettingsNavigation = (): NavigationItem[] => {
-  const { hasPermission } = useRBACAuth();
-
   return useMemo(
     () => [
       // Personal Settings (6 items)
@@ -286,7 +276,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
         category: "utility" as const,
       },
     ],
-    [hasPermission],
+    [],
   );
 };
 

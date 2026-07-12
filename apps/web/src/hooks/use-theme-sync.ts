@@ -76,6 +76,7 @@ export function useThemeSync() {
   };
 
   // Apply appearance settings when they change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: applyAppearanceSettings is a stable DOM-only helper; effect keyed on settings.appearance
   useEffect(() => {
     applyAppearanceSettings(settings.appearance);
   }, [settings.appearance]);

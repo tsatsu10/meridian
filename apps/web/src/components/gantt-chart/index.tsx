@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef } from "react";
 import { format, addDays, differenceInDays } from "date-fns";
 import type { TaskWithSubtasks } from "@/types/task";
 import useProjectStore from "@/store/project";
@@ -353,14 +353,7 @@ function GanttChart({ tasks }: GanttChartProps) {
           totalDays: 30,
         };
       }
-    }, [
-      scheduledTasks,
-      schedulingStats,
-      tasks,
-      currentDate,
-      viewMode,
-      zoomLevel,
-    ]);
+    }, [scheduledTasks, tasks, currentDate, viewMode, zoomLevel]);
 
   // Dynamic timeline headers based on view mode
   const timelineHeaders = useMemo(() => {
@@ -471,9 +464,6 @@ function GanttChart({ tasks }: GanttChartProps) {
       }
     }
   };
-
-  // Error boundary for rendering issues
-  useEffect(() => {}, [debugInfo, ganttTasks, timelineHeaders]);
 
   if (ganttTasks.length === 0) {
     return (

@@ -68,6 +68,7 @@ export function NoteEditor({
   }, [note]);
 
   // Auto-save functionality
+  // biome-ignore lint/correctness/useExhaustiveDependencies: debounced autosave keyed on title/content; autoSaveTimeout is written here and note fields are read for change detection — adding them would reset/loop the timer
   useEffect(() => {
     if (note && (title !== note.title || content !== note.content)) {
       // Clear existing timeout
