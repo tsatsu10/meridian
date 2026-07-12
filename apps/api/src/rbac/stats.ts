@@ -122,7 +122,7 @@ rbacStats.get("/recent-changes", authMiddleware, async (c) => {
     // Format changes
     const formattedChanges = changes.map((change) => {
       // settings_audit_log stores before/after as JSON strings in oldValue/newValue
-      const parse = (value: string | null): any => {
+      const parse = (value: string | null): unknown => {
         if (!value) return undefined;
         try {
           return JSON.parse(value);
