@@ -99,11 +99,20 @@ export async function getGoalAnalytics(c: Context) {
 /**
  * Calculate progress velocity (progress per day)
  */
-function calculateVelocity(progressEntries: any[]): number {
+type ProgressEntry = { value: string | number; recordedAt: string | Date };
+type GoalInput = {
+  progress?: number | null;
+  progressEntries: ProgressEntry[];
+  updatedAt?: string | Date | null;
+  endDate?: string | Date | null;
+};
+
+function calculateVelocity(progressEntries: ProgressEntry[]): number {
   if (progressEntries.length < 2) return 0;
 
   const latest = progressEntries[0];
   const oldest = progressEntries[progressEntries.length - 1];
+  if (!latest || !oldest) return 0;
 
   const progressChange =
     Number.parseFloat(latest.value as string) -
@@ -119,7 +128,7 @@ function calculateVelocity(progressEntries: any[]): number {
 /**
  * Estimate completion date based on velocity
  */
-function estimateCompletion(goal: any): string | null {
+function estimateCompletion(goal: GoalInput): string | null {
   const p = goal.progress ?? 0;
   if (p >= 100) return null; // Already complete
 
@@ -139,7 +148,7 @@ function estimateCompletion(goal: any): string | null {
  * Calculate progress trend for last 7 days
  */
 function calculateProgressTrend(
-  progressEntries: any[],
+  progressEntries: ProgressEntry[],
 ): Array<{ date: string; value: number }> {
   const trend: Array<{ date: string; value: number }> = [];
   const sevenDaysAgo = new Date();
@@ -162,7 +171,7 @@ function calculateProgressTrend(
 /**
  * Calculate days since last update
  */
-function calculateDaysSinceUpdate(goal: any): number {
+function calculateDaysSinceUpdate(goal: GoalInput): number {
   if (!goal.updatedAt) return 0;
 
   const now = new Date();
@@ -175,7 +184,7 @@ function calculateDaysSinceUpdate(goal: any): number {
 /**
  * Calculate overall health score (0-100)
  */
-function calculateHealthScore(goal: any): number {
+function calculateHealthScore(goal: GoalInput): number {
   let score = 100;
 
   // Deduct points for stale goals (no updates)
