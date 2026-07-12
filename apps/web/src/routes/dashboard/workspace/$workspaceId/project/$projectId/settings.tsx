@@ -448,11 +448,12 @@ function ProjectSettings() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredAndSortedTeams.slice(startIndex, endIndex);
-  }, [filteredAndSortedTeams, currentPage, itemsPerPage]);
+  }, [filteredAndSortedTeams, currentPage]);
 
   const totalPages = Math.ceil(filteredAndSortedTeams.length / itemsPerPage);
 
   // Reset to page 1 when search or sort changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset to page 1 when search/sort changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, sortBy]);

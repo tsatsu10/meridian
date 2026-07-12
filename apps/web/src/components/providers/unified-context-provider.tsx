@@ -181,6 +181,7 @@ function UnifiedContextInner({
 
   // ===== INITIALIZATION =====
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one-time context initialization on mount; settings.theme read from storage, not a re-run trigger
   useEffect(() => {
     const initializeContext = async () => {
       try {
@@ -317,6 +318,7 @@ function UnifiedContextInner({
 
   // ===== CONTEXT VALUE =====
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: signIn/signOut/updateSettings close over only stable setters; excluded to keep the context value stable and avoid re-rendering all consumers
   const contextValue: UnifiedContextType = useMemo(
     () => ({
       // Auth

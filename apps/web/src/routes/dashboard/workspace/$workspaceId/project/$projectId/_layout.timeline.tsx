@@ -661,6 +661,7 @@ function ProjectTimeline() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: keyboard handler; handleCreateMilestone is rebuilt each render, the listener re-binds harmlessly to capture the latest
   }, [searchQuery, handleCreateMilestone]);
 
   // Loading state

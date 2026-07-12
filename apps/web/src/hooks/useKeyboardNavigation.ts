@@ -271,6 +271,7 @@ export function useKeyboardNavigation(
       switchGroup,
       items,
       currentGroup,
+      announceToScreenReader,
     ],
   );
 

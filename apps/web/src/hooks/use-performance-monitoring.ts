@@ -297,6 +297,7 @@ export function useComponentPerformance(componentName: string) {
     );
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: measure component mount time exactly once on mount
   useEffect(() => {
     measureComponentMount();
   }, []);

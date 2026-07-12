@@ -160,6 +160,7 @@ function RouteComponent() {
   };
 
   // 🚀 PERFORMANCE: Memoize filtering logic to prevent re-computation on every render
+  // biome-ignore lint/correctness/useExhaustiveDependencies: flattenTasksForFiltering/rebuildTaskHierarchy are pure local helpers; adding them would defeat this memo
   const filteredProject = useMemo(() => {
     if (!project) return null;
 

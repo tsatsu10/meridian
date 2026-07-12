@@ -102,6 +102,7 @@ export function ErrorRecovery({
   const canRetry = retryCount < maxRetries && errorInfo.recoverable;
 
   // Auto-retry countdown logic (deps intentionally narrow to avoid resetting the countdown on every render)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: countdown deps intentionally narrow; adding autoRetryDelay would reset the timer each tick
   useEffect(() => {
     if (autoRetry && canRetry && !isRetrying) {
       if (countdown > 0) {

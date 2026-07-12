@@ -72,6 +72,7 @@ export function AnimatedGridPattern({
   };
 
   // Update squares to animate in
+  // biome-ignore lint/correctness/useExhaustiveDependencies: regenerate squares when dimensions/count change; generateSquares derives from those
   useEffect(() => {
     if (dimensions.width && dimensions.height) {
       setSquares(generateSquares(numSquares));
@@ -98,7 +99,7 @@ export function AnimatedGridPattern({
         resizeObserver.unobserve(containerRef.current);
       }
     };
-  }, [containerRef]);
+  }, []);
 
   return (
     <svg

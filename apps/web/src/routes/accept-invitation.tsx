@@ -42,7 +42,7 @@ function AcceptInvitationPage() {
       setHasAttempted(true);
       handleAcceptInvitation();
     }
-  }, [invitationToken, hasAttempted]);
+  }, [invitationToken, hasAttempted, navigate]);
 
   const handleAcceptInvitation = async () => {
     if (!invitationToken) return;

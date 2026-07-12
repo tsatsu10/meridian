@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -127,13 +127,13 @@ function ProjectsPage() {
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
 
   // Create project handler (MUST be before keyboard shortcuts)
-  const handleCreateProject = () => {
+  const handleCreateProject = useCallback(() => {
     if (!canCreateProjects) {
       toast.error("You don't have permission to create projects");
       return;
     }
     setIsCreateProjectOpen(true);
-  };
+  }, [canCreateProjects]);
 
   // Keyboard shortcuts
   const keyboardShortcuts = useMemo(() => {
@@ -156,7 +156,7 @@ function ProjectsPage() {
     });
 
     return shortcuts;
-  }, [canCreateProjects]);
+  }, [canCreateProjects, handleCreateProject]);
 
   useKeyboardShortcuts(keyboardShortcuts);
 
@@ -220,6 +220,7 @@ function ProjectsPage() {
   const completedProjects = projectStats?.completed ?? 0;
   const avgProgress = projectStats?.avgProgress ?? 0;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset to page 1 when any filter/search/sort changes
   useEffect(() => {
     setCurrentPage(1);
   }, [

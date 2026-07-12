@@ -768,6 +768,7 @@ export default function AllTasksPage() {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset to page 1 when any filter/search/tab changes
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filterStatus, filterPriority, activeTab, advancedFilters]);

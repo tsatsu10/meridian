@@ -166,6 +166,7 @@ export default function EnhancedBacklogView({
   const [showThemePanel, setShowThemePanel] = useState(false);
 
   // Initialize with mock themes on mount (remove when backend is ready)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hasProjectData is a pure type guard; effect keyed on project/themes.length, adding it would loop
   useEffect(() => {
     // Only initialize if themes are empty and project exists
     if (themes.length === 0 && hasProjectData(project)) {
@@ -258,6 +259,7 @@ export default function EnhancedBacklogView({
   };
 
   // Transform tasks to enhanced tasks with additional metadata
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hasProjectData is a pure type guard; memo keyed on project
   const enhancedTasks: EnhancedTask[] = useMemo(() => {
     if (!hasProjectData(project)) return [];
 

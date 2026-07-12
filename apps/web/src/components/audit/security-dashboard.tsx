@@ -73,6 +73,7 @@ export function SecurityDashboard() {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch/poll security data when timeRange changes; fetchSecurityData intentionally not a dep
   useEffect(() => {
     fetchSecurityData();
 
