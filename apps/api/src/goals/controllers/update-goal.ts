@@ -60,7 +60,7 @@ export async function updateGoal(c: Context) {
     }
 
     // Build update object
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 
