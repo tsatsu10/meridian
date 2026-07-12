@@ -312,10 +312,14 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
           <div className="space-y-4">
             {/* Field selector */}
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label
+                htmlFor="bulk-update-field"
+                className="text-sm font-medium text-gray-700 block mb-2"
+              >
                 Update field
               </label>
               <select
+                id="bulk-update-field"
                 value={updateField}
                 onChange={(e) =>
                   setUpdateField(e.target.value as "status" | "priority")
@@ -329,10 +333,14 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
 
             {/* Value input */}
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label
+                htmlFor="bulk-new-value"
+                className="text-sm font-medium text-gray-700 block mb-2"
+              >
                 New value
               </label>
               <select
+                id="bulk-new-value"
                 value={updateValue}
                 onChange={(e) => setUpdateValue(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
