@@ -19,7 +19,7 @@ import { hash } from "@node-rs/argon2";
 import { createId } from "@paralleldrive/cuid2";
 
 describe.skip("Authentication Flow Integration Tests", () => {
-  let db: any;
+  let db: Record<string, unknown>;
   let testUserId: string;
   let testUserEmail: string;
   let testSessionToken: string;
