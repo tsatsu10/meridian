@@ -965,7 +965,7 @@ export default function LandingPage() {
                 >
                   {category.features.map((feature, index) => (
                     <motion.div
-                      key={feature}
+                      key={feature.name}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
