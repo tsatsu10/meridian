@@ -130,7 +130,11 @@ class RedisClient {
   /**
    * Set value with optional TTL
    */
-  async set(key: string, value: any, ttlSeconds?: number): Promise<boolean> {
+  async set(
+    key: string,
+    value: unknown,
+    ttlSeconds?: number,
+  ): Promise<boolean> {
     try {
       if (!this.isConnected || !this.client) {
         Logger.warn("Redis not ready, skipping set", { key });
