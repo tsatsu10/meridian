@@ -52,6 +52,16 @@
   },
   "overrides": [
     {
+      "include": ["apps/web/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "error"
+          }
+        }
+      }
+    },
+    {
       "include": ["**/tsconfig.json", "**/tsconfig.*.json", "**/*.jsonc"],
       "json": {
         "parser": {
