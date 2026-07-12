@@ -33,7 +33,7 @@ export async function recordWorkHistoryEvent(
   userId: string,
   workspaceId: string,
   event: WorkHistoryEvent,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   try {
@@ -66,7 +66,7 @@ export async function getUserWorkHistory(
   userId: string,
   workspaceId?: string,
   options?: { limit?: number; offset?: number },
-): Promise<any[]> {
+) {
   const db = getDatabase();
 
   try {
@@ -110,7 +110,7 @@ export async function getUserWorkHistory(
 /**
  * Get tenure milestones
  */
-export function getTenureMilestones(daysInWorkspace: number): any[] {
+export function getTenureMilestones(daysInWorkspace: number) {
   const milestones = [
     { days: 30, name: "1 Month", icon: "🌟" },
     { days: 90, name: "3 Months", icon: "✨" },
@@ -139,7 +139,7 @@ export async function recordMajorContribution(
     projectId: string;
     type?: "project_lead" | "key_feature" | "problem_solver" | "team_builder";
   },
-): Promise<any> {
+) {
   return recordWorkHistoryEvent(userId, workspaceId, {
     eventType: "project_completed",
     eventTitle: data.title,
