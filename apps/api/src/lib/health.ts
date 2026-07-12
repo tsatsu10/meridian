@@ -5,6 +5,7 @@
 
 // Re-export health route
 export { default as healthRoute } from "../health/index";
+import type { Context, Next } from "hono";
 
 // Re-export health calculation functions
 export { calculateProjectHealth } from "../health/calculate-project-health";
@@ -72,7 +73,7 @@ export interface SystemInfo {
 }
 
 export function createHealthMiddleware(config?: Partial<HealthConfig>) {
-  return async (c: any, next: any) => {
+  return async (c: Context, next: Next) => {
     // Placeholder middleware
     await next();
   };
