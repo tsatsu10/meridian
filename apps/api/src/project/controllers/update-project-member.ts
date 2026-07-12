@@ -34,7 +34,7 @@ async function updateProjectMember(
   }
 
   // Build update object
-  const updateFields: any = {};
+  const updateFields: Record<string, unknown> = {};
 
   if (data.role !== undefined) updateFields.role = data.role;
   if (data.hoursPerWeek !== undefined)
