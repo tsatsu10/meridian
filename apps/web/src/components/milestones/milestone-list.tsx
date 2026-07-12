@@ -753,6 +753,7 @@ export default function MilestoneList({
                               e.stopPropagation();
                               handleToggleSelection(milestone.id);
                             }}
+                            onKeyDown={(e) => e.stopPropagation()}
                             onClick={(e) => e.stopPropagation()}
                             className="mt-1 h-4 w-4 rounded border-gray-300"
                           />
@@ -868,6 +869,7 @@ export default function MilestoneList({
 
                         <div
                           className="flex items-center gap-2 ml-4"
+                          onKeyDown={(e) => e.stopPropagation()}
                           onClick={(e) => e.stopPropagation()}
                         >
                           {!milestone.isDerived &&
@@ -912,6 +914,7 @@ export default function MilestoneList({
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  onKeyDown={(e) => e.stopPropagation()}
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
