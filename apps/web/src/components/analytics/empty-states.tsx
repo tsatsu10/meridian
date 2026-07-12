@@ -232,6 +232,7 @@ export function AnalyticsEmptyState({
                     const StepIcon = step.icon;
                     return (
                       <div
+                        // biome-ignore lint/suspicious/noArrayIndexKey: static onboarding steps, index shown as step number
                         key={index}
                         className="flex items-center gap-3 text-sm text-muted-foreground"
                       >
@@ -251,11 +252,11 @@ export function AnalyticsEmptyState({
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 justify-center pt-4">
-              {config.actions.map((action, index) => {
+              {config.actions.map((action) => {
                 const ActionIcon = action.icon;
                 return (
                   <Button
-                    key={index}
+                    key={action.path}
                     variant={action.variant}
                     onClick={() => navigate({ to: action.path })}
                     className="gap-2"

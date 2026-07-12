@@ -322,9 +322,9 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps = {}) {
 
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              {backupCodes.map((code, i) => (
+              {backupCodes.map((code) => (
                 <div
-                  key={i}
+                  key={code}
                   className="p-3 bg-gray-50 border rounded-md font-mono text-sm text-center"
                 >
                   {code}

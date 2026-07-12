@@ -169,6 +169,7 @@ function AnalyticsCharts({
           {/* Interactive data points */}
           {data.datasets[0]?.data.map((value, index) => (
             <circle
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed test dataset, index drives position/testid
               key={index}
               cx={`${(index + 1) * (100 / (data.labels.length + 1))}%`}
               cy={`${100 - value}%`}
@@ -200,6 +201,7 @@ function AnalyticsCharts({
         >
           {data.datasets.map((dataset, index) => (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed test dataset, never reorders
               key={index}
               className="legend-item"
               // biome-ignore lint/a11y/useSemanticElements: test mock component

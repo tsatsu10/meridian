@@ -258,6 +258,7 @@ export function OnboardingTour({
                 <ul className="space-y-2">
                   {currentStepData.tips.map((tip, index) => (
                     <motion.li
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static tips list, index drives stagger delay
                       key={index}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}

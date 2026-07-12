@@ -297,6 +297,7 @@ export function ColorBlindMode() {
             <div className="flex items-end justify-between gap-2 h-32">
               {[65, 45, 80, 35, 90, 55, 70, 40].map((height, index) => (
                 <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed static bar-chart preview, never reorders
                   key={index}
                   className={cn(
                     "flex-1 rounded-t transition-all",

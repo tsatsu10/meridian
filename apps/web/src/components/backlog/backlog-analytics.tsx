@@ -390,9 +390,9 @@ export default function BacklogAnalytics({
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {priorityChartData.map((entry, index) => (
+                    {priorityChartData.map((entry) => (
                       <Cell
-                        key={`cell-${index}`}
+                        key={`cell-${entry.name}`}
                         fill={
                           COLORS[entry.name as keyof typeof COLORS] || "#94A3B8"
                         }
@@ -442,9 +442,9 @@ export default function BacklogAnalytics({
                   <YAxis />
                   <Tooltip />
                   <Bar dataKey="value">
-                    {refinementChartData.map((entry, index) => (
+                    {refinementChartData.map((entry) => (
                       <Cell
-                        key={`cell-${index}`}
+                        key={`cell-${entry.name}`}
                         fill={
                           COLORS[entry.name as keyof typeof COLORS] || "#94A3B8"
                         }

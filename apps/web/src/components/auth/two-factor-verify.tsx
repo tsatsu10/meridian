@@ -164,6 +164,7 @@ export function TwoFactorVerify({
             <div className="flex gap-2 justify-center" onPaste={handlePaste}>
               {code.map((digit, index) => (
                 <Input
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length OTP inputs indexed by position
                   key={index}
                   ref={(el) => {
                     inputRefs.current[index] = el;
