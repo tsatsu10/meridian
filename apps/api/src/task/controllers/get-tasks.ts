@@ -111,7 +111,7 @@ async function getTasks(projectId: string) {
 
   // @epic-1.2-dependencies: Fetch all dependencies for tasks in this project (simplified for now)
   const taskIds = tasks.map((task) => task.id);
-  const dependencies: any[] = []; // Temporarily disabled to fix TypeScript issues
+  const dependencies: unknown[] = []; // Temporarily disabled to fix TypeScript issues
 
   // Create a task lookup map for dependency resolution
   const taskLookupMap = new Map(tasks.map((task) => [task.id, task]));
@@ -119,7 +119,7 @@ async function getTasks(projectId: string) {
   // Create dependency maps for quick lookup with related task information
   const dependencyMap = new Map<
     string,
-    { dependencies: any[]; blockedBy: any[] }
+    { dependencies: unknown[]; blockedBy: unknown[] }
   >();
 
   // Initialize dependency arrays for all tasks
@@ -131,9 +131,17 @@ async function getTasks(projectId: string) {
   // Will be re-enabled once TypeScript issues are resolved
 
   // Build hierarchical task structure with progress calculation and dependencies
-  const buildTaskHierarchy = (taskList: any[]) => {
-    const taskMap = new Map();
-    const rootTasks: any[] = [];
+  type MappedTask = (typeof tasks)[number];
+  type TaskNode = MappedTask & {
+    subtasks: TaskNode[];
+    dependencies: unknown[];
+    blockedBy: unknown[];
+    subtaskProgress?: { completed: number; total: number; percentage: number };
+  };
+
+  const buildTaskHierarchy = (taskList: MappedTask[]) => {
+    const taskMap = new Map<string, TaskNode>();
+    const rootTasks: TaskNode[] = [];
 
     // First pass: create task map with dependencies
     for (const task of taskList) {
@@ -152,8 +160,9 @@ async function getTasks(projectId: string) {
     // Second pass: build hierarchy
     for (const task of taskList) {
       const taskWithSubtasks = taskMap.get(task.id);
-      if (task.parentId && taskMap.has(task.parentId)) {
-        const parent = taskMap.get(task.parentId);
+      if (!taskWithSubtasks) continue;
+      const parent = task.parentId ? taskMap.get(task.parentId) : undefined;
+      if (parent) {
         parent.subtasks.push(taskWithSubtasks);
       } else {
         rootTasks.push(taskWithSubtasks);
@@ -161,14 +170,14 @@ async function getTasks(projectId: string) {
     }
 
     // Third pass: calculate progress for parent tasks
-    const calculateProgress = (task: any): any => {
+    const calculateProgress = (task: TaskNode): TaskNode => {
       if (task.subtasks && task.subtasks.length > 0) {
         // Recursively calculate progress for nested subtasks
         task.subtasks = task.subtasks.map(calculateProgress);
 
         // Calculate completion percentage
         const completedSubtasks = task.subtasks.filter(
-          (subtask: any) => subtask.status === "done",
+          (subtask: TaskNode) => subtask.status === "done",
         ).length;
 
         task.subtaskProgress = {
