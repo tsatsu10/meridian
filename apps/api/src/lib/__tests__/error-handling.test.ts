@@ -137,7 +137,7 @@ describe("Error Handling", () => {
 
   describe("Error Handling Strategies", () => {
     const handleError = (
-      error: any,
+      error: unknown,
     ): { shouldRetry: boolean; delay: number } => {
       const retryableErrors = ["ETIMEDOUT", "ECONNREFUSED", "ENOTFOUND"];
 
@@ -202,7 +202,10 @@ describe("Error Handling", () => {
   });
 
   describe("Error Logging", () => {
-    const logError = (error: Error, context?: any): void => {
+    const logError = (
+      error: Error,
+      context?: Record<string, unknown>,
+    ): void => {
       const logEntry = {
         timestamp: new Date().toISOString(),
         message: error.message,
