@@ -28,9 +28,9 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Analytics Service", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testUser: any;
-  let testWorkspace: any;
-  let testProject: any;
+  let testUser: Record<string, unknown>;
+  let testWorkspace: Record<string, unknown>;
+  let testProject: Record<string, unknown>;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -446,8 +446,8 @@ describe.skip("Analytics Service", () => {
   });
 
   describe("Team Performance Analytics", () => {
-    let teamMember1: any;
-    let teamMember2: any;
+    let teamMember1: Record<string, unknown>;
+    let teamMember2: Record<string, unknown>;
 
     beforeEach(async () => {
       const hashedPassword = await hashPassword("TestPassword123!");
@@ -517,20 +517,23 @@ describe.skip("Analytics Service", () => {
         .from(taskTable)
         .where(eq(taskTable.projectId, testProject.id));
 
-      const tasksByMember = tasks.reduce((acc: Record<string, any>, task) => {
-        if (!task.assigneeId) return acc;
+      const tasksByMember = tasks.reduce(
+        (acc: Record<string, unknown>, task) => {
+          if (!task.assigneeId) return acc;
 
-        if (!acc[task.assigneeId]) {
-          acc[task.assigneeId] = { total: 0, completed: 0 };
-        }
+          if (!acc[task.assigneeId]) {
+            acc[task.assigneeId] = { total: 0, completed: 0 };
+          }
 
-        acc[task.assigneeId].total++;
-        if (task.status === "done") {
-          acc[task.assigneeId].completed++;
-        }
+          acc[task.assigneeId].total++;
+          if (task.status === "done") {
+            acc[task.assigneeId].completed++;
+          }
 
-        return acc;
-      }, {});
+          return acc;
+        },
+        {},
+      );
 
       expect(tasksByMember[teamMember1.id].completed).toBe(2);
       expect(tasksByMember[teamMember2.id].completed).toBe(1);
@@ -608,7 +611,7 @@ describe.skip("Analytics Service", () => {
   });
 
   describe("Workspace-Level Analytics", () => {
-    let project2: any;
+    let project2: Record<string, unknown>;
 
     beforeEach(async () => {
       [project2] = await db
