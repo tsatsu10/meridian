@@ -31,7 +31,7 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "error",
         "noArrayIndexKey": "warn"
       },
       "correctness": {
@@ -51,16 +51,6 @@
     "enabled": false
   },
   "overrides": [
-    {
-      "include": ["apps/web/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "error"
-          }
-        }
-      }
-    },
     {
       "include": ["**/tsconfig.json", "**/tsconfig.*.json", "**/*.jsonc"],
       "json": {
