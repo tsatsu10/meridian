@@ -651,6 +651,7 @@ function NotificationsPanel() {
     <LazyDashboardLayout>
       {/* Live region for screen reader announcements */}
       <div
+        // biome-ignore lint/a11y/useSemanticElements: intentional status live region
         role="status"
         aria-live="polite"
         aria-atomic="true"
