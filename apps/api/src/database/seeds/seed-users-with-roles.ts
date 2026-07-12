@@ -75,7 +75,7 @@ export async function seedUsersWithRoles() {
   try {
     // 1️⃣ CREATE USERS
     logger.debug("👥 Creating test users...");
-    const createdUsers: any[] = [];
+    const createdUsers: Array<{ id: string; [key: string]: unknown }> = [];
 
     for (const userData of testUsers) {
       // Check if user exists
@@ -220,7 +220,7 @@ export async function seedUsersWithRoles() {
       },
     ];
 
-    const createdProjects: any[] = [];
+    const createdProjects: Array<{ id: string; [key: string]: unknown }> = [];
     for (const projectData of projectsData) {
       const existing = await db
         .select()
@@ -326,7 +326,7 @@ export async function seedUsersWithRoles() {
       },
     ];
 
-    const createdTeams: any[] = [];
+    const createdTeams: Array<{ id: string; [key: string]: unknown }> = [];
     for (const teamData of teamsData) {
       const existing = await db
         .select()
