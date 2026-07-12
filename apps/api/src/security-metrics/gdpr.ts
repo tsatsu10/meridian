@@ -378,7 +378,9 @@ function getComplianceStatus(
   return "non-compliant";
 }
 
-async function calculateDataRetentionScore(db: any): Promise<number> {
+async function calculateDataRetentionScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Simplified calculation
   // In a real implementation, check if old data is being properly deleted
   const now = new Date();
@@ -402,7 +404,9 @@ async function calculateDataRetentionScore(db: any): Promise<number> {
   return Math.round(retentionScore);
 }
 
-async function calculateUserConsentScore(db: any): Promise<number> {
+async function calculateUserConsentScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on users with email verification (proxy for consent)
   const totalUsers = await db.select({ count: count() }).from(userTable);
   const verifiedUsers = await db
@@ -418,7 +422,9 @@ async function calculateUserConsentScore(db: any): Promise<number> {
   return Math.max(score, 70); // Minimum 70% for reasonable baseline
 }
 
-async function calculateDataAccessScore(db: any): Promise<number> {
+async function calculateDataAccessScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on active user sessions (proxy for data access management)
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -436,7 +442,9 @@ async function calculateDataAccessScore(db: any): Promise<number> {
   return score;
 }
 
-async function calculateDataDeletionScore(db: any): Promise<number> {
+async function calculateDataDeletionScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on user deletion capability
   // Check if system allows proper cascading deletes
   const totalUsers = await db.select({ count: count() }).from(userTable);
@@ -448,7 +456,9 @@ async function calculateDataDeletionScore(db: any): Promise<number> {
   return userCount > 0 ? 95 : 100; // 95 for active system, 100 for empty (no risk)
 }
 
-async function calculateDataPortabilityScore(db: any): Promise<number> {
+async function calculateDataPortabilityScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on data export capability
   // Check if we have structured data that can be exported
   const totalProjects = await db.select({ count: count() }).from(projectTable);
@@ -459,7 +469,9 @@ async function calculateDataPortabilityScore(db: any): Promise<number> {
   return projectCount > 0 ? 90 : 95; // 90 for active system, 95 for simple system
 }
 
-async function calculateBreachNotificationScore(db: any): Promise<number> {
+async function calculateBreachNotificationScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on security audit log activity
   // More logging = better breach detection
   const now = new Date();
