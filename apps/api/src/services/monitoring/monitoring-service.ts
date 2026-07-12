@@ -436,9 +436,9 @@ class MonitoringService extends EventEmitter {
   /**
    * Export metrics in JSON format
    */
-  public exportJSON(): any {
+  public exportJSON(): Record<string, unknown> {
     const snapshot = this.getSnapshot();
-    const histogramStats: Record<string, any> = {};
+    const histogramStats: Record<string, unknown> = {};
 
     for (const [name, _] of this.histograms.entries()) {
       const stats = this.getHistogramStats(name);
