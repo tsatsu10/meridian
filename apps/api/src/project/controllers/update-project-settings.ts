@@ -5,7 +5,7 @@ import { projectSettingsTable } from "../../database/schema";
 async function updateProjectSettings(
   projectId: string,
   category: string,
-  settings: Record<string, any>,
+  settings: Record<string, unknown>,
   modifiedBy?: string,
 ) {
   const db = getDatabase();
