@@ -112,7 +112,7 @@ export class CacheService {
    */
   static async cacheUser(
     userId: string,
-    userData: any,
+    userData: unknown,
     ttl: number = CacheTTL.LONG,
   ): Promise<void> {
     const redis = getRedisClient();
@@ -128,7 +128,7 @@ export class CacheService {
   /**
    * Get cached user
    */
-  static async getCachedUser(userId: string): Promise<any | null> {
+  static async getCachedUser(userId: string): Promise<unknown | null> {
     const redis = getRedisClient();
     const key = CacheKeys.user(userId);
 
@@ -153,7 +153,7 @@ export class CacheService {
    */
   static async cacheWorkspace(
     workspaceId: string,
-    data: any,
+    data: unknown,
     ttl: number = CacheTTL.MEDIUM,
   ): Promise<void> {
     const redis = getRedisClient();
@@ -179,7 +179,7 @@ export class CacheService {
    */
   static async cacheProject(
     projectId: string,
-    data: any,
+    data: unknown,
     ttl: number = CacheTTL.MEDIUM,
   ): Promise<void> {
     const redis = getRedisClient();
@@ -206,7 +206,7 @@ export class CacheService {
    */
   static async cacheTaskList(
     projectId: string,
-    tasks: any[],
+    tasks: unknown[],
     ttl: number = CacheTTL.SHORT,
   ): Promise<void> {
     const redis = getRedisClient();
@@ -225,7 +225,7 @@ export class CacheService {
   static async cacheSearchResults(
     query: string,
     filters: string | undefined,
-    results: any[],
+    results: unknown[],
     ttl: number = CacheTTL.MEDIUM,
   ): Promise<void> {
     const redis = getRedisClient();
@@ -245,7 +245,7 @@ export class CacheService {
     type: string,
     id: string,
     period: string,
-    data: any,
+    data: unknown,
     ttl: number = CacheTTL.LONG,
   ): Promise<void> {
     const redis = getRedisClient();
@@ -263,7 +263,7 @@ export class CacheService {
    */
   static async cacheFile(
     fileId: string,
-    metadata: any,
+    metadata: unknown,
     ttl: number = CacheTTL.VERY_LONG,
   ): Promise<void> {
     const redis = getRedisClient();
@@ -316,7 +316,12 @@ export class CacheService {
       const info = await redis.info();
       const lines = info.split("\r\n");
 
-      const stats: any = { connected: true };
+      const stats: {
+        connected: boolean;
+        keysCount?: number;
+        memoryUsage?: string;
+        uptime?: number;
+      } = { connected: true };
 
       for (const line of lines) {
         if (line.startsWith("db0:")) {
@@ -347,7 +352,7 @@ export class CacheService {
    * Warm up cache with frequently accessed data
    */
   static async warmUp(
-    data: { key: string; value: any; ttl: number }[],
+    data: { key: string; value: unknown; ttl: number }[],
   ): Promise<void> {
     const redis = getRedisClient();
 
