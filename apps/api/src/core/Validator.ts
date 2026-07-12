@@ -297,7 +297,7 @@ export class Validator {
 
   static validateQuery<T>(
     schema: z.ZodSchema<T>,
-    query: Record<string, any>,
+    query: Record<string, unknown>,
   ): T {
     // Convert query parameters to appropriate types
     const processedQuery = Object.fromEntries(
@@ -324,11 +324,11 @@ export class Validator {
     return Validator.validate(CommonSchemas.id, id);
   }
 
-  static validatePagination(query: Record<string, any>) {
+  static validatePagination(query: Record<string, unknown>) {
     return Validator.validateQuery(CommonSchemas.pagination, query);
   }
 
-  static validateSearch(query: Record<string, any>) {
+  static validateSearch(query: Record<string, unknown>) {
     return Validator.validateQuery(CommonSchemas.search, query);
   }
 
