@@ -102,7 +102,11 @@ export class MonitoringService {
 
     // Add to buckets
     const bucketKey = this.getBucketKey(value);
-    const buckets = (existing.buckets ??= new Map());
+    let buckets = existing.buckets;
+    if (!buckets) {
+      buckets = new Map();
+      existing.buckets = buckets;
+    }
     buckets.set(bucketKey, (buckets.get(bucketKey) || 0) + 1);
 
     existing.lastUpdated = new Date();

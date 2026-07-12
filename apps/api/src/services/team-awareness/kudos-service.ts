@@ -294,7 +294,11 @@ export class KudosService {
       const reactions =
         (existingKudos.reactions as Record<string, string[]>) || {};
 
-      const list = (reactions[emoji] ??= []);
+      let list = reactions[emoji];
+      if (!list) {
+        list = [];
+        reactions[emoji] = list;
+      }
 
       // Toggle reaction (add if not present, remove if present)
       const userIndex = list.indexOf(userId);

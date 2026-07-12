@@ -55,7 +55,8 @@ export default async function getTemplate(
   // Group subtasks by task
   const subtasksByTask = subtasks.reduce(
     (acc, subtask) => {
-      (acc[subtask.templateTaskId] ??= []).push(subtask);
+      if (!acc[subtask.templateTaskId]) acc[subtask.templateTaskId] = [];
+      acc[subtask.templateTaskId]?.push(subtask);
       return acc;
     },
     {} as Record<string, SubtaskRow[]>,
@@ -64,7 +65,8 @@ export default async function getTemplate(
   // Group dependencies by task
   const depsByTask = dependencies.reduce(
     (acc, dep) => {
-      (acc[dep.dependentTaskId] ??= []).push(dep);
+      if (!acc[dep.dependentTaskId]) acc[dep.dependentTaskId] = [];
+      acc[dep.dependentTaskId]?.push(dep);
       return acc;
     },
     {} as Record<string, DepRow[]>,
