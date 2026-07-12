@@ -22,7 +22,7 @@ export interface SecurityEvent {
   userAgent?: string;
   resource?: string;
   action?: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   blocked: boolean;
   riskScore: number;
   geolocation?: {
@@ -145,7 +145,7 @@ class SecurityLoggingService {
       | "account_locked",
     userId: string | undefined,
     ip: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
       type: "authentication",
@@ -155,7 +155,7 @@ class SecurityLoggingService {
           : "info",
       userId,
       ip,
-      userAgent: details.userAgent,
+      userAgent: details.userAgent as string | undefined,
       details: { ...details, authType: type },
       blocked: false,
     });
@@ -170,7 +170,7 @@ class SecurityLoggingService {
     resource: string,
     action: string,
     ip: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
       type: "authorization",
@@ -195,7 +195,7 @@ class SecurityLoggingService {
       | "validation_success",
     userId: string | undefined,
     ip: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
       type: "csrf",
@@ -216,7 +216,7 @@ class SecurityLoggingService {
     endpoint: string,
     attempts: number,
     limit: number,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
       type: "rate_limit",
@@ -237,7 +237,7 @@ class SecurityLoggingService {
     ip: string,
     payload: string,
     blocked: boolean,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
       type: "injection_attempt",
@@ -261,7 +261,7 @@ class SecurityLoggingService {
     ip: string,
     payload: string,
     blocked: boolean,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
       type: "xss_attempt",
@@ -284,7 +284,7 @@ class SecurityLoggingService {
     userId: string | undefined,
     ip: string,
     severity: SecuritySeverity = "medium",
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
       type: "suspicious_activity",
@@ -607,7 +607,7 @@ class SecurityLoggingService {
       pattern: (event) => {
         if (
           event.type !== "authentication" ||
-          !event.details.authType?.includes("failure")
+          !(event.details.authType as string | undefined)?.includes("failure")
         ) {
           return false;
         }
@@ -615,7 +615,7 @@ class SecurityLoggingService {
           (e) =>
             e.ip === event.ip &&
             e.type === "authentication" &&
-            e.details.authType?.includes("failure") &&
+            (e.details.authType as string | undefined)?.includes("failure") &&
             e.timestamp.getTime() > Date.now() - 300000, // Last 5 minutes
         );
         return recentFailures.length >= 5;
