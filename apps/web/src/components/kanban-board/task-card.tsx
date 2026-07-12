@@ -139,6 +139,7 @@ const TaskCard = React.memo(
               } ${
                 isSelected ? "ring-2 ring-blue-500 border-blue-500" : ""
               } cursor-pointer hover:shadow-sm`}
+              // biome-ignore lint/a11y/useSemanticElements: task card contains nested interactive controls, cannot be a <button>
               role="button"
               tabIndex={0}
               aria-label={`Task: ${task.title}. Priority: ${task.priority}. Status: ${task.status}. ${task.userEmail ? `Assigned to ${task.userEmail}` : "Unassigned"}. ${task.dueDate ? `Due ${format(new Date(task.dueDate), "MMMM d, yyyy")}` : "No due date"}`}
@@ -287,6 +288,25 @@ const TaskCard = React.memo(
                       <div
                         key={subtask.id}
                         className="flex items-center gap-2 p-2 bg-zinc-50/50 dark:bg-zinc-800/30 rounded-md border border-zinc-200/30 dark:border-zinc-700/30 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                        // biome-ignore lint/a11y/useSemanticElements: styled clickable subtask row, keep as div
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            if (project && workspace) {
+                              navigate({
+                                to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
+                                params: {
+                                  workspaceId: workspace.id,
+                                  projectId: project.id,
+                                  taskId: subtask.id,
+                                },
+                              });
+                            }
+                          }
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
                           // Navigate to subtask
