@@ -101,7 +101,7 @@ describe("Email Service", () => {
   describe("Email Templates", () => {
     const renderTemplate = (
       template: string,
-      data: Record<string, any>,
+      data: Record<string, unknown>,
     ): string => {
       let rendered = template;
 
@@ -269,8 +269,8 @@ describe("Email Service", () => {
 
   describe("Retry Logic", () => {
     const sendWithRetry = async (
-      mailer: any,
-      email: any,
+      mailer: Record<string, unknown>,
+      email: unknown,
       maxRetries = 3,
     ): Promise<boolean> => {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
