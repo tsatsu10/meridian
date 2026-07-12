@@ -11,6 +11,14 @@ import { Star, Calendar, Users, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import type { ProjectDashboardRow } from "@/types/project";
 
+const activateOnKey =
+  (handler: () => void) => (e: import("react").KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  };
+
 const ROW_HEIGHT = 112;
 
 interface ProjectListViewProps {
@@ -55,6 +63,7 @@ export function ProjectListView({
     <div
       ref={parentRef}
       className="max-h-[min(70vh,900px)] overflow-auto pr-1 rounded-lg border border-border/40"
+      // biome-ignore lint/a11y/useSemanticElements: list semantics on a styled scroll container, keep as div
       role="list"
       aria-label="Projects list"
     >
@@ -71,6 +80,7 @@ export function ProjectListView({
           return (
             <div
               key={project.id}
+              // biome-ignore lint/a11y/useSemanticElements: listitem within a role=list scroll container
               role="listitem"
               style={{
                 position: "absolute",
@@ -140,6 +150,10 @@ function ProjectListItem({
   return (
     <div
       className="glass-card hover:border-primary/50 transition-all cursor-pointer mb-2"
+      // biome-ignore lint/a11y/useSemanticElements: styled clickable project card, keep as div
+      role="button"
+      tabIndex={0}
+      onKeyDown={activateOnKey(() => onProjectClick(project))}
       onClick={() => onProjectClick(project)}
     >
       <div className="p-4 flex items-center gap-4">
@@ -226,6 +240,7 @@ function ProjectListItem({
           </div>
         )}
 
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: stops card-click propagation for the actions menu, not an interactive control */}
         <div onClick={(e) => e.stopPropagation()}>
           <QuickActionsMenu
             project={project}
