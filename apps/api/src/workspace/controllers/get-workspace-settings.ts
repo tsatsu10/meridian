@@ -134,7 +134,8 @@ export default async function getWorkspaceSettings(
     .where(eq(workspaceMembers.workspaceId, workspaceId));
 
   // Merge default settings with stored settings
-  const storedSettings = (workspace.workspace.settings as any) || {};
+  const storedSettings =
+    (workspace.workspace.settings as Record<string, unknown>) || {};
   const settings = { ...DEFAULT_SETTINGS, ...storedSettings };
 
   return {
