@@ -28,7 +28,11 @@ interface DashboardStatsProps {
 function DashboardStats({ data, isLoading, error }: DashboardStatsProps) {
   if (isLoading) {
     return (
-      <div role="status" aria-label="Loading dashboard">
+      <div
+        // biome-ignore lint/a11y/useSemanticElements: test mock status
+        role="status"
+        aria-label="Loading dashboard"
+      >
         <div className="animate-pulse">Loading...</div>
       </div>
     );
@@ -48,22 +52,42 @@ function DashboardStats({ data, isLoading, error }: DashboardStatsProps) {
 
   return (
     <div className="dashboard-stats">
-      <div className="stat-card" role="region" aria-label="Total Projects">
+      <div
+        className="stat-card"
+        // biome-ignore lint/a11y/useSemanticElements: test mock region
+        role="region"
+        aria-label="Total Projects"
+      >
         <h3>Total Projects</h3>
         <p className="stat-value">{data.totalProjects}</p>
       </div>
 
-      <div className="stat-card" role="region" aria-label="Active Tasks">
+      <div
+        className="stat-card"
+        // biome-ignore lint/a11y/useSemanticElements: test mock region
+        role="region"
+        aria-label="Active Tasks"
+      >
         <h3>Active Tasks</h3>
         <p className="stat-value">{data.activeTasks}</p>
       </div>
 
-      <div className="stat-card" role="region" aria-label="Completion Rate">
+      <div
+        className="stat-card"
+        // biome-ignore lint/a11y/useSemanticElements: test mock region
+        role="region"
+        aria-label="Completion Rate"
+      >
         <h3>Completion Rate</h3>
         <p className="stat-value">{data.completionRate}%</p>
       </div>
 
-      <div className="stat-card" role="region" aria-label="Team Members">
+      <div
+        className="stat-card"
+        // biome-ignore lint/a11y/useSemanticElements: test mock region
+        role="region"
+        aria-label="Team Members"
+      >
         <h3>Team Members</h3>
         <p className="stat-value">{data.teamMembers}</p>
       </div>
