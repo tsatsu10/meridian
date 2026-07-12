@@ -28,7 +28,7 @@ export interface NotificationPayload {
   priority?: "low" | "medium" | "high" | "urgent";
   resourceId?: string;
   resourceType?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface DeliveryResult {
@@ -366,8 +366,8 @@ export class NotificationDeliveryService {
    */
   private static shouldSendNotificationType(
     notificationType: string,
-    preferences: any,
-    settings: any,
+    preferences: { types?: Record<string, unknown> },
+    settings: Record<string, unknown> | null,
   ): boolean {
     // Map notification types to settings keys
     const typeMapping: Record<string, string> = {
@@ -387,7 +387,8 @@ export class NotificationDeliveryService {
     // Check both preferences and settings
     const typeEnabled = preferences.types?.[notificationType] !== false;
     const settingEnabled = Object.values(settings || {}).some(
-      (channelSettings: any) => channelSettings[settingKey] === true,
+      (channelSettings) =>
+        (channelSettings as Record<string, unknown>)[settingKey] === true,
     );
 
     return typeEnabled && settingEnabled;
@@ -433,7 +434,7 @@ export class NotificationDeliveryService {
       notificationType: string;
       channel: string;
       action: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     },
   ) {
     try {
