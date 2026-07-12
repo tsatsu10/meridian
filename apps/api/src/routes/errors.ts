@@ -120,7 +120,7 @@ errorRouter.get("/recent", async (c) => {
 });
 
 // Helper functions
-async function sendToMonitoringService(errorData: any) {
+async function sendToMonitoringService(errorData: unknown) {
   try {
     // Send to Sentry, DataDog, or other monitoring service
     if (process.env.SENTRY_DSN) {
@@ -146,7 +146,7 @@ async function sendToMonitoringService(errorData: any) {
   }
 }
 
-function isCriticalError(error: any): boolean {
+function isCriticalError(error: { message?: string; name?: string }): boolean {
   const criticalPatterns = [
     "ChunkLoadError",
     "Loading chunk",
@@ -161,7 +161,7 @@ function isCriticalError(error: any): boolean {
   );
 }
 
-async function sendCriticalErrorAlert(errorData: any) {
+async function sendCriticalErrorAlert(errorData: Record<string, unknown>) {
   try {
     // Send alert to Slack, Discord, or email
     if (process.env.ALERT_WEBHOOK_URL) {
@@ -178,7 +178,8 @@ async function sendCriticalErrorAlert(errorData: any) {
               fields: [
                 {
                   title: "Error Message",
-                  value: errorData.error.message,
+                  value: (errorData.error as { message?: string } | undefined)
+                    ?.message,
                   short: false,
                 },
                 {
