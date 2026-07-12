@@ -17,21 +17,25 @@ type ChartMockProps = {
 // Mock recharts components
 vi.mock("recharts", () => ({
   LineChart: ({ children, onClick }: ChartMockProps) => (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: recharts test mock, not an interactive control
     <div data-testid="line-chart" onClick={onClick}>
       {children}
     </div>
   ),
   BarChart: ({ children, onClick }: ChartMockProps) => (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: recharts test mock, not an interactive control
     <div data-testid="bar-chart" onClick={onClick}>
       {children}
     </div>
   ),
   AreaChart: ({ children, onClick }: ChartMockProps) => (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: recharts test mock, not an interactive control
     <div data-testid="area-chart" onClick={onClick}>
       {children}
     </div>
   ),
   PieChart: ({ children, onClick }: ChartMockProps) => (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: recharts test mock, not an interactive control
     <div data-testid="pie-chart" onClick={onClick}>
       {children}
     </div>

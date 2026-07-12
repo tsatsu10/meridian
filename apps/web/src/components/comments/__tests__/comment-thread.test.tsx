@@ -209,7 +209,12 @@ function CommentThread({
           )}
 
           {comment.reactions && Object.keys(comment.reactions).length > 0 && (
-            <div className="reactions" role="group" aria-label="Reactions">
+            <div
+              className="reactions"
+              // biome-ignore lint/a11y/useSemanticElements: test mock component
+              role="group"
+              aria-label="Reactions"
+            >
               {Object.entries(comment.reactions).map(([emoji, count]) => (
                 <button
                   type="button"

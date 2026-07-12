@@ -47,7 +47,11 @@ function TaskList({ tasks = [], onTaskClick }: TaskListProps) {
   };
 
   return (
-    <div role="region" aria-label="Task list">
+    <div
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="region"
+      aria-label="Task list"
+    >
       <h2>Tasks ({tasks.length})</h2>
 
       {tasks.length === 0 ? (

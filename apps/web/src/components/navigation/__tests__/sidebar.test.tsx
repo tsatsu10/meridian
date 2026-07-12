@@ -78,6 +78,13 @@ function Sidebar({
       <li key={item.id} data-depth={depth}>
         <div
           className={`nav-item ${isActive ? "active" : ""}`}
+          onKeyDown={() => {
+            if (hasChildren) {
+              toggleExpand(item.id);
+            } else {
+              onNavigate?.(item.path);
+            }
+          }}
           onClick={() => {
             if (hasChildren) {
               toggleExpand(item.id);
@@ -85,6 +92,7 @@ function Sidebar({
               onNavigate?.(item.path);
             }
           }}
+          // biome-ignore lint/a11y/useSemanticElements: test mock nav item
           role="button"
           tabIndex={0}
           aria-current={isActive ? "page" : undefined}

@@ -118,13 +118,18 @@ function KanbanColumn({
         </div>
       )}
 
-      <div className="task-list" role="list">
+      <div
+        className="task-list"
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
+        role="list"
+      >
         {column.tasks.map((task) => (
           <div
             key={task.id}
             className="task-card"
             draggable
             onDragStart={() => onDragStart?.(task.id)}
+            onKeyDown={() => onTaskClick?.(task.id)}
             onClick={() => onTaskClick?.(task.id)}
             role="listitem"
             aria-label={`Task: ${task.title}`}

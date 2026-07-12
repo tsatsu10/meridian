@@ -72,7 +72,12 @@ function UserProfile({
   };
 
   return (
-    <div className="user-profile" role="region" aria-label="User profile">
+    <div
+      className="user-profile"
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="region"
+      aria-label="User profile"
+    >
       <div className="profile-header">
         <div className="avatar-section">
           {editedUser.avatar ? (

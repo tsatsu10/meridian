@@ -80,6 +80,7 @@ function ProjectCard({
       onMouseLeave={() => setShowActions(false)}
     >
       <div className="project-header">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: test mock clickable heading */}
         <h3
           className="project-name cursor-pointer"
           onClick={() => onNavigate?.(project.id)}

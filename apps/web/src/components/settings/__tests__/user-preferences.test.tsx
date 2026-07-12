@@ -81,7 +81,11 @@ function UserPreferencesComponent({
 
   if (isLoading) {
     return (
-      <div role="status" aria-label="Loading preferences">
+      <div
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
+        role="status"
+        aria-label="Loading preferences"
+      >
         <div className="loading-skeleton" />
         <span className="sr-only">Loading preferences...</span>
       </div>
@@ -93,7 +97,12 @@ function UserPreferencesComponent({
       <h1>User Preferences</h1>
 
       {saveSuccess && (
-        <div role="status" className="success-message" aria-live="polite">
+        <div
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
+          role="status"
+          className="success-message"
+          aria-live="polite"
+        >
           Preferences saved successfully
         </div>
       )}

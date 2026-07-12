@@ -115,7 +115,11 @@ function AnalyticsCharts({
       {/* Header */}
       <div className="chart-header">
         <h2>{title}</h2>
-        <div className="chart-stats" role="status">
+        <div
+          className="chart-stats"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
+          role="status"
+        >
           <span>Total: {totalDataPoints.toLocaleString()}</span>
           <span>{data.datasets.length} datasets</span>
         </div>
@@ -187,9 +191,19 @@ function AnalyticsCharts({
 
       {/* Legend */}
       {showLegend && (
-        <div className="chart-legend" role="list" aria-label="Chart legend">
+        <div
+          className="chart-legend"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
+          role="list"
+          aria-label="Chart legend"
+        >
           {data.datasets.map((dataset, index) => (
-            <div key={index} className="legend-item" role="listitem">
+            <div
+              key={index}
+              className="legend-item"
+              // biome-ignore lint/a11y/useSemanticElements: test mock component
+              role="listitem"
+            >
               <span
                 className="legend-color"
                 style={{

@@ -34,7 +34,11 @@ function CalendarView({
   onEventClick,
 }: CalendarViewProps) {
   return (
-    <div role="region" aria-label="Calendar">
+    <div
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="region"
+      aria-label="Calendar"
+    >
       <h2>Calendar - {view} view</h2>
 
       {events.length === 0 ? (
