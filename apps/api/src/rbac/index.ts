@@ -468,12 +468,12 @@ async function checkContextualPermissions(
   userRole: UserRole,
   permission: string,
   context: { workspaceId?: string; projectId?: string; departmentId?: string },
-  roleAssignment: any,
+  roleAssignment: Record<string, unknown> | null,
 ): Promise<{
   allowed: boolean;
   role: UserRole;
   reason?: string;
-  context?: any;
+  context?: Record<string, unknown>;
 }> {
   if (!roleAssignment) {
     return {
@@ -488,7 +488,9 @@ async function checkContextualPermissions(
   if (userRole === "department-head") {
     if (context.departmentId && roleAssignment.departmentIds) {
       try {
-        const departmentIds = JSON.parse(roleAssignment.departmentIds || "[]");
+        const departmentIds = JSON.parse(
+          (roleAssignment.departmentIds as string) || "[]",
+        );
         if (!departmentIds.includes(context.departmentId)) {
           return {
             allowed: false,
@@ -514,7 +516,9 @@ async function checkContextualPermissions(
   if (userRole === "project-manager" || userRole === "project-viewer") {
     if (context.projectId && roleAssignment.projectIds) {
       try {
-        const projectIds = JSON.parse(roleAssignment.projectIds || "[]");
+        const projectIds = JSON.parse(
+          (roleAssignment.projectIds as string) || "[]",
+        );
         if (!projectIds.includes(context.projectId)) {
           return {
             allowed: false,
