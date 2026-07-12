@@ -101,18 +101,18 @@ export const logger = winston.createLogger({
 /**
  * Logging utility functions
  */
-export class Logger {
+export const Logger = {
   /**
    * Log info message
    */
-  static info(message: string, meta?: object) {
+  info(message: string, meta?: object) {
     logger.info(message, meta);
-  }
+  },
 
   /**
    * Log error message
    */
-  static error(message: string, error?: unknown, meta?: object) {
+  error(message: string, error?: unknown, meta?: object) {
     logger.error(message, {
       ...meta,
       error:
@@ -124,57 +124,57 @@ export class Logger {
             }
           : error,
     });
-  }
+  },
 
   /**
    * Log warning message
    */
-  static warn(message: string, meta?: object) {
+  warn(message: string, meta?: object) {
     logger.warn(message, meta);
-  }
+  },
 
   /**
    * Log debug message
    */
-  static debug(message: string, meta?: object) {
+  debug(message: string, meta?: object) {
     logger.debug(message, meta);
-  }
+  },
 
   /**
    * Log HTTP request
    */
-  static http(message: string, meta?: object) {
+  http(message: string, meta?: object) {
     logger.http(message, meta);
-  }
+  },
 
   /**
    * Log database query
    */
-  static query(query: string, duration: number, meta?: object) {
+  query(query: string, duration: number, meta?: object) {
     logger.debug("Database query", {
       ...meta,
       query,
       duration,
       type: "database",
     });
-  }
+  },
 
   /**
    * Log authentication event
    */
-  static auth(event: string, userId?: string, success = true, meta?: object) {
+  auth(event: string, userId?: string, success = true, meta?: object) {
     logger.info(`Auth: ${event}`, {
       ...meta,
       userId,
       success,
       type: "authentication",
     });
-  }
+  },
 
   /**
    * Log security event
    */
-  static security(
+  security(
     event: string,
     severity: "low" | "medium" | "high" | "critical",
     meta?: object,
@@ -184,12 +184,12 @@ export class Logger {
       severity,
       type: "security",
     });
-  }
+  },
 
   /**
    * Log API request
    */
-  static request(
+  request(
     method: string,
     path: string,
     statusCode: number,
@@ -207,17 +207,12 @@ export class Logger {
       duration,
       type: "request",
     });
-  }
+  },
 
   /**
    * Log performance metric
    */
-  static performance(
-    metric: string,
-    value: number,
-    unit: string,
-    meta?: object,
-  ) {
+  performance(metric: string, value: number, unit: string, meta?: object) {
     logger.info(`Performance: ${metric}`, {
       ...meta,
       metric,
@@ -225,22 +220,22 @@ export class Logger {
       unit,
       type: "performance",
     });
-  }
+  },
 
   /**
    * Log business event
    */
-  static business(event: string, meta?: object) {
+  business(event: string, meta?: object) {
     logger.info(`Business: ${event}`, {
       ...meta,
       type: "business",
     });
-  }
+  },
 
   /**
    * Log external service call
    */
-  static external(
+  external(
     service: string,
     operation: string,
     success: boolean,
@@ -255,8 +250,8 @@ export class Logger {
       duration,
       type: "external",
     });
-  }
-}
+  },
+};
 
 /**
  * Create child logger with context
