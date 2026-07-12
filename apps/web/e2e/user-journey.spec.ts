@@ -579,7 +579,7 @@ test.describe("Critical User Journeys", () => {
 
     // Verify XSS is sanitized (script should not execute)
     const scriptExecuted = await page.evaluate(() => {
-      return (window as any).__xss_executed === true;
+      return (window as unknown as { __xss_executed?: boolean }).__xss_executed === true;
     });
 
     expect(scriptExecuted).toBeFalsy();
