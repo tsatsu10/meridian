@@ -29,10 +29,10 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Time Tracking", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testUser: any;
-  let testWorkspace: any;
-  let testProject: any;
-  let testTask: any;
+  let testUser: Record<string, unknown>;
+  let testWorkspace: Record<string, unknown>;
+  let testProject: Record<string, unknown>;
+  let testTask: Record<string, unknown>;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -202,7 +202,7 @@ describe.skip("Time Tracking", () => {
   });
 
   describe("Time Entry Updates", () => {
-    let activeEntry: any;
+    let activeEntry: Record<string, unknown>;
 
     beforeEach(async () => {
       [activeEntry] = await db
@@ -469,7 +469,7 @@ describe.skip("Time Tracking", () => {
   });
 
   describe("Time Entry Deletion", () => {
-    let testEntry: any;
+    let testEntry: Record<string, unknown>;
 
     beforeEach(async () => {
       [testEntry] = await db
