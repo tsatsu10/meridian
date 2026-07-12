@@ -27,7 +27,7 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Workspace Service - REAL Integration Tests", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testUser: any;
+  let testUser: Record<string, unknown>;
   let testWorkspaceId: string;
 
   beforeAll(async () => {
