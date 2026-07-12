@@ -44,7 +44,11 @@ search.get("/", async (c) => {
     }
 
     const db = getDatabase();
-    const results: any[] = [];
+    const results: Array<{
+      title?: string | null;
+      createdAt?: string | Date | null;
+      [key: string]: unknown;
+    }> = [];
     const searchPattern = `%${query}%`;
     const wantsType = (t: string) => !type || type === "all" || type === t;
 
