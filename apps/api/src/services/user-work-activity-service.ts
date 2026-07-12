@@ -20,7 +20,7 @@ import logger from "../utils/logger";
 /**
  * Get user's active projects
  */
-export async function getUserActiveProjects(userId: string): Promise<any[]> {
+export async function getUserActiveProjects(userId: string) {
   const db = getDatabase();
 
   try {
@@ -111,7 +111,7 @@ export async function getUserActiveProjects(userId: string): Promise<any[]> {
 export async function getUserRecentTasks(
   userId: string,
   options?: { limit?: number },
-): Promise<any> {
+) {
   const db = getDatabase();
 
   try {
@@ -206,7 +206,7 @@ export async function getUserRecentTasks(
 export async function getUserActivityFeed(
   userId: string,
   options?: { limit?: number; offset?: number },
-): Promise<any[]> {
+) {
   const db = getDatabase();
 
   try {
@@ -245,7 +245,7 @@ export async function getUserActivityFeed(
 /**
  * Get user's current workload
  */
-export async function getUserWorkload(userId: string): Promise<any> {
+export async function getUserWorkload(userId: string) {
   const db = getDatabase();
 
   try {
@@ -325,7 +325,7 @@ export async function getUserWorkload(userId: string): Promise<any> {
 /**
  * Get user's team collaborations
  */
-export async function getUserTeamCollaborations(userId: string): Promise<any> {
+export async function getUserTeamCollaborations(userId: string) {
   const db = getDatabase();
 
   try {
