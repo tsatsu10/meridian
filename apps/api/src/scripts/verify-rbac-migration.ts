@@ -81,7 +81,9 @@ async function verifyTable(
       WHERE table_name = ${tableName}
     `);
 
-    const actualColumns = columnsCheck.rows.map((row: any) => row.column_name);
+    const actualColumns = columnsCheck.rows.map(
+      (row: Record<string, unknown>) => row.column_name,
+    );
     const missingColumns = expectedColumns.filter(
       (col) => !actualColumns.includes(col),
     );
