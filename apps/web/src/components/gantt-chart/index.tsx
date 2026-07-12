@@ -769,9 +769,9 @@ function GanttChart({ tasks }: GanttChartProps) {
             <div className="bg-gradient-to-b from-gray-50 to-gray-100 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
               {/* Month headers */}
               <div className="flex h-12 border-b border-gray-300">
-                {timelineHeaders.map((header, headerIndex) => (
+                {timelineHeaders.map((header) => (
                   <div
-                    key={`month-${headerIndex}`}
+                    key={`month-${header.date.toISOString()}`}
                     className={`flex-1 min-w-[50px] px-3 py-3 text-center text-sm font-semibold ${
                       header.isMonthStart
                         ? "bg-blue-50 text-blue-900 border-l-2 border-blue-400"
@@ -790,9 +790,9 @@ function GanttChart({ tasks }: GanttChartProps) {
 
               {/* Week headers */}
               <div className="flex h-10 border-b border-gray-300">
-                {timelineHeaders.map((header, headerIndex) => (
+                {timelineHeaders.map((header) => (
                   <div
-                    key={`week-${headerIndex}`}
+                    key={`week-${header.date.toISOString()}`}
                     className={`flex-1 min-w-[50px] px-2 py-2 text-center text-xs font-medium ${
                       header.isWeekStart
                         ? "border-l border-gray-400 text-gray-700"
@@ -807,9 +807,9 @@ function GanttChart({ tasks }: GanttChartProps) {
 
               {/* Dynamic headers based on view mode */}
               <div className="flex h-12">
-                {timelineHeaders.map((header, headerIndex) => (
+                {timelineHeaders.map((header) => (
                   <div
-                    key={`day-${headerIndex}`}
+                    key={`day-${header.date.toISOString()}`}
                     className={`flex-1 min-w-[50px] px-2 py-2 text-center text-xs border-r border-gray-200 transition-all duration-200 cursor-pointer ${
                       header.isToday
                         ? "bg-blue-500 text-white font-bold shadow-md border-l-2 border-blue-600"

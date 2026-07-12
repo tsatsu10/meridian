@@ -324,6 +324,7 @@ export function EnhancedMemberDetailsModal({
             {isLoading ? (
               <div className="space-y-2">
                 {[...Array(5)].map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
                   <Skeleton key={i} className="h-16 w-full" />
                 ))}
               </div>
@@ -419,18 +420,16 @@ export function EnhancedMemberDetailsModal({
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-10 gap-1">
-                      {activityData.contributionGraph
-                        .slice(-30)
-                        .map((day, index) => (
-                          <div
-                            key={index}
-                            className={cn(
-                              "w-full aspect-square rounded",
-                              getContributionColor(day.count),
-                            )}
-                            title={`${day.date}: ${day.count} contributions`}
-                          />
-                        ))}
+                      {activityData.contributionGraph.slice(-30).map((day) => (
+                        <div
+                          key={day.date}
+                          className={cn(
+                            "w-full aspect-square rounded",
+                            getContributionColor(day.count),
+                          )}
+                          title={`${day.date}: ${day.count} contributions`}
+                        />
+                      ))}
                     </div>
                     <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
                       <span>Less</span>
@@ -484,6 +483,7 @@ export function EnhancedMemberDetailsModal({
             {isLoading ? (
               <div className="space-y-2">
                 {[...Array(5)].map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
                   <Skeleton key={i} className="h-16 w-full" />
                 ))}
               </div>

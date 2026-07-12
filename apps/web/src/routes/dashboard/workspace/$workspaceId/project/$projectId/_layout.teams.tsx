@@ -918,6 +918,7 @@ function ProjectTeams() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
                 <Card key={i}>
                   <CardHeader>
                     <Skeleton className="h-4 w-24" />
@@ -935,7 +936,11 @@ function ProjectTeams() {
               <CardContent>
                 <div className="space-y-4">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3">
+                    <div
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                      key={i}
+                      className="flex items-center space-x-3"
+                    >
                       <Skeleton className="h-10 w-10 rounded-full" />
                       <div className="space-y-1">
                         <Skeleton className="h-4 w-32" />
@@ -1357,11 +1362,11 @@ function ProjectTeams() {
                         });
                       }
 
-                      return insights.slice(0, 3).map((insight, idx) => {
+                      return insights.slice(0, 3).map((insight) => {
                         const IconComponent = insight.icon;
                         return (
                           <Card
-                            key={idx}
+                            key={insight.title}
                             className={cn("border-l-4", insight.borderColor)}
                           >
                             <CardContent className="pt-4">
