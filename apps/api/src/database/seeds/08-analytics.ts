@@ -150,7 +150,7 @@ export async function seedAnalytics() {
             "Review current sprint capacity",
             "Reassign tasks if needed",
             "Update task estimates",
-          ] as any,
+          ] as string[],
           estimatedImpact: randomInt(40, 90),
           isResolved: randomBool(0.3),
           resolvedAt: randomBool(0.3) ? daysAgo(randomInt(1, 15)) : null,
