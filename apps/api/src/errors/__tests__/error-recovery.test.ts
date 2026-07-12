@@ -13,9 +13,9 @@ import { describe, it, expect } from "vitest";
 describe("Error Recovery", () => {
   describe("Retry Logic", () => {
     const retryWithBackoff = async (
-      fn: () => Promise<any>,
+      fn: () => Promise<unknown>,
       maxRetries = 3,
-    ): Promise<any> => {
+    ): Promise<unknown> => {
       let lastError: unknown;
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -72,7 +72,7 @@ describe("Error Recovery", () => {
       private state: "closed" | "open" | "half-open" = "closed";
       private threshold = 5;
 
-      async execute(fn: () => Promise<any>): Promise<any> {
+      async execute(fn: () => Promise<unknown>): Promise<unknown> {
         if (this.state === "open") {
           throw new Error("Circuit breaker is open");
         }
@@ -178,7 +178,7 @@ describe("Error Recovery", () => {
   });
 
   describe("Graceful Degradation", () => {
-    const getDataWithDegradation = async (): Promise<any> => {
+    const getDataWithDegradation = async (): Promise<unknown> => {
       try {
         // Try real-time data
         return { source: "realtime", data: [] };
