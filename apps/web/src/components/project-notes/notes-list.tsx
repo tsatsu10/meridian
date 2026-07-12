@@ -297,6 +297,7 @@ export function NotesList({
 
                   <div
                     className="flex items-center gap-2"
+                    onKeyDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Button
