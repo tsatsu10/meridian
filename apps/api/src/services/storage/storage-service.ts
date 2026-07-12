@@ -60,8 +60,8 @@ export interface FileMetadata {
 
 export class StorageService {
   private config: StorageConfig;
-  private s3Client: any;
-  private cloudinary: any;
+  private s3Client!: InstanceType<typeof import("@aws-sdk/client-s3").S3Client>;
+  private cloudinary!: typeof import("cloudinary").v2;
 
   constructor(config: StorageConfig) {
     this.config = config;
@@ -462,7 +462,8 @@ export const createStorageService = (
   config?: Partial<StorageConfig>,
 ): StorageService => {
   const defaultConfig: StorageConfig = {
-    provider: (process.env.STORAGE_PROVIDER as any) || "local",
+    provider:
+      (process.env.STORAGE_PROVIDER as StorageConfig["provider"]) || "local",
     maxFileSize: Number.parseInt(process.env.MAX_FILE_SIZE || "10485760"), // 10MB default
     allowedMimeTypes: process.env.ALLOWED_MIME_TYPES?.split(",") || [
       "image/*",
