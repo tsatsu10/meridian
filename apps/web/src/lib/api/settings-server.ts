@@ -150,8 +150,8 @@ const defaultSettings: AllSettings = {
 };
 
 // Production API interface with fallback support
-export class SettingsAPI {
-  static async getSettings(userId: string): Promise<AllSettings> {
+export const SettingsAPI = {
+  async getSettings(userId: string): Promise<AllSettings> {
     try {
       const settings = await api.load(userId);
       if (settings) {
@@ -167,9 +167,9 @@ export class SettingsAPI {
       console.warn("Settings API unavailable, using local fallback:", error);
       return SettingsAPI.getLocalFallback(userId);
     }
-  }
+  },
 
-  static async updateSettings(
+  async updateSettings(
     userId: string,
     section: keyof AllSettings,
     updates: Partial<AllSettings[keyof AllSettings]>,
@@ -194,9 +194,9 @@ export class SettingsAPI {
       console.warn("Settings update failed, using local fallback:", error);
       return SettingsAPI.updateLocalFallback(userId, section, updates);
     }
-  }
+  },
 
-  static async validateSettings(
+  async validateSettings(
     section: keyof AllSettings,
     settings: Partial<AllSettings[keyof AllSettings]>,
   ): Promise<SettingsValidationError[]> {
@@ -208,9 +208,9 @@ export class SettingsAPI {
       );
       return SettingsAPI.clientSideValidation(section, settings);
     }
-  }
+  },
 
-  static async resetSection(
+  async resetSection(
     userId: string,
     section: keyof AllSettings,
   ): Promise<AllSettings> {
@@ -228,10 +228,10 @@ export class SettingsAPI {
     }
 
     return resetSettings;
-  }
+  },
 
   // Fallback methods for offline/error scenarios
-  private static getLocalFallback(userId: string): AllSettings {
+  getLocalFallback(userId: string): AllSettings {
     try {
       const stored = localStorage.getItem(`meridian-settings-${userId}`);
       if (stored) {
@@ -242,9 +242,9 @@ export class SettingsAPI {
       console.warn("Local storage unavailable:", error);
     }
     return { ...defaultSettings };
-  }
+  },
 
-  private static async updateLocalFallback(
+  async updateLocalFallback(
     userId: string,
     section: keyof AllSettings,
     updates: Partial<AllSettings[keyof AllSettings]>,
@@ -264,12 +264,9 @@ export class SettingsAPI {
       settings: updatedSettings,
       conflicts: [],
     };
-  }
+  },
 
-  private static saveLocalFallback(
-    userId: string,
-    settings: AllSettings,
-  ): void {
+  saveLocalFallback(userId: string, settings: AllSettings): void {
     try {
       localStorage.setItem(
         `meridian-settings-${userId}`,
@@ -278,11 +275,9 @@ export class SettingsAPI {
     } catch (error) {
       console.warn("Failed to save settings locally:", error);
     }
-  }
+  },
 
-  private static mergeWithDefaults(
-    settings: Partial<AllSettings>,
-  ): AllSettings {
+  mergeWithDefaults(settings: Partial<AllSettings>): AllSettings {
     const merged = { ...defaultSettings };
 
     // Deep merge each section
@@ -296,9 +291,9 @@ export class SettingsAPI {
     }
 
     return merged;
-  }
+  },
 
-  private static clientSideValidation(
+  clientSideValidation(
     section: keyof AllSettings,
     settings: Partial<AllSettings[keyof AllSettings]>,
   ): SettingsValidationError[] {
@@ -366,24 +361,24 @@ export class SettingsAPI {
     }
 
     return errors;
-  }
+  },
 
-  private static isValidEmail(email: string): boolean {
+  isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  }
+  },
 
-  private static isValidUrl(url: string): boolean {
+  isValidUrl(url: string): boolean {
     try {
       new URL(url);
       return true;
     } catch {
       return false;
     }
-  }
+  },
 
   // Development/testing helpers
-  static clearAllData(userId?: string): void {
+  clearAllData(userId?: string): void {
     if (userId) {
       localStorage.removeItem(`meridian-settings-${userId}`);
     } else {
@@ -395,14 +390,14 @@ export class SettingsAPI {
         }
       }
     }
-  }
+  },
 
-  static exportData(userId: string): Record<string, unknown> {
+  exportData(userId: string): Record<string, unknown> {
     try {
       const data = localStorage.getItem(`meridian-settings-${userId}`);
       return data ? JSON.parse(data) : {};
     } catch {
       return {};
     }
-  }
-}
+  },
+};

@@ -48,27 +48,15 @@ export interface MoodFilters {
 /**
  * Mood Tracker Service
  */
-export class MoodTrackerService {
-  private static getDb() {
+export const MoodTrackerService = {
+  getDb() {
     return getDatabase();
-  }
-
-  /**
-   * Mood to score mapping
-   */
-  private static readonly MOOD_SCORES: Record<MoodType, number> = {
-    great: 5,
-    good: 4,
-    okay: 3,
-    stressed: 2,
-    overwhelmed: 1,
-    frustrated: 1,
-  };
+  },
 
   /**
    * Log user mood
    */
-  static async logMood(params: LogMoodParams) {
+  async logMood(params: LogMoodParams) {
     try {
       const moodId = createId();
 
@@ -105,12 +93,12 @@ export class MoodTrackerService {
       Logger.error("Failed to log mood", error, params);
       throw error;
     }
-  }
+  },
 
   /**
    * Get mood logs with filters
    */
-  static async getMoodLogs(filters: MoodFilters) {
+  async getMoodLogs(filters: MoodFilters) {
     const cacheKey = `mood:${filters.workspaceId}:${filters.userId || "all"}:${filters.projectId || "all"}`;
 
     return CacheService.getOrCompute(
@@ -149,16 +137,12 @@ export class MoodTrackerService {
       },
       CacheTTL.SHORT,
     );
-  }
+  },
 
   /**
    * Get user mood history
    */
-  static async getUserMoodHistory(
-    userId: string,
-    workspaceId: string,
-    days = 30,
-  ) {
+  async getUserMoodHistory(userId: string, workspaceId: string, days = 30) {
     const cacheKey = `mood:user:${userId}:history:${days}`;
 
     return CacheService.getOrCompute(
@@ -183,12 +167,12 @@ export class MoodTrackerService {
       },
       CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Get workspace mood statistics
    */
-  static async getWorkspaceMoodStats(workspaceId: string, days = 7) {
+  async getWorkspaceMoodStats(workspaceId: string, days = 7) {
     const cacheKey = `mood:workspace:${workspaceId}:stats:${days}`;
 
     return CacheService.getOrCompute(
@@ -279,12 +263,12 @@ export class MoodTrackerService {
       },
       CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Get mood trend (daily averages)
    */
-  static async getMoodTrend(workspaceId: string, days = 30) {
+  async getMoodTrend(workspaceId: string, days = 30) {
     const cacheKey = `mood:workspace:${workspaceId}:trend:${days}`;
 
     return CacheService.getOrCompute(
@@ -313,12 +297,12 @@ export class MoodTrackerService {
       },
       CacheTTL.LONG,
     );
-  }
+  },
 
   /**
    * Check if user should log mood today
    */
-  static async shouldLogMoodToday(
+  async shouldLogMoodToday(
     userId: string,
     workspaceId: string,
   ): Promise<boolean> {
@@ -384,14 +368,12 @@ export class MoodTrackerService {
       });
       return false;
     }
-  }
+  },
 
   /**
    * Get users who need mood reminders
    */
-  static async getUsersNeedingReminders(
-    workspaceId: string,
-  ): Promise<string[]> {
+  async getUsersNeedingReminders(workspaceId: string): Promise<string[]> {
     try {
       const today = new Date();
       const dayOfWeek =
@@ -458,12 +440,12 @@ export class MoodTrackerService {
       });
       return [];
     }
-  }
+  },
 
   /**
    * Get team morale indicator
    */
-  static async getTeamMoraleIndicator(workspaceId: string): Promise<{
+  async getTeamMoraleIndicator(workspaceId: string): Promise<{
     level: "high" | "good" | "moderate" | "low" | "critical";
     score: number;
     trend: "improving" | "stable" | "declining";
@@ -510,7 +492,7 @@ export class MoodTrackerService {
       },
       CacheTTL.MEDIUM,
     );
-  }
-}
+  },
+};
 
 export default MoodTrackerService;

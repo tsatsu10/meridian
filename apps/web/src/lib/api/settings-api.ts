@@ -215,12 +215,9 @@ async function apiRequest<T>(
 }
 
 // Settings API implementation
-export class SettingsAPI {
+export const SettingsAPI = {
   // Get user settings with caching
-  static async getSettings(
-    userId: string,
-    useCache = true,
-  ): Promise<AllSettings> {
+  async getSettings(userId: string, useCache = true): Promise<AllSettings> {
     // Try production API first, fallback to local storage if needed
     if (API_CONFIG.USE_PRODUCTION) {
       try {
@@ -257,10 +254,10 @@ export class SettingsAPI {
       // Fallback to production settings API with local storage
       return await ProductionSettingsAPI.getSettings(userId);
     }
-  }
+  },
 
   // Update settings with optimistic updates and conflict resolution
-  static async updateSettings(
+  async updateSettings(
     userId: string,
     section: keyof AllSettings,
     updates: Partial<AllSettings[keyof AllSettings]>,
@@ -312,10 +309,10 @@ export class SettingsAPI {
         updates,
       );
     }
-  }
+  },
 
   // Validate settings before saving
-  static async validateSettings(
+  async validateSettings(
     section: keyof AllSettings,
     settings: Partial<AllSettings[keyof AllSettings]>,
   ): Promise<SettingsValidationError[]> {
@@ -353,10 +350,10 @@ export class SettingsAPI {
       // Fallback to production settings API
       return await ProductionSettingsAPI.validateSettings(section, settings);
     }
-  }
+  },
 
   // Apply preset with server-side validation
-  static async applyPreset(
+  async applyPreset(
     userId: string,
     presetId: string,
     customizations?: Partial<AllSettings>,
@@ -376,10 +373,10 @@ export class SettingsAPI {
     }
 
     throw new Error(response.message || "Failed to apply preset");
-  }
+  },
 
   // Sync settings across devices
-  static async syncSettings(
+  async syncSettings(
     userId: string,
     localSettings: AllSettings,
     lastSynced?: string,
@@ -409,10 +406,10 @@ export class SettingsAPI {
     }
 
     throw new Error(response.message || "Failed to sync settings");
-  }
+  },
 
   // Export settings
-  static async exportSettings(
+  async exportSettings(
     userId: string,
     options: SettingsExport,
   ): Promise<{ data: string; filename: string; mimeType: string }> {
@@ -430,10 +427,10 @@ export class SettingsAPI {
     }
 
     throw new Error(response.message || "Failed to export settings");
-  }
+  },
 
   // Import settings with validation
-  static async importSettings(
+  async importSettings(
     userId: string,
     options: SettingsImport,
   ): Promise<{
@@ -474,10 +471,10 @@ export class SettingsAPI {
     }
 
     throw new Error(response.message || "Failed to import settings");
-  }
+  },
 
   // Get audit logs
-  static async getAuditLogs(
+  async getAuditLogs(
     userId: string,
     options: {
       limit?: number;
@@ -505,10 +502,10 @@ export class SettingsAPI {
     }
 
     throw new Error(response.message || "Failed to fetch audit logs");
-  }
+  },
 
   // Reset settings section
-  static async resetSection(
+  async resetSection(
     userId: string,
     section: keyof AllSettings,
   ): Promise<AllSettings> {
@@ -547,10 +544,10 @@ export class SettingsAPI {
       // Fallback to production settings API
       return await ProductionSettingsAPI.resetSection(userId, section);
     }
-  }
+  },
 
   // Get available presets (cached)
-  static async getPresets(useCache = true): Promise<SettingsPreset[]> {
+  async getPresets(useCache = true): Promise<SettingsPreset[]> {
     const cacheKey = "presets:available";
 
     if (useCache) {
@@ -566,10 +563,10 @@ export class SettingsAPI {
     }
 
     throw new Error(response.message || "Failed to fetch presets");
-  }
+  },
 
   // Utility: Generate or get device ID
-  private static getDeviceId(): string {
+  getDeviceId(): string {
     const key = "meridian-device-id";
     let deviceId = localStorage.getItem(key);
 
@@ -579,20 +576,20 @@ export class SettingsAPI {
     }
 
     return deviceId;
-  }
+  },
 
   // Utility: Clear all caches
-  static clearCache(): void {
+  clearCache(): void {
     settingsCache.invalidate();
-  }
+  },
 
   // Utility: Health check
-  static async healthCheck(): Promise<boolean> {
+  async healthCheck(): Promise<boolean> {
     try {
       const response = await apiRequest<{ status: string }>("/health");
       return response.success && response.data.status === "ok";
     } catch {
       return false;
     }
-  }
-}
+  },
+};

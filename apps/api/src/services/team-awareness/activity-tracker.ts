@@ -38,11 +38,11 @@ export interface ActivityFilters {
 /**
  * Activity Tracker Service
  */
-export class ActivityTracker {
+export const ActivityTracker = {
   /**
    * Log an activity
    */
-  static async logActivity(params: ActivityParams): Promise<void> {
+  async logActivity(params: ActivityParams): Promise<void> {
     try {
       const db = getDatabase();
       const activityId = createId();
@@ -77,12 +77,12 @@ export class ActivityTracker {
     } catch (error) {
       Logger.error("Failed to log activity", error, params);
     }
-  }
+  },
 
   /**
    * Get recent activities
    */
-  static async getActivities(filters: ActivityFilters) {
+  async getActivities(filters: ActivityFilters) {
     const db = getDatabase();
     // TODO: Re-enable caching once Redis is properly initialized
     // const cacheKey = `activity:${filters.workspaceId}:${filters.userId || 'all'}:${filters.projectId || 'all'}`;
@@ -134,12 +134,12 @@ export class ActivityTracker {
       .offset(filters.offset || 0);
 
     return activities;
-  }
+  },
 
   /**
    * Get activity statistics
    */
-  static async getActivityStats(workspaceId: string, userId?: string) {
+  async getActivityStats(workspaceId: string, userId?: string) {
     const db = getDatabase();
     // TODO: Re-enable caching once Redis is properly initialized
     // const cacheKey = `activity:stats:${workspaceId}:${userId || 'all'}`;
@@ -182,12 +182,12 @@ export class ActivityTracker {
       entityTypeCounts,
       recentCount: recentCount[0]?.count || 0,
     };
-  }
+  },
 
   /**
    * Get most active users
    */
-  static async getMostActiveUsers(workspaceId: string, limit = 10) {
+  async getMostActiveUsers(workspaceId: string, limit = 10) {
     const db = getDatabase();
     // TODO: Re-enable caching once Redis is properly initialized
     // const cacheKey = `activity:top-users:${workspaceId}`;
@@ -210,12 +210,12 @@ export class ActivityTracker {
       .limit(limit);
 
     return activeUsers;
-  }
+  },
 
   /**
    * Delete old activities (cleanup)
    */
-  static async deleteOldActivities(
+  async deleteOldActivities(
     workspaceId: string,
     daysToKeep = 90,
   ): Promise<number> {
@@ -245,12 +245,12 @@ export class ActivityTracker {
       Logger.error("Failed to delete old activities", error, { workspaceId });
       return 0;
     }
-  }
+  },
 
   /**
    * Helper: Log task activity
    */
-  static async logTaskActivity(
+  async logTaskActivity(
     userId: string,
     workspaceId: string,
     projectId: string,
@@ -270,12 +270,12 @@ export class ActivityTracker {
       description: `${action} task "${taskTitle}"`,
       metadata,
     });
-  }
+  },
 
   /**
    * Helper: Log project activity
    */
-  static async logProjectActivity(
+  async logProjectActivity(
     userId: string,
     workspaceId: string,
     action: "created" | "updated" | "deleted",
@@ -294,12 +294,12 @@ export class ActivityTracker {
       description: `${action} project "${projectTitle}"`,
       metadata,
     });
-  }
+  },
 
   /**
    * Helper: Log comment activity
    */
-  static async logCommentActivity(
+  async logCommentActivity(
     userId: string,
     workspaceId: string,
     projectId: string,
@@ -319,12 +319,12 @@ export class ActivityTracker {
       description: `commented on ${entityType} "${entityTitle}"`,
       metadata: { commentPreview: commentText.substring(0, 100) },
     });
-  }
+  },
 
   /**
    * Helper: Log file activity
    */
-  static async logFileActivity(
+  async logFileActivity(
     userId: string,
     workspaceId: string,
     projectId: string | undefined,
@@ -344,7 +344,7 @@ export class ActivityTracker {
       description: `${action} file "${fileName}"`,
       metadata,
     });
-  }
-}
+  },
+};
 
 export default ActivityTracker;

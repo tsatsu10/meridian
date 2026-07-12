@@ -38,11 +38,11 @@ export interface DeliveryResult {
   error?: string;
 }
 
-export class NotificationDeliveryService {
+export const NotificationDeliveryService = {
   /**
    * Main delivery method that checks preferences and delivers notifications
    */
-  static async deliverNotification(
+  async deliverNotification(
     payload: NotificationPayload,
     workspaceId?: string,
   ): Promise<{
@@ -166,12 +166,12 @@ export class NotificationDeliveryService {
         ],
       };
     }
-  }
+  },
 
   /**
    * Validate notification timing against user's schedule
    */
-  private static async validateNotificationTiming(
+  async validateNotificationTiming(
     userEmail: string,
     priority: string,
   ): Promise<{ canSend: boolean; reasons: string[] }> {
@@ -273,12 +273,12 @@ export class NotificationDeliveryService {
         reasons: ["Failed to validate timing - allowing delivery"],
       };
     }
-  }
+  },
 
   /**
    * Get user notification preferences
    */
-  private static async getUserNotificationPreferences(userEmail: string) {
+  async getUserNotificationPreferences(userEmail: string) {
     try {
       const db = await getDatabase();
       const prefs = await db
@@ -320,12 +320,12 @@ export class NotificationDeliveryService {
         digestFrequency: "immediate",
       };
     }
-  }
+  },
 
   /**
    * Get user notification settings (enhanced settings)
    */
-  private static async getUserNotificationSettings(userEmail: string) {
+  async getUserNotificationSettings(userEmail: string) {
     try {
       const db = await getDatabase();
       const settings = await db
@@ -359,12 +359,12 @@ export class NotificationDeliveryService {
         soundEnabled: true,
       };
     }
-  }
+  },
 
   /**
    * Check if notification type should be sent based on preferences
    */
-  private static shouldSendNotificationType(
+  shouldSendNotificationType(
     notificationType: string,
     preferences: { types?: Record<string, unknown> },
     settings: Record<string, unknown> | null,
@@ -392,12 +392,12 @@ export class NotificationDeliveryService {
     );
 
     return typeEnabled && settingEnabled;
-  }
+  },
 
   /**
    * Send email notification
    */
-  private static async sendEmailNotification(
+  async sendEmailNotification(
     payload: NotificationPayload,
     _workspaceId?: string,
   ): Promise<DeliveryResult> {
@@ -422,12 +422,12 @@ export class NotificationDeliveryService {
         error: error instanceof Error ? error.message : "Email delivery failed",
       };
     }
-  }
+  },
 
   /**
    * Record analytics event
    */
-  private static async recordAnalyticsEvent(
+  async recordAnalyticsEvent(
     userEmail: string,
     event: {
       eventType: string;
@@ -450,14 +450,10 @@ export class NotificationDeliveryService {
       logger.error("Failed to record analytics event:", error);
       // Don't throw error - analytics recording shouldn't fail notification delivery
     }
-  }
+  },
 
   // Helper methods
-  private static isTimeInRange(
-    timeStr: string,
-    startTime: string,
-    endTime: string,
-  ): boolean {
+  isTimeInRange(timeStr: string, startTime: string, endTime: string): boolean {
     const [timeHour = 0, timeMin = 0] = timeStr.split(":").map(Number);
     const [startHour = 0, startMin = 0] = startTime.split(":").map(Number);
     const [endHour = 0, endMin = 0] = endTime.split(":").map(Number);
@@ -471,5 +467,5 @@ export class NotificationDeliveryService {
       return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
     }
     return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
-  }
-}
+  },
+};

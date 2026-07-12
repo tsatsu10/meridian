@@ -178,11 +178,10 @@ interface ProjectTeam {
 
 // Teams API client
 // ✅ Teams API Client - Now using real backend endpoints
-class TeamsAPI {
-  private static baseUrl =
-    import.meta.env.VITE_API_URL || "http://localhost:3005";
+const TeamsAPI = {
+  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:3005",
 
-  private static async request(endpoint: string, options: RequestInit = {}) {
+  async request(endpoint: string, options: RequestInit = {}) {
     const token =
       localStorage.getItem("auth-token") ||
       sessionStorage.getItem("auth-token");
@@ -206,13 +205,13 @@ class TeamsAPI {
     }
 
     return response.json();
-  }
+  },
 
-  static async getProjectTeams(projectId: string): Promise<ProjectTeam[]> {
+  async getProjectTeams(projectId: string): Promise<ProjectTeam[]> {
     return await TeamsAPI.request(`/api/projects/${projectId}/teams`);
-  }
+  },
 
-  static async createTeam(
+  async createTeam(
     projectId: string,
     team: Omit<ProjectTeam, "id" | "createdAt">,
   ): Promise<ProjectTeam> {
@@ -220,9 +219,9 @@ class TeamsAPI {
       method: "POST",
       body: JSON.stringify(team),
     });
-  }
+  },
 
-  static async updateTeam(
+  async updateTeam(
     projectId: string,
     teamId: string,
     updates: Partial<ProjectTeam>,
@@ -234,15 +233,15 @@ class TeamsAPI {
         body: JSON.stringify(updates),
       },
     );
-  }
+  },
 
-  static async deleteTeam(projectId: string, teamId: string): Promise<void> {
+  async deleteTeam(projectId: string, teamId: string): Promise<void> {
     await TeamsAPI.request(`/api/projects/${projectId}/teams/${teamId}`, {
       method: "DELETE",
     });
-  }
+  },
 
-  static async addMember(
+  async addMember(
     projectId: string,
     teamId: string,
     member: Omit<TeamMember, "id" | "joinedAt">,
@@ -254,9 +253,9 @@ class TeamsAPI {
         body: JSON.stringify(member),
       },
     );
-  }
+  },
 
-  static async removeMember(
+  async removeMember(
     projectId: string,
     teamId: string,
     memberId: string,
@@ -267,9 +266,9 @@ class TeamsAPI {
         method: "DELETE",
       },
     );
-  }
+  },
 
-  static async updateMemberRole(
+  async updateMemberRole(
     projectId: string,
     teamId: string,
     memberId: string,
@@ -282,8 +281,8 @@ class TeamsAPI {
         body: JSON.stringify({ role }),
       },
     );
-  }
-}
+  },
+};
 
 const projectStatuses = [
   { value: "planning", label: "Planning", color: "bg-gray-100 text-gray-800" },
