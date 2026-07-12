@@ -22,6 +22,13 @@ export interface KeyboardShortcut {
   updatedAt: Date;
 }
 
+// The workspace `settings` jsonb column is broadly typed; this describes the
+// slice these controllers read/write while preserving unrelated settings keys.
+type WorkspaceSettingsWithShortcuts = {
+  shortcuts?: Record<string, KeyboardShortcut[]>;
+  [key: string]: unknown;
+};
+
 export interface ShortcutPreset {
   id: string;
   name: string;
@@ -320,7 +327,10 @@ export async function getShortcuts(
     throw new Error("Workspace not found");
   }
 
-  const shortcuts = (workspace.settings as any)?.shortcuts?.[userId] || [];
+  const shortcuts =
+    (workspace.settings as WorkspaceSettingsWithShortcuts)?.shortcuts?.[
+      userId
+    ] || [];
 
   // If user has no custom shortcuts, return defaults
   if (shortcuts.length === 0) {
@@ -388,14 +398,15 @@ export async function updateShortcuts(
     return existing;
   });
 
-  const allShortcuts = (workspace.settings as any)?.shortcuts || {};
+  const allShortcuts =
+    (workspace.settings as WorkspaceSettingsWithShortcuts)?.shortcuts || {};
   allShortcuts[userId] = updatedShortcuts;
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...(workspace.settings as WorkspaceSettingsWithShortcuts),
         shortcuts: allShortcuts,
       },
     })
@@ -428,23 +439,26 @@ export async function updateShortcut(
     throw new Error("Workspace not found");
   }
 
-  const allShortcuts = (workspace.settings as any)?.shortcuts || {};
+  const allShortcuts =
+    (workspace.settings as WorkspaceSettingsWithShortcuts)?.shortcuts || {};
   const userShortcuts =
     allShortcuts[userId] || (await getShortcuts(workspaceId, userId));
 
   const shortcutIndex = userShortcuts.findIndex(
     (s: KeyboardShortcut) => s.id === shortcutId,
   );
-  if (shortcutIndex === -1) {
+  const current = userShortcuts[shortcutIndex];
+  if (shortcutIndex === -1 || !current) {
     throw new Error("Shortcut not found");
   }
 
-  userShortcuts[shortcutIndex] = {
-    ...userShortcuts[shortcutIndex],
+  const updated: KeyboardShortcut = {
+    ...current,
     ...updates,
     isCustom: true,
     updatedAt: new Date(),
   };
+  userShortcuts[shortcutIndex] = updated;
 
   allShortcuts[userId] = userShortcuts;
 
@@ -452,14 +466,14 @@ export async function updateShortcut(
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...(workspace.settings as WorkspaceSettingsWithShortcuts),
         shortcuts: allShortcuts,
       },
     })
     .where(eq(workspaces.id, workspaceId));
 
   logger.info(`Shortcut updated: ${shortcutId}`);
-  return userShortcuts[shortcutIndex];
+  return updated;
 }
 
 /**
@@ -496,14 +510,15 @@ export async function resetShortcuts(
     throw new Error("Workspace not found");
   }
 
-  const allShortcuts = (workspace.settings as any)?.shortcuts || {};
+  const allShortcuts =
+    (workspace.settings as WorkspaceSettingsWithShortcuts)?.shortcuts || {};
   delete allShortcuts[userId];
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...(workspace.settings as WorkspaceSettingsWithShortcuts),
         shortcuts: allShortcuts,
       },
     })
@@ -558,14 +573,15 @@ export async function applyPreset(
     throw new Error("Workspace not found");
   }
 
-  const allShortcuts = (workspace.settings as any)?.shortcuts || {};
+  const allShortcuts =
+    (workspace.settings as WorkspaceSettingsWithShortcuts)?.shortcuts || {};
   allShortcuts[userId] = shortcuts;
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...(workspace.settings as WorkspaceSettingsWithShortcuts),
         shortcuts: allShortcuts,
       },
     })
