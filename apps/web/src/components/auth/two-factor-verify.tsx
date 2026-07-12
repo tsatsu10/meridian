@@ -188,8 +188,11 @@ export function TwoFactorVerify({
           <>
             {/* Backup code input */}
             <div className="space-y-3">
-              <label className="text-sm font-medium">Backup Code</label>
+              <label htmlFor="tfa-backup-code" className="text-sm font-medium">
+                Backup Code
+              </label>
               <Input
+                id="tfa-backup-code"
                 type="text"
                 placeholder="Enter 8-character code"
                 value={backupCode}
