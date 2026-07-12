@@ -263,6 +263,15 @@ export default function NotificationCenter({
                   <div
                     key={notification.id}
                     className="p-2 bg-white border border-red-200 rounded-lg cursor-pointer hover:bg-red-50 transition-colors"
+                    // biome-ignore lint/a11y/useSemanticElements: styled clickable notification row, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleNotificationClick(notification);
+                      }
+                    }}
                     onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="flex items-start gap-2">
@@ -335,6 +344,15 @@ export default function NotificationCenter({
                                 ? "bg-muted/30 hover:bg-muted/50"
                                 : "bg-blue-50 border-blue-200 hover:bg-blue-100",
                             )}
+                            // biome-ignore lint/a11y/useSemanticElements: styled clickable notification row, keep as div
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleNotificationClick(notification);
+                              }
+                            }}
                             onClick={() =>
                               handleNotificationClick(notification)
                             }
