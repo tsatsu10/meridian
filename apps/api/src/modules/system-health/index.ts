@@ -42,7 +42,7 @@ interface HealthCheckResult {
   status: "pass" | "fail" | "warn";
   responseTime?: number;
   message?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 /**
