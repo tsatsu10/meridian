@@ -19,7 +19,7 @@ import {
 import type { TemplateFilterOptions } from "../../types/templates";
 
 interface ListTemplatesResult {
-  templates: any[];
+  templates: (typeof projectTemplates.$inferSelect)[];
   total: number;
   limit: number;
   offset: number;
@@ -44,7 +44,7 @@ export default async function listTemplates(
   } = filters;
 
   // Build where conditions
-  const whereConditions: any[] = [];
+  const whereConditions: (SQL | undefined)[] = [];
 
   if (industry) {
     whereConditions.push(eq(projectTemplates.industry, industry));
