@@ -76,8 +76,11 @@ export function AllTasksVirtualGrid<T extends { id: string }>({
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
                 {row.items.map((task) => (
-                  {/* biome-ignore lint/a11y/useSemanticElements: listitem within a virtualized role=list container */}
-                  <div key={task.id} role="listitem">
+                  <div
+                    key={task.id}
+                    // biome-ignore lint/a11y/useSemanticElements: listitem within a virtualized role=list container
+                    role="listitem"
+                  >
                     {renderTask(task)}
                   </div>
                 ))}

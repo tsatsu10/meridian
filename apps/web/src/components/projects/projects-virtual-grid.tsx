@@ -74,8 +74,11 @@ export function ProjectsVirtualGrid<T extends { id: string }>({
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
                 {row.items.map((p) => (
-                  {/* biome-ignore lint/a11y/useSemanticElements: listitem within a virtualized role=list container */}
-                  <div key={p.id} role="listitem">
+                  <div
+                    key={p.id}
+                    // biome-ignore lint/a11y/useSemanticElements: listitem within a virtualized role=list container
+                    role="listitem"
+                  >
                     {renderProject(p)}
                   </div>
                 ))}
