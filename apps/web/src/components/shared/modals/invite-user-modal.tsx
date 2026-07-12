@@ -136,9 +136,9 @@ export function InviteUserModal({
 
           {/* Role Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <span className="block text-sm font-medium text-gray-700 mb-3">
               Role
-            </label>
+            </span>
             <div className="space-y-2">
               {roleOptions.map((role) => (
                 <label
