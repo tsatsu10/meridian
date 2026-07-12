@@ -71,6 +71,7 @@ function AnalyticsCharts({
       <div className="analytics-charts loading" data-testid="analytics-charts">
         <div
           className="loading-spinner"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
           role="status"
           aria-label="Loading chart"
         >

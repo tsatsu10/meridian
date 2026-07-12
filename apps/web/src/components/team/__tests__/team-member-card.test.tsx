@@ -64,6 +64,7 @@ function TeamMemberCard({
     <div
       className="team-member-card"
       data-member-id={member.id}
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
       role="article"
       aria-label={`Team member: ${member.name}`}
     >
@@ -119,6 +120,7 @@ function TeamMemberCard({
       {showActions && (
         <div
           className="member-actions"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
           role="group"
           aria-label="Member actions"
         >

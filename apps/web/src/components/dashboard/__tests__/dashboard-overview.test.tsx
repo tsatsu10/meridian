@@ -84,6 +84,7 @@ function DashboardOverview({
     return (
       <div
         className="dashboard-loading"
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
         role="status"
         aria-label="Loading dashboard"
       >

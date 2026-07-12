@@ -74,6 +74,7 @@ function ProjectCard({
     <div
       className="project-card"
       data-project-id={project.id}
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
       role="article"
       aria-label={`Project: ${project.name}`}
       onMouseEnter={() => setShowActions(true)}
@@ -155,6 +156,7 @@ function ProjectCard({
       {showActions && (
         <div
           className="project-actions"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
           role="group"
           aria-label="Project actions"
         >

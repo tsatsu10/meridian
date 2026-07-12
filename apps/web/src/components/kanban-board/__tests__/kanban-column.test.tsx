@@ -79,6 +79,7 @@ function KanbanColumn({
       data-column-id={column.id}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
       role="region"
       aria-label={`${column.title} column`}
     >
@@ -131,6 +132,7 @@ function KanbanColumn({
             onDragStart={() => onDragStart?.(task.id)}
             onKeyDown={() => onTaskClick?.(task.id)}
             onClick={() => onTaskClick?.(task.id)}
+            // biome-ignore lint/a11y/useSemanticElements: test mock component
             role="listitem"
             aria-label={`Task: ${task.title}`}
           >

@@ -47,6 +47,7 @@ function NotificationList({
     return (
       <div
         className="notification-list"
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
         role="status"
         aria-label="Loading notifications"
       >
@@ -100,6 +101,7 @@ function NotificationList({
           <div
             key={notification.id}
             className={`notification-item ${notification.isRead ? "read" : "unread"} ${notification.type}`}
+            // biome-ignore lint/a11y/useSemanticElements: test mock component
             role="listitem"
             data-notification-id={notification.id}
           >

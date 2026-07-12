@@ -119,6 +119,7 @@ function CommentThread({
         key={comment.id}
         className={`comment depth-${depth}`}
         data-comment-id={comment.id}
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
         role="article"
       >
         <div className="comment-header">
