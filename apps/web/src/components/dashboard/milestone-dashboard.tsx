@@ -567,6 +567,15 @@ export default function MilestoneDashboard({
             <div
               key={milestone.id}
               className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+              // biome-ignore lint/a11y/useSemanticElements: styled clickable milestone card, keep as div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onMilestoneClick?.(milestone);
+                }
+              }}
               onClick={() => onMilestoneClick?.(milestone)}
             >
               <div className="flex-1 min-w-0">
@@ -843,6 +852,15 @@ export default function MilestoneDashboard({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
+                        // biome-ignore lint/a11y/useSemanticElements: styled clickable milestone card, keep as div
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onMilestoneClick?.(milestone);
+                          }
+                        }}
                         onClick={() => onMilestoneClick?.(milestone)}
                       >
                         <Eye className="mr-2 h-4 w-4" />
