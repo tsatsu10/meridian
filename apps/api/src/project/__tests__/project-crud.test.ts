@@ -28,9 +28,9 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Project CRUD Operations", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testOwner: any;
-  let testMember: any;
-  let testWorkspace: any;
+  let testOwner: Record<string, unknown>;
+  let testMember: Record<string, unknown>;
+  let testWorkspace: Record<string, unknown>;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -198,7 +198,7 @@ describe.skip("Project CRUD Operations", () => {
   });
 
   describe("Read Project", () => {
-    let testProject: any;
+    let testProject: Record<string, unknown>;
 
     beforeEach(async () => {
       [testProject] = await db
@@ -319,7 +319,7 @@ describe.skip("Project CRUD Operations", () => {
   });
 
   describe("Update Project", () => {
-    let testProject: any;
+    let testProject: Record<string, unknown>;
 
     beforeEach(async () => {
       [testProject] = await db
@@ -460,8 +460,8 @@ describe.skip("Project CRUD Operations", () => {
   });
 
   describe("Delete Project", () => {
-    let testProject: any;
-    let testTask: any;
+    let testProject: Record<string, unknown>;
+    let testTask: Record<string, unknown>;
 
     beforeEach(async () => {
       [testProject] = await db
@@ -533,7 +533,7 @@ describe.skip("Project CRUD Operations", () => {
   });
 
   describe("Project Status Transitions", () => {
-    let testProject: any;
+    let testProject: Record<string, unknown>;
 
     beforeEach(async () => {
       [testProject] = await db
