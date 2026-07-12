@@ -64,7 +64,7 @@ export async function updateTeam(c: Context) {
     }
 
     // 🔒 SECURITY: Build sanitized update object
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
     if (name !== undefined) {
       const sanitizedName = sanitizeText(name, {
