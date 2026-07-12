@@ -131,7 +131,7 @@ async function deleteProject(c: Context) {
       .from(milestoneTable)
       .where(eq(milestoneTable.projectId, projectId));
 
-    const members: any[] = [];
+    const members: unknown[] = [];
 
     const statusColumns = await db
       .select()
