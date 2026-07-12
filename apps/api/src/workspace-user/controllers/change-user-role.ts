@@ -12,7 +12,7 @@ async function changeUserRole(
 
   const [updatedWorkspaceUser] = await db
     .update(workspaceUserTable)
-    .set({ role: role as any }) // Type assertion for enum
+    .set({ role: role as (typeof workspaceUserTable.role.enumValues)[number] })
     .where(
       and(
         eq(workspaceUserTable.workspaceId, workspaceId),
