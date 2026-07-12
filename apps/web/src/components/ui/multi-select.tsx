@@ -70,6 +70,7 @@ export function MultiSelect({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          // biome-ignore lint/a11y/useSemanticElements: custom combobox trigger, not a native <select>
           role="combobox"
           aria-expanded={open}
           className={cn(
