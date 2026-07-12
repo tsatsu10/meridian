@@ -147,8 +147,11 @@ export function WorkloadHeatmap({
             {/* Header with dates */}
             <div className="flex mb-2">
               <div className="w-32 flex-shrink-0" /> {/* Member name column */}
-              {dateRange.map((date, index) => (
-                <div key={index} className="w-10 text-center flex-shrink-0">
+              {dateRange.map((date) => (
+                <div
+                  key={date.toISOString()}
+                  className="w-10 text-center flex-shrink-0"
+                >
                   <div className="text-xs font-medium">
                     {weekDays[date.getDay()]}
                   </div>
@@ -202,15 +205,17 @@ export function WorkloadHeatmap({
                   </div>
 
                   <div className="flex gap-1">
-                    {dateRange.map((date, index) => {
+                    {dateRange.map((date) => {
                       const dateKey = format(date, "yyyy-MM-dd");
                       const cellData = memberData.get(dateKey);
 
                       if (!cellData)
-                        return <div key={index} className="w-10 h-10" />;
+                        return (
+                          <div key={date.toISOString()} className="w-10 h-10" />
+                        );
 
                       return (
-                        <TooltipProvider key={index}>
+                        <TooltipProvider key={date.toISOString()}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
@@ -231,8 +236,8 @@ export function WorkloadHeatmap({
                             </TooltipTrigger>
                             <TooltipContent>
                               <div className="space-y-1">
-                                {cellData.tooltip.split("\n").map((line, i) => (
-                                  <div key={i} className="text-xs">
+                                {cellData.tooltip.split("\n").map((line) => (
+                                  <div key={line} className="text-xs">
                                     {line}
                                   </div>
                                 ))}
