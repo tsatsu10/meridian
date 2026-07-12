@@ -90,7 +90,7 @@ async function getWorkspaces(userEmail: string) {
     }
 
     // Return ALL workspaces with their membership info
-    const results = workspaces.map((workspace: any) => {
+    const results = workspaces.map((workspace) => {
       const membership = userWorkspaceMemberships.find(
         (m: { workspaceId: string }) => m.workspaceId === workspace.id,
       );
