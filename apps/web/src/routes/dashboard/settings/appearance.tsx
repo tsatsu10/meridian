@@ -160,9 +160,12 @@ function AppearanceSettings() {
     value: unknown,
   ) => {
     try {
-      await updateSettings(section as keyof AllSettings, {
-        [key]: value,
-      } as Partial<AllSettings[keyof AllSettings]>);
+      await updateSettings(
+        section as keyof AllSettings,
+        {
+          [key]: value,
+        } as Partial<AllSettings[keyof AllSettings]>,
+      );
       toast.success("Setting updated successfully");
     } catch (error) {
       toast.error("Failed to update setting");

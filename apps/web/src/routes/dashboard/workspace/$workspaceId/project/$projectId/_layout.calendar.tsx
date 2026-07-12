@@ -203,11 +203,10 @@ function ProjectCalendar() {
           (tasksData as { columns?: Array<{ tasks?: TaskWithSubtasks[] }> })
             .columns,
         )
-      ? (tasksData as { columns: Array<{ tasks?: TaskWithSubtasks[] }> }).columns
+      ? (tasksData as { columns: Array<{ tasks?: TaskWithSubtasks[] }> })
+          .columns
       : [];
-  const allTasks = flattenTasks(
-    columnArray.flatMap((col) => col.tasks || []),
-  );
+  const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks || []));
 
   // Convert tasks to calendar events
   const calendarEvents = useMemo((): CalendarEvent[] => {

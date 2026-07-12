@@ -32,9 +32,9 @@ type ProjectMembersRoute = {
 };
 
 async function getProjectMembers(projectId: string): Promise<ProjectMember[]> {
-  const response = await (
-    client as unknown as ProjectMembersRoute
-  ).project[":projectId"].members.$get({
+  const response = await (client as unknown as ProjectMembersRoute).project[
+    ":projectId"
+  ].members.$get({
     param: { projectId },
   });
 

@@ -708,22 +708,16 @@ function LocalizationSettingsPage() {
                     <SelectValue placeholder="Select a language" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(supportedLanguages).map(
-                      ([code, info]) => {
-                        const isAdded = languages.some(
-                          (l: Language) => l.languageCode === code,
-                        );
-                        return (
-                          <SelectItem
-                            key={code}
-                            value={code}
-                            disabled={isAdded}
-                          >
-                            {info.name} ({info.nativeName}) {isAdded && "✓"}
-                          </SelectItem>
-                        );
-                      },
-                    )}
+                    {Object.entries(supportedLanguages).map(([code, info]) => {
+                      const isAdded = languages.some(
+                        (l: Language) => l.languageCode === code,
+                      );
+                      return (
+                        <SelectItem key={code} value={code} disabled={isAdded}>
+                          {info.name} ({info.nativeName}) {isAdded && "✓"}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>

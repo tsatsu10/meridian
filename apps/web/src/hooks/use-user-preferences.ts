@@ -158,7 +158,9 @@ export function useUserPreferences() {
         dashboardLayout: JSON.parse(
           localStorage.getItem(STORAGE_KEYS.DASHBOARD_LAYOUT) || "{}",
         ),
-        theme: localStorage.getItem(STORAGE_KEYS.THEME) as UserPreferences["theme"],
+        theme: localStorage.getItem(
+          STORAGE_KEYS.THEME,
+        ) as UserPreferences["theme"],
       };
       setPreferences(cached);
     } catch (error) {

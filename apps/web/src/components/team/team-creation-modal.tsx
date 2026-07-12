@@ -181,15 +181,15 @@ export default function TeamCreationModal({
         const users = await fetchApi(`/workspace-user/${workspace.id}`);
         const members: TeamMember[] = (Array.isArray(users) ? users : []).map(
           (u: {
-        id?: string;
-        userId?: string;
-        name?: string;
-        userName?: string;
-        email?: string;
-        userEmail?: string;
-        role?: string;
-        avatar?: string;
-      }) => ({
+            id?: string;
+            userId?: string;
+            name?: string;
+            userName?: string;
+            email?: string;
+            userEmail?: string;
+            role?: string;
+            avatar?: string;
+          }) => ({
             id: u.id || u.userId || "",
             name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
             email: u.email || u.userEmail || "",

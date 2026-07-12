@@ -28,9 +28,9 @@ type ProjectMembersRoute = {
 
 async function addProjectMember(data: AddProjectMemberData) {
   const { projectId, ...memberData } = data;
-  const response = await (
-    client as unknown as ProjectMembersRoute
-  ).project[":projectId"].members.$post({
+  const response = await (client as unknown as ProjectMembersRoute).project[
+    ":projectId"
+  ].members.$post({
     param: { projectId },
     json: memberData,
   });
@@ -63,9 +63,8 @@ function useAddProjectMember() {
       toast.success("Team member added successfully");
     },
     onError: (error: unknown) => {
-      const message = (
-        error as { response?: { data?: { message?: string } } }
-      ).response?.data?.message;
+      const message = (error as { response?: { data?: { message?: string } } })
+        .response?.data?.message;
       toast.error(message || "Failed to add team member");
     },
   });

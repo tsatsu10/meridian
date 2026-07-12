@@ -214,7 +214,7 @@ function NotificationsPanel() {
     const filtered = notifications.filter((notification) => {
       // Filter by archived status
       const isArchived =
-      (notification as { isArchived?: boolean }).isArchived || false;
+        (notification as { isArchived?: boolean }).isArchived || false;
 
       if (filter === "archived") {
         // Show only archived notifications

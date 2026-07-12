@@ -593,10 +593,7 @@ const ChartSkeleton = ({ height = "h-64" }: { height?: string }) => (
 );
 
 // Export functions
-const exportToCSV = (
-  data: object | null | undefined,
-  filename: string,
-) => {
+const exportToCSV = (data: object | null | undefined, filename: string) => {
   if (!data) {
     toast.error("No data available to export");
     return;
@@ -1896,7 +1893,8 @@ function AnalyticsPage() {
                       onValueChange={(value) =>
                         dispatch({
                           type: "SET_COMPARISON_TIME_RANGE",
-                          payload: value as AnalyticsState["comparisonTimeRange"],
+                          payload:
+                            value as AnalyticsState["comparisonTimeRange"],
                         })
                       }
                     >
@@ -2160,7 +2158,8 @@ function AnalyticsPage() {
                       onValueChange={(value) =>
                         dispatch({
                           type: "SET_COMPARISON_TIME_RANGE",
-                          payload: value as AnalyticsState["comparisonTimeRange"],
+                          payload:
+                            value as AnalyticsState["comparisonTimeRange"],
                         })
                       }
                     >

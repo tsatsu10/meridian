@@ -584,30 +584,25 @@ export function TeamMemberProfileModal({
                             Teams ({profile.teams.length})
                           </h3>
                           <div className="space-y-2">
-                            {profile.teams
-                              .slice(0, 3)
-                              .map(
-                                (team: {
-                                  id: string;
-                                  name: string;
-                                  role?: string;
-                                }) => (
-                                  <div
-                                    key={team.id}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 transition-colors group cursor-pointer"
-                                  >
-                                    <span className="text-sm font-medium group-hover:text-primary transition-colors">
-                                      {team.name}
-                                    </span>
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      {team.role}
-                                    </Badge>
-                                  </div>
-                                ),
-                              )}
+                            {profile.teams.slice(0, 3).map(
+                              (team: {
+                                id: string;
+                                name: string;
+                                role?: string;
+                              }) => (
+                                <div
+                                  key={team.id}
+                                  className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 transition-colors group cursor-pointer"
+                                >
+                                  <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                                    {team.name}
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {team.role}
+                                  </Badge>
+                                </div>
+                              ),
+                            )}
                             {profile.teams.length > 3 && (
                               <Button
                                 variant="ghost"

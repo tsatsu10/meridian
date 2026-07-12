@@ -169,8 +169,9 @@ export default function RoleManagementModal({
   );
   const [editingRoles, setEditingRoles] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
-  const [_selectedMember, setSelectedMember] =
-    useState<EnrichedMember | null>(null);
+  const [_selectedMember, setSelectedMember] = useState<EnrichedMember | null>(
+    null,
+  );
   const [showMemberActions, setShowMemberActions] = useState<string | null>(
     null,
   );
@@ -457,16 +458,12 @@ export default function RoleManagementModal({
                                   member.teamColor,
                                 )}
                               />
-                              <span className="text-sm">
-                                {member.teamName}
-                              </span>
+                              <span className="text-sm">{member.teamName}</span>
                             </div>
                           </td>
 
                           <td className="p-4">
-                            <div className="text-sm">
-                              {member.projectName}
-                            </div>
+                            <div className="text-sm">{member.projectName}</div>
                           </td>
 
                           <td className="p-4">

@@ -1382,9 +1382,8 @@ export default function TeamCalendarModal({
                                       </Badge>
                                     </div>
                                   ))}
-                                {team.members.filter(
-                                  (m) => m.workload > 85,
-                                ).length === 0 && (
+                                {team.members.filter((m) => m.workload > 85)
+                                  .length === 0 && (
                                   <p className="text-sm text-muted-foreground">
                                     All members within capacity
                                   </p>

@@ -159,9 +159,7 @@ export default function CreateMilestoneModal({
       : [];
 
   // Get all available tasks for dependencies
-  const allTasks = flattenTasks(
-    columnArray.flatMap((col) => col.tasks || []),
-  );
+  const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks || []));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

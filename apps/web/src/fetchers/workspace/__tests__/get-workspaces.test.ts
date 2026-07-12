@@ -29,10 +29,12 @@ describe("getWorkspaces", () => {
   ];
 
   it("should fetch workspaces successfully", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockWorkspaces,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockWorkspaces,
+      },
+    );
 
     const result = await getWorkspaces();
 
@@ -50,34 +52,42 @@ describe("getWorkspaces", () => {
   });
 
   it("should include credentials in request", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [],
+      },
+    );
 
     await getWorkspaces();
 
-    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     expect(callOptions.credentials).toBe("include");
   });
 
   it("should set Content-Type header", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [],
+      },
+    );
 
     await getWorkspaces();
 
-    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     expect(callOptions.headers["Content-Type"]).toBe("application/json");
   });
 
   it("should call correct API endpoint", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [],
+      },
+    );
 
     await getWorkspaces();
 
@@ -88,10 +98,12 @@ describe("getWorkspaces", () => {
   });
 
   it("should return empty array when no workspaces", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [],
+      },
+    );
 
     const result = await getWorkspaces();
 
@@ -99,10 +111,12 @@ describe("getWorkspaces", () => {
   });
 
   it("should return multiple workspaces", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockWorkspaces,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockWorkspaces,
+      },
+    );
 
     const result = await getWorkspaces();
 
@@ -112,19 +126,23 @@ describe("getWorkspaces", () => {
   });
 
   it("should throw error when response is not ok", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Failed to fetch workspaces",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Failed to fetch workspaces",
+      },
+    );
 
     await expect(getWorkspaces()).rejects.toThrow("Failed to fetch workspaces");
   });
 
   it("should handle unauthorized error (401)", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Unauthorized: Please log in",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Unauthorized: Please log in",
+      },
+    );
 
     await expect(getWorkspaces()).rejects.toThrow(
       "Unauthorized: Please log in",
@@ -132,16 +150,20 @@ describe("getWorkspaces", () => {
   });
 
   it("should handle server error (500)", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Internal server error",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Internal server error",
+      },
+    );
 
     await expect(getWorkspaces()).rejects.toThrow("Internal server error");
   });
 
   it("should handle network errors", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("Network error"));
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error("Network error"),
+    );
 
     await expect(getWorkspaces()).rejects.toThrow("Network error");
   });
@@ -153,10 +175,12 @@ describe("getWorkspaces", () => {
       description: "Test description",
     };
 
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [workspace],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [workspace],
+      },
+    );
 
     const result = await getWorkspaces();
 
@@ -175,10 +199,12 @@ describe("getWorkspaces", () => {
       projects: 5,
     };
 
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [detailedWorkspace],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [detailedWorkspace],
+      },
+    );
 
     const result = await getWorkspaces();
 
@@ -189,10 +215,12 @@ describe("getWorkspaces", () => {
   });
 
   it("should be called only once per fetch", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [],
+      },
+    );
 
     await getWorkspaces();
 
@@ -205,10 +233,12 @@ describe("getWorkspaces", () => {
       name: `Workspace ${i}`,
     }));
 
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => largeList,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => largeList,
+      },
+    );
 
     const result = await getWorkspaces();
 
@@ -221,10 +251,12 @@ describe("getWorkspaces", () => {
       name: "Minimal",
     };
 
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [minimalWorkspace],
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => [minimalWorkspace],
+      },
+    );
 
     const result = await getWorkspaces();
 

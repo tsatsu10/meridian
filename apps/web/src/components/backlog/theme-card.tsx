@@ -223,24 +223,22 @@ export function ThemeCard({
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <div className="flex -space-x-1">
-                  {theme.assignees
-                    .slice(0, 3)
-                    .map((assignee, index) => (
-                      <Avatar
-                        key={index}
-                        className="h-6 w-6 border-2 border-background"
-                      >
-                        <AvatarFallback className="text-xs">
-                          {String(
-                            typeof assignee === "string"
-                              ? assignee
-                              : (assignee?.name ?? ""),
-                          )
-                            .charAt(0)
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
+                  {theme.assignees.slice(0, 3).map((assignee, index) => (
+                    <Avatar
+                      key={index}
+                      className="h-6 w-6 border-2 border-background"
+                    >
+                      <AvatarFallback className="text-xs">
+                        {String(
+                          typeof assignee === "string"
+                            ? assignee
+                            : (assignee?.name ?? ""),
+                        )
+                          .charAt(0)
+                          .toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
                   {theme.assignees.length > 3 && (
                     <div className="h-6 w-6 rounded-full bg-meridian-neutral-100 border-2 border-background flex items-center justify-center">
                       <span className="text-xs text-meridian-neutral-600">

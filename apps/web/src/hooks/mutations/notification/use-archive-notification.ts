@@ -7,11 +7,9 @@ function useArchiveNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await looseClient.notification[":id"].archive.$patch(
-        {
-          param: { id: notificationId },
-        },
-      );
+      const response = await looseClient.notification[":id"].archive.$patch({
+        param: { id: notificationId },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to archive notification");

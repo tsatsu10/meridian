@@ -159,9 +159,7 @@ export default function MilestoneDetailModal({
         Array.isArray((tasksData as { columns?: TaskColumn[] }).columns)
       ? (tasksData as { columns: TaskColumn[] }).columns
       : [];
-  const allTasks = flattenTasks(
-    columnArray.flatMap((col) => col.tasks || []),
-  );
+  const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks || []));
 
   // Get task title by ID
   const getTaskTitle = (taskId: string) => {

@@ -18,10 +18,12 @@ describe("fetchApi", () => {
 
   it("should make a GET request with correct URL", async () => {
     const mockResponse = { data: "test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     const result = await fetchApi("/users");
 
@@ -37,10 +39,12 @@ describe("fetchApi", () => {
 
   it("should add /api prefix if not present", async () => {
     const mockResponse = { data: "test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/users");
 
@@ -52,10 +56,12 @@ describe("fetchApi", () => {
 
   it("should not duplicate /api prefix", async () => {
     const mockResponse = { data: "test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/api/users");
 
@@ -67,53 +73,64 @@ describe("fetchApi", () => {
 
   it("should include query parameters", async () => {
     const mockResponse = { data: "test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/users", {
       params: { id: "123", status: "active" },
     });
 
-    const callUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const callUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
     expect(callUrl).toContain("id=123");
     expect(callUrl).toContain("status=active");
   });
 
   it("should set Content-Type header to application/json by default", async () => {
     const mockResponse = { data: "test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/users");
 
-    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     const headers = callOptions.headers;
     expect(headers.get("Content-Type")).toBe("application/json");
   });
 
   it("should include credentials: include for cookies", async () => {
     const mockResponse = { data: "test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/users");
 
-    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     expect(callOptions.credentials).toBe("include");
   });
 
   it("should pass custom headers", async () => {
     const mockResponse = { data: "test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/users", {
       headers: {
@@ -121,17 +138,20 @@ describe("fetchApi", () => {
       },
     });
 
-    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     const headers = callOptions.headers;
     expect(headers.get("X-Custom-Header")).toBe("custom-value");
   });
 
   it("should handle POST requests with body", async () => {
     const mockResponse = { id: 1, name: "Test" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     const body = { name: "Test" };
     const result = await fetchApi("/users", {
@@ -151,29 +171,35 @@ describe("fetchApi", () => {
 
   it("should throw error on non-ok response with error message", async () => {
     const errorMessage = "User not found";
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-      status: 404,
-      json: async () => ({ message: errorMessage }),
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        status: 404,
+        json: async () => ({ message: errorMessage }),
+      },
+    );
 
     await expect(fetchApi("/users/999")).rejects.toThrow(errorMessage);
   });
 
   it("should throw error on non-ok response without error message", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => {
-        throw new Error("Invalid JSON");
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        status: 500,
+        json: async () => {
+          throw new Error("Invalid JSON");
+        },
       },
-    });
+    );
 
     await expect(fetchApi("/users")).rejects.toThrow("An error occurred");
   });
 
   it("should handle network errors", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("Network error"));
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error("Network error"),
+    );
 
     await expect(fetchApi("/users")).rejects.toThrow("Network error");
   });
@@ -185,10 +211,12 @@ describe("fetchApi", () => {
         { id: 2, name: "Bob" },
       ],
     };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockData,
+      },
+    );
 
     const result = await fetchApi("/users");
 
@@ -197,10 +225,12 @@ describe("fetchApi", () => {
 
   it("should handle PUT requests", async () => {
     const mockResponse = { id: 1, name: "Updated" };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/users/1", {
       method: "PUT",
@@ -217,10 +247,12 @@ describe("fetchApi", () => {
 
   it("should handle DELETE requests", async () => {
     const mockResponse = { success: true };
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockResponse,
+      },
+    );
 
     await fetchApi("/users/1", {
       method: "DELETE",

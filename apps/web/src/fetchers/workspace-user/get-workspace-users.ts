@@ -35,11 +35,9 @@ function normalizeWorkspaceMember(
 }
 
 async function getWorkspaceUsers({ param }: GetWorkspaceUsersRequest) {
-  const response = await looseClient["workspace-user"][":workspaceId"].$get(
-    {
-      param,
-    },
-  );
+  const response = await looseClient["workspace-user"][":workspaceId"].$get({
+    param,
+  });
 
   if (!response.ok) {
     const error = await response.text();

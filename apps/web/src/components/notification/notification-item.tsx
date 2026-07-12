@@ -275,7 +275,8 @@ const NotificationItem = memo(
 
     const handleArchive = (e: React.MouseEvent) => {
       e.stopPropagation();
-      const isArchived = (notification as { isArchived?: boolean }).isArchived || false;
+      const isArchived =
+        (notification as { isArchived?: boolean }).isArchived || false;
       if (isArchived) {
         unarchiveNotification(notification.id);
       } else {

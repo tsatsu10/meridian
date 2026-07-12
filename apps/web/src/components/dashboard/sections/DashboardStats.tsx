@@ -69,9 +69,8 @@ export default function DashboardStats({
           ariaLabel: "Active Projects Statistics",
           onActivate: () => {
             const activeCount =
-              dashboardData?.projects?.filter(
-                (p) => p.status !== "completed",
-              ).length || 0;
+              dashboardData?.projects?.filter((p) => p.status !== "completed")
+                .length || 0;
             keyboardNavigation?.announceToScreenReader(
               `Active projects: ${dashboardData?.projects?.length || 0} total, ${activeCount} in progress`,
             );
@@ -184,9 +183,8 @@ export default function DashboardStats({
           <h3 id="stats-projects-label">Active Projects Statistics</h3>
           <p id="stats-projects-desc">
             Shows {dashboardData?.projects?.length || 0} total projects with{" "}
-            {dashboardData?.projects?.filter(
-              (p) => p.status !== "completed",
-            ).length || 0}{" "}
+            {dashboardData?.projects?.filter((p) => p.status !== "completed")
+              .length || 0}{" "}
             currently in progress. Trending up by 8.3%.
           </p>
         </div>

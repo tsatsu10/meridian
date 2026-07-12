@@ -228,8 +228,7 @@ function RouteComponent() {
           assigneeEmail: task.userEmail ?? null,
           assigneeName: (task as { userName?: string | null }).userName ?? null,
           assignedTeamId: (task as { teamId?: string | null }).teamId ?? null,
-          assignedTeam:
-            (task as { team?: Task["assignedTeam"] }).team ?? null,
+          assignedTeam: (task as { team?: Task["assignedTeam"] }).team ?? null,
           position: task.position ?? 0,
         }));
 

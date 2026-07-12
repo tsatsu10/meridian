@@ -7,9 +7,7 @@ function useBatchMarkRead() {
 
   return useMutation({
     mutationFn: async (notificationIds: string[]) => {
-      const response = await looseClient.notification.batch[
-        "mark-read"
-      ].$post({
+      const response = await looseClient.notification.batch["mark-read"].$post({
         json: { ids: notificationIds },
       });
 

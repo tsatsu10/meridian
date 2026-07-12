@@ -39,14 +39,17 @@ const DialogContent = React.forwardRef<
   const hasTitle = React.Children.toArray(children).some(
     (child) =>
       React.isValidElement(child) &&
-      ((child.type as { displayName?: string })?.displayName === "DialogTitle" ||
-        (child.type as { displayName?: string })?.displayName === DialogPrimitive.Title.displayName),
+      ((child.type as { displayName?: string })?.displayName ===
+        "DialogTitle" ||
+        (child.type as { displayName?: string })?.displayName ===
+          DialogPrimitive.Title.displayName),
   );
 
   const hasDescription = React.Children.toArray(children).some(
     (child) =>
       React.isValidElement(child) &&
-      ((child.type as { displayName?: string })?.displayName === "DialogDescription" ||
+      ((child.type as { displayName?: string })?.displayName ===
+        "DialogDescription" ||
         (child.type as { displayName?: string })?.displayName ===
           DialogPrimitive.Description.displayName),
   );
