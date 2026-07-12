@@ -17,6 +17,7 @@ export default function NotificationSection({
 
   return (
     <Card
+      // biome-ignore lint/a11y/useSemanticElements: intentional region landmark with aria-label
       role="region"
       aria-labelledby="notifications-heading"
       aria-describedby="notifications-summary"
@@ -56,6 +57,7 @@ export default function NotificationSection({
         {recentNotifications.length === 0 ? (
           <div
             className="text-center py-4 text-gray-500"
+            // biome-ignore lint/a11y/useSemanticElements: intentional status live region
             role="status"
             aria-label="No recent activity available"
           >
@@ -77,6 +79,7 @@ export default function NotificationSection({
                     ? "bg-gray-50"
                     : "bg-blue-50 border-blue-200",
                 )}
+                // biome-ignore lint/a11y/useSemanticElements: intentional article landmark for a notification item
                 role="article"
                 aria-labelledby={`notification-title-${index}`}
                 aria-describedby={`notification-content-${index}`}
