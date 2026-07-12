@@ -185,7 +185,7 @@ describe("Validators", () => {
   });
 
   describe("isArrayOfStrings", () => {
-    const isArrayOfStrings = (value: any): boolean => {
+    const isArrayOfStrings = (value: unknown): boolean => {
       return (
         Array.isArray(value) && value.every((item) => typeof item === "string")
       );
@@ -226,7 +226,7 @@ describe("Validators", () => {
   });
 
   describe("isEmpty", () => {
-    const isEmpty = (value: any): boolean => {
+    const isEmpty = (value: unknown): boolean => {
       if (value === null || value === undefined) return true;
       if (typeof value === "string") return value.trim().length === 0;
       if (Array.isArray(value)) return value.length === 0;
