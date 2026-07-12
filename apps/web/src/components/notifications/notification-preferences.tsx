@@ -405,10 +405,14 @@ export const NotificationPreferences: React.FC<
 
                 {preferences.dailyDigestEnabled && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="daily-digest-time"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Send time
                     </label>
                     <input
+                      id="daily-digest-time"
                       type="time"
                       value={preferences.dailyDigestTime}
                       onChange={(e) =>
@@ -448,10 +452,14 @@ export const NotificationPreferences: React.FC<
                 {preferences.weeklyDigestEnabled && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="weekly-digest-day"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Day of week
                       </label>
                       <select
+                        id="weekly-digest-day"
                         value={preferences.weeklyDigestDay}
                         onChange={(e) =>
                           updatePreference(
@@ -469,10 +477,14 @@ export const NotificationPreferences: React.FC<
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="weekly-digest-time"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Send time
                       </label>
                       <input
+                        id="weekly-digest-time"
                         type="time"
                         value={preferences.weeklyDigestTime}
                         onChange={(e) =>
@@ -521,10 +533,14 @@ export const NotificationPreferences: React.FC<
                 {preferences.quietHoursEnabled && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="quiet-hours-start"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Start time
                       </label>
                       <input
+                        id="quiet-hours-start"
                         type="time"
                         value={preferences.quietHoursStart}
                         onChange={(e) =>
@@ -534,10 +550,14 @@ export const NotificationPreferences: React.FC<
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="quiet-hours-end"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         End time
                       </label>
                       <input
+                        id="quiet-hours-end"
                         type="time"
                         value={preferences.quietHoursEnd}
                         onChange={(e) =>
@@ -579,10 +599,14 @@ export const NotificationPreferences: React.FC<
 
                 {preferences.groupSimilarNotifications && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="grouping-window-minutes"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Grouping window (minutes)
                     </label>
                     <input
+                      id="grouping-window-minutes"
                       type="number"
                       min="1"
                       max="60"
