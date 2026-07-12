@@ -41,6 +41,7 @@ const XIcon = ({
   className,
   onClick,
 }: { className?: string; onClick?: () => void }) => (
+  // biome-ignore lint/a11y/useKeyWithClickEvents: decorative aria-hidden icon; the interactive parent control provides keyboard access
   <svg
     aria-hidden="true"
     className={className}
