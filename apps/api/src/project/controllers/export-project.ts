@@ -20,6 +20,39 @@ import { eq, and } from "drizzle-orm";
 import { auditLogger } from "../../utils/audit-logger";
 import { errorMessage } from "../../utils/errors";
 
+interface ExportData {
+  project: {
+    id: string;
+    name: string;
+    description?: string | null;
+    status?: string | null;
+    createdAt?: string | Date | null;
+    updatedAt?: string | Date | null;
+  };
+  exportedAt: string;
+  exportedBy: string;
+  format: string;
+  tasks?: Array<{
+    id: string;
+    title: string;
+    description?: string | null;
+    status?: string | null;
+    priority?: string | null;
+    dueDate?: string | Date | null;
+    assignee?: string | null;
+    createdAt?: string | Date | null;
+    updatedAt?: string | Date | null;
+  }>;
+  milestones?: unknown[];
+  team?: unknown[];
+  stats?: {
+    totalTasks?: number;
+    completedTasks?: number;
+    inProgressTasks?: number;
+    overdueTasks?: number;
+  };
+}
+
 interface ExportOptions {
   format?: "json" | "csv" | "markdown";
   includeComments?: boolean;
@@ -87,7 +120,7 @@ async function exportProject(
     }
 
     // 🔒 STEP 2: Fetch project data based on options and permissions
-    const exportData: any = {
+    const exportData: ExportData = {
       project: {
         id: project.id,
         name: project.name,
@@ -237,7 +270,7 @@ async function exportProject(
 /**
  * Convert export data to CSV format
  */
-function convertToCSV(exportData: any): string {
+function convertToCSV(exportData: ExportData): string {
   const lines: string[] = [];
 
   // Project info
@@ -255,7 +288,7 @@ function convertToCSV(exportData: any): string {
     "ID,Title,Description,Status,Priority,Due Date,Assignee,Created At",
   );
 
-  for (const task of exportData.tasks) {
+  for (const task of exportData.tasks ?? []) {
     const row = [
       task.id,
       `"${task.title.replace(/"/g, '""')}"`,
@@ -272,10 +305,10 @@ function convertToCSV(exportData: any): string {
   // Stats
   lines.push("");
   lines.push("Statistics");
-  lines.push(`Total Tasks,${exportData.stats.totalTasks}`);
-  lines.push(`Completed Tasks,${exportData.stats.completedTasks}`);
-  lines.push(`In Progress Tasks,${exportData.stats.inProgressTasks}`);
-  lines.push(`Overdue Tasks,${exportData.stats.overdueTasks}`);
+  lines.push(`Total Tasks,${exportData.stats?.totalTasks}`);
+  lines.push(`Completed Tasks,${exportData.stats?.completedTasks}`);
+  lines.push(`In Progress Tasks,${exportData.stats?.inProgressTasks}`);
+  lines.push(`Overdue Tasks,${exportData.stats?.overdueTasks}`);
 
   return lines.join("\n");
 }
@@ -283,7 +316,7 @@ function convertToCSV(exportData: any): string {
 /**
  * Convert export data to Markdown format
  */
-function convertToMarkdown(exportData: any): string {
+function convertToMarkdown(exportData: ExportData): string {
   const lines: string[] = [];
 
   // Project header
@@ -298,10 +331,10 @@ function convertToMarkdown(exportData: any): string {
   // Stats
   lines.push("## Project Statistics");
   lines.push("");
-  lines.push(`- **Total Tasks:** ${exportData.stats.totalTasks}`);
-  lines.push(`- **Completed:** ${exportData.stats.completedTasks}`);
-  lines.push(`- **In Progress:** ${exportData.stats.inProgressTasks}`);
-  lines.push(`- **Overdue:** ${exportData.stats.overdueTasks}`);
+  lines.push(`- **Total Tasks:** ${exportData.stats?.totalTasks}`);
+  lines.push(`- **Completed:** ${exportData.stats?.completedTasks}`);
+  lines.push(`- **In Progress:** ${exportData.stats?.inProgressTasks}`);
+  lines.push(`- **Overdue:** ${exportData.stats?.overdueTasks}`);
   lines.push("");
 
   // Tasks
@@ -310,7 +343,7 @@ function convertToMarkdown(exportData: any): string {
   lines.push("| Title | Status | Priority | Due Date | Assignee |");
   lines.push("|-------|--------|----------|----------|----------|");
 
-  for (const task of exportData.tasks) {
+  for (const task of exportData.tasks ?? []) {
     lines.push(
       `| ${task.title} | ${task.status} | ${task.priority || "N/A"} | ${task.dueDate || "N/A"} | ${task.assignee || "Unassigned"} |`,
     );
