@@ -196,9 +196,9 @@ export class ErrorHandler {
         return APIResponseBuilder.error(
           ErrorCodes.INTERNAL_ERROR,
           fallbackMessage,
-        );
+        ) as APIResponse<T>;
       }
-      return ErrorHandler.handle(error as Error);
+      return ErrorHandler.handle(error as Error) as APIResponse<T>;
     }
   }
 

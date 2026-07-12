@@ -3,7 +3,7 @@
  * @persona-all - Consistent API experience for all users
  */
 
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
