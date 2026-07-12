@@ -878,7 +878,7 @@ const project = new Hono<{
         );
 
         // Convert to requested format
-        let responseData: any;
+        let responseData: unknown;
         let contentType: string;
         let filename: string;
 
