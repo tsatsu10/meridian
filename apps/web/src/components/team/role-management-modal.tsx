@@ -694,6 +694,7 @@ export default function RoleManagementModal({
 
         {/* Click outside to close dropdown */}
         {showMemberActions && (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: click-away overlay to close member actions (Esc/blur also close)
           <div
             className="fixed inset-0 z-0"
             onClick={() => setShowMemberActions(null)}

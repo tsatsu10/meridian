@@ -1529,6 +1529,7 @@ function ProjectSettings() {
                             {totalPages > 1 && (
                               <div
                                 className="flex items-center justify-between mt-4 px-2"
+                                // biome-ignore lint/a11y/useSemanticElements: intentional navigation landmark with aria-label
                                 role="navigation"
                                 aria-label="Team pagination"
                               >
@@ -1768,11 +1769,15 @@ function ProjectSettings() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label
+                          htmlFor="confirm-delete-project-name"
+                          className="block text-sm font-medium mb-2"
+                        >
                           Type "{project.name}" to confirm deletion
                         </label>
                         <div className="flex gap-3">
                           <Input
+                            id="confirm-delete-project-name"
                             value={confirmProjectName}
                             onChange={(e) =>
                               setConfirmProjectName(e.target.value)
@@ -2002,7 +2007,7 @@ function ProjectSettings() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select Member</label>
+              <span className="text-sm font-medium">Select Member</span>
               <Select
                 onValueChange={(value) => {
                   const user = workspaceUsers?.find(
@@ -2075,7 +2080,7 @@ function ProjectSettings() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select New Role</label>
+              <span className="text-sm font-medium">Select New Role</span>
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {[
                   {

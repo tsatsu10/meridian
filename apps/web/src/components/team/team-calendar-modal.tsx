@@ -432,6 +432,15 @@ export default function TeamCalendarModal({
                           isCalendarEvent &&
                             "cursor-pointer hover:scale-[1.01]",
                         )}
+                        // biome-ignore lint/a11y/useSemanticElements: styled clickable calendar event, keep as div
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (isCalendarEvent) handleEventClick(event.id);
+                          }
+                        }}
                         onClick={() =>
                           isCalendarEvent && handleEventClick(event.id)
                         }
@@ -575,6 +584,19 @@ export default function TeamCalendarModal({
                               "cursor-pointer hover:opacity-80",
                           )}
                           title={event.title}
+                          // biome-ignore lint/a11y/useSemanticElements: styled clickable calendar event, keep as div
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (
+                              isCalendarEvent &&
+                              (e.key === "Enter" || e.key === " ")
+                            ) {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleEventClick(event.id);
+                            }
+                          }}
                           onClick={(e) => {
                             if (isCalendarEvent) {
                               e.stopPropagation();

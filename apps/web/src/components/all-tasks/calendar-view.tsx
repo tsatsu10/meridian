@@ -97,6 +97,16 @@ function CalendarTaskItem({
         isSelected && "ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/20",
         isOverdue && "bg-red-50 dark:bg-red-900/20",
       )}
+      // biome-ignore lint/a11y/useSemanticElements: styled clickable calendar event, keep as div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.stopPropagation();
+          e.preventDefault();
+          onSelect(task.id);
+        }
+      }}
       onClick={(e) => {
         e.stopPropagation();
         onSelect(task.id);
@@ -351,6 +361,15 @@ export function AllTasksCalendarView({
                   selectedTasks.includes(task.id) &&
                     "ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/20",
                 )}
+                // biome-ignore lint/a11y/useSemanticElements: styled clickable task row, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onTaskSelect(task.id);
+                  }
+                }}
                 onClick={() => onTaskSelect(task.id)}
               >
                 <div className="flex items-start justify-between">

@@ -74,12 +74,14 @@ function ProjectCard({
     <div
       className="project-card"
       data-project-id={project.id}
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
       role="article"
       aria-label={`Project: ${project.name}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
       <div className="project-header">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: test mock clickable heading */}
         <h3
           className="project-name cursor-pointer"
           onClick={() => onNavigate?.(project.id)}
@@ -154,6 +156,7 @@ function ProjectCard({
       {showActions && (
         <div
           className="project-actions"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
           role="group"
           aria-label="Project actions"
         >

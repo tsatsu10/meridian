@@ -152,7 +152,9 @@ function FileUpload({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onKeyDown={() => fileInputRef.current?.click()}
         onClick={() => fileInputRef.current?.click()}
+        // biome-ignore lint/a11y/useSemanticElements: test mock dropzone with drag handlers
         role="button"
         aria-label="Upload files"
         tabIndex={0}
@@ -178,10 +180,19 @@ function FileUpload({
 
       {/* Uploaded Files List */}
       {uploadedFiles.length > 0 && (
-        <div className="uploaded-files" role="list">
+        <div
+          className="uploaded-files"
+          // biome-ignore lint/a11y/useSemanticElements: test mock list
+          role="list"
+        >
           <h3>Uploaded Files ({uploadedFiles.length})</h3>
           {uploadedFiles.map((file) => (
-            <div key={file.id} className="uploaded-file" role="listitem">
+            <div
+              key={file.id}
+              className="uploaded-file"
+              // biome-ignore lint/a11y/useSemanticElements: test mock listitem
+              role="listitem"
+            >
               <div className="file-info">
                 <span className="file-name">{file.name}</span>
                 <span className="file-size">{formatFileSize(file.size)}</span>
@@ -234,7 +245,11 @@ function FileUpload({
 
       {/* File Limit Info */}
       {uploadedFiles.length >= maxFiles && (
-        <div className="file-limit-warning" role="status">
+        <div
+          className="file-limit-warning"
+          // biome-ignore lint/a11y/useSemanticElements: test mock status
+          role="status"
+        >
           Maximum file limit reached ({maxFiles} files)
         </div>
       )}

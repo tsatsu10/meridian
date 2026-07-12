@@ -84,6 +84,7 @@ function DashboardOverview({
     return (
       <div
         className="dashboard-loading"
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
         role="status"
         aria-label="Loading dashboard"
       >
@@ -153,9 +154,18 @@ function DashboardOverview({
       <section className="activity-widget" aria-label="Recent activity">
         <h2>Recent Activity</h2>
         {recentActivity.length > 0 ? (
-          <div className="activity-list" role="list">
+          <div
+            className="activity-list"
+            // biome-ignore lint/a11y/useSemanticElements: test mock component
+            role="list"
+          >
             {recentActivity.map((activity) => (
-              <div key={activity.id} className="activity-item" role="listitem">
+              <div
+                key={activity.id}
+                className="activity-item"
+                // biome-ignore lint/a11y/useSemanticElements: test mock component
+                role="listitem"
+              >
                 <span className={`activity-type type-${activity.type}`}>
                   {activity.type}
                 </span>

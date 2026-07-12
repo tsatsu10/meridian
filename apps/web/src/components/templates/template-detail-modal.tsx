@@ -218,6 +218,15 @@ export function TemplateDetailModal({
                               "p-3 cursor-pointer hover:bg-muted/50 transition-colors",
                               hasSubtasks && "cursor-pointer",
                             )}
+                            // biome-ignore lint/a11y/useSemanticElements: styled expandable task row, keep as div
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                if (hasSubtasks) toggleTask(task.id);
+                              }
+                            }}
                             onClick={() => hasSubtasks && toggleTask(task.id)}
                           >
                             <div className="flex items-start gap-3">

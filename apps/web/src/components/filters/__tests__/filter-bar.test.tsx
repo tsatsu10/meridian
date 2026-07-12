@@ -59,10 +59,15 @@ function FilterBar({
     filters.assignee.length > 0;
 
   return (
-    <div className="filter-bar" role="region" aria-label="Filters">
+    <div
+      className="filter-bar"
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="region"
+      aria-label="Filters"
+    >
       {showStatusFilter && (
         <div className="filter-group">
-          <label>Status:</label>
+          <span>Status:</span>
           {["todo", "in_progress", "done"].map((status) => (
             <label key={status}>
               <input
@@ -79,7 +84,7 @@ function FilterBar({
 
       {showPriorityFilter && (
         <div className="filter-group">
-          <label>Priority:</label>
+          <span>Priority:</span>
           {["low", "medium", "high", "urgent"].map((priority) => (
             <label key={priority}>
               <input

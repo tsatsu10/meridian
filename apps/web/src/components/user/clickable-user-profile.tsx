@@ -123,6 +123,7 @@ export function ClickableUserProfile({
           className,
         )}
         onClick={handleClick}
+        // biome-ignore lint/a11y/useSemanticElements: styled clickable element with keyboard handler, keep as div
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {

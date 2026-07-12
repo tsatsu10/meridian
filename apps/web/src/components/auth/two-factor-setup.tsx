@@ -247,8 +247,14 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps = {}) {
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Verification Code</label>
+            <label
+              htmlFor="tfa-verification-code"
+              className="text-sm font-medium"
+            >
+              Verification Code
+            </label>
             <Input
+              id="tfa-verification-code"
               type="text"
               maxLength={6}
               placeholder="000000"

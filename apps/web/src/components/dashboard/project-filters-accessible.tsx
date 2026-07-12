@@ -146,6 +146,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       {expanded && (
         <div
           id={`${id}-content`}
+          // biome-ignore lint/a11y/useSemanticElements: intentional region landmark with aria-label
           role="region"
           aria-labelledby={`${id}-header`}
           className="px-2 pb-3"
@@ -403,6 +404,7 @@ export const ProjectFiltersAccessible: React.FC<
 
         <PopoverContent
           className="w-80 p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg"
+          // biome-ignore lint/a11y/useSemanticElements: intentional dialog role on a custom popover
           role="dialog"
           aria-label="Project filters dialog"
           aria-describedby="filters-description"
@@ -601,6 +603,7 @@ export const ProjectFiltersAccessible: React.FC<
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
+          // biome-ignore lint/a11y/useSemanticElements: intentional status live region
           role="status"
           aria-live="polite"
           aria-label="Active filters"

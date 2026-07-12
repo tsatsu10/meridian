@@ -266,9 +266,18 @@ function TeamSettings({
           </div>
         )}
 
-        <div className="members-list" role="list">
+        <div
+          className="members-list"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
+          role="list"
+        >
           {team.members.map((member) => (
-            <div key={member.id} className="member-item" role="listitem">
+            <div
+              key={member.id}
+              className="member-item"
+              // biome-ignore lint/a11y/useSemanticElements: test mock component
+              role="listitem"
+            >
               <div className="member-info">
                 <strong>{member.name}</strong>
                 <span>{member.email}</span>

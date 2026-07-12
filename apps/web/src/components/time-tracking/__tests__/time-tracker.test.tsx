@@ -211,7 +211,12 @@ function TimeTracker({
       </div>
 
       {/* Time Summary */}
-      <div className="time-summary" role="status" aria-live="polite">
+      <div
+        className="time-summary"
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
+        role="status"
+        aria-live="polite"
+      >
         <h3>Summary</h3>
         <p>
           Total Time: <strong>{formatTime(totalTime)}</strong> ({totalHours}{" "}

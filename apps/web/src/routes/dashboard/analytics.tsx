@@ -195,6 +195,7 @@ const EnhancedMetricCard = ({
       transition={{ duration: 0.3 }}
       whileHover={{ scale: 1.02, y: -4 }}
       className="h-full"
+      // biome-ignore lint/a11y/useSemanticElements: intentional article landmark
       role="article"
       aria-label={`${title}: ${comparativeData.current}`}
     >

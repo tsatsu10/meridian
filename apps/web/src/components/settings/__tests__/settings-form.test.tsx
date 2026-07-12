@@ -138,7 +138,11 @@ function SettingsForm({ initialSettings = {}, onSave }: SettingsFormProps) {
       )}
 
       {success && (
-        <div role="status" className="success-message">
+        <div
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
+          role="status"
+          className="success-message"
+        >
           Settings saved successfully!
         </div>
       )}

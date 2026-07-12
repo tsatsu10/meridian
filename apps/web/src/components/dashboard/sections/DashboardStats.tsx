@@ -145,6 +145,7 @@ export default function DashboardStats({
       <div
         ref={tasksCard.ref}
         className={tasksCard.isActive ? "ring-2 ring-primary rounded-lg" : ""}
+        // biome-ignore lint/a11y/useSemanticElements: intentional labeled article landmark wrapper (aria-labelledby/describedby)
         role="article"
         aria-labelledby="stats-total-tasks-label"
         aria-describedby="stats-total-tasks-desc"
@@ -175,6 +176,7 @@ export default function DashboardStats({
         className={
           projectsCard.isActive ? "ring-2 ring-primary rounded-lg" : ""
         }
+        // biome-ignore lint/a11y/useSemanticElements: intentional labeled article landmark wrapper (aria-labelledby/describedby)
         role="article"
         aria-labelledby="stats-projects-label"
         aria-describedby="stats-projects-desc"
@@ -204,6 +206,7 @@ export default function DashboardStats({
       <div
         ref={riskCard.ref}
         className={riskCard.isActive ? "ring-2 ring-primary rounded-lg" : ""}
+        // biome-ignore lint/a11y/useSemanticElements: intentional labeled article landmark wrapper (aria-labelledby/describedby)
         role="article"
         aria-labelledby="stats-risk-label"
         aria-describedby="stats-risk-desc"
@@ -246,6 +249,7 @@ export default function DashboardStats({
         className={
           notificationsCard.isActive ? "ring-2 ring-primary rounded-lg" : ""
         }
+        // biome-ignore lint/a11y/useSemanticElements: intentional labeled article landmark wrapper (aria-labelledby/describedby)
         role="article"
         aria-labelledby="stats-notifications-label"
         aria-describedby="stats-notifications-desc"

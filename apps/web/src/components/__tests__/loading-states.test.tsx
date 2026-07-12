@@ -40,7 +40,12 @@ interface LoadingSpinnerProps {
 
 function LoadingSpinner({ size = "medium", message }: LoadingSpinnerProps) {
   return (
-    <div className={`spinner spinner-${size}`} role="status" aria-live="polite">
+    <div
+      className={`spinner spinner-${size}`}
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="status"
+      aria-live="polite"
+    >
       <div className="spinner-icon" />
       {message && <p>{message}</p>}
     </div>

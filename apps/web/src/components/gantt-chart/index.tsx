@@ -706,10 +706,14 @@ function GanttChart({ tasks }: GanttChartProps) {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-gray-600 font-medium">
+                  <label
+                    htmlFor="gantt-view-mode"
+                    className="text-xs text-gray-600 font-medium"
+                  >
                     View:
                   </label>
                   <select
+                    id="gantt-view-mode"
                     value={viewMode}
                     onChange={(e) =>
                       handleViewModeChange(
@@ -819,6 +823,15 @@ function GanttChart({ tasks }: GanttChartProps) {
                           ? `${100 / timelineHeaders.length}%`
                           : `${100 / totalDays}%`,
                       minWidth: viewMode === "months" ? "80px" : "50px",
+                    }}
+                    // biome-ignore lint/a11y/useSemanticElements: styled clickable timeline header cell, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setCurrentDate(header.date);
+                      }
                     }}
                     onClick={() => setCurrentDate(header.date)}
                     title={`Jump to ${format(header.date, "MMMM d, yyyy")}`}

@@ -231,6 +231,15 @@ export function AssignUsersModal({
                     <div
                       key={user.id}
                       className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                      // biome-ignore lint/a11y/useSemanticElements: styled selectable user row, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleToggleUser(user.id);
+                        }
+                      }}
                       onClick={() => handleToggleUser(user.id)}
                     >
                       <Checkbox

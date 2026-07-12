@@ -109,6 +109,7 @@ export function EnhancedProjectGridCard({
         {/* Quick Actions - Top Right */}
         <div
           className="absolute top-2 right-2 z-10"
+          onKeyDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
           <QuickActionsMenu

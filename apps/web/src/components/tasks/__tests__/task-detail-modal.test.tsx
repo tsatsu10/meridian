@@ -81,6 +81,7 @@ function TaskDetailModal({
 
   return (
     <div
+      // biome-ignore lint/a11y/useSemanticElements: test mock dialog
       role="dialog"
       aria-labelledby="task-modal-title"
       aria-modal="true"
@@ -192,14 +193,14 @@ function TaskDetailModal({
 
           {task.assignee && (
             <div className="metadata-item">
-              <label>Assigned to:</label>
+              <span>Assigned to:</span>
               <span>{task.assignee.name}</span>
             </div>
           )}
 
           {task.dueDate && (
             <div className="metadata-item">
-              <label>Due date:</label>
+              <span>Due date:</span>
               <span>{new Date(task.dueDate).toLocaleDateString()}</span>
             </div>
           )}
@@ -224,9 +225,18 @@ function TaskDetailModal({
         {task.tags && task.tags.length > 0 && (
           <div className="task-tags">
             <h3>Tags</h3>
-            <div className="tag-list" role="list">
+            <div
+              className="tag-list"
+              // biome-ignore lint/a11y/useSemanticElements: test mock list
+              role="list"
+            >
               {task.tags.map((tag) => (
-                <span key={tag} className="tag" role="listitem">
+                <span
+                  key={tag}
+                  className="tag"
+                  // biome-ignore lint/a11y/useSemanticElements: test mock listitem
+                  role="listitem"
+                >
                   {tag}
                 </span>
               ))}
@@ -257,9 +267,18 @@ function TaskDetailModal({
             </div>
           )}
 
-          <div className="comments-list" role="list">
+          <div
+            className="comments-list"
+            // biome-ignore lint/a11y/useSemanticElements: test mock list
+            role="list"
+          >
             {task.comments?.map((comment) => (
-              <div key={comment.id} className="comment" role="listitem">
+              <div
+                key={comment.id}
+                className="comment"
+                // biome-ignore lint/a11y/useSemanticElements: test mock listitem
+                role="listitem"
+              >
                 <div className="comment-header">
                   <strong>{comment.author}</strong>
                   <time dateTime={comment.createdAt}>

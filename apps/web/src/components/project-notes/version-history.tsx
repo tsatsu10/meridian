@@ -157,6 +157,15 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
                           ? "bg-accent border-primary"
                           : ""
                       } ${compareVersion?.id === version.id ? "border-secondary" : ""}`}
+                      // biome-ignore lint/a11y/useSemanticElements: styled clickable version row, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedVersion(version);
+                        }
+                      }}
                       onClick={() => setSelectedVersion(version)}
                     >
                       <div className="flex items-center justify-between mb-2">

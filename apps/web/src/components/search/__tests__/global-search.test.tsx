@@ -61,7 +61,11 @@ function GlobalSearch({ onSearch, onResultClick }: GlobalSearchProps) {
   };
 
   return (
-    <div role="search" aria-label="Global search">
+    <div
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="search"
+      aria-label="Global search"
+    >
       <input
         type="search"
         placeholder="Search..."

@@ -178,6 +178,15 @@ export function ColorBlindMode() {
                         ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2"
                         : "border-border hover:bg-muted/30",
                     )}
+                    // biome-ignore lint/a11y/useSemanticElements: styled selectable option, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleModeChange(profile.id);
+                      }
+                    }}
                     onClick={() => handleModeChange(profile.id)}
                   >
                     <div className="flex items-start gap-3">

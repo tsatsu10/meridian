@@ -2,6 +2,7 @@
 
 export function ModalChunkFallback() {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: intentional status live region (sr-only loading announcer)
     <div role="status" aria-live="polite" aria-busy="true" className="sr-only">
       Loading…
     </div>

@@ -32,7 +32,11 @@ function WorkspaceSwitcher({
   onWorkspaceChange,
 }: WorkspaceSwitcherProps) {
   return (
-    <div role="navigation" aria-label="Workspace switcher">
+    <div
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="navigation"
+      aria-label="Workspace switcher"
+    >
       <h3>Workspaces</h3>
       <ul>
         {workspaces.map((workspace) => (

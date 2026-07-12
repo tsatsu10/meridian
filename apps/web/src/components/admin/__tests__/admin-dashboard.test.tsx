@@ -30,7 +30,11 @@ function AdminDashboard({ stats }: AdminDashboardProps) {
   };
 
   return (
-    <div role="main" aria-label="Admin dashboard">
+    <div
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="main"
+      aria-label="Admin dashboard"
+    >
       <h1>Admin Dashboard</h1>
 
       <div className="stats-grid">

@@ -71,7 +71,12 @@ function TeamMemberList({
   };
 
   return (
-    <div className="team-member-list" role="region" aria-label="Team members">
+    <div
+      className="team-member-list"
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="region"
+      aria-label="Team members"
+    >
       <div className="list-header">
         <h2>Team Members ({filteredMembers.length})</h2>
         <input
@@ -95,6 +100,7 @@ function TeamMemberList({
             >
               <div
                 className="member-info"
+                onKeyDown={() => onMemberClick?.(member.id)}
                 onClick={() => onMemberClick?.(member.id)}
               >
                 {member.avatar ? (

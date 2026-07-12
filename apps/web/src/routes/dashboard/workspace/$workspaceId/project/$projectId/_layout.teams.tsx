@@ -1446,6 +1446,7 @@ function ProjectTeams() {
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
                           <Checkbox
+                            id="select-all-members"
                             checked={
                               selectedMembers.size ===
                                 filteredAndSortedMembers.length &&
@@ -1454,8 +1455,8 @@ function ProjectTeams() {
                             onCheckedChange={toggleSelectAll}
                           />
                           <label
+                            htmlFor="select-all-members"
                             className="text-sm font-medium cursor-pointer"
-                            onClick={toggleSelectAll}
                           >
                             Select All
                           </label>
@@ -2451,9 +2452,9 @@ function ProjectTeams() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <span className="text-sm font-medium mb-2 block">
                   Select New Role
-                </label>
+                </span>
                 <Select value={newRole} onValueChange={setNewRole}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a role" />
@@ -2620,9 +2621,9 @@ function ProjectTeams() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <span className="text-sm font-medium mb-2 block">
                   Select New Role
-                </label>
+                </span>
                 <Select value={bulkNewRole} onValueChange={setBulkNewRole}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a role" />

@@ -71,6 +71,14 @@ import {
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import useWorkspaceStore from "@/store/workspace";
 
+const activateOnKey =
+  (handler: () => void) => (e: import("react").KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  };
+
 export const Route = createFileRoute("/dashboard/calendar")({
   component: GlobalCalendar,
 });
@@ -566,10 +574,14 @@ function GlobalCalendar() {
             return (
               <div
                 key={day.toISOString()}
+                // biome-ignore lint/a11y/useSemanticElements: day cell contains nested interactive events, cannot be a <button>
+                role="button"
+                tabIndex={0}
                 className={cn(
                   "border-r border-b border-border last:border-r-0 p-1 cursor-pointer hover:bg-muted/50 transition-colors",
                   !isCurrentMonth && "bg-muted/20 text-muted-foreground",
                 )}
+                onKeyDown={activateOnKey(() => handleDateClick(day))}
                 onClick={() => handleDateClick(day)}
               >
                 <div
@@ -590,6 +602,16 @@ function GlobalCalendar() {
                         backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
+                      }}
+                      // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleEventClick(event);
+                        }
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -670,6 +692,19 @@ function GlobalCalendar() {
                   <div
                     key={hour}
                     className="h-16 border-b hover:bg-muted/50 cursor-pointer"
+                    // biome-ignore lint/a11y/useSemanticElements: styled calendar time-slot cell, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={activateOnKey(() =>
+                      handleDateClick(
+                        new Date(
+                          day.getFullYear(),
+                          day.getMonth(),
+                          day.getDate(),
+                          hour,
+                        ),
+                      ),
+                    )}
                     onClick={() =>
                       handleDateClick(
                         new Date(
@@ -695,6 +730,10 @@ function GlobalCalendar() {
                         top: `${(event.start.getHours() + event.start.getMinutes() / 60) * 64}px`,
                         height: `${Math.max(1, (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60)) * 64}px`,
                       }}
+                      // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey(() => handleEventClick(event))}
                       onClick={() => handleEventClick(event)}
                     >
                       <div className="font-medium truncate">{event.title}</div>
@@ -749,6 +788,19 @@ function GlobalCalendar() {
                 </div>
                 <div
                   className="flex-1 h-16 hover:bg-muted/50 cursor-pointer"
+                  // biome-ignore lint/a11y/useSemanticElements: styled calendar time-slot cell, keep as div
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey(() =>
+                    handleDateClick(
+                      new Date(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth(),
+                        currentDate.getDate(),
+                        hour,
+                      ),
+                    ),
+                  )}
                   onClick={() =>
                     handleDateClick(
                       new Date(
@@ -773,6 +825,10 @@ function GlobalCalendar() {
                   top: `${(event.start.getHours() + event.start.getMinutes() / 60) * 64}px`,
                   height: `${Math.max(1, (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60)) * 64}px`,
                 }}
+                // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() => handleEventClick(event))}
                 onClick={() => handleEventClick(event)}
               >
                 <div className="font-medium">{event.title}</div>
@@ -821,6 +877,10 @@ function GlobalCalendar() {
                 <div
                   key={event.id}
                   className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
+                  // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey(() => handleEventClick(event))}
                   onClick={() => handleEventClick(event)}
                 >
                   <div
@@ -1040,6 +1100,10 @@ function GlobalCalendar() {
               {/* Event content */}
               <div
                 className="flex-1 p-4 rounded-lg border hover:bg-muted/50 cursor-pointer"
+                // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() => handleEventClick(event))}
                 onClick={() => handleEventClick(event)}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -1320,7 +1384,7 @@ function GlobalCalendar() {
               <div className="space-y-4">
                 {selectedEvent.project && (
                   <div>
-                    <label className="text-sm font-medium">Project</label>
+                    <span className="text-sm font-medium">Project</span>
                     <div className="flex items-center space-x-2 mt-1">
                       <div
                         className="w-3 h-3 rounded-full"
@@ -1335,7 +1399,7 @@ function GlobalCalendar() {
 
                 {selectedEvent.description && (
                   <div>
-                    <label className="text-sm font-medium">Description</label>
+                    <span className="text-sm font-medium">Description</span>
                     <p className="text-sm text-muted-foreground mt-1">
                       {selectedEvent.description}
                     </p>
@@ -1344,7 +1408,7 @@ function GlobalCalendar() {
 
                 {selectedEvent.assignee && (
                   <div>
-                    <label className="text-sm font-medium">Assignee</label>
+                    <span className="text-sm font-medium">Assignee</span>
                     <div className="flex items-center space-x-2 mt-1">
                       <Avatar className="w-6 h-6">
                         <div className="w-full h-full bg-primary/10 flex items-center justify-center text-xs font-medium">
@@ -1360,13 +1424,13 @@ function GlobalCalendar() {
 
                 <div className="flex items-center space-x-4">
                   <div>
-                    <label className="text-sm font-medium">Status</label>
+                    <span className="text-sm font-medium">Status</span>
                     <Badge variant="outline" className="ml-2">
                       {selectedEvent.status}
                     </Badge>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Priority</label>
+                    <span className="text-sm font-medium">Priority</span>
                     <Badge variant="outline" className="ml-2">
                       {selectedEvent.priority}
                     </Badge>

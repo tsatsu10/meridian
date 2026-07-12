@@ -29,7 +29,12 @@ function EmptyState({
   icon,
 }: EmptyStateProps) {
   return (
-    <div className="empty-state" role="region" aria-label="Empty state">
+    <div
+      className="empty-state"
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="region"
+      aria-label="Empty state"
+    >
       {icon && <div className="icon">{icon}</div>}
       <h3>{title}</h3>
       {description && <p>{description}</p>}

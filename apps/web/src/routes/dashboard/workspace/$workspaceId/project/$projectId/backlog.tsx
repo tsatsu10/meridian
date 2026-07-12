@@ -653,7 +653,7 @@ function BacklogPage() {
                 <div className="mt-6 space-y-4">
                   {/* Priority Filter */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Priority</label>
+                    <span className="text-sm font-medium">Priority</span>
                     <div className="flex gap-2 flex-wrap">
                       {["low", "medium", "high", "urgent"].map((priority) => (
                         <Button

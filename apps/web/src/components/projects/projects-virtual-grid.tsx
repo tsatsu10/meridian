@@ -48,6 +48,7 @@ export function ProjectsVirtualGrid<T extends { id: string }>({
     <div
       ref={parentRef}
       className={cn("max-h-[min(70vh,900px)] overflow-auto pr-1", className)}
+      // biome-ignore lint/a11y/useSemanticElements: list semantics on a virtualized container, keep as div
       role="list"
       aria-label="Projects grid"
     >
@@ -73,7 +74,11 @@ export function ProjectsVirtualGrid<T extends { id: string }>({
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
                 {row.items.map((p) => (
-                  <div key={p.id} role="listitem">
+                  <div
+                    key={p.id}
+                    // biome-ignore lint/a11y/useSemanticElements: listitem within a virtualized role=list container
+                    role="listitem"
+                  >
                     {renderProject(p)}
                   </div>
                 ))}

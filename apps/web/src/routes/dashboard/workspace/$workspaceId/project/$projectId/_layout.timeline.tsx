@@ -846,6 +846,7 @@ function ProjectTimeline() {
           searchQuery) && (
           <div
             className="px-6 py-3 border-b border-border bg-muted/30"
+            // biome-ignore lint/a11y/useSemanticElements: intentional status live region
             role="status"
             aria-live="polite"
           >

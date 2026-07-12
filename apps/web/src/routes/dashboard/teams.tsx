@@ -124,6 +124,14 @@ import { RefreshCw as RefreshIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
 
+const activateOnKey =
+  (handler: () => void) => (e: import("react").KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  };
+
 // Error fallback for Teams
 function TeamsErrorFallback({
   error,
@@ -1753,6 +1761,12 @@ function TeamsPage() {
                             {/* Avatar and Basic Info */}
                             <div
                               className="text-center space-y-3"
+                              // biome-ignore lint/a11y/useSemanticElements: styled clickable card region, keep as div
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={activateOnKey(() =>
+                                handleViewProfile(user.id || user.userEmail),
+                              )}
                               onClick={() =>
                                 handleViewProfile(user.id || user.userEmail)
                               }
@@ -1856,6 +1870,12 @@ function TeamsPage() {
                           <CardContent className="p-6">
                             <div
                               className="flex items-center justify-between gap-6"
+                              // biome-ignore lint/a11y/useSemanticElements: styled clickable card region, keep as div
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={activateOnKey(() =>
+                                handleViewProfile(user.id || user.userEmail),
+                              )}
                               onClick={() =>
                                 handleViewProfile(user.id || user.userEmail)
                               }
@@ -2391,8 +2411,11 @@ function EditUserModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Name</label>
+            <label htmlFor="add-user-name" className="text-sm font-medium">
+              Name
+            </label>
             <Input
+              id="add-user-name"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -2403,8 +2426,11 @@ function EditUserModal({
           </div>
 
           <div>
-            <label className="text-sm font-medium">Email</label>
+            <label htmlFor="add-user-email" className="text-sm font-medium">
+              Email
+            </label>
             <Input
+              id="add-user-email"
               type="email"
               value={formData.email}
               onChange={(e) =>
@@ -2416,8 +2442,11 @@ function EditUserModal({
           </div>
 
           <div>
-            <label className="text-sm font-medium">Role</label>
+            <label htmlFor="add-user-role" className="text-sm font-medium">
+              Role
+            </label>
             <select
+              id="add-user-role"
               value={formData.role}
               onChange={(e) =>
                 setFormData({ ...formData, role: e.target.value })
@@ -2827,6 +2856,12 @@ function MembersList({
                   <td className="p-4">
                     <div
                       className="flex items-center space-x-3 cursor-pointer hover:bg-muted/50 -m-2 p-2 rounded transition-colors"
+                      // biome-ignore lint/a11y/useSemanticElements: styled clickable table-cell region, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey(() =>
+                        onMemberAction("viewProfile", member),
+                      )}
                       onClick={() => onMemberAction("viewProfile", member)}
                       title="Click to view profile"
                     >
@@ -2986,6 +3021,12 @@ function MembersList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
+                          // biome-ignore lint/a11y/useSemanticElements: styled clickable table-cell region, keep as div
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={activateOnKey(() =>
+                            onMemberAction("viewProfile", member),
+                          )}
                           onClick={() => onMemberAction("viewProfile", member)}
                         >
                           <Eye className="mr-2 h-4 w-4" />

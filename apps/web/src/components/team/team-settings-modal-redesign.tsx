@@ -821,10 +821,14 @@ export default function TeamSettingsModalRedesign({
                     <MagicCard className="p-6">
                       <div className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium">
+                          <label
+                            htmlFor="team-settings-name"
+                            className="text-sm font-medium"
+                          >
                             Team Name
                           </label>
                           <Input
+                            id="team-settings-name"
                             value={
                               isEditing ? editedTeam?.name || "" : team.name
                             }
@@ -849,10 +853,14 @@ export default function TeamSettingsModalRedesign({
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium">
+                          <label
+                            htmlFor="team-settings-description"
+                            className="text-sm font-medium"
+                          >
                             Description
                           </label>
                           <textarea
+                            id="team-settings-description"
                             value={
                               isEditing
                                 ? editedTeam?.description || ""
@@ -881,10 +889,14 @@ export default function TeamSettingsModalRedesign({
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">
+                          <label
+                            htmlFor="team-settings-id"
+                            className="text-sm font-medium text-muted-foreground"
+                          >
                             Team ID
                           </label>
                           <Input
+                            id="team-settings-id"
                             value={team.id}
                             disabled
                             className="bg-muted"
@@ -892,10 +904,14 @@ export default function TeamSettingsModalRedesign({
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">
+                          <label
+                            htmlFor="team-settings-created"
+                            className="text-sm font-medium text-muted-foreground"
+                          >
                             Created
                           </label>
                           <Input
+                            id="team-settings-created"
                             value={formatDistanceToNow(
                               new Date(team.createdAt),
                               { addSuffix: true },

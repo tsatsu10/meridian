@@ -64,6 +64,14 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { client } from "@meridian/libs";
 import { getTemplates } from "@/fetchers/templates/get-templates";
 
+const activateOnKey =
+  (handler: () => void) => (e: import("react").KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  };
+
 // Project templates will be fetched from API
 
 // Priority options
@@ -427,6 +435,7 @@ export default function CreateProjectModal({
   if (!open) return null;
 
   return createPortal(
+    // biome-ignore lint/a11y/useKeyWithClickEvents: modal backdrop click-to-close (mouse affordance; keyboard users dismiss via Escape)
     <div
       className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
       onClick={(e) => {
@@ -435,6 +444,7 @@ export default function CreateProjectModal({
         }
       }}
     >
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: stops backdrop-close propagation, not an interactive control */}
       <div
         className={cn(
           "glass-card border-border/50 backdrop-blur-xl max-w-4xl w-full",
@@ -1091,6 +1101,12 @@ export default function CreateProjectModal({
                                   "hover:bg-muted/50 glass-card",
                                   formData.teamMembers.includes(member.id) &&
                                     "bg-primary/10 border-primary/20",
+                                )}
+                                // biome-ignore lint/a11y/useSemanticElements: styled selectable member row, keep as div
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={activateOnKey(() =>
+                                  toggleTeamMember(member.id),
                                 )}
                                 onClick={() => toggleTeamMember(member.id)}
                               >
