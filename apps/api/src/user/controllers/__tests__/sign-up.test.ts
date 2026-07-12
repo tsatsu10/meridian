@@ -129,7 +129,7 @@ describe("SignUp Controller", () => {
       vi.mocked(getSettings).mockReturnValue({
         disableRegistration: true,
         isDemoMode: false,
-      } as any);
+      } as Record<string, unknown>);
 
       const email = "newuser@example.com";
       const password = "password123";
@@ -150,7 +150,7 @@ describe("SignUp Controller", () => {
       vi.mocked(getSettings).mockReturnValue({
         disableRegistration: true,
         isDemoMode: true,
-      } as any);
+      } as Record<string, unknown>);
 
       const email = "newuser@example.com";
       const password = "password123";
@@ -301,7 +301,7 @@ describe("SignUp Controller", () => {
 
       mockDb.query.userTable.findFirst.mockResolvedValue(null);
       mockDb.insert.mockReturnThis();
-      mockDb.values.mockImplementation((values: any) => {
+      mockDb.values.mockImplementation((values: unknown) => {
         // Verify the hashed password format
         expect(values.password).toMatch(/^\$2b\$10\$/);
         return mockDb;
