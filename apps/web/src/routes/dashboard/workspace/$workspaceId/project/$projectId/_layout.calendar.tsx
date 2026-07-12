@@ -76,6 +76,14 @@ import {
 } from "date-fns";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 
+const activateOnKey =
+  (handler: () => void) => (e: import("react").KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  };
+
 export const Route = createFileRoute(
   "/dashboard/workspace/$workspaceId/project/$projectId/_layout/calendar",
 )({
@@ -422,6 +430,10 @@ function ProjectCalendar() {
                   "border-r border-b border-border last:border-r-0 p-1 cursor-pointer hover:bg-muted/50 transition-colors",
                   !isCurrentMonth && "bg-muted/20 text-muted-foreground",
                 )}
+                // biome-ignore lint/a11y/useSemanticElements: styled calendar day cell, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() => handleDateClick(day))}
                 onClick={() => handleDateClick(day)}
               >
                 <div
@@ -442,6 +454,16 @@ function ProjectCalendar() {
                         backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
+                      }}
+                      // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleEventClick(event);
+                        }
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -505,6 +527,10 @@ function ProjectCalendar() {
               <div
                 key={`allday-${day.toISOString()}`}
                 className="min-h-12 border-r border-border last:border-r-0 p-1 hover:bg-muted/50 cursor-pointer"
+                // biome-ignore lint/a11y/useSemanticElements: styled calendar day cell, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() => handleDateClick(day))}
                 onClick={() => handleDateClick(day)}
               >
                 {allDayEvents.map((event) => (
@@ -515,6 +541,16 @@ function ProjectCalendar() {
                       backgroundColor: `${event.color}20`,
                       color: event.color,
                       borderLeft: `3px solid ${event.color}`,
+                    }}
+                    // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleEventClick(event);
+                      }
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -551,6 +587,12 @@ function ProjectCalendar() {
                     <div
                       key={`${day.toISOString()}-${hour}`}
                       className="min-h-12 border-r border-b border-border last:border-r-0 p-1 hover:bg-muted/50 cursor-pointer"
+                      // biome-ignore lint/a11y/useSemanticElements: styled calendar time-slot cell, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey(() =>
+                        handleDateClick(new Date(day.setHours(hour, 0, 0, 0))),
+                      )}
                       onClick={() =>
                         handleDateClick(new Date(day.setHours(hour, 0, 0, 0)))
                       }
@@ -563,6 +605,16 @@ function ProjectCalendar() {
                             backgroundColor: `${event.color}20`,
                             color: event.color,
                             borderLeft: `3px solid ${event.color}`,
+                          }}
+                          // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleEventClick(event);
+                            }
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -624,6 +676,10 @@ function ProjectCalendar() {
                       color: event.color,
                       borderLeft: `3px solid ${event.color}`,
                     }}
+                    // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={activateOnKey(() => handleEventClick(event))}
                     onClick={() => handleEventClick(event)}
                   >
                     {event.title}
@@ -648,6 +704,14 @@ function ProjectCalendar() {
                 </div>
                 <div
                   className="flex-1 min-h-12 p-2 hover:bg-muted/50 cursor-pointer"
+                  // biome-ignore lint/a11y/useSemanticElements: styled calendar time-slot cell, keep as div
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey(() =>
+                    handleDateClick(
+                      new Date(currentDate.setHours(hour, 0, 0, 0)),
+                    ),
+                  )}
                   onClick={() =>
                     handleDateClick(
                       new Date(currentDate.setHours(hour, 0, 0, 0)),
@@ -662,6 +726,16 @@ function ProjectCalendar() {
                         backgroundColor: `${event.color}20`,
                         color: event.color,
                         borderLeft: `3px solid ${event.color}`,
+                      }}
+                      // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleEventClick(event);
+                        }
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -704,6 +778,10 @@ function ProjectCalendar() {
             <div
               key={event.id}
               className="flex items-center space-x-4 p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+              // biome-ignore lint/a11y/useSemanticElements: styled calendar event cell, keep as div
+              role="button"
+              tabIndex={0}
+              onKeyDown={activateOnKey(() => handleEventClick(event))}
               onClick={() => handleEventClick(event)}
             >
               <div
