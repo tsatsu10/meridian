@@ -22,7 +22,7 @@ import logger from "../utils/logger";
 export async function calculateUserStatistics(
   userId: string,
   workspaceId: string,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   try {
@@ -133,7 +133,7 @@ export async function calculateUserStatistics(
 /**
  * Get user statistics
  */
-export async function getUserStatistics(userId: string): Promise<any> {
+export async function getUserStatistics(userId: string) {
   const db = getDatabase();
 
   try {
