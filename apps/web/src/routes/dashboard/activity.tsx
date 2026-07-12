@@ -461,6 +461,7 @@ function ActivitySkeleton() {
     <div className="space-y-3">
       {Array.from({ length: 6 }).map((_, index) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
           key={index}
           className="h-20 rounded-xl border border-border/40 bg-muted/60 animate-pulse"
         />

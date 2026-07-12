@@ -84,6 +84,7 @@ const DockNavigationSkeleton = () => (
         <div className="w-px h-8 bg-border/50 mx-1" />
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton
+            // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
             key={`utility-${i}`}
             className="h-10 w-10 rounded-full bg-gradient-to-r from-gray-300 to-gray-400"
           />

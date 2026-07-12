@@ -102,9 +102,9 @@ export function SystemAlert({
         </div>
 
         <div className="flex items-center gap-2">
-          {actions.map((action, index) => (
+          {actions.map((action) => (
             <Button
-              key={index}
+              key={action.label}
               onClick={action.onClick}
               variant={action.variant || "outline"}
               size="sm"

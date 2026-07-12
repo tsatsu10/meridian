@@ -1230,13 +1230,11 @@ function ProjectCalendar() {
                     <div>
                       <span className="text-sm font-medium">Participants:</span>
                       <div className="flex items-center space-x-2 mt-1">
-                        {selectedEvent.participants.map(
-                          (participant, index) => (
-                            <Badge key={index} variant="outline">
-                              {participant}
-                            </Badge>
-                          ),
-                        )}
+                        {selectedEvent.participants.map((participant) => (
+                          <Badge key={participant} variant="outline">
+                            {participant}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   )}

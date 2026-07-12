@@ -215,8 +215,8 @@ export function AccessControlMonitor() {
                       outerRadius={80}
                       label={(entry) => `${entry.percentage}%`}
                     >
-                      {roleDistribution?.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {roleDistribution?.map((entry) => (
+                        <Cell key={`cell-${entry.role}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip

@@ -519,9 +519,9 @@ export default function TeamDashboardModal({
                   </h3>
                 </div>
                 <div className="space-y-2">
-                  {teamTimelineData.riskFactors.map((risk, index) => (
+                  {teamTimelineData.riskFactors.map((risk) => (
                     <div
-                      key={index}
+                      key={risk}
                       className="text-sm text-yellow-700 dark:text-yellow-300"
                     >
                       • {risk}

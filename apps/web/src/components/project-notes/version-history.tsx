@@ -274,6 +274,7 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
                       <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
                         {diff.addedLines.map((line, index) => (
                           <pre
+                            // biome-ignore lint/suspicious/noArrayIndexKey: diff lines are positional and may repeat verbatim
                             key={index}
                             className="text-sm text-green-800 dark:text-green-200"
                           >
@@ -293,6 +294,7 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
                       <div className="bg-red-50 dark:bg-red-950 rounded-lg p-4">
                         {diff.removedLines.map((line, index) => (
                           <pre
+                            // biome-ignore lint/suspicious/noArrayIndexKey: diff lines are positional and may repeat verbatim
                             key={index}
                             className="text-sm text-red-800 dark:text-red-200"
                           >

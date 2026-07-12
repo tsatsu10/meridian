@@ -140,8 +140,8 @@ export function RoleHistory({ roleId }: RoleHistoryProps) {
 
   return (
     <div className="space-y-4">
-      {history.map((entry, index) => (
-        <Card key={index}>
+      {history.map((entry) => (
+        <Card key={entry.timestamp.toISOString()}>
           <CardContent className="p-4">
             <div className="flex items-start gap-4">
               <div className="mt-1">{getActionIcon(entry.action)}</div>

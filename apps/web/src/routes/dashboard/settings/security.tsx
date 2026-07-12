@@ -784,6 +784,7 @@ function SecuritySettings() {
                 <div className="space-y-3">
                   {securityChecks.map((check, index) => (
                     <div
+                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed security-check list in stable order
                       key={index}
                       className="flex items-center justify-between text-sm"
                     >
@@ -819,6 +820,7 @@ function SecuritySettings() {
               <CardContent className="space-y-4">
                 {recentSessions.map((session, index) => (
                   <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: session list rendered in fixed server order
                     key={index}
                     className="flex items-center gap-3 p-3 rounded-lg border"
                   >

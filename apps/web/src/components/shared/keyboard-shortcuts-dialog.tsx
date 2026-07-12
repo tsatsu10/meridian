@@ -54,9 +54,9 @@ export function KeyboardShortcutsDialog({
                     {category}
                   </h3>
                   <div className="space-y-2">
-                    {categoryShortcuts.map((shortcut, index) => (
+                    {categoryShortcuts.map((shortcut) => (
                       <div
-                        key={index}
+                        key={shortcut.description}
                         className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted transition-colors"
                       >
                         <span className="text-sm">{shortcut.description}</span>
@@ -78,9 +78,9 @@ export function KeyboardShortcutsDialog({
           {shortcuts.length > 0 &&
             Object.values(groupedShortcuts).every((g) => g.length === 0) && (
               <div className="space-y-2">
-                {shortcuts.map((shortcut, index) => (
+                {shortcuts.map((shortcut) => (
                   <div
-                    key={index}
+                    key={shortcut.description}
                     className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted transition-colors"
                   >
                     <span className="text-sm">{shortcut.description}</span>

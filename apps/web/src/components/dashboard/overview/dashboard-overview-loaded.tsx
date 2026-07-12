@@ -149,7 +149,11 @@ export function DashboardOverviewLoaded({
               aria-label="Loading statistics"
             >
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-32 bg-muted rounded animate-pulse" />
+                <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                  key={i}
+                  className="h-32 bg-muted rounded animate-pulse"
+                />
               ))}
             </div>
           }

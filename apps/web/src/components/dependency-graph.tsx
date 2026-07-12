@@ -262,7 +262,7 @@ export function DependencyGraph({
           >
             {/* Draw edges */}
             <g className="edges">
-              {edges.map((edge, i) => {
+              {edges.map((edge) => {
                 const fromNode = nodes.find((n) => n.id === edge.from);
                 const toNode = nodes.find((n) => n.id === edge.to);
 
@@ -276,7 +276,7 @@ export function DependencyGraph({
                 const midX = (x1 + x2) / 2;
 
                 return (
-                  <g key={`edge-${i}`}>
+                  <g key={`edge-${edge.from}-${edge.to}`}>
                     <path
                       d={`M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`}
                       stroke="currentColor"

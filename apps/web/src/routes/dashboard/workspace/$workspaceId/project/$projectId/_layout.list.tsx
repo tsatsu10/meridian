@@ -461,6 +461,7 @@ function ProjectListView() {
           {/* Task List Skeleton - Dynamic based on pageSize */}
           <div className="space-y-3">
             {Array.from({ length: pageSize }).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
               <ExperienceItemSkeleton key={i} />
             ))}
           </div>

@@ -201,6 +201,7 @@ function InteractiveChartInternal({
               >
                 {chartData.map((_entry, index) => (
                   <Cell
+                    // biome-ignore lint/suspicious/noArrayIndexKey: recharts cells, index drives color cycle
                     key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
                   />

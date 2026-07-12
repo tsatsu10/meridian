@@ -139,6 +139,7 @@ export function AnimatedGridPattern({
               repeatType: "reverse",
             }}
             onAnimationComplete={() => updateSquarePosition(id)}
+            // biome-ignore lint/suspicious/noArrayIndexKey: animated grid squares, index drives stagger delay
             key={`${x}-${y}-${index}`}
             width={width - 1}
             height={height - 1}

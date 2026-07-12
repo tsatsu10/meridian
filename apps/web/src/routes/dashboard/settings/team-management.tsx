@@ -756,9 +756,9 @@ function TeamManagementSettings() {
                     <h4 className="font-medium capitalize">{role}</h4>
                   </div>
                   <ul className="space-y-1">
-                    {permissions.map((permission, permIndex) => (
+                    {permissions.map((permission) => (
                       <li
-                        key={permIndex}
+                        key={permission}
                         className="text-xs text-muted-foreground flex items-center gap-1"
                       >
                         <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />

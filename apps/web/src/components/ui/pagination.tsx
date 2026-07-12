@@ -154,6 +154,7 @@ export function MeridianPagination({
           if (page === "...") {
             return (
               <span
+                // biome-ignore lint/suspicious/noArrayIndexKey: ellipsis placeholders, value not unique
                 key={`ellipsis-${index}`}
                 className="px-2 text-muted-foreground"
               >

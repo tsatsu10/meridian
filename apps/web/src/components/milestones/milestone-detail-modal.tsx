@@ -407,30 +407,28 @@ export default function MilestoneDetailModal({
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {milestone.stakeholders.map(
-                      (email: string, index: number) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-xs flex items-center gap-1"
+                    {milestone.stakeholders.map((email: string) => (
+                      <Badge
+                        key={email}
+                        variant="secondary"
+                        className="text-xs flex items-center gap-1"
+                      >
+                        <User className="h-3 w-3" />
+                        {email.split("@")[0]}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            toast.success(
+                              `Notification sent to ${email.split("@")[0]}`,
+                            );
+                          }}
+                          className="p-0 h-auto ml-1 hover:bg-transparent"
                         >
-                          <User className="h-3 w-3" />
-                          {email.split("@")[0]}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              toast.success(
-                                `Notification sent to ${email.split("@")[0]}`,
-                              );
-                            }}
-                            className="p-0 h-auto ml-1 hover:bg-transparent"
-                          >
-                            <Mail className="h-3 w-3 text-blue-500 hover:text-blue-700" />
-                          </Button>
-                        </Badge>
-                      ),
-                    )}
+                          <Mail className="h-3 w-3 text-blue-500 hover:text-blue-700" />
+                        </Button>
+                      </Badge>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -463,44 +461,42 @@ export default function MilestoneDetailModal({
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {milestone.dependencies.map(
-                    (depId: string, index: number) => {
-                      const task = allTasks.find((t) => t.id === depId);
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 p-3 bg-muted/50 rounded text-sm border border-muted"
-                        >
-                          <Target className="h-4 w-4 text-muted-foreground" />
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              {getTaskTitle(depId)}
-                            </div>
-                            {task && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Status: {task.status} • ID: {depId}
-                              </div>
-                            )}
+                  {milestone.dependencies.map((depId: string) => {
+                    const task = allTasks.find((t) => t.id === depId);
+                    return (
+                      <div
+                        key={depId}
+                        className="flex items-center gap-2 p-3 bg-muted/50 rounded text-sm border border-muted"
+                      >
+                        <Target className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex-1">
+                          <div className="font-medium">
+                            {getTaskTitle(depId)}
                           </div>
                           {task && (
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-xs",
-                                task.status === "done"
-                                  ? "bg-green-100 text-green-800"
-                                  : task.status === "in_progress"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-gray-100 text-gray-800",
-                              )}
-                            >
-                              {task.status}
-                            </Badge>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Status: {task.status} • ID: {depId}
+                            </div>
                           )}
                         </div>
-                      );
-                    },
-                  )}
+                        {task && (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-xs",
+                              task.status === "done"
+                                ? "bg-green-100 text-green-800"
+                                : task.status === "in_progress"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800",
+                            )}
+                          >
+                            {task.status}
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
