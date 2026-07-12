@@ -182,7 +182,7 @@ describe("ErrorHandler", () => {
 
     it("should handle unknown error types", () => {
       const error = "String error";
-      const response = ErrorHandler.handle(error as any);
+      const response = ErrorHandler.handle(error as Error);
 
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe("INTERNAL_ERROR");
@@ -282,7 +282,7 @@ describe("ErrorHandler", () => {
 
     it("should return 500 for unknown error types", () => {
       const error = "String error";
-      expect(ErrorHandler.getStatusCode(error as any)).toBe(500);
+      expect(ErrorHandler.getStatusCode(error as Error)).toBe(500);
     });
   });
 
