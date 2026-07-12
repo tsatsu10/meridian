@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createMockContext } from "../../tests/helpers/test-requests";
 
 describe("Security Audit Middleware", () => {
-  let mockContext: any;
+  let mockContext: Record<string, unknown>;
 
   beforeEach(() => {
     mockContext = createMockContext();
