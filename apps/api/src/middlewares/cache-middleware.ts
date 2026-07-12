@@ -4,7 +4,7 @@
  * Phase 1 - Performance Optimization
  */
 
-import type { MiddlewareHandler } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 import { CacheService, CacheTTL } from "../services/cache/cache-service";
 import { Logger } from "../services/logging/logger";
 import crypto from "node:crypto";
@@ -12,7 +12,7 @@ import crypto from "node:crypto";
 interface CacheOptions {
   ttl?: number;
   varyBy?: string[]; // Vary cache by headers (e.g., ['user-id'])
-  skipIf?: (c: any) => boolean; // Skip caching condition
+  skipIf?: (c: Context) => boolean; // Skip caching condition
   keyPrefix?: string;
 }
 
@@ -89,7 +89,7 @@ export function cacheMiddleware(options: CacheOptions = {}): MiddlewareHandler {
 /**
  * Build cache key from request
  */
-function buildCacheKey(c: any, prefix: string, varyBy: string[]): string {
+function buildCacheKey(c: Context, prefix: string, varyBy: string[]): string {
   const parts = [prefix, c.req.path];
 
   // Add query params
