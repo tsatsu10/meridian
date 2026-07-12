@@ -48,7 +48,11 @@ const TableSkeleton = () => (
         <Skeleton className="h-6 w-40 bg-gradient-to-r from-gray-200 to-gray-300" />
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between">
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+              key={i}
+              className="flex items-center justify-between"
+            >
               <div className="flex items-center space-x-3">
                 <Skeleton className="h-8 w-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300" />
                 <div className="space-y-1">
@@ -72,6 +76,7 @@ const DockNavigationSkeleton = () => (
       <div className="flex items-center justify-center h-full space-x-3 px-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton
+            // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
             key={i}
             className="h-10 w-10 rounded-full bg-gradient-to-r from-gray-300 to-gray-400"
           />
