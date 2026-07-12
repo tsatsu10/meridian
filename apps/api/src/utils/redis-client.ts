@@ -105,7 +105,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
  */
 export async function setCache(
   key: string,
-  value: any,
+  value: unknown,
   ttl = 300, // Default: 5 minutes
 ): Promise<boolean> {
   if (!isRedisEnabled || !redisClient) {
