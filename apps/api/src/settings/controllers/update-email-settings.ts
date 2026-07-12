@@ -27,7 +27,7 @@ function encryptPassword(password: string): string {
 export default async function updateEmailSettings(
   workspaceId: string,
   updates: Partial<EmailSettings>,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   // Get current workspace
@@ -47,7 +47,7 @@ export default async function updateEmailSettings(
   }
 
   // Get current settings
-  const currentSettings = (workspace.settings as any) || {};
+  const currentSettings = (workspace.settings as Record<string, unknown>) || {};
   const currentEmailSettings = currentSettings.email || {};
 
   // Merge updates
