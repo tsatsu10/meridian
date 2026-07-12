@@ -125,6 +125,7 @@ export function useDashboards() {
     return [];
   }, [data]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset the selected dashboard when the user or workspace changes
   useEffect(() => {
     setSelectedDashboardId(null);
   }, [user?.email, workspace?.id]);

@@ -42,6 +42,7 @@ export function NoteComments({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch comments when noteId changes; fetchComments intentionally not a dep
   useEffect(() => {
     fetchComments();
   }, [noteId]);

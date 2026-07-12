@@ -95,6 +95,7 @@ export function TemplateGallery({
   const [isPublicTemplate, setIsPublicTemplate] = useState(false);
 
   // Load templates
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch templates when workspace changes; fetchTemplates is a stable module-local fetch
   useEffect(() => {
     fetchTemplates();
   }, [workspaceId]);

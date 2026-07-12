@@ -64,6 +64,7 @@ export function NotesList({
   const [showArchived, setShowArchived] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch notes when projectId/showArchived change; fetchNotes intentionally not a dep
   useEffect(() => {
     fetchNotes();
   }, [projectId, showArchived]);
