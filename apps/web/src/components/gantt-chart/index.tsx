@@ -706,10 +706,14 @@ function GanttChart({ tasks }: GanttChartProps) {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-gray-600 font-medium">
+                  <label
+                    htmlFor="gantt-view-mode"
+                    className="text-xs text-gray-600 font-medium"
+                  >
                     View:
                   </label>
                   <select
+                    id="gantt-view-mode"
                     value={viewMode}
                     onChange={(e) =>
                       handleViewModeChange(
