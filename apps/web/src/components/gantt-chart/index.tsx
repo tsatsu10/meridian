@@ -820,6 +820,15 @@ function GanttChart({ tasks }: GanttChartProps) {
                           : `${100 / totalDays}%`,
                       minWidth: viewMode === "months" ? "80px" : "50px",
                     }}
+                    // biome-ignore lint/a11y/useSemanticElements: styled clickable timeline header cell, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setCurrentDate(header.date);
+                      }
+                    }}
                     onClick={() => setCurrentDate(header.date)}
                     title={`Jump to ${format(header.date, "MMMM d, yyyy")}`}
                   >
