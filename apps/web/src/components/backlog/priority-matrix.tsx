@@ -121,6 +121,15 @@ export default function PriorityMatrix({
         "p-2 mb-2 rounded border cursor-pointer transition-all duration-200 hover:shadow-md",
         "bg-white border-gray-200 hover:border-gray-300",
       )}
+      // biome-ignore lint/a11y/useSemanticElements: styled clickable task card, keep as div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onTaskClick?.(task);
+        }
+      }}
       onClick={() => onTaskClick?.(task)}
     >
       <div className="flex items-start justify-between">
@@ -164,6 +173,15 @@ export default function PriorityMatrix({
           isSelected && "ring-2 ring-blue-500 ring-offset-2",
           "cursor-pointer hover:shadow-lg",
         )}
+        // biome-ignore lint/a11y/useSemanticElements: styled selectable quadrant container with nested cards, keep as div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setSelectedQuadrant(isSelected ? null : quadrant);
+          }
+        }}
         onClick={() => setSelectedQuadrant(isSelected ? null : quadrant)}
       >
         <div className="mb-3">
@@ -351,6 +369,15 @@ export default function PriorityMatrix({
                   <div
                     key={task.id}
                     className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-muted/50"
+                    // biome-ignore lint/a11y/useSemanticElements: styled clickable task card, keep as div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onTaskClick?.(task);
+                      }
+                    }}
                     onClick={() => onTaskClick?.(task)}
                   >
                     <span className="font-medium">{task.title}</span>
