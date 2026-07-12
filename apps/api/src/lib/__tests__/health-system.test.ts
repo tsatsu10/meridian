@@ -449,7 +449,7 @@ describe.skip("Health System", () => {
       expect(() => {
         healthService.createCheck({
           name: "",
-          check: null as any,
+          check: null as unknown,
           interval: -1,
         });
       }).not.toThrow();
