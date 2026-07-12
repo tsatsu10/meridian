@@ -11,7 +11,7 @@ import type { CalendarSettings } from "./get-calendar-settings";
 export default async function updateCalendarSettings(
   workspaceId: string,
   updates: Partial<CalendarSettings>,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   // Get current workspace
@@ -26,7 +26,7 @@ export default async function updateCalendarSettings(
   }
 
   // Get current settings
-  const currentSettings = (workspace.settings as any) || {};
+  const currentSettings = (workspace.settings as Record<string, unknown>) || {};
   const currentCalendarSettings = currentSettings.calendar || {};
 
   // Merge updates
