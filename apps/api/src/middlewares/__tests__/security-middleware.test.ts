@@ -297,12 +297,16 @@ describe("Security Middleware", () => {
   });
 
   describe("Request Sanitization", () => {
-    const sanitizeInput = (input: any): any => {
+    const sanitizeInput = (input: unknown): unknown => {
       if (typeof input === "string") {
         return input.trim().substring(0, 10000); // Limit length
       }
       if (typeof input === "object" && input !== null) {
-        const sanitized: any = Array.isArray(input) ? [] : {};
+        const sanitized: Record<string, unknown> | unknown[] = Array.isArray(
+          input,
+        )
+          ? []
+          : {};
         for (const key in input) {
           sanitized[key] = sanitizeInput(input[key]);
         }
