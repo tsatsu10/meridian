@@ -102,9 +102,11 @@ upload.post("/", async (c) => {
     // Use multer middleware
     await new Promise((resolve, reject) => {
       multerUpload.array("file", 10)(
-        c.req.raw as any,
-        {} as any,
-        (err: any) => {
+        c.req.raw as unknown as Parameters<
+          ReturnType<typeof multerUpload.array>
+        >[0],
+        {} as unknown as Parameters<ReturnType<typeof multerUpload.array>>[1],
+        (err: unknown) => {
           if (err) reject(err);
           else resolve(null);
         },
@@ -112,7 +114,8 @@ upload.post("/", async (c) => {
     });
 
     // Access uploaded files
-    files = (c.req.raw as any).files as Express.Multer.File[];
+    files = (c.req.raw as unknown as { files?: Express.Multer.File[] })
+      .files as Express.Multer.File[];
     if (!files || files.length === 0) {
       return c.json({ error: "No files uploaded" }, 400);
     }
