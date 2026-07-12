@@ -27,8 +27,8 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Calendar Events", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testUser: any;
-  let testWorkspace: any;
+  let testUser: Record<string, unknown>;
+  let testWorkspace: Record<string, unknown>;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -197,8 +197,8 @@ describe.skip("Calendar Events", () => {
   });
 
   describe("Attendee Management", () => {
-    let testEvent: any;
-    let attendee: any;
+    let testEvent: Record<string, unknown>;
+    let attendee: Record<string, unknown>;
 
     beforeEach(async () => {
       [testEvent] = await db
@@ -382,7 +382,7 @@ describe.skip("Calendar Events", () => {
   });
 
   describe("Event Updates", () => {
-    let testEvent: any;
+    let testEvent: Record<string, unknown>;
 
     beforeEach(async () => {
       [testEvent] = await db
@@ -462,7 +462,7 @@ describe.skip("Calendar Events", () => {
   });
 
   describe("Event Deletion", () => {
-    let testEvent: any;
+    let testEvent: Record<string, unknown>;
 
     beforeEach(async () => {
       [testEvent] = await db
