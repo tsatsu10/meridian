@@ -211,7 +211,7 @@ export async function seedWorkspaces() {
         workspaceId: workspace.id,
         userId: user.id,
         userEmail: user.email,
-        role: userRole as any,
+        role: userRole as (typeof workspaceMembers.role.enumValues)[number],
         status: "active",
         permissions: [],
         joinedAt: new Date(),
@@ -261,7 +261,7 @@ export async function seedWorkspaces() {
     // 4. CREATE DEPARTMENTS
     logger.info("\n🏢 Creating departments...");
 
-    const createdDepartments: any[] = [];
+    const createdDepartments: unknown[] = [];
 
     for (const deptData of DEPARTMENTS) {
       const existing = await db
@@ -301,7 +301,7 @@ export async function seedWorkspaces() {
     // 5. CREATE TEAMS
     logger.info("\n👥 Creating teams...");
 
-    const createdTeams: any[] = [];
+    const createdTeams: unknown[] = [];
 
     for (const teamData of TEAMS) {
       const existing = await db
