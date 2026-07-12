@@ -311,7 +311,8 @@ app.patch("/appearance/:userEmail", async (c) => {
       where: eq(userPreferencesTable.userId, user.id),
     });
 
-    const currentSettings = (existing?.settings as any) || {};
+    const currentSettings =
+      (existing?.settings as Record<string, unknown>) || {};
     const updatedSettings = { ...currentSettings, ...body };
 
     if (existing) {
@@ -417,7 +418,8 @@ app.patch("/background/:userEmail", async (c) => {
       where: eq(userPreferencesTable.userId, user.id),
     });
 
-    const currentSettings = (existing?.settings as any) || {};
+    const currentSettings =
+      (existing?.settings as Record<string, unknown>) || {};
     const updatedSettings = {
       ...currentSettings,
       backgroundImage:
@@ -503,7 +505,8 @@ app.patch("/fonts/:userEmail", async (c) => {
       where: eq(userPreferencesTable.userId, user.id),
     });
 
-    const currentSettings = (existing?.settings as any) || {};
+    const currentSettings =
+      (existing?.settings as Record<string, unknown>) || {};
     const updatedSettings = {
       ...currentSettings,
       fontFamily: fontFamily || currentSettings.fontFamily || "Inter",
