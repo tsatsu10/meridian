@@ -96,7 +96,7 @@ export async function evaluateRule(
  * Evaluate project progress condition
  */
 async function evaluateProjectProgress(
-  db: any,
+  db: ReturnType<typeof getDatabase>,
   rule: AlertRule,
   workspaceId: string,
 ): Promise<boolean> {
@@ -126,9 +126,7 @@ async function evaluateProjectProgress(
 
     if (allTasks.length === 0) return false;
 
-    const completedTasks = allTasks.filter(
-      (t: any) => t.status === "done",
-    ).length;
+    const completedTasks = allTasks.filter((t) => t.status === "done").length;
     const progress = (completedTasks / allTasks.length) * 100;
 
     // Check condition
@@ -152,7 +150,7 @@ async function evaluateProjectProgress(
  * Evaluate task overdue condition
  */
 async function evaluateTaskOverdue(
-  db: any,
+  db: ReturnType<typeof getDatabase>,
   rule: AlertRule,
   workspaceId: string,
 ): Promise<boolean> {
@@ -185,7 +183,7 @@ async function evaluateTaskOverdue(
  * Evaluate task count condition
  */
 async function evaluateTaskCount(
-  db: any,
+  db: ReturnType<typeof getDatabase>,
   rule: AlertRule,
   workspaceId: string,
 ): Promise<boolean> {
@@ -229,7 +227,7 @@ async function evaluateTaskCount(
  * Evaluate no activity condition
  */
 async function evaluateNoActivity(
-  db: any,
+  db: ReturnType<typeof getDatabase>,
   rule: AlertRule,
   workspaceId: string,
 ): Promise<boolean> {
