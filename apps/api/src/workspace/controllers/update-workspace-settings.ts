@@ -55,7 +55,7 @@ export default async function updateWorkspaceSettings(
   userEmail: string,
   workspaceId: string,
   updates: UpdateWorkspaceSettingsInput,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   // Verify user is workspace owner or admin
@@ -100,8 +100,8 @@ export default async function updateWorkspaceSettings(
   }
 
   // Separate basic fields from settings
-  const basicUpdates: any = {};
-  const settingsUpdates: any = {};
+  const basicUpdates: Record<string, unknown> = {};
+  const settingsUpdates: Record<string, unknown> = {};
 
   // Basic fields that go directly to workspace table
   if (updates.name !== undefined) basicUpdates.name = updates.name;
@@ -154,7 +154,8 @@ export default async function updateWorkspaceSettings(
     throw new Error("Workspace not found");
   }
 
-  const currentSettings = (currentWorkspace.settings as any) || {};
+  const currentSettings =
+    (currentWorkspace.settings as Record<string, unknown>) || {};
   const mergedSettings = { ...currentSettings, ...settingsUpdates };
 
   // Update workspace
