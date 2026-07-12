@@ -9,9 +9,25 @@
 
 import { Logger } from "../logging/logger";
 
+// Minimal structural type for the optional @sentry/node runtime require.
+// The package ships no types in this project, so we describe only the surface
+// we actually call. Everything is best-effort inside try/catch.
+interface SentryLike {
+  init(options: Record<string, unknown>): void;
+  captureException(error: Error, context?: Record<string, unknown>): void;
+  captureMessage(message: string, options?: Record<string, unknown>): void;
+  setUser(user: Record<string, unknown> | null): void;
+  addBreadcrumb(breadcrumb: Record<string, unknown>): void;
+  startTransaction(context: Record<string, unknown>): unknown;
+  setTag(key: string, value: string): void;
+  setContext(name: string, context: Record<string, unknown>): void;
+  flush(timeout?: number): Promise<boolean>;
+  close(timeout?: number): Promise<boolean>;
+}
+
 // 🔧 Optional Sentry import - gracefully handle if not installed
-let Sentry: any = null;
-let ProfilingIntegration: any = null;
+let Sentry: SentryLike | null = null;
+let ProfilingIntegration: (new () => unknown) | null = null;
 let isSentryAvailable = false;
 
 try {
@@ -40,7 +56,7 @@ interface SentryConfig {
  * Initialize Sentry
  */
 export function initializeSentry(config: SentryConfig) {
-  if (!isSentryAvailable) {
+  if (!isSentryAvailable || !Sentry || !ProfilingIntegration) {
     Logger.info("Sentry not available - skipping initialization");
     return;
   }
@@ -66,9 +82,17 @@ export function initializeSentry(config: SentryConfig) {
       sampleRate: config.sampleRate || 1.0, // 100% of errors
 
       // Additional options
-      // Sentry is an optional runtime require (typed any above), so its
-      // callback params have no importable types here
-      beforeSend(event: any, hint: any) {
+      // Sentry is an optional runtime require with no importable types, so
+      // these callback params are described structurally by what we touch.
+      beforeSend(
+        event: {
+          request?: {
+            cookies?: unknown;
+            headers?: { authorization?: unknown; cookie?: unknown };
+          };
+        },
+        _hint: unknown,
+      ) {
         // Filter out sensitive data
         if (event.request) {
           // Assign undefined instead of delete — undefined keys are dropped
@@ -83,7 +107,10 @@ export function initializeSentry(config: SentryConfig) {
         return event;
       },
 
-      beforeBreadcrumb(breadcrumb: any) {
+      beforeBreadcrumb(breadcrumb: {
+        category?: string;
+        data?: { Authorization?: unknown; Cookie?: unknown };
+      }) {
         // Filter sensitive breadcrumbs
         if (breadcrumb.category === "http" && breadcrumb.data) {
           breadcrumb.data.Authorization = undefined;
@@ -106,7 +133,10 @@ export function initializeSentry(config: SentryConfig) {
 /**
  * Capture exception
  */
-export function captureException(error: Error, context?: Record<string, any>) {
+export function captureException(
+  error: Error,
+  context?: Record<string, unknown>,
+) {
   if (!isSentryAvailable || !Sentry) {
     // Fallback: Just log to console if Sentry not available
     Logger.error("Error (Sentry not available):", error, context);
@@ -128,7 +158,7 @@ export function captureException(error: Error, context?: Record<string, any>) {
 export function captureMessage(
   message: string,
   level = "info",
-  context?: Record<string, any>,
+  context?: Record<string, unknown>,
 ) {
   if (!isSentryAvailable || !Sentry) {
     Logger.info(message, context);
@@ -137,7 +167,7 @@ export function captureMessage(
 
   try {
     Sentry.captureMessage(message, {
-      level: level as any,
+      level,
       extra: context,
     });
   } catch (err) {
@@ -186,7 +216,7 @@ export function addBreadcrumb(
   message: string,
   category: string,
   level = "info",
-  data?: Record<string, any>,
+  data?: Record<string, unknown>,
 ) {
   if (!isSentryAvailable || !Sentry) {
     // Fallback: Log as debug message
@@ -198,7 +228,7 @@ export function addBreadcrumb(
     Sentry.addBreadcrumb({
       message,
       category,
-      level: level as any,
+      level,
       data,
     });
   } catch (err) {
@@ -239,7 +269,7 @@ export function setTag(key: string, value: string) {
 /**
  * Set context
  */
-export function setContext(name: string, context: Record<string, any>) {
+export function setContext(name: string, context: Record<string, unknown>) {
   if (!isSentryAvailable || !Sentry) return;
 
   try {
