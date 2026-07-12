@@ -452,12 +452,20 @@ function ProjectsPage() {
             <div className="h-8 bg-muted rounded w-1/4 mb-4" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-24 bg-muted rounded glass-card" />
+                <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                  key={i}
+                  className="h-24 bg-muted rounded glass-card"
+                />
               ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-64 bg-muted rounded glass-card" />
+                <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                  key={i}
+                  className="h-64 bg-muted rounded glass-card"
+                />
               ))}
             </div>
           </div>
@@ -779,7 +787,7 @@ function ProjectsPage() {
                           }
 
                           return (
-                            <PaginationItem key={i}>
+                            <PaginationItem key={pageNum}>
                               {(pageNum === 1 &&
                                 currentPage > 3 &&
                                 pagination.pages > 5) ||

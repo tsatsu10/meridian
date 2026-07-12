@@ -119,9 +119,9 @@ export function TimelineView({
                 Tasks
               </div>
               <div className="flex">
-                {days.map((day, index) => (
+                {days.map((day) => (
                   <div
-                    key={index}
+                    key={day.toISOString()}
                     className={cn(
                       "text-center flex-shrink-0 border-l border-border/30",
                       day.getDay() === 0 || day.getDay() === 6
@@ -168,17 +168,15 @@ export function TimelineView({
                           </div>
                           <div className="flex items-center gap-1 mt-1">
                             <div className="flex -space-x-1">
-                              {entry.assignees
-                                .slice(0, 3)
-                                .map((assignee, i) => (
-                                  <div
-                                    key={i}
-                                    className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-xs"
-                                    title={assignee}
-                                  >
-                                    {assignee.charAt(0)}
-                                  </div>
-                                ))}
+                              {entry.assignees.slice(0, 3).map((assignee) => (
+                                <div
+                                  key={assignee}
+                                  className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-xs"
+                                  title={assignee}
+                                >
+                                  {assignee.charAt(0)}
+                                </div>
+                              ))}
                               {entry.assignees.length > 3 && (
                                 <div className="w-5 h-5 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs">
                                   +{entry.assignees.length - 3}
@@ -194,9 +192,9 @@ export function TimelineView({
                     <div className="flex-1 relative">
                       {/* Grid lines */}
                       <div className="absolute inset-0 flex">
-                        {days.map((day, i) => (
+                        {days.map((day) => (
                           <div
-                            key={i}
+                            key={day.toISOString()}
                             className={cn(
                               "border-l border-border/20",
                               day.getDay() === 0 || day.getDay() === 6

@@ -688,6 +688,7 @@ const TaskListSkeleton: React.FC = () => {
     <div className="space-y-2 p-4">
       {Array.from({ length: 10 }).map((_, i) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
           key={i}
           style={{
             display: "grid",

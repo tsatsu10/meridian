@@ -1249,6 +1249,7 @@ export default function AllTasksPage() {
                     {isLoading ? (
                       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                         {Array.from({ length: 6 }).map((_, i) => (
+                          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
                           <TaskCardSkeleton key={i} />
                         ))}
                       </div>
@@ -1304,6 +1305,7 @@ export default function AllTasksPage() {
 
                                       {generatePageNumbers().map(
                                         (pageNum, idx) => (
+                                          // biome-ignore lint/suspicious/noArrayIndexKey: pagination items include non-unique ellipsis
                                           <PaginationItem key={idx}>
                                             {pageNum === "..." ? (
                                               <PaginationEllipsis />

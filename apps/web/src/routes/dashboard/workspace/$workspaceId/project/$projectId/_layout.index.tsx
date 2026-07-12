@@ -581,6 +581,7 @@ function ProjectOverview() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
               <StatsCardSkeleton key={i} />
             ))}
           </div>

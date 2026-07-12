@@ -462,7 +462,11 @@ export function AllTasksKanbanView({
               <div className="h-4 bg-gray-200 rounded mb-4" />
               <div className="space-y-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-20 bg-gray-100 rounded" />
+                  <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                    key={i}
+                    className="h-20 bg-gray-100 rounded"
+                  />
                 ))}
               </div>
             </div>

@@ -269,7 +269,11 @@ export function AllTasksCalendarView({
         </div>
         <div className="grid grid-cols-7 gap-1">
           {[...Array(35)].map((_, i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded animate-pulse" />
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+              key={i}
+              className="h-24 bg-gray-100 rounded animate-pulse"
+            />
           ))}
         </div>
       </div>

@@ -555,6 +555,7 @@ export default function TeamCalendarModal({
 
               return (
                 <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: calendar day cells in fixed positional order
                   key={index}
                   className={cn(
                     "min-h-[80px] p-2 border-r border-b relative",
@@ -1453,6 +1454,7 @@ export default function TeamCalendarModal({
 
                                 return (
                                   <div
+                                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed weekly buckets, week index drives label
                                     key={week}
                                     className="flex items-center space-x-3"
                                   >

@@ -244,6 +244,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
             <Card key={i}>
               <CardContent className="p-6">
                 <Skeleton className="h-16 w-full" />
@@ -374,7 +375,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {data.insights.map((insight: ProjectInsight, index: number) => {
+                {data.insights.map((insight: ProjectInsight) => {
                   const Icon =
                     insight.type === "positive"
                       ? CheckCircle2
@@ -394,7 +395,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
 
                   return (
                     <div
-                      key={index}
+                      key={insight.title}
                       className="flex items-start gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg"
                     >
                       <Icon className={cn("h-5 w-5 mt-0.5", color)} />
@@ -564,17 +565,15 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
                 <div>
                   <p className="text-sm font-medium mb-2">Risk Factors:</p>
                   <div className="space-y-1">
-                    {data.projectHealth.riskFactors.map(
-                      (risk: string, index: number) => (
-                        <div
-                          key={index}
-                          className="flex items-center text-xs text-muted-foreground"
-                        >
-                          <AlertTriangle className="h-3 w-3 mr-1 text-yellow-500" />
-                          {risk}
-                        </div>
-                      ),
-                    )}
+                    {data.projectHealth.riskFactors.map((risk: string) => (
+                      <div
+                        key={risk}
+                        className="flex items-center text-xs text-muted-foreground"
+                      >
+                        <AlertTriangle className="h-3 w-3 mr-1 text-yellow-500" />
+                        {risk}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -346,9 +346,9 @@ function ApiAccessSettings() {
 
                     {key.scopes && key.scopes.length > 0 && (
                       <div className="flex gap-1 flex-wrap">
-                        {key.scopes.map((scope: string, index: number) => (
+                        {key.scopes.map((scope: string) => (
                           <Badge
-                            key={index}
+                            key={scope}
                             variant="outline"
                             className="text-xs"
                           >

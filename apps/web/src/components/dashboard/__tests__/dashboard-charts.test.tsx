@@ -23,6 +23,7 @@ function TaskCompletionChart({ data = [] }: TaskCompletionChartProps) {
       {data.length > 0 ? (
         <div className="chart-container">
           {data.map((entry, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed test data, index drives testid
             <div key={index} className="chart-bar" data-testid={`bar-${index}`}>
               <span>{entry.date}</span>
               <span>{entry.completed}</span>
@@ -52,8 +53,8 @@ function VelocityChart({ weeklyData = [] }: VelocityChartProps) {
       <div className="average" data-testid="avg-velocity">
         Average: {avgVelocity.toFixed(1)} tasks/week
       </div>
-      {weeklyData.map((week, index) => (
-        <div key={index} data-testid={`week-${week.week}`}>
+      {weeklyData.map((week) => (
+        <div key={week.week} data-testid={`week-${week.week}`}>
           Week {week.week}: {week.velocity} tasks
         </div>
       ))}

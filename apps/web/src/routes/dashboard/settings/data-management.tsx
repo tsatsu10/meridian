@@ -1295,6 +1295,7 @@ function DataManagementSettings() {
                               {importResult.errors
                                 .slice(0, 5)
                                 .map((error, index) => (
+                                  // biome-ignore lint/suspicious/noArrayIndexKey: bounded positional error list, may repeat verbatim
                                   <li key={index} className="text-sm">
                                     Row {error.row}: {error.message}
                                   </li>

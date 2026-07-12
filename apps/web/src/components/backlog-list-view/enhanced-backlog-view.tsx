@@ -924,9 +924,9 @@ export default function EnhancedBacklogView({
                   </h3>
                   <Card className="p-4">
                     <div className="space-y-2">
-                      {selectedTheme.risks.map((risk, index) => (
+                      {selectedTheme.risks.map((risk) => (
                         <div
-                          key={index}
+                          key={risk}
                           className="text-sm bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 p-3 rounded-md flex items-start gap-2"
                         >
                           <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />

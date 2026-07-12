@@ -846,9 +846,9 @@ export default function MilestoneList({
                               <div className="flex flex-wrap gap-1">
                                 {milestone.stakeholders
                                   .slice(0, 3)
-                                  .map((email, index) => (
+                                  .map((email) => (
                                     <Badge
-                                      key={index}
+                                      key={email}
                                       variant="secondary"
                                       className="text-xs"
                                     >

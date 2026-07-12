@@ -676,7 +676,7 @@ export default function LandingPage() {
             >
               {stats.map((stat, index) => (
                 <motion.div
-                  key={index}
+                  key={stat.label}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
@@ -709,7 +709,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
                 {companyLogos.map((logo, index) => (
                   <motion.div
-                    key={index}
+                    key={logo}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 0.6 }}
                     transition={{ delay: 0.7 + index * 0.1 }}
@@ -735,7 +735,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap justify-center gap-3 mb-6">
                 {techStack.map((tech, index) => (
                   <motion.div
-                    key={index}
+                    key={tech.name}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.8 + index * 0.1 }}
@@ -887,7 +887,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {selectedRole.features.map((feature, index) => (
                   <motion.div
-                    key={index}
+                    key={feature}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -965,7 +965,7 @@ export default function LandingPage() {
                 >
                   {category.features.map((feature, index) => (
                     <motion.div
-                      key={index}
+                      key={feature.name}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -1015,7 +1015,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
-                key={index}
+                key={testimonial.author}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -1025,6 +1025,7 @@ export default function LandingPage() {
                 <div className="flex items-center mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star
+                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-star rating, never reorders
                       key={i}
                       className="w-5 h-5 text-yellow-400 fill-current"
                     />
@@ -1084,7 +1085,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <motion.div
-                key={index}
+                key={plan.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -1144,8 +1145,8 @@ export default function LandingPage() {
                   )}
 
                   <ul className="space-y-4 text-left">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start gap-3">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                         <span className="text-muted-foreground">{feature}</span>
                       </li>
@@ -1209,7 +1210,7 @@ export default function LandingPage() {
           <div className="space-y-4">
             {faqData.map((faq, index) => (
               <motion.div
-                key={index}
+                key={faq.question}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}

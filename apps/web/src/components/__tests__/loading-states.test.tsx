@@ -22,6 +22,7 @@ function LoadingSkeleton({ count = 1, type = "text" }: LoadingSkeletonProps) {
     <div className="skeleton-loader" data-testid="skeleton-loader">
       {Array.from({ length: count }).map((_, index) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
           key={index}
           className={`skeleton-${type}`}
           data-testid={`skeleton-item-${index}`}

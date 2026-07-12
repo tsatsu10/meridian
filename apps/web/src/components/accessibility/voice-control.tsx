@@ -451,9 +451,9 @@ export function VoiceControl() {
           </div>
           <ScrollArea className="h-[250px] pr-4">
             <div className="space-y-2">
-              {commands.map((cmd, index) => (
+              {commands.map((cmd) => (
                 <div
-                  key={index}
+                  key={cmd.command}
                   className="p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-1">
@@ -469,8 +469,12 @@ export function VoiceControl() {
                       <span className="text-xs text-muted-foreground">
                         Also:
                       </span>
-                      {cmd.aliases.map((alias, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
+                      {cmd.aliases.map((alias) => (
+                        <Badge
+                          key={alias}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {alias}
                         </Badge>
                       ))}

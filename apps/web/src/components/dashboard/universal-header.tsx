@@ -145,7 +145,11 @@ export default function UniversalHeader({
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav className="flex items-center space-x-2 text-sm mt-4 pt-4 border-t border-border/50">
           {breadcrumbs.map((crumb, index) => (
-            <div key={index} className="flex items-center">
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed breadcrumb trail, index drives separator
+              key={index}
+              className="flex items-center"
+            >
               {index > 0 && (
                 <span className="text-muted-foreground mx-2">/</span>
               )}

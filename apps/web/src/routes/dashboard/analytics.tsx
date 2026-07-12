@@ -408,9 +408,9 @@ const ProjectHealthCard = ({
                   Risk Factors:
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {project.riskFactors.slice(0, 2).map((risk, index) => (
+                  {project.riskFactors.slice(0, 2).map((risk) => (
                     <Badge
-                      key={index}
+                      key={risk}
                       variant="outline"
                       className="text-xs px-1 py-0"
                     >
@@ -497,11 +497,11 @@ const EnhancedInsightsPanel = ({
       {alerts && alerts.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-foreground">System Alerts</h4>
-          {alerts.map((alert, index) => {
+          {alerts.map((alert) => {
             const AlertIcon = getAlertIcon(alert.type);
             return (
               <div
-                key={index}
+                key={alert.message}
                 className={cn(
                   "flex items-start space-x-3 p-3 rounded-lg border",
                   getAlertColor(alert.type),
@@ -1385,7 +1385,10 @@ function AnalyticsPage() {
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <MetricCardSkeleton key={i} />
+                  <MetricCardSkeleton
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static chart skeleton placeholders never reorder
+                    key={i}
+                  />
                 ))}
               </div>
             ) : enhancedAnalytics ? (
@@ -1608,7 +1611,11 @@ function AnalyticsPage() {
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <ChartSkeleton key={i} height="h-48" />
+                  <ChartSkeleton
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static chart skeleton placeholders never reorder
+                    key={i}
+                    height="h-48"
+                  />
                 ))}
               </div>
             ) : (enhancedAnalytics?.projectHealth?.length ?? 0) > 0 ? (
@@ -1648,63 +1655,61 @@ function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {enhancedAnalytics?.resourceUtilization?.map(
-                      (resource, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
-                        >
-                          <div className="flex-1">
-                            <h4 className="font-medium">{resource.userName}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {resource.role}
-                            </p>
-                            <div className="flex items-center gap-4 mt-2 text-xs">
-                              <span>Projects: {resource.projectCount}</span>
-                              <span>Tasks: {resource.taskCount}</span>
-                              <span>Hours: {resource.totalHours}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium">
-                                {resource.utilization}%
-                              </span>
-                              <Badge
-                                variant={
-                                  resource.workloadBalance === "optimal"
-                                    ? "default"
-                                    : resource.workloadBalance === "overloaded"
-                                      ? "secondary"
-                                      : resource.workloadBalance === "critical"
-                                        ? "secondary"
-                                        : "secondary"
-                                }
-                              >
-                                {resource.workloadBalance}
-                              </Badge>
-                            </div>
-                            <div className="w-32 h-2 bg-muted rounded-full">
-                              <div
-                                className={cn(
-                                  "h-2 rounded-full transition-all duration-300",
-                                  resource.workloadBalance === "optimal"
-                                    ? "bg-green-500"
-                                    : resource.workloadBalance === "overloaded"
-                                      ? "bg-red-500"
-                                      : resource.workloadBalance === "critical"
-                                        ? "bg-red-600"
-                                        : "bg-blue-500",
-                                )}
-                                style={{
-                                  width: `${Math.min(resource.utilization, 100)}%`,
-                                }}
-                              />
-                            </div>
+                    {enhancedAnalytics?.resourceUtilization?.map((resource) => (
+                      <div
+                        key={resource.userName}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium">{resource.userName}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {resource.role}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2 text-xs">
+                            <span>Projects: {resource.projectCount}</span>
+                            <span>Tasks: {resource.taskCount}</span>
+                            <span>Hours: {resource.totalHours}</span>
                           </div>
                         </div>
-                      ),
-                    )}
+                        <div className="text-right">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">
+                              {resource.utilization}%
+                            </span>
+                            <Badge
+                              variant={
+                                resource.workloadBalance === "optimal"
+                                  ? "default"
+                                  : resource.workloadBalance === "overloaded"
+                                    ? "secondary"
+                                    : resource.workloadBalance === "critical"
+                                      ? "secondary"
+                                      : "secondary"
+                              }
+                            >
+                              {resource.workloadBalance}
+                            </Badge>
+                          </div>
+                          <div className="w-32 h-2 bg-muted rounded-full">
+                            <div
+                              className={cn(
+                                "h-2 rounded-full transition-all duration-300",
+                                resource.workloadBalance === "optimal"
+                                  ? "bg-green-500"
+                                  : resource.workloadBalance === "overloaded"
+                                    ? "bg-red-500"
+                                    : resource.workloadBalance === "critical"
+                                      ? "bg-red-600"
+                                      : "bg-blue-500",
+                              )}
+                              style={{
+                                width: `${Math.min(resource.utilization, 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>

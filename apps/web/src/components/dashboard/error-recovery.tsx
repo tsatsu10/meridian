@@ -360,8 +360,11 @@ export function ErrorRecovery({
                 Recovery History ({retryHistory.length} attempts)
               </summary>
               <div className="mt-2 space-y-1 pl-4">
-                {retryHistory.map((attempt, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs">
+                {retryHistory.map((attempt) => (
+                  <div
+                    key={attempt.time.toISOString()}
+                    className="flex items-center gap-2 text-xs"
+                  >
                     {attempt.success ? (
                       <CheckCircle className="h-3 w-3 text-green-500" />
                     ) : (

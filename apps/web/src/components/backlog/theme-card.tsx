@@ -225,6 +225,7 @@ export function ThemeCard({
                 <div className="flex -space-x-1">
                   {theme.assignees.slice(0, 3).map((assignee, index) => (
                     <Avatar
+                      // biome-ignore lint/suspicious/noArrayIndexKey: assignee may be string|object union; capped avatar stack
                       key={index}
                       className="h-6 w-6 border-2 border-background"
                     >

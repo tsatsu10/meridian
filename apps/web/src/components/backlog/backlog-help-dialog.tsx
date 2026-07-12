@@ -74,14 +74,15 @@ export function BacklogHelpDialog({
                 {section.category}
               </h3>
               <div className="space-y-2">
-                {section.items.map((shortcut, index) => (
+                {section.items.map((shortcut) => (
                   <div
-                    key={index}
+                    key={shortcut.description}
                     className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50 transition-colors"
                   >
                     <span className="text-sm">{shortcut.description}</span>
                     <div className="flex items-center gap-1">
                       {shortcut.keys.map((key, keyIndex) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: fixed key-combo list, keyIndex drives separator
                         <div key={keyIndex} className="flex items-center gap-1">
                           <Badge
                             variant="outline"

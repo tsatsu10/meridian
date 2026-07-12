@@ -146,8 +146,8 @@ export function SecurityDashboard() {
 
           {event.riskFactors && event.riskFactors.length > 0 && (
             <div className="flex gap-1 flex-wrap">
-              {event.riskFactors.map((factor, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
+              {event.riskFactors.map((factor) => (
+                <Badge key={factor} variant="outline" className="text-xs">
                   {factor.replace(/_/g, " ")}
                 </Badge>
               ))}

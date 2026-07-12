@@ -16,7 +16,11 @@ export function DashboardStatsLoading() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="glass-card">
+        <Card
+          // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+          key={i}
+          className="glass-card"
+        >
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <Skeleton className="h-4 w-24" />
@@ -53,6 +57,7 @@ export function ProjectListLoading({ count = 6 }: { count?: number }) {
       <CardContent className="space-y-3">
         {Array.from({ length: count }).map((_, i) => (
           <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
             key={i}
             className="flex items-center gap-3 p-4 border rounded-lg animate-pulse"
           >
@@ -86,7 +91,11 @@ export function MilestoneDashboardLoading() {
       </CardHeader>
       <CardContent className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="p-4 border rounded-lg">
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+            key={i}
+            className="p-4 border rounded-lg"
+          >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <Skeleton className="h-5 w-48 mb-2" />
@@ -140,7 +149,11 @@ export function ActivityFeedLoading({ count = 5 }: { count?: number }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="flex items-start gap-3 p-3 border rounded-lg">
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+            key={i}
+            className="flex items-start gap-3 p-3 border rounded-lg"
+          >
             <Skeleton className="h-8 w-8 rounded-full flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <Skeleton className="h-4 w-full mb-2" />
@@ -176,6 +189,7 @@ export function ChartLoading({ height = 300 }: { height?: number }) {
         >
           {Array.from({ length: 7 }).map((_, i) => (
             <Skeleton
+              // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
               key={i}
               className="w-full rounded-t"
               style={{ height: `${Math.random() * 60 + 40}%` }}
@@ -269,7 +283,7 @@ export function ProgressiveLoading({
         const isPending = i > currentStep;
 
         return (
-          <div key={i} className="flex items-center gap-3">
+          <div key={step} className="flex items-center gap-3">
             <div
               className={cn(
                 "flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium",
@@ -327,6 +341,7 @@ export function PulseDotsLoading() {
     <div className="flex items-center gap-1">
       {[0, 1, 2].map((i) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
           key={i}
           className="h-2 w-2 bg-primary rounded-full animate-pulse"
           style={{
