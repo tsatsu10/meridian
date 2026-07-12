@@ -4,7 +4,7 @@ import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { logger } from "@/lib/logger";
 
 // Helper function to sanitize data for JSON serialization
-const sanitizeForJSON = (obj: any): any => {
+const sanitizeForJSON = (obj: unknown): unknown => {
   if (obj === null || obj === undefined) return obj;
 
   // Handle primitives
@@ -16,10 +16,11 @@ const sanitizeForJSON = (obj: any): any => {
   }
 
   // Handle objects
-  const cleaned: any = {};
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      const value = obj[key];
+  const cleaned: Record<string, unknown> = {};
+  const source = obj as Record<string, unknown>;
+  for (const key in source) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      const value = source[key];
 
       // Skip functions, symbols, and undefined
       if (
@@ -51,8 +52,8 @@ export interface DashboardSettings {
   taskChartType?: "line" | "bar" | "area";
   healthChartType?: "pie" | "bar" | "line";
   workspaceHealthChartType?: "pie" | "bar" | "line";
-  filters?: any;
-  widgets?: any[];
+  filters?: Record<string, unknown>;
+  widgets?: unknown[];
 }
 
 export interface UserSettings {
@@ -61,7 +62,7 @@ export interface UserSettings {
   tutorialsCompleted?: string[];
   sidebarCollapsed?: boolean;
   compactMode?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface UserPreferences {
@@ -70,7 +71,7 @@ export interface UserPreferences {
   pinnedProjects?: string[];
   dashboardLayout?: DashboardSettings;
   theme?: "light" | "dark" | "system";
-  notifications?: any;
+  notifications?: Record<string, unknown>;
   settings?: UserSettings;
   createdAt?: Date;
   updatedAt?: Date;
@@ -148,16 +149,18 @@ export function useUserPreferences() {
         settings: {
           projectsViewMode: localStorage.getItem(
             STORAGE_KEYS.PROJECTS_VIEW,
-          ) as any,
+          ) as UserSettings["projectsViewMode"],
           allTasksViewMode: localStorage.getItem(
             STORAGE_KEYS.TASKS_VIEW,
-          ) as any,
+          ) as UserSettings["allTasksViewMode"],
           ...JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || "{}"),
         },
         dashboardLayout: JSON.parse(
           localStorage.getItem(STORAGE_KEYS.DASHBOARD_LAYOUT) || "{}",
         ),
-        theme: localStorage.getItem(STORAGE_KEYS.THEME) as any,
+        theme: localStorage.getItem(
+          STORAGE_KEYS.THEME,
+        ) as UserPreferences["theme"],
       };
       setPreferences(cached);
     } catch (error) {
@@ -232,7 +235,9 @@ export function useUserPreferences() {
 
         try {
           // Sanitize updates to remove non-serializable data
-          const sanitizedUpdates = sanitizeForJSON(updates);
+          const sanitizedUpdates = sanitizeForJSON(
+            updates,
+          ) as Partial<UserPreferences>;
 
           const requestBody = {
             userEmail: user.email,

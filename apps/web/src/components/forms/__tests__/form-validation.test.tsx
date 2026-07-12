@@ -18,9 +18,9 @@ import React from "react";
 
 interface ValidationRule {
   type: "required" | "email" | "minLength" | "maxLength" | "pattern" | "custom";
-  value?: any;
+  value?: string | number;
   message: string;
-  validator?: (value: any) => boolean | Promise<boolean>;
+  validator?: (value: string) => boolean | Promise<boolean>;
 }
 
 interface FormField {
@@ -35,7 +35,7 @@ interface FormField {
 
 interface FormProps {
   fields: FormField[];
-  onSubmit?: (data: Record<string, any>) => Promise<void> | void;
+  onSubmit?: (data: Record<string, string>) => Promise<void> | void;
   onValidationError?: (errors: Record<string, string>) => void;
   validateOnBlur?: boolean;
   validateOnChange?: boolean;
@@ -48,8 +48,8 @@ function FormWithValidation({
   validateOnBlur = true,
   validateOnChange = false,
 }: FormProps) {
-  const [values, setValues] = React.useState<Record<string, any>>(() => {
-    const initial: Record<string, any> = {};
+  const [values, setValues] = React.useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
     for (const field of fields) {
       initial[field.name] = field.defaultValue || "";
     }
@@ -62,7 +62,7 @@ function FormWithValidation({
 
   const validateField = async (
     field: FormField,
-    value: any,
+    value: string,
   ): Promise<string | null> => {
     if (!field.validationRules) return null;
 
@@ -83,19 +83,19 @@ function FormWithValidation({
         }
 
         case "minLength":
-          if (value && value.length < rule.value) {
+          if (value && value.length < (rule.value as number)) {
             return rule.message;
           }
           break;
 
         case "maxLength":
-          if (value && value.length > rule.value) {
+          if (value && value.length > (rule.value as number)) {
             return rule.message;
           }
           break;
 
         case "pattern":
-          if (value && !new RegExp(rule.value).test(value)) {
+          if (value && !new RegExp(rule.value as string).test(value)) {
             return rule.message;
           }
           break;
@@ -127,7 +127,7 @@ function FormWithValidation({
     return newErrors;
   };
 
-  const handleChange = async (fieldName: string, value: any) => {
+  const handleChange = async (fieldName: string, value: string) => {
     setValues((prev) => ({ ...prev, [fieldName]: value }));
 
     if (validateOnChange) {

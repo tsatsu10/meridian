@@ -12,6 +12,7 @@ import { API_BASE_URL } from "@/constants/urls";
 
 // Import existing auth
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
+import type { LoggedInUser } from "@/types/user";
 
 // Import RBAC types and utilities
 import type {
@@ -45,7 +46,7 @@ import { getRolePermissions, hasMinimumRole } from "./definitions";
  * Convert existing user to RBAC user with default role assignment
  */
 function createRBACUser(
-  user: any,
+  user: LoggedInUser,
   role: UserRole = "member",
   permissions?: AllPermissions,
 ): RBACUser {
@@ -78,7 +79,7 @@ function createRBACUser(
 /**
  * Determine user's initial role based on various factors
  */
-function determineInitialRole(user: any): UserRole {
+function determineInitialRole(user: LoggedInUser): UserRole {
   // TODO: This will later be determined by:
   // 1. Database role assignments
   // 2. Workspace creator status
@@ -188,7 +189,7 @@ export function RBACProvider({ children }: RBACProviderProps) {
           // Check if we got a valid assignments response
           if (data.assignments && Array.isArray(data.assignments)) {
             const activeAssignment = data.assignments.find(
-              (a: any) => a.isActive,
+              (a: { isActive?: boolean; role?: UserRole }) => a.isActive,
             );
             userRole = activeAssignment?.role || determineInitialRole(authUser);
           } else {

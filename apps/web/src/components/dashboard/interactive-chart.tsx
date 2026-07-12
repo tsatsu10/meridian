@@ -118,9 +118,9 @@ function InteractiveChartInternal({
     return "text-gray-500";
   };
 
-  const handleDataPointClick = (dataPoint: any) => {
+  const handleDataPointClick = (dataPoint: unknown) => {
     if (drillDownEnabled && onDrillDown) {
-      onDrillDown(dataPoint);
+      onDrillDown(dataPoint as ChartDataPoint);
     }
   };
 

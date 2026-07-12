@@ -2,9 +2,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, AlertTriangle, Target } from "lucide-react";
 import { cn } from "@/lib/cn";
+import type { Notification } from "@/types/notification";
 
 interface NotificationSectionProps {
-  allNotifications: any[];
+  allNotifications: Notification[];
 }
 
 export default function NotificationSection({

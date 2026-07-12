@@ -13,6 +13,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 
 interface PredictiveInsightsProps {
-  timeSeriesData: any[]; // Accept any type for flexibility
+  timeSeriesData: unknown[]; // Accept any type for flexibility
   className?: string;
 }
 
@@ -99,7 +100,7 @@ export function PredictiveInsights({
     prediction,
     title,
     icon: Icon,
-  }: { prediction: PredictionResult; title: string; icon: any }) => {
+  }: { prediction: PredictionResult; title: string; icon: LucideIcon }) => {
     const nextWeekPrediction = prediction.predictions[6]; // 7 days ahead
 
     if (!nextWeekPrediction) return null;

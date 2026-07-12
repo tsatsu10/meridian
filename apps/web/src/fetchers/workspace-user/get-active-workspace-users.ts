@@ -1,4 +1,4 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 // The generated AppType is missing workspace-user[":workspaceId"], so type locally
 export type GetActiveWorkspaceUsersRequest = { workspaceId: string };
@@ -6,7 +6,7 @@ export type GetActiveWorkspaceUsersRequest = { workspaceId: string };
 async function getActiveWorkspaceUsers({
   workspaceId,
 }: GetActiveWorkspaceUsersRequest) {
-  const response = await (client as any)["workspace-user"][
+  const response = await looseClient["workspace-user"][
     ":workspaceId"
   ].active.$get({
     param: { workspaceId },

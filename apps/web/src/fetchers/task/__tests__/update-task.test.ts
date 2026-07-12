@@ -44,7 +44,9 @@ describe("updateTask", () => {
       json: async () => mockResponse,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     const result = await updateTask("task-123", mockTask);
 
@@ -77,7 +79,9 @@ describe("updateTask", () => {
       json: async () => taskWithParent,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskWithParent);
 
@@ -103,7 +107,9 @@ describe("updateTask", () => {
       json: async () => minimalTask,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", minimalTask as Task);
 
@@ -128,7 +134,9 @@ describe("updateTask", () => {
       json: async () => taskNoDueDate,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskNoDueDate as Task);
 
@@ -145,7 +153,9 @@ describe("updateTask", () => {
       json: async () => taskNewStatus,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskNewStatus);
 
@@ -166,7 +176,9 @@ describe("updateTask", () => {
       json: async () => taskNewPriority,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskNewPriority);
 
@@ -187,7 +199,9 @@ describe("updateTask", () => {
       json: async () => taskNewPosition,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskNewPosition);
 
@@ -206,7 +220,9 @@ describe("updateTask", () => {
       text: async () => "Task update failed: Task not found",
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await expect(updateTask("invalid-task", mockTask)).rejects.toThrow(
       "Task update failed: Task not found",
@@ -219,7 +235,9 @@ describe("updateTask", () => {
       text: async () => "Permission denied",
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await expect(updateTask("task-123", mockTask)).rejects.toThrow(
       "Permission denied",
@@ -232,7 +250,9 @@ describe("updateTask", () => {
       json: async () => mockTask,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", mockTask);
 
@@ -248,7 +268,9 @@ describe("updateTask", () => {
       json: async () => taskNewAssignee,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskNewAssignee);
 
@@ -269,7 +291,9 @@ describe("updateTask", () => {
       json: async () => taskNoDesc,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskNoDesc);
 
@@ -290,7 +314,9 @@ describe("updateTask", () => {
       json: async () => taskNoUser,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("task-123", taskNoUser as unknown as Task);
 
@@ -304,7 +330,9 @@ describe("updateTask", () => {
       json: async () => mockTask,
     });
 
-    ((client.task as any)[":id"].$put as any) = mockPut;
+    (client.task as unknown as Record<string, { $put: typeof mockPut }>)[
+      ":id"
+    ].$put = mockPut;
 
     await updateTask("specific-task-id", mockTask);
 

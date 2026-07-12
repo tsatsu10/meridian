@@ -30,6 +30,7 @@ import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import type { WorkspaceUser } from "@/types/workspace-user";
+import type { TaskWithSubtasks } from "@/types/task";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import {
   Calendar,
@@ -101,7 +102,7 @@ interface CalendarEvent {
   participants?: string[];
   isAllDay?: boolean;
   color?: string;
-  originalTask?: any;
+  originalTask?: TaskWithSubtasks;
 }
 
 interface TeamMember {
@@ -193,12 +194,19 @@ function ProjectCalendar() {
     })) ?? [];
 
   // Process task data into calendar events
-  const columnArray = Array.isArray(tasksData)
-    ? tasksData
-    : tasksData && Array.isArray((tasksData as any).columns)
-      ? (tasksData as any).columns
+  const columnArray: Array<{ tasks?: TaskWithSubtasks[] }> = Array.isArray(
+    tasksData,
+  )
+    ? (tasksData as Array<{ tasks?: TaskWithSubtasks[] }>)
+    : tasksData &&
+        Array.isArray(
+          (tasksData as { columns?: Array<{ tasks?: TaskWithSubtasks[] }> })
+            .columns,
+        )
+      ? (tasksData as { columns: Array<{ tasks?: TaskWithSubtasks[] }> })
+          .columns
       : [];
-  const allTasks = flattenTasks(columnArray.flatMap((col: any) => col.tasks));
+  const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks || []));
 
   // Convert tasks to calendar events
   const calendarEvents = useMemo((): CalendarEvent[] => {

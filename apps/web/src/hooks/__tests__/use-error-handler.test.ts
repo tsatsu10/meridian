@@ -53,7 +53,7 @@ describe("useErrorHandler", () => {
       .mockResolvedValueOnce("Success");
 
     // First attempt fails
-    let firstAttempt: Promise<any>;
+    let firstAttempt: Promise<unknown>;
     act(() => {
       firstAttempt = result.current.retry(mockOperation);
     });
@@ -68,7 +68,7 @@ describe("useErrorHandler", () => {
     expect(result.current.retryCount).toBe(1);
 
     // Second attempt succeeds and resets the error state
-    let secondAttempt: Promise<any>;
+    let secondAttempt: Promise<unknown>;
     act(() => {
       secondAttempt = result.current.retry(mockOperation);
     });
@@ -93,7 +93,7 @@ describe("useErrorHandler", () => {
 
     // Each retry() call is one attempt; two failures reach maxRetries
     for (let i = 0; i < 2; i++) {
-      let attempt: Promise<any>;
+      let attempt: Promise<unknown>;
       act(() => {
         attempt = result.current.retry(mockOperation);
       });
@@ -151,7 +151,7 @@ describe("useApiCall", () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.data).toBeNull();
 
-    let executePromise: Promise<any>;
+    let executePromise: Promise<unknown>;
 
     act(() => {
       executePromise = result.current.execute();
@@ -172,7 +172,7 @@ describe("useApiCall", () => {
     const mockApiCall = vi.fn().mockRejectedValue(new Error("API error"));
     const { result } = renderHook(() => useApiCall(mockApiCall));
 
-    let executePromise: Promise<any>;
+    let executePromise: Promise<unknown>;
 
     act(() => {
       executePromise = result.current.execute();
@@ -200,7 +200,7 @@ describe("useApiCall", () => {
     const { result } = renderHook(() => useApiCall(mockApiCall));
 
     // First retry attempt fails (retry() runs one attempt per call)
-    let firstAttempt: Promise<any>;
+    let firstAttempt: Promise<unknown>;
     act(() => {
       firstAttempt = result.current.retry();
     });
@@ -210,7 +210,7 @@ describe("useApiCall", () => {
     });
 
     // Second retry attempt succeeds
-    let secondAttempt: Promise<any>;
+    let secondAttempt: Promise<unknown>;
     act(() => {
       secondAttempt = result.current.retry();
     });
@@ -240,7 +240,7 @@ describe("useAsyncOperation", () => {
     const mockOperation = vi.fn().mockResolvedValue("Operation result");
     const { result } = renderHook(() => useAsyncOperation(mockOperation));
 
-    let executePromise: Promise<any>;
+    let executePromise: Promise<unknown>;
 
     act(() => {
       executePromise = result.current.execute("param1", "param2");
@@ -260,7 +260,7 @@ describe("useAsyncOperation", () => {
       .mockRejectedValue(new Error("Operation error"));
     const { result } = renderHook(() => useAsyncOperation(mockOperation));
 
-    let executePromise: Promise<any>;
+    let executePromise: Promise<unknown>;
 
     act(() => {
       executePromise = result.current.execute();
@@ -295,7 +295,7 @@ describe("useFormSubmission", () => {
 
     const formData = { name: "John", email: "john@example.com" };
 
-    let submitPromise: Promise<any>;
+    let submitPromise: Promise<unknown>;
 
     act(() => {
       submitPromise = result.current.submit(formData);
@@ -320,7 +320,7 @@ describe("useFormSubmission", () => {
 
     const formData = { name: "John" };
 
-    let submitPromise: Promise<any>;
+    let submitPromise: Promise<unknown>;
 
     act(() => {
       submitPromise = result.current.submit(formData);
@@ -350,7 +350,7 @@ describe("useFormSubmission", () => {
     const formData = { name: "John" };
 
     // First retry attempt fails (retry() runs one attempt per call)
-    let firstAttempt: Promise<any>;
+    let firstAttempt: Promise<unknown>;
     act(() => {
       firstAttempt = result.current.retry(formData);
     });
@@ -360,7 +360,7 @@ describe("useFormSubmission", () => {
     });
 
     // Second retry attempt succeeds
-    let secondAttempt: Promise<any>;
+    let secondAttempt: Promise<unknown>;
     act(() => {
       secondAttempt = result.current.retry(formData);
     });

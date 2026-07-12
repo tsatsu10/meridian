@@ -251,6 +251,47 @@ interface EnhancedTeam {
   unreadCount?: number;
 }
 
+// People Directory view renders a few aspirational profile fields that
+// don't exist on the workspace-user API response yet (always undefined at
+// runtime today) -- kept as optional so this pre-existing gap stays
+// visible instead of being hidden behind `any`.
+type DirectoryUser = WorkspaceUser & {
+  jobTitle?: string;
+  company?: string;
+  location?: string;
+};
+
+type MemberWithTeams = EnhancedTeamMember & {
+  teams: Array<{ id: string; name: string; color?: string }>;
+};
+
+interface TeamsPermissions {
+  canCreateTeams: boolean;
+  canUpdateTeams: boolean;
+  canDeleteTeams: boolean;
+  canManageTeams: boolean;
+  canViewMembers: boolean;
+  canAddMembers: boolean;
+  canRemoveMembers: boolean;
+  canManageMembers: boolean;
+  canViewUsers: boolean;
+  canCreateUsers: boolean;
+  canEditUsers: boolean;
+  canDeleteUsers: boolean;
+  canChangeUserRoles: boolean;
+  canToggleUserStatus: boolean;
+  canResetPasswords: boolean;
+  canManageUsers: boolean;
+  canExportData: boolean;
+  canAccessChat: boolean;
+  canViewCalendar: boolean;
+  canManageCalendar: boolean;
+  canViewSettings: boolean;
+  canUpdateSettings: boolean;
+  canViewAnalytics: boolean;
+  canViewDetailedAnalytics: boolean;
+}
+
 // Enhanced team role mapping
 const ROLE_LABELS = {
   "workspace-manager": {
@@ -307,7 +348,7 @@ function TeamsPage() {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] =
-    useState<EnhancedTeamMember | null>(null);
+    useState<WorkspaceUser | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<
     string | null
@@ -353,7 +394,7 @@ function TeamsPage() {
   const userRole = user?.role || "member";
 
   // Granular permissions check based on user role
-  const globalPermissions = {
+  const globalPermissions: TeamsPermissions = {
     // Team Management
     canCreateTeams: ["workspace-manager", "admin", "team-lead"].includes(
       userRole,
@@ -622,9 +663,12 @@ function TeamsPage() {
         color: teamColor,
         projectName:
           team.projectName ||
-          (Array.isArray(projects) ? projects : []).find(
-            (p: any) => p.id === team.projectId,
-          )?.name,
+          (
+            (Array.isArray(projects) ? projects : []) as Array<{
+              id: string;
+              name: string;
+            }>
+          ).find((p) => p.id === team.projectId)?.name,
         healthScore,
         healthStatus,
         completedTasks,
@@ -642,12 +686,7 @@ function TeamsPage() {
 
   // Deduplicated members with team information
   const uniqueMembers = useMemo(() => {
-    const memberMap = new Map<
-      string,
-      EnhancedTeamMember & {
-        teams: Array<{ id: string; name: string; color?: string }>;
-      }
-    >();
+    const memberMap = new Map<string, MemberWithTeams>();
 
     for (const team of enhancedTeams) {
       for (const member of team.members) {
@@ -884,7 +923,7 @@ function TeamsPage() {
     setIsCreateTeamOpen(true);
   };
 
-  const handleTeamCreated = async (newTeam: any) => {
+  const handleTeamCreated = async (newTeam: { name?: string } | undefined) => {
     setIsCreateTeamOpen(false);
 
     try {
@@ -925,7 +964,7 @@ function TeamsPage() {
     }
   };
 
-  const handleUserUpdated = (updatedUser: any) => {
+  const handleUserUpdated = (updatedUser: WorkspaceUser) => {
     setIsEditUserOpen(false);
     setSelectedUserForEdit(null);
     toast.success(`User "${updatedUser.name}" updated successfully!`);
@@ -1704,7 +1743,7 @@ function TeamsPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {directoryPagination.paginatedData.map(
-                    (user: any, index: number) => (
+                    (user: DirectoryUser, index) => (
                       <BlurFade
                         key={user.id || user.userEmail}
                         delay={0.05 + index * 0.02}
@@ -1720,8 +1759,8 @@ function TeamsPage() {
                             >
                               <Avatar className="h-20 w-20 mx-auto border-4 border-primary/10 group-hover:border-primary/30 transition-colors">
                                 <AvatarImage
-                                  src={user.avatar}
-                                  alt={user.userName || user.name}
+                                  src={user.avatar ?? undefined}
+                                  alt={user.userName || user.name || undefined}
                                 />
                                 <AvatarFallback className="text-xl">
                                   {(user.userName || user.name || "U")
@@ -1808,7 +1847,7 @@ function TeamsPage() {
               <>
                 <div className="space-y-4">
                   {directoryPagination.paginatedData.map(
-                    (user: any, index: number) => (
+                    (user: DirectoryUser, index) => (
                       <BlurFade
                         key={user.id || user.userEmail}
                         delay={0.05 + index * 0.02}
@@ -1825,8 +1864,10 @@ function TeamsPage() {
                               <div className="flex items-center gap-4 flex-1 min-w-0">
                                 <Avatar className="h-16 w-16 border-2 border-primary/10 group-hover:border-primary/30 transition-colors flex-shrink-0">
                                   <AvatarImage
-                                    src={user.avatar}
-                                    alt={user.userName || user.name}
+                                    src={user.avatar ?? undefined}
+                                    alt={
+                                      user.userName || user.name || undefined
+                                    }
                                   />
                                   <AvatarFallback className="text-lg">
                                     {(user.userName || user.name || "U")
@@ -1919,7 +1960,7 @@ function TeamsPage() {
               users={usersPagination.paginatedData}
               onUserAction={(action, user) => {
                 if (action === "edit") {
-                  setSelectedUserForEdit(user as any);
+                  setSelectedUserForEdit(user);
                   setIsEditUserOpen(true);
                 } else if (action === "delete") {
                   if (
@@ -2179,8 +2220,8 @@ function UsersManagementView({
   onUserAction,
   searchTerm,
 }: {
-  users: any[];
-  onUserAction: (action: string, user: any) => void;
+  users: WorkspaceUser[];
+  onUserAction: (action: string, user: WorkspaceUser) => void;
   searchTerm: string;
 }) {
   const filteredUsers = users.filter(
@@ -2301,8 +2342,8 @@ function EditUserModal({
 }: {
   open: boolean;
   onClose: () => void;
-  user: any;
-  onUserUpdated: (user: any) => void;
+  user: WorkspaceUser | null;
+  onUserUpdated: (user: WorkspaceUser) => void;
 }) {
   const [formData, setFormData] = useState({
     name: "",
@@ -2325,6 +2366,7 @@ function EditUserModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
 
     const updatedUser = {
       ...user,
@@ -2426,7 +2468,7 @@ function TeamCard({
 }: {
   team: EnhancedTeam;
   onAction: (action: string, team: EnhancedTeam) => void;
-  userPermissions: any;
+  userPermissions: TeamsPermissions;
 }) {
   const workload = team.workload ?? 0;
   const roleCounts: Record<string, number> = {};
@@ -2746,9 +2788,9 @@ function MembersList({
 
   onMemberAction,
 }: {
-  members: any[];
-  userPermissions: any;
-  onMemberAction: (action: string, member: any) => void;
+  members: MemberWithTeams[];
+  userPermissions: TeamsPermissions;
+  onMemberAction: (action: string, member: MemberWithTeams) => void;
 }) {
   return (
     <MagicCard className="cursor-pointer">
@@ -2790,7 +2832,7 @@ function MembersList({
                     >
                       <div className="relative">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={member.image} />
+                          <AvatarImage src={member.avatar ?? undefined} />
                           <AvatarFallback className="text-xs">
                             {member.name
                               .split(" ")
@@ -2995,7 +3037,7 @@ function TeamListItem({
 }: {
   team: EnhancedTeam;
   onAction: (action: string, team: EnhancedTeam) => void;
-  userPermissions: any;
+  userPermissions: TeamsPermissions;
 }) {
   return (
     <Card className="hover:shadow-md transition-shadow">

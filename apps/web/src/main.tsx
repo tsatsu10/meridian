@@ -116,13 +116,25 @@ if (!rootElement) {
 }
 if (!rootElement.innerHTML) {
   // 🚨 EMERGENCY: Make emergency cleanup available immediately
-  (window as any).__REACT_QUERY_CLIENT__ = queryClient;
+  (
+    window as typeof window & { __REACT_QUERY_CLIENT__?: unknown }
+  ).__REACT_QUERY_CLIENT__ = queryClient;
 
   // Make workspace utilities available globally
   import("./utils/clear-workspace-store").then(
     ({ clearWorkspaceStore, setDemoWorkspace }) => {
-      (window as any).clearWorkspaceStore = clearWorkspaceStore;
-      (window as any).setDemoWorkspace = setDemoWorkspace;
+      (
+        window as typeof window & {
+          clearWorkspaceStore?: unknown;
+          setDemoWorkspace?: unknown;
+        }
+      ).clearWorkspaceStore = clearWorkspaceStore;
+      (
+        window as typeof window & {
+          clearWorkspaceStore?: unknown;
+          setDemoWorkspace?: unknown;
+        }
+      ).setDemoWorkspace = setDemoWorkspace;
     },
   );
 

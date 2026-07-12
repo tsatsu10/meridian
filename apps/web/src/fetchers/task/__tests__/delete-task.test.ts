@@ -27,7 +27,9 @@ describe("deleteTask", () => {
       json: async () => mockResponse,
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     const result = await deleteTask("task-123");
 
@@ -44,7 +46,9 @@ describe("deleteTask", () => {
       json: async () => ({ success: true }),
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await deleteTask("specific-task-id");
 
@@ -59,7 +63,9 @@ describe("deleteTask", () => {
       text: async () => "Task deletion failed: Task not found",
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await expect(deleteTask("invalid-task")).rejects.toThrow(
       "Task deletion failed: Task not found",
@@ -72,7 +78,9 @@ describe("deleteTask", () => {
       text: async () => "Permission denied: Cannot delete task",
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await expect(deleteTask("task-123")).rejects.toThrow(
       "Permission denied: Cannot delete task",
@@ -82,7 +90,9 @@ describe("deleteTask", () => {
   it("should handle network errors", async () => {
     const mockDelete = vi.fn().mockRejectedValue(new Error("Network error"));
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await expect(deleteTask("task-123")).rejects.toThrow("Network error");
   });
@@ -99,7 +109,9 @@ describe("deleteTask", () => {
       json: async () => mockResponse,
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     const result = await deleteTask("task-123");
 
@@ -120,7 +132,9 @@ describe("deleteTask", () => {
       json: async () => mockResponse,
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     const result = await deleteTask("task-123");
 
@@ -133,7 +147,9 @@ describe("deleteTask", () => {
       text: async () => "Invalid task ID",
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await expect(deleteTask("")).rejects.toThrow("Invalid task ID");
   });
@@ -144,7 +160,9 @@ describe("deleteTask", () => {
       json: async () => ({ success: true }),
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await deleteTask("task-123");
 
@@ -157,7 +175,9 @@ describe("deleteTask", () => {
       text: async () => "Internal server error",
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await expect(deleteTask("task-123")).rejects.toThrow(
       "Internal server error",
@@ -170,7 +190,9 @@ describe("deleteTask", () => {
       text: async () => "Task not found",
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await expect(deleteTask("nonexistent-task")).rejects.toThrow(
       "Task not found",
@@ -183,7 +205,9 @@ describe("deleteTask", () => {
       text: async () => "Unauthorized: Please log in",
     });
 
-    ((client.task as any)[":id"].$delete as any) = mockDelete;
+    (client.task as unknown as Record<string, { $delete: typeof mockDelete }>)[
+      ":id"
+    ].$delete = mockDelete;
 
     await expect(deleteTask("task-123")).rejects.toThrow(
       "Unauthorized: Please log in",

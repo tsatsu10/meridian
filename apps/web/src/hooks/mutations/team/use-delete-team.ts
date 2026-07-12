@@ -27,7 +27,7 @@ export function useDeleteTeam() {
       });
       toast.success("Team deleted successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to delete team");
     },
   });

@@ -1,7 +1,8 @@
 import { client } from "@meridian/libs";
+import type { Notification } from "@/types/notification";
 
 export interface NotificationsPage {
-  notifications: any[];
+  notifications: Notification[];
   pagination: {
     limit: number;
     offset: number;

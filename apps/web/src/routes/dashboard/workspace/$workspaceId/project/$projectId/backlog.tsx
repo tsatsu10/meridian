@@ -216,8 +216,8 @@ function BacklogPage() {
         action: () => {
           // Select all visible tasks
           const allTaskIds = new Set([
-            ...(project?.plannedTasks || []).map((t: any) => t.id),
-            ...(project?.archivedTasks || []).map((t: any) => t.id),
+            ...(project?.plannedTasks || []).map((t) => t.id),
+            ...(project?.archivedTasks || []).map((t) => t.id),
           ]);
           setSelectedTasks(allTaskIds);
         },
@@ -521,7 +521,7 @@ function BacklogPage() {
           {
             id: "planned" as const,
             name: "Planned" as const,
-            tasks: (project.plannedTasks || []).map((task: any) => ({
+            tasks: (project.plannedTasks || []).map((task) => ({
               ...task,
               assigneeName: null,
               assigneeEmail: null,
@@ -530,19 +530,19 @@ function BacklogPage() {
           {
             id: "archived" as const,
             name: "Archived" as const,
-            tasks: (project.archivedTasks || []).map((task: any) => ({
+            tasks: (project.archivedTasks || []).map((task) => ({
               ...task,
               assigneeName: null,
               assigneeEmail: null,
             })),
           },
         ],
-        plannedTasks: (project.plannedTasks || []).map((task: any) => ({
+        plannedTasks: (project.plannedTasks || []).map((task) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,
         })),
-        archivedTasks: (project.archivedTasks || []).map((task: any) => ({
+        archivedTasks: (project.archivedTasks || []).map((task) => ({
           ...task,
           assigneeName: null,
           assigneeEmail: null,

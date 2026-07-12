@@ -107,7 +107,8 @@ function RouteComponent() {
 
   const totalTasks =
     project?.columns?.reduce(
-      (acc: number, col: any) => acc + (col.tasks?.length || 0),
+      (acc: number, col: { tasks?: unknown[] }) =>
+        acc + (col.tasks?.length || 0),
       0,
     ) || 0;
   const activeFilterCount = [
@@ -225,9 +226,9 @@ function RouteComponent() {
         .map((task) => ({
           ...task,
           assigneeEmail: task.userEmail ?? null,
-          assigneeName: (task as any).userName ?? null,
-          assignedTeamId: (task as any).teamId ?? null,
-          assignedTeam: (task as any).team ?? null,
+          assigneeName: (task as { userName?: string | null }).userName ?? null,
+          assignedTeamId: (task as { teamId?: string | null }).teamId ?? null,
+          assignedTeam: (task as { team?: Task["assignedTeam"] }).team ?? null,
           position: task.position ?? 0,
         }));
 
@@ -281,17 +282,20 @@ function RouteComponent() {
     return {
       ...project,
       columns:
-        project.columns?.map((column: any) => ({
-          id: column.id as "todo" | "in_progress" | "done" | "done",
-          name: column.name as "To Do" | "In Progress" | "In Review" | "Done",
-          tasks: filterTasks(column.tasks),
-        })) ?? [],
+        project.columns?.map(
+          (column: { id: string; name: string; tasks: Task[] }) => ({
+            id: column.id as "todo" | "in_progress" | "done" | "done",
+            name: column.name as "To Do" | "In Progress" | "In Review" | "Done",
+            tasks: filterTasks(column.tasks),
+          }),
+        ) ?? [],
     };
   }, [project, filters]); // Only recompute when project or filters change
 
   const visibleTasks =
     filteredProject?.columns?.reduce(
-      (acc: number, col: any) => acc + (col.tasks?.length || 0),
+      (acc: number, col: { tasks?: unknown[] }) =>
+        acc + (col.tasks?.length || 0),
       0,
     ) || 0;
 

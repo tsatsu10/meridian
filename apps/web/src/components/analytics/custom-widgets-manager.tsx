@@ -61,7 +61,7 @@ export interface DashboardWidget {
   description?: string;
   size: WidgetSize;
   dataSource: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   position: number;
 }
 

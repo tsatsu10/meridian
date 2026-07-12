@@ -54,7 +54,7 @@ export function MemoryCleanupProvider({
         const staleQueries = allQueries.filter(
           (query) =>
             query.isStale() &&
-            !(query as any).isFetching &&
+            !(query as { isFetching?: boolean }).isFetching &&
             query.state.dataUpdatedAt < Date.now() - 10 * 60 * 1000, // 10min old
         );
 

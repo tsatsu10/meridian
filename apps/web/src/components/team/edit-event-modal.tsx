@@ -123,11 +123,21 @@ export default function EditEventModal({
         data: {
           title: formData.title,
           description: formData.description,
-          type: formData.type as any,
-          status: formData.status as any,
+          type: formData.type as
+            | "meeting"
+            | "deadline"
+            | "time-off"
+            | "workload"
+            | "milestone"
+            | "other",
+          status: formData.status as
+            | "scheduled"
+            | "in-progress"
+            | "completed"
+            | "cancelled",
           startTime: startDateTime.toISOString(),
           endTime: endDateTime.toISOString(),
-          priority: formData.priority as any,
+          priority: formData.priority as "low" | "medium" | "high" | "urgent",
           location: formData.location || undefined,
           meetingLink: formData.meetingLink || undefined,
           estimatedHours: formData.estimatedHours,

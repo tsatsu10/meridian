@@ -92,19 +92,35 @@ const fetchTeamMembers = async (): Promise<TeamMember[]> => {
 
     // Transform the assignments data to match our TeamMember interface
     const members =
-      data.assignments?.map((assignment: any, index: number) => ({
-        id: assignment.assignment.userId || `member-${index}-${Date.now()}`, // Ensure unique ID
-        name: assignment.user?.name || assignment.user?.email || "Unknown User",
-        email: assignment.user?.email || "",
-        role: assignment.assignment.role,
-        status: assignment.assignment.isActive ? "active" : "inactive",
-        joinDate: new Date(assignment.assignment.assignedAt)
-          .toISOString()
-          .split("T")[0],
-        lastActive: "Recently", // Placeholder
-        workspaceId: assignment.assignment.workspaceId,
-        departmentId: assignment.assignment.departmentId,
-      })) || [];
+      data.assignments?.map(
+        (
+          assignment: {
+            assignment: {
+              userId?: string;
+              role?: string;
+              isActive?: boolean;
+              assignedAt: string;
+              workspaceId?: string;
+              departmentId?: string;
+            };
+            user?: { name?: string; email?: string };
+          },
+          index: number,
+        ) => ({
+          id: assignment.assignment.userId || `member-${index}-${Date.now()}`, // Ensure unique ID
+          name:
+            assignment.user?.name || assignment.user?.email || "Unknown User",
+          email: assignment.user?.email || "",
+          role: assignment.assignment.role,
+          status: assignment.assignment.isActive ? "active" : "inactive",
+          joinDate: new Date(assignment.assignment.assignedAt)
+            .toISOString()
+            .split("T")[0],
+          lastActive: "Recently", // Placeholder
+          workspaceId: assignment.assignment.workspaceId,
+          departmentId: assignment.assignment.departmentId,
+        }),
+      ) || [];
 
     // Remove duplicates based on user ID and email to prevent duplicate keys
     const uniqueMembers = members.reduce(

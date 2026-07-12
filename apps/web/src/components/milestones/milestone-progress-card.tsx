@@ -13,7 +13,12 @@ import {
 import { cn } from "@/lib/cn";
 
 interface MilestoneProgressCardProps {
-  milestones: any[];
+  milestones: Array<{
+    status?: string;
+    riskLevel?: string;
+    createdAt: string;
+    updatedAt?: string;
+  }>;
   className?: string;
 }
 

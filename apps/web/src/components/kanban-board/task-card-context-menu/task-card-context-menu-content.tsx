@@ -87,18 +87,22 @@ export default function TaskCardContextMenuContent({
   const { mutateAsync: deleteTask } = useDeleteTask(taskCardContext.projectId);
 
   // useGetProjects returns either a bare array or { projects, pagination }
-  const projectList = Array.isArray(projects)
-    ? projects
-    : (projects as any)?.projects;
+  const projectList = (
+    Array.isArray(projects) ? projects : projects?.projects
+  ) as Array<{ id: string; name: string }> | undefined;
 
   const projectsOptions = useMemo(() => {
-    return projectList?.map((project: any) => {
+    return projectList?.map((project) => {
       return { label: project.name, value: project.id };
     });
   }, [projectList]);
 
   const usersOptions = useMemo(() => {
-    return workspaceUsers?.map((user: any) => ({
+    return (
+      workspaceUsers as
+        | Array<{ userName?: string | null; userEmail: string }>
+        | undefined
+    )?.map((user) => ({
       label: user.userName ?? user.userEmail,
       value: user.userEmail,
     }));
@@ -133,7 +137,7 @@ export default function TaskCardContextMenuContent({
 
   const handleDuplicateTask = async (projectId: string) => {
     const selectedProject = projectsOptions?.find(
-      (project: any) => project.value === projectId,
+      (project) => project.value === projectId,
     );
 
     const newTask = {
@@ -219,7 +223,7 @@ export default function TaskCardContextMenuContent({
         status={task.status}
         parentTaskId={task.id}
         projectContext={projectList?.find(
-          (p: any) => p.id === taskCardContext.projectId,
+          (p) => p.id === taskCardContext.projectId,
         )}
         hideProjectSelection={true}
       />
@@ -365,7 +369,7 @@ export default function TaskCardContextMenuContent({
 
           {usersOptions && (
             <ContextMenuSubContent>
-              {usersOptions.map((user: any) => (
+              {usersOptions.map((user) => (
                 <ContextMenuCheckboxItem
                   key={user.value}
                   checked={task.userEmail === user.value}
@@ -418,7 +422,7 @@ export default function TaskCardContextMenuContent({
 
           {projectsOptions && (
             <ContextMenuSubContent>
-              {projectsOptions.map((project: any) => (
+              {projectsOptions.map((project) => (
                 <ContextMenuItem
                   key={project.value}
                   onClick={() => handleDuplicateTask(project.value)}

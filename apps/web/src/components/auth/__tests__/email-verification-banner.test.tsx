@@ -28,7 +28,7 @@ describe("EmailVerificationBanner", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockClear();
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockClear();
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
@@ -80,7 +80,9 @@ describe("EmailVerificationBanner", () => {
   describe("Resend Functionality", () => {
     it("should send verification email successfully", async () => {
       const user = setupUser();
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
       });
@@ -106,7 +108,9 @@ describe("EmailVerificationBanner", () => {
 
     it("should show error message on failure", async () => {
       const user = setupUser();
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ error: "Rate limit exceeded" }),
       });
@@ -121,7 +125,9 @@ describe("EmailVerificationBanner", () => {
 
     it("should show countdown timer after sending", async () => {
       const user = setupUser();
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
       });
@@ -140,7 +146,9 @@ describe("EmailVerificationBanner", () => {
 
     it("should disable button during countdown", async () => {
       const user = setupUser();
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
       });
@@ -163,7 +171,9 @@ describe("EmailVerificationBanner", () => {
 
     it("should re-enable button after countdown completes", async () => {
       const user = setupUser();
-      (global.fetch as any).mockResolvedValueOnce({
+      (
+        global.fetch as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
       });

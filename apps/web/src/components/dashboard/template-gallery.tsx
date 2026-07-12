@@ -52,9 +52,9 @@ interface DashboardTemplate {
   workspaceId?: string | null;
   isGlobal: boolean;
   isPublic: boolean;
-  layout: any;
-  widgets: any;
-  gridConfig?: any;
+  layout: unknown;
+  widgets: unknown;
+  gridConfig?: unknown;
   category?: string | null;
   tags?: string[] | null;
   thumbnail?: string | null;

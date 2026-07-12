@@ -26,7 +26,7 @@ export function useUpdateTeamNotifications() {
       });
       toast.success("Notification preferences updated");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(
         error?.message || "Failed to update notification preferences",
       );

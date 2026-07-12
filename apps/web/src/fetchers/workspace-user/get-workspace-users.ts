@@ -1,4 +1,4 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { dedupeWorkspaceUsersForList } from "@/lib/workspace-users/dedupe-workspace-users";
 import type { WorkspaceMember } from "@/types/workspace-user";
 // The generated AppType is missing workspace-user[":workspaceId"], so type locally
@@ -35,11 +35,9 @@ function normalizeWorkspaceMember(
 }
 
 async function getWorkspaceUsers({ param }: GetWorkspaceUsersRequest) {
-  const response = await (client as any)["workspace-user"][":workspaceId"].$get(
-    {
-      param,
-    },
-  );
+  const response = await looseClient["workspace-user"][":workspaceId"].$get({
+    param,
+  });
 
   if (!response.ok) {
     const error = await response.text();

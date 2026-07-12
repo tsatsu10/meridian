@@ -26,8 +26,15 @@ const createToastFunction = (
 ) => {
   return (message: string, _options?: ToastOptions) => {
     // Use the global toast function from minimal-toast
-    if (typeof window !== "undefined" && (window as any).toast) {
-      return (window as any).toast[type](message);
+    if (typeof window !== "undefined") {
+      const globalToast = (
+        window as {
+          toast?: Record<string, (message: string) => unknown>;
+        }
+      ).toast;
+      if (globalToast) {
+        return globalToast[type](message);
+      }
     }
     // Fallback to console for server-side rendering
     logger.info(`Toast ${type}: ${message}`);
@@ -56,7 +63,7 @@ toast.promise = <T>(
   messages: {
     loading: string;
     success: string | ((data: T) => string);
-    error: string | ((error: any) => string);
+    error: string | ((error: unknown) => string);
   },
 ) => {
   toast.loading(messages.loading);
@@ -85,7 +92,7 @@ toast.dismiss = (_id?: string) => {
   // The toasts auto-dismiss after their duration
 };
 
-toast.custom = (_jsx: any, options?: ToastOptions) => {
+toast.custom = (_jsx: unknown, options?: ToastOptions) => {
   // Fallback to regular toast for custom JSX
   return toast("Custom notification", options);
 };

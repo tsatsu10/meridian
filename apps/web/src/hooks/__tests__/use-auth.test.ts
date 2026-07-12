@@ -13,9 +13,18 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { useState, useEffect } from "react";
 import { toError } from "@/lib/error-utils";
 
+interface MockUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
+type MockWindow = typeof window & { __mockUser?: MockUser };
+
 // Mock useAuth hook
 function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<MockUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -28,7 +37,9 @@ function useAuth() {
         await new Promise((resolve) => setTimeout(resolve, 10));
 
         const storedUser =
-          typeof window !== "undefined" ? (window as any).__mockUser : null;
+          typeof window !== "undefined"
+            ? ((window as MockWindow).__mockUser ?? null)
+            : null;
 
         setUser(storedUser);
       } catch (err) {
@@ -57,7 +68,7 @@ function useAuth() {
       };
 
       if (typeof window !== "undefined") {
-        (window as any).__mockUser = mockUser;
+        (window as MockWindow).__mockUser = mockUser;
       }
 
       setUser(mockUser);
@@ -76,7 +87,7 @@ function useAuth() {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (typeof window !== "undefined") {
-        (window as any).__mockUser = undefined;
+        (window as MockWindow).__mockUser = undefined;
       }
 
       setUser(null);
@@ -85,8 +96,8 @@ function useAuth() {
     }
   };
 
-  const updateUser = (updates: any) => {
-    setUser((prev: any) => (prev ? { ...prev, ...updates } : null));
+  const updateUser = (updates: Partial<MockUser>) => {
+    setUser((prev) => (prev ? { ...prev, ...updates } : null));
   };
 
   return {
@@ -103,7 +114,7 @@ function useAuth() {
 describe("useAuth Hook", () => {
   beforeEach(() => {
     if (typeof window !== "undefined") {
-      (window as any).__mockUser = undefined;
+      (window as MockWindow).__mockUser = undefined;
     }
   });
 
@@ -134,7 +145,7 @@ describe("useAuth Hook", () => {
     });
 
     expect(result.current.user).toBeDefined();
-    expect(result.current.user.email).toBe("test@example.com");
+    expect(result.current.user?.email).toBe("test@example.com");
     expect(result.current.isAuthenticated).toBe(true);
   });
 
@@ -176,13 +187,13 @@ describe("useAuth Hook", () => {
       result.current.updateUser({ name: "Updated Name" });
     });
 
-    expect(result.current.user.name).toBe("Updated Name");
-    expect(result.current.user.email).toBe("test@example.com");
+    expect(result.current.user?.name).toBe("Updated Name");
+    expect(result.current.user?.email).toBe("test@example.com");
   });
 
   it("should persist user across renders", async () => {
     if (typeof window !== "undefined") {
-      (window as any).__mockUser = {
+      (window as MockWindow).__mockUser = {
         id: "user-456",
         email: "persisted@example.com",
         name: "Persisted User",

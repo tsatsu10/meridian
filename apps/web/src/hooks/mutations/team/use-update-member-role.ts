@@ -30,7 +30,7 @@ export function useUpdateMemberRole() {
       });
       toast.success("Member role updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to update member role");
     },
   });

@@ -1,7 +1,7 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 async function exportTasks(projectId: string) {
-  const response = await (client as any).task.export[":projectId"].$get({
+  const response = await looseClient.task.export[":projectId"].$get({
     param: { projectId },
   });
 

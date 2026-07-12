@@ -35,9 +35,9 @@ export function optimizedFlatMap<T, U>(
 /**
  * Memory-efficient task flattening for hierarchical data
  */
-export function optimizedFlattenTasks(tasks: any[]): any[] {
-  const flattened: any[] = [];
-  const stack: any[] = [...tasks];
+export function optimizedFlattenTasks<T>(tasks: T[]): T[] {
+  const flattened: T[] = [];
+  const stack: T[] = [...tasks];
 
   while (stack.length > 0) {
     const task = stack.pop();
@@ -46,12 +46,9 @@ export function optimizedFlattenTasks(tasks: any[]): any[] {
     flattened.push(task);
 
     // Add subtasks to stack if they exist
-    if (
-      task.subtasks &&
-      Array.isArray(task.subtasks) &&
-      task.subtasks.length > 0
-    ) {
-      stack.push(...task.subtasks);
+    const subtasks = (task as { subtasks?: unknown }).subtasks;
+    if (Array.isArray(subtasks) && subtasks.length > 0) {
+      stack.push(...(subtasks as T[]));
     }
   }
 
@@ -188,7 +185,11 @@ export class MemoryMonitor {
   private startMonitoring(): void {
     this.checkInterval = setInterval(() => {
       if ("memory" in performance) {
-        const memory = (performance as any).memory;
+        const memory = (
+          performance as Performance & {
+            memory: { usedJSHeapSize: number; totalJSHeapSize: number };
+          }
+        ).memory;
         const usage = memory.usedJSHeapSize / memory.totalJSHeapSize;
 
         for (const observer of this.observers) {
@@ -209,7 +210,11 @@ export class MemoryMonitor {
 
   getCurrentUsage(): number {
     if ("memory" in performance) {
-      const memory = (performance as any).memory;
+      const memory = (
+        performance as Performance & {
+          memory: { usedJSHeapSize: number; totalJSHeapSize: number };
+        }
+      ).memory;
       return memory.usedJSHeapSize / memory.totalJSHeapSize;
     }
     return 0;

@@ -511,10 +511,10 @@ export const useSettingsStore = create<SettingsStore>()(
 
           // Apply all updates
           for (const update of updates) {
-            newSettings[update.section] = {
+            (newSettings as Record<string, unknown>)[update.section] = {
               ...newSettings[update.section],
               ...update.updates,
-            } as any;
+            };
           }
 
           set({

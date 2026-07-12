@@ -66,7 +66,10 @@ export function TemplateBrowser() {
   const handleDifficultyFilter = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      difficulty: value === "all" ? undefined : (value as any),
+      difficulty:
+        value === "all"
+          ? undefined
+          : (value as TemplateFilterOptions["difficulty"]),
       offset: 0,
     }));
   };
@@ -74,7 +77,7 @@ export function TemplateBrowser() {
   const handleSortChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      sortBy: value as any,
+      sortBy: value as TemplateFilterOptions["sortBy"],
       offset: 0,
     }));
   };

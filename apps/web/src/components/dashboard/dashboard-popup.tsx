@@ -26,6 +26,17 @@ import { useMilestones } from "@/hooks/use-milestones";
 // @persona-sarah: PM needs quick access to project metrics
 // @persona-jennifer: Executive needs summary analytics
 
+interface DashboardProjectStats {
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  overdueTasks: number;
+  teamMembers: number;
+  velocity: number;
+  healthScore: number;
+  efficiency: number;
+}
+
 interface DashboardPopupProps {
   open: boolean;
   onClose: () => void;
@@ -33,9 +44,15 @@ interface DashboardPopupProps {
   projectName?: string;
   title?: string;
   variant?: "milestones" | "team" | "timeline" | "full";
-  realProjectStats?: any;
-  realTasks?: any[];
-  realTeamMembers?: any[];
+  realProjectStats?: DashboardProjectStats;
+  realTasks?: unknown[];
+  realTeamMembers?: Array<{
+    name?: string;
+    status?: string;
+    workloadStatus?: string;
+    productivity?: number;
+    completedTasks?: number;
+  }>;
 }
 
 export default function DashboardPopup({

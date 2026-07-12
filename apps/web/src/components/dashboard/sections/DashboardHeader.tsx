@@ -5,7 +5,11 @@ import { cn } from "@/lib/cn";
 import UniversalHeader from "@/components/dashboard/universal-header";
 
 interface DashboardHeaderProps {
-  riskData: any;
+  riskData: {
+    hasHighRisk?: boolean;
+    highPriorityRisks?: unknown[];
+    data?: unknown;
+  };
   isRefreshing: boolean;
   onRefresh: () => void;
 }

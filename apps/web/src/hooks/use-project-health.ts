@@ -48,7 +48,7 @@ export function useProjectHealth(
     }
 
     // Calculate completion rate
-    const completedTasks = tasks.filter((t: any) => {
+    const completedTasks = tasks.filter((t) => {
       const status = t.status?.toLowerCase();
       return status === "completed" || status === "done";
     }).length;
@@ -56,7 +56,7 @@ export function useProjectHealth(
 
     // Check for overdue tasks
     const now = new Date();
-    const overdueTasks = tasks.filter((t: any) => {
+    const overdueTasks = tasks.filter((t) => {
       if (!t.dueDate) return false;
       const dueDate = new Date(t.dueDate);
       const status = t.status?.toLowerCase();

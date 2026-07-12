@@ -68,9 +68,61 @@ interface Milestone {
   estimatedCompletion?: string;
 }
 
+// Passed-milestone props mirror useMilestones' localStorage-backed
+// MilestoneTask (unexported from that hook) rather than claiming `any`.
+interface PassedMilestone {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  status: "upcoming" | "achieved" | "missed";
+  riskLevel: "low" | "medium" | "high" | "critical";
+  projectId: string;
+  stakeholders?: string[];
+}
+
+interface PassedMilestoneStats {
+  total: number;
+  achieved: number;
+  missed: number;
+  highRisk: number;
+  dueSoon?: number;
+  upcoming?: number;
+}
+
+// useDashboardData()'s RecentProject/ApiTask types are internal to that
+// hook and don't model every field read below (deadline/members/assignee
+// are real API fields the hook's own minimal types don't declare).
+interface DashboardMilestoneAssignee {
+  id?: string;
+  name?: string;
+  email?: string;
+  avatar?: string;
+}
+
+interface DashboardMilestoneTask {
+  id: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string;
+  assignee?: DashboardMilestoneAssignee;
+}
+
+interface DashboardMilestoneProject {
+  id: string;
+  name?: string;
+  deadline?: string;
+  priority?: string;
+  members?: DashboardMilestoneAssignee[];
+  columns?: Array<{ tasks?: DashboardMilestoneTask[] }>;
+  tasks?: DashboardMilestoneTask[];
+}
+
 interface MilestoneDashboardProps {
-  milestones?: any[]; // Real milestone data from useMilestones hook
-  stats?: any; // Milestone statistics
+  milestones?: PassedMilestone[]; // Real milestone data from useMilestones hook
+  stats?: PassedMilestoneStats; // Milestone statistics
   projectId?: string; // If provided, show only milestones for this project
   variant?: "full" | "compact" | "summary";
   showProjectFilter?: boolean;
@@ -80,7 +132,9 @@ interface MilestoneDashboardProps {
 }
 
 // Helper function to derive milestones from project data
-const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
+const deriveMilestonesFromProjects = (
+  projects: DashboardMilestoneProject[],
+): Milestone[] => {
   if (!projects || !Array.isArray(projects)) return [];
 
   const milestones: Milestone[] = [];
@@ -89,11 +143,11 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
     // Find milestone tasks (tasks marked as milestones or with specific priority)
     // Check both columns (Kanban) and direct tasks array
     const columnTasks =
-      project.columns?.flatMap((col: any) => col.tasks || []) || [];
+      project.columns?.flatMap((col) => col.tasks || []) || [];
     const directTasks = project.tasks || [];
     const allTasks = [...columnTasks, ...directTasks];
     const milestoneTasks = allTasks.filter(
-      (task: any) =>
+      (task) =>
         task.priority === "critical" ||
         task.title?.toLowerCase().includes("milestone") ||
         task.title?.toLowerCase().includes("release") ||
@@ -103,9 +157,7 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
 
     // If no specific milestone tasks, create a project completion milestone
     if (milestoneTasks.length === 0 && allTasks.length > 0) {
-      const completedTasks = allTasks.filter(
-        (t: any) => t.status === "done",
-      ).length;
+      const completedTasks = allTasks.filter((t) => t.status === "done").length;
       const progress = Math.round((completedTasks / allTasks.length) * 100);
 
       // Determine status based on progress and deadlines
@@ -120,30 +172,31 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
         Math.min(100, progress + (Math.random() * 20 - 10)),
       );
 
+      const projectName = project.name || "Untitled Project";
       milestones.push({
         id: `milestone-${project.id}`,
-        title: `${project.name} Completion`,
-        description: `Complete all tasks and deliverables for ${project.name}`,
+        title: `${projectName} Completion`,
+        description: `Complete all tasks and deliverables for ${projectName}`,
         targetDate:
           project.deadline ||
           new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split("T")[0],
         status,
-        priority: project.priority || "medium",
+        priority: (project.priority || "medium") as Milestone["priority"],
         projectId: project.id,
-        projectName: project.name,
+        projectName,
         assignees:
-          project.members?.slice(0, 3).map((member: any) => ({
-            id: member.id,
+          project.members?.slice(0, 3).map((member) => ({
+            id: member.id || "unknown",
             name: member.name || member.email?.split("@")[0] || "Unknown",
             email: member.email || `${member.id}@example.com`,
             avatar: member.avatar,
           })) || [],
-        tasks: allTasks.map((task: any) => ({
+        tasks: allTasks.map((task) => ({
           id: task.id,
-          title: task.title,
-          status: task.status,
+          title: task.title || "Untitled",
+          status: (task.status || "todo") as "todo" | "in_progress" | "done",
           priority: task.priority || "medium",
         })),
         progress,
@@ -152,16 +205,16 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
     } else {
       // Create milestones from milestone tasks
       for (const task of milestoneTasks) {
+        const taskTitleFirstWord =
+          task.title?.toLowerCase().split(" ")[0] || "";
         const relatedTasks = allTasks.filter(
-          (t: any) =>
-            t.title
-              ?.toLowerCase()
-              .includes(task.title?.toLowerCase().split(" ")[0]) ||
+          (t) =>
+            t.title?.toLowerCase().includes(taskTitleFirstWord) ||
             t.assignee === task.assignee,
         );
 
         const completedRelated = relatedTasks.filter(
-          (t: any) => t.status === "done",
+          (t) => t.status === "done",
         ).length;
         const progress =
           relatedTasks.length > 0
@@ -180,10 +233,11 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
           Math.min(100, progress + (Math.random() * 20 - 10)),
         );
 
+        const taskTitle = task.title || "Untitled";
         milestones.push({
           id: `milestone-${task.id}`,
-          title: task.title,
-          description: task.description || `Milestone: ${task.title}`,
+          title: taskTitle,
+          description: task.description || `Milestone: ${taskTitle}`,
           targetDate:
             task.dueDate ||
             project.deadline ||
@@ -191,9 +245,9 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
               .toISOString()
               .split("T")[0],
           status,
-          priority: task.priority || "high",
+          priority: (task.priority || "high") as Milestone["priority"],
           projectId: project.id,
-          projectName: project.name,
+          projectName: project.name || "Untitled Project",
           assignees: task.assignee
             ? [
                 {
@@ -208,10 +262,10 @@ const deriveMilestonesFromProjects = (projects: any[]): Milestone[] => {
                 },
               ]
             : [],
-          tasks: relatedTasks.map((t: any) => ({
+          tasks: relatedTasks.map((t) => ({
             id: t.id,
-            title: t.title,
-            status: t.status,
+            title: t.title || "Untitled",
+            status: (t.status || "todo") as "todo" | "in_progress" | "done",
             priority: t.priority || "medium",
           })),
           progress,
@@ -329,7 +383,11 @@ export default function MilestoneDashboard({
     }
 
     if (!dashboardData?.projects) return [];
-    return deriveMilestonesFromProjects(dashboardData.projects);
+    // useDashboardData's RecentProject/ApiTask types don't declare every
+    // field read in deriveMilestonesFromProjects (see comment above).
+    return deriveMilestonesFromProjects(
+      dashboardData.projects as unknown as DashboardMilestoneProject[],
+    );
   }, [passedMilestones, dashboardData?.projects]);
 
   // Filter milestones

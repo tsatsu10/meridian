@@ -44,13 +44,13 @@ interface CreateEventData {
     weekdays?: number[];
     dayOfMonth?: number;
     weekOfMonth?: number;
-    customPattern?: Record<string, any>;
+    customPattern?: Record<string, unknown>;
     exceptionDates?: string[];
   };
 }
 
 interface CreateEventResponse {
-  event: any;
+  event: unknown;
 }
 
 async function createEvent(

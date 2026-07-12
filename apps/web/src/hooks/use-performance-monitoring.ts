@@ -67,7 +67,7 @@ export function usePerformanceMonitoring(
       try {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1] as any;
+          const lastEntry = entries[entries.length - 1];
           updateMetrics({ lcp: lastEntry.startTime });
         });
         lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
@@ -152,7 +152,9 @@ export function usePerformanceMonitoring(
 
       // Navigation timing
       if (performance.navigation) {
-        const navTiming = performance.getEntriesByType("navigation")[0] as any;
+        const navTiming = performance.getEntriesByType(
+          "navigation",
+        )[0] as PerformanceNavigationTiming;
         if (navTiming) {
           updateMetrics({
             ttfb: navTiming.responseStart - navTiming.requestStart,
@@ -240,7 +242,9 @@ export function usePerformanceMonitoring(
   };
 
   // Function to send metrics to analytics
-  const sendMetricsToAnalytics = async (customData?: Record<string, any>) => {
+  const sendMetricsToAnalytics = async (
+    customData?: Record<string, unknown>,
+  ) => {
     try {
       await fetch("/api/analytics/performance", {
         method: "POST",

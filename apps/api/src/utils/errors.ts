@@ -68,14 +68,14 @@ export enum ErrorCode {
  */
 export class AppError extends HTTPException {
   public readonly code: ErrorCode;
-  public readonly details?: Record<string, any>;
+  public readonly details?: Record<string, unknown>;
   public readonly isOperational: boolean;
 
   constructor(
     statusCode: AppStatusCode,
     message: string,
     code: ErrorCode,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     isOperational = true,
   ) {
     super(statusCode, { message });
@@ -105,20 +105,23 @@ export class AppError extends HTTPException {
 export class UnauthorizedError extends AppError {
   constructor(
     message = "Authentication required",
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(401 as AppStatusCode, message, ErrorCode.UNAUTHORIZED, details);
   }
 }
 
 export class TokenExpiredError extends AppError {
-  constructor(message = "Token has expired", details?: Record<string, any>) {
+  constructor(
+    message = "Token has expired",
+    details?: Record<string, unknown>,
+  ) {
     super(401 as AppStatusCode, message, ErrorCode.TOKEN_EXPIRED, details);
   }
 }
 
 export class InvalidTokenError extends AppError {
-  constructor(message = "Invalid token", details?: Record<string, any>) {
+  constructor(message = "Invalid token", details?: Record<string, unknown>) {
     super(401 as AppStatusCode, message, ErrorCode.TOKEN_INVALID, details);
   }
 }
@@ -127,7 +130,7 @@ export class InvalidTokenError extends AppError {
  * Authorization errors (403)
  */
 export class ForbiddenError extends AppError {
-  constructor(message = "Access forbidden", details?: Record<string, any>) {
+  constructor(message = "Access forbidden", details?: Record<string, unknown>) {
     super(403 as AppStatusCode, message, ErrorCode.FORBIDDEN, details);
   }
 }
@@ -135,7 +138,7 @@ export class ForbiddenError extends AppError {
 export class InsufficientPermissionsError extends AppError {
   constructor(
     message = "Insufficient permissions",
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(
       403 as AppStatusCode,
@@ -150,19 +153,22 @@ export class InsufficientPermissionsError extends AppError {
  * Validation errors (400)
  */
 export class ValidationError extends AppError {
-  constructor(message = "Validation failed", details?: Record<string, any>) {
+  constructor(
+    message = "Validation failed",
+    details?: Record<string, unknown>,
+  ) {
     super(400 as AppStatusCode, message, ErrorCode.VALIDATION_ERROR, details);
   }
 }
 
 export class InvalidInputError extends AppError {
-  constructor(message = "Invalid input", details?: Record<string, any>) {
+  constructor(message = "Invalid input", details?: Record<string, unknown>) {
     super(400 as AppStatusCode, message, ErrorCode.INVALID_INPUT, details);
   }
 }
 
 export class MissingFieldError extends AppError {
-  constructor(field: string, details?: Record<string, any>) {
+  constructor(field: string, details?: Record<string, unknown>) {
     super(
       400 as AppStatusCode,
       `Missing required field: ${field}`,
@@ -179,7 +185,7 @@ export class MissingFieldError extends AppError {
  * Resource errors (404, 409, 410)
  */
 export class NotFoundError extends AppError {
-  constructor(resource = "Resource", details?: Record<string, any>) {
+  constructor(resource = "Resource", details?: Record<string, unknown>) {
     super(
       404 as AppStatusCode,
       `${resource} not found`,
@@ -190,7 +196,7 @@ export class NotFoundError extends AppError {
 }
 
 export class AlreadyExistsError extends AppError {
-  constructor(resource = "Resource", details?: Record<string, any>) {
+  constructor(resource = "Resource", details?: Record<string, unknown>) {
     super(
       409 as AppStatusCode,
       `${resource} already exists`,
@@ -201,7 +207,10 @@ export class AlreadyExistsError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message = "Conflict detected", details?: Record<string, any>) {
+  constructor(
+    message = "Conflict detected",
+    details?: Record<string, unknown>,
+  ) {
     super(409 as AppStatusCode, message, ErrorCode.CONFLICT, details);
   }
 }
@@ -209,7 +218,7 @@ export class ConflictError extends AppError {
 export class GoneError extends AppError {
   constructor(
     message = "Resource no longer available",
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(410 as AppStatusCode, message, ErrorCode.GONE, details);
   }
@@ -219,7 +228,7 @@ export class GoneError extends AppError {
  * Business logic errors (422)
  */
 export class BusinessRuleViolationError extends AppError {
-  constructor(message: string, details?: Record<string, any>) {
+  constructor(message: string, details?: Record<string, unknown>) {
     super(
       422 as AppStatusCode,
       message,
@@ -232,7 +241,7 @@ export class BusinessRuleViolationError extends AppError {
 export class InvalidStateError extends AppError {
   constructor(
     message = "Invalid state for this operation",
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(422 as AppStatusCode, message, ErrorCode.INVALID_STATE, details);
   }
@@ -241,7 +250,7 @@ export class InvalidStateError extends AppError {
 export class OperationNotAllowedError extends AppError {
   constructor(
     message = "Operation not allowed",
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(
       422 as AppStatusCode,
@@ -253,7 +262,7 @@ export class OperationNotAllowedError extends AppError {
 }
 
 export class QuotaExceededError extends AppError {
-  constructor(quota: string, details?: Record<string, any>) {
+  constructor(quota: string, details?: Record<string, unknown>) {
     super(
       422 as AppStatusCode,
       `Quota exceeded: ${quota}`,
@@ -273,7 +282,7 @@ export class RateLimitError extends AppError {
   constructor(
     message = "Rate limit exceeded",
     retryAfter?: number,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(429 as AppStatusCode, message, ErrorCode.RATE_LIMIT_EXCEEDED, {
       retryAfter,
@@ -289,7 +298,7 @@ export class ExternalServiceError extends AppError {
   constructor(
     service: string,
     message?: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(
       502 as AppStatusCode,
@@ -304,7 +313,7 @@ export class IntegrationError extends AppError {
   constructor(
     integration: string,
     message?: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(
       502 as AppStatusCode,
@@ -319,7 +328,7 @@ export class IntegrationError extends AppError {
  * Database errors (500)
  */
 export class DatabaseError extends AppError {
-  constructor(message = "Database error", details?: Record<string, any>) {
+  constructor(message = "Database error", details?: Record<string, unknown>) {
     super(
       500 as AppStatusCode,
       message,
@@ -331,7 +340,10 @@ export class DatabaseError extends AppError {
 }
 
 export class TransactionFailedError extends AppError {
-  constructor(message = "Transaction failed", details?: Record<string, any>) {
+  constructor(
+    message = "Transaction failed",
+    details?: Record<string, unknown>,
+  ) {
     super(
       500 as AppStatusCode,
       message,
@@ -343,7 +355,7 @@ export class TransactionFailedError extends AppError {
 }
 
 export class ConstraintViolationError extends AppError {
-  constructor(constraint: string, details?: Record<string, any>) {
+  constructor(constraint: string, details?: Record<string, unknown>) {
     super(
       500 as AppStatusCode,
       `Database constraint violation: ${constraint}`,
@@ -363,7 +375,7 @@ export class ConstraintViolationError extends AppError {
 export class InternalError extends AppError {
   constructor(
     message = "Internal server error",
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(
       500 as AppStatusCode,
@@ -376,7 +388,7 @@ export class InternalError extends AppError {
 }
 
 export class NotImplementedError extends AppError {
-  constructor(message = "Not implemented", details?: Record<string, any>) {
+  constructor(message = "Not implemented", details?: Record<string, unknown>) {
     super(501 as AppStatusCode, message, ErrorCode.NOT_IMPLEMENTED, details);
   }
 }
@@ -384,7 +396,7 @@ export class NotImplementedError extends AppError {
 export class ServiceUnavailableError extends AppError {
   constructor(
     message = "Service temporarily unavailable",
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
   ) {
     super(
       503 as AppStatusCode,
@@ -396,7 +408,7 @@ export class ServiceUnavailableError extends AppError {
 }
 
 export class TimeoutError extends AppError {
-  constructor(message = "Request timeout", details?: Record<string, any>) {
+  constructor(message = "Request timeout", details?: Record<string, unknown>) {
     super(504 as AppStatusCode, message, ErrorCode.TIMEOUT, details);
   }
 }
@@ -418,7 +430,7 @@ export function getErrorDetails(error: unknown): {
   message: string;
   code: ErrorCode;
   statusCode: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   stack?: string;
 } {
   // Handle AppError instances

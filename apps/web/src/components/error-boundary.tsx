@@ -68,8 +68,15 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Report to error monitoring service (e.g., Sentry)
-    if (typeof window !== "undefined" && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
+    const sentry = (
+      window as {
+        Sentry?: {
+          captureException: (error: unknown, context?: unknown) => void;
+        };
+      }
+    ).Sentry;
+    if (typeof window !== "undefined" && sentry) {
+      sentry.captureException(error, {
         contexts: {
           react: {
             componentStack: errorInfo.componentStack,

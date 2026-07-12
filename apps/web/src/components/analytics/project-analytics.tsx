@@ -57,6 +57,27 @@ interface ProjectAnalyticsProps {
   projectId: string;
 }
 
+interface MemberPerformance {
+  name: string;
+  email: string;
+  completedTasks: number;
+  inProgressTasks: number;
+  totalHours: number;
+  productivity: number;
+}
+
+interface ProjectInsight {
+  type: string;
+  title: string;
+  description: string;
+}
+
+interface BurndownPoint {
+  label: string;
+  actual: number;
+  ideal: number;
+}
+
 // @epic-3.1-analytics: Project-specific analytics dashboard @persona-sarah
 export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
@@ -145,7 +166,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
         "Total Hours",
         "Productivity %",
       ],
-      ...(data.teamMetrics.memberPerformance?.map((m: any) => [
+      ...(data.teamMetrics.memberPerformance?.map((m: MemberPerformance) => [
         m.name,
         m.completedTasks,
         m.inProgressTasks,
@@ -345,7 +366,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {data.insights.map((insight: any, index: number) => {
+                {data.insights.map((insight: ProjectInsight, index: number) => {
                   const Icon =
                     insight.type === "positive"
                       ? CheckCircle2
@@ -536,7 +557,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
                   <p className="text-sm font-medium mb-2">Risk Factors:</p>
                   <div className="space-y-1">
                     {data.projectHealth.riskFactors.map(
-                      (risk: any, index: any) => (
+                      (risk: string, index: number) => (
                         <div
                           key={index}
                           className="flex items-center text-xs text-muted-foreground"
@@ -610,7 +631,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
             <CardContent>
               <div className="space-y-4">
                 {data.teamMetrics.memberPerformance.map(
-                  (member: any, index: number) => (
+                  (member: MemberPerformance, index: number) => (
                     <div
                       key={member.email}
                       className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
@@ -795,7 +816,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
           <CardContent>
             <InteractiveChart
               title="Work Remaining"
-              data={data.burndownData.map((point: any) => ({
+              data={data.burndownData.map((point: BurndownPoint) => ({
                 label: point.label,
                 value: point.actual,
                 ideal: point.ideal,

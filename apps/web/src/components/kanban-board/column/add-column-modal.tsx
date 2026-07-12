@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 interface AddColumnModalProps {
   open: boolean;
@@ -59,7 +59,7 @@ function AddColumnModal({
     setIsLoading(true);
 
     try {
-      const response = await (client as any).project[":projectId"][
+      const response = await looseClient.project[":projectId"][
         "status-columns"
       ].$post({
         param: { projectId },

@@ -8,7 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Circle, Clock, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Clock,
+  AlertCircle,
+  type LucideIcon,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import useWorkspaceStore from "@/store/workspace";
 import {
@@ -21,6 +27,16 @@ import { cn } from "@/lib/cn";
 interface RecentTasksProps {
   userId: string;
   className?: string;
+}
+
+interface RecentTask {
+  id: string;
+  projectId: string;
+  title: string;
+  projectName?: string;
+  priority?: string;
+  dueDate?: string;
+  completedAt?: string;
 }
 
 const priorityColors = {
@@ -89,7 +105,7 @@ export function RecentTasks({ userId, className }: RecentTasksProps) {
             ) : (
               tasksData.currentlyAssigned
                 .slice(0, 5)
-                .map((task: any) => (
+                .map((task: RecentTask) => (
                   <TaskItem key={task.id} task={task} icon={Circle} />
                 ))
             )}
@@ -101,7 +117,7 @@ export function RecentTasks({ userId, className }: RecentTasksProps) {
                 No completed tasks yet
               </p>
             ) : (
-              tasksData.lastCompleted.map((task: any) => (
+              tasksData.lastCompleted.map((task: RecentTask) => (
                 <TaskItem key={task.id} task={task} icon={CheckCircle2} />
               ))
             )}
@@ -113,7 +129,7 @@ export function RecentTasks({ userId, className }: RecentTasksProps) {
                 ✨ No overdue tasks!
               </p>
             ) : (
-              tasksData.overdue.map((task: any) => (
+              tasksData.overdue.map((task: RecentTask) => (
                 <TaskItem
                   key={task.id}
                   task={task}
@@ -134,8 +150,8 @@ function TaskItem({
   icon: Icon,
   isOverdue = false,
 }: {
-  task: any;
-  icon: any;
+  task: RecentTask;
+  icon: LucideIcon;
   isOverdue?: boolean;
 }) {
   const workspaceId = useWorkspaceStore((s) => s.workspace?.id);

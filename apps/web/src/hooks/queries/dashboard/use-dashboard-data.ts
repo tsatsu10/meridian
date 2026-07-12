@@ -301,7 +301,7 @@ export function useDashboardData(
             occurredAt: Number.isNaN(created.getTime())
               ? new Date().toISOString()
               : created.toISOString(),
-            project: activity.metadata?.projectName,
+            project: activity.metadata?.projectName ?? "",
             projectId: activity.projectId,
           };
         });

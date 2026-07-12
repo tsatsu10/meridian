@@ -51,6 +51,7 @@ import {
   Search,
   ChevronRight,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "framer-motion";
@@ -122,6 +123,11 @@ export default function CreateProjectModal({
   React.useEffect(() => {
     if (!open || !workspace?.id) return;
 
+    // Guard against state updates after the modal unmounts (or reopens with a
+    // different workspace) while the request is still in flight.
+    let cancelled = false;
+    const controller = new AbortController();
+
     const fetchWorkspaceMembers = async () => {
       setIsLoadingMembers(true);
       try {
@@ -130,30 +136,48 @@ export default function CreateProjectModal({
           {
             credentials: "include",
             headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
           },
         );
 
         if (!response.ok) throw new Error("Failed to fetch members");
 
         const users = await response.json();
-        const members = users.map((u: any) => ({
-          id: u.id || u.userId,
-          name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
-          role: u.role || "member",
-          email: u.email || u.userEmail,
-          avatar: u.avatar, // Custom avatar if exists, DiceBear will be used in component
-        }));
+        const members = users.map(
+          (u: {
+            id?: string;
+            userId?: string;
+            name?: string;
+            userName?: string;
+            email?: string;
+            userEmail?: string;
+            role?: string;
+            avatar?: string;
+          }) => ({
+            id: u.id || u.userId,
+            name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
+            role: u.role || "member",
+            email: u.email || u.userEmail,
+            avatar: u.avatar, // Custom avatar if exists, DiceBear will be used in component
+          }),
+        );
 
-        setAvailableMembers(members);
+        if (!cancelled) setAvailableMembers(members);
       } catch (error) {
+        if (cancelled || controller.signal.aborted) return;
         console.error("Error fetching workspace members:", error);
         setAvailableMembers([]);
       } finally {
-        setIsLoadingMembers(false);
+        if (!cancelled) setIsLoadingMembers(false);
       }
     };
 
     fetchWorkspaceMembers();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [open, workspace?.id]);
 
   // Create project mutation - we'll pass data during the mutation call
@@ -197,7 +221,7 @@ export default function CreateProjectModal({
         category:
           selectedTemplate === "custom"
             ? ("other" as const)
-            : (selectedTemplateData?.category as any) || ("other" as const),
+            : (selectedTemplateData?.category as string) || ("other" as const),
         priority: formData.priority as "low" | "medium" | "high" | "urgent",
 
         // Visibility and access
@@ -493,7 +517,7 @@ export default function CreateProjectModal({
 
                     // Get icon for profession
                     const getProfessionIcon = (prof: string) => {
-                      const iconMap: Record<string, any> = {
+                      const iconMap: Record<string, LucideIcon> = {
                         "Software Engineer": Code,
                         Designer: Palette,
                         Marketer: TrendingUp,

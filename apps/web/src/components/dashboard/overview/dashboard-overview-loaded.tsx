@@ -288,7 +288,7 @@ export function DashboardOverviewLoaded({
                     .map((project: ProjectRow) => {
                       const allProjectTasks = project.tasks || [];
                       const completedTasks = allProjectTasks.filter(
-                        (task: any) =>
+                        (task: { status?: string }) =>
                           task.status === "done" || task.status === "completed",
                       ).length;
                       const progressPercentage =

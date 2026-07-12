@@ -67,7 +67,7 @@ class LiveApiClient {
   /**
    * POST request
    */
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: Record<string, unknown>): Promise<T> {
     return this.request<T>(endpoint, {
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
@@ -77,7 +77,7 @@ class LiveApiClient {
   /**
    * PUT request
    */
-  async put<T>(endpoint: string, data?: any): Promise<T> {
+  async put<T>(endpoint: string, data?: Record<string, unknown>): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PUT",
       body: data ? JSON.stringify(data) : undefined,
@@ -132,11 +132,12 @@ export const liveApi = {
   workspaces: {
     list: () => liveApiClient.get("/api/workspaces"),
     get: (id: string) => liveApiClient.get(`/api/workspaces/${id}`),
-    create: (data: any) => liveApiClient.post("/api/workspaces", data),
+    create: (data: Record<string, unknown>) =>
+      liveApiClient.post("/api/workspaces", data),
     users: {
       list: (workspaceId: string) =>
         liveApiClient.get(`/api/workspaces/${workspaceId}/users`),
-      invite: (workspaceId: string, data: any) =>
+      invite: (workspaceId: string, data: Record<string, unknown>) =>
         liveApiClient.post(`/api/workspaces/${workspaceId}/users/invite`, data),
       remove: (workspaceId: string, userId: string) =>
         liveApiClient.delete(`/api/workspaces/${workspaceId}/users/${userId}`),
@@ -153,21 +154,29 @@ export const liveApi = {
     list: (workspaceId: string) =>
       liveApiClient.get(`/api/workspaces/${workspaceId}/projects`),
     get: (id: string) => liveApiClient.get(`/api/projects/${id}`),
-    create: (workspaceId: string, data: any) =>
+    create: (workspaceId: string, data: Record<string, unknown>) =>
       liveApiClient.post(`/api/workspaces/${workspaceId}/projects`, data),
-    update: (id: string, data: any) =>
+    update: (id: string, data: Record<string, unknown>) =>
       liveApiClient.put(`/api/projects/${id}`, data),
     delete: (id: string) => liveApiClient.delete(`/api/projects/${id}`),
     teams: {
       list: (projectId: string) =>
         liveApiClient.get(`/api/projects/${projectId}/teams`),
-      create: (projectId: string, data: any) =>
+      create: (projectId: string, data: Record<string, unknown>) =>
         liveApiClient.post(`/api/projects/${projectId}/teams`, data),
-      update: (projectId: string, teamId: string, data: any) =>
+      update: (
+        projectId: string,
+        teamId: string,
+        data: Record<string, unknown>,
+      ) =>
         liveApiClient.put(`/api/projects/${projectId}/teams/${teamId}`, data),
       delete: (projectId: string, teamId: string) =>
         liveApiClient.delete(`/api/projects/${projectId}/teams/${teamId}`),
-      addMember: (projectId: string, teamId: string, data: any) =>
+      addMember: (
+        projectId: string,
+        teamId: string,
+        data: Record<string, unknown>,
+      ) =>
         liveApiClient.post(
           `/api/projects/${projectId}/teams/${teamId}/members`,
           data,
@@ -184,9 +193,9 @@ export const liveApi = {
     list: (projectId: string) =>
       liveApiClient.get(`/api/projects/${projectId}/tasks`),
     get: (id: string) => liveApiClient.get(`/api/tasks/${id}`),
-    create: (projectId: string, data: any) =>
+    create: (projectId: string, data: Record<string, unknown>) =>
       liveApiClient.post(`/api/projects/${projectId}/tasks`, data),
-    update: (id: string, data: any) =>
+    update: (id: string, data: Record<string, unknown>) =>
       liveApiClient.put(`/api/tasks/${id}`, data),
   },
 
@@ -211,7 +220,7 @@ export const liveApi = {
   messages: {
     list: (channelId: string) =>
       liveApiClient.get(`/api/channel/${channelId}/messages`),
-    send: (channelId: string, data: any) =>
+    send: (channelId: string, data: Record<string, unknown>) =>
       liveApiClient.post(`/api/channel/${channelId}/messages`, data),
   },
 
@@ -221,7 +230,7 @@ export const liveApi = {
     markRead: (id: string) =>
       liveApiClient.put(`/api/notifications/${id}/read`),
     getSettings: () => liveApiClient.get("/api/notifications/settings"),
-    updateSettings: (settings: any) =>
+    updateSettings: (settings: Record<string, unknown>) =>
       liveApiClient.put("/api/notifications/settings", settings),
     preview: (type: string) =>
       liveApiClient.get(`/api/notifications/preview/${type}`),
@@ -230,13 +239,13 @@ export const liveApi = {
   // Integrations
   integrations: {
     list: () => liveApiClient.get("/api/integrations"),
-    connect: (integrationId: string, config: any) =>
+    connect: (integrationId: string, config: Record<string, unknown>) =>
       liveApiClient.post(`/api/integrations/${integrationId}/connect`, config),
     disconnect: (integrationId: string) =>
       liveApiClient.post(`/api/integrations/${integrationId}/disconnect`),
     getConfig: (integrationId: string) =>
       liveApiClient.get(`/api/integrations/${integrationId}/config`),
-    updateConfig: (integrationId: string, config: any) =>
+    updateConfig: (integrationId: string, config: Record<string, unknown>) =>
       liveApiClient.put(`/api/integrations/${integrationId}/config`, config),
   },
 
@@ -256,8 +265,9 @@ export const liveApi = {
         if (params.endDate) query.append("endDate", params.endDate);
         return liveApiClient.get(`/api/calendar/events?${query.toString()}`);
       },
-      create: (data: any) => liveApiClient.post("/api/calendar/events", data),
-      update: (id: string, data: any) =>
+      create: (data: Record<string, unknown>) =>
+        liveApiClient.post("/api/calendar/events", data),
+      update: (id: string, data: Record<string, unknown>) =>
         liveApiClient.put(`/api/calendar/events/${id}`, data),
       delete: (id: string) =>
         liveApiClient.delete(`/api/calendar/events/${id}`),
@@ -291,7 +301,7 @@ export const liveApi = {
     list: () => liveApiClient.get("/api/webhooks"),
     create: (data: { url: string; events: string[] }) =>
       liveApiClient.post("/api/webhooks", data),
-    update: (id: string, data: any) =>
+    update: (id: string, data: Record<string, unknown>) =>
       liveApiClient.put(`/api/webhooks/${id}`, data),
     delete: (id: string) => liveApiClient.delete(`/api/webhooks/${id}`),
     test: (id: string) => liveApiClient.post(`/api/webhooks/${id}/test`),

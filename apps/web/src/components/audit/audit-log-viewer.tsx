@@ -37,15 +37,15 @@ interface AuditLogEntry {
   userAgent?: string;
   workspaceId?: string;
   projectId?: string;
-  changes?: any;
-  metadata?: any;
+  changes?: unknown;
+  metadata?: unknown;
 }
 
 interface AuditStats {
   totalEvents: number;
   severityBreakdown: Record<string, number>;
   topActions: Array<{ action: string; count: number }>;
-  recentSecurityFailures: any[];
+  recentSecurityFailures: unknown[];
   timeRange: { since: string; days: number };
 }
 
@@ -218,7 +218,7 @@ export function AuditLogViewer() {
             <p className="text-sm text-gray-700 mb-2">{log.description}</p>
           )}
 
-          {log.changes && (
+          {!!log.changes && (
             <details className="mt-2">
               <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800">
                 View Changes

@@ -10,7 +10,7 @@ const generateUniqueId = (prefix = ""): string => {
   return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
-interface AutoStatusUpdateData {
+export interface AutoStatusUpdateData {
   taskId: string;
   newStatus: string;
   reason: string;
@@ -18,7 +18,13 @@ interface AutoStatusUpdateData {
   dependentTasks?: string[];
 }
 
-interface NotificationData {
+export interface DependencyAwareTask {
+  id: string;
+  status: string;
+  dependencies?: string[];
+}
+
+export interface NotificationData {
   id: string;
   type: "auto-status-update";
   title: string;
@@ -33,7 +39,7 @@ interface NotificationData {
 const triggerAutoStatusUpdate = async (
   data: AutoStatusUpdateData,
 ): Promise<{
-  updatedTask: any;
+  updatedTask: { id: string; status: string };
   notification: NotificationData;
 }> => {
   // Simulate API delay
@@ -121,7 +127,7 @@ export default function useAutoStatusUpdate() {
 // Helper function to check and trigger auto-status updates
 export const checkDependenciesAndUpdate = async (
   completedTaskId: string,
-  allTasks: any[],
+  allTasks: DependencyAwareTask[],
   triggerUpdate: (data: AutoStatusUpdateData) => void,
 ) => {
   // Find tasks that depend on the completed task
@@ -132,7 +138,7 @@ export const checkDependenciesAndUpdate = async (
 
   for (const dependentTask of dependentTasks) {
     // Check if all dependencies are completed
-    const allDependenciesCompleted = dependentTask.dependencies.every(
+    const allDependenciesCompleted = dependentTask.dependencies?.every(
       (depId: string) => {
         const depTask = allTasks.find((t) => t.id === depId);
         return depTask && depTask.status === "done";
@@ -160,7 +166,7 @@ export const useTaskStatusMonitor = () => {
     taskId: string,
     newStatus: string,
     oldStatus: string,
-    allTasks: any[],
+    allTasks: DependencyAwareTask[],
   ) => {
     // If task is marked as done, check for dependent tasks
     if (newStatus === "done" && oldStatus !== "done") {

@@ -76,11 +76,26 @@ interface TeamCalendarModalProps {
   allTeams?: Team[];
 }
 
+interface TeamMember {
+  id: string;
+  name: string;
+  workload: number;
+  email: string;
+  role: string;
+  memberName?: string;
+  avatar?: string | null;
+  availability?: string;
+  status?: string;
+  currentActivity?: string;
+  hoursScheduled?: number;
+  currentTasks?: number;
+}
+
 interface Team {
   id: string;
   name: string;
   description: string;
-  members: any[];
+  members: TeamMember[];
   lead?: string;
   projectId?: string;
   projectName?: string;
@@ -224,9 +239,10 @@ export default function TeamCalendarModal({
       memberName: member.name,
       memberEmail: member.email,
       role: member.role,
-      avatar: member.avatar,
-      availability: member.availability || "available",
-      status: member.status || "offline",
+      avatar: member.avatar ?? undefined,
+      availability: (member.availability ||
+        "available") as MemberSchedule["availability"],
+      status: (member.status || "offline") as MemberSchedule["status"],
       currentActivity: member.currentActivity,
       workload: member.workload || 0,
       hoursScheduled: member.hoursScheduled || 0,
@@ -595,7 +611,7 @@ export default function TeamCalendarModal({
     setShowCreateEventModal(true);
   };
 
-  const handleCreateEvent = (_eventData: any) => {
+  const handleCreateEvent = (_eventData: unknown) => {
     // Event creation is now handled by the CreateEventModal component
     // This handler is called after successful creation for any additional logic
     setShowCreateEventModal(false);
@@ -1346,8 +1362,8 @@ export default function TeamCalendarModal({
                               </h4>
                               <div className="space-y-2">
                                 {team.members
-                                  .filter((m: any) => m.workload > 85)
-                                  .map((member: any) => (
+                                  .filter((m) => m.workload > 85)
+                                  .map((member) => (
                                     <div
                                       key={member.id}
                                       className="flex items-center justify-between text-sm"
@@ -1366,9 +1382,8 @@ export default function TeamCalendarModal({
                                       </Badge>
                                     </div>
                                   ))}
-                                {team.members.filter(
-                                  (m: any) => m.workload > 85,
-                                ).length === 0 && (
+                                {team.members.filter((m) => m.workload > 85)
+                                  .length === 0 && (
                                   <p className="text-sm text-muted-foreground">
                                     All members within capacity
                                   </p>

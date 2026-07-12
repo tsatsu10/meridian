@@ -10,16 +10,25 @@ import { API_URL } from "@/constants/urls";
 import { logger } from "@/lib/logger";
 
 // AppType lacks several mounted routes; single escape hatch until it is complete.
+// biome-ignore lint/suspicious/noExplicitAny: documented escape hatch above
 const rpc = client as any;
+
+function hasVitestFlag(target: unknown): boolean {
+  return (
+    typeof target === "object" &&
+    target !== null &&
+    Boolean((target as { __vitest__?: unknown }).__vitest__)
+  );
+}
 
 /**
  * Determines if we're in a test environment
  */
 function isTestEnvironment(): boolean {
   return (
-    (typeof window !== "undefined" && (window as any).__vitest__) ||
+    (typeof window !== "undefined" && hasVitestFlag(window)) ||
     process.env.NODE_ENV === "test" ||
-    (typeof global !== "undefined" && (global as any).__vitest__)
+    (typeof global !== "undefined" && hasVitestFlag(global))
   );
 }
 
@@ -190,7 +199,7 @@ class SmartApiClient {
       return response.json();
     },
 
-    create: async (data: any) => {
+    create: async (data: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.workspaces.create(data);
       }
@@ -218,7 +227,7 @@ class SmartApiClient {
         ];
       },
 
-      invite: async (workspaceId: string, data: any) => {
+      invite: async (workspaceId: string, data: Record<string, unknown>) => {
         if (this.useLive) {
           return liveApi.workspaces.users.invite(workspaceId, data);
         }
@@ -268,7 +277,7 @@ class SmartApiClient {
       return response.json();
     },
 
-    create: async (workspaceId: string, data: any) => {
+    create: async (workspaceId: string, data: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.projects.create(workspaceId, data);
       }
@@ -279,7 +288,7 @@ class SmartApiClient {
       return response.json();
     },
 
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.projects.update(id, data);
       }
@@ -322,7 +331,7 @@ class SmartApiClient {
         ];
       },
 
-      create: async (projectId: string, data: any) => {
+      create: async (projectId: string, data: Record<string, unknown>) => {
         if (this.useLive) {
           return liveApi.projects.teams.create(projectId, data);
         }
@@ -330,7 +339,11 @@ class SmartApiClient {
         return { success: true, team: { id: `team-${Date.now()}`, ...data } };
       },
 
-      update: async (projectId: string, teamId: string, data: any) => {
+      update: async (
+        projectId: string,
+        teamId: string,
+        data: Record<string, unknown>,
+      ) => {
         if (this.useLive) {
           return liveApi.projects.teams.update(projectId, teamId, data);
         }
@@ -346,7 +359,11 @@ class SmartApiClient {
         return { success: true };
       },
 
-      addMember: async (projectId: string, teamId: string, data: any) => {
+      addMember: async (
+        projectId: string,
+        teamId: string,
+        data: Record<string, unknown>,
+      ) => {
         if (this.useLive) {
           return liveApi.projects.teams.addMember(projectId, teamId, data);
         }
@@ -401,7 +418,7 @@ class SmartApiClient {
       return response.json();
     },
 
-    create: async (projectId: string, data: any) => {
+    create: async (projectId: string, data: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.tasks.create(projectId, data);
       }
@@ -413,7 +430,7 @@ class SmartApiClient {
       return response.json();
     },
 
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.tasks.update(id, data);
       }
@@ -530,7 +547,7 @@ class SmartApiClient {
       };
     },
 
-    send: async (channelId: string, data: any) => {
+    send: async (channelId: string, data: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.messages.send(channelId, data);
       }
@@ -591,7 +608,7 @@ class SmartApiClient {
       };
     },
 
-    updateSettings: async (settings: any) => {
+    updateSettings: async (settings: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.notifications.updateSettings(settings);
       }
@@ -643,7 +660,7 @@ class SmartApiClient {
         ];
       },
 
-      create: async (data: any) => {
+      create: async (data: Record<string, unknown>) => {
         if (this.useLive) {
           return liveApi.calendar.events.create(data);
         }
@@ -651,7 +668,7 @@ class SmartApiClient {
         return { success: true, event: { id: `event-${Date.now()}`, ...data } };
       },
 
-      update: async (id: string, data: any) => {
+      update: async (id: string, data: Record<string, unknown>) => {
         if (this.useLive) {
           return liveApi.calendar.events.update(id, data);
         }
@@ -717,7 +734,7 @@ class SmartApiClient {
       ];
     },
 
-    connect: async (integrationId: string, config: any) => {
+    connect: async (integrationId: string, config: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.integrations.connect(integrationId, config);
       }
@@ -744,7 +761,10 @@ class SmartApiClient {
       return { config: {} };
     },
 
-    updateConfig: async (integrationId: string, config: any) => {
+    updateConfig: async (
+      integrationId: string,
+      config: Record<string, unknown>,
+    ) => {
       if (this.useLive) {
         return liveApi.integrations.updateConfig(integrationId, config);
       }
@@ -857,7 +877,7 @@ class SmartApiClient {
       };
     },
 
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Record<string, unknown>) => {
       if (this.useLive) {
         return liveApi.webhooks.update(id, data);
       }

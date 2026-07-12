@@ -59,10 +59,12 @@ export function BulkOperationsToolbar() {
 
   const assignOptions = [
     { id: "", name: "Unassigned" },
-    ...(workspaceUsers?.map((user: any) => ({
-      id: user.userEmail ?? "",
-      name: user.userName ?? user.userEmail ?? "",
-    })) || []),
+    ...(workspaceUsers?.map(
+      (user: { userEmail: string; userName?: string }) => ({
+        id: user.userEmail ?? "",
+        name: user.userName ?? user.userEmail ?? "",
+      }),
+    ) || []),
   ];
 
   return (

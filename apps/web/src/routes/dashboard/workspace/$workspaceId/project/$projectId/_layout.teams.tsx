@@ -94,6 +94,8 @@ import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
 import { EnhancedMemberDetailsModal } from "@/components/team/enhanced-member-details-modal";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { toast } from "sonner";
+import type { ProjectColumn, ProjectWithTasks } from "@/types/project";
+import type Task from "@/types/task";
 
 export const Route = createFileRoute(
   "/dashboard/workspace/$workspaceId/project/$projectId/_layout/teams",
@@ -123,6 +125,13 @@ interface ProjectMember {
   workloadStatus?: "balanced" | "overloaded" | "underutilized";
   highPriorityTasks?: number;
 }
+
+// Task doesn't declare estimatedHours/actualHours -- kept as optional
+// extras rather than claiming the real Task type has them.
+type WorkloadTask = Task & {
+  estimatedHours?: number;
+  actualHours?: number;
+};
 
 interface TeamMetrics {
   totalMembers: number;
@@ -276,24 +285,29 @@ function ProjectTeams() {
   const projectMembers: ProjectMember[] = useMemo(() => {
     if (!realProjectMembers || !tasksData) return [];
 
-    const allTasks = tasksData?.tasks || [];
+    // useGetTasks' response type is untyped upstream (the generated Hono
+    // AppType is missing this route); ProjectWithTasks mirrors the actual
+    // GET /task/tasks/:projectId shape (columns, not a top-level `tasks`).
+    const projectWithTasks = tasksData as ProjectWithTasks | undefined;
+    const columnArray: ProjectColumn[] = projectWithTasks?.columns ?? [];
+    const allTasks = columnArray.flatMap((col) => col.tasks) as WorkloadTask[];
 
     return realProjectMembers.map((member) => {
       const userTasks = allTasks.filter(
-        (task: any) => task.userEmail === member.userEmail,
+        (task) => task.userEmail === member.userEmail,
       );
 
       // Basic counts
       const activeTasks = userTasks.filter(
-        (task: any) => task.status !== "done",
+        (task) => task.status !== "done",
       ).length;
       const completedTasks = userTasks.filter(
-        (task: any) => task.status === "done",
+        (task) => task.status === "done",
       ).length;
       void (activeTasks + completedTasks);
 
       // Enhanced workload calculation with complexity and priority
-      const calculateTaskWeight = (task: any) => {
+      const calculateTaskWeight = (task: WorkloadTask) => {
         let weight = 1; // Base weight
 
         // Priority multiplier (high priority tasks count more)
@@ -318,17 +332,17 @@ function ProjectTeams() {
 
       // Calculate weighted workload
       const activeTasksWeighted = userTasks
-        .filter((task: any) => task.status !== "done")
-        .reduce((sum: number, task: any) => sum + calculateTaskWeight(task), 0);
+        .filter((task) => task.status !== "done")
+        .reduce((sum, task) => sum + calculateTaskWeight(task), 0);
 
       const completedTasksWeighted = userTasks
-        .filter((task: any) => task.status === "done")
-        .reduce((sum: number, task: any) => sum + calculateTaskWeight(task), 0);
+        .filter((task) => task.status === "done")
+        .reduce((sum, task) => sum + calculateTaskWeight(task), 0);
 
       const totalWeightedTasks = activeTasksWeighted + completedTasksWeighted;
 
       // Calculate estimated hours (either from task data or weighted estimate)
-      const estimatedHours = userTasks.reduce((sum: number, task: any) => {
+      const estimatedHours = userTasks.reduce((sum, task) => {
         if (task.estimatedHours) {
           return sum + (task.status !== "done" ? task.estimatedHours : 0);
         }
@@ -339,7 +353,7 @@ function ProjectTeams() {
       }, 0);
 
       // Calculate actual hours logged (if available)
-      const actualHours = userTasks.reduce((sum: number, task: any) => {
+      const actualHours = userTasks.reduce((sum, task) => {
         return sum + (task.actualHours || 0);
       }, 0);
 
@@ -391,7 +405,7 @@ function ProjectTeams() {
         capacityUtilization,
         workloadStatus,
         highPriorityTasks: userTasks.filter(
-          (t: any) =>
+          (t) =>
             (t.priority === "urgent" || t.priority === "high") &&
             t.status !== "done",
         ).length,
@@ -1127,7 +1141,9 @@ function ProjectTeams() {
 
                     <Select
                       value={sortBy}
-                      onValueChange={(value: any) => setSortBy(value)}
+                      onValueChange={(
+                        value: "name" | "tasks" | "productivity" | "recent",
+                      ) => setSortBy(value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Sort by" />

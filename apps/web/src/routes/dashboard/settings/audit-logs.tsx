@@ -57,8 +57,8 @@ interface AuditLog {
   entityType: string;
   entityId: string | null;
   entityName: string | null;
-  changes: any;
-  metadata: any;
+  changes: unknown;
+  metadata: unknown;
   ipAddress: string | null;
   userAgent: string | null;
   timestamp: Date;
@@ -271,7 +271,10 @@ function AuditLogsSettings() {
     },
   });
 
-  const handleChange = (field: keyof AuditLogSettings, value: any) => {
+  const handleChange = (
+    field: keyof AuditLogSettings,
+    value: AuditLogSettings[keyof AuditLogSettings],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
@@ -449,11 +452,13 @@ function AuditLogsSettings() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All users</SelectItem>
-                        {filterOptions?.users.map((user: any) => (
-                          <SelectItem key={user.email} value={user.email}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
+                        {filterOptions?.users.map(
+                          (user: { email: string; name?: string }) => (
+                            <SelectItem key={user.email} value={user.email}>
+                              {user.name}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

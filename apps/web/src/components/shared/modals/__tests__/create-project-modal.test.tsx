@@ -374,7 +374,9 @@ describe("CreateProjectModal", () => {
       const user = userEvent.setup();
       const { client } = await import("@meridian/libs");
       const { toast } = await import("sonner");
-      (client.project.$post as any).mockResolvedValue({
+      (
+        client.project.$post as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
         ok: true,
         json: async () => ({ id: "project-123", name: "Test Project" }),
       });
@@ -435,7 +437,9 @@ describe("CreateProjectModal", () => {
       const user = userEvent.setup();
       const { client } = await import("@meridian/libs");
       const { toast } = await import("sonner");
-      (client.project.$post as any).mockResolvedValue({
+      (
+        client.project.$post as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
         ok: false,
         text: async () => "Project name already exists",
       });

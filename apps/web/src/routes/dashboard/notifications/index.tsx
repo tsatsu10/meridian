@@ -213,7 +213,8 @@ function NotificationsPanel() {
   const filteredNotifications = useMemo(() => {
     const filtered = notifications.filter((notification) => {
       // Filter by archived status
-      const isArchived = (notification as any).isArchived || false;
+      const isArchived =
+        (notification as { isArchived?: boolean }).isArchived || false;
 
       if (filter === "archived") {
         // Show only archived notifications
@@ -450,7 +451,7 @@ function NotificationsPanel() {
       return [{ title: "", notifications: filteredNotifications }];
     }
 
-    const groups: Record<string, any[]> = {};
+    const groups: Record<string, (typeof filteredNotifications)[number][]> = {};
 
     for (const notification of filteredNotifications) {
       let groupKey = "";

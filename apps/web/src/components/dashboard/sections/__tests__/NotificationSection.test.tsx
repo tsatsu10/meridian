@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+import type { ComponentProps } from "react";
 import NotificationSection from "../NotificationSection";
 
 // Mock lucide-react icons
@@ -152,7 +153,15 @@ describe("NotificationSection", () => {
   });
 
   it("handles undefined notifications gracefully", () => {
-    render(<NotificationSection allNotifications={undefined as any} />);
+    render(
+      <NotificationSection
+        allNotifications={
+          undefined as unknown as ComponentProps<
+            typeof NotificationSection
+          >["allNotifications"]
+        }
+      />,
+    );
 
     expect(screen.getByText("No recent activity")).toBeInTheDocument();
   });

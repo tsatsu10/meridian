@@ -1,7 +1,7 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 async function markNotificationAsRead(id: string) {
-  const response = await (client as any).notification[":id"].read.$patch({
+  const response = await looseClient.notification[":id"].read.$patch({
     param: { id },
   });
 

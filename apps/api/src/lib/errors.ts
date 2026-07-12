@@ -10,7 +10,7 @@ export interface ErrorResponse {
   error: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
     timestamp: string;
     requestId?: string;
   };
@@ -67,15 +67,15 @@ export class AppError extends Error {
   public readonly code: ErrorCode | string;
   public readonly statusCode: number;
   public readonly severity: ErrorSeverity | string;
-  public readonly details?: any;
+  public readonly details?: unknown;
   public readonly isOperational: boolean;
 
   constructor(
     codeOrMessage: ErrorCode | string,
     messageOrStatusCode?: string | number,
     statusCodeOrSeverity?: number | string,
-    severityOrDetails?: ErrorSeverity | string | any,
-    detailsOrIsOperational?: any | boolean,
+    severityOrDetails?: ErrorSeverity | string | unknown,
+    detailsOrIsOperational?: unknown,
     isOperational?: boolean,
   ) {
     // Support both old signature (message first) and new signature (code first)
@@ -83,7 +83,7 @@ export class AppError extends Error {
     let message: string;
     let statusCode: number;
     let severity: ErrorSeverity | string;
-    let details: any;
+    let details: unknown;
     let operational: boolean;
 
     // Check if using new signature (code first) by checking if first arg is ErrorCode enum
@@ -131,7 +131,7 @@ export class AppError extends Error {
 
 // Error factory functions
 export const createError = {
-  unauthorized: (message = "Unauthorized", details?: any) =>
+  unauthorized: (message = "Unauthorized", details?: unknown) =>
     new AppError(
       ErrorCode.UNAUTHORIZED,
       message,
@@ -140,7 +140,7 @@ export const createError = {
       details,
     ),
 
-  forbidden: (message = "Forbidden", details?: any) =>
+  forbidden: (message = "Forbidden", details?: unknown) =>
     new AppError(
       ErrorCode.FORBIDDEN,
       message,
@@ -149,10 +149,10 @@ export const createError = {
       details,
     ),
 
-  notFound: (message = "Resource not found", details?: any) =>
+  notFound: (message = "Resource not found", details?: unknown) =>
     new AppError(ErrorCode.NOT_FOUND, message, 404, ErrorSeverity.LOW, details),
 
-  badRequest: (message = "Bad request", details?: any) =>
+  badRequest: (message = "Bad request", details?: unknown) =>
     new AppError(
       ErrorCode.INVALID_INPUT,
       message,
@@ -161,7 +161,7 @@ export const createError = {
       details,
     ),
 
-  validationError: (message = "Validation error", details?: any) =>
+  validationError: (message = "Validation error", details?: unknown) =>
     new AppError(
       ErrorCode.VALIDATION_ERROR,
       message,
@@ -170,7 +170,7 @@ export const createError = {
       details,
     ),
 
-  conflict: (message = "Resource conflict", details?: any) =>
+  conflict: (message = "Resource conflict", details?: unknown) =>
     new AppError(
       ErrorCode.CONFLICT,
       message,
@@ -179,7 +179,7 @@ export const createError = {
       details,
     ),
 
-  databaseError: (message = "Database error", details?: any) =>
+  databaseError: (message = "Database error", details?: unknown) =>
     new AppError(
       ErrorCode.DATABASE_ERROR,
       message,
@@ -188,7 +188,7 @@ export const createError = {
       details,
     ),
 
-  internalError: (message = "Internal server error", details?: any) =>
+  internalError: (message = "Internal server error", details?: unknown) =>
     new AppError(
       ErrorCode.INTERNAL_ERROR,
       message,
@@ -197,7 +197,7 @@ export const createError = {
       details,
     ),
 
-  serverError: (message = "Internal server error", details?: any) =>
+  serverError: (message = "Internal server error", details?: unknown) =>
     new AppError(
       ErrorCode.INTERNAL_ERROR,
       message,
@@ -207,7 +207,7 @@ export const createError = {
       false,
     ),
 
-  serviceUnavailable: (message = "Service unavailable", details?: any) =>
+  serviceUnavailable: (message = "Service unavailable", details?: unknown) =>
     new AppError(
       ErrorCode.SERVICE_UNAVAILABLE,
       message,
@@ -216,7 +216,7 @@ export const createError = {
       details,
     ),
 
-  rateLimited: (message = "Rate limit exceeded", details?: any) =>
+  rateLimited: (message = "Rate limit exceeded", details?: unknown) =>
     new AppError(
       ErrorCode.RATE_LIMITED,
       message,
@@ -226,12 +226,25 @@ export const createError = {
     ),
 };
 
+// Shape actually produced by errorHandler() below — distinct from the
+// ErrorResponse interface above, which no other code in this file builds.
+interface MiddlewareErrorResponse {
+  error: {
+    code: string;
+    message: string;
+    statusCode: number;
+    severity: string;
+    details?: unknown;
+  };
+  success: false;
+}
+
 // Error handler middleware
 export function errorHandler() {
   return async (err: Error, c: Context) => {
     logger.error("Error caught by middleware:", err);
 
-    let errorResponse: any;
+    let errorResponse: MiddlewareErrorResponse;
     let statusCode = 500;
 
     if (err instanceof AppError) {
@@ -422,7 +435,7 @@ export function withDatabaseRetry<T>(
 export function createValidationError(
   field: string,
   message: string,
-  value?: any,
+  value?: unknown,
 ) {
   return createError.validationError(
     `Validation failed for field '${field}': ${message}`,

@@ -99,6 +99,43 @@ const DEFAULT_TRANSLATIONS: Record<string, Translation> = {
 // CRUD OPERATIONS
 // ===================================
 
+interface WorkspaceLocalizationSettings {
+  languages?: Language[];
+  translations?: Record<string, Record<string, Translation>>;
+  localizationSettings?: Partial<LocalizationSettings>;
+}
+
+function getSettingsObject(settings: unknown): Record<string, unknown> {
+  return typeof settings === "object" && settings !== null
+    ? (settings as Record<string, unknown>)
+    : {};
+}
+
+function getLanguagesArray(settings: unknown): Language[] {
+  if (typeof settings !== "object" || settings === null) return [];
+  const languages = (settings as WorkspaceLocalizationSettings).languages;
+  return Array.isArray(languages) ? languages : [];
+}
+
+function getTranslationsMap(
+  settings: unknown,
+): Record<string, Record<string, Translation>> {
+  if (typeof settings !== "object" || settings === null) return {};
+  const translations = (settings as WorkspaceLocalizationSettings).translations;
+  return translations && typeof translations === "object" ? translations : {};
+}
+
+function getRawLocalizationSettings(
+  settings: unknown,
+): Partial<LocalizationSettings> {
+  if (typeof settings !== "object" || settings === null) return {};
+  const localizationSettings = (settings as WorkspaceLocalizationSettings)
+    .localizationSettings;
+  return localizationSettings && typeof localizationSettings === "object"
+    ? localizationSettings
+    : {};
+}
+
 /**
  * Get all languages for a workspace
  */
@@ -115,7 +152,7 @@ export async function getLanguages(workspaceId: string): Promise<Language[]> {
     throw new Error("Workspace not found");
   }
 
-  const languages = (workspace.settings as any)?.languages || [];
+  const languages = getLanguagesArray(workspace.settings);
 
   // Ensure English is always present
   if (languages.length === 0) {
@@ -170,11 +207,9 @@ export async function addLanguage(
     throw new Error("Workspace not found");
   }
 
-  const existingLanguages = (workspace.settings as any)?.languages || [];
+  const existingLanguages = getLanguagesArray(workspace.settings);
 
-  if (
-    existingLanguages.some((l: Language) => l.languageCode === languageCode)
-  ) {
+  if (existingLanguages.some((l) => l.languageCode === languageCode)) {
     throw new Error("Language already exists");
   }
 
@@ -198,7 +233,7 @@ export async function addLanguage(
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         languages: updatedLanguages,
       },
     })
@@ -232,17 +267,18 @@ export async function updateLanguage(
     throw new Error("Workspace not found");
   }
 
-  const existingLanguages = (workspace.settings as any)?.languages || [];
+  const existingLanguages = getLanguagesArray(workspace.settings);
   const langIndex = existingLanguages.findIndex(
-    (l: Language) => l.languageCode === languageCode,
+    (l) => l.languageCode === languageCode,
   );
 
-  if (langIndex === -1) {
+  const existingLanguage = existingLanguages[langIndex];
+  if (langIndex === -1 || !existingLanguage) {
     throw new Error("Language not found");
   }
 
   const updatedLanguage = {
-    ...existingLanguages[langIndex],
+    ...existingLanguage,
     ...updates,
     updatedAt: new Date(),
   };
@@ -253,7 +289,7 @@ export async function updateLanguage(
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         languages: existingLanguages,
       },
     })
@@ -288,20 +324,20 @@ export async function deleteLanguage(
     throw new Error("Workspace not found");
   }
 
-  const existingLanguages = (workspace.settings as any)?.languages || [];
+  const existingLanguages = getLanguagesArray(workspace.settings);
   const updatedLanguages = existingLanguages.filter(
-    (l: Language) => l.languageCode !== languageCode,
+    (l) => l.languageCode !== languageCode,
   );
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         languages: updatedLanguages,
         // Also remove translations for this language
         translations: {
-          ...((workspace.settings as any)?.translations || {}),
+          ...getTranslationsMap(workspace.settings),
           [languageCode]: undefined,
         },
       },
@@ -333,7 +369,7 @@ export async function getTranslations(
   }
 
   const translations =
-    (workspace.settings as any)?.translations?.[languageCode] || {};
+    getTranslationsMap(workspace.settings)[languageCode] || {};
 
   // Return default translations for English if none exist
   if (languageCode === "en" && Object.keys(translations).length === 0) {
@@ -365,34 +401,33 @@ export async function updateTranslations(
     throw new Error("Workspace not found");
   }
 
-  const currentTranslations = (workspace.settings as any)?.translations || {};
+  const currentTranslations = getTranslationsMap(workspace.settings);
   const updatedTranslations = {
     ...currentTranslations,
     [languageCode]: translations,
   };
 
   // Calculate completion percentage
-  const languages = (workspace.settings as any)?.languages || [];
-  const langIndex = languages.findIndex(
-    (l: Language) => l.languageCode === languageCode,
-  );
+  const languages = getLanguagesArray(workspace.settings);
+  const langIndex = languages.findIndex((l) => l.languageCode === languageCode);
 
-  if (langIndex !== -1) {
+  const languageToUpdate = languages[langIndex];
+  if (langIndex !== -1 && languageToUpdate) {
     const totalKeys = Object.keys(DEFAULT_TRANSLATIONS).length;
     const translatedKeys = Object.keys(translations).filter(
       (key) => translations[key]?.value,
     ).length;
-    languages[langIndex].completionPercentage = Math.round(
+    languageToUpdate.completionPercentage = Math.round(
       (translatedKeys / totalKeys) * 100,
     );
-    languages[langIndex].updatedAt = new Date();
+    languageToUpdate.updatedAt = new Date();
   }
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         translations: updatedTranslations,
         languages,
       },
@@ -512,7 +547,7 @@ export async function getLocalizationSettings(
     throw new Error("Workspace not found");
   }
 
-  const settings = (workspace.settings as any)?.localizationSettings || {};
+  const settings = getRawLocalizationSettings(workspace.settings);
 
   return {
     workspaceId,
@@ -533,7 +568,9 @@ export async function getLocalizationSettings(
     },
     firstDayOfWeek: settings.firstDayOfWeek ?? 0,
     timezone: settings.timezone || "UTC",
-    updatedAt: new Date(settings.updatedAt || workspace.updatedAt),
+    updatedAt: new Date(
+      settings.updatedAt || workspace.updatedAt || new Date(),
+    ),
   };
 }
 
@@ -556,8 +593,7 @@ export async function updateLocalizationSettings(
     throw new Error("Workspace not found");
   }
 
-  const currentSettings =
-    (workspace.settings as any)?.localizationSettings || {};
+  const currentSettings = getRawLocalizationSettings(workspace.settings);
   const updatedSettings = {
     ...currentSettings,
     ...updates,
@@ -568,7 +604,7 @@ export async function updateLocalizationSettings(
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         localizationSettings: updatedSettings,
       },
     })

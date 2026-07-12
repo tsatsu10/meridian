@@ -19,6 +19,9 @@ import {
   verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
+
+// Attribute/listener handle types produced by useSortable (spread onto the row).
+type SortableHandles = ReturnType<typeof useSortable>;
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/cn";
@@ -98,7 +101,10 @@ interface VirtualizedTaskListProps {
   selectedTasks: string[];
   onTaskSelect: (taskId: string) => void;
   onSelectAll: () => void;
-  onTaskUpdate?: (taskId: string, updates: any) => Promise<void>;
+  onTaskUpdate?: (
+    taskId: string,
+    updates: Partial<VirtualizedTask>,
+  ) => Promise<void>;
   onTaskDelete?: (taskId: string) => Promise<void>;
   onTaskReorder?: (taskId: string, newPosition: number) => Promise<void>;
   isLoading?: boolean;
@@ -270,11 +276,14 @@ interface TaskRowProps {
     tasks: VirtualizedTask[];
     selectedTasks: string[];
     onTaskSelect: (taskId: string) => void;
-    onTaskUpdate?: (taskId: string, updates: any) => Promise<void>;
+    onTaskUpdate?: (
+      taskId: string,
+      updates: Partial<VirtualizedTask>,
+    ) => Promise<void>;
     onTaskDelete?: (taskId: string) => Promise<void>;
   };
-  dragAttributes?: any;
-  dragListeners?: any;
+  dragAttributes?: SortableHandles["attributes"];
+  dragListeners?: SortableHandles["listeners"];
   isDragging?: boolean;
 }
 
@@ -282,8 +291,8 @@ const TaskRow: React.FC<TaskRowProps> = ({
   index,
   style,
   data,
-  dragAttributes = {},
-  dragListeners = {},
+  dragAttributes,
+  dragListeners,
   isDragging = false,
 }) => {
   const { tasks, selectedTasks, onTaskSelect, onTaskUpdate, onTaskDelete } =

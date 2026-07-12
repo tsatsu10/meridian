@@ -150,7 +150,7 @@ export default function TeamCreationModal({
   const [_step, setStep] = useState<"template" | "details" | "members">(
     "template",
   );
-  const [_selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [_selectedTemplate, setSelectedTemplate] = useState<unknown>(null);
   const [_teamData, setTeamData] = useState({
     name: "",
     description: "",
@@ -180,10 +180,19 @@ export default function TeamCreationModal({
       try {
         const users = await fetchApi(`/workspace-user/${workspace.id}`);
         const members: TeamMember[] = (Array.isArray(users) ? users : []).map(
-          (u: any) => ({
-            id: u.id || u.userId,
+          (u: {
+            id?: string;
+            userId?: string;
+            name?: string;
+            userName?: string;
+            email?: string;
+            userEmail?: string;
+            role?: string;
+            avatar?: string;
+          }) => ({
+            id: u.id || u.userId || "",
             name: u.name || u.userName || u.email?.split("@")[0] || "Unknown",
-            email: u.email || u.userEmail,
+            email: u.email || u.userEmail || "",
             role: u.role || "member",
             avatar: u.avatar,
             status: "existing" as const,

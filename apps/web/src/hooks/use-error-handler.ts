@@ -43,7 +43,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
   );
 
   const retry = useCallback(
-    async (operation: () => Promise<any>) => {
+    async (operation: () => Promise<unknown>) => {
       if (errorState.retryCount >= maxRetries) {
         console.warn("Max retries exceeded");
         return;
@@ -167,7 +167,7 @@ export function useApiCall<T>(
 }
 
 // Hook for handling async operations with loading and error states
-export function useAsyncOperation<T, P extends any[]>(
+export function useAsyncOperation<T, P extends unknown[]>(
   operation: (...args: P) => Promise<T>,
   options: UseErrorHandlerOptions = {},
 ) {
@@ -218,7 +218,7 @@ export function useAsyncOperation<T, P extends any[]>(
 
 // Hook for handling form submissions with error handling
 export function useFormSubmission<T>(
-  submitFn: (data: T) => Promise<any>,
+  submitFn: (data: T) => Promise<unknown>,
   options: UseErrorHandlerOptions = {},
 ) {
   const errorHandler = useErrorHandler(options);

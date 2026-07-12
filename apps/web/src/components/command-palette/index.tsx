@@ -38,7 +38,7 @@ export function CommandPalette() {
   const [pendingAction, setPendingAction] = useState<{
     type: "task" | "project" | "workspace" | "navigation" | "theme" | "export";
     status?: string;
-    payload?: any;
+    payload?: unknown;
   } | null>(null);
   const navigate = useNavigate();
 

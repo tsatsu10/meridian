@@ -40,6 +40,12 @@ interface AssignUsersModalProps {
   onSuccess?: () => void;
 }
 
+interface AssignUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 // ==========================================
 // COMPONENT
 // ==========================================
@@ -71,7 +77,9 @@ export function AssignUsersModal({
   });
 
   // Map API response to user list
-  const allUsers = workspaceUsersData || [];
+  // Cast narrows WorkspaceMember's nullable id/name to the non-null shape this
+  // UI already assumes (the previous `any[]` hid the same assumption).
+  const allUsers = (workspaceUsersData || []) as AssignUser[];
 
   // Assign users mutation
   const assignMutation = useMutation({
@@ -133,7 +141,7 @@ export function AssignUsersModal({
   };
 
   const handleSelectAll = () => {
-    const filtered = filteredUsers.map((u: any) => u.id);
+    const filtered = filteredUsers.map((u) => u.id);
     setSelectedUsers(filtered);
   };
 
@@ -153,7 +161,7 @@ export function AssignUsersModal({
   };
 
   const filteredUsers = allUsers.filter(
-    (user: any) =>
+    (user) =>
       search === "" ||
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase()),
@@ -219,7 +227,7 @@ export function AssignUsersModal({
                     </span>
                   </div>
                 ) : (
-                  filteredUsers.map((user: any) => (
+                  filteredUsers.map((user) => (
                     <div
                       key={user.id}
                       className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
@@ -261,7 +269,7 @@ export function AssignUsersModal({
                 <Label>Selected Users</Label>
                 <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/50">
                   {selectedUsers.map((userId) => {
-                    const user = allUsers.find((u: any) => u.id === userId);
+                    const user = allUsers.find((u) => u.id === userId);
                     return (
                       <Badge key={userId} variant="secondary">
                         {user?.name}

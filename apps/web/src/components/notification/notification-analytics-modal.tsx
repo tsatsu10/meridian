@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Notification } from "@/types/notification";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -33,7 +34,7 @@ interface NotificationAnalyticsModalProps {
     pinned: number;
     important: number;
   };
-  notifications: any[];
+  notifications: Notification[];
 }
 
 export default function NotificationAnalyticsModal({

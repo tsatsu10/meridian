@@ -9,9 +9,9 @@ interface UpdateAutomationData {
   description?: string;
   trigger?: {
     type: string;
-    config: any;
+    config: Record<string, unknown>;
   };
-  actions?: any[];
+  actions?: unknown[];
   enabled?: boolean;
 }
 
@@ -40,7 +40,7 @@ export function useUpdateAutomation() {
       });
       toast.success("Automation updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to update automation");
     },
   });

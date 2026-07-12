@@ -27,7 +27,7 @@ function DashboardTemplatesPage() {
     );
   }
 
-  const handleApplyTemplate = (template: any) => {
+  const handleApplyTemplate = (template: { name: string }) => {
     // In a real implementation, this would apply the template to the current dashboard
     // For now, we just show a success message
     toast.success(

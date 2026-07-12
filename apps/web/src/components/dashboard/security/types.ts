@@ -31,7 +31,7 @@ export interface SecurityEvent {
   ipAddress?: string;
   userAgent?: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityThreat {

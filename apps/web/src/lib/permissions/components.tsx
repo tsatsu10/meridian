@@ -17,6 +17,7 @@ import type {
   PermissionAction,
   ResourceType,
   AccessLevel,
+  PermissionContext,
 } from "./types";
 
 // ===== PERMISSION GUARD COMPONENTS =====
@@ -116,7 +117,7 @@ export function RequireAll({
   >;
   children: React.ReactNode;
   fallback?: React.ReactNode;
-  context?: any;
+  context?: PermissionContext;
 }) {
   const { hasPermission, user, isMinimumRole, canAccessResource } =
     useRBACAuth();
@@ -166,7 +167,7 @@ export function RequireAny({
   >;
   children: React.ReactNode;
   fallback?: React.ReactNode;
-  context?: any;
+  context?: PermissionContext;
 }) {
   const { hasPermission, user, isMinimumRole, canAccessResource } =
     useRBACAuth();

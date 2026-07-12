@@ -1,9 +1,116 @@
 // @epic-3.4-teams: Export utilities for teams, members, and users data
 
+interface ExportTeam {
+  id?: string;
+  name?: string;
+  description?: string;
+  type?: string;
+  memberCount?: number;
+  performance?: number;
+  workload?: number;
+  healthScore?: number;
+  completedTasks?: number;
+  currentTasks?: number;
+  productivity?: number;
+  createdAt?: string | Date;
+  members?: unknown[];
+  healthStatus?: { label?: string };
+  projectId?: string;
+  projectName?: string;
+}
+
+interface ExportMember {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+  availability?: string;
+  teamName?: string;
+  projectName?: string;
+  workload?: number;
+  performance?: number;
+  tasksCompleted?: number;
+  currentTasks?: number;
+  joinedAt?: string;
+  lastActive?: string;
+}
+
+interface ExportUser {
+  id?: string | null;
+  name?: string | null;
+  userName?: string | null;
+  email?: string;
+  userEmail?: string;
+  role?: string;
+  status?: string;
+  joinedAt?: string;
+}
+
+interface ExportProjectHealth {
+  name?: string;
+  healthScore?: number;
+  completionRate?: number;
+  velocity?: number;
+  completedTasks?: number;
+  totalTasks?: number;
+  riskLevel?: string;
+  status?: string;
+}
+
+interface ExportResource {
+  userName?: string;
+  role?: string;
+  utilization?: number;
+  workloadBalance?: number | string;
+  projectCount?: number;
+  taskCount?: number;
+  totalHours?: number;
+  completedTasks?: number;
+}
+
+interface ExportTimePoint {
+  date: string | number | Date;
+  productivity?: number;
+  tasksCompleted?: number;
+  hoursLogged?: number;
+  activeMembers?: number;
+}
+
+// Analytics metric leaves are ComparativeData-shaped; the exporter only reads
+// an optional numeric `value`. `change` overlaps the real shape so responses
+// stay assignable (an all-optional target would trip the weak-type check).
+type MetricLeaf = { value?: number; change?: unknown };
+
+interface AnalyticsExportData {
+  summary?: unknown;
+  timeRange?: string;
+  projectMetrics?: {
+    totalProjects?: MetricLeaf;
+    projectsAtRisk?: MetricLeaf;
+    avgHealthScore?: MetricLeaf;
+  };
+  taskMetrics?: { completedTasks?: MetricLeaf };
+  teamMetrics?: {
+    avgProductivity?: MetricLeaf;
+    activeMembers?: MetricLeaf;
+  };
+  timeMetrics?: {
+    totalHours?: MetricLeaf;
+    timeUtilization?: MetricLeaf;
+  };
+  projectHealth?: ExportProjectHealth[];
+  resourceUtilization?: ExportResource[];
+  timeSeriesData?: ExportTimePoint[];
+}
+
 /**
  * Convert data to CSV format
  */
-export function convertToCSV(data: any[], headers: string[]): string {
+export function convertToCSV(
+  data: Record<string, unknown>[],
+  headers: string[],
+): string {
   if (!data || data.length === 0) return "";
 
   // Create header row
@@ -34,7 +141,7 @@ export function convertToCSV(data: any[], headers: string[]): string {
 /**
  * Convert data to JSON format
  */
-export function convertToJSON(data: any[]): string {
+export function convertToJSON(data: unknown[]): string {
   return JSON.stringify(data, null, 2);
 }
 
@@ -60,7 +167,10 @@ export function downloadFile(
 /**
  * Export teams data
  */
-export function exportTeams(teams: any[], format: "csv" | "json" = "csv") {
+export function exportTeams(
+  teams: ExportTeam[],
+  format: "csv" | "json" = "csv",
+) {
   const timestamp = new Date().toISOString().split("T")[0];
   const filename = `teams-export-${timestamp}.${format}`;
 
@@ -121,7 +231,10 @@ export function exportTeams(teams: any[], format: "csv" | "json" = "csv") {
 /**
  * Export members data
  */
-export function exportMembers(members: any[], format: "csv" | "json" = "csv") {
+export function exportMembers(
+  members: ExportMember[],
+  format: "csv" | "json" = "csv",
+) {
   const timestamp = new Date().toISOString().split("T")[0];
   const filename = `members-export-${timestamp}.${format}`;
 
@@ -179,7 +292,10 @@ export function exportMembers(members: any[], format: "csv" | "json" = "csv") {
 /**
  * Export users data
  */
-export function exportUsers(users: any[], format: "csv" | "json" = "csv") {
+export function exportUsers(
+  users: ExportUser[],
+  format: "csv" | "json" = "csv",
+) {
   const timestamp = new Date().toISOString().split("T")[0];
   const filename = `users-export-${timestamp}.${format}`;
 
@@ -212,7 +328,10 @@ export function exportUsers(users: any[], format: "csv" | "json" = "csv") {
 /**
  * Export data to Excel format using xlsx library
  */
-export async function exportToExcel(data: any, filename = "export") {
+export async function exportToExcel(
+  data: AnalyticsExportData,
+  filename = "export",
+) {
   // Dynamic import for better code splitting
   const XLSX = await import("xlsx");
 
@@ -248,7 +367,7 @@ export async function exportToExcel(data: any, filename = "export") {
 
   // Create Project Health sheet
   if (data.projectHealth && data.projectHealth.length > 0) {
-    const projectData = data.projectHealth.map((project: any) => ({
+    const projectData = data.projectHealth.map((project) => ({
       "Project Name": project.name,
       "Health Score": project.healthScore,
       Completion: `${project.completionRate}%`,
@@ -264,7 +383,7 @@ export async function exportToExcel(data: any, filename = "export") {
 
   // Create Resource Utilization sheet
   if (data.resourceUtilization && data.resourceUtilization.length > 0) {
-    const resourceData = data.resourceUtilization.map((resource: any) => ({
+    const resourceData = data.resourceUtilization.map((resource) => ({
       Name: resource.userName,
       Role: resource.role,
       Utilization: `${resource.utilization}%`,
@@ -280,7 +399,7 @@ export async function exportToExcel(data: any, filename = "export") {
 
   // Create Time Series sheet
   if (data.timeSeriesData && data.timeSeriesData.length > 0) {
-    const timeSeriesData = data.timeSeriesData.map((point: any) => ({
+    const timeSeriesData = data.timeSeriesData.map((point) => ({
       Date: new Date(point.date).toLocaleDateString(),
       Productivity: point.productivity,
       "Tasks Completed": point.tasksCompleted,

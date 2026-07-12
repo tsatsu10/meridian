@@ -13,8 +13,19 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { TestWrapper } from "../../../test-utils/test-wrapper";
 
+interface DashboardStatsProps {
+  data?: {
+    totalProjects?: number;
+    activeTasks?: number;
+    completionRate?: number;
+    teamMembers?: number;
+  } | null;
+  isLoading?: boolean;
+  error?: { message?: string } | null;
+}
+
 // Mock dashboard stats component
-function DashboardStats({ data, isLoading, error }: any) {
+function DashboardStats({ data, isLoading, error }: DashboardStatsProps) {
   if (isLoading) {
     return (
       <div role="status" aria-label="Loading dashboard">

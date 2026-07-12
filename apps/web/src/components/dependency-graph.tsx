@@ -23,9 +23,17 @@ interface DependencyNode {
   y: number;
 }
 
+interface DependencyNodeInput {
+  id: string;
+  title?: string;
+  status?: string;
+  // Dependency IDs; typed loosely since callers pass task-dependency objects.
+  dependencies?: unknown[];
+}
+
 interface DependencyGraphProps {
-  tasks: any[];
-  milestones: any[];
+  tasks: DependencyNodeInput[];
+  milestones: DependencyNodeInput[];
   focusId?: string;
   onClose?: () => void;
 }
@@ -65,7 +73,7 @@ export function DependencyGraph({
       }
 
       const maxDepLevel = Math.max(
-        ...item.dependencies.map((depId: any) => calculateLevel(depId)),
+        ...item.dependencies.map((depId) => calculateLevel(depId as string)),
       );
       const level = maxDepLevel + 1;
       levels.set(id, level);
@@ -98,10 +106,10 @@ export function DependencyGraph({
 
       nodeMap.set(item.id, {
         id: item.id,
-        title: item.title,
+        title: item.title || "",
         type: item.type,
-        status: item.status,
-        dependencies: item.dependencies || [],
+        status: item.status || "",
+        dependencies: (item.dependencies as string[]) || [],
         level,
         x: level * levelWidth,
         y: indexInLevel * levelHeight,
@@ -113,7 +121,7 @@ export function DependencyGraph({
     for (const item of allItems) {
       if (item.dependencies) {
         for (const depId of item.dependencies) {
-          edges.push({ from: depId, to: item.id });
+          edges.push({ from: depId as string, to: item.id });
         }
       }
     }

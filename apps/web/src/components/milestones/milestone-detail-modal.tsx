@@ -29,16 +29,38 @@ import { cn } from "@/lib/cn";
 import { Card, CardContent } from "@/components/ui/card";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import { flattenTasks } from "@/utils/task-hierarchy";
+import type { TaskWithSubtasks } from "@/types/task";
 import { toast } from "sonner";
 
 // @epic-1.3-milestones: Sarah (PM) needs detailed milestone viewing
 // @persona-sarah: PM needs comprehensive milestone information display
 
+// Mirrors milestone-list.tsx's DisplayMilestone (not exported there) plus the
+// optional `dependencies` this modal reads.
+interface MilestoneDetail {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  status: "upcoming" | "achieved" | "missed";
+  milestoneType: "phase_completion" | "deliverable" | "approval" | "deadline";
+  stakeholders: string[];
+  successCriteria: string;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  projectId: string;
+  isDerived?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  dependencies?: string[];
+}
+
+type TaskColumn = { tasks?: TaskWithSubtasks[] };
+
 interface MilestoneDetailModalProps {
-  milestone: any | null;
+  milestone: MilestoneDetail | null;
   open: boolean;
   onClose: () => void;
-  onEdit?: (milestone: any) => void;
+  onEdit?: (milestone: MilestoneDetail) => void;
   onDelete?: (milestoneId: string) => void;
   onStatusChange?: (
     milestoneId: string,
@@ -131,14 +153,13 @@ export default function MilestoneDetailModal({
   const { data: tasksData } = useGetTasks(projectId || "");
 
   // Get all tasks for dependency resolution
-  const columnArray = Array.isArray(tasksData)
-    ? tasksData
-    : tasksData && Array.isArray((tasksData as any).columns)
-      ? (tasksData as any).columns
+  const columnArray: TaskColumn[] = Array.isArray(tasksData)
+    ? (tasksData as TaskColumn[])
+    : tasksData &&
+        Array.isArray((tasksData as { columns?: TaskColumn[] }).columns)
+      ? (tasksData as { columns: TaskColumn[] }).columns
       : [];
-  const allTasks = flattenTasks(
-    columnArray.flatMap((col: any) => col.tasks || []),
-  );
+  const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks || []));
 
   // Get task title by ID
   const getTaskTitle = (taskId: string) => {

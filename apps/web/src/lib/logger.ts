@@ -12,7 +12,7 @@ interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
-  context?: Record<string, any>;
+  context?: object;
   stack?: string;
 }
 
@@ -41,7 +41,7 @@ class Logger {
   private formatMessage(
     level: LogLevel,
     message: string,
-    context?: Record<string, any>,
+    context?: object,
   ): string {
     const timestamp = new Date().toISOString();
     const contextStr = context ? ` ${JSON.stringify(context)}` : "";
@@ -58,7 +58,7 @@ class Logger {
   private log(
     level: LogLevel,
     message: string,
-    context?: Record<string, any>,
+    context?: object,
     error?: Error,
   ): void {
     if (!this.shouldLog(level)) return;
@@ -105,7 +105,8 @@ class Logger {
   private sendToExternalService(entry: LogEntry): void {
     // TODO: Integrate with external logging service
     // Examples: Sentry, LogRocket, Datadog, etc.
-    if (entry.level === "error" && (window as any).Sentry) {
+    const hasSentry = "Sentry" in window;
+    if (entry.level === "error" && hasSentry) {
       // window.Sentry.captureException(new Error(entry.message));
     }
   }
@@ -113,33 +114,29 @@ class Logger {
   /**
    * Log debug information (development only)
    */
-  debug(message: string, context?: Record<string, any>): void {
+  debug(message: string, context?: object): void {
     this.log("debug", message, context);
   }
 
   /**
    * Log informational messages
    */
-  info(message: string, context?: Record<string, any>): void {
+  info(message: string, context?: object): void {
     this.log("info", message, context);
   }
 
   /**
    * Log warning messages
    */
-  warn(message: string, context?: Record<string, any>): void {
+  warn(message: string, context?: object): void {
     this.log("warn", message, context);
   }
 
   /**
    * Log error messages
    */
-  error(
-    message: string,
-    contextOrError?: Record<string, any> | Error,
-    error?: Error,
-  ): void {
-    let context: Record<string, any> | undefined;
+  error(message: string, contextOrError?: object | Error, error?: Error): void {
+    let context: object | undefined;
     let err: Error | undefined;
 
     if (contextOrError instanceof Error) {
@@ -180,17 +177,11 @@ export const logger = new Logger();
 
 // Export convenience functions
 export const log = {
-  debug: (message: string, context?: Record<string, any>) =>
-    logger.debug(message, context),
-  info: (message: string, context?: Record<string, any>) =>
-    logger.info(message, context),
-  warn: (message: string, context?: Record<string, any>) =>
-    logger.warn(message, context),
-  error: (
-    message: string,
-    contextOrError?: Record<string, any> | Error,
-    error?: Error,
-  ) => logger.error(message, contextOrError, error),
+  debug: (message: string, context?: object) => logger.debug(message, context),
+  info: (message: string, context?: object) => logger.info(message, context),
+  warn: (message: string, context?: object) => logger.warn(message, context),
+  error: (message: string, contextOrError?: object | Error, error?: Error) =>
+    logger.error(message, contextOrError, error),
 };
 
 export default logger;

@@ -22,15 +22,15 @@ interface CalendarEvent {
   estimatedHours?: number;
   actualHours?: number;
   color: string;
-  attachments: any[];
-  metadata: Record<string, any>;
+  attachments: unknown[];
+  metadata: Record<string, unknown>;
   isRecurring: boolean;
   recurringEventId?: string;
   reminderMinutes: number;
   createdAt: string;
   updatedAt: string;
-  attendees?: any[];
-  recurringPattern?: any;
+  attendees?: unknown[];
+  recurringPattern?: { frequency?: string; interval: number };
 }
 
 interface GetEventResponse {

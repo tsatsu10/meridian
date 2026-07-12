@@ -564,7 +564,9 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                     <Label htmlFor="frequency">Frequency *</Label>
                     <Select
                       value={formFrequency}
-                      onValueChange={(value: any) => setFormFrequency(value)}
+                      onValueChange={(value) =>
+                        setFormFrequency(value as typeof formFrequency)
+                      }
                     >
                       <SelectTrigger id="frequency">
                         <SelectValue />
@@ -663,7 +665,9 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                 <Label htmlFor="format">Export Format *</Label>
                 <Select
                   value={formFormat}
-                  onValueChange={(value: any) => setFormFormat(value)}
+                  onValueChange={(value) =>
+                    setFormFormat(value as typeof formFormat)
+                  }
                 >
                   <SelectTrigger id="format">
                     <SelectValue />

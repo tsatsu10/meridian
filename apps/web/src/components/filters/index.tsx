@@ -237,22 +237,26 @@ function BoardFilters({ onFiltersChange }: BoardFiltersProps) {
                   <UserIcon className="w-3.5 h-3.5" />
                   <span>Unassigned</span>
                 </button>
-                {users?.map((user: any) => (
-                  <button
-                    type="button"
-                    key={user.userEmail}
-                    onClick={() => handleAssigneeChange(user.userEmail ?? null)}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-2 py-1.5 text-xs text-left transition-colors",
-                      selectedAssignee === user.userEmail
-                        ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                    )}
-                  >
-                    <UserIcon className="w-3.5 h-3.5" />
-                    <span>{user.userName}</span>
-                  </button>
-                ))}
+                {users?.map(
+                  (user: { userEmail: string; userName?: string }) => (
+                    <button
+                      type="button"
+                      key={user.userEmail}
+                      onClick={() =>
+                        handleAssigneeChange(user.userEmail ?? null)
+                      }
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1.5 text-xs text-left transition-colors",
+                        selectedAssignee === user.userEmail
+                          ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                      )}
+                    >
+                      <UserIcon className="w-3.5 h-3.5" />
+                      <span>{user.userName}</span>
+                    </button>
+                  ),
+                )}
 
                 <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-2" />
 
@@ -427,8 +431,10 @@ function BoardFilters({ onFiltersChange }: BoardFiltersProps) {
             >
               <UserIcon className="w-3 h-3" />
               <span>
-                {users?.find((u: any) => u.userEmail === selectedAssignee)
-                  ?.userName || "Unassigned"}
+                {users?.find(
+                  (u: { userEmail: string }) =>
+                    u.userEmail === selectedAssignee,
+                )?.userName || "Unassigned"}
               </span>
               <X className="w-3 h-3 ml-1 text-zinc-400" />
             </button>

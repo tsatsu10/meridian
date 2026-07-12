@@ -1,4 +1,4 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CreateDependencyParams {
@@ -12,7 +12,7 @@ async function createDependency({
   requiredTaskId,
   type = "blocks",
 }: CreateDependencyParams) {
-  const response = await (client as any).task[":taskId"].dependencies.$post({
+  const response = await looseClient.task[":taskId"].dependencies.$post({
     param: { taskId },
     json: { requiredTaskId, type },
   });

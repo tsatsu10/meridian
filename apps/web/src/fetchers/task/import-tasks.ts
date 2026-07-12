@@ -1,4 +1,4 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 export type TaskToImport = {
   title: string;
@@ -10,7 +10,7 @@ export type TaskToImport = {
 };
 
 async function importTasks(projectId: string, tasks: TaskToImport[]) {
-  const response = await (client as any).task.import[":projectId"].$post({
+  const response = await looseClient.task.import[":projectId"].$post({
     param: { projectId },
     json: { tasks },
   });

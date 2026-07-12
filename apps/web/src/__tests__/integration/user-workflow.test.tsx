@@ -366,7 +366,7 @@ describe("User Workflow Integration Tests", () => {
 
       const getCachedData = async (
         key: string,
-        fetcher: () => Promise<any>,
+        fetcher: () => Promise<unknown>,
       ) => {
         if (cache.has(key)) {
           return cache.get(key);

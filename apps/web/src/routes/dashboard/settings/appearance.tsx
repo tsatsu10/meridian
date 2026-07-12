@@ -41,7 +41,7 @@ import {
   Type,
 } from "lucide-react";
 import { useThemeSync } from "@/hooks/use-theme-sync";
-import { useSettingsStore } from "@/store/settings";
+import { useSettingsStore, type AllSettings } from "@/store/settings";
 import { useAuthStore } from "@/store/consolidated/auth";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/constants/urls";
@@ -157,10 +157,15 @@ function AppearanceSettings() {
   const handleSettingUpdate = async (
     section: string,
     key: string,
-    value: any,
+    value: unknown,
   ) => {
     try {
-      await updateSettings(section as any, { [key]: value });
+      await updateSettings(
+        section as keyof AllSettings,
+        {
+          [key]: value,
+        } as Partial<AllSettings[keyof AllSettings]>,
+      );
       toast.success("Setting updated successfully");
     } catch (error) {
       toast.error("Failed to update setting");
@@ -898,8 +903,10 @@ function AppearanceSettings() {
                       <Label>Position</Label>
                       <Select
                         value={backgroundPosition}
-                        onValueChange={(value: any) => {
-                          setBackgroundPosition(value);
+                        onValueChange={(value) => {
+                          setBackgroundPosition(
+                            value as typeof backgroundPosition,
+                          );
                           saveBackgroundPreferences(
                             undefined,
                             value,

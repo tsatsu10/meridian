@@ -22,10 +22,12 @@ describe("signIn", () => {
   };
 
   it("should sign in successfully with valid credentials", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     const result = await signIn({
       email: "user@example.com",
@@ -52,50 +54,62 @@ describe("signIn", () => {
   });
 
   it("should use POST method", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({ email: "test@example.com", password: "pass" });
 
-    const callOptions = (global.fetch as any).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     expect(callOptions.method).toBe("POST");
   });
 
   it("should include credentials for cookie handling", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({ email: "test@example.com", password: "pass" });
 
-    const callOptions = (global.fetch as any).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     expect(callOptions.credentials).toBe("include");
   });
 
   it("should set Content-Type header to application/json", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({ email: "test@example.com", password: "pass" });
 
-    const callOptions = (global.fetch as any).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     expect(callOptions.headers["Content-Type"]).toBe("application/json");
   });
 
   it("should send email and password in request body", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({ email: "user@test.com", password: "mypassword" });
 
-    const callOptions = (global.fetch as any).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     const body = JSON.parse(callOptions.body);
 
     expect(body.email).toBe("user@test.com");
@@ -103,10 +117,12 @@ describe("signIn", () => {
   });
 
   it("should throw error for invalid credentials", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Invalid email or password",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Invalid email or password",
+      },
+    );
 
     await expect(
       signIn({ email: "wrong@example.com", password: "wrongpass" }),
@@ -114,10 +130,12 @@ describe("signIn", () => {
   });
 
   it("should throw error for unauthorized access (401)", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Unauthorized",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Unauthorized",
+      },
+    );
 
     await expect(
       signIn({ email: "user@example.com", password: "wrong" }),
@@ -125,10 +143,12 @@ describe("signIn", () => {
   });
 
   it("should handle server errors (500)", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Internal server error",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Internal server error",
+      },
+    );
 
     await expect(
       signIn({ email: "user@example.com", password: "pass" }),
@@ -136,7 +156,9 @@ describe("signIn", () => {
   });
 
   it("should handle network errors", async () => {
-    (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error("Network error"),
+    );
 
     await expect(
       signIn({ email: "user@example.com", password: "pass" }),
@@ -144,10 +166,12 @@ describe("signIn", () => {
   });
 
   it("should return user object with token", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     const result = await signIn({
       email: "user@example.com",
@@ -160,17 +184,20 @@ describe("signIn", () => {
   });
 
   it("should handle email with special characters", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({
       email: "user+test@example.com",
       password: "password",
     });
 
-    const callOptions = (global.fetch as any).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     const body = JSON.parse(callOptions.body);
 
     expect(body.email).toBe("user+test@example.com");
@@ -179,27 +206,32 @@ describe("signIn", () => {
   it("should handle long passwords", async () => {
     const longPassword = "a".repeat(100);
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({
       email: "user@example.com",
       password: longPassword,
     });
 
-    const callOptions = (global.fetch as any).mock.calls[0][1];
+    const callOptions = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][1];
     const body = JSON.parse(callOptions.body);
 
     expect(body.password).toBe(longPassword);
   });
 
   it("should call correct API endpoint", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({ email: "user@example.com", password: "pass" });
 
@@ -210,10 +242,12 @@ describe("signIn", () => {
   });
 
   it("should be called only once per sign-in attempt", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUser,
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: true,
+        json: async () => mockUser,
+      },
+    );
 
     await signIn({ email: "user@example.com", password: "pass" });
 
@@ -221,10 +255,12 @@ describe("signIn", () => {
   });
 
   it("should handle account locked error", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Account locked due to too many failed attempts",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Account locked due to too many failed attempts",
+      },
+    );
 
     await expect(
       signIn({ email: "user@example.com", password: "pass" }),
@@ -232,10 +268,12 @@ describe("signIn", () => {
   });
 
   it("should handle email not verified error", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      text: async () => "Email not verified",
-    });
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        text: async () => "Email not verified",
+      },
+    );
 
     await expect(
       signIn({ email: "user@example.com", password: "pass" }),

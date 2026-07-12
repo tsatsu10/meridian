@@ -1,8 +1,8 @@
 import type Task from "@/types/task";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 async function updateTask(taskId: string, task: Task) {
-  const response = await (client as any).task[":id"].$put({
+  const response = await looseClient.task[":id"].$put({
     param: { id: taskId },
     json: {
       userEmail: task.userEmail || "",

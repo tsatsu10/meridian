@@ -169,14 +169,16 @@ function TaskInfo({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {workspaceUsers?.map((user: any) => (
-                    <SelectItem
-                      key={user.userEmail}
-                      value={user.userEmail ?? "unassigned"}
-                    >
-                      {user.userName ?? ""}
-                    </SelectItem>
-                  ))}
+                  {workspaceUsers?.map(
+                    (user: { userEmail: string; userName?: string }) => (
+                      <SelectItem
+                        key={user.userEmail}
+                        value={user.userEmail ?? "unassigned"}
+                      >
+                        {user.userName ?? ""}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </FormItem>

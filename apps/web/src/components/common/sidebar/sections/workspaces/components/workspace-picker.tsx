@@ -76,7 +76,7 @@ function WorkspacePicker() {
             >
               {workspaces &&
                 workspaces.length > 0 &&
-                workspaces.map((workspace: any) => (
+                workspaces.map((workspace: Workspace) => (
                   <DropdownMenu.Item
                     key={workspace.id}
                     className={cn(

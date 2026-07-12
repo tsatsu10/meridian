@@ -20,7 +20,7 @@ export interface FilterCondition {
     | "in"
     | "isEmpty"
     | "isNotEmpty";
-  value: any;
+  value: unknown;
 }
 
 export interface FilterGroup {
@@ -211,6 +211,22 @@ export const FILTER_TEMPLATES: FilterTemplate[] = [
 // CRUD OPERATIONS
 // ===================================
 
+interface WorkspaceFilterSettings {
+  savedFilters?: SavedFilter[];
+}
+
+function getSavedFiltersArray(settings: unknown): SavedFilter[] {
+  if (typeof settings !== "object" || settings === null) return [];
+  const filters = (settings as WorkspaceFilterSettings).savedFilters;
+  return Array.isArray(filters) ? filters : [];
+}
+
+function getSettingsObject(settings: unknown): Record<string, unknown> {
+  return typeof settings === "object" && settings !== null
+    ? (settings as Record<string, unknown>)
+    : {};
+}
+
 /**
  * Get all saved filters for a user
  */
@@ -233,20 +249,18 @@ export async function getSavedFilters(
     throw new Error("Workspace not found");
   }
 
-  let filters = (workspace.settings as any)?.savedFilters || [];
+  let filters = getSavedFiltersArray(workspace.settings);
 
   // Filter by user or public filters
-  filters = filters.filter(
-    (f: SavedFilter) => f.userId === userId || f.isPublic,
-  );
+  filters = filters.filter((f) => f.userId === userId || f.isPublic);
 
   // Filter by type if specified
   if (filterType) {
-    filters = filters.filter((f: SavedFilter) => f.filterType === filterType);
+    filters = filters.filter((f) => f.filterType === filterType);
   }
 
   // Sort by pinned, then usage count, then last used
-  filters.sort((a: SavedFilter, b: SavedFilter) => {
+  filters.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
     if (a.usageCount !== b.usageCount) return b.usageCount - a.usageCount;
@@ -326,14 +340,14 @@ export async function createSavedFilter(
     updatedAt: new Date(),
   };
 
-  const existingFilters = (workspace.settings as any)?.savedFilters || [];
+  const existingFilters = getSavedFiltersArray(workspace.settings);
   const updatedFilters = [...existingFilters, newFilter];
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         savedFilters: updatedFilters,
       },
     })
@@ -369,22 +383,21 @@ export async function updateSavedFilter(
     throw new Error("Workspace not found");
   }
 
-  const existingFilters = (workspace.settings as any)?.savedFilters || [];
-  const filterIndex = existingFilters.findIndex(
-    (f: SavedFilter) => f.id === filterId,
-  );
+  const existingFilters = getSavedFiltersArray(workspace.settings);
+  const filterIndex = existingFilters.findIndex((f) => f.id === filterId);
 
-  if (filterIndex === -1) {
+  const existingFilter = existingFilters[filterIndex];
+  if (filterIndex === -1 || !existingFilter) {
     throw new Error("Filter not found");
   }
 
   // Check ownership
-  if (existingFilters[filterIndex].userId !== userId) {
+  if (existingFilter.userId !== userId) {
     throw new Error("Access denied");
   }
 
   const updatedFilter = {
-    ...existingFilters[filterIndex],
+    ...existingFilter,
     ...updates,
     updatedAt: new Date(),
   };
@@ -395,7 +408,7 @@ export async function updateSavedFilter(
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         savedFilters: existingFilters,
       },
     })
@@ -425,8 +438,8 @@ export async function deleteSavedFilter(
     throw new Error("Workspace not found");
   }
 
-  const existingFilters = (workspace.settings as any)?.savedFilters || [];
-  const filter = existingFilters.find((f: SavedFilter) => f.id === filterId);
+  const existingFilters = getSavedFiltersArray(workspace.settings);
+  const filter = existingFilters.find((f) => f.id === filterId);
 
   if (!filter) {
     throw new Error("Filter not found");
@@ -437,15 +450,13 @@ export async function deleteSavedFilter(
     throw new Error("Access denied");
   }
 
-  const updatedFilters = existingFilters.filter(
-    (f: SavedFilter) => f.id !== filterId,
-  );
+  const updatedFilters = existingFilters.filter((f) => f.id !== filterId);
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         savedFilters: updatedFilters,
       },
     })
@@ -499,24 +510,22 @@ export async function recordFilterUsage(
     throw new Error("Workspace not found");
   }
 
-  const existingFilters = (workspace.settings as any)?.savedFilters || [];
-  const filterIndex = existingFilters.findIndex(
-    (f: SavedFilter) => f.id === filterId,
-  );
+  const existingFilters = getSavedFiltersArray(workspace.settings);
+  const filterIndex = existingFilters.findIndex((f) => f.id === filterId);
 
-  if (filterIndex === -1) {
+  const existingFilter = existingFilters[filterIndex];
+  if (filterIndex === -1 || !existingFilter) {
     return; // Silently fail if filter not found
   }
 
-  existingFilters[filterIndex].usageCount =
-    (existingFilters[filterIndex].usageCount || 0) + 1;
-  existingFilters[filterIndex].lastUsed = new Date();
+  existingFilter.usageCount = (existingFilter.usageCount || 0) + 1;
+  existingFilter.lastUsed = new Date();
 
   await db
     .update(workspaces)
     .set({
       settings: {
-        ...(workspace.settings as any),
+        ...getSettingsObject(workspace.settings),
         savedFilters: existingFilters,
       },
     })

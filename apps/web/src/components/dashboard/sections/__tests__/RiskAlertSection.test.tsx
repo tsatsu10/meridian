@@ -1,11 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import RiskAlertSection from "../RiskAlertSection";
 
 // Mock framer-motion
 vi.mock("@/components/magicui/blur-fade", () => ({
-  BlurFade: ({ children }: any) => (
+  BlurFade: ({ children }: { children?: ReactNode }) => (
     <div data-testid="blur-fade">{children}</div>
   ),
 }));

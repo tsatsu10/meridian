@@ -22,7 +22,7 @@ export interface SettingsAuditLog {
   userId: string;
   action: "UPDATE" | "RESET" | "PRESET_APPLIED" | "IMPORT" | "EXPORT";
   section?: keyof AllSettings;
-  changes: Record<string, { from: any; to: any }>;
+  changes: Record<string, { from: unknown; to: unknown }>;
   metadata: {
     userAgent: string;
     ip: string;
@@ -64,14 +64,14 @@ const CACHE_CONFIG = {
 class SettingsCache {
   private cache = new Map<
     string,
-    { data: any; timestamp: number; version: number }
+    { data: unknown; timestamp: number; version: number }
   >();
 
   constructor() {
     this.loadFromStorage();
   }
 
-  set(key: string, data: any, version = 1): void {
+  set(key: string, data: unknown, version = 1): void {
     this.cache.set(key, {
       data: structuredClone(data),
       timestamp: Date.now(),
@@ -199,8 +199,8 @@ async function apiRequest<T>(
     if (retryCount < API_CONFIG.RETRY_ATTEMPTS) {
       const isRetryableError =
         error instanceof TypeError || // Network error
-        (error as any)?.name === "AbortError" || // Timeout
-        (error as any)?.status >= 500; // Server error
+        (error as { name?: string })?.name === "AbortError" || // Timeout
+        ((error as { status?: number })?.status ?? 0) >= 500; // Server error
 
       if (isRetryableError) {
         await new Promise((resolve) =>
@@ -265,7 +265,7 @@ export class SettingsAPI {
     section: keyof AllSettings,
     updates: Partial<AllSettings[keyof AllSettings]>,
     version?: number,
-  ): Promise<{ settings: AllSettings; conflicts?: any[] }> {
+  ): Promise<{ settings: AllSettings; conflicts?: unknown[] }> {
     // Try production API first
     if (API_CONFIG.USE_PRODUCTION) {
       try {
@@ -285,7 +285,7 @@ export class SettingsAPI {
     try {
       const response = await apiRequest<{
         settings: AllSettings;
-        conflicts?: any[];
+        conflicts?: unknown[];
       }>(`/settings/${userId}/${section}`, {
         method: "PATCH",
         body: JSON.stringify({ updates, version }),

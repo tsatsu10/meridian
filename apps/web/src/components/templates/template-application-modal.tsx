@@ -58,7 +58,7 @@ export function TemplateApplicationModal({
   // getProjects returns either a bare array or { projects, pagination }
   const projects = Array.isArray(projectsData)
     ? projectsData
-    : (projectsData?.projects as any[] | undefined);
+    : (projectsData?.projects as unknown[] | undefined);
 
   // Fetch workspace users
   const { data: users } = useQuery({
@@ -145,7 +145,7 @@ export function TemplateApplicationModal({
                 <SelectValue placeholder="Choose a project..." />
               </SelectTrigger>
               <SelectContent>
-                {projects?.map((project: any) => (
+                {projects?.map((project: { id: string; name: string }) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
                   </SelectItem>

@@ -129,7 +129,7 @@ interface BackupRecord {
 interface ExportTemplate {
   name: string;
   fields: string[];
-  example: Record<string, any>;
+  example: Record<string, unknown>;
 }
 
 interface ImportResult {
@@ -408,7 +408,10 @@ function DataManagementSettings() {
     },
   });
 
-  const handleFormChange = (field: keyof BackupSettings, value: any) => {
+  const handleFormChange = (
+    field: keyof BackupSettings,
+    value: BackupSettings[keyof BackupSettings],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };

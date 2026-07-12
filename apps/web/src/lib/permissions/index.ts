@@ -29,6 +29,7 @@ export type {
 export { ROLE_METADATA } from "./types";
 
 // ===== CONTEXT & HOOKS =====
+import type { RBACUser } from "./context";
 export type {
   RBACUser,
   RBACAuthContextType,
@@ -144,44 +145,53 @@ export { useRBACAuth as useAuthWithPermissions } from "./provider";
  */
 export const QuickChecks = {
   // Workspace-level checks
-  canManageWorkspace: (user: any) =>
+  canManageWorkspace: (user: RBACUser | null | undefined) =>
     user?.permissions?.canManageWorkspace || false,
-  canViewWorkspace: (user: any) => user?.permissions?.canViewWorkspace || false,
-  canInviteUsers: (user: any) => user?.permissions?.canInviteUsers || false,
+  canViewWorkspace: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canViewWorkspace || false,
+  canInviteUsers: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canInviteUsers || false,
 
   // Project-level checks
-  canCreateProjects: (user: any) =>
+  canCreateProjects: (user: RBACUser | null | undefined) =>
     user?.permissions?.canCreateProjects || false,
-  canManageProjects: (user: any) =>
+  canManageProjects: (user: RBACUser | null | undefined) =>
     user?.permissions?.canEditProjects ||
     user?.permissions?.canManageProjectSettings ||
     false,
-  canEditProjects: (user: any) => user?.permissions?.canEditProjects || false,
-  canDeleteProjects: (user: any) =>
+  canEditProjects: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canEditProjects || false,
+  canDeleteProjects: (user: RBACUser | null | undefined) =>
     user?.permissions?.canDeleteProjects || false,
-  canArchiveProjects: (user: any) =>
+  canArchiveProjects: (user: RBACUser | null | undefined) =>
     user?.permissions?.canArchiveProjects || false,
-  canCloneProjects: (user: any) => user?.permissions?.canCloneProjects || false,
-  canManageProjectSettings: (user: any) =>
+  canCloneProjects: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canCloneProjects || false,
+  canManageProjectSettings: (user: RBACUser | null | undefined) =>
     user?.permissions?.canManageProjectSettings || false,
-  canManageProjectTeam: (user: any) =>
+  canManageProjectTeam: (user: RBACUser | null | undefined) =>
     user?.permissions?.canManageProjectTeam || false,
-  canViewAllProjects: (user: any) =>
+  canViewAllProjects: (user: RBACUser | null | undefined) =>
     user?.permissions?.canViewAllProjects || false,
 
   // Task-level checks
-  canCreateTasks: (user: any) => user?.permissions?.canCreateTasks || false,
-  canEditTasks: (user: any) => user?.permissions?.canEditTasks || false,
-  canAssignTasks: (user: any) => user?.permissions?.canAssignTasks || false,
+  canCreateTasks: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canCreateTasks || false,
+  canEditTasks: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canEditTasks || false,
+  canAssignTasks: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canAssignTasks || false,
 
   // Team-level checks
-  canManageTeam: (user: any) => user?.permissions?.canCreateTeams || false,
-  canAddMembers: (user: any) => user?.permissions?.canAddMembers || false,
-  canAssignTeamLeads: (user: any) =>
+  canManageTeam: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canCreateTeams || false,
+  canAddMembers: (user: RBACUser | null | undefined) =>
+    user?.permissions?.canAddMembers || false,
+  canAssignTeamLeads: (user: RBACUser | null | undefined) =>
     user?.permissions?.canAssignTeamLeads || false,
 
   // Special subtask permissions (Team Lead specific)
-  canCRUDSubtasks: (user: any) =>
+  canCRUDSubtasks: (user: RBACUser | null | undefined) =>
     user?.role === "team-lead" ||
     user?.permissions?.canManageSubtaskHierarchy ||
     false,

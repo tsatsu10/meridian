@@ -10,6 +10,13 @@
 import { onCLS, onFID, onFCP, onLCP, onTTFB, type Metric } from "web-vitals";
 import { logger } from "@/lib/logger";
 
+// Non-standard `performance.memory` (Chromium only).
+interface PerformanceMemory {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
 /**
  * Send metric to analytics service
  */
@@ -20,8 +27,12 @@ function sendToAnalytics(metric: Metric) {
   }
 
   // Send to Google Analytics if configured
-  if (typeof window !== "undefined" && (window as any).gtag) {
-    (window as any).gtag("event", metric.name, {
+  const gtag =
+    typeof window !== "undefined"
+      ? (window as { gtag?: (...args: unknown[]) => void }).gtag
+      : undefined;
+  if (gtag) {
+    gtag("event", metric.name, {
       event_category: "Web Vitals",
       event_label: metric.id,
       value: Math.round(
@@ -106,7 +117,7 @@ export function initWebVitals() {
 export async function getPerformanceMetrics(): Promise<{
   navigation?: PerformanceNavigationTiming;
   resources?: PerformanceResourceTiming[];
-  memory?: any;
+  memory?: PerformanceMemory;
 }> {
   if (typeof window === "undefined" || !window.performance) {
     return {};
@@ -118,7 +129,7 @@ export async function getPerformanceMetrics(): Promise<{
   const resources = performance.getEntriesByType(
     "resource",
   ) as PerformanceResourceTiming[];
-  const memory = (performance as any).memory;
+  const memory = (performance as { memory?: PerformanceMemory }).memory;
 
   return {
     navigation,

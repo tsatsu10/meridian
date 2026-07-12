@@ -7,7 +7,7 @@ interface UpdateTeamData {
   name?: string;
   description?: string;
   projectId?: string | null;
-  settings?: any;
+  settings?: Record<string, unknown>;
   workspaceId: string;
 }
 
@@ -29,7 +29,7 @@ export function useUpdateTeam() {
       });
       toast.success("Team updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to update team");
     },
   });

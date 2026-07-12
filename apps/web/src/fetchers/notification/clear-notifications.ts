@@ -1,7 +1,7 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 async function clearNotifications() {
-  const response = await (client as any).notification["clear-all"].$delete();
+  const response = await looseClient.notification["clear-all"].$delete();
 
   if (!response.ok) {
     const error = await response.text();

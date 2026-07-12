@@ -2,10 +2,29 @@ import { useKeyboardNavigationItem } from "@/hooks/useKeyboardNavigation";
 import AnimatedStatsCard from "@/components/dashboard/animated-stats-card";
 import { CheckCircle, FolderOpen, Shield, Bell } from "lucide-react";
 
+interface DashboardStatsData {
+  stats?: {
+    totalTasks?: number;
+    completedTasks?: number;
+    overdueTasks?: number;
+  };
+  projects?: Array<{ status?: string }>;
+}
+
+interface DashboardRiskData {
+  data?: { overallRiskScore?: number } | null;
+  hasHighRisk?: boolean;
+  highPriorityRisks?: unknown[];
+}
+
+interface DashboardNotification {
+  isRead?: boolean;
+}
+
 interface DashboardStatsProps {
-  dashboardData: any;
-  riskData: any;
-  allNotifications: any[];
+  dashboardData: DashboardStatsData | null;
+  riskData: DashboardRiskData | null;
+  allNotifications: DashboardNotification[];
   keyboardNavigation?: ReturnType<
     typeof import("@/hooks/useKeyboardNavigation").useKeyboardNavigation
   >;
@@ -50,9 +69,8 @@ export default function DashboardStats({
           ariaLabel: "Active Projects Statistics",
           onActivate: () => {
             const activeCount =
-              dashboardData?.projects?.filter(
-                (p: any) => p.status !== "completed",
-              ).length || 0;
+              dashboardData?.projects?.filter((p) => p.status !== "completed")
+                .length || 0;
             keyboardNavigation?.announceToScreenReader(
               `Active projects: ${dashboardData?.projects?.length || 0} total, ${activeCount} in progress`,
             );
@@ -165,9 +183,8 @@ export default function DashboardStats({
           <h3 id="stats-projects-label">Active Projects Statistics</h3>
           <p id="stats-projects-desc">
             Shows {dashboardData?.projects?.length || 0} total projects with{" "}
-            {dashboardData?.projects?.filter(
-              (p: any) => p.status !== "completed",
-            ).length || 0}{" "}
+            {dashboardData?.projects?.filter((p) => p.status !== "completed")
+              .length || 0}{" "}
             currently in progress. Trending up by 8.3%.
           </p>
         </div>
@@ -175,7 +192,7 @@ export default function DashboardStats({
           title="Active Projects"
           value={dashboardData?.projects?.length || 0}
           icon={FolderOpen}
-          description={`${dashboardData?.projects?.filter((p: any) => p.status !== "completed").length || 0} in progress`}
+          description={`${dashboardData?.projects?.filter((p) => p.status !== "completed").length || 0} in progress`}
           delay={0.2}
           colorScheme="info"
           trend="up"

@@ -55,8 +55,8 @@ function ListView({ project }: ListViewProps) {
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const task = project?.columns
-      ?.flatMap((col: any) => col.tasks)
-      .find((t: any) => t.id === active.id);
+      ?.flatMap((col) => col.tasks)
+      .find((t) => t.id === active.id);
     if (task) {
       setActiveTask(task);
     }
@@ -69,28 +69,25 @@ function ListView({ project }: ListViewProps) {
     const activeId = active.id.toString();
     const overId = over.id.toString();
 
-    const updatedProject = produce(project, (draft: any) => {
-      const sourceColumn = draft.columns?.find((col: any) =>
-        col.tasks.some((task: any) => task.id === activeId),
+    const updatedProject = produce(project, (draft) => {
+      const sourceColumn = draft.columns?.find((col) =>
+        col.tasks.some((task) => task.id === activeId),
       );
       const destinationColumn = draft.columns?.find(
-        (col: any) =>
-          col.id === overId ||
-          col.tasks.some((task: any) => task.id === overId),
+        (col) =>
+          col.id === overId || col.tasks.some((task) => task.id === overId),
       );
 
       if (!sourceColumn || !destinationColumn) return;
 
-      const taskIndex = sourceColumn.tasks.findIndex(
-        (t: any) => t.id === activeId,
-      );
+      const taskIndex = sourceColumn.tasks.findIndex((t) => t.id === activeId);
       const task = sourceColumn.tasks[taskIndex];
 
       sourceColumn.tasks.splice(taskIndex, 1);
 
       if (sourceColumn.id === destinationColumn.id) {
         const destinationIndex = destinationColumn.tasks.findIndex(
-          (t: any) => t.id === overId,
+          (t) => t.id === overId,
         );
         destinationColumn.tasks.splice(destinationIndex, 0, task);
       } else {
@@ -143,10 +140,8 @@ function ListView({ project }: ListViewProps) {
         return;
       }
 
-      const updatedProject = produce(project, (draft: any) => {
-        const doneColumn = draft?.columns?.find(
-          (col: any) => col.id === "done",
-        );
+      const updatedProject = produce(project, (draft) => {
+        const doneColumn = draft?.columns?.find((col) => col.id === "done");
         if (!doneColumn) return;
 
         for (const task of doneColumn.tasks) {
@@ -212,7 +207,7 @@ function ListView({ project }: ListViewProps) {
                 animate={{ opacity: 1 }}
                 className="space-y-1"
               >
-                {column.tasks.map((task: any) => (
+                {column.tasks.map((task) => (
                   <TaskRow
                     key={task.id}
                     task={task}
@@ -256,7 +251,7 @@ function ListView({ project }: ListViewProps) {
       onDragEnd={handleDragEnd}
     >
       <div className="w-full h-full p-4 space-y-4">
-        {project.columns.map((column: any) => (
+        {project.columns.map((column) => (
           <ColumnSection key={column.id} column={column} />
         ))}
       </div>

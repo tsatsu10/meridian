@@ -25,7 +25,7 @@ interface SettingsFormProps {
     emailNotifications?: boolean;
     pushNotifications?: boolean;
   };
-  onSave?: (settings: any) => Promise<void>;
+  onSave?: (settings: Record<string, unknown>) => Promise<void>;
 }
 
 function SettingsForm({ initialSettings = {}, onSave }: SettingsFormProps) {

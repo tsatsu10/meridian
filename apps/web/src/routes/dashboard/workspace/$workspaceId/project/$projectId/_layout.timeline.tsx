@@ -63,6 +63,8 @@ import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout"
 import RoadmapView from "@/components/roadmap-view";
 import ChronologicalView from "@/components/chronological-view";
 import TimelineErrorBoundary from "@/components/timeline-error-boundary";
+import type { ProjectColumn, ProjectWithTasks } from "@/types/project";
+import type { TaskDependency } from "@/types/task";
 
 export const Route = createFileRoute(
   "/dashboard/workspace/$workspaceId/project/$projectId/_layout/timeline",
@@ -193,18 +195,20 @@ function ProjectTimeline() {
   };
 
   // Process real task data with memoization
+  // useGetTasks' response type is untyped upstream (generated Hono AppType
+  // is missing this route); ProjectWithTasks mirrors the actual
+  // GET /task/tasks/:projectId shape.
   const allTasks = useMemo(() => {
-    const columnArray = Array.isArray(tasksData)
-      ? tasksData
-      : tasksData && Array.isArray((tasksData as any).columns)
-        ? (tasksData as any).columns
-        : [];
-    return flattenTasks(columnArray.flatMap((col: any) => col.tasks));
+    const projectWithTasks = tasksData as ProjectWithTasks | undefined;
+    const columnArray: ProjectColumn[] = Array.isArray(tasksData)
+      ? (tasksData as ProjectColumn[])
+      : (projectWithTasks?.columns ?? []);
+    return flattenTasks(columnArray.flatMap((col) => col.tasks));
   }, [tasksData]);
 
   // Filter tasks based on current filters and search
   const filteredTasks = useMemo(() => {
-    return allTasks.filter((task: any) => {
+    return allTasks.filter((task) => {
       const statusMatch =
         filterStatus === "all" || task.status === filterStatus;
       const priorityMatch =
@@ -224,9 +228,7 @@ function ProjectTimeline() {
 
   // Filter out milestone tasks for dependency selection
   const availableTasksForDependencies = useMemo(() => {
-    return filteredTasks.filter(
-      (task: any) => task.id !== editingMilestone?.id,
-    );
+    return filteredTasks.filter((task) => task.id !== editingMilestone?.id);
   }, [filteredTasks, editingMilestone?.id]);
 
   // Calculate project statistics with weighted progress
@@ -242,11 +244,9 @@ function ProjectTimeline() {
       };
     }
 
-    const completed = allTasks.filter(
-      (task: any) => task.status === "done",
-    ).length;
+    const completed = allTasks.filter((task) => task.status === "done").length;
     const inProgress = allTasks.filter(
-      (task: any) => task.status === "in_progress",
+      (task) => task.status === "in_progress",
     ).length;
 
     // Weighted progress based on priority
@@ -556,16 +556,16 @@ function ProjectTimeline() {
       }
 
       // Check if current task has dependencies in other milestones
-      const task = allTasks.find((t: any) => t.id === currentId);
+      const task = allTasks.find((t) => t.id === currentId);
       if (task?.dependencies) {
         stack.push(
-          ...task.dependencies.map((d: any) =>
+          ...task.dependencies.map((d: TaskDependency | string) =>
             typeof d === "string" ? d : d.requiredTaskId,
           ),
         );
       }
 
-      const milestone = realMilestones.find((m: any) => m.id === currentId);
+      const milestone = realMilestones.find((m) => m.id === currentId);
       if (milestone?.dependencies) {
         stack.push(...milestone.dependencies);
       }
@@ -1165,7 +1165,7 @@ function ProjectTimeline() {
 
             {realMilestones.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
-                {realMilestones.map((milestone: any) => (
+                {realMilestones.map((milestone) => (
                   <div
                     key={milestone.id}
                     className="border rounded-lg p-4 relative group hover:shadow-md transition-shadow"
@@ -1369,7 +1369,9 @@ function ProjectTimeline() {
                       <Label htmlFor="milestoneType">Type</Label>
                       <Select
                         value={formData.milestoneType}
-                        onValueChange={(value: any) =>
+                        onValueChange={(
+                          value: MilestoneFormData["milestoneType"],
+                        ) =>
                           setFormData((prev) => ({
                             ...prev,
                             milestoneType: value,
@@ -1396,7 +1398,7 @@ function ProjectTimeline() {
                       <Label htmlFor="status">Status</Label>
                       <Select
                         value={formData.status}
-                        onValueChange={(value: any) =>
+                        onValueChange={(value: MilestoneFormData["status"]) =>
                           setFormData((prev) => ({ ...prev, status: value }))
                         }
                       >
@@ -1482,7 +1484,7 @@ function ProjectTimeline() {
                     <Label htmlFor="riskLevel">Risk Level</Label>
                     <Select
                       value={formData.riskLevel}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value: MilestoneFormData["riskLevel"]) =>
                         setFormData((prev) => ({ ...prev, riskLevel: value }))
                       }
                     >
@@ -1521,7 +1523,7 @@ function ProjectTimeline() {
                         No tasks available for dependencies
                       </p>
                     ) : (
-                      availableTasksForDependencies.map((task: any) => (
+                      availableTasksForDependencies.map((task) => (
                         <div
                           key={task.id}
                           className="flex items-center space-x-2"

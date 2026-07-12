@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import MilestoneList from "@/components/milestones/milestone-list";
+import type { DisplayMilestone } from "@/components/milestones/milestone-list";
 import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
 import DashboardPopup from "@/components/dashboard/dashboard-popup";
 import { useMilestones } from "@/hooks/use-milestones";
@@ -30,7 +31,8 @@ function ProjectMilestones() {
   } = useGetProject({ id: projectId, workspaceId });
   const { createMilestone, updateMilestone } = useMilestones(projectId);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
-  const [editingMilestone, setEditingMilestone] = useState<any | null>(null);
+  const [editingMilestone, setEditingMilestone] =
+    useState<DisplayMilestone | null>(null);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   void useNavigate();
   const [_showFilters, _setShowFilters] = useState(false);
@@ -101,7 +103,11 @@ function ProjectMilestones() {
           }}
           projectId={projectId}
           projectName={projectData?.name}
-          editingMilestone={editingMilestone}
+          editingMilestone={
+            editingMilestone as ComponentProps<
+              typeof CreateMilestoneModal
+            >["editingMilestone"]
+          }
           onMilestoneCreated={(milestone) => {
             if (editingMilestone) {
               // Update existing milestone

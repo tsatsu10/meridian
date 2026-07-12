@@ -148,7 +148,7 @@ function SecuritySettings() {
     }
   };
 
-  const handleSettingChange = async (key: string, value: any) => {
+  const handleSettingChange = async (key: string, value: unknown) => {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
 

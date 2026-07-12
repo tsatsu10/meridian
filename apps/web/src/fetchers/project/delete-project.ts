@@ -1,11 +1,11 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 
 // The generated AppType is missing project[":id"], so type the request locally
 export type DeleteProjectRequest = { id: string; workspaceId: string };
 
 async function deleteProject({ id, workspaceId }: DeleteProjectRequest) {
   // The API requires workspaceId to scope the destructive delete
-  const response = await (client as any).project[":id"].$delete({
+  const response = await looseClient.project[":id"].$delete({
     param: { id },
     query: { workspaceId },
   });

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
 
 function useArchiveNotification() {
@@ -7,11 +7,9 @@ function useArchiveNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await (client as any).notification[":id"].archive.$patch(
-        {
-          param: { id: notificationId },
-        },
-      );
+      const response = await looseClient.notification[":id"].archive.$patch({
+        param: { id: notificationId },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to archive notification");

@@ -264,7 +264,7 @@ export const secureStorage = {
    * @param key - Storage key
    * @param value - Value to store (will be JSON stringified)
    */
-  set(key: string, value: any) {
+  set(key: string, value: unknown) {
     try {
       const serialized = JSON.stringify(value);
       // Basic obfuscation using base64
@@ -280,7 +280,7 @@ export const secureStorage = {
    * @param key - Storage key
    * @returns Parsed value or null if not found
    */
-  get(key: string): any {
+  get(key: string): unknown {
     try {
       const item = localStorage.getItem(`_sec_${key}`);
       if (!item) return null;

@@ -52,7 +52,10 @@ import { Progress } from "@/components/ui/progress";
 import MilestoneDashboard from "@/components/dashboard/milestone-dashboard";
 import { useMilestones } from "@/hooks/use-milestones";
 import { useRiskMonitor } from "@/hooks/queries/risk/use-risk-detection";
-import { useTaskStatusMonitor } from "@/hooks/mutations/task/use-auto-status-update";
+import {
+  useTaskStatusMonitor,
+  type DependencyAwareTask,
+} from "@/hooks/mutations/task/use-auto-status-update";
 import { getNotificationsFromStore } from "@/hooks/mutations/task/use-auto-status-update";
 import DashboardPopup from "@/components/dashboard/dashboard-popup";
 import { useRBACAuth } from "@/lib/permissions";
@@ -64,6 +67,7 @@ import LazyDashboardLayout, {
 import useWorkspaceStore from "@/store/workspace";
 import { API_BASE_URL } from "@/constants/urls";
 import { logger } from "@/lib/logger";
+import type { ProjectColumn, ProjectWithTasks } from "@/types/project";
 
 export const Route = createFileRoute(
   "/dashboard/workspace/$workspaceId/project/$projectId/_layout/",
@@ -125,6 +129,17 @@ interface ActivityItem {
   timestamp: string;
   priority: "low" | "medium" | "high";
   icon: string;
+}
+
+// GET /workspace-user/:workspaceId/active response row — the generated
+// AppType is missing this route, so the fetcher returns unknown/any and
+// this mirrors the actual shape from get-active-workspace-users.ts.
+interface ActiveWorkspaceUser {
+  id: string;
+  userEmail: string;
+  userName: string | null;
+  role: string;
+  status: string;
 }
 
 interface SmartAlert {
@@ -191,9 +206,10 @@ function ProjectOverview() {
   // 🔒 SECURITY: Get project-scoped permissions
   const projectPermissions = useProjectPermissions(projectId);
 
-  const { data: users, error: usersError } = useGetActiveWorkspaceUsers({
+  const { data: usersRaw, error: usersError } = useGetActiveWorkspaceUsers({
     workspaceId,
   });
+  const users = usersRaw as ActiveWorkspaceUser[] | undefined;
   const {
     milestones,
     stats: milestoneStats,
@@ -218,12 +234,14 @@ function ProjectOverview() {
   } = useGetTasks(projectId);
 
   // Enhanced task data processing (must be before hooks that depend on it)
-  const columnArray = Array.isArray(tasksData)
-    ? tasksData
-    : tasksData && Array.isArray((tasksData as any).columns)
-      ? (tasksData as any).columns
-      : [];
-  const allTasks = flattenTasks(columnArray.flatMap((col: any) => col.tasks));
+  // useGetTasks' response type is untyped upstream (the generated Hono
+  // AppType is missing this route); ProjectWithTasks mirrors the actual
+  // GET /task/tasks/:projectId shape.
+  const projectWithTasks = tasksData as ProjectWithTasks | undefined;
+  const columnArray: ProjectColumn[] = Array.isArray(tasksData)
+    ? (tasksData as ProjectColumn[])
+    : (projectWithTasks?.columns ?? []);
+  const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks));
 
   // Risk monitoring and auto-status updates (ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS)
   const riskData = useRiskMonitor(allTasks, projectData ? [projectData] : []);
@@ -244,7 +262,12 @@ function ProjectOverview() {
   // Task status change handler with auto-updates
   void useCallback(
     (taskId: string, newStatus: string, oldStatus: string) => {
-      handleTaskStatusChange(taskId, newStatus, oldStatus, allTasks);
+      handleTaskStatusChange(
+        taskId,
+        newStatus,
+        oldStatus,
+        allTasks as unknown as DependencyAwareTask[],
+      );
     },
     [handleTaskStatusChange, allTasks],
   );
@@ -271,12 +294,12 @@ function ProjectOverview() {
 
     const now = new Date();
     const completedTasks = allTasks.filter(
-      (task: any) => task.status === "done",
+      (task) => task.status === "done",
     ).length;
     const inProgressTasks = allTasks.filter(
-      (task: any) => task.status === "in_progress",
+      (task) => task.status === "in_progress",
     ).length;
-    const overdueTasks = allTasks.filter((task: any) => {
+    const overdueTasks = allTasks.filter((task) => {
       if (!task.dueDate) return false;
       return task.status !== "done" && new Date(task.dueDate) < now;
     }).length;
@@ -308,7 +331,7 @@ function ProjectOverview() {
 
     // Calculate blocked tasks (tasks with dependencies not met)
     const blockedTasks = allTasks.filter(
-      (task: any) =>
+      (task) =>
         task.status === "todo" &&
         task.dependencies &&
         task.dependencies.length > 0,
@@ -342,7 +365,7 @@ function ProjectOverview() {
       inProgressTasks,
       overdueTasks,
       teamMembers: new Set(
-        allTasks.map((task: any) => task.assigneeId).filter(Boolean),
+        allTasks.map((task) => task.userEmail).filter(Boolean),
       ).size,
       daysRemaining: 0,
       velocity,
@@ -361,13 +384,14 @@ function ProjectOverview() {
     return allTasks
       .slice()
       .sort(
-        (a: any, b: any) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+        (a, b) =>
+          new Date(b.updatedAt || b.createdAt).getTime() -
+          new Date(a.updatedAt || a.createdAt).getTime(),
       )
       .slice(0, 5)
-      .map((task: any) => {
+      .map((task) => {
         const assigneeName = users?.find(
-          (u: any) => u.userEmail === task.userEmail,
+          (u) => u.userEmail === task.userEmail,
         )?.userName;
         return {
           id: task.id,
@@ -392,7 +416,7 @@ function ProjectOverview() {
     for (const task of allTasks) {
       if (task.userEmail) {
         const memberEmail = task.userEmail;
-        const user = users?.find((u: any) => u.userEmail === memberEmail);
+        const user = users?.find((u) => u.userEmail === memberEmail);
         const memberName = user?.userName || memberEmail;
         if (!memberMap.has(memberEmail)) {
           memberMap.set(memberEmail, {
@@ -415,7 +439,7 @@ function ProjectOverview() {
     }
 
     return Array.from(memberMap.values())
-      .map((member: any) => ({
+      .map((member) => ({
         ...member,
         productivity:
           member.activeTasks + member.completedTasks > 0
@@ -437,11 +461,12 @@ function ProjectOverview() {
     return allTasks
       .slice()
       .sort(
-        (a: any, b: any) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+        (a, b) =>
+          new Date(b.updatedAt || b.createdAt).getTime() -
+          new Date(a.updatedAt || a.createdAt).getTime(),
       )
       .slice(0, 3)
-      .map((task: any) => ({
+      .map((task) => ({
         id: task.id,
         type:
           task.status === "done"
@@ -452,7 +477,9 @@ function ProjectOverview() {
         user:
           teamMembers.find((m) => m.email === task.userEmail)?.name ||
           "Team Member",
-        timestamp: new Date(task.updatedAt).toLocaleTimeString(),
+        timestamp: new Date(
+          task.updatedAt || task.createdAt,
+        ).toLocaleTimeString(),
         priority: task.priority || ("medium" as ActivityItem["priority"]),
         icon: task.status === "done" ? "✅" : "📝",
       }));
@@ -1245,12 +1272,12 @@ function ProjectOverview() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {users && users.length > 0 ? (
-                  users.slice(0, 5).map((user: any) => {
+                  users.slice(0, 5).map((user) => {
                     const userTasks = allTasks.filter(
-                      (task: any) => task.userEmail === user.userEmail,
+                      (task) => task.userEmail === user.userEmail,
                     );
                     const completedTasks = userTasks.filter(
-                      (task: any) => task.status === "done",
+                      (task) => task.status === "done",
                     ).length;
                     const workloadPercentage =
                       userTasks.length > 0
@@ -1266,7 +1293,7 @@ function ProjectOverview() {
                           <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-medium text-white">
                             {user.userName
                               ?.split(" ")
-                              .map((n: any) => n[0])
+                              .map((n) => n[0])
                               .join("") || "?"}
                           </div>
                         </Avatar>
