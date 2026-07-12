@@ -1655,63 +1655,61 @@ function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {enhancedAnalytics?.resourceUtilization?.map(
-                      (resource) => (
-                        <div
-                          key={resource.userName}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
-                        >
-                          <div className="flex-1">
-                            <h4 className="font-medium">{resource.userName}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {resource.role}
-                            </p>
-                            <div className="flex items-center gap-4 mt-2 text-xs">
-                              <span>Projects: {resource.projectCount}</span>
-                              <span>Tasks: {resource.taskCount}</span>
-                              <span>Hours: {resource.totalHours}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium">
-                                {resource.utilization}%
-                              </span>
-                              <Badge
-                                variant={
-                                  resource.workloadBalance === "optimal"
-                                    ? "default"
-                                    : resource.workloadBalance === "overloaded"
-                                      ? "secondary"
-                                      : resource.workloadBalance === "critical"
-                                        ? "secondary"
-                                        : "secondary"
-                                }
-                              >
-                                {resource.workloadBalance}
-                              </Badge>
-                            </div>
-                            <div className="w-32 h-2 bg-muted rounded-full">
-                              <div
-                                className={cn(
-                                  "h-2 rounded-full transition-all duration-300",
-                                  resource.workloadBalance === "optimal"
-                                    ? "bg-green-500"
-                                    : resource.workloadBalance === "overloaded"
-                                      ? "bg-red-500"
-                                      : resource.workloadBalance === "critical"
-                                        ? "bg-red-600"
-                                        : "bg-blue-500",
-                                )}
-                                style={{
-                                  width: `${Math.min(resource.utilization, 100)}%`,
-                                }}
-                              />
-                            </div>
+                    {enhancedAnalytics?.resourceUtilization?.map((resource) => (
+                      <div
+                        key={resource.userName}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium">{resource.userName}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {resource.role}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2 text-xs">
+                            <span>Projects: {resource.projectCount}</span>
+                            <span>Tasks: {resource.taskCount}</span>
+                            <span>Hours: {resource.totalHours}</span>
                           </div>
                         </div>
-                      ),
-                    )}
+                        <div className="text-right">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">
+                              {resource.utilization}%
+                            </span>
+                            <Badge
+                              variant={
+                                resource.workloadBalance === "optimal"
+                                  ? "default"
+                                  : resource.workloadBalance === "overloaded"
+                                    ? "secondary"
+                                    : resource.workloadBalance === "critical"
+                                      ? "secondary"
+                                      : "secondary"
+                              }
+                            >
+                              {resource.workloadBalance}
+                            </Badge>
+                          </div>
+                          <div className="w-32 h-2 bg-muted rounded-full">
+                            <div
+                              className={cn(
+                                "h-2 rounded-full transition-all duration-300",
+                                resource.workloadBalance === "optimal"
+                                  ? "bg-green-500"
+                                  : resource.workloadBalance === "overloaded"
+                                    ? "bg-red-500"
+                                    : resource.workloadBalance === "critical"
+                                      ? "bg-red-600"
+                                      : "bg-blue-500",
+                              )}
+                              style={{
+                                width: `${Math.min(resource.utilization, 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
