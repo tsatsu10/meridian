@@ -16,6 +16,7 @@ import {
   boolean,
   integer,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { users, workspaceTable } from "../schema";
 
@@ -61,7 +62,7 @@ export const roles = pgTable("roles", {
 
   // Role Inheritance
   // Custom roles can inherit from templates or other roles
-  baseRoleId: text("base_role_id").references((): any => roles.id, {
+  baseRoleId: text("base_role_id").references((): AnyPgColumn => roles.id, {
     onDelete: "set null",
   }),
 
