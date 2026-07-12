@@ -3,7 +3,7 @@
  * Handles workspace-wide search with filters and saved searches
  */
 
-import { eq, and, or, like, sql, desc, inArray } from "drizzle-orm";
+import { eq, and, or, like, sql, desc, inArray, type SQL } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import {
   projectTable,
@@ -30,7 +30,7 @@ export interface SearchResult {
   type: "project" | "task" | "user";
   title: string;
   description?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt?: Date;
   relevance: number;
@@ -62,7 +62,9 @@ export async function performSearch(
 
   // Search Projects
   if (searchTypes.includes("project")) {
-    const projectWhere: any[] = [eq(projectTable.workspaceId, workspaceId)];
+    const projectWhere: (SQL | undefined)[] = [
+      eq(projectTable.workspaceId, workspaceId),
+    ];
 
     if (query) {
       projectWhere.push(
@@ -110,7 +112,9 @@ export async function performSearch(
   // Search Tasks
   if (searchTypes.includes("task")) {
     // tasks have no workspaceId — workspace scoping goes through the project join
-    const taskWhere: any[] = [eq(projectTable.workspaceId, workspaceId)];
+    const taskWhere: (SQL | undefined)[] = [
+      eq(projectTable.workspaceId, workspaceId),
+    ];
 
     if (query) {
       taskWhere.push(
@@ -173,7 +177,7 @@ export async function performSearch(
 
   // Search Users
   if (searchTypes.includes("user")) {
-    const userWhere: any[] = [];
+    const userWhere: (SQL | undefined)[] = [];
 
     if (query) {
       userWhere.push(
