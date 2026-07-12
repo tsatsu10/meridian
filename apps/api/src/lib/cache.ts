@@ -53,7 +53,7 @@ export function invalidateCache(c: Context, cacheName: string) {
 // Cache key generator
 export function generateCacheKey(
   prefix: string,
-  params: Record<string, any>,
+  params: Record<string, unknown>,
 ): string {
   const sortedParams = Object.keys(params)
     .sort()
@@ -87,9 +87,9 @@ export function createCustomCacheMiddleware(
 }
 
 // Mock cache implementation (replace with Redis, Memcached, etc.)
-const cacheStore = new Map<string, { data: any; expires: number }>();
+const cacheStore = new Map<string, { data: unknown; expires: number }>();
 
-async function getCachedResponse(key: string): Promise<any> {
+async function getCachedResponse(key: string): Promise<unknown> {
   const cached = cacheStore.get(key);
   if (cached && cached.expires > Date.now()) {
     return cached.data;
@@ -100,7 +100,7 @@ async function getCachedResponse(key: string): Promise<any> {
 
 async function setCachedResponse(
   key: string,
-  data: any,
+  data: unknown,
   duration: number,
 ): Promise<void> {
   cacheStore.set(key, {
