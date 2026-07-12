@@ -32,9 +32,6 @@
       "recommended": true,
       "suspicious": {
         "noExplicitAny": "error"
-      },
-      "complexity": {
-        "noStaticOnlyClass": "warn"
       }
     }
   },
