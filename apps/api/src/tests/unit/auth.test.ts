@@ -121,7 +121,9 @@ describe("Authentication System", () => {
         ),
       };
 
-      const secureResult = isInSecureMode(mockSecureRequest as any);
+      const secureResult = isInSecureMode(
+        mockSecureRequest as Parameters<typeof isInSecureMode>[0],
+      );
       expect(secureResult).toBe(true);
 
       // Test with HTTP (x-forwarded-proto header not set to https)
@@ -131,7 +133,9 @@ describe("Authentication System", () => {
         ),
       };
 
-      const insecureResult = isInSecureMode(mockInsecureRequest as any);
+      const insecureResult = isInSecureMode(
+        mockInsecureRequest as Parameters<typeof isInSecureMode>[0],
+      );
       expect(insecureResult).toBe(false);
     });
 
@@ -141,7 +145,9 @@ describe("Authentication System", () => {
         header: vi.fn(() => undefined),
       };
 
-      const result = isInSecureMode(mockRequestNoHeader as any);
+      const result = isInSecureMode(
+        mockRequestNoHeader as Parameters<typeof isInSecureMode>[0],
+      );
       expect(result).toBe(false);
     });
   });
