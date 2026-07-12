@@ -139,7 +139,7 @@ export async function getPublicProfile(c: Context) {
     // Get kudos stats (with error handling)
     let kudosReceivedCount = 0;
     let kudosGivenCount = 0;
-    let recentKudos: any[] = [];
+    let recentKudos: unknown[] = [];
 
     try {
       // Note: kudos table uses fromUserEmail/toUserEmail (email-based, not ID-based)
@@ -173,7 +173,8 @@ export async function getPublicProfile(c: Context) {
     }
 
     // Get teams (with error handling)
-    let userTeams: any[] = [];
+    let userTeams: Array<{ id: string; name: string; role: string | null }> =
+      [];
     try {
       // First get team memberships
       const memberships = await db
@@ -206,7 +207,8 @@ export async function getPublicProfile(c: Context) {
     }
 
     // Get projects (with error handling)
-    let userProjects: any[] = [];
+    let userProjects: Array<{ id: string; name: string; role: string | null }> =
+      [];
     try {
       // First get project memberships
       const memberships = await db
