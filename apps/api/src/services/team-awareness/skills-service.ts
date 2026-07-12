@@ -237,11 +237,16 @@ export class SkillsService {
         throw new Error("Skill not found");
       }
 
-      const endorsements = (skill.endorsements as any[]) || [];
+      const endorsements =
+        (skill.endorsements as Array<{
+          userId?: string;
+          comment?: string;
+          createdAt?: string;
+        }>) || [];
 
       // Check if already endorsed
       const existingIndex = endorsements.findIndex(
-        (e: any) => e.userId === params.endorserId,
+        (e) => e.userId === params.endorserId,
       );
 
       if (existingIndex > -1) {
@@ -422,7 +427,7 @@ export class SkillsService {
         });
 
         // Group by skill name
-        const matrix: Record<string, any[]> = {};
+        const matrix: Record<string, (typeof skills)[number][]> = {};
 
         for (const skill of skills) {
           let bucket = matrix[skill.skillName];
