@@ -349,7 +349,7 @@ export function sanitizeUrl(url: string, maxLength = 2000): string {
  * Prevents NaN, Infinity, and ensures valid range
  */
 export function sanitizeNumber(
-  value: any,
+  value: unknown,
   options: {
     min?: number;
     max?: number;
@@ -376,7 +376,7 @@ export function sanitizeNumber(
  * Removes duplicates, invalid items, limits size
  */
 export function sanitizeArray<T>(
-  arr: any[],
+  arr: unknown[],
   options: {
     maxLength?: number;
     validator?: (item: T) => boolean;
@@ -388,7 +388,7 @@ export function sanitizeArray<T>(
   if (!Array.isArray(arr)) return [];
 
   let sanitized = arr.filter((item) => {
-    if (validator && !validator(item)) return false;
+    if (validator && !validator(item as T)) return false;
     return true;
   });
 
@@ -396,7 +396,7 @@ export function sanitizeArray<T>(
     sanitized = [...new Set(sanitized)];
   }
 
-  return sanitized.slice(0, maxLength);
+  return sanitized.slice(0, maxLength) as T[];
 }
 
 /**
@@ -404,13 +404,13 @@ export function sanitizeArray<T>(
  * Removes dangerous keys, limits depth
  */
 export function sanitizeObject(
-  obj: any,
+  obj: unknown,
   options: {
     allowedKeys?: string[];
     maxDepth?: number;
     currentDepth?: number;
   } = {},
-): any {
+): unknown {
   const { allowedKeys, maxDepth = 5, currentDepth = 0 } = options;
 
   if (currentDepth >= maxDepth) {
@@ -428,7 +428,7 @@ export function sanitizeObject(
     );
   }
 
-  const sanitized: any = {};
+  const sanitized: Record<string, unknown> = {};
 
   for (const key of Object.keys(obj)) {
     // Skip dangerous keys
@@ -442,7 +442,7 @@ export function sanitizeObject(
       continue;
     }
 
-    const value = obj[key];
+    const value = (obj as Record<string, unknown>)[key];
 
     if (typeof value === "object") {
       sanitized[key] = sanitizeObject(value, {
@@ -464,7 +464,7 @@ export function sanitizeObject(
  * Universal sanitizer for all user inputs
  */
 export function sanitizeInput(
-  input: any,
+  input: unknown,
   type:
     | "text"
     | "richText"
@@ -475,27 +475,43 @@ export function sanitizeInput(
     | "number"
     | "array"
     | "object",
-  options?: any,
-): any {
+  options?: Record<string, unknown>,
+): unknown {
+  const maxLength = options?.maxLength as number | undefined;
   switch (type) {
     case "text":
-      return sanitizeText(input, options);
+      return sanitizeText(
+        input as string,
+        options as Parameters<typeof sanitizeText>[1],
+      );
     case "richText":
-      return sanitizeRichText(input, options);
+      return sanitizeRichText(
+        input as string,
+        options as Parameters<typeof sanitizeRichText>[1],
+      );
     case "email":
-      return isValidEmail(input) ? input : "";
+      return isValidEmail(input as string) ? input : "";
     case "url":
-      return sanitizeUrl(input, options?.maxLength);
+      return sanitizeUrl(input as string, maxLength);
     case "fileName":
-      return sanitizeFileName(input);
+      return sanitizeFileName(input as string);
     case "slug":
-      return sanitizeSlug(input, options?.maxLength);
+      return sanitizeSlug(input as string, maxLength);
     case "number":
-      return sanitizeNumber(input, options);
+      return sanitizeNumber(
+        input,
+        options as Parameters<typeof sanitizeNumber>[1],
+      );
     case "array":
-      return sanitizeArray(input, options);
+      return sanitizeArray(
+        input as unknown[],
+        options as Parameters<typeof sanitizeArray>[1],
+      );
     case "object":
-      return sanitizeObject(input, options);
+      return sanitizeObject(
+        input,
+        options as Parameters<typeof sanitizeObject>[1],
+      );
     default:
       logger.warn("Unknown sanitization type", { type });
       return sanitizeText(String(input));
