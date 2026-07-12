@@ -53,6 +53,14 @@ import { cn } from "@/lib/cn";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 
+const activateOnKey =
+  (handler: () => void) => (e: import("react").KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  };
+
 interface ProjectAnalyticsProps {
   projectId: string;
 }
@@ -582,6 +590,12 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
             <div className="space-y-3">
               <div
                 className="flex justify-between items-center p-2 rounded hover:bg-muted transition-colors cursor-pointer"
+                // biome-ignore lint/a11y/useSemanticElements: styled clickable stat row, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() =>
+                  toast.info("View completed tasks - Feature coming soon"),
+                )}
                 onClick={() =>
                   toast.info("View completed tasks - Feature coming soon")
                 }
@@ -591,6 +605,10 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
               </div>
               <div
                 className="flex justify-between items-center p-2 rounded hover:bg-muted transition-colors cursor-pointer"
+                // biome-ignore lint/a11y/useSemanticElements: styled clickable stat row, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() => handleDrillDown("in-progress"))}
                 onClick={() => handleDrillDown("in-progress")}
               >
                 <span className="text-sm">In Progress</span>
@@ -598,6 +616,12 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
               </div>
               <div
                 className="flex justify-between items-center p-2 rounded hover:bg-muted transition-colors cursor-pointer"
+                // biome-ignore lint/a11y/useSemanticElements: styled clickable stat row, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() =>
+                  handleDrillDown("high-priority"),
+                )}
                 onClick={() => handleDrillDown("high-priority")}
               >
                 <span className="text-sm">High Priority</span>
@@ -605,6 +629,10 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
               </div>
               <div
                 className="flex justify-between items-center p-2 rounded hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+                // biome-ignore lint/a11y/useSemanticElements: styled clickable stat row, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey(() => handleDrillDown("overdue"))}
                 onClick={() => handleDrillDown("overdue")}
               >
                 <span className="text-sm text-red-600 font-medium">
