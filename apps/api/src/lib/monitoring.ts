@@ -107,7 +107,7 @@ export class MonitoringService {
   }
 
   // Record event
-  recordEvent(name: string, data: any, tags: Record<string, string> = {}) {
+  recordEvent(name: string, data: unknown, tags: Record<string, string> = {}) {
     const event = {
       name,
       data,
@@ -190,7 +190,11 @@ export class MonitoringService {
   }
 
   // Send alert notification
-  private async sendAlertNotification(alert: any) {
+  private async sendAlertNotification(alert: {
+    message: string;
+    severity: string;
+    timestamp: Date;
+  }) {
     try {
       // Send to external monitoring service
       if (process.env.ALERT_WEBHOOK_URL) {
