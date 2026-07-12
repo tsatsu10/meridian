@@ -323,7 +323,7 @@ export async function getRole(
   // Check if it's a template
   if (roleId.startsWith("template_")) {
     const templateKey = roleId.replace("template_", "");
-    const template = (ROLE_TEMPLATES as any)[templateKey];
+    const template = ROLE_TEMPLATES[templateKey as keyof typeof ROLE_TEMPLATES];
     if (template) {
       return {
         id: roleId,
