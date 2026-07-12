@@ -22,6 +22,7 @@ import {
   jsonb,
   index,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { users, workspaces } from "../schema";
 
@@ -85,9 +86,12 @@ export const goals = pgTable(
     privacy: text("privacy").notNull().default("private"), // 'private' | 'team' | 'organization'
 
     // Hierarchy
-    parentGoalId: text("parent_goal_id").references((): any => goals.id, {
-      onDelete: "set null",
-    }),
+    parentGoalId: text("parent_goal_id").references(
+      (): AnyPgColumn => goals.id,
+      {
+        onDelete: "set null",
+      },
+    ),
 
     // Priority & Metadata
     priority: text("priority").default("medium"), // 'low' | 'medium' | 'high' | 'critical'
