@@ -123,6 +123,11 @@ export default function CreateProjectModal({
   React.useEffect(() => {
     if (!open || !workspace?.id) return;
 
+    // Guard against state updates after the modal unmounts (or reopens with a
+    // different workspace) while the request is still in flight.
+    let cancelled = false;
+    const controller = new AbortController();
+
     const fetchWorkspaceMembers = async () => {
       setIsLoadingMembers(true);
       try {
@@ -131,6 +136,7 @@ export default function CreateProjectModal({
           {
             credentials: "include",
             headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
           },
         );
 
@@ -156,16 +162,22 @@ export default function CreateProjectModal({
           }),
         );
 
-        setAvailableMembers(members);
+        if (!cancelled) setAvailableMembers(members);
       } catch (error) {
+        if (cancelled || controller.signal.aborted) return;
         console.error("Error fetching workspace members:", error);
         setAvailableMembers([]);
       } finally {
-        setIsLoadingMembers(false);
+        if (!cancelled) setIsLoadingMembers(false);
       }
     };
 
     fetchWorkspaceMembers();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [open, workspace?.id]);
 
   // Create project mutation - we'll pass data during the mutation call
