@@ -102,8 +102,14 @@ export function MeridianPagination({
       <div className="flex items-center gap-4">
         <p className="text-sm text-muted-foreground">Showing {pageInfo}</p>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground">Per page:</label>
+          <label
+            htmlFor="pagination-page-size"
+            className="text-sm text-muted-foreground"
+          >
+            Per page:
+          </label>
           <select
+            id="pagination-page-size"
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             className="px-2 py-1 border border-input bg-background rounded-md text-sm"
