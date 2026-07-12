@@ -171,7 +171,7 @@ export async function seedProjectsAndTasks() {
     // 1. CREATE PROJECTS
     logger.info("📁 Creating projects...");
 
-    const createdProjects: any[] = [];
+    const createdProjects: unknown[] = [];
 
     for (const projectTemplate of PROJECT_TEMPLATES) {
       const projectOwner = randomElement(
@@ -207,8 +207,10 @@ export async function seedProjectsAndTasks() {
             "📝",
             "📱",
           ]),
-          status: projectTemplate.status as any,
-          priority: projectTemplate.priority as any,
+          status:
+            projectTemplate.status as (typeof projects.status.enumValues)[number],
+          priority:
+            projectTemplate.priority as (typeof projects.priority.enumValues)[number],
           startDate,
           dueDate,
           completedAt:
@@ -272,7 +274,7 @@ export async function seedProjectsAndTasks() {
     // 2. CREATE TASKS
     logger.info("\n📋 Creating tasks...");
 
-    const allTasks: any[] = [];
+    const allTasks: unknown[] = [];
     const tasksPerProject = 20; // Average
 
     for (const project of createdProjects) {
