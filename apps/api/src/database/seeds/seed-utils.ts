@@ -392,7 +392,7 @@ export function calculateLeaderboardScore(activities: {
  * Batch insert with progress logging
  */
 export async function batchInsert<T extends { id: string }>(
-  insertFn: (batch: T[]) => Promise<any>,
+  insertFn: (batch: T[]) => Promise<unknown>,
   items: T[],
   batchSize = 100,
   label = "items",
