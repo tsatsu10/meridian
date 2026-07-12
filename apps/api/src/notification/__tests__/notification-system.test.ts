@@ -36,8 +36,8 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Notification System", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testUser: any;
-  let testWorkspace: any;
+  let testUser: Record<string, unknown>;
+  let testWorkspace: Record<string, unknown>;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -241,7 +241,7 @@ describe.skip("Notification System", () => {
   });
 
   describe("Read/Unread Status", () => {
-    let testNotification: any;
+    let testNotification: Record<string, unknown>;
 
     beforeEach(async () => {
       [testNotification] = await db
@@ -460,7 +460,7 @@ describe.skip("Notification System", () => {
   });
 
   describe("Notification Deletion", () => {
-    let testNotification: any;
+    let testNotification: Record<string, unknown>;
 
     beforeEach(async () => {
       [testNotification] = await db
