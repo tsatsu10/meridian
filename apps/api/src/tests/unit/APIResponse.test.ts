@@ -161,7 +161,7 @@ describe("APIResponseBuilder", () => {
     });
 
     it("should handle empty data set", () => {
-      const data: any[] = [];
+      const data: unknown[] = [];
       const pagination = {
         page: 1,
         limit: 10,
