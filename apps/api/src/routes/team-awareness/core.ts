@@ -302,7 +302,9 @@ teamAwareness.get(
     try {
       const query = c.req.valid("query");
 
-      const kudos = await KudosService.getKudos(query as any);
+      const kudos = await KudosService.getKudos(
+        query as Parameters<typeof KudosService.getKudos>[0],
+      );
 
       return c.json({ kudos });
     } catch (error) {
@@ -648,7 +650,9 @@ teamAwareness.get(
     try {
       const filters = c.req.valid("query");
 
-      const skills = await SkillsService.searchSkills(filters as any);
+      const skills = await SkillsService.searchSkills(
+        filters as Parameters<typeof SkillsService.searchSkills>[0],
+      );
 
       return c.json({ skills });
     } catch (error) {

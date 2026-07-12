@@ -28,9 +28,9 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Task Management", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testUser: any;
-  let testWorkspace: any;
-  let testProject: any;
+  let testUser: Record<string, unknown>;
+  let testWorkspace: Record<string, unknown>;
+  let testProject: Record<string, unknown>;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -192,7 +192,7 @@ describe.skip("Task Management", () => {
   });
 
   describe("Task Status Transitions", () => {
-    let testTask: any;
+    let testTask: Record<string, unknown>;
 
     beforeEach(async () => {
       [testTask] = await db
@@ -261,9 +261,9 @@ describe.skip("Task Management", () => {
   });
 
   describe("Task Dependencies", () => {
-    let task1: any;
-    let task2: any;
-    let task3: any;
+    let task1: Record<string, unknown>;
+    let task2: Record<string, unknown>;
+    let task3: Record<string, unknown>;
 
     beforeEach(async () => {
       [task1] = await db
@@ -346,8 +346,8 @@ describe.skip("Task Management", () => {
   });
 
   describe("Task Assignment", () => {
-    let testTask: any;
-    let assignee: any;
+    let testTask: Record<string, unknown>;
+    let assignee: Record<string, unknown>;
 
     beforeEach(async () => {
       const hashedPassword = await hashPassword("TestPassword123!");
@@ -428,7 +428,7 @@ describe.skip("Task Management", () => {
   });
 
   describe("Time Tracking", () => {
-    let testTask: any;
+    let testTask: Record<string, unknown>;
 
     beforeEach(async () => {
       [testTask] = await db
@@ -584,7 +584,7 @@ describe.skip("Task Management", () => {
   });
 
   describe("Task Deletion", () => {
-    let testTask: any;
+    let testTask: Record<string, unknown>;
 
     beforeEach(async () => {
       [testTask] = await db
@@ -622,7 +622,7 @@ describe.skip("Task Management", () => {
   });
 
   describe("Task Updates", () => {
-    let testTask: any;
+    let testTask: Record<string, unknown>;
 
     beforeEach(async () => {
       [testTask] = await db

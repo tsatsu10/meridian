@@ -1,3 +1,4 @@
+import type { Context } from "hono";
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userProfileTable } from "../../database/schema";
@@ -22,7 +23,7 @@ const RECOMMENDED_SIZE = 400; // 400x400px
  * Validate uploaded file
  * Note: Hono's parseBody() returns Blob-like object, not File
  */
-function validateFile(file: any): void {
+function validateFile(file: File): void {
   if (!file) {
     throw new HTTPException(400, { message: "No file uploaded" });
   }
@@ -60,14 +61,14 @@ function validateFile(file: any): void {
 /**
  * Upload and process profile picture
  */
-const uploadProfilePicture = async (c: any, userId: string) => {
+const uploadProfilePicture = async (c: Context, userId: string) => {
   const db = getDatabase();
 
   try {
     logger.info(`📸 Uploading profile picture for user: ${userId}`);
 
     const body = await c.req.parseBody();
-    const file = body.file || body.avatar; // Support both 'file' and 'avatar' field names
+    const file = (body.file || body.avatar) as File; // Support both 'file' and 'avatar' field names
 
     // Validate file
     validateFile(file);

@@ -22,7 +22,7 @@ export interface SessionData {
   lastActivity: number;
   ipAddress?: string;
   userAgent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SessionStoreOptions {

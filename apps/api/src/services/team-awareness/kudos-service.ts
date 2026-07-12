@@ -291,21 +291,24 @@ export class KudosService {
         throw new Error("Kudos not found");
       }
 
-      const reactions = (existingKudos.reactions as any) || {};
+      const reactions =
+        (existingKudos.reactions as Record<string, string[]>) || {};
 
-      if (!reactions[emoji]) {
-        reactions[emoji] = [];
+      let list = reactions[emoji];
+      if (!list) {
+        list = [];
+        reactions[emoji] = list;
       }
 
       // Toggle reaction (add if not present, remove if present)
-      const userIndex = reactions[emoji].indexOf(userId);
+      const userIndex = list.indexOf(userId);
       if (userIndex > -1) {
-        reactions[emoji].splice(userIndex, 1);
-        if (reactions[emoji].length === 0) {
+        list.splice(userIndex, 1);
+        if (list.length === 0) {
           delete reactions[emoji];
         }
       } else {
-        reactions[emoji].push(userId);
+        list.push(userId);
       }
 
       await KudosService.getDb()

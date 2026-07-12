@@ -155,7 +155,7 @@ export async function seedUsers() {
   logger.info("🌱 Phase 1: Seeding users and authentication...\n");
 
   try {
-    const createdUsers: any[] = [];
+    const createdUsers: unknown[] = [];
 
     // 1. CREATE USERS
     logger.info("👥 Creating test users...");

@@ -21,7 +21,7 @@ export interface ActivityParams {
   entityId?: string;
   entityTitle?: string;
   description?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   isPublic?: boolean;
 }
 
@@ -257,7 +257,7 @@ export class ActivityTracker {
     action: "created" | "updated" | "completed" | "deleted" | "commented",
     taskId: string,
     taskTitle: string,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
   ) {
     await ActivityTracker.logActivity({
       userId,
@@ -281,7 +281,7 @@ export class ActivityTracker {
     action: "created" | "updated" | "deleted",
     projectId: string,
     projectTitle: string,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
   ) {
     await ActivityTracker.logActivity({
       userId,
@@ -331,7 +331,7 @@ export class ActivityTracker {
     action: "uploaded" | "deleted",
     fileId: string,
     fileName: string,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
   ) {
     await ActivityTracker.logActivity({
       userId,

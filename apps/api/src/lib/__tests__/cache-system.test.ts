@@ -295,7 +295,7 @@ describe.skip("Cache System", () => {
     });
 
     it("handles circular references", () => {
-      const circularData: any = { name: "test" };
+      const circularData: Record<string, unknown> = { name: "test" };
       circularData.self = circularData;
 
       cacheService.set("circular", circularData);
@@ -373,11 +373,11 @@ describe.skip("Cache System", () => {
       }).not.toThrow();
 
       expect(() => {
-        cacheService.set(null as any, "value");
+        cacheService.set(null as unknown, "value");
       }).not.toThrow();
 
       expect(() => {
-        cacheService.set(undefined as any, "value");
+        cacheService.set(undefined as unknown, "value");
       }).not.toThrow();
     });
 

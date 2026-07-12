@@ -141,7 +141,7 @@ export async function seedTimeAndActivity() {
         taskId: activityType.includes("task") ? task?.id : null,
         userId: user.id,
         type: activityType,
-        content: content as any,
+        content: content as string,
         metadata: {
           icon: getActivityIcon(activityType),
           color: getActivityColor(activityType),
@@ -233,7 +233,7 @@ export async function seedTimeAndActivity() {
           okay: randomInt(0, totalCheckins / 3),
           bad: randomInt(0, totalCheckins / 5),
           stressed: randomInt(0, totalCheckins / 5),
-        } as any,
+        } as Record<string, unknown>,
         averageScore: (3.0 + Math.random() * 2).toFixed(2), // 3.0 to 5.0
         totalCheckins,
       });
@@ -265,8 +265,8 @@ export async function seedTimeAndActivity() {
 function generateActivityDescription(
   type: (typeof ACTIVITY_TYPES)[number],
   userName: string,
-  task: any,
-  project: any,
+  task: Record<string, unknown>,
+  project: Record<string, unknown>,
 ): string {
   const descriptions: Record<string, string> = {
     task_created: `${userName} created task "${task?.title || "New Task"}"`,

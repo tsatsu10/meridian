@@ -26,8 +26,8 @@ export interface AuditLog {
   entityType: string;
   entityId: string | null;
   entityName: string | null;
-  changes: any;
-  metadata: any;
+  changes: unknown;
+  metadata: unknown;
   ipAddress: string | null;
   userAgent: string | null;
   timestamp: Date;

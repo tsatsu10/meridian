@@ -21,7 +21,7 @@ process.env.CORS_ALLOWED_ORIGIN = "http://localhost:3000";
 process.env.DISABLE_RATE_LIMITING = "true";
 process.env.DISABLE_CSRF = "true";
 
-let testDb: any;
+let testDb: Record<string, unknown>;
 
 // Global test setup
 beforeAll(async () => {
@@ -66,7 +66,7 @@ afterAll(async () => {
 export { testDb };
 
 // Helper function to create test user
-export function createTestUser(overrides: any = {}) {
+export function createTestUser(overrides: Record<string, unknown> = {}) {
   const defaultUser = {
     id: "test-user-id",
     email: "test@example.com",
@@ -150,7 +150,7 @@ export const mockVirusScanner = {
 };
 
 // Helper to generate mock JWT token
-export function generateMockToken(payload: any = {}) {
+export function generateMockToken(payload: Record<string, unknown> = {}) {
   const defaultPayload = {
     userId: "test-user-id",
     email: "test@example.com",
@@ -162,7 +162,7 @@ export function generateMockToken(payload: any = {}) {
 }
 
 // Helper to create mock request
-export function createMockRequest(options: any = {}) {
+export function createMockRequest(options: Record<string, unknown> = {}) {
   return {
     method: options.method || "GET",
     path: options.path || "/",
@@ -176,7 +176,7 @@ export function createMockRequest(options: any = {}) {
 
 // Helper to create mock response
 export function createMockResponse() {
-  const response: any = {
+  const response: Record<string, unknown> = {
     status: 200,
     headers: {},
     body: null,

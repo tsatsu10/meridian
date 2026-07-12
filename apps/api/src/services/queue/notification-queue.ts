@@ -19,7 +19,7 @@ import {
   type NotificationPayload,
 } from "../../notification/services/notification-delivery";
 
-export interface QueueJob<T = any> {
+export interface QueueJob<T = unknown> {
   id: string;
   type: "notification" | "email" | "digest" | "alert";
   payload: T;
@@ -60,7 +60,7 @@ class NotificationQueue extends EventEmitter {
   /**
    * Add a job to the queue
    */
-  public async addJob<T = any>(
+  public async addJob<T = unknown>(
     type: QueueJob["type"],
     payload: T,
     priority: QueueJob["priority"] = "normal",

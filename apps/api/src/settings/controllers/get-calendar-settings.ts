@@ -113,7 +113,7 @@ export default async function getCalendarSettings(
   }
 
   // Get calendar settings from workspace settings JSONB
-  const storedSettings = (workspace.settings as any) || {};
+  const storedSettings = (workspace.settings as Record<string, unknown>) || {};
   const calendarSettings = storedSettings.calendar || {};
 
   // Merge with defaults

@@ -26,7 +26,7 @@ export async function bulkUpdateStatus(
     const updatedTasks = await db
       .update(tasks)
       .set({
-        status: status as any,
+        status: status as (typeof tasks.status.enumValues)[number],
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))
@@ -80,7 +80,7 @@ export async function bulkUpdatePriority(
     const updatedTasks = await db
       .update(tasks)
       .set({
-        priority: priority as any,
+        priority: priority as (typeof tasks.priority.enumValues)[number],
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))

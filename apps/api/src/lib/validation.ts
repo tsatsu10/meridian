@@ -411,7 +411,7 @@ export function createValidationMiddleware<T>(
 
   return async (c: Context, next: Next) => {
     try {
-      let input: any;
+      let input: unknown;
       if (mode === "query") {
         input = c.req.query();
       } else if (mode === "form") {

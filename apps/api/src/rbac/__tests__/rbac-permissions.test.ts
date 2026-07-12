@@ -31,8 +31,8 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("RBAC Permission System", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testWorkspace: any;
-  const testUsers: Record<string, any> = {};
+  let testWorkspace: Record<string, unknown>;
+  const testUsers: Record<string, unknown> = {};
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -77,7 +77,7 @@ describe.skip("RBAC Permission System", () => {
           email: `${role}@example.com`,
           name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
           password: hashedPassword,
-          role: role as any,
+          role: role as unknown,
         })
         .returning();
 

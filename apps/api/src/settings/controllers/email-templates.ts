@@ -18,9 +18,9 @@ export interface EmailTemplate {
   category: string;
   workspaceId: string | null;
   isGlobal: boolean;
-  variables: any;
+  variables: Record<string, unknown>;
   isActive: boolean;
-  metadata: any;
+  metadata: Record<string, unknown>;
   createdBy: string | null;
   createdAt: Date;
   updatedAt: Date | null;
@@ -32,8 +32,8 @@ export interface CreateEmailTemplateInput {
   htmlBody: string;
   textBody?: string;
   category: string;
-  variables?: any;
-  metadata?: any;
+  variables?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateEmailTemplateInput {
@@ -42,9 +42,9 @@ export interface UpdateEmailTemplateInput {
   htmlBody?: string;
   textBody?: string;
   category?: string;
-  variables?: any;
+  variables?: Record<string, unknown>;
   isActive?: boolean;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 // Get all email templates for a workspace

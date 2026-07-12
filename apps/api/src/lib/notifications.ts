@@ -10,6 +10,8 @@ export { default as notificationsRoute } from "../notification/index";
 export { default as createNotification } from "../notification/controllers/create-notification";
 export { default as getNotifications } from "../notification/controllers/get-notifications";
 export { default as markNotificationAsRead } from "../notification/controllers/mark-notification-as-read";
+import type createNotificationDefault from "../notification/controllers/create-notification";
+import type getNotificationsDefault from "../notification/controllers/get-notifications";
 
 // Re-export notification services
 export { NotificationDeliveryService } from "../notification/services/notification-delivery";
@@ -20,14 +22,17 @@ export type {
 
 // Mock notification service interface for tests
 export const notificationService = {
-  send: async (payload: any) => {
+  send: async (payload: Parameters<typeof createNotificationDefault>[0]) => {
     const { default: createNotification } = await import(
       "../notification/controllers/create-notification"
     );
     return createNotification(payload);
   },
 
-  getForUser: async (userEmail: string, options?: any) => {
+  getForUser: async (
+    userEmail: string,
+    options?: Parameters<typeof getNotificationsDefault>[1],
+  ) => {
     const { default: getNotifications } = await import(
       "../notification/controllers/get-notifications"
     );
@@ -90,7 +95,7 @@ export interface NotificationConfig {
 export function createNotificationMiddleware(
   config?: Partial<NotificationConfig>,
 ) {
-  return async (c: any, next: any) => {
+  return async (_c: unknown, next: () => Promise<void>) => {
     // Placeholder middleware
     await next();
   };

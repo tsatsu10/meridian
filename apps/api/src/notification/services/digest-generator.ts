@@ -28,10 +28,18 @@ export interface DigestData {
     kudosReceived: number;
   };
   content: {
-    recentTasks?: any[];
-    recentComments?: any[];
-    recentMentions?: any[];
-    recentKudos?: any[];
+    recentTasks?: Array<{ title?: string | null; project?: string | null }>;
+    recentComments?: unknown[];
+    recentMentions?: Array<{
+      title?: string | null;
+      content?: string | null;
+      message?: string | null;
+    }>;
+    recentKudos?: Array<{
+      emoji?: string | null;
+      message?: string | null;
+      fromUserEmail?: string | null;
+    }>;
   };
 }
 

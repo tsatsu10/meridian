@@ -37,7 +37,7 @@ export interface AppSettings {
 function loadSettings(): AppSettings {
   const settings: AppSettings = {
     // Environment
-    nodeEnv: (process.env.NODE_ENV as any) || "development",
+    nodeEnv: (process.env.NODE_ENV as AppSettings["nodeEnv"]) || "development",
     isDemoMode: process.env.DEMO_MODE === "true",
     apiPort: Number.parseInt(
       process.env.API_PORT || String(DEFAULT_API_PORT),
@@ -50,7 +50,9 @@ function loadSettings(): AppSettings {
     jwtSecret: process.env.JWT_SECRET || "meridian-dev-secret",
 
     // Database
-    databaseType: (process.env.DATABASE_TYPE as any) || "postgresql",
+    databaseType:
+      (process.env.DATABASE_TYPE as AppSettings["databaseType"]) ||
+      "postgresql",
     databaseUrl: process.env.DATABASE_URL || "",
 
     // Security

@@ -130,7 +130,7 @@ export default async function getEmailSettings(
   }
 
   // Get email settings from workspace settings JSONB
-  const storedSettings = (workspace.settings as any) || {};
+  const storedSettings = (workspace.settings as Record<string, unknown>) || {};
   const emailSettings = storedSettings.email || {};
 
   // Merge with defaults

@@ -4,7 +4,8 @@ import { createError } from "./errors";
 // Performance optimization service
 export class PerformanceService {
   private static instance: PerformanceService;
-  private metrics: Map<string, any> = new Map();
+  private metrics: Map<string, { count: number; total: number; avg: number }> =
+    new Map();
 
   static getInstance(): PerformanceService {
     if (!PerformanceService.instance) {

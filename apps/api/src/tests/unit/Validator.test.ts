@@ -248,7 +248,7 @@ describe("Validator", () => {
     });
 
     it("should throw ValidationError for non-string ID", () => {
-      const id = 123 as any;
+      const id = 123 as unknown;
 
       expect(() => Validator.validateId(id)).toThrow(ValidationError);
     });
@@ -371,9 +371,9 @@ describe("Validator", () => {
       const array = "not-an-array";
       const itemSchema = CommonSchemas.id;
 
-      expect(() => Validator.validateArray(array as any, itemSchema)).toThrow(
-        ValidationError,
-      );
+      expect(() =>
+        Validator.validateArray(array as unknown, itemSchema),
+      ).toThrow(ValidationError);
     });
   });
 
@@ -400,7 +400,7 @@ describe("Validator", () => {
       const obj = "not-an-object";
       const schema = CommonSchemas.id;
 
-      expect(() => Validator.validateObject(obj as any, schema)).toThrow(
+      expect(() => Validator.validateObject(obj as unknown, schema)).toThrow(
         ValidationError,
       );
     });

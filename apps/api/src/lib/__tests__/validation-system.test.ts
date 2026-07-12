@@ -391,7 +391,7 @@ describe.skip("Validation System", () => {
       expect(() => {
         validationService.createRule({
           name: "",
-          pattern: null as any,
+          pattern: null as unknown,
           message: "",
         });
       }).not.toThrow();
@@ -459,7 +459,7 @@ describe.skip("Validation System", () => {
       expect(() => {
         validationService.createRule({
           name: "test",
-          pattern: null as any,
+          pattern: null as unknown,
           message: "Test message",
         });
       }).not.toThrow();

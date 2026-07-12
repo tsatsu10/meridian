@@ -39,7 +39,7 @@ async function updateAttachment(id: string, data: UpdateAttachmentData) {
       );
     }
 
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
     // Update fileName in schema
     if (data.name !== undefined) {

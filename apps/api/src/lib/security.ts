@@ -248,7 +248,7 @@ export function createAuthMiddleware() {
 }
 
 // JWT verification function (mock implementation)
-async function verifyJWT(token: string): Promise<any> {
+async function verifyJWT(token: string) {
   // In a real implementation, you would verify the JWT signature
   // This is a simplified version for demonstration
   try {
@@ -346,7 +346,7 @@ export function createSecurityAuditMiddleware() {
 }
 
 // Send security event to monitoring service
-async function sendSecurityEvent(event: any) {
+async function sendSecurityEvent(event: Record<string, unknown>) {
   try {
     await fetch("/api/security/events", {
       method: "POST",

@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createMockContext } from "../../tests/helpers/test-requests";
 
 describe("CSRF Protection Middleware", () => {
-  let mockContext: any;
+  let mockContext: Record<string, unknown>;
 
   beforeEach(() => {
     mockContext = createMockContext();
@@ -129,7 +129,7 @@ describe("CSRF Protection Middleware", () => {
         _csrf: "token-from-body",
       });
 
-      mockContext.req.json().then((body: any) => {
+      mockContext.req.json().then((body: unknown) => {
         expect(body._csrf).toBe("token-from-body");
       });
     });

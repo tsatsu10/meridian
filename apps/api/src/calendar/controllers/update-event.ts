@@ -25,7 +25,7 @@ export async function getEventTeamId(eventId: string): Promise<string | null> {
 // @epic-3.4-teams: Update calendar event
 export async function updateEvent(
   eventId: string,
-  eventData: any,
+  eventData: Record<string, unknown>,
   userId: string,
 ) {
   const db = getDatabase();
@@ -46,7 +46,7 @@ export async function updateEvent(
     }
 
     // Update the event
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 
@@ -56,10 +56,10 @@ export async function updateEvent(
     if (eventData.type !== undefined) updateData.type = eventData.type;
     if (eventData.status !== undefined) updateData.status = eventData.status;
     if (eventData.startTime !== undefined)
-      updateData.startTime = new Date(eventData.startTime);
+      updateData.startTime = new Date(eventData.startTime as string);
     if (eventData.endTime !== undefined)
       updateData.endTime = eventData.endTime
-        ? new Date(eventData.endTime)
+        ? new Date(eventData.endTime as string)
         : null;
     if (eventData.allDay !== undefined) updateData.allDay = eventData.allDay;
     if (eventData.priority !== undefined)

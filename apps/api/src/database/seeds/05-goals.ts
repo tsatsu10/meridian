@@ -70,8 +70,8 @@ export async function seedGoals() {
       throw new Error("Workspace and users required. Run phases 1-2 first.");
     }
 
-    const createdGoals: any[] = [];
-    const createdKeyResults: any[] = [];
+    const createdGoals: unknown[] = [];
+    const createdKeyResults: unknown[] = [];
 
     // 1. CREATE PERSONAL GOALS
     logger.info("🎯 Creating personal goals...");
@@ -100,7 +100,7 @@ export async function seedGoals() {
             timeframe: "Q1 2025",
             startDate,
             endDate,
-            status: status as any,
+            status: status as (typeof goals.status.enumValues)[number],
             progress,
             privacy: "private",
             priority: randomElement(["low", "medium", "high"]),
@@ -208,7 +208,7 @@ export async function seedGoals() {
             dueDate: endDate,
           });
 
-          createdKeyResults.push({} as any);
+          createdKeyResults.push({});
         }
       }
 
@@ -273,7 +273,7 @@ export async function seedGoals() {
             dueDate: endDate,
           });
 
-          createdKeyResults.push({} as any);
+          createdKeyResults.push({});
         }
       }
 

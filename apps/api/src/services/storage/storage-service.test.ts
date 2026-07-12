@@ -7,6 +7,15 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { StorageService } from "./storage-service";
 
+type StorageInternals = {
+  validateFile: (file: unknown) => unknown;
+  generateSafeFileName: (...args: unknown[]) => string;
+  uploadToLocal: (...args: unknown[]) => Promise<unknown>;
+  deleteFromLocal: (...args: unknown[]) => Promise<unknown>;
+  getSignedUrl: (...args: unknown[]) => Promise<unknown>;
+  config: { provider: string };
+};
+
 describe("StorageService", () => {
   let storageService: StorageService;
 
@@ -28,7 +37,9 @@ describe("StorageService", () => {
         size: 5 * 1024 * 1024,
       } as Express.Multer.File;
 
-      const result = (storageService as any).validateFile(file);
+      const result = (
+        storageService as unknown as StorageInternals
+      ).validateFile(file);
       expect(result.valid).toBe(true);
     });
 
@@ -40,7 +51,9 @@ describe("StorageService", () => {
         size: 15 * 1024 * 1024,
       } as Express.Multer.File;
 
-      const result = (storageService as any).validateFile(file);
+      const result = (
+        storageService as unknown as StorageInternals
+      ).validateFile(file);
       expect(result.valid).toBe(false);
       expect(result.error).toContain("File size exceeds");
     });
@@ -53,7 +66,9 @@ describe("StorageService", () => {
         size: 1024,
       } as Express.Multer.File;
 
-      const result = (storageService as any).validateFile(file);
+      const result = (
+        storageService as unknown as StorageInternals
+      ).validateFile(file);
       expect(result.valid).toBe(true);
     });
 
@@ -65,7 +80,9 @@ describe("StorageService", () => {
         size: 1024,
       } as Express.Multer.File;
 
-      const result = (storageService as any).validateFile(file);
+      const result = (
+        storageService as unknown as StorageInternals
+      ).validateFile(file);
       expect(result.valid).toBe(false);
       expect(result.error).toContain("not allowed");
     });
@@ -78,17 +95,18 @@ describe("StorageService", () => {
         size: 1024,
       } as Express.Multer.File;
 
-      const result = (storageService as any).validateFile(file);
+      const result = (
+        storageService as unknown as StorageInternals
+      ).validateFile(file);
       expect(result.valid).toBe(true);
     });
   });
 
   describe("generateSafeFileName", () => {
     it("should generate safe filenames", () => {
-      const result = (storageService as any).generateSafeFileName(
-        "My Test File!@#.jpg",
-        "file-123",
-      );
+      const result = (
+        storageService as unknown as StorageInternals
+      ).generateSafeFileName("My Test File!@#.jpg", "file-123");
 
       // The function replaces non-alphanumeric chars with dashes
       expect(result).toMatch(/^file-123_my-test-file---\.jpg$/);
@@ -96,29 +114,26 @@ describe("StorageService", () => {
 
     it("should handle long filenames", () => {
       const longName = `${"a".repeat(100)}.jpg`;
-      const result = (storageService as any).generateSafeFileName(
-        longName,
-        "file-123",
-      );
+      const result = (
+        storageService as unknown as StorageInternals
+      ).generateSafeFileName(longName, "file-123");
 
       expect(result.length).toBeLessThan(100);
       expect(result).toContain("file-123");
     });
 
     it("should preserve file extensions", () => {
-      const result = (storageService as any).generateSafeFileName(
-        "document.pdf",
-        "file-123",
-      );
+      const result = (
+        storageService as unknown as StorageInternals
+      ).generateSafeFileName("document.pdf", "file-123");
 
       expect(result).toMatch(/\.pdf$/);
     });
 
     it("should remove special characters", () => {
-      const result = (storageService as any).generateSafeFileName(
-        "file@#$%^&*.txt",
-        "file-123",
-      );
+      const result = (
+        storageService as unknown as StorageInternals
+      ).generateSafeFileName("file@#$%^&*.txt", "file-123");
 
       expect(result).not.toContain("@");
       expect(result).not.toContain("#");
@@ -136,12 +151,18 @@ describe("StorageService", () => {
       } as Express.Multer.File;
 
       // Mock validation to pass
-      vi.spyOn(storageService as any, "validateFile").mockReturnValue({
+      vi.spyOn(
+        storageService as unknown as StorageInternals,
+        "validateFile",
+      ).mockReturnValue({
         valid: true,
       });
 
       // Mock upload to local
-      vi.spyOn(storageService as any, "uploadToLocal").mockResolvedValue({
+      vi.spyOn(
+        storageService as unknown as StorageInternals,
+        "uploadToLocal",
+      ).mockResolvedValue({
         success: true,
         fileId: "file-123",
         fileName: "test.txt",
@@ -184,24 +205,28 @@ describe("StorageService", () => {
         size: 4,
       } as Express.Multer.File;
 
-      vi.spyOn(storageService as any, "validateFile").mockReturnValue({
+      vi.spyOn(
+        storageService as unknown as StorageInternals,
+        "validateFile",
+      ).mockReturnValue({
         valid: true,
       });
 
       // Mock to return different fileIds on each call
       let callCount = 0;
-      vi.spyOn(storageService as any, "uploadToLocal").mockImplementation(
-        async () => {
-          callCount++;
-          return {
-            success: true,
-            fileId: `file-${callCount}`,
-            fileName: "test.txt",
-            url: "/uploads/test.txt",
-            size: 4,
-          };
-        },
-      );
+      vi.spyOn(
+        storageService as unknown as StorageInternals,
+        "uploadToLocal",
+      ).mockImplementation(async () => {
+        callCount++;
+        return {
+          success: true,
+          fileId: `file-${callCount}`,
+          fileName: "test.txt",
+          url: "/uploads/test.txt",
+          size: 4,
+        };
+      });
 
       const result1 = await storageService.uploadFile(file, {
         uploadedBy: "user-123",
@@ -219,9 +244,10 @@ describe("StorageService", () => {
 
   describe("deleteFile", () => {
     it("should successfully delete file", async () => {
-      vi.spyOn(storageService as any, "deleteFromLocal").mockResolvedValue(
-        true,
-      );
+      vi.spyOn(
+        storageService as unknown as StorageInternals,
+        "deleteFromLocal",
+      ).mockResolvedValue(true);
 
       const result = await storageService.deleteFile("file-123", "test.txt");
 
@@ -229,9 +255,10 @@ describe("StorageService", () => {
     });
 
     it("should handle deletion errors gracefully", async () => {
-      vi.spyOn(storageService as any, "deleteFromLocal").mockRejectedValue(
-        new Error("Delete failed"),
-      );
+      vi.spyOn(
+        storageService as unknown as StorageInternals,
+        "deleteFromLocal",
+      ).mockRejectedValue(new Error("Delete failed"));
 
       const result = await storageService.deleteFile("file-123", "test.txt");
 
@@ -255,9 +282,10 @@ describe("StorageService", () => {
         s3Bucket: "test-bucket",
       });
 
-      vi.spyOn(s3Service as any, "getSignedUrl").mockResolvedValue(
-        "https://signed-url.example.com",
-      );
+      vi.spyOn(
+        s3Service as unknown as StorageInternals,
+        "getSignedUrl",
+      ).mockResolvedValue("https://signed-url.example.com");
 
       const result = await s3Service.getSignedUrl("key-123", 3600);
 
@@ -273,7 +301,9 @@ describe("StorageService", () => {
         allowedMimeTypes: [],
       });
 
-      expect((service as any).config.provider).toBe("local");
+      expect((service as unknown as StorageInternals).config.provider).toBe(
+        "local",
+      );
     });
 
     it("should support S3 storage", () => {
@@ -285,7 +315,9 @@ describe("StorageService", () => {
         s3Bucket: "test-bucket",
       });
 
-      expect((service as any).config.provider).toBe("s3");
+      expect((service as unknown as StorageInternals).config.provider).toBe(
+        "s3",
+      );
     });
 
     it("should support Cloudinary storage", () => {
@@ -296,7 +328,9 @@ describe("StorageService", () => {
         cloudinaryName: "test-cloud",
       });
 
-      expect((service as any).config.provider).toBe("cloudinary");
+      expect((service as unknown as StorageInternals).config.provider).toBe(
+        "cloudinary",
+      );
     });
   });
 });

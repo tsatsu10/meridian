@@ -25,7 +25,7 @@ import { hashPassword } from "../../auth/password";
 describe.skip("Workspace API - REAL Integration Tests", () => {
   let app: Hono;
   let db: ReturnType<typeof getDatabase>;
-  let testUser: any;
+  let testUser: Record<string, unknown>;
   let authToken: string;
   let testWorkspaceId: string;
 

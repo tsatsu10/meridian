@@ -48,7 +48,7 @@ export interface BulkOperationResult {
     id: string;
     status: "success" | "failed";
     error?: string;
-    data?: any;
+    data?: unknown;
   }>;
   duration: number; // milliseconds
 }
@@ -88,7 +88,7 @@ export async function bulkUpdateProjects(
     }
 
     // Filter out empty updates
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (payload.updates.status !== undefined)
       updateData.status = payload.updates.status;
     if (payload.updates.priority !== undefined)
@@ -130,7 +130,7 @@ export async function bulkUpdateProjects(
 
     // Build result items
     for (const projectId of payload.projectIds) {
-      const updatedProject = updated.find((p: any) => p.id === projectId);
+      const updatedProject = updated.find((p) => p.id === projectId);
       if (updatedProject) {
         items.push({
           id: projectId,
@@ -223,7 +223,7 @@ export async function bulkDeleteProjects(
 
     // Build result items
     for (const project of projectsToDelete) {
-      const deletedProject = deleted.find((p: any) => p.id === project.id);
+      const deletedProject = deleted.find((p) => p.id === project.id);
       if (deletedProject) {
         items.push({
           id: project.id,

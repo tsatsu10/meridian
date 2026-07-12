@@ -72,7 +72,7 @@ export async function updateKeyResult(c: Context) {
     const valueChanged = oldValue !== newValue;
 
     // Build update object
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 

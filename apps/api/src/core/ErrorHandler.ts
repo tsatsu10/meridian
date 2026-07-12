@@ -14,21 +14,21 @@ import { logger } from "../utils/logger";
 export interface AppError extends Error {
   code: ErrorCode;
   statusCode: number;
-  details?: any;
+  details?: unknown;
   isOperational?: boolean;
 }
 
 export class CustomError extends Error implements AppError {
   public code: ErrorCode;
   public statusCode: number;
-  public details?: any;
+  public details?: unknown;
   public isOperational: boolean;
 
   constructor(
     message: string,
     code: ErrorCode = ErrorCodes.INTERNAL_ERROR,
     statusCode = 500,
-    details?: any,
+    details?: unknown,
     isOperational = true,
   ) {
     super(message);
@@ -43,7 +43,7 @@ export class CustomError extends Error implements AppError {
 }
 
 export class ValidationError extends CustomError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, ErrorCodes.VALIDATION_ERROR, 400, details);
   }
 }
@@ -70,19 +70,19 @@ export class ForbiddenError extends CustomError {
 }
 
 export class ConflictError extends CustomError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, ErrorCodes.RESOURCE_CONFLICT, 409, details);
   }
 }
 
 export class DatabaseError extends CustomError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, ErrorCodes.DATABASE_ERROR, 500, details);
   }
 }
 
 export class ExternalServiceError extends CustomError {
-  constructor(service: string, message: string, details?: any) {
+  constructor(service: string, message: string, details?: unknown) {
     super(
       `External service error: ${service} - ${message}`,
       ErrorCodes.EXTERNAL_SERVICE_ERROR,
@@ -105,7 +105,7 @@ export class ServiceUnavailableError extends CustomError {
 }
 
 export class WebSocketError extends CustomError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, ErrorCodes.WEBSOCKET_ERROR, 500, details);
   }
 }
@@ -196,9 +196,9 @@ export class ErrorHandler {
         return APIResponseBuilder.error(
           ErrorCodes.INTERNAL_ERROR,
           fallbackMessage,
-        );
+        ) as APIResponse<T>;
       }
-      return ErrorHandler.handle(error as Error);
+      return ErrorHandler.handle(error as Error) as APIResponse<T>;
     }
   }
 

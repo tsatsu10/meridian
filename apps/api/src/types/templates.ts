@@ -51,7 +51,7 @@ export interface TemplateTask {
   relativeStartDay?: number; // days after project start
   relativeDueDay?: number; // days after project start
   tags: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,7 +68,7 @@ export interface TemplateSubtask {
   position: number;
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -111,7 +111,7 @@ export interface CreateTemplateInput {
   estimatedDuration?: number;
   difficulty?: TemplateDifficulty;
   tags?: string[];
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
   isPublic?: boolean;
   isOfficial?: boolean;
   tasks?: CreateTemplateTaskInput[];

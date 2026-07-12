@@ -123,7 +123,15 @@ export async function checkAttendeeConflicts(
         });
         return acc;
       },
-      {} as Record<string, any[]>,
+      {} as Record<
+        string,
+        Array<{
+          eventId: string;
+          title: string;
+          startTime: string;
+          endTime?: string;
+        }>
+      >,
     );
 
     return Object.entries(conflictsByAttendee).map(([userId, events]) => ({

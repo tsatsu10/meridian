@@ -25,7 +25,7 @@ interface ErrorResponse {
     message: string;
     code: string;
     statusCode: number;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     requestId?: string;
     timestamp: string;
     path?: string;
@@ -156,7 +156,7 @@ export async function errorHandler(err: Error, c: Context) {
   }
 
   // Return error response
-  return c.json(errorResponse, statusCode as any);
+  return c.json(errorResponse, statusCode as Parameters<typeof c.json>[1]);
 }
 
 /**
@@ -197,7 +197,7 @@ export function notFoundHandler(c: Context) {
  * Helper to validate required fields and throw MissingFieldError
  */
 export function validateRequiredFields(
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   requiredFields: string[],
 ): void {
   const { MissingFieldError } = require("../utils/errors");
@@ -222,7 +222,7 @@ export function handleDatabaseError(error: unknown, context?: string): never {
     ConstraintViolationError,
   } = require("../utils/errors");
 
-  const err = error as any;
+  const err = error as Record<string, unknown>;
 
   // PostgreSQL unique constraint violation
   if (err.code === "23505") {
@@ -268,7 +268,7 @@ export function handleExternalError(
 ): never {
   const { ExternalServiceError, TimeoutError } = require("../utils/errors");
 
-  const err = error as any;
+  const err = error as Record<string, unknown>;
 
   // Handle timeout errors
   if (err.code === "ETIMEDOUT" || err.code === "ECONNABORTED") {

@@ -64,7 +64,7 @@ smartProfileRoutes.get("/:userId/availability", async (c) => {
     const { userId } = c.req.param();
 
     const availability = await getUserAvailability(userId);
-    const currentTime = getCurrentLocalTime(availability.timezone || "UTC");
+    const currentTime = getCurrentLocalTime(availability?.timezone || "UTC");
     const inWorkingHours = isInWorkingHours(availability);
 
     return c.json({
@@ -392,7 +392,9 @@ smartProfileRoutes.get("/:userId/analytics", async (c) => {
         collaborators,
         availability: {
           ...availability,
-          currentLocalTime: getCurrentLocalTime(availability.timezone || "UTC"),
+          currentLocalTime: getCurrentLocalTime(
+            availability?.timezone || "UTC",
+          ),
           inWorkingHours: isInWorkingHours(availability),
         },
       },

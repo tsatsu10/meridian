@@ -21,7 +21,7 @@ vi.mock("../../../database/connection", () => ({
 
 describe.skip("PermissionChecker", () => {
   let checker: PermissionChecker;
-  let mockDb: any;
+  let mockDb: Record<string, unknown>;
 
   beforeEach(() => {
     mockDb = getDatabase();

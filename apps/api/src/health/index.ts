@@ -58,7 +58,7 @@ healthRoute.get("/projects/:projectId", async (c) => {
       .select()
       .from(projectHealthTable)
       .where(eq(projectHealthTable.projectId, projectId))
-      .then((rows: any[]) => rows[0]);
+      .then((rows) => rows[0]);
 
     const now = new Date();
     const cacheExpired =
@@ -172,7 +172,7 @@ healthRoute.get("/projects/:projectId/history", async (c) => {
       .orderBy(desc(healthHistoryTable.recordedAt));
 
     // Format for frontend charting
-    const formattedHistory = history.map((h: any) => ({
+    const formattedHistory = history.map((h) => ({
       date: new Date(h.recordedAt).toISOString().split("T")[0],
       score: h.score,
       status: h.status,
@@ -357,7 +357,7 @@ healthRoute.post("/projects/:projectId/refresh", async (c) => {
       .select()
       .from(projectHealthTable)
       .where(eq(projectHealthTable.projectId, projectId))
-      .then((rows: any[]) => rows[0]);
+      .then((rows) => rows[0]);
 
     if (existingHealth) {
       await db

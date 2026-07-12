@@ -105,11 +105,11 @@ export function sanitizeFilePath(path: string): string {
 /**
  * Sanitize object by removing dangerous keys
  */
-export function sanitizeObject<T extends Record<string, any>>(
+export function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
   allowedKeys: string[],
 ): Partial<T> {
-  const sanitized: any = {};
+  const sanitized: Record<string, unknown> = {};
 
   for (const key of allowedKeys) {
     if (key in obj) {
@@ -117,7 +117,7 @@ export function sanitizeObject<T extends Record<string, any>>(
     }
   }
 
-  return sanitized;
+  return sanitized as Partial<T>;
 }
 
 /**
@@ -205,7 +205,7 @@ export const sanitizationSchemas = {
 /**
  * Sanitize request body
  */
-export function sanitizeRequestBody<T extends Record<string, any>>(
+export function sanitizeRequestBody<T extends Record<string, unknown>>(
   body: T,
   schema: z.ZodSchema,
 ): T {
@@ -219,7 +219,7 @@ export function sanitizeRequestBody<T extends Record<string, any>>(
 /**
  * Deep sanitize object (recursive)
  */
-export function deepSanitize(obj: any): any {
+export function deepSanitize(obj: unknown): unknown {
   if (typeof obj === "string") {
     return sanitizePlainText(obj);
   }
@@ -229,7 +229,7 @@ export function deepSanitize(obj: any): any {
   }
 
   if (obj !== null && typeof obj === "object") {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       sanitized[key] = deepSanitize(value);
     }
@@ -278,8 +278,10 @@ export function logSuspiciousInput(
 /**
  * Middleware helper to sanitize all string fields in request body
  */
-export function sanitizeAllStrings<T extends Record<string, any>>(body: T): T {
-  const sanitized: any = {};
+export function sanitizeAllStrings<T extends Record<string, unknown>>(
+  body: T,
+): T {
+  const sanitized: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(body)) {
     if (typeof value === "string") {
@@ -295,11 +297,11 @@ export function sanitizeAllStrings<T extends Record<string, any>>(body: T): T {
         typeof item === "string" ? sanitizePlainText(item) : item,
       );
     } else if (value !== null && typeof value === "object") {
-      sanitized[key] = sanitizeAllStrings(value);
+      sanitized[key] = sanitizeAllStrings(value as Record<string, unknown>);
     } else {
       sanitized[key] = value;
     }
   }
 
-  return sanitized;
+  return sanitized as T;
 }

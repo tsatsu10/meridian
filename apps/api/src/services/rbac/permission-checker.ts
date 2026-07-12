@@ -7,7 +7,7 @@
  * @phase Phase-2-Week-4
  */
 
-import { eq, and, or, sql } from "drizzle-orm";
+import { eq, and, or, sql, type SQL } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import {
   roles,
@@ -137,7 +137,7 @@ export class PermissionChecker {
     context?: PermissionContext,
   ): Promise<{ granted: boolean; reason: string } | null> {
     try {
-      const conditions: any[] = [
+      const conditions: (SQL | undefined)[] = [
         eq(permissionOverrides.userId, userId),
         eq(permissionOverrides.permission, permission),
         eq(permissionOverrides.isActive, true),
@@ -211,7 +211,7 @@ export class PermissionChecker {
   ): Promise<PermissionResult> {
     try {
       // Get user's role assignments
-      const conditions: any[] = [
+      const conditions: (SQL | undefined)[] = [
         eq(roleAssignments.userId, userId),
         eq(roleAssignments.isActive, true),
       ];
@@ -315,7 +315,7 @@ export class PermissionChecker {
    * Check if a role has a specific permission
    */
   private async roleHasPermission(
-    role: any,
+    role: { type?: string; id: string; permissions?: unknown },
     permission: string,
   ): Promise<boolean> {
     if (role.type === "system") {
@@ -337,7 +337,7 @@ export class PermissionChecker {
   ): Promise<UserPermissions> {
     try {
       // Get user's role assignments
-      const conditions: any[] = [
+      const conditions: (SQL | undefined)[] = [
         eq(roleAssignments.userId, userId),
         eq(roleAssignments.isActive, true),
       ];
@@ -395,7 +395,7 @@ export class PermissionChecker {
       }
 
       // Get permission overrides
-      const overrideConditions: any[] = [
+      const overrideConditions: (SQL | undefined)[] = [
         eq(permissionOverrides.userId, userId),
         eq(permissionOverrides.isActive, true),
       ];
@@ -510,7 +510,7 @@ export class PermissionChecker {
     context?: PermissionContext,
   ): Promise<boolean> {
     try {
-      const conditions: any[] = [
+      const conditions: (SQL | undefined)[] = [
         eq(roleAssignments.userId, userId),
         eq(roleAssignments.roleId, roleId),
         eq(roleAssignments.isActive, true),

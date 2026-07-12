@@ -305,7 +305,7 @@ describe("Edge Cases and Error Scenarios", () => {
     });
 
     it("should handle circular references", () => {
-      const obj: any = { name: "test" };
+      const obj: Record<string, unknown> = { name: "test" };
       obj.self = obj;
 
       // JSON.stringify would throw

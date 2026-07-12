@@ -24,7 +24,7 @@ export interface LogMetrics {
   endpoint?: string;
   statusCode?: number;
   errorCode?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LogAnalytics {
@@ -57,7 +57,7 @@ export interface AlertRule {
   enabled: boolean;
   actions: Array<{
     type: "email" | "webhook" | "slack";
-    config: Record<string, any>;
+    config: Record<string, unknown>;
   }>;
 }
 
@@ -521,7 +521,7 @@ class LogAggregationService extends EventEmitter {
   }
 
   private async sendWebhookAlert(
-    config: any,
+    config: Record<string, unknown>,
     rule: AlertRule,
     metrics: LogMetrics,
   ): Promise<void> {
@@ -530,7 +530,7 @@ class LogAggregationService extends EventEmitter {
   }
 
   private async sendEmailAlert(
-    config: any,
+    config: Record<string, unknown>,
     rule: AlertRule,
     metrics: LogMetrics,
   ): Promise<void> {
@@ -539,7 +539,7 @@ class LogAggregationService extends EventEmitter {
   }
 
   private async sendSlackAlert(
-    config: any,
+    config: Record<string, unknown>,
     rule: AlertRule,
     metrics: LogMetrics,
   ): Promise<void> {

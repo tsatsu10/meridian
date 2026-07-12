@@ -9,21 +9,23 @@ import { eq, and, gte, inArray } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { logger } from "../../utils/logger";
 
+type NotificationRow = typeof notifications.$inferSelect;
+
 interface NotificationGroup {
   groupId: string;
   type: string;
   count: number;
-  latestNotification: any;
-  notifications: any[];
+  latestNotification: NotificationRow;
+  notifications: NotificationRow[];
 }
 
 /**
  * Group notifications by type and similarity
  */
 export function groupNotifications(
-  notificationList: any[],
+  notificationList: NotificationRow[],
 ): NotificationGroup[] {
-  const groups = new Map<string, any[]>();
+  const groups = new Map<string, NotificationRow[]>();
 
   for (const notification of notificationList) {
     // Skip if already part of a group
@@ -52,21 +54,22 @@ export function groupNotifications(
   const result: NotificationGroup[] = [];
 
   for (const [groupId, items] of groups.entries()) {
-    if (items.length > 0) {
-      // Sort by date (newest first)
-      items.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+    // Sort by date (newest first)
+    items.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
-      result.push({
-        groupId,
-        type: items[0].type,
-        count: items.length,
-        latestNotification: items[0],
-        notifications: items,
-      });
-    }
+    const latest = items[0];
+    if (!latest) continue;
+
+    result.push({
+      groupId,
+      type: latest.type,
+      count: items.length,
+      latestNotification: latest,
+      notifications: items,
+    });
   }
 
   return result;
@@ -76,7 +79,7 @@ export function groupNotifications(
  * Generate a group key for a notification
  * Notifications with the same key will be grouped together
  */
-function generateGroupKey(notification: any): string {
+function generateGroupKey(notification: NotificationRow): string {
   const { type, resourceType, resourceId } = notification;
 
   // Group similar notification types

@@ -87,16 +87,16 @@ export const mockSessions = {
  */
 export function createMockDb() {
   // Store query results in order they'll be called
-  const selectResults: any[] = [];
+  const selectResults: unknown[] = [];
   let selectCallIndex = 0;
 
-  const mockDb: any = {
+  const mockDb: Record<string, unknown> = {
     // Query builder methods that return chainable objects
-    select: vi.fn((fields?: any) => {
+    select: vi.fn((fields?: unknown) => {
       const currentIndex = selectCallIndex++;
 
       // Each select() call creates a new chain
-      const chain: any = {};
+      const chain: Record<string, unknown> = {};
       chain.from = vi.fn().mockReturnValue(chain);
       chain.where = vi.fn().mockReturnValue(chain);
       chain.limit = vi.fn().mockReturnValue(chain);
@@ -105,7 +105,7 @@ export function createMockDb() {
       chain.leftJoin = vi.fn().mockReturnValue(chain); // Add leftJoin support
       // Make chainable and await-able - return results for this specific select() call
       // biome-ignore lint/suspicious/noThenProperty: the mock must be thenable so `await db.select()...` chains resolve like drizzle's query builder
-      chain.then = (resolve: any) => {
+      chain.then = (resolve: (value: unknown) => unknown) => {
         const results = selectResults[currentIndex] || [];
         return Promise.resolve(results).then(resolve);
       };
@@ -126,7 +126,7 @@ export function createMockDb() {
     execute: vi.fn().mockResolvedValue([]),
 
     // Helper to set query results in order
-    __setSelectResults: (...results: any[][]) => {
+    __setSelectResults: (...results: unknown[][]) => {
       selectResults.length = 0;
       selectResults.push(...results);
       selectCallIndex = 0;

@@ -35,9 +35,10 @@ describe.skip("EmailService", () => {
 
     it("should handle email sending failure", async () => {
       // Mock failure
-      vi.spyOn(emailService as any, "send").mockRejectedValue(
-        new Error("Send failed"),
-      );
+      vi.spyOn(
+        emailService as unknown as { send: (...args: unknown[]) => unknown },
+        "send",
+      ).mockRejectedValue(new Error("Send failed"));
 
       const result = await emailService.sendVerificationEmail(
         "invalid@example.com",
@@ -49,7 +50,10 @@ describe.skip("EmailService", () => {
     });
 
     it("should include correct template variables", async () => {
-      const sendSpy = vi.spyOn(emailService as any, "send");
+      const sendSpy = vi.spyOn(
+        emailService as unknown as { send: (...args: unknown[]) => unknown },
+        "send",
+      );
 
       await emailService.sendVerificationEmail(
         "user@example.com",
@@ -82,7 +86,10 @@ describe.skip("EmailService", () => {
     });
 
     it("should include reset link with token", async () => {
-      const sendSpy = vi.spyOn(emailService as any, "send");
+      const sendSpy = vi.spyOn(
+        emailService as unknown as { send: (...args: unknown[]) => unknown },
+        "send",
+      );
 
       await emailService.sendPasswordResetEmail(
         "user@example.com",
@@ -114,7 +121,10 @@ describe.skip("EmailService", () => {
   describe("retry logic", () => {
     it("should retry failed sends up to 3 times", async () => {
       const sendSpy = vi
-        .spyOn(emailService as any, "send")
+        .spyOn(
+          emailService as unknown as { send: (...args: unknown[]) => unknown },
+          "send",
+        )
         .mockRejectedValueOnce(new Error("Fail 1"))
         .mockRejectedValueOnce(new Error("Fail 2"))
         .mockResolvedValueOnce(true);
@@ -131,7 +141,10 @@ describe.skip("EmailService", () => {
 
     it("should fail after 3 retry attempts", async () => {
       const sendSpy = vi
-        .spyOn(emailService as any, "send")
+        .spyOn(
+          emailService as unknown as { send: (...args: unknown[]) => unknown },
+          "send",
+        )
         .mockRejectedValue(new Error("Always fail"));
 
       const result = await emailService.sendVerificationEmail(
@@ -153,7 +166,10 @@ describe.skip("EmailService", () => {
     });
 
     it("should sanitize email addresses", async () => {
-      const sendSpy = vi.spyOn(emailService as any, "send");
+      const sendSpy = vi.spyOn(
+        emailService as unknown as { send: (...args: unknown[]) => unknown },
+        "send",
+      );
 
       await emailService.sendVerificationEmail(
         "  USER@EXAMPLE.COM  ",

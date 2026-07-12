@@ -137,7 +137,7 @@ describe.skipIf(!dbAvailable)("Authentication Flow", () => {
   });
 
   describe("Sign In", () => {
-    let testUser: any;
+    let testUser: Record<string, unknown>;
 
     beforeEach(async () => {
       const hashedPassword = await hashPassword("SecurePassword123!");
@@ -215,8 +215,8 @@ describe.skipIf(!dbAvailable)("Authentication Flow", () => {
   });
 
   describe("Session Management", () => {
-    let testUser: any;
-    let testSession: any;
+    let testUser: Record<string, unknown>;
+    let testSession: Record<string, unknown>;
 
     beforeEach(async () => {
       const hashedPassword = await hashPassword("SecurePassword123!");
@@ -361,7 +361,7 @@ describe.skipIf(!dbAvailable)("Authentication Flow", () => {
   });
 
   describe("Two-Factor Authentication", () => {
-    let testUser: any;
+    let testUser: Record<string, unknown>;
 
     beforeEach(async () => {
       const hashedPassword = await hashPassword("SecurePassword123!");

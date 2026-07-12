@@ -37,7 +37,9 @@ export class EmailService {
 
   constructor() {
     this.config = {
-      provider: (process.env.EMAIL_PROVIDER as any) || "sendgrid",
+      provider:
+        (process.env.EMAIL_PROVIDER as "sendgrid" | "ses" | "smtp") ||
+        "sendgrid",
       apiKey: process.env.SENDGRID_API_KEY || process.env.AWS_SES_API_KEY,
       from: process.env.FROM_EMAIL || "noreply@meridian.app",
       fromName: process.env.FROM_NAME || "Meridian",

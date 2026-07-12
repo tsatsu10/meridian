@@ -42,13 +42,16 @@ const mockDb = createMockDb();
 // Helper function to call updateTask with partial update object
 // The actual updateTask requires all positional parameters, so we fetch the task first
 // and merge updates with existing values
-async function updateTaskPartial(id: string, updates: any) {
+async function updateTaskPartial(id: string, updates: Record<string, unknown>) {
   const updateTask = (await import("../../task/controllers/update-task"))
     .default;
 
   // Fetch existing task to get current values
   const existingTask = (await mockDb.query.taskTable.findFirst({
-    where: (taskTable: any, { eq }: any) => eq(taskTable.id, id),
+    where: (
+      taskTable: Record<string, unknown>,
+      { eq }: { eq: (...args: unknown[]) => unknown },
+    ) => eq(taskTable.id, id),
   })) || {
     id,
     title: "",

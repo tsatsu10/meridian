@@ -100,7 +100,7 @@ export async function getBackupSettings(
     throw new Error("Workspace not found");
   }
 
-  const storedSettings = (workspace.settings as any) || {};
+  const storedSettings = (workspace.settings as Record<string, unknown>) || {};
   const backupSettings = storedSettings.backup || {};
 
   return { ...DEFAULT_BACKUP_SETTINGS, ...backupSettings };
@@ -109,7 +109,7 @@ export async function getBackupSettings(
 export async function updateBackupSettings(
   workspaceId: string,
   updates: Partial<BackupSettings>,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   const [workspace] = await db
@@ -122,7 +122,7 @@ export async function updateBackupSettings(
     throw new Error("Workspace not found");
   }
 
-  const currentSettings = (workspace.settings as any) || {};
+  const currentSettings = (workspace.settings as Record<string, unknown>) || {};
   const currentBackupSettings = currentSettings.backup || {};
 
   const updatedBackupSettings = { ...currentBackupSettings, ...updates };
@@ -227,7 +227,7 @@ export async function deleteBackup(
 export async function verifyBackup(
   workspaceId: string,
   backupId: string,
-): Promise<{ valid: boolean; message: string; details?: any }> {
+): Promise<{ valid: boolean; message: string; details?: unknown }> {
   // This would verify backup file integrity
   // For now, return mock response
   return {

@@ -13,11 +13,12 @@
 
 import { rateLimiter } from "hono-rate-limiter";
 import { getRedisClient } from "../utils/redis-client";
+import type { Context } from "hono";
 
 /**
  * Get user identifier for rate limiting
  */
-function getUserKey(c: any): string {
+function getUserKey(c: Context): string {
   const userEmail = c.get("userEmail");
   const ip =
     c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";

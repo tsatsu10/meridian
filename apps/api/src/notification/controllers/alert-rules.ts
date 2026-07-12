@@ -17,7 +17,7 @@ export async function createAlertRule(
   data: {
     name: string;
     conditionType: string;
-    conditionConfig: any;
+    conditionConfig: Record<string, unknown>;
     notificationChannels?: string[];
     isActive?: boolean;
   },
@@ -106,7 +106,7 @@ export async function updateAlertRule(
   updates: {
     name?: string;
     conditionType?: string;
-    conditionConfig?: any;
+    conditionConfig?: Record<string, unknown>;
     notificationChannels?: string[];
     isActive?: boolean;
   },

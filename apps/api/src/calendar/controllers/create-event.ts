@@ -7,9 +7,44 @@ import {
 import { createId } from "@paralleldrive/cuid2";
 import logger from "../../utils/logger";
 
+type CalendarEventInsert = typeof calendarEvents.$inferInsert;
+
+interface CreateEventInput {
+  title: string;
+  description?: string | null;
+  type?: CalendarEventInsert["type"];
+  startTime: string | Date;
+  endTime?: string | Date | null;
+  allDay?: boolean;
+  timezone?: string;
+  teamId?: CalendarEventInsert["teamId"];
+  projectId?: CalendarEventInsert["projectId"];
+  priority?: CalendarEventInsert["priority"];
+  location?: string | null;
+  meetingLink?: string | null;
+  estimatedHours?: CalendarEventInsert["estimatedHours"];
+  color?: string;
+  attachments?: unknown;
+  metadata?: unknown;
+  isRecurring?: boolean;
+  reminderMinutes?: number;
+  attendees?: string[];
+  recurringPattern?: {
+    frequency?: string;
+    interval?: number;
+    endDate?: string | Date | null;
+    occurrences?: number | null;
+    weekdays?: unknown;
+    dayOfMonth?: number | null;
+    weekOfMonth?: number | null;
+    customPattern?: unknown;
+    exceptionDates?: unknown;
+  };
+}
+
 // @epic-3.4-teams: Create calendar event
 export async function createEvent(
-  eventData: any,
+  eventData: CreateEventInput,
   userId: string,
   workspaceId: string,
 ) {
@@ -68,20 +103,30 @@ export async function createEvent(
 
     // Add recurring pattern if event is recurring
     if (eventData.isRecurring && eventData.recurringPattern) {
+      const rp = eventData.recurringPattern as {
+        frequency?: string;
+        interval?: number;
+        endDate?: string | Date | null;
+        occurrences?: number | null;
+        weekdays?: unknown;
+        dayOfMonth?: number | null;
+        weekOfMonth?: number | null;
+        customPattern?: unknown;
+        exceptionDates?: unknown;
+      };
       await db.insert(recurringPatterns).values({
         id: createId(),
         eventId: newEvent.id,
-        frequency: eventData.recurringPattern.frequency || "weekly",
-        interval: eventData.recurringPattern.interval || 1,
-        endDate: eventData.recurringPattern.endDate
-          ? new Date(eventData.recurringPattern.endDate)
-          : null,
-        occurrences: eventData.recurringPattern.occurrences || null,
-        weekdays: eventData.recurringPattern.weekdays || [],
-        dayOfMonth: eventData.recurringPattern.dayOfMonth || null,
-        weekOfMonth: eventData.recurringPattern.weekOfMonth || null,
-        customPattern: eventData.recurringPattern.customPattern || {},
-        exceptionDates: eventData.recurringPattern.exceptionDates || [],
+        frequency: (rp.frequency ||
+          "weekly") as (typeof recurringPatterns.frequency.enumValues)[number],
+        interval: rp.interval || 1,
+        endDate: rp.endDate ? new Date(rp.endDate) : null,
+        occurrences: rp.occurrences || null,
+        weekdays: rp.weekdays || [],
+        dayOfMonth: rp.dayOfMonth || null,
+        weekOfMonth: rp.weekOfMonth || null,
+        customPattern: rp.customPattern || {},
+        exceptionDates: rp.exceptionDates || [],
       });
     }
 

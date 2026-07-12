@@ -144,10 +144,7 @@ export async function calculateFrequentCollaborators(
 /**
  * Get frequent collaborators
  */
-export async function getFrequentCollaborators(
-  userId: string,
-  limit = 5,
-): Promise<any[]> {
+export async function getFrequentCollaborators(userId: string, limit = 5) {
   const db = getDatabase();
 
   try {

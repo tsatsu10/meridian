@@ -2,10 +2,25 @@ import type { Context } from "hono";
 import { createError } from "./errors";
 import logger from "../utils/logger";
 
+// Heterogeneous metric record: gauges/counters/histograms share this map and
+// only populate the fields relevant to their kind.
+interface MetricEntry {
+  count?: number;
+  total?: number;
+  avg?: number;
+  min?: number;
+  max?: number;
+  lastValue?: number;
+  lastUpdated?: Date;
+  value?: number;
+  sum?: number;
+  buckets?: Map<string, number>;
+}
+
 // Monitoring service for application metrics
 export class MonitoringService {
   private static instance: MonitoringService;
-  private metrics: Map<string, any> = new Map();
+  private metrics: Map<string, MetricEntry> = new Map();
   private alerts: Array<{
     id: string;
     message: string;
@@ -34,11 +49,11 @@ export class MonitoringService {
       max: Number.NEGATIVE_INFINITY,
     };
 
-    existing.count++;
-    existing.total += value;
+    existing.count = (existing.count ?? 0) + 1;
+    existing.total = (existing.total ?? 0) + value;
     existing.avg = existing.total / existing.count;
-    existing.min = Math.min(existing.min, value);
-    existing.max = Math.max(existing.max, value);
+    existing.min = Math.min(existing.min ?? Number.POSITIVE_INFINITY, value);
+    existing.max = Math.max(existing.max ?? Number.NEGATIVE_INFINITY, value);
     existing.lastValue = value;
     existing.lastUpdated = new Date();
 
@@ -53,7 +68,7 @@ export class MonitoringService {
       lastUpdated: new Date(),
     };
 
-    existing.count += value;
+    existing.count = (existing.count ?? 0) + value;
     existing.lastUpdated = new Date();
 
     this.metrics.set(key, existing);
@@ -82,12 +97,17 @@ export class MonitoringService {
       lastUpdated: new Date(),
     };
 
-    existing.count++;
-    existing.sum += value;
+    existing.count = (existing.count ?? 0) + 1;
+    existing.sum = (existing.sum ?? 0) + value;
 
     // Add to buckets
     const bucketKey = this.getBucketKey(value);
-    existing.buckets.set(bucketKey, (existing.buckets.get(bucketKey) || 0) + 1);
+    let buckets = existing.buckets;
+    if (!buckets) {
+      buckets = new Map();
+      existing.buckets = buckets;
+    }
+    buckets.set(bucketKey, (buckets.get(bucketKey) || 0) + 1);
 
     existing.lastUpdated = new Date();
     this.metrics.set(key, existing);
@@ -107,7 +127,7 @@ export class MonitoringService {
   }
 
   // Record event
-  recordEvent(name: string, data: any, tags: Record<string, string> = {}) {
+  recordEvent(name: string, data: unknown, tags: Record<string, string> = {}) {
     const event = {
       name,
       data,
@@ -190,7 +210,11 @@ export class MonitoringService {
   }
 
   // Send alert notification
-  private async sendAlertNotification(alert: any) {
+  private async sendAlertNotification(alert: {
+    message: string;
+    severity: string;
+    timestamp: Date;
+  }) {
     try {
       // Send to external monitoring service
       if (process.env.ALERT_WEBHOOK_URL) {

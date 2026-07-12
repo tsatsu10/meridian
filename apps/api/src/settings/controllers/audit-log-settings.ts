@@ -94,7 +94,7 @@ export async function getAuditLogSettings(
     throw new Error("Workspace not found");
   }
 
-  const storedSettings = (workspace.settings as any) || {};
+  const storedSettings = (workspace.settings as Record<string, unknown>) || {};
   const auditSettings = storedSettings.auditLogs || {};
 
   return { ...DEFAULT_AUDIT_LOG_SETTINGS, ...auditSettings };
@@ -103,7 +103,7 @@ export async function getAuditLogSettings(
 export async function updateAuditLogSettings(
   workspaceId: string,
   updates: Partial<AuditLogSettings>,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   const [workspace] = await db
@@ -116,7 +116,7 @@ export async function updateAuditLogSettings(
     throw new Error("Workspace not found");
   }
 
-  const currentSettings = (workspace.settings as any) || {};
+  const currentSettings = (workspace.settings as Record<string, unknown>) || {};
   const currentAuditSettings = currentSettings.auditLogs || {};
 
   const updatedAuditSettings = { ...currentAuditSettings, ...updates };

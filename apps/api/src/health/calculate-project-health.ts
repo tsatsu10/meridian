@@ -3,6 +3,9 @@ import { projectTable, taskTable } from "../database/schema";
 import { eq } from "drizzle-orm";
 import logger from "../utils/logger";
 
+type TaskRow = typeof taskTable.$inferSelect;
+type ProjectRow = typeof projectTable.$inferSelect;
+
 export interface ProjectHealthMetrics {
   score: number;
   status: "excellent" | "good" | "fair" | "critical";
@@ -31,7 +34,7 @@ export async function calculateProjectHealth(
       .select()
       .from(projectTable)
       .where(eq(projectTable.id, projectId))
-      .then((rows: any[]) => rows[0]);
+      .then((rows) => rows[0]);
 
     if (!project) {
       return null;
@@ -104,7 +107,7 @@ export async function calculateProjectHealth(
 /**
  * Calculate completion rate (0-100)
  */
-function calculateCompletionRate(tasks: any[]): number {
+function calculateCompletionRate(tasks: TaskRow[]): number {
   if (tasks.length === 0) return 0;
 
   const completedCount = tasks.filter((t) => t.status === "done").length;
@@ -114,7 +117,10 @@ function calculateCompletionRate(tasks: any[]): number {
 /**
  * Calculate timeline health (0-100)
  */
-function calculateTimelineHealth(project: any, tasks: any[]): number {
+function calculateTimelineHealth(
+  project: ProjectRow,
+  tasks: TaskRow[],
+): number {
   let score = 100;
 
   // Check if project has a due date
@@ -153,7 +159,7 @@ function calculateTimelineHealth(project: any, tasks: any[]): number {
 /**
  * Calculate task health (0-100)
  */
-function calculateTaskHealth(tasks: any[]): number {
+function calculateTaskHealth(tasks: TaskRow[]): number {
   if (tasks.length === 0) return 75;
 
   let score = 100;
@@ -190,7 +196,7 @@ function calculateTaskHealth(tasks: any[]): number {
 /**
  * Calculate resource allocation health (0-100)
  */
-function calculateResourceAllocation(tasks: any[]): number {
+function calculateResourceAllocation(tasks: TaskRow[]): number {
   if (tasks.length === 0) return 75;
 
   let score = 100;
@@ -206,6 +212,7 @@ function calculateResourceAllocation(tasks: any[]): number {
     // Look for workload imbalance
     const taskCountByAssignee: { [key: string]: number } = {};
     for (const t of assignedTasks) {
+      if (!t.assigneeId) continue;
       taskCountByAssignee[t.assigneeId] =
         (taskCountByAssignee[t.assigneeId] || 0) + 1;
     }
@@ -237,7 +244,7 @@ function calculateResourceAllocation(tasks: any[]): number {
 /**
  * Calculate risk level (0-100, lower is better)
  */
-function calculateRiskLevel(tasks: any[], project: any): number {
+function calculateRiskLevel(tasks: TaskRow[], project: ProjectRow): number {
   let riskScore = 0;
 
   // High priority unstarted tasks = high risk

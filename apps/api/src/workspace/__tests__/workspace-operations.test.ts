@@ -28,8 +28,8 @@ import { hashPassword } from "../../auth/password";
 
 describe.skip("Workspace Operations", () => {
   let db: ReturnType<typeof getDatabase>;
-  let testOwner: any;
-  let testMember: any;
+  let testOwner: Record<string, unknown>;
+  let testMember: Record<string, unknown>;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -132,7 +132,7 @@ describe.skip("Workspace Operations", () => {
   });
 
   describe("Workspace Member Management", () => {
-    let testWorkspace: any;
+    let testWorkspace: Record<string, unknown>;
 
     beforeEach(async () => {
       [testWorkspace] = await db
@@ -257,7 +257,7 @@ describe.skip("Workspace Operations", () => {
   });
 
   describe("Workspace Settings", () => {
-    let testWorkspace: any;
+    let testWorkspace: Record<string, unknown>;
 
     beforeEach(async () => {
       [testWorkspace] = await db
@@ -338,9 +338,9 @@ describe.skip("Workspace Operations", () => {
   });
 
   describe("Workspace Deletion with Cascading", () => {
-    let testWorkspace: any;
-    let testProject: any;
-    let testTask: any;
+    let testWorkspace: Record<string, unknown>;
+    let testProject: Record<string, unknown>;
+    let testTask: Record<string, unknown>;
 
     beforeEach(async () => {
       // Create workspace
@@ -420,7 +420,7 @@ describe.skip("Workspace Operations", () => {
   });
 
   describe("Workspace Status Management", () => {
-    let testWorkspace: any;
+    let testWorkspace: Record<string, unknown>;
 
     beforeEach(async () => {
       [testWorkspace] = await db
@@ -471,8 +471,8 @@ describe.skip("Workspace Operations", () => {
   });
 
   describe("Workspace Queries", () => {
-    let workspace1: any;
-    let workspace2: any;
+    let workspace1: Record<string, unknown>;
+    let workspace2: Record<string, unknown>;
 
     beforeEach(async () => {
       [workspace1] = await db

@@ -220,11 +220,15 @@ describe("GetTasks Controller", () => {
       // Assert
       // Tasks are grouped into columns by status, not into archivedTasks/plannedTasks
       expect(result.columns).toBeDefined();
-      const todoColumn = result.columns.find((c: any) => c.id === "todo");
-      const inProgressColumn = result.columns.find(
-        (c: any) => c.id === "in_progress",
+      const todoColumn = result.columns.find(
+        (c: { id: string }) => c.id === "todo",
       );
-      const doneColumn = result.columns.find((c: any) => c.id === "done");
+      const inProgressColumn = result.columns.find(
+        (c: { id: string }) => c.id === "in_progress",
+      );
+      const doneColumn = result.columns.find(
+        (c: { id: string }) => c.id === "done",
+      );
 
       expect(todoColumn.tasks).toHaveLength(1);
       expect(inProgressColumn.tasks).toHaveLength(1);

@@ -36,8 +36,8 @@ export interface RoleChangeDetails {
   newRole: string;
   previousPermissions?: string[];
   newPermissions?: string[];
-  previousScope?: any;
-  newScope?: any;
+  previousScope?: Record<string, unknown>;
+  newScope?: Record<string, unknown>;
 }
 
 /**
@@ -223,7 +223,7 @@ export class RoleAuditService {
   static async logPermissionGrant(
     ctx: RoleAuditContext,
     permission: string,
-    scope?: any,
+    scope?: Record<string, unknown>,
   ): Promise<void> {
     const db = getDatabase();
 
@@ -261,7 +261,7 @@ export class RoleAuditService {
   static async logPermissionRevoke(
     ctx: RoleAuditContext,
     permission: string,
-    scope?: any,
+    scope?: Record<string, unknown>,
   ): Promise<void> {
     const db = getDatabase();
 
@@ -300,7 +300,7 @@ export class RoleAuditService {
     userId: string,
     workspaceId?: string,
     limit = 100,
-  ): Promise<any[]> {
+  ) {
     const db = getDatabase();
 
     try {
@@ -341,10 +341,7 @@ export class RoleAuditService {
   /**
    * Get workspace audit trail
    */
-  static async getWorkspaceAuditTrail(
-    workspaceId: string,
-    limit = 100,
-  ): Promise<any[]> {
+  static async getWorkspaceAuditTrail(workspaceId: string, limit = 100) {
     const db = getDatabase();
 
     try {

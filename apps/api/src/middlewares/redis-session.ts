@@ -123,7 +123,7 @@ export async function createSession(
     role: string;
     workspaceId: string;
     permissions?: string[];
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   },
 ): Promise<string> {
   const sessionStore = getSessionStore();
@@ -274,7 +274,7 @@ export async function getSessionInfo(c: Context): Promise<{
   sessionId: string;
   user: SessionUser;
   ttl: number;
-  connectionInfo?: any;
+  connectionInfo?: Record<string, unknown> | null;
 } | null> {
   const sessionId = c.get("sessionId");
   const user = c.get("user");
@@ -366,7 +366,7 @@ export async function sessionHealthCheck(): Promise<{
   redis: {
     connected: boolean;
     totalSessions: number;
-    connectionInfo: any;
+    connectionInfo: Record<string, unknown> | null;
   };
   status: "healthy" | "degraded" | "unhealthy";
 }> {

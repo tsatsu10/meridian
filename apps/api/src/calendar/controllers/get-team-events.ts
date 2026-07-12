@@ -79,7 +79,7 @@ export async function getTeamEvents(
 
     // Get recurring event instances (only for events marked as recurring)
     const recurringEvents = customEvents.filter((e) => e.id && e.startTime);
-    let recurringInstances: any[] = [];
+    let recurringInstances: unknown[] = [];
 
     for (const recurringEvent of recurringEvents) {
       try {

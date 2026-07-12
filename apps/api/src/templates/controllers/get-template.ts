@@ -8,6 +8,9 @@ import {
 } from "../../database/schema";
 import type { TemplateWithTasks } from "../../types/templates";
 
+type SubtaskRow = typeof templateSubtasks.$inferSelect;
+type DepRow = typeof templateDependencies.$inferSelect;
+
 export default async function getTemplate(
   templateId: string,
 ): Promise<TemplateWithTasks | null> {
@@ -29,7 +32,7 @@ export default async function getTemplate(
 
   // Get subtasks for these tasks
   const taskIds = tasks.map((t) => t.id);
-  let subtasks: any[] = [];
+  let subtasks: SubtaskRow[] = [];
 
   if (taskIds.length > 0) {
     subtasks = await getDatabase()
@@ -40,7 +43,7 @@ export default async function getTemplate(
   }
 
   // Get dependencies for these tasks
-  let dependencies: any[] = [];
+  let dependencies: DepRow[] = [];
 
   if (taskIds.length > 0) {
     dependencies = await getDatabase()
@@ -52,25 +55,21 @@ export default async function getTemplate(
   // Group subtasks by task
   const subtasksByTask = subtasks.reduce(
     (acc, subtask) => {
-      if (!acc[subtask.templateTaskId]) {
-        acc[subtask.templateTaskId] = [];
-      }
-      acc[subtask.templateTaskId].push(subtask);
+      if (!acc[subtask.templateTaskId]) acc[subtask.templateTaskId] = [];
+      acc[subtask.templateTaskId]?.push(subtask);
       return acc;
     },
-    {} as Record<string, any[]>,
+    {} as Record<string, SubtaskRow[]>,
   );
 
   // Group dependencies by task
   const depsByTask = dependencies.reduce(
     (acc, dep) => {
-      if (!acc[dep.dependentTaskId]) {
-        acc[dep.dependentTaskId] = [];
-      }
-      acc[dep.dependentTaskId].push(dep);
+      if (!acc[dep.dependentTaskId]) acc[dep.dependentTaskId] = [];
+      acc[dep.dependentTaskId]?.push(dep);
       return acc;
     },
-    {} as Record<string, any[]>,
+    {} as Record<string, DepRow[]>,
   );
 
   // Combine tasks with their subtasks and dependencies

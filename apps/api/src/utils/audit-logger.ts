@@ -31,7 +31,7 @@ export interface AuditEvent {
   resourceId?: string;
   resourceType?: string;
   action: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   severity: "low" | "medium" | "high" | "critical";
   outcome: "success" | "failure" | "blocked";
   retryAttempt?: boolean;
@@ -193,7 +193,7 @@ export class AuditLogger {
     ipAddress?: string;
     userAgent?: string;
     outcome: "success" | "failure" | "blocked";
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     errorMessage?: string;
   }): Promise<void> {
     await this.logEvent({
@@ -224,7 +224,7 @@ export class AuditLogger {
     userAgent?: string;
     workspaceId?: string;
     outcome: "success" | "failure" | "blocked";
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     errorMessage?: string;
     duration?: number;
   }): Promise<void> {
@@ -258,7 +258,7 @@ export class AuditLogger {
     workspaceId?: string;
     ipAddress?: string;
     outcome: "success" | "failure" | "blocked";
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     errorMessage?: string;
   }): Promise<void> {
     await this.logEvent({
@@ -295,7 +295,7 @@ export class AuditLogger {
       | "malicious_content"
       | "injection_attempt"
       | "other";
-    details: Record<string, any>;
+    details: Record<string, unknown>;
     blockedAction?: string;
   }): Promise<void> {
     await this.logEvent({
@@ -368,7 +368,7 @@ export class AuditLogger {
     resourceId?: string;
     ipAddress?: string;
     outcome: "success" | "failure";
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     errorMessage?: string;
   }): Promise<void> {
     await this.logEvent({
@@ -396,7 +396,7 @@ export class AuditLogger {
    * Query audit logs
    */
   async queryLogs(query: AuditQuery): Promise<{
-    logs: any[];
+    logs: (typeof auditLogTable.$inferSelect)[];
     total: number;
     hasMore: boolean;
   }> {
@@ -663,8 +663,10 @@ export class AuditLogger {
   /**
    * Recursively sanitize an object
    */
-  private sanitizeObject(obj: Record<string, any>): Record<string, any> {
-    const sanitized: Record<string, any> = {};
+  private sanitizeObject(
+    obj: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(obj)) {
       const lowerKey = key.toLowerCase();
@@ -677,7 +679,7 @@ export class AuditLogger {
       ) {
         sanitized[key] = "[REDACTED]";
       } else if (typeof value === "object" && value !== null) {
-        sanitized[key] = this.sanitizeObject(value);
+        sanitized[key] = this.sanitizeObject(value as Record<string, unknown>);
       } else {
         sanitized[key] = value;
       }

@@ -237,13 +237,25 @@ async function getProjectOverview(c: Context) {
   }
 }
 
+type TaskStats = {
+  total: number;
+  completed: number;
+  inProgress: number;
+  overdue: number;
+  blocked: number;
+};
+type MilestoneStats = { overdue: number };
+type VelocityTask = {
+  status?: string | null;
+  updatedAt?: Date | string | null;
+};
 /**
  * Calculate project health score (0-100)
  */
 function calculateProjectHealth(data: {
-  taskStats: any;
-  milestoneStats: any;
-  project: any;
+  taskStats: TaskStats;
+  milestoneStats: MilestoneStats;
+  project: unknown;
 }): number {
   const { taskStats, milestoneStats, project } = data;
 
@@ -275,7 +287,7 @@ function calculateProjectHealth(data: {
 /**
  * Calculate velocity (tasks completed per week)
  */
-function calculateVelocity(tasks: any[]): number {
+function calculateVelocity(tasks: VelocityTask[]): number {
   const completedTasks = tasks.filter(
     (t) => t.status === "done" && t.updatedAt,
   );
@@ -287,7 +299,7 @@ function calculateVelocity(tasks: any[]): number {
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
 
   const recentlyCompleted = completedTasks.filter(
-    (t) => new Date(t.updatedAt).getTime() >= weekAgo,
+    (t) => t.updatedAt != null && new Date(t.updatedAt).getTime() >= weekAgo,
   );
 
   return recentlyCompleted.length;
@@ -296,7 +308,7 @@ function calculateVelocity(tasks: any[]): number {
 /**
  * Calculate efficiency score (0-100)
  */
-function calculateEfficiency(taskStats: any): number {
+function calculateEfficiency(taskStats: TaskStats): number {
   if (taskStats.total === 0) return 0;
 
   const productive = taskStats.completed + taskStats.inProgress;
@@ -310,7 +322,7 @@ function calculateEfficiency(taskStats: any): number {
  */
 function calculateRiskLevel(
   healthScore: number,
-  taskStats: any,
+  taskStats: TaskStats,
 ): "low" | "medium" | "high" | "critical" {
   // Critical: Health < 40 OR many overdue/blocked tasks
   if (healthScore < 40 || taskStats.overdue > 10 || taskStats.blocked > 5) {

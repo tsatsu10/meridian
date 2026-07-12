@@ -238,8 +238,10 @@ export async function seedExecutiveData(options: SeedOptions = {}) {
           name: template.name,
           slug: template.name.toLowerCase().replace(/\s+/g, "-"),
           description: `${template.name} project for ${workspaceName}`,
-          status: template.status as any,
-          priority: template.priority as any,
+          status:
+            template.status as (typeof projectTable.status.enumValues)[number],
+          priority:
+            template.priority as (typeof projectTable.priority.enumValues)[number],
           startDate,
           endDate,
           healthScore: template.health,
@@ -286,8 +288,8 @@ export async function seedExecutiveData(options: SeedOptions = {}) {
           projectId: project.id,
           title: `Task ${j + 1} for ${project.name}`,
           description: `Implementation task for ${project.name}`,
-          status: status as any,
-          priority: priority as any,
+          status: status as (typeof taskTable.status.enumValues)[number],
+          priority: priority as (typeof taskTable.priority.enumValues)[number],
           dueDate,
           createdAt: taskStartDate,
           updatedAt: status === "done" ? dueDate : now,

@@ -63,7 +63,7 @@ async function updateProject(
     }
 
     // Build update object with only schema fields
-    const updateFields: any = {
+    const updateFields: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 

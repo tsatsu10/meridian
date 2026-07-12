@@ -30,7 +30,7 @@ export async function updateMilestone(c: Context) {
     } = body;
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 

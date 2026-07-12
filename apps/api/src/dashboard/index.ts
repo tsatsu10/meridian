@@ -41,7 +41,12 @@ const dashboard = new Hono()
       if (filters.status) {
         const statuses = filters.status.split(",");
         if (statuses.length === 1) {
-          filterConditions.push(eq(taskTable.status, statuses[0] as any));
+          filterConditions.push(
+            eq(
+              taskTable.status,
+              statuses[0] as (typeof taskTable.status.enumValues)[number],
+            ),
+          );
         } else {
           filterConditions.push(
             sql`${taskTable.status} IN (${sql.join(
@@ -56,7 +61,12 @@ const dashboard = new Hono()
       if (filters.priority) {
         const priorities = filters.priority.split(",");
         if (priorities.length === 1) {
-          filterConditions.push(eq(taskTable.priority, priorities[0] as any));
+          filterConditions.push(
+            eq(
+              taskTable.priority,
+              priorities[0] as (typeof taskTable.priority.enumValues)[number],
+            ),
+          );
         } else {
           filterConditions.push(
             sql`${taskTable.priority} IN (${sql.join(

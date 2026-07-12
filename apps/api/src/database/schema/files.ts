@@ -63,7 +63,7 @@ export const files = pgTable("files", {
   // Metadata
   description: text("description"),
   tags: json("tags").$type<string[]>(),
-  metadata: json("metadata").$type<Record<string, any>>(), // Additional metadata
+  metadata: json("metadata").$type<Record<string, unknown>>(), // Additional metadata
 
   // Access control
   isPublic: boolean("is_public").default(false).notNull(),
@@ -200,7 +200,7 @@ export const fileActivityLog = pgTable("file_activity_log", {
 
   // Activity details
   activityType: text("activity_type").notNull(), // 'upload', 'download', 'view', 'edit', 'delete', 'share', 'comment'
-  activityDetails: json("activity_details").$type<Record<string, any>>(),
+  activityDetails: json("activity_details").$type<Record<string, unknown>>(),
 
   // User relation
   userId: text("user_id").references(() => users.id, { onDelete: "set null" }),

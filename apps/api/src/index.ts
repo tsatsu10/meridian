@@ -3,7 +3,7 @@ config({ path: "./.env" });
 import { serve } from "@hono/node-server";
 // import { serveStatic } from "@hono/node-server/serve-static";
 // import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { Hono } from "hono";
+import { Hono, type Context, type Next } from "hono";
 // import { getCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { compress } from "hono/compress";
@@ -59,7 +59,11 @@ import metricsRoutes from "./modules/metrics"; // Monitoring & metrics endpoint
 import fileVersionsRoutes from "./modules/file-versions"; // File versioning API
 // Removed old complex api-keys module - using simplified version
 import goalsRoutes from "./goals/routes"; // @epic-goal-setting: Goals & OKRs management
-import { createServer } from "node:http";
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import { userTable } from "./database/schema";
 import { eq } from "drizzle-orm";
 import favorites from "./favorites";
@@ -265,7 +269,7 @@ if (!enableDemoAuthBypass) {
 }
 
 // Database readiness middleware
-const databaseMiddleware = async (c: any, next: any) => {
+const databaseMiddleware = async (c: Context, next: Next) => {
   if (!databaseReady) {
     logger.debug("⏳ Database not ready yet, waiting...");
     // Wait for database to be ready
@@ -477,7 +481,11 @@ async function startServer() {
         handleHonoRequest(req, res);
       }
 
-      function handleHonoRequest(req: any, res: any, body?: string) {
+      function handleHonoRequest(
+        req: IncomingMessage,
+        res: ServerResponse,
+        body?: string,
+      ) {
         void Promise.resolve(
           app.fetch(
             new Request(`http://localhost:${port}${req.url}`, {
