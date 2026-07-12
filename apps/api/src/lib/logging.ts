@@ -6,6 +6,7 @@
  */
 
 import logger from "../utils/logger";
+import type { Context } from "hono";
 
 // Re-export types (LogLevel name is reserved for the enum below)
 export type { LogCategory } from "../utils/logger";
@@ -16,7 +17,7 @@ export interface LogEntry {
   level: string;
   category: string;
   message: string;
-  data?: any;
+  data?: unknown;
   context?: {
     userId?: string;
     endpoint?: string;
@@ -63,7 +64,11 @@ class LoggingService {
     // Also log using the actual logger
     const logMethod = entry.level.toLowerCase() as keyof typeof logger;
     if (typeof logger[logMethod] === "function") {
-      (logger[logMethod] as any)(entry.message, entry.data, entry.category);
+      (logger[logMethod] as (...args: unknown[]) => void)(
+        entry.message,
+        entry.data,
+        entry.category,
+      );
     }
 
     return fullEntry;
@@ -128,7 +133,7 @@ export const loggingService = new LoggingService();
  * Create logging middleware for Hono
  */
 export function createLoggingMiddleware(config?: Partial<LoggingConfig>) {
-  return async (c: any, next: () => Promise<void>) => {
+  return async (c: Context, next: () => Promise<void>) => {
     const start = Date.now();
     const method = c.req.method;
     const path = c.req.path;
