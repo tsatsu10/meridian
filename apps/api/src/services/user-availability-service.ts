@@ -25,7 +25,7 @@ export interface AvailabilityUpdate {
 /**
  * Get user availability
  */
-export async function getUserAvailability(userId: string): Promise<any> {
+export async function getUserAvailability(userId: string) {
   const db = getDatabase();
 
   try {
@@ -83,7 +83,7 @@ export async function getUserAvailability(userId: string): Promise<any> {
 export async function updateUserAvailability(
   userId: string,
   data: AvailabilityUpdate,
-): Promise<any> {
+) {
   const db = getDatabase();
 
   try {
@@ -146,7 +146,16 @@ export function getCurrentLocalTime(timezone: string): string {
 /**
  * Check if user is currently in working hours
  */
-export function isInWorkingHours(availability: any): boolean {
+export function isInWorkingHours(
+  availability:
+    | {
+        workingDays?: unknown;
+        workingHoursStart?: string | null;
+        workingHoursEnd?: string | null;
+      }
+    | null
+    | undefined,
+): boolean {
   if (!availability) return false;
 
   try {
@@ -157,7 +166,9 @@ export function isInWorkingHours(availability: any): boolean {
       .toLowerCase();
 
     // Check if today is a working day
-    const workingDays = availability.workingDays || [];
+    const workingDays = Array.isArray(availability.workingDays)
+      ? availability.workingDays
+      : [];
     if (!workingDays.includes(dayOfWeek)) {
       return false;
     }
@@ -192,7 +203,7 @@ export async function updateAutoStatus(userId: string): Promise<void> {
   try {
     const availability = await getUserAvailability(userId);
 
-    if (!availability.autoStatus) {
+    if (!availability || !availability.autoStatus) {
       return; // Manual status is set
     }
 
