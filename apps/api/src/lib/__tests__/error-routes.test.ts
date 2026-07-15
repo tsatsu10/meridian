@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 import { errorsRoute } from "../errors";
 import { errorHandler } from "../errors";
+import logger from "../../utils/logger";
 
 describe("Error Routes", () => {
   let app: Hono;
@@ -215,10 +216,10 @@ describe("Error Routes", () => {
   });
 
   describe("Error Report Processing", () => {
-    it.skip("logs error reports to console", async () => {
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+    it("logs error reports via the logger", async () => {
+      const errorSpy = vi
+        .spyOn(logger, "error")
+        .mockImplementation(async () => {});
 
       const errorReport = {
         message: "Test error message",
@@ -232,7 +233,7 @@ describe("Error Routes", () => {
         body: JSON.stringify(errorReport),
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(errorSpy).toHaveBeenCalledWith(
         "Client-side error reported:",
         expect.objectContaining({
           message: "Test error message",
@@ -241,7 +242,7 @@ describe("Error Routes", () => {
         }),
       );
 
-      consoleSpy.mockRestore();
+      errorSpy.mockRestore();
     });
 
     it("responds with 200 even if error reporting fails", async () => {

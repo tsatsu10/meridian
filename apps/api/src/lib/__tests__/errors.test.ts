@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 import { AppError, createError, errorHandler } from "../errors";
 import { HTTPException } from "hono/http-exception";
+import logger from "../../utils/logger";
 
 describe("Error Handling", () => {
   let app: Hono;
@@ -192,10 +193,10 @@ describe("Error Handling", () => {
       });
     });
 
-    it.skip("logs errors to console", async () => {
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+    it("logs errors via the logger", async () => {
+      const errorSpy = vi
+        .spyOn(logger, "error")
+        .mockImplementation(async () => {});
 
       app.get("/test", () => {
         throw new Error("Test error");
@@ -203,12 +204,12 @@ describe("Error Handling", () => {
 
       await app.request("/test");
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(errorSpy).toHaveBeenCalledWith(
         "Error caught by middleware:",
         expect.any(Error),
       );
 
-      consoleSpy.mockRestore();
+      errorSpy.mockRestore();
     });
   });
 
