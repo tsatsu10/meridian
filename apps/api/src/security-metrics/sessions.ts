@@ -105,8 +105,34 @@ sessionRoutes.post("/:sessionId/terminate", authMiddleware, async (c) => {
       return c.json({ error: "Authentication required" }, 401);
     }
 
-    // Delete the session
-    await db.delete(sessionsTable).where(eq(sessionsTable.id, sessionId));
+    const [currentUser] = await db
+      .select({ id: userTable.id })
+      .from(userTable)
+      .where(eq(userTable.email, userEmail))
+      .limit(1);
+
+    if (!currentUser) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    // SECURITY: scope the delete to the caller's own session. Without this,
+    // any authenticated user could terminate ANY other user's session by
+    // supplying an arbitrary sessionId (no ownership check existed before).
+    // Returning 404 for both "no such session" and "not yours" avoids
+    // letting a caller distinguish real session IDs from made-up ones.
+    const result = await db
+      .delete(sessionsTable)
+      .where(
+        and(
+          eq(sessionsTable.id, sessionId),
+          eq(sessionsTable.userId, currentUser.id),
+        ),
+      )
+      .returning({ id: sessionsTable.id });
+
+    if (result.length === 0) {
+      return c.json({ error: "Session not found" }, 404);
+    }
 
     // In a real app, you might also want to:
     // 1. Invalidate any cached tokens
