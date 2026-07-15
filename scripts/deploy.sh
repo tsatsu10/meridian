@@ -161,12 +161,11 @@ check_prerequisites() {
         error "Node.js 18 or higher is required. Current version: $(node --version)"
     fi
     
-    # Check pnpm
-    if ! command -v pnpm &> /dev/null; then
-        warning "pnpm not found, installing..."
-        npm install -g pnpm
+    # Check npm (ships with Node)
+    if ! command -v npm &> /dev/null; then
+        error "npm not found. Install Node.js (which bundles npm)."
     fi
-    
+
     # Check Git (for version info)
     if ! command -v git &> /dev/null; then
         warning "Git not found. Version info will not be available."
@@ -199,8 +198,8 @@ install_dependencies() {
         rm -rf node_modules
     fi
     
-    # Install with frozen lockfile for consistency
-    pnpm install --frozen-lockfile
+    # Install with the committed lockfile for consistency
+    npm ci
     
     success "Dependencies installed"
 }
@@ -462,7 +461,7 @@ generate_report() {
     "version": "$(git rev-parse HEAD 2>/dev/null || echo 'unknown')",
     "tag": "$(git describe --tags 2>/dev/null || echo 'no-tags')",
     "node_version": "$(node --version)",
-    "pnpm_version": "$(pnpm --version 2>/dev/null || echo 'not-installed')"
+    "npm_version": "$(npm --version 2>/dev/null || echo 'not-installed')"
   },
   "configuration": {
     "api_port": "${API_PORT:-3008}",
