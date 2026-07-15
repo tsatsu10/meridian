@@ -24,9 +24,7 @@ if (import.meta.env.PROD) {
       initWebVitals();
     })
     .catch((_error) => {
-      console.info(
-        "Web Vitals monitoring disabled. Install with: npm install",
-      );
+      console.info("Web Vitals monitoring disabled. Install with: npm install");
     });
 }
 
