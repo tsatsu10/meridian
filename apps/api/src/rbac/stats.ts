@@ -8,7 +8,7 @@ import logger from "../utils/logger";
 const rbacStats = new Hono();
 
 // Get overall access control stats
-rbacStats.get("/stats", authMiddleware, async (c) => {
+rbacStats.get("/stats", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -53,7 +53,7 @@ rbacStats.get("/stats", authMiddleware, async (c) => {
 });
 
 // Get role distribution
-rbacStats.get("/distribution", authMiddleware, async (c) => {
+rbacStats.get("/distribution", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -101,7 +101,7 @@ rbacStats.get("/distribution", authMiddleware, async (c) => {
 });
 
 // Get recent permission changes
-rbacStats.get("/recent-changes", authMiddleware, async (c) => {
+rbacStats.get("/recent-changes", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

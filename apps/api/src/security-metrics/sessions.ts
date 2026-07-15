@@ -8,7 +8,7 @@ import logger from "../utils/logger";
 const sessionRoutes = new Hono();
 
 // Get active sessions
-sessionRoutes.get("/active", authMiddleware, async (c) => {
+sessionRoutes.get("/active", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const userEmail = c.get("userEmail");
@@ -63,7 +63,7 @@ sessionRoutes.get("/active", authMiddleware, async (c) => {
 });
 
 // Get session statistics
-sessionRoutes.get("/stats", authMiddleware, async (c) => {
+sessionRoutes.get("/stats", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -96,9 +96,12 @@ sessionRoutes.get("/stats", authMiddleware, async (c) => {
 });
 
 // Terminate a specific session
-sessionRoutes.post("/:sessionId/terminate", authMiddleware, async (c) => {
+sessionRoutes.post("/:sessionId/terminate", authMiddleware(), async (c) => {
   try {
     const { sessionId } = c.req.param();
+    if (!sessionId) {
+      return c.json({ error: "Session id is required" }, 400);
+    }
     const db = getDatabase();
     const userEmail = c.get("userEmail");
     if (!userEmail) {
@@ -152,7 +155,7 @@ sessionRoutes.post("/:sessionId/terminate", authMiddleware, async (c) => {
 });
 
 // Terminate all sessions except current
-sessionRoutes.post("/terminate-all", authMiddleware, async (c) => {
+sessionRoutes.post("/terminate-all", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const userEmail = c.get("userEmail");

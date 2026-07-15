@@ -14,7 +14,7 @@ import logger from "../utils/logger";
 const gdprRoutes = new Hono();
 
 // Get overall GDPR compliance overview
-gdprRoutes.get("/compliance", authMiddleware, async (c) => {
+gdprRoutes.get("/compliance", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -140,7 +140,7 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
 });
 
 // Get data retention policies
-gdprRoutes.get("/retention-policies", authMiddleware, async (c) => {
+gdprRoutes.get("/retention-policies", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -210,7 +210,7 @@ gdprRoutes.get("/retention-policies", authMiddleware, async (c) => {
 });
 
 // Get user consent records
-gdprRoutes.get("/consent-records", authMiddleware, async (c) => {
+gdprRoutes.get("/consent-records", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -266,7 +266,7 @@ gdprRoutes.get("/consent-records", authMiddleware, async (c) => {
 });
 
 // Get data access requests
-gdprRoutes.get("/access-requests", authMiddleware, async (c) => {
+gdprRoutes.get("/access-requests", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -331,7 +331,7 @@ gdprRoutes.get("/access-requests", authMiddleware, async (c) => {
 });
 
 // Generate compliance report
-gdprRoutes.post("/generate-report", authMiddleware, async (c) => {
+gdprRoutes.post("/generate-report", authMiddleware(), async (c) => {
   try {
     // In a real implementation, this would generate a PDF report
     // For now, we'll return a simple text file

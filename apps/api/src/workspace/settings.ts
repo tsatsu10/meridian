@@ -8,7 +8,7 @@ import logger from "../utils/logger";
 const workspaceSettingsRoutes = new Hono();
 
 // Get workspace settings
-workspaceSettingsRoutes.get("/", authMiddleware, async (c) => {
+workspaceSettingsRoutes.get("/", authMiddleware(), async (c) => {
   try {
     const workspaceId = c.get("workspaceId") as string | undefined;
     const db = getDatabase();
@@ -59,7 +59,7 @@ workspaceSettingsRoutes.get("/", authMiddleware, async (c) => {
 });
 
 // Update workspace settings
-workspaceSettingsRoutes.patch("/", authMiddleware, async (c) => {
+workspaceSettingsRoutes.patch("/", authMiddleware(), async (c) => {
   try {
     const workspaceId = c.get("workspaceId") as string | undefined;
     const userId = c.get("userId") as string | undefined;

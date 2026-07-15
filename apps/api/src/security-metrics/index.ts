@@ -16,7 +16,7 @@ import logger from "../utils/logger";
 const securityMetrics = new Hono();
 
 // Get overall security metrics
-securityMetrics.get("/metrics", authMiddleware, async (c) => {
+securityMetrics.get("/metrics", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -148,7 +148,7 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
 });
 
 // Get security alerts
-securityMetrics.get("/alerts", authMiddleware, async (c) => {
+securityMetrics.get("/alerts", authMiddleware(), async (c) => {
   try {
     const timeRange = c.req.query("timeRange") || "7d";
     const status = c.req.query("status") || "all";
@@ -201,7 +201,7 @@ securityMetrics.get("/alerts", authMiddleware, async (c) => {
 });
 
 // Get threat data for charts
-securityMetrics.get("/threats", authMiddleware, async (c) => {
+securityMetrics.get("/threats", authMiddleware(), async (c) => {
   try {
     const timeRange = c.req.query("timeRange") || "7d";
     const db = getDatabase();
@@ -290,7 +290,7 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
 });
 
 // Resolve a security alert
-securityMetrics.post("/alerts/:id/resolve", authMiddleware, async (c) => {
+securityMetrics.post("/alerts/:id/resolve", authMiddleware(), async (c) => {
   try {
     const alertId = c.req.param("id");
     const userEmail = c.get("userEmail");
@@ -321,7 +321,7 @@ securityMetrics.post("/alerts/:id/resolve", authMiddleware, async (c) => {
 });
 
 // Export security report
-securityMetrics.post("/export-report", authMiddleware, async (c) => {
+securityMetrics.post("/export-report", authMiddleware(), async (c) => {
   try {
     const { timeRange } = await c.req.json();
 

@@ -8,7 +8,7 @@ import logger from "../utils/logger";
 const reportsRoutes = new Hono();
 
 // Get scheduled reports
-reportsRoutes.get("/scheduled", authMiddleware, async (c) => {
+reportsRoutes.get("/scheduled", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -42,7 +42,7 @@ reportsRoutes.get("/scheduled", authMiddleware, async (c) => {
 });
 
 // Create scheduled report
-reportsRoutes.post("/schedule", authMiddleware, async (c) => {
+reportsRoutes.post("/schedule", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const body = await c.req.json();
@@ -71,10 +71,13 @@ reportsRoutes.post("/schedule", authMiddleware, async (c) => {
 });
 
 // Update scheduled report
-reportsRoutes.put("/schedule/:id", authMiddleware, async (c) => {
+reportsRoutes.put("/schedule/:id", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const { id } = c.req.param();
+    if (!id) {
+      return c.json({ error: "Report id is required" }, 400);
+    }
     const body = await c.req.json();
 
     const updated = await db
@@ -102,10 +105,13 @@ reportsRoutes.put("/schedule/:id", authMiddleware, async (c) => {
 });
 
 // Delete scheduled report
-reportsRoutes.delete("/schedule/:id", authMiddleware, async (c) => {
+reportsRoutes.delete("/schedule/:id", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const { id } = c.req.param();
+    if (!id) {
+      return c.json({ error: "Report id is required" }, 400);
+    }
 
     const deleted = await db
       .delete(scheduledReports)
@@ -124,7 +130,7 @@ reportsRoutes.delete("/schedule/:id", authMiddleware, async (c) => {
 });
 
 // Run report now
-reportsRoutes.post("/send-now", authMiddleware, async (c) => {
+reportsRoutes.post("/send-now", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const { reportId } = await c.req.json();
@@ -161,7 +167,7 @@ reportsRoutes.post("/send-now", authMiddleware, async (c) => {
 });
 
 // Keep old endpoints for backward compatibility (deprecated)
-reportsRoutes.get("/scheduled-old", authMiddleware, async (c) => {
+reportsRoutes.get("/scheduled-old", authMiddleware(), async (c) => {
   try {
     // Legacy mock data for backward compatibility
     const reports = [
@@ -250,28 +256,32 @@ reportsRoutes.get("/scheduled-old", authMiddleware, async (c) => {
 });
 
 // Toggle report enabled status
-reportsRoutes.post("/scheduled/:reportId/toggle", authMiddleware, async (c) => {
-  try {
-    const { reportId } = c.req.param();
-    const { enabled } = await c.req.json();
+reportsRoutes.post(
+  "/scheduled/:reportId/toggle",
+  authMiddleware(),
+  async (c) => {
+    try {
+      const { reportId } = c.req.param();
+      const { enabled } = await c.req.json();
 
-    // In production, update the report in the database
-    logger.debug(
-      `Toggling report ${reportId} to ${enabled ? "enabled" : "disabled"}`,
-    );
+      // In production, update the report in the database
+      logger.debug(
+        `Toggling report ${reportId} to ${enabled ? "enabled" : "disabled"}`,
+      );
 
-    return c.json({
-      success: true,
-      data: { reportId, enabled },
-    });
-  } catch (error) {
-    logger.error("Error toggling report:", error);
-    return c.json({ error: "Failed to toggle report" }, 500);
-  }
-});
+      return c.json({
+        success: true,
+        data: { reportId, enabled },
+      });
+    } catch (error) {
+      logger.error("Error toggling report:", error);
+      return c.json({ error: "Failed to toggle report" }, 500);
+    }
+  },
+);
 
 // Delete scheduled report
-reportsRoutes.delete("/scheduled/:reportId", authMiddleware, async (c) => {
+reportsRoutes.delete("/scheduled/:reportId", authMiddleware(), async (c) => {
   try {
     const { reportId } = c.req.param();
 
@@ -289,7 +299,7 @@ reportsRoutes.delete("/scheduled/:reportId", authMiddleware, async (c) => {
 });
 
 // Run report now
-reportsRoutes.post("/scheduled/:reportId/run", authMiddleware, async (c) => {
+reportsRoutes.post("/scheduled/:reportId/run", authMiddleware(), async (c) => {
   try {
     const { reportId } = c.req.param();
 
