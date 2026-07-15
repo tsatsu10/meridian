@@ -356,31 +356,6 @@ describe("TwoFactorSetup", () => {
       const downloadButton = screen.getByRole("button", { name: /Download/i });
       expect(downloadButton).toBeInTheDocument();
     });
-
-    it.skip("should call onComplete callback after timeout", async () => {
-      // Skip: Complex interaction with fake timers and React state updates
-      // Requires refactoring component to make timer observable
-    });
-  });
-
-  describe("Error Handling", () => {
-    it.skip("should show error if generate fails", async () => {
-      // Skip: Error boundary/toast integration needs component refactoring
-    });
-
-    it.skip("should show error if verification code is too short", async () => {
-      // Skip: Button state validation needs component refactoring
-    });
-  });
-
-  describe("Loading States", () => {
-    it.skip("should show loading state during generate", async () => {
-      // Skip: Loading state timing needs component refactoring
-    });
-
-    it.skip("should show loading state during verification", async () => {
-      // Skip: Loading state timing needs component refactoring
-    });
   });
 
   describe("Accessibility", () => {
@@ -389,10 +364,6 @@ describe("TwoFactorSetup", () => {
 
       const button = screen.getByRole("button", { name: /Get Started/i });
       expect(button).toBeInTheDocument();
-    });
-
-    it.skip("should focus verification input on mount", async () => {
-      // Skip: Focus management testing needs component refactoring
     });
   });
 });

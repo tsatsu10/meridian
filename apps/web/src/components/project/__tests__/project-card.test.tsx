@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TestWrapper } from "../../../test-utils/test-wrapper";
 import React from "react";
@@ -322,8 +322,7 @@ describe("Project Card Component", () => {
     });
   });
 
-  // Skip: Hover actions may not trigger callbacks in test environment
-  it.skip("should handle edit action [HOVER INTERACTION]", async () => {
+  it("should handle edit action", async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
 
@@ -340,13 +339,15 @@ describe("Project Card Component", () => {
     const editButton = await screen.findByRole("button", {
       name: /edit project/i,
     });
-    await user.click(editButton);
+    // userEvent.click moves the pointer, which fires the card's mouseleave in
+    // jsdom and unmounts the hover-revealed button mid-click; fireEvent
+    // dispatches the click without pointer simulation.
+    fireEvent.click(editButton);
 
     expect(onEdit).toHaveBeenCalledWith("project-123");
   });
 
-  // Skip: Hover actions may not trigger callbacks in test environment
-  it.skip("should handle archive action [HOVER INTERACTION]", async () => {
+  it("should handle archive action", async () => {
     const user = userEvent.setup();
     const onArchive = vi.fn();
 
@@ -363,7 +364,8 @@ describe("Project Card Component", () => {
     const archiveButton = await screen.findByRole("button", {
       name: /archive project/i,
     });
-    await user.click(archiveButton);
+    // Same jsdom mouseleave-unmount trap as the edit-action test above.
+    fireEvent.click(archiveButton);
 
     expect(onArchive).toHaveBeenCalledWith("project-123");
   });
