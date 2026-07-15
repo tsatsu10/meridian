@@ -12,22 +12,27 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { getDatabase } from "../../database/connection";
+import { getDatabase, initializeDatabase } from "../../database/connection";
 import { userTable, sessionTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
 import { hash } from "@node-rs/argon2";
 import { createId } from "@paralleldrive/cuid2";
 
-describe.skip("Authentication Flow Integration Tests", () => {
+// This suite needs the dedicated test database from tests/setup.ts
+// (postgresql://postgres:test@localhost:5432/meridian_test). Probe it once and
+// skip cleanly when it isn't provisioned — matching the other DB-integration
+// suites — instead of failing the whole file in beforeAll.
+const dbAvailable = await initializeDatabase()
+  .then(() => true)
+  .catch(() => false);
+
+describe.skipIf(!dbAvailable)("Authentication Flow Integration Tests", () => {
   let db: Record<string, unknown>;
   let testUserId: string;
   let testUserEmail: string;
   let testSessionToken: string;
 
   beforeAll(async () => {
-    // Initialize database connection
-    const { initializeDatabase } = await import("../../database/connection");
-    await initializeDatabase();
     db = getDatabase();
   });
 
