@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
-import { getDatabase } from "../../database/connection";
+import { getDatabase, initializeDatabase } from "../../database/connection";
 import {
   goals,
   goalKeyResults,
@@ -18,7 +18,15 @@ const testUserId = "test-user-id";
 const testWorkspaceId = "test-workspace-id";
 let db: ReturnType<typeof getDatabase>;
 
-describe.skip("Goals API", () => {
+// This suite needs the dedicated test database from tests/setup.ts
+// (postgresql://postgres:test@localhost:5432/meridian_test). Probe it once and
+// skip cleanly when it isn't provisioned — matching the other DB-integration
+// suites — instead of failing the whole file in beforeAll.
+const dbAvailable = await initializeDatabase()
+  .then(() => true)
+  .catch(() => false);
+
+describe.skipIf(!dbAvailable)("Goals API", () => {
   beforeAll(() => {
     db = getDatabase();
   });
