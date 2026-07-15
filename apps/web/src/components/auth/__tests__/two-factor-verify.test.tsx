@@ -101,11 +101,7 @@ describe("TwoFactorVerify", () => {
       expect(inputs[0]).toHaveFocus();
     });
 
-    // Skip: ClipboardEvent is not available in jsdom environment
-    // This test should be moved to E2E test suite (Playwright/Cypress)
-    it.skip("should handle paste of 6-digit code [E2E REQUIRED]", async () => {
-      // Note: ClipboardEvent and DataTransfer are browser APIs not available in jsdom
-      // This functionality should be tested with E2E tests using a real browser
+    it("should handle paste of 6-digit code", async () => {
       render(<TwoFactorVerify {...defaultProps} />);
 
       const inputs = screen.getAllByRole("textbox");
@@ -118,14 +114,12 @@ describe("TwoFactorVerify", () => {
         json: async () => ({ success: true }),
       });
 
-      // Paste code
-      const pasteEvent = new ClipboardEvent("paste", {
-        clipboardData: new DataTransfer(),
-      });
-      pasteEvent.clipboardData?.setData("text", "123456");
-
+      // jsdom has no ClipboardEvent/DataTransfer constructors, but
+      // fireEvent.paste accepts a stubbed clipboardData in the event init.
       inputs[0].focus();
-      fireEvent.paste(inputs[0], pasteEvent);
+      fireEvent.paste(inputs[0], {
+        clipboardData: { getData: () => "123456" },
+      });
 
       // Should auto-submit after paste
       await waitFor(() => {
