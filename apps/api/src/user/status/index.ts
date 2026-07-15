@@ -8,7 +8,7 @@ import { z } from "zod";
 const statusRouter = new Hono();
 
 // Get current user's status
-statusRouter.get("/me", authMiddleware, async (c) => {
+statusRouter.get("/me", authMiddleware(), async (c) => {
   try {
     const userEmail = c.get("userEmail");
     if (!userEmail) {
@@ -32,9 +32,12 @@ statusRouter.get("/me", authMiddleware, async (c) => {
 });
 
 // Get all workspace statuses
-statusRouter.get("/:workspaceId", authMiddleware, async (c) => {
+statusRouter.get("/:workspaceId", authMiddleware(), async (c) => {
   try {
     const { workspaceId } = c.req.param();
+    if (!workspaceId) {
+      return c.json({ success: false, error: "Workspace id is required" }, 400);
+    }
     const statuses = await getWorkspaceStatuses(workspaceId);
 
     return c.json({
@@ -53,7 +56,7 @@ statusRouter.get("/:workspaceId", authMiddleware, async (c) => {
 });
 
 // Set user status
-statusRouter.post("/", authMiddleware, async (c) => {
+statusRouter.post("/", authMiddleware(), async (c) => {
   try {
     const userEmail = c.get("userEmail");
     if (!userEmail) {
@@ -110,7 +113,7 @@ statusRouter.post("/", authMiddleware, async (c) => {
 });
 
 // Clear user status
-statusRouter.delete("/", authMiddleware, async (c) => {
+statusRouter.delete("/", authMiddleware(), async (c) => {
   try {
     const userEmail = c.get("userEmail");
     if (!userEmail) {

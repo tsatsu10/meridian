@@ -5,7 +5,7 @@ import logger from "../utils/logger";
 const quickCaptureRoutes = new Hono();
 
 // Quick capture endpoint
-quickCaptureRoutes.post("/", authMiddleware, async (c) => {
+quickCaptureRoutes.post("/", authMiddleware(), async (c) => {
   try {
     // In production, this would:
     // 1. Parse multipart form data

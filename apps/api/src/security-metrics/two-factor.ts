@@ -8,7 +8,7 @@ import logger from "../utils/logger";
 const twoFactorRoutes = new Hono();
 
 // Get 2FA statistics
-twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
+twoFactorRoutes.get("/stats", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -66,7 +66,7 @@ twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
 });
 
 // Get user 2FA status list
-twoFactorRoutes.get("/users", authMiddleware, async (c) => {
+twoFactorRoutes.get("/users", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -99,7 +99,7 @@ twoFactorRoutes.get("/users", authMiddleware, async (c) => {
 });
 
 // Toggle 2FA enforcement
-twoFactorRoutes.post("/enforcement", authMiddleware, async (c) => {
+twoFactorRoutes.post("/enforcement", authMiddleware(), async (c) => {
   try {
     const { enabled } = await c.req.json();
     const userEmail = c.get("userEmail");
@@ -138,7 +138,7 @@ twoFactorRoutes.post("/enforcement", authMiddleware, async (c) => {
 });
 
 // Send 2FA setup reminder
-twoFactorRoutes.post("/send-reminder", authMiddleware, async (c) => {
+twoFactorRoutes.post("/send-reminder", authMiddleware(), async (c) => {
   try {
     const { userEmail } = await c.req.json();
     const senderEmail = c.get("userEmail");

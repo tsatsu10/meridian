@@ -8,7 +8,7 @@ import logger from "../utils/logger";
 const monitoringRoutes = new Hono();
 
 // Get API metrics
-monitoringRoutes.get("/metrics", authMiddleware, async (c) => {
+monitoringRoutes.get("/metrics", authMiddleware(), async (c) => {
   try {
     const { range } = c.req.query();
     const db = getDatabase();
@@ -91,7 +91,7 @@ monitoringRoutes.get("/metrics", authMiddleware, async (c) => {
 });
 
 // Get endpoint stats
-monitoringRoutes.get("/endpoints", authMiddleware, async (c) => {
+monitoringRoutes.get("/endpoints", authMiddleware(), async (c) => {
   try {
     const { range } = c.req.query();
     const db = getDatabase();
@@ -189,7 +189,7 @@ monitoringRoutes.get("/endpoints", authMiddleware, async (c) => {
 });
 
 // Get recent API calls
-monitoringRoutes.get("/recent-calls", authMiddleware, async (c) => {
+monitoringRoutes.get("/recent-calls", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -222,7 +222,7 @@ monitoringRoutes.get("/recent-calls", authMiddleware, async (c) => {
 });
 
 // Get timeseries data
-monitoringRoutes.get("/timeseries", authMiddleware, async (c) => {
+monitoringRoutes.get("/timeseries", authMiddleware(), async (c) => {
   try {
     const { range } = c.req.query();
     const db = getDatabase();
