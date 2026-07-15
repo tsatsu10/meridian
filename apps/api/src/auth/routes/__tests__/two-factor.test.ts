@@ -31,12 +31,25 @@ vi.mock("../../../utils/logger", () => ({
   },
 }));
 
-describe.skip("Two-Factor Authentication Routes", () => {
+describe("Two-Factor Authentication Routes", () => {
   let app: Hono;
+  let unauthApp: Hono;
 
   beforeEach(() => {
+    // The routes read userId/userEmail from context (set by the real auth
+    // middleware in production); install a stub middleware here.
     app = new Hono();
+    app.use("*", async (c, next) => {
+      c.set("userId", "user-123");
+      c.set("userEmail", "test@example.com");
+      await next();
+    });
     app.route("/auth/two-factor", twoFactorRoutes);
+
+    // Bare app without auth context, for the 401 paths.
+    unauthApp = new Hono();
+    unauthApp.route("/auth/two-factor", twoFactorRoutes);
+
     mockUsers.clear();
     vi.clearAllMocks();
   });
@@ -50,17 +63,6 @@ describe.skip("Two-Factor Authentication Routes", () => {
         },
       });
 
-      // Mock authenticated context
-      const context = {
-        get: (key: string) => {
-          if (key === "userId") return "user-123";
-          if (key === "userEmail") return "test@example.com";
-          return null;
-        },
-        req,
-        json: vi.fn(),
-      };
-
       const response = await app.fetch(req);
       const data = await response.json();
 
@@ -69,7 +71,8 @@ describe.skip("Two-Factor Authentication Routes", () => {
       expect(data).toHaveProperty("qrCodeUrl");
       expect(data).toHaveProperty("manualEntryKey");
       expect(data.qrCodeUrl).toContain("otpauth://totp/");
-      expect(data.qrCodeUrl).toContain("test@example.com");
+      // keyuri percent-encodes the account name
+      expect(data.qrCodeUrl).toContain("test%40example.com");
       expect(data.qrCodeUrl).toContain("Meridian");
     });
 
@@ -78,7 +81,7 @@ describe.skip("Two-Factor Authentication Routes", () => {
         method: "POST",
       });
 
-      const response = await app.fetch(req);
+      const response = await unauthApp.fetch(req);
 
       expect(response.status).toBe(401);
       const data = await response.json();
@@ -440,29 +443,6 @@ describe.skip("Two-Factor Authentication Routes", () => {
     });
   });
 
-  describe("Backup Code Format", () => {
-    it("should generate codes in correct format", () => {
-      const codeRegex = /^[A-F0-9]{4}-[A-F0-9]{4}$/;
-
-      // Generate codes multiple times
-      for (let i = 0; i < 10; i++) {
-        const codes: string[] = [];
-        for (let j = 0; j < 8; j++) {
-          const randomBytes = Buffer.from(
-            Array.from({ length: 4 }, () => Math.floor(Math.random() * 256)),
-          );
-          const code = randomBytes.toString("hex").toUpperCase();
-          const formatted = `${code.slice(0, 4)}-${code.slice(4, 8)}`;
-          codes.push(formatted);
-        }
-
-        for (const code of codes) {
-          expect(code).toMatch(codeRegex);
-        }
-      }
-    });
-  });
-
   describe("Security Considerations", () => {
     it("should not expose secret in error messages", async () => {
       const secret = "TOPSECRET123456";
@@ -499,12 +479,6 @@ describe.skip("Two-Factor Authentication Routes", () => {
 
       expect(data).not.toHaveProperty("backupCodes");
       expect(data).not.toHaveProperty("secret");
-    });
-
-    it("should rate limit verification attempts", async () => {
-      // This would require rate limiting middleware integration
-      // Placeholder for future implementation
-      expect(true).toBe(true);
     });
   });
 });
