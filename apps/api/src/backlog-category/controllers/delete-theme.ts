@@ -25,8 +25,8 @@ export async function deleteTheme(themeId: string, userId: string) {
       throw new Error("Theme not found");
     }
 
-    // TODO: Add permission check
-    // Ensure user has permission to delete this theme
+    // Authorization (project-scoped canManageProjectSettings) is enforced by
+    // requireThemePermission at the route layer.
 
     // TODO: Handle tasks assigned to this theme
     // Either reassign or set to null
