@@ -13,9 +13,8 @@ export async function getProjectThemes(projectId: string, userId: string) {
   const db = getDatabase();
 
   try {
-    // TODO: Add permission check
-    // Ensure user has access to this project
-
+    // Authorization (project-scoped canViewWorkspace) is enforced by
+    // requireThemeProjectPermission at the route layer.
     const themes = await db
       .select()
       .from(backlogThemesTable)

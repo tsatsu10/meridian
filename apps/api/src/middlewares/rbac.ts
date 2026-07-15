@@ -433,6 +433,108 @@ export function requireProjectPermission(
 }
 
 /**
+ * Reusable project-permission check (the logic behind requireProjectPermission),
+ * callable outside a route that carries :projectId — e.g. after resolving a
+ * child resource (theme, task) to its project. Mirrors requireProjectPermission
+ * AND includes the demo-mode admin bypass that the other guards have (note:
+ * requireProjectPermission itself is missing that bypass).
+ */
+export interface ProjectPermissionResult {
+  allowed: boolean;
+  status?: 401 | 403 | 404;
+  body?: Record<string, unknown>;
+  userId?: string;
+  userRole?: UserRole;
+}
+
+export async function checkProjectPermission(
+  userEmail: string | undefined,
+  projectId: string,
+  permission: PermissionAction,
+): Promise<ProjectPermissionResult> {
+  const isDemoMode = process.env.DEMO_MODE === "true";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@meridian.app";
+  if (isDemoMode && userEmail === adminEmail) {
+    return { allowed: true };
+  }
+
+  if (!userEmail) {
+    return {
+      allowed: false,
+      status: 401,
+      body: { error: "Authentication required" },
+    };
+  }
+
+  const db = getDatabase();
+  const [currentUser] = await db
+    .select({ id: userTable.id })
+    .from(userTable)
+    .where(eq(userTable.email, userEmail))
+    .limit(1);
+
+  if (!currentUser) {
+    return { allowed: false, status: 404, body: { error: "User not found" } };
+  }
+
+  const [assignment] = await db
+    .select()
+    .from(roleAssignmentTable)
+    .where(
+      and(
+        eq(roleAssignmentTable.userId, currentUser.id),
+        eq(roleAssignmentTable.isActive, true),
+      ),
+    )
+    .limit(1);
+
+  if (!assignment) {
+    return {
+      allowed: false,
+      status: 403,
+      body: { error: "No active role assignment found" },
+    };
+  }
+
+  const userRole = assignment.role as UserRole;
+  const rolePermissions = getRolePermissions(userRole);
+
+  if (!rolePermissions[permission]) {
+    return {
+      allowed: false,
+      status: 403,
+      body: {
+        error: "Insufficient permissions",
+        required: permission,
+        role: userRole,
+        message: `This action requires the '${permission}' permission`,
+      },
+    };
+  }
+
+  // Project-scoped roles may only act on their assigned projects
+  if (userRole === "project-manager" || userRole === "project-viewer") {
+    const projectIds: string[] = Array.isArray(assignment.projectIds)
+      ? (assignment.projectIds as string[])
+      : [];
+    if (projectIds.length > 0 && !projectIds.includes(projectId)) {
+      return {
+        allowed: false,
+        status: 403,
+        body: {
+          error: "No access to this project",
+          role: userRole,
+          projectId,
+          message: `${userRole} can only access assigned projects`,
+        },
+      };
+    }
+  }
+
+  return { allowed: true, userId: currentUser.id, userRole };
+}
+
+/**
  * Admin-only middleware - shortcut for workspace manager access
  */
 export const requireAdmin = requireRole("workspace-manager", true);

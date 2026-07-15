@@ -38,8 +38,8 @@ export async function updateTheme(
       throw new Error("Theme not found");
     }
 
-    // TODO: Add permission check
-    // Ensure user has permission to update this theme
+    // Authorization (project-scoped canManageProjectSettings) is enforced by
+    // requireThemePermission at the route layer.
 
     // Update theme
     const [updatedTheme] = await db
