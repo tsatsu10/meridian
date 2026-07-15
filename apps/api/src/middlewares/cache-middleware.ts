@@ -207,141 +207,141 @@ export function noCache(): MiddlewareHandler {
 /**
  * Cache invalidation helper
  */
-export class CacheInvalidation {
+export const CacheInvalidation = {
   /**
    * Invalidate route cache
    */
-  static async invalidateRoute(path: string): Promise<void> {
+  async invalidateRoute(path: string): Promise<void> {
     const pattern = `cache:route:${path}*`;
     await CacheService.invalidatePattern(pattern);
     Logger.info("Route cache invalidated", { path });
-  }
+  },
 
   /**
    * Invalidate user-specific cache
    */
-  static async invalidateUser(userId: string): Promise<void> {
+  async invalidateUser(userId: string): Promise<void> {
     await CacheService.invalidateUser(userId);
     await CacheService.invalidatePattern(`cache:*user-id:${userId}*`);
     Logger.info("User cache invalidated", { userId });
-  }
+  },
 
   /**
    * Invalidate workspace cache
    */
-  static async invalidateWorkspace(workspaceId: string): Promise<void> {
+  async invalidateWorkspace(workspaceId: string): Promise<void> {
     await CacheService.invalidateWorkspace(workspaceId);
     Logger.info("Workspace cache invalidated", { workspaceId });
-  }
+  },
 
   /**
    * Invalidate project cache
    */
-  static async invalidateProject(projectId: string): Promise<void> {
+  async invalidateProject(projectId: string): Promise<void> {
     await CacheService.invalidateProject(projectId);
     Logger.info("Project cache invalidated", { projectId });
-  }
-}
+  },
+};
 
 /**
  * Cache presets for common use cases
  */
-export class CachePresets {
+export const CachePresets = {
   /**
    * Short cache - 1 minute (fast-changing data)
    */
-  static short(): CacheOptions {
+  short(): CacheOptions {
     return {
       ttl: CacheTTL.SHORT,
       keyPrefix: "short",
     };
-  }
+  },
 
   /**
    * Medium cache - 5 minutes (moderate-changing data)
    */
-  static medium(): CacheOptions {
+  medium(): CacheOptions {
     return {
       ttl: CacheTTL.MEDIUM,
       keyPrefix: "medium",
     };
-  }
+  },
 
   /**
    * Long cache - 1 hour (slow-changing data)
    */
-  static long(): CacheOptions {
+  long(): CacheOptions {
     return {
       ttl: CacheTTL.LONG,
       keyPrefix: "long",
     };
-  }
+  },
 
   /**
    * Project overview cache - 5 minutes
    */
-  static projectOverview(): CacheOptions {
+  projectOverview(): CacheOptions {
     return {
       ttl: 300, // 5 minutes
       keyPrefix: "project-overview",
       varyBy: ["user-id"],
     };
-  }
+  },
 
   /**
    * Dashboard cache - 2 minutes
    */
-  static dashboard(): CacheOptions {
+  dashboard(): CacheOptions {
     return {
       ttl: 120, // 2 minutes
       keyPrefix: "dashboard",
       varyBy: ["user-id", "workspace-id"],
     };
-  }
+  },
 
   /**
    * Analytics cache - 10 minutes
    */
-  static analytics(): CacheOptions {
+  analytics(): CacheOptions {
     return {
       ttl: 600, // 10 minutes
       keyPrefix: "analytics",
       varyBy: ["workspace-id"],
     };
-  }
+  },
 
   /**
    * User profile cache - 5 minutes
    */
-  static userProfile(): CacheOptions {
+  userProfile(): CacheOptions {
     return {
       ttl: 300, // 5 minutes
       keyPrefix: "user-profile",
       varyBy: ["user-id"],
     };
-  }
+  },
 
   /**
    * Workspace settings cache - 15 minutes
    */
-  static workspaceSettings(): CacheOptions {
+  workspaceSettings(): CacheOptions {
     return {
       ttl: 900, // 15 minutes
       keyPrefix: "workspace-settings",
       varyBy: ["workspace-id"],
     };
-  }
+  },
 
   /**
    * Static data cache - 1 hour
    */
-  static staticData(): CacheOptions {
+  staticData(): CacheOptions {
     return {
       ttl: 3600, // 1 hour
       keyPrefix: "static",
     };
-  }
-}
+  },
+};
 
 export default {
   cacheMiddleware,

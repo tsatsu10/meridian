@@ -31,11 +31,8 @@ export interface PaginationParams {
   sortOrder?: "asc" | "desc";
 }
 
-export class APIResponseBuilder {
-  static success<T>(
-    data: T,
-    meta?: Partial<APIResponse["meta"]>,
-  ): APIResponse<T> {
+export const APIResponseBuilder = {
+  success<T>(data: T, meta?: Partial<APIResponse["meta"]>): APIResponse<T> {
     return {
       success: true,
       data,
@@ -46,9 +43,9 @@ export class APIResponseBuilder {
         ...meta,
       },
     };
-  }
+  },
 
-  static error(
+  error(
     code: string,
     message: string,
     details?: unknown,
@@ -68,9 +65,9 @@ export class APIResponseBuilder {
         ...meta,
       },
     };
-  }
+  },
 
-  static paginated<T>(
+  paginated<T>(
     data: T[],
     pagination: Required<PaginationParams> & { total: number },
     meta?: Partial<APIResponse["meta"]>,
@@ -93,12 +90,12 @@ export class APIResponseBuilder {
         ...meta,
       },
     };
-  }
+  },
 
-  private static generateRequestId(): string {
+  generateRequestId(): string {
     return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-}
+  },
+};
 
 // Common error codes
 export const ErrorCodes = {

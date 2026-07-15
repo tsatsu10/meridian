@@ -255,8 +255,8 @@ export const TimeEntrySchemas = {
 };
 
 // Validation helper functions
-export class Validator {
-  static validate<T>(schema: z.ZodSchema<T>, data: unknown): T {
+export const Validator = {
+  validate<T>(schema: z.ZodSchema<T>, data: unknown): T {
     try {
       return schema.parse(data);
     } catch (error) {
@@ -270,9 +270,9 @@ export class Validator {
       }
       throw error;
     }
-  }
+  },
 
-  static validatePartial<T>(schema: z.ZodSchema<T>, data: unknown): Partial<T> {
+  validatePartial<T>(schema: z.ZodSchema<T>, data: unknown): Partial<T> {
     try {
       if (!(schema instanceof z.ZodObject)) {
         throw new ValidationError(
@@ -293,12 +293,9 @@ export class Validator {
       }
       throw error;
     }
-  }
+  },
 
-  static validateQuery<T>(
-    schema: z.ZodSchema<T>,
-    query: Record<string, unknown>,
-  ): T {
+  validateQuery<T>(schema: z.ZodSchema<T>, query: Record<string, unknown>): T {
     // Convert query parameters to appropriate types
     const processedQuery = Object.fromEntries(
       Object.entries(query).map(([key, value]) => {
@@ -318,45 +315,45 @@ export class Validator {
     );
 
     return Validator.validate(schema, processedQuery);
-  }
+  },
 
-  static validateId(id: string): string {
+  validateId(id: string): string {
     return Validator.validate(CommonSchemas.id, id);
-  }
+  },
 
-  static validatePagination(query: Record<string, unknown>) {
+  validatePagination(query: Record<string, unknown>) {
     return Validator.validateQuery(CommonSchemas.pagination, query);
-  }
+  },
 
-  static validateSearch(query: Record<string, unknown>) {
+  validateSearch(query: Record<string, unknown>) {
     return Validator.validateQuery(CommonSchemas.search, query);
-  }
+  },
 
-  static validateDateRange(data: {
+  validateDateRange(data: {
     startDate: string | Date;
     endDate: string | Date;
   }) {
     return Validator.validate(CommonSchemas.dateRange, data);
-  }
+  },
 
-  static validateEmail(email: string): string {
+  validateEmail(email: string): string {
     return Validator.validate(CommonSchemas.email, email);
-  }
+  },
 
-  static validatePassword(password: string): string {
+  validatePassword(password: string): string {
     return Validator.validate(CommonSchemas.password, password);
-  }
+  },
 
-  static validateDate(date: string | Date): Date {
+  validateDate(date: string | Date): Date {
     return Validator.validate(z.coerce.date(), date);
-  }
+  },
 
-  static validateEnum<T extends string>(value: string, allowedValues: T[]): T {
+  validateEnum<T extends string>(value: string, allowedValues: T[]): T {
     const enumSchema = z.enum(allowedValues as [T, ...T[]]);
     return Validator.validate(enumSchema, value);
-  }
+  },
 
-  static validateArray<T>(data: unknown, itemSchema: z.ZodSchema<T>): T[] {
+  validateArray<T>(data: unknown, itemSchema: z.ZodSchema<T>): T[] {
     // First check if data is an array
     if (!Array.isArray(data)) {
       throw new ValidationError("Validation failed", [
@@ -382,9 +379,9 @@ export class Validator {
         throw error;
       }
     });
-  }
+  },
 
-  static validateObject<T>(
+  validateObject<T>(
     data: unknown,
     valueSchema: z.ZodSchema<T>,
   ): Record<string, T> {
@@ -418,8 +415,8 @@ export class Validator {
       }
     }
     return result;
-  }
-}
+  },
+};
 
 // Export all schemas for easy access
 export const Schemas = {

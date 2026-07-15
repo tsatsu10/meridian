@@ -43,11 +43,11 @@ export interface RoleChangeDetails {
 /**
  * Role Audit Service
  */
-export class RoleAuditService {
+export const RoleAuditService = {
   /**
    * Log role assignment
    */
-  static async logRoleAssignment(
+  async logRoleAssignment(
     ctx: RoleAuditContext,
     details: RoleChangeDetails,
     assignmentId?: string,
@@ -149,12 +149,12 @@ export class RoleAuditService {
 
       // Don't throw - audit logging failure shouldn't block the operation
     }
-  }
+  },
 
   /**
    * Log role removal
    */
-  static async logRoleRemoval(
+  async logRoleRemoval(
     ctx: RoleAuditContext,
     previousRole: string,
     assignmentId?: string,
@@ -215,12 +215,12 @@ export class RoleAuditService {
     } catch (error) {
       winstonLog.error("Failed to log role removal", { error, ctx });
     }
-  }
+  },
 
   /**
    * Log permission grant
    */
-  static async logPermissionGrant(
+  async logPermissionGrant(
     ctx: RoleAuditContext,
     permission: string,
     scope?: Record<string, unknown>,
@@ -253,12 +253,12 @@ export class RoleAuditService {
     } catch (error) {
       winstonLog.error("Failed to log permission grant", { error, ctx });
     }
-  }
+  },
 
   /**
    * Log permission revoke
    */
-  static async logPermissionRevoke(
+  async logPermissionRevoke(
     ctx: RoleAuditContext,
     permission: string,
     scope?: Record<string, unknown>,
@@ -291,16 +291,12 @@ export class RoleAuditService {
     } catch (error) {
       winstonLog.error("Failed to log permission revoke", { error, ctx });
     }
-  }
+  },
 
   /**
    * Get complete audit trail for user
    */
-  static async getUserAuditTrail(
-    userId: string,
-    workspaceId?: string,
-    limit = 100,
-  ) {
+  async getUserAuditTrail(userId: string, workspaceId?: string, limit = 100) {
     const db = getDatabase();
 
     try {
@@ -336,12 +332,12 @@ export class RoleAuditService {
       winstonLog.error("Failed to get user audit trail", { error, userId });
       return [];
     }
-  }
+  },
 
   /**
    * Get workspace audit trail
    */
-  static async getWorkspaceAuditTrail(workspaceId: string, limit = 100) {
+  async getWorkspaceAuditTrail(workspaceId: string, limit = 100) {
     const db = getDatabase();
 
     try {
@@ -383,12 +379,12 @@ export class RoleAuditService {
       });
       return [];
     }
-  }
+  },
 
   /**
    * Get audit statistics
    */
-  static async getAuditStats(workspaceId?: string): Promise<{
+  async getAuditStats(workspaceId?: string): Promise<{
     totalChanges: number;
     roleAssignments: number;
     roleRemovals: number;
@@ -438,7 +434,7 @@ export class RoleAuditService {
         last7Days: 0,
       };
     }
-  }
-}
+  },
+};
 
 export default RoleAuditService;

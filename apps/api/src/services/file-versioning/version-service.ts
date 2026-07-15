@@ -43,13 +43,11 @@ export interface VersionInfo {
 /**
  * File Versioning Service
  */
-export class FileVersioningService {
+export const FileVersioningService = {
   /**
    * Create a new version of a file
    */
-  static async createVersion(
-    options: CreateVersionOptions,
-  ): Promise<VersionInfo> {
+  async createVersion(options: CreateVersionOptions): Promise<VersionInfo> {
     const db = getDatabase();
 
     try {
@@ -145,15 +143,12 @@ export class FileVersioningService {
       });
       throw error;
     }
-  }
+  },
 
   /**
    * Get version history for a file
    */
-  static async getVersionHistory(
-    fileId: string,
-    limit = 50,
-  ): Promise<VersionInfo[]> {
+  async getVersionHistory(fileId: string, limit = 50): Promise<VersionInfo[]> {
     const db = getDatabase();
 
     try {
@@ -184,12 +179,12 @@ export class FileVersioningService {
       });
       throw error;
     }
-  }
+  },
 
   /**
    * Get specific version
    */
-  static async getVersion(versionId: string): Promise<VersionInfo | null> {
+  async getVersion(versionId: string): Promise<VersionInfo | null> {
     const db = getDatabase();
 
     try {
@@ -219,12 +214,12 @@ export class FileVersioningService {
       });
       return null;
     }
-  }
+  },
 
   /**
    * Restore a previous version (create new version from old one)
    */
-  static async restoreVersion(
+  async restoreVersion(
     versionId: string,
     restoredBy: string,
     reason?: string,
@@ -337,15 +332,12 @@ export class FileVersioningService {
       });
       throw error;
     }
-  }
+  },
 
   /**
    * Delete old versions (cleanup)
    */
-  static async deleteOldVersions(
-    fileId: string,
-    keepCount = 10,
-  ): Promise<number> {
+  async deleteOldVersions(fileId: string, keepCount = 10): Promise<number> {
     const db = getDatabase();
 
     try {
@@ -384,12 +376,12 @@ export class FileVersioningService {
       });
       throw error;
     }
-  }
+  },
 
   /**
    * Compare two versions
    */
-  static async compareVersions(
+  async compareVersions(
     versionId1: string,
     versionId2: string,
   ): Promise<{
@@ -430,7 +422,7 @@ export class FileVersioningService {
       });
       throw error;
     }
-  }
-}
+  },
+};
 
 export default FileVersioningService;

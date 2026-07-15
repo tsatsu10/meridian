@@ -45,15 +45,15 @@ export interface KudosFilters {
 /**
  * Kudos Service
  */
-export class KudosService {
-  private static getDb() {
+export const KudosService = {
+  getDb() {
     return getDatabase();
-  }
+  },
 
   /**
    * Give kudos to a team member
    */
-  static async giveKudos(params: GiveKudosParams) {
+  async giveKudos(params: GiveKudosParams) {
     try {
       const kudosId = createId();
 
@@ -89,12 +89,12 @@ export class KudosService {
       Logger.error("Failed to give kudos", error, params);
       throw error;
     }
-  }
+  },
 
   /**
    * Get kudos with filters
    */
-  static async getKudos(filters: KudosFilters) {
+  async getKudos(filters: KudosFilters) {
     const cacheKey = `kudos:${filters.workspaceId}:${filters.userId || "all"}:${filters.projectId || "all"}`;
 
     return CacheService.getOrCompute(
@@ -170,16 +170,12 @@ export class KudosService {
       },
       CacheTTL.SHORT,
     );
-  }
+  },
 
   /**
    * Get kudos received by user
    */
-  static async getReceivedKudos(
-    userId: string,
-    workspaceId: string,
-    limit = 20,
-  ) {
+  async getReceivedKudos(userId: string, workspaceId: string, limit = 20) {
     const cacheKey = `kudos:user:${userId}:received`;
 
     return CacheService.getOrCompute(
@@ -221,12 +217,12 @@ export class KudosService {
       },
       CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Get kudos statistics
    */
-  static async getKudosStats(userId: string, workspaceId: string) {
+  async getKudosStats(userId: string, workspaceId: string) {
     const cacheKey = `kudos:stats:${userId}:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -274,12 +270,12 @@ export class KudosService {
       },
       CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Add reaction to kudos
    */
-  static async addReaction(kudosId: string, userId: string, emoji: string) {
+  async addReaction(kudosId: string, userId: string, emoji: string) {
     try {
       const [existingKudos] = await KudosService.getDb()
         .select()
@@ -332,12 +328,12 @@ export class KudosService {
       });
       throw error;
     }
-  }
+  },
 
   /**
    * Get top kudos receivers (leaderboard)
    */
-  static async getTopReceivers(workspaceId: string, limit = 10) {
+  async getTopReceivers(workspaceId: string, limit = 10) {
     const cacheKey = `kudos:leaderboard:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -371,12 +367,12 @@ export class KudosService {
       },
       CacheTTL.LONG,
     );
-  }
+  },
 
   /**
    * Delete kudos
    */
-  static async deleteKudos(kudosId: string, userId: string) {
+  async deleteKudos(kudosId: string, userId: string) {
     try {
       const [existingKudos] = await KudosService.getDb()
         .select()
@@ -405,12 +401,12 @@ export class KudosService {
       Logger.error("Failed to delete kudos", error, { kudosId, userId });
       throw error;
     }
-  }
+  },
 
   /**
    * Get recent kudos wall
    */
-  static async getKudosWall(workspaceId: string, limit = 20) {
+  async getKudosWall(workspaceId: string, limit = 20) {
     const cacheKey = `kudos:wall:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -424,7 +420,7 @@ export class KudosService {
       },
       CacheTTL.SHORT,
     );
-  }
-}
+  },
+};
 
 export default KudosService;

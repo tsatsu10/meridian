@@ -34,15 +34,15 @@ export interface UpdateStatusParams {
 /**
  * User Status Service
  */
-export class UserStatusService {
-  private static getDb() {
+export const UserStatusService = {
+  getDb() {
     return getDatabase();
-  }
+  },
 
   /**
    * Update user status
    */
-  static async updateStatus(params: UpdateStatusParams) {
+  async updateStatus(params: UpdateStatusParams) {
     try {
       const existingStatus = await UserStatusService.getDb()
         .select()
@@ -107,12 +107,12 @@ export class UserStatusService {
       Logger.error("Failed to update user status", error, params);
       throw error;
     }
-  }
+  },
 
   /**
    * Get user status
    */
-  static async getUserStatus(userId: string, workspaceId: string) {
+  async getUserStatus(userId: string, workspaceId: string) {
     const cacheKey = `user-status:${userId}:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -142,12 +142,12 @@ export class UserStatusService {
       },
       CacheTTL.VERY_SHORT, // 1 minute cache for real-time status
     );
-  }
+  },
 
   /**
    * Get workspace team status
    */
-  static async getWorkspaceStatuses(workspaceId: string) {
+  async getWorkspaceStatuses(workspaceId: string) {
     const cacheKey = `workspace-status:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -180,12 +180,12 @@ export class UserStatusService {
       },
       CacheTTL.VERY_SHORT,
     );
-  }
+  },
 
   /**
    * Get multiple user statuses
    */
-  static async getUserStatuses(userIds: string[], workspaceId: string) {
+  async getUserStatuses(userIds: string[], workspaceId: string) {
     try {
       const statuses = await UserStatusService.getDb()
         .select()
@@ -205,12 +205,12 @@ export class UserStatusService {
       });
       return [];
     }
-  }
+  },
 
   /**
    * Update last seen timestamp
    */
-  static async updateLastSeen(userId: string, workspaceId: string) {
+  async updateLastSeen(userId: string, workspaceId: string) {
     try {
       await UserStatusService.getDb()
         .update(userStatus)
@@ -233,34 +233,34 @@ export class UserStatusService {
         workspaceId,
       });
     }
-  }
+  },
 
   /**
    * Set user offline
    */
-  static async setOffline(userId: string, workspaceId: string) {
+  async setOffline(userId: string, workspaceId: string) {
     await UserStatusService.updateStatus({
       userId,
       workspaceId,
       status: "offline",
     });
-  }
+  },
 
   /**
    * Set user online
    */
-  static async setOnline(userId: string, workspaceId: string) {
+  async setOnline(userId: string, workspaceId: string) {
     await UserStatusService.updateStatus({
       userId,
       workspaceId,
       status: "online",
     });
-  }
+  },
 
   /**
    * Clear expired status messages
    */
-  static async clearExpiredStatuses() {
+  async clearExpiredStatuses() {
     try {
       const now = new Date();
 
@@ -282,12 +282,12 @@ export class UserStatusService {
     } catch (error) {
       Logger.error("Failed to clear expired statuses", error);
     }
-  }
+  },
 
   /**
    * Get online users count
    */
-  static async getOnlineCount(workspaceId: string): Promise<number> {
+  async getOnlineCount(workspaceId: string): Promise<number> {
     const cacheKey = `workspace-online-count:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -307,12 +307,12 @@ export class UserStatusService {
       },
       CacheTTL.VERY_SHORT,
     );
-  }
+  },
 
   /**
    * Get availability statistics
    */
-  static async getAvailabilityStats(workspaceId: string) {
+  async getAvailabilityStats(workspaceId: string) {
     const cacheKey = `workspace-availability:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -343,12 +343,12 @@ export class UserStatusService {
       },
       CacheTTL.VERY_SHORT,
     );
-  }
+  },
 
   /**
    * Heartbeat - Update user activity
    */
-  static async heartbeat(
+  async heartbeat(
     userId: string,
     workspaceId: string,
     currentProjectId?: string,
@@ -375,7 +375,7 @@ export class UserStatusService {
     } catch (error) {
       Logger.error("Heartbeat failed", error, { userId, workspaceId });
     }
-  }
-}
+  },
+};
 
 export default UserStatusService;

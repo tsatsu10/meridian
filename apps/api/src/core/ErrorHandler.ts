@@ -110,8 +110,8 @@ export class WebSocketError extends CustomError {
   }
 }
 
-export class ErrorHandler {
-  static handle(error: Error | AppError): APIResponse {
+export const ErrorHandler = {
+  handle(error: Error | AppError): APIResponse {
     // Log the error
     ErrorHandler.logError(error);
 
@@ -181,9 +181,9 @@ export class ErrorHandler {
         ? error.stack
         : undefined,
     );
-  }
+  },
 
-  static async handleAsync<T>(
+  async handleAsync<T>(
     promise: Promise<T>,
     fallbackMessage = "An unexpected error occurred",
   ): Promise<APIResponse<T>> {
@@ -200,9 +200,9 @@ export class ErrorHandler {
       }
       return ErrorHandler.handle(error as Error) as APIResponse<T>;
     }
-  }
+  },
 
-  private static logError(error: Error | AppError): void {
+  logError(error: Error | AppError): void {
     const errorInfo = {
       name: error.name,
       message: error.message,
@@ -221,22 +221,22 @@ export class ErrorHandler {
     } else {
       logger.error("Unexpected error occurred", errorInfo);
     }
-  }
+  },
 
-  static isOperationalError(error: Error | AppError): boolean {
+  isOperationalError(error: Error | AppError): boolean {
     if (error instanceof CustomError) {
       return error.isOperational;
     }
     return false;
-  }
+  },
 
-  static getStatusCode(error: Error | AppError): number {
+  getStatusCode(error: Error | AppError): number {
     if (error instanceof CustomError) {
       return error.statusCode;
     }
     return 500;
-  }
-}
+  },
+};
 
 // Global error handlers
 process.on("uncaughtException", (error: Error) => {

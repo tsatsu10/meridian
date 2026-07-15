@@ -58,26 +58,25 @@ export interface SkillFilters {
 /**
  * Skills Service
  */
-export class SkillsService {
-  private static getDb() {
+export const SkillsService = {
+  getDb() {
     return getDatabase();
-  }
+  },
 
   /**
    * Proficiency level to score mapping
    */
-  private static readonly PROFICIENCY_SCORES: Record<ProficiencyLevel, number> =
-    {
-      beginner: 1,
-      intermediate: 2,
-      advanced: 3,
-      expert: 5,
-    };
+  PROFICIENCY_SCORES: {
+    beginner: 1,
+    intermediate: 2,
+    advanced: 3,
+    expert: 5,
+  } as Record<ProficiencyLevel, number>,
 
   /**
    * Add skill to user profile
    */
-  static async addSkill(params: AddSkillParams) {
+  async addSkill(params: AddSkillParams) {
     try {
       const skillId = createId();
 
@@ -115,12 +114,12 @@ export class SkillsService {
       Logger.error("Failed to add skill", error, params);
       throw error;
     }
-  }
+  },
 
   /**
    * Get user skills
    */
-  static async getUserSkills(userId: string, workspaceId: string) {
+  async getUserSkills(userId: string, workspaceId: string) {
     const cacheKey = `skills:user:${userId}:${workspaceId}`;
 
     return CacheService.getOrCompute(
@@ -141,12 +140,12 @@ export class SkillsService {
       },
       CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Search skills with filters
    */
-  static async searchSkills(filters: SkillFilters) {
+  async searchSkills(filters: SkillFilters) {
     const cacheKey = `skills:search:${filters.workspaceId}:${JSON.stringify(filters)}`;
 
     return CacheService.getOrCompute(
@@ -220,12 +219,12 @@ export class SkillsService {
       },
       CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Endorse skill
    */
-  static async endorseSkill(params: EndorseSkillParams) {
+  async endorseSkill(params: EndorseSkillParams) {
     try {
       const [skill] = await SkillsService.getDb()
         .select()
@@ -290,12 +289,12 @@ export class SkillsService {
       Logger.error("Failed to endorse skill", error, params);
       throw error;
     }
-  }
+  },
 
   /**
    * Verify skill (by manager/team lead)
    */
-  static async verifySkill(skillId: string, verifierId: string) {
+  async verifySkill(skillId: string, verifierId: string) {
     try {
       const [skill] = await SkillsService.getDb()
         .select()
@@ -328,12 +327,12 @@ export class SkillsService {
       Logger.error("Failed to verify skill", error, { skillId, verifierId });
       throw error;
     }
-  }
+  },
 
   /**
    * Update skill
    */
-  static async updateSkill(
+  async updateSkill(
     skillId: string,
     updates: Partial<{
       proficiencyLevel: ProficiencyLevel;
@@ -373,12 +372,12 @@ export class SkillsService {
       Logger.error("Failed to update skill", error, { skillId, updates });
       throw error;
     }
-  }
+  },
 
   /**
    * Delete skill
    */
-  static async deleteSkill(skillId: string, userId: string) {
+  async deleteSkill(skillId: string, userId: string) {
     try {
       const [skill] = await SkillsService.getDb()
         .select()
@@ -410,12 +409,12 @@ export class SkillsService {
       Logger.error("Failed to delete skill", error, { skillId, userId });
       throw error;
     }
-  }
+  },
 
   /**
    * Get skill matrix (all skills in workspace)
    */
-  static async getSkillMatrix(workspaceId: string) {
+  async getSkillMatrix(workspaceId: string) {
     const cacheKey = `skills:workspace:${workspaceId}:matrix`;
 
     return CacheService.getOrCompute(
@@ -449,12 +448,12 @@ export class SkillsService {
       },
       CacheTTL.LONG,
     );
-  }
+  },
 
   /**
    * Get most common skills
    */
-  static async getPopularSkills(workspaceId: string, limit = 10) {
+  async getPopularSkills(workspaceId: string, limit = 10) {
     const cacheKey = `skills:workspace:${workspaceId}:popular`;
 
     return CacheService.getOrCompute(
@@ -476,12 +475,12 @@ export class SkillsService {
       },
       CacheTTL.LONG,
     );
-  }
+  },
 
   /**
    * Find experts (users with advanced/expert level skills)
    */
-  static async findExperts(workspaceId: string, skillName: string) {
+  async findExperts(workspaceId: string, skillName: string) {
     const cacheKey = `skills:experts:${workspaceId}:${skillName}`;
 
     return CacheService.getOrCompute(
@@ -498,12 +497,12 @@ export class SkillsService {
       },
       CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Get skill gaps (skills with low coverage)
    */
-  static async getSkillGaps(workspaceId: string, threshold = 2) {
+  async getSkillGaps(workspaceId: string, threshold = 2) {
     const cacheKey = `skills:workspace:${workspaceId}:gaps`;
 
     return CacheService.getOrCompute(
@@ -528,7 +527,7 @@ export class SkillsService {
       },
       CacheTTL.LONG,
     );
-  }
-}
+  },
+};
 
 export default SkillsService;

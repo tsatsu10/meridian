@@ -41,12 +41,12 @@ export const CacheKeys = {
 /**
  * Cache Service Class
  */
-export class CacheService {
+export const CacheService = {
   /**
    * Get or compute value
    * If cache miss, compute and store the value
    */
-  static async getOrCompute<T>(
+  async getOrCompute<T>(
     key: string,
     computeFn: () => Promise<T>,
     ttl: number = CacheTTL.MEDIUM,
@@ -77,12 +77,12 @@ export class CacheService {
       // Fall back to computing the value
       return await computeFn();
     }
-  }
+  },
 
   /**
    * Invalidate cache by key
    */
-  static async invalidate(...keys: string[]): Promise<void> {
+  async invalidate(...keys: string[]): Promise<void> {
     const redis = getRedisClient();
 
     try {
@@ -91,12 +91,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Cache invalidation failed", error, { keys });
     }
-  }
+  },
 
   /**
    * Invalidate cache by pattern
    */
-  static async invalidatePattern(pattern: string): Promise<void> {
+  async invalidatePattern(pattern: string): Promise<void> {
     const redis = getRedisClient();
 
     try {
@@ -105,12 +105,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Cache pattern invalidation failed", error, { pattern });
     }
-  }
+  },
 
   /**
    * Cache user data
    */
-  static async cacheUser(
+  async cacheUser(
     userId: string,
     userData: unknown,
     ttl: number = CacheTTL.LONG,
@@ -123,12 +123,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to cache user", error, { userId });
     }
-  }
+  },
 
   /**
    * Get cached user
    */
-  static async getCachedUser(userId: string): Promise<unknown | null> {
+  async getCachedUser(userId: string): Promise<unknown | null> {
     const redis = getRedisClient();
     const key = CacheKeys.user(userId);
 
@@ -138,20 +138,20 @@ export class CacheService {
       Logger.error("Failed to get cached user", error, { userId });
       return null;
     }
-  }
+  },
 
   /**
    * Invalidate user cache
    */
-  static async invalidateUser(userId: string): Promise<void> {
+  async invalidateUser(userId: string): Promise<void> {
     const key = CacheKeys.user(userId);
     await CacheService.invalidate(key);
-  }
+  },
 
   /**
    * Cache workspace data
    */
-  static async cacheWorkspace(
+  async cacheWorkspace(
     workspaceId: string,
     data: unknown,
     ttl: number = CacheTTL.MEDIUM,
@@ -164,20 +164,20 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to cache workspace", error, { workspaceId });
     }
-  }
+  },
 
   /**
    * Invalidate workspace and related caches
    */
-  static async invalidateWorkspace(workspaceId: string): Promise<void> {
+  async invalidateWorkspace(workspaceId: string): Promise<void> {
     await CacheService.invalidatePattern(`workspace:${workspaceId}*`);
     await CacheService.invalidatePattern(`project:*:workspace:${workspaceId}*`);
-  }
+  },
 
   /**
    * Cache project data
    */
-  static async cacheProject(
+  async cacheProject(
     projectId: string,
     data: unknown,
     ttl: number = CacheTTL.MEDIUM,
@@ -190,21 +190,21 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to cache project", error, { projectId });
     }
-  }
+  },
 
   /**
    * Invalidate project and related caches
    */
-  static async invalidateProject(projectId: string): Promise<void> {
+  async invalidateProject(projectId: string): Promise<void> {
     await CacheService.invalidate(CacheKeys.project(projectId));
     await CacheService.invalidate(CacheKeys.taskList(projectId));
     await CacheService.invalidatePattern(`task:*:project:${projectId}*`);
-  }
+  },
 
   /**
    * Cache task list
    */
-  static async cacheTaskList(
+  async cacheTaskList(
     projectId: string,
     tasks: unknown[],
     ttl: number = CacheTTL.SHORT,
@@ -217,12 +217,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to cache task list", error, { projectId });
     }
-  }
+  },
 
   /**
    * Cache search results
    */
-  static async cacheSearchResults(
+  async cacheSearchResults(
     query: string,
     filters: string | undefined,
     results: unknown[],
@@ -236,12 +236,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to cache search results", error, { query, filters });
     }
-  }
+  },
 
   /**
    * Cache analytics data
    */
-  static async cacheAnalytics(
+  async cacheAnalytics(
     type: string,
     id: string,
     period: string,
@@ -256,12 +256,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to cache analytics", error, { type, id, period });
     }
-  }
+  },
 
   /**
    * Cache file metadata
    */
-  static async cacheFile(
+  async cacheFile(
     fileId: string,
     metadata: unknown,
     ttl: number = CacheTTL.VERY_LONG,
@@ -274,12 +274,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to cache file", error, { fileId });
     }
-  }
+  },
 
   /**
    * Increment counter
    */
-  static async incrementCounter(key: string, ttl?: number): Promise<number> {
+  async incrementCounter(key: string, ttl?: number): Promise<number> {
     const redis = getRedisClient();
 
     try {
@@ -295,12 +295,12 @@ export class CacheService {
       Logger.error("Failed to increment counter", error, { key });
       return 0;
     }
-  }
+  },
 
   /**
    * Get cache statistics
    */
-  static async getStats(): Promise<{
+  async getStats(): Promise<{
     connected: boolean;
     keysCount?: number;
     memoryUsage?: string;
@@ -346,12 +346,12 @@ export class CacheService {
       Logger.error("Failed to get cache stats", error);
       return { connected: false };
     }
-  }
+  },
 
   /**
    * Warm up cache with frequently accessed data
    */
-  static async warmUp(
+  async warmUp(
     data: { key: string; value: unknown; ttl: number }[],
   ): Promise<void> {
     const redis = getRedisClient();
@@ -366,12 +366,12 @@ export class CacheService {
     } catch (error) {
       Logger.error("Cache warm up failed", error);
     }
-  }
+  },
 
   /**
    * Clear all cache (use with caution!)
    */
-  static async clearAll(): Promise<void> {
+  async clearAll(): Promise<void> {
     const redis = getRedisClient();
 
     try {
@@ -380,7 +380,7 @@ export class CacheService {
     } catch (error) {
       Logger.error("Failed to clear cache", error);
     }
-  }
-}
+  },
+};
 
 export default CacheService;
