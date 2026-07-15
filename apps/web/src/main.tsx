@@ -17,7 +17,7 @@ import { initSentry } from "./lib/sentry";
 initSentry();
 
 // Initialize Web Vitals monitoring
-// Note: Run 'pnpm install' to install web-vitals package
+// Note: Run 'npm install' to install web-vitals package
 if (import.meta.env.PROD) {
   import("./lib/web-vitals")
     .then(({ initWebVitals }) => {
@@ -25,7 +25,7 @@ if (import.meta.env.PROD) {
     })
     .catch((_error) => {
       console.info(
-        "Web Vitals monitoring disabled. Install with: pnpm install",
+        "Web Vitals monitoring disabled. Install with: npm install",
       );
     });
 }

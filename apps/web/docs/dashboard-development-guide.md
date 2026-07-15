@@ -22,7 +22,7 @@ This guide provides detailed instructions for developing, maintaining, and exten
 ```bash
 # Required tools
 node >= 18.0.0
-pnpm >= 8.0.0
+npm >= 10.0.0
 git >= 2.30.0
 
 # Recommended VS Code extensions
@@ -40,12 +40,12 @@ git >= 2.30.0
 # Clone and setup
 git clone https://github.com/your-org/meridian.git
 cd meridian
-pnpm install
+npm install
 
 # Start development servers
-pnpm dev:all          # Start all services
-pnpm dev              # Start web frontend only
-pnpm dev:api          # Start API server only
+npm run dev:all          # Start all services
+npm run dev              # Start web frontend only
+npm run dev:api          # Start API server only
 
 # Development URLs
 Frontend: http://localhost:5173
