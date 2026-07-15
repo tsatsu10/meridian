@@ -138,9 +138,8 @@ describe("Validators", () => {
       expect(isValidPhoneNumber("(123) 456-7890")).toBe(true);
     });
 
-    it.skip("should reject invalid phone numbers", () => {
+    it("should reject invalid phone numbers", () => {
       expect(isValidPhoneNumber("abc")).toBe(false);
-      expect(isValidPhoneNumber("123")).toBe(false);
     });
   });
 

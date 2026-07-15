@@ -80,7 +80,10 @@ function LoginForm({ onSubmit, onForgotPassword, onSignUp }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} aria-label="Login form">
+    // noValidate: validation is handled in handleSubmit; without it, native
+    // constraint validation on the type="email" input blocks form submission
+    // in jsdom before the handler can set the inline error messages.
+    <form onSubmit={handleSubmit} aria-label="Login form" noValidate>
       <h1>Sign In</h1>
 
       <div>
@@ -170,9 +173,7 @@ describe("Login Form Component", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // Skip: This test component variant doesn't render validation errors in the DOM
-  // The error handling might be in a toast or different UI pattern
-  it.skip("should validate email format [ERROR DISPLAY ISSUE]", async () => {
+  it("should validate email format", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
 
@@ -182,11 +183,8 @@ describe("Login Form Component", () => {
     await user.type(screen.getByLabelText(/password/i), "password123");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-    // The component may show errors via toast instead of inline
     await waitFor(() => {
-      expect(
-        screen.getByText(/please enter a valid email/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/invalid email format/i)).toBeInTheDocument();
     });
 
     expect(onSubmit).not.toHaveBeenCalled();
@@ -325,11 +323,7 @@ describe("Login Form Component", () => {
     ).toBeInTheDocument();
   });
 
-  // Skip: Component doesn't currently set aria-invalid attribute
-  // Should be implemented for better accessibility
-  it.skip("should set aria-invalid on validation errors [NOT IMPLEMENTED]", async () => {
-    // Note: The LoginForm component should set aria-invalid="true" on inputs
-    // when there are validation errors for better screen reader support
+  it("should set aria-invalid on validation errors", async () => {
     const user = userEvent.setup();
 
     render(<LoginForm />, { wrapper: TestWrapper });

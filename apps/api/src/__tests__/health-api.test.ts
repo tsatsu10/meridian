@@ -11,7 +11,13 @@ import { DEFAULT_API_PORT } from "../config/default-api-port";
 const API_BASE = `http://localhost:${DEFAULT_API_PORT}`;
 const TEST_PROJECT_ID = "test-project-123";
 
-describe.skip("Health System API", () => {
+// This suite exercises a LIVE API server (npm run dev). Probe it once and
+// skip cleanly when nothing is listening, instead of failing every fetch.
+const apiUp = await fetch(`${API_BASE}/api/health`)
+  .then(() => true)
+  .catch(() => false);
+
+describe.skipIf(!apiUp)("Health System API", () => {
   describe("GET /api/health/projects/:projectId", () => {
     it("should return current health metrics for a valid project", async () => {
       const response = await fetch(

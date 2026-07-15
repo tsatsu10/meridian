@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
@@ -370,11 +370,10 @@ describe("FileUpload", () => {
     expect(onUpload).not.toHaveBeenCalled();
   });
 
-  // Skip: File type validation via user.upload() doesn't trigger browser validation
-  it.skip("should reject invalid file types [FILE TYPE VALIDATION]", async () => {
-    // Note: userEvent.upload() doesn't trigger browser file type validation
-    // This should be tested with E2E tests using real file dialogs
-    const user = userEvent.setup();
+  it("should reject invalid file types", async () => {
+    // user.upload silently drops files rejected by the accept attribute;
+    // disable that so the component's own validation runs.
+    const user = userEvent.setup({ applyAccept: false });
     const onUpload = vi.fn();
 
     render(<FileUpload acceptedTypes={["image/*"]} onUpload={onUpload} />, {
@@ -626,11 +625,7 @@ describe("FileUpload", () => {
     dropZone?.dispatchEvent(new Event("dragover", { bubbles: true }));
   });
 
-  // Skip: user.upload() with multiple files doesn't trigger custom validation
-  it.skip("should handle single file mode [FILE VALIDATION]", async () => {
-    // Note: userEvent.upload() doesn't trigger custom multi-file validation
-    // This should be tested with E2E tests
-    const user = userEvent.setup();
+  it("should handle single file mode", async () => {
     const onUpload = vi.fn();
 
     render(<FileUpload multiple={false} onUpload={onUpload} />, {
@@ -643,7 +638,10 @@ describe("FileUpload", () => {
     ];
     const input = screen.getByLabelText("File input");
 
-    await user.upload(input, files);
+    // user.upload only forwards the first file to a non-multiple input, so
+    // dispatch the change event directly to reach the component's own
+    // "only one file allowed" validation.
+    fireEvent.change(input, { target: { files } });
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent(

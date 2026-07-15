@@ -27,7 +27,15 @@ import { eq, and, gte, lte } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { hashPassword } from "../../auth/password";
 
-describe.skip("Time Tracking", () => {
+// This suite needs the dedicated test database from tests/setup.ts
+// (postgresql://postgres:test@localhost:5432/meridian_test). Probe it once and
+// skip cleanly when it isn't provisioned — matching the other DB-integration
+// suites — instead of failing the whole file in beforeAll.
+const dbAvailable = await initializeDatabase()
+  .then(() => true)
+  .catch(() => false);
+
+describe.skipIf(!dbAvailable)("Time Tracking", () => {
   let db: ReturnType<typeof getDatabase>;
   let testUser: Record<string, unknown>;
   let testWorkspace: Record<string, unknown>;

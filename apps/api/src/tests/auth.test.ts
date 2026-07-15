@@ -1,22 +1,27 @@
 /**
  * Authentication API Tests
  * Tests for user authentication endpoints
- *
- * TODO: Missing dependency - dotenv
- * Error: Failed to load url dotenv in src/utils/get-settings.ts
- * Need to install dotenv or refactor get-settings.ts to not use it
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { Hono } from "hono";
 import userRoutes from "../user/index";
 import { seedTestData, cleanupTestData, createTestJWT } from "./setup";
+import { initializeDatabase } from "../database/connection";
 
 // Create test app
 const testApp = new Hono();
 testApp.route("/user", userRoutes);
 
-describe.skip("Authentication API", () => {
+// This suite needs the dedicated test database from tests/setup.ts
+// (postgresql://postgres:test@localhost:5432/meridian_test). Probe it once and
+// skip cleanly when it isn't provisioned — matching the other DB-integration
+// suites — instead of failing the whole file in beforeEach.
+const dbAvailable = await initializeDatabase()
+  .then(() => true)
+  .catch(() => false);
+
+describe.skipIf(!dbAvailable)("Authentication API", () => {
   beforeEach(async () => {
     await cleanupTestData();
   });

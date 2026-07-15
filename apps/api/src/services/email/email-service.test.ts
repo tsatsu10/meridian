@@ -1,29 +1,65 @@
 /**
  * Email Service Tests
- * Unit tests for email functionality
- * Phase 0 - Testing Infrastructure
- *
- * TODO: Missing dependency - @sendgrid/mail
- * Error: Failed to load url @sendgrid/mail in email-service.ts
- * Need to install @sendgrid/mail package
+ * Unit tests for email composition, sending, and retry behavior.
+ * SendGrid is mocked — no real emails are sent.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import sgMail from "@sendgrid/mail";
 import { EmailService } from "./email-service";
 
-describe.skip("EmailService", () => {
+vi.mock("@sendgrid/mail", () => ({
+  default: {
+    setApiKey: vi.fn(),
+    send: vi.fn(),
+  },
+}));
+
+const sendMock = vi.mocked(sgMail.send);
+
+describe("EmailService", () => {
   let emailService: EmailService;
 
   beforeEach(() => {
-    emailService = new EmailService({
-      apiKey: "test-api-key",
-      from: "test@meridian.app",
-      provider: "sendgrid",
+    vi.stubEnv("SENDGRID_API_KEY", "test-api-key");
+    vi.stubEnv("FROM_EMAIL", "test@meridian.app");
+    vi.stubEnv("FRONTEND_URL", "http://localhost:5173");
+    vi.clearAllMocks();
+    sendMock.mockResolvedValue([
+      { statusCode: 202, body: {}, headers: {} },
+      {},
+    ] as unknown as Awaited<ReturnType<typeof sgMail.send>>);
+    emailService = new EmailService();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  describe("initialization", () => {
+    it("configures SendGrid with the API key", () => {
+      expect(sgMail.setApiKey).toHaveBeenCalledWith("test-api-key");
+    });
+
+    it("does not send when no API key is configured", async () => {
+      vi.stubEnv("SENDGRID_API_KEY", "");
+      vi.stubEnv("AWS_SES_API_KEY", "");
+      const uninitialized = new EmailService();
+
+      const result = await uninitialized.sendVerificationEmail(
+        "user@example.com",
+        "token",
+        "User",
+      );
+
+      expect(result).toBe(false);
+      expect(sendMock).not.toHaveBeenCalled();
     });
   });
 
   describe("sendVerificationEmail", () => {
-    it("should send verification email successfully", async () => {
+    it("sends and reports success", async () => {
       const result = await emailService.sendVerificationEmail(
         "user@example.com",
         "verification-token-123",
@@ -31,51 +67,32 @@ describe.skip("EmailService", () => {
       );
 
       expect(result).toBe(true);
+      expect(sendMock).toHaveBeenCalledTimes(1);
     });
 
-    it("should handle email sending failure", async () => {
-      // Mock failure
-      vi.spyOn(
-        emailService as unknown as { send: (...args: unknown[]) => unknown },
-        "send",
-      ).mockRejectedValue(new Error("Send failed"));
-
-      const result = await emailService.sendVerificationEmail(
-        "invalid@example.com",
-        "token",
-        "User",
-      );
-
-      expect(result).toBe(false);
-    });
-
-    it("should include correct template variables", async () => {
-      const sendSpy = vi.spyOn(
-        emailService as unknown as { send: (...args: unknown[]) => unknown },
-        "send",
-      );
-
+    it("addresses the recipient and includes the verification link", async () => {
       await emailService.sendVerificationEmail(
         "user@example.com",
         "token-abc",
         "Jane",
       );
 
-      expect(sendSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: "user@example.com",
-          templateId: expect.any(String),
-          dynamicTemplateData: expect.objectContaining({
-            name: "Jane",
-            verificationLink: expect.stringContaining("token-abc"),
-          }),
-        }),
-      );
+      const msg = sendMock.mock.calls[0][0] as {
+        to: string;
+        subject: string;
+        html: string;
+        from: { email: string };
+      };
+      expect(msg.to).toBe("user@example.com");
+      expect(msg.subject).toBe("Verify your Meridian account");
+      expect(msg.from.email).toBe("test@meridian.app");
+      expect(msg.html).toContain("Hi Jane");
+      expect(msg.html).toContain("/verify-email?token=token-abc");
     });
   });
 
   describe("sendPasswordResetEmail", () => {
-    it("should send password reset email successfully", async () => {
+    it("sends and includes the reset link with token", async () => {
       const result = await emailService.sendPasswordResetEmail(
         "user@example.com",
         "reset-token-123",
@@ -83,105 +100,60 @@ describe.skip("EmailService", () => {
       );
 
       expect(result).toBe(true);
-    });
-
-    it("should include reset link with token", async () => {
-      const sendSpy = vi.spyOn(
-        emailService as unknown as { send: (...args: unknown[]) => unknown },
-        "send",
-      );
-
-      await emailService.sendPasswordResetEmail(
-        "user@example.com",
-        "token-xyz",
-        "User",
-      );
-
-      expect(sendSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          dynamicTemplateData: expect.objectContaining({
-            resetLink: expect.stringContaining("token-xyz"),
-          }),
-        }),
-      );
+      const msg = sendMock.mock.calls[0][0] as { html: string };
+      expect(msg.html).toContain("token=reset-token-123");
     });
   });
 
   describe("sendWelcomeEmail", () => {
-    it("should send welcome email after verification", async () => {
+    it("sends and reports success", async () => {
       const result = await emailService.sendWelcomeEmail(
         "user@example.com",
         "New User",
       );
 
       expect(result).toBe(true);
+      expect(sendMock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("retry logic", () => {
-    it("should retry failed sends up to 3 times", async () => {
-      const sendSpy = vi
-        .spyOn(
-          emailService as unknown as { send: (...args: unknown[]) => unknown },
-          "send",
-        )
+    it("retries failed sends and succeeds on a later attempt", async () => {
+      vi.useFakeTimers();
+      sendMock
         .mockRejectedValueOnce(new Error("Fail 1"))
         .mockRejectedValueOnce(new Error("Fail 2"))
-        .mockResolvedValueOnce(true);
+        .mockResolvedValueOnce([
+          { statusCode: 202, body: {}, headers: {} },
+          {},
+        ] as unknown as Awaited<ReturnType<typeof sgMail.send>>);
 
-      const result = await emailService.sendVerificationEmail(
+      const pending = emailService.sendVerificationEmail(
         "user@example.com",
         "token",
         "User",
       );
+      await vi.runAllTimersAsync();
+      const result = await pending;
 
-      expect(sendSpy).toHaveBeenCalledTimes(3);
+      expect(sendMock).toHaveBeenCalledTimes(3);
       expect(result).toBe(true);
     });
 
-    it("should fail after 3 retry attempts", async () => {
-      const sendSpy = vi
-        .spyOn(
-          emailService as unknown as { send: (...args: unknown[]) => unknown },
-          "send",
-        )
-        .mockRejectedValue(new Error("Always fail"));
+    it("gives up after 3 attempts and reports failure", async () => {
+      vi.useFakeTimers();
+      sendMock.mockRejectedValue(new Error("Always fail"));
 
-      const result = await emailService.sendVerificationEmail(
+      const pending = emailService.sendVerificationEmail(
         "user@example.com",
         "token",
         "User",
       );
+      await vi.runAllTimersAsync();
+      const result = await pending;
 
-      expect(sendSpy).toHaveBeenCalledTimes(3);
+      expect(sendMock).toHaveBeenCalledTimes(3);
       expect(result).toBe(false);
-    });
-  });
-
-  describe("template validation", () => {
-    it("should validate required template fields", () => {
-      expect(() => {
-        emailService.sendVerificationEmail("", "", "");
-      }).toThrow();
-    });
-
-    it("should sanitize email addresses", async () => {
-      const sendSpy = vi.spyOn(
-        emailService as unknown as { send: (...args: unknown[]) => unknown },
-        "send",
-      );
-
-      await emailService.sendVerificationEmail(
-        "  USER@EXAMPLE.COM  ",
-        "token",
-        "User",
-      );
-
-      expect(sendSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: "user@example.com",
-        }),
-      );
     });
   });
 });

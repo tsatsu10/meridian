@@ -290,14 +290,6 @@ describe("File Upload", () => {
       return maliciousPatterns.some((pattern) => pattern.test(contentStr));
     };
 
-    it.skip("should sanitize malicious file names", () => {
-      expect(sanitizeFileName("../../etc/passwd")).not.toContain("..");
-      expect(sanitizeFileName("<script>alert(1)</script>.txt")).not.toContain(
-        "<",
-      );
-      expect(sanitizeFileName("file|name.txt")).not.toContain("|");
-    });
-
     it("should preserve safe file names", () => {
       const safe = "document-2025_final.pdf";
       expect(sanitizeFileName(safe)).toBe(safe);

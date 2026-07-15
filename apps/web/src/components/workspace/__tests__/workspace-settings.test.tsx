@@ -55,7 +55,10 @@ function WorkspaceSettings({ workspace, onSave }: WorkspaceSettingsProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} aria-label="Workspace settings">
+    // noValidate: validation is handled in handleSubmit; without it, jsdom's
+    // native constraint validation on the required input blocks submission
+    // before the handler can set the inline error message.
+    <form onSubmit={handleSubmit} aria-label="Workspace settings" noValidate>
       <h2>Workspace Settings</h2>
 
       <div>
@@ -174,8 +177,7 @@ describe("Workspace Settings Component", () => {
     });
   });
 
-  // Skip: Component handles validation differently (needs browser validation or state update)
-  it.skip("should validate required name [VALIDATION PATTERN]", async () => {
+  it("should validate required name", async () => {
     const user = userEvent.setup();
 
     render(<WorkspaceSettings workspace={mockWorkspace} />, {

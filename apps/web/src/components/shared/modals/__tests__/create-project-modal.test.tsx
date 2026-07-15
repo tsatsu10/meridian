@@ -18,7 +18,12 @@ import CreateProjectModal from "../create-project-modal";
 // Mock dependencies
 const mockNavigate = vi.fn();
 const mockHasPermission = vi.fn().mockReturnValue(true);
-const mockWorkspace = { id: "workspace-123", name: "Test Workspace" };
+// Mutable so individual tests can simulate "no workspace selected";
+// reset in beforeEach.
+let mockWorkspace: { id: string; name: string } | null = {
+  id: "workspace-123",
+  name: "Test Workspace",
+};
 const mockOnClose = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
@@ -106,6 +111,7 @@ describe("CreateProjectModal", () => {
     mockNavigate.mockClear();
     mockHasPermission.mockReturnValue(true);
     mockOnClose.mockClear();
+    mockWorkspace = { id: "workspace-123", name: "Test Workspace" };
   });
 
   describe("Permission Handling", () => {
@@ -251,28 +257,26 @@ describe("CreateProjectModal", () => {
       expect(screen.getByText(/priority/i)).toBeInTheDocument();
     });
 
-    // Skip: Template selection populates form, making it hard to test typing
-    it.skip("should allow entering project name and description [FORM POPULATION]", async () => {
-      // Note: When template is selected, it auto-fills the name field
-      // This makes testing manual typing challenging
+    it("should allow entering project name and description", async () => {
       const user = userEvent.setup();
 
       render(<CreateProjectModal open={true} onClose={mockOnClose} />, {
         wrapper: TestWrapperWithMocks,
       });
 
-      await waitFor(() => screen.getAllByText(/start from scratch/i));
-      const customCard = screen
-        .getByText(/build your own from scratch/i)
-        .closest('div[class*="rounded-xl"]');
-      if (!customCard) throw new Error("custom project card not found");
-      await user.click(customCard);
+      await waitFor(() => screen.getByText(/custom project/i));
+      await user.click(screen.getByText(/custom project/i));
 
-      await waitFor(async () => {
-        const nameInput = screen.getByPlaceholderText(/enter project name/i);
-        await user.type(nameInput, "Test Project");
-        expect(nameInput).toHaveValue("Test Project");
-      });
+      const nameInput = await screen.findByLabelText(/project name/i);
+      // A template selection may pre-fill the name; clear before typing.
+      await user.clear(nameInput);
+      await user.type(nameInput, "Test Project");
+      expect(nameInput).toHaveValue("Test Project");
+
+      const descriptionInput = screen.getByLabelText(/description/i);
+      await user.clear(descriptionInput);
+      await user.type(descriptionInput, "A description");
+      expect(descriptionInput).toHaveValue("A description");
     });
 
     it("should show progress indicator", async () => {
@@ -414,26 +418,35 @@ describe("CreateProjectModal", () => {
   });
 
   describe("Error Handling", () => {
-    // Skip: Complex mock setup with workspace store
-    it.skip("should show error when workspace is not selected [MOCK COMPLEXITY]", async () => {
-      // Note: This test requires dynamic mocking of the workspace store
-      // which is complex with vi.mock() at the module level
-      void userEvent.setup();
+    it("should show error when workspace is not selected", async () => {
+      const user = userEvent.setup();
       const { toast } = await import("sonner");
+      mockWorkspace = null;
 
       render(<CreateProjectModal open={true} onClose={mockOnClose} />, {
         wrapper: TestWrapperWithMocks,
       });
 
-      // Would need to mock workspace as null and test the error path
+      await waitFor(() => screen.getByText(/custom project/i));
+      await user.click(screen.getByText(/custom project/i));
+
+      const nameInput = await screen.findByLabelText(/project name/i);
+      await user.clear(nameInput);
+      await user.type(nameInput, "Test Project");
+
+      await user.click(screen.getByRole("button", { name: /next/i }));
+      await waitFor(() => screen.getByText(/project summary/i));
+
+      await user.click(screen.getByRole("button", { name: /create project/i }));
+
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalled();
+        expect(toast.error).toHaveBeenCalledWith(
+          "Please select a workspace first",
+        );
       });
     });
 
-    // Skip: Form auto-population from template makes label-based queries difficult
-    it.skip("should handle project creation API errors [FORM AUTO-FILL]", async () => {
-      // Note: Template selection auto-fills form, making label queries fail
+    it("should handle project creation API errors", async () => {
       const user = userEvent.setup();
       const { client } = await import("@meridian/libs");
       const { toast } = await import("sonner");
@@ -448,22 +461,22 @@ describe("CreateProjectModal", () => {
         wrapper: TestWrapperWithMocks,
       });
 
-      // Navigate and fill form
-      await waitFor(() => screen.getAllByText(/start from scratch/i));
-      const customCard = screen
-        .getByText(/build your own from scratch/i)
-        .closest('div[class*="rounded-xl"]');
-      if (!customCard) throw new Error("custom project card not found");
-      await user.click(customCard);
+      await waitFor(() => screen.getByText(/custom project/i));
+      await user.click(screen.getByText(/custom project/i));
+
+      const nameInput = await screen.findByLabelText(/project name/i);
+      await user.clear(nameInput);
+      await user.type(nameInput, "Duplicate Project");
 
       await user.click(screen.getByRole("button", { name: /next/i }));
-      await waitFor(() =>
-        screen.getByRole("button", { name: /create project/i }),
-      );
+      await waitFor(() => screen.getByText(/project summary/i));
+
       await user.click(screen.getByRole("button", { name: /create project/i }));
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalled();
+        expect(toast.error).toHaveBeenCalledWith(
+          expect.stringContaining("already exists"),
+        );
       });
     });
   });

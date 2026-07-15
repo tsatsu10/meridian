@@ -60,12 +60,22 @@ function UserPreferencesComponent({
     setSaveSuccess(false);
   };
 
+  // Track the success-banner timer so unmount can cancel it — otherwise it
+  // fires after the test environment is torn down.
+  const successTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  React.useEffect(
+    () => () => {
+      if (successTimer.current) clearTimeout(successTimer.current);
+    },
+    [],
+  );
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
       await onSave?.(preferences);
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      successTimer.current = setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error("Failed to save preferences:", error);
     } finally {
@@ -546,6 +556,10 @@ describe("UserPreferences", () => {
 
     expect(saveButton).toBeDisabled();
     expect(saveButton).toHaveTextContent("Saving...");
+
+    // Let the pending save resolve before the test ends — its finally block
+    // calls setState and crashes if the environment is already torn down.
+    await waitFor(() => expect(saveButton).toHaveTextContent("Save Changes"));
   });
 
   it("should disable inputs while saving", async () => {
@@ -568,6 +582,11 @@ describe("UserPreferences", () => {
     await user.click(screen.getByLabelText(/save preferences/i));
 
     expect(screen.getByLabelText("Theme")).toBeDisabled();
+
+    // Let the pending save resolve before the test ends (see above).
+    await waitFor(() =>
+      expect(screen.getByLabelText("Theme")).not.toBeDisabled(),
+    );
   });
 
   it("should show loading state", () => {
