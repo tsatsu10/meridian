@@ -24,6 +24,7 @@ import {
 } from "../database/schema";
 import { createId } from "@paralleldrive/cuid2";
 import { getRolePermissions } from "../constants/rbac";
+import { requirePermission } from "../middlewares/rbac";
 import type { UserRole } from "../types/rbac";
 import logger from "../utils/logger";
 
@@ -102,12 +103,9 @@ rbac.get("/roles", async (c) => {
 /**
  * GET /roles/assignments - Get all role assignments
  */
-rbac.get("/assignments", async (c) => {
+rbac.get("/assignments", requirePermission("canManageRoles"), async (c) => {
   try {
     const db = getDatabase();
-    const userEmail = c.get("userEmail");
-
-    // TODO: Check if user has permission to view role assignments
 
     const assignments = await db
       .select({
@@ -129,201 +127,207 @@ rbac.get("/assignments", async (c) => {
 /**
  * GET /roles/assignments/:userId - Get role assignments for specific user
  */
-rbac.get("/assignments/:userId", async (c) => {
-  try {
-    const db = getDatabase();
-    const userId = c.req.param("userId");
-    const userEmail = c.get("userEmail");
+rbac.get(
+  "/assignments/:userId",
+  requirePermission("canManageRoles"),
+  async (c) => {
+    try {
+      const db = getDatabase();
+      const userId = c.req.param("userId");
 
-    // TODO: Check if user has permission to view this user's roles
+      const assignments = await db
+        .select()
+        .from(roleAssignmentTable)
+        .where(
+          and(
+            eq(roleAssignmentTable.userId, userId),
+            eq(roleAssignmentTable.isActive, true),
+          ),
+        )
+        .orderBy(desc(roleAssignmentTable.assignedAt));
 
-    const assignments = await db
-      .select()
-      .from(roleAssignmentTable)
-      .where(
-        and(
-          eq(roleAssignmentTable.userId, userId),
-          eq(roleAssignmentTable.isActive, true),
-        ),
-      )
-      .orderBy(desc(roleAssignmentTable.assignedAt));
-
-    return c.json({ assignments });
-  } catch (error) {
-    logger.error("Failed to get user role assignments:", error);
-    // Return empty assignments if table doesn't exist yet
-    if (
-      error instanceof Error &&
-      error.message.includes('relation "role_assignment" does not exist')
-    ) {
-      return c.json({
-        assignments: [],
-        warning:
-          "RBAC tables not yet created in database. Run 'npm run db:push' to create them.",
-      });
+      return c.json({ assignments });
+    } catch (error) {
+      logger.error("Failed to get user role assignments:", error);
+      // Return empty assignments if table doesn't exist yet
+      if (
+        error instanceof Error &&
+        error.message.includes('relation "role_assignment" does not exist')
+      ) {
+        return c.json({
+          assignments: [],
+          warning:
+            "RBAC tables not yet created in database. Run 'npm run db:push' to create them.",
+        });
+      }
+      return c.json(
+        {
+          error: "Failed to get user role assignments",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
     }
-    return c.json(
-      {
-        error: "Failed to get user role assignments",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      500,
-    );
-  }
-});
+  },
+);
 
 /**
  * POST /roles/assign - Assign role to user
  */
-rbac.post("/assign", zValidator("json", assignRoleSchema), async (c) => {
-  try {
-    const db = getDatabase();
-    const data = c.req.valid("json");
-    const assignerEmail = c.get("userEmail");
+rbac.post(
+  "/assign",
+  requirePermission("canManageRoles"),
+  zValidator("json", assignRoleSchema),
+  async (c) => {
+    try {
+      const db = getDatabase();
+      const data = c.req.valid("json");
+      const assignerEmail = c.get("userEmail");
 
-    // Get assigner user ID
-    const assignerUser = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, assignerEmail))
-      .limit(1);
+      // Get assigner user ID
+      const assignerUser = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.email, assignerEmail))
+        .limit(1);
 
-    const [assigner] = assignerUser;
-    if (!assigner) {
-      return c.json({ error: "Assigner not found" }, 400);
+      const [assigner] = assignerUser;
+      if (!assigner) {
+        return c.json({ error: "Assigner not found" }, 400);
+      }
+
+      // Deactivate existing role assignments for this user
+      await db
+        .update(roleAssignmentTable)
+        .set({
+          isActive: false,
+        })
+        .where(
+          and(
+            eq(roleAssignmentTable.userId, data.userId),
+            eq(roleAssignmentTable.isActive, true),
+          ),
+        );
+
+      // Create new role assignment (only columns role_assignment actually has;
+      // assigner/expiry/reason context is captured in role_history below)
+      const newAssignment = {
+        id: createId(),
+        userId: data.userId,
+        role: data.role,
+        assignedAt: new Date(),
+        isActive: true,
+        workspaceId: data.workspaceId || null,
+        projectIds: data.projectIds ?? null,
+      };
+
+      await db.insert(roleAssignmentTable).values(newAssignment);
+
+      // Record in role history
+      await db.insert(roleHistoryTable).values({
+        id: createId(),
+        userId: data.userId,
+        role: data.role,
+        action: "assigned",
+        performedBy: assigner.id,
+        reason: data.reason || "Role assigned",
+        workspaceId: data.workspaceId || null,
+        projectIds: data.projectIds ?? null,
+        departmentIds: data.departmentIds ?? null,
+        notes: data.notes || null,
+        metadata: {
+          ipAddress: c.req.header("x-forwarded-for") || "unknown",
+          userAgent: c.req.header("user-agent") || "unknown",
+          expiresAt: data.expiresAt ?? null,
+        },
+      });
+
+      return c.json({
+        success: true,
+        assignment: newAssignment,
+        message: `Role ${data.role} assigned successfully`,
+      });
+    } catch (error) {
+      logger.error("Failed to assign role:", error);
+      return c.json({ error: "Failed to assign role" }, 500);
     }
-
-    // TODO: Check if assigner has permission to assign this role
-
-    // Deactivate existing role assignments for this user
-    await db
-      .update(roleAssignmentTable)
-      .set({
-        isActive: false,
-      })
-      .where(
-        and(
-          eq(roleAssignmentTable.userId, data.userId),
-          eq(roleAssignmentTable.isActive, true),
-        ),
-      );
-
-    // Create new role assignment (only columns role_assignment actually has;
-    // assigner/expiry/reason context is captured in role_history below)
-    const newAssignment = {
-      id: createId(),
-      userId: data.userId,
-      role: data.role,
-      assignedAt: new Date(),
-      isActive: true,
-      workspaceId: data.workspaceId || null,
-      projectIds: data.projectIds ?? null,
-    };
-
-    await db.insert(roleAssignmentTable).values(newAssignment);
-
-    // Record in role history
-    await db.insert(roleHistoryTable).values({
-      id: createId(),
-      userId: data.userId,
-      role: data.role,
-      action: "assigned",
-      performedBy: assigner.id,
-      reason: data.reason || "Role assigned",
-      workspaceId: data.workspaceId || null,
-      projectIds: data.projectIds ?? null,
-      departmentIds: data.departmentIds ?? null,
-      notes: data.notes || null,
-      metadata: {
-        ipAddress: c.req.header("x-forwarded-for") || "unknown",
-        userAgent: c.req.header("user-agent") || "unknown",
-        expiresAt: data.expiresAt ?? null,
-      },
-    });
-
-    return c.json({
-      success: true,
-      assignment: newAssignment,
-      message: `Role ${data.role} assigned successfully`,
-    });
-  } catch (error) {
-    logger.error("Failed to assign role:", error);
-    return c.json({ error: "Failed to assign role" }, 500);
-  }
-});
+  },
+);
 
 /**
  * DELETE /roles/remove/:userId - Remove user's role assignment
  */
-rbac.delete("/remove/:userId", async (c) => {
-  try {
-    const db = getDatabase();
-    const userId = c.req.param("userId");
-    const removerEmail = c.get("userEmail");
+rbac.delete(
+  "/remove/:userId",
+  requirePermission("canManageRoles"),
+  async (c) => {
+    try {
+      const db = getDatabase();
+      const userId = c.req.param("userId");
+      const removerEmail = c.get("userEmail");
 
-    // Get remover user ID
-    const removerUser = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, removerEmail))
-      .limit(1);
+      // Get remover user ID
+      const removerUser = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.email, removerEmail))
+        .limit(1);
 
-    const [remover] = removerUser;
-    if (!remover) {
-      return c.json({ error: "User not found" }, 400);
+      const [remover] = removerUser;
+      if (!remover) {
+        return c.json({ error: "User not found" }, 400);
+      }
+
+      // Get current role assignment
+      const currentAssignment = await db
+        .select()
+        .from(roleAssignmentTable)
+        .where(
+          and(
+            eq(roleAssignmentTable.userId, userId),
+            eq(roleAssignmentTable.isActive, true),
+          ),
+        )
+        .limit(1);
+
+      const [activeAssignment] = currentAssignment;
+      if (!activeAssignment) {
+        return c.json({ error: "No active role assignment found" }, 404);
+      }
+
+      // Deactivate role assignment
+      await db
+        .update(roleAssignmentTable)
+        .set({
+          isActive: false,
+        })
+        .where(eq(roleAssignmentTable.id, activeAssignment.id));
+
+      // Record in role history
+      await db.insert(roleHistoryTable).values({
+        id: createId(),
+        userId: userId,
+        role: activeAssignment.role,
+        action: "removed",
+        performedBy: remover.id,
+        reason: "Role removed",
+        workspaceId: activeAssignment.workspaceId,
+        metadata: {
+          ipAddress: c.req.header("x-forwarded-for") || "unknown",
+          userAgent: c.req.header("user-agent") || "unknown",
+        },
+      });
+
+      return c.json({
+        success: true,
+        message: "Role removed successfully",
+      });
+    } catch (error) {
+      logger.error("Failed to remove role:", error);
+      return c.json({ error: "Failed to remove role" }, 500);
     }
-
-    // TODO: Check if remover has permission to remove roles
-
-    // Get current role assignment
-    const currentAssignment = await db
-      .select()
-      .from(roleAssignmentTable)
-      .where(
-        and(
-          eq(roleAssignmentTable.userId, userId),
-          eq(roleAssignmentTable.isActive, true),
-        ),
-      )
-      .limit(1);
-
-    const [activeAssignment] = currentAssignment;
-    if (!activeAssignment) {
-      return c.json({ error: "No active role assignment found" }, 404);
-    }
-
-    // Deactivate role assignment
-    await db
-      .update(roleAssignmentTable)
-      .set({
-        isActive: false,
-      })
-      .where(eq(roleAssignmentTable.id, activeAssignment.id));
-
-    // Record in role history
-    await db.insert(roleHistoryTable).values({
-      id: createId(),
-      userId: userId,
-      role: activeAssignment.role,
-      action: "removed",
-      performedBy: remover.id,
-      reason: "Role removed",
-      workspaceId: activeAssignment.workspaceId,
-      metadata: {
-        ipAddress: c.req.header("x-forwarded-for") || "unknown",
-        userAgent: c.req.header("user-agent") || "unknown",
-      },
-    });
-
-    return c.json({
-      success: true,
-      message: "Role removed successfully",
-    });
-  } catch (error) {
-    logger.error("Failed to remove role:", error);
-    return c.json({ error: "Failed to remove role" }, 500);
-  }
-});
+  },
+);
 
 // ===== PERMISSION CHECKING ENDPOINTS =====
 
@@ -332,6 +336,7 @@ rbac.delete("/remove/:userId", async (c) => {
  */
 rbac.post(
   "/permissions/check",
+  requirePermission("canManageRoles"),
   zValidator(
     "json",
     z.object({
@@ -655,6 +660,7 @@ rbac.post(
  */
 rbac.post(
   "/permissions/custom",
+  requirePermission("canManageRoles"),
   zValidator("json", customPermissionSchema),
   async (c) => {
     try {
@@ -673,8 +679,6 @@ rbac.post(
       if (!granter) {
         return c.json({ error: "Granter not found" }, 400);
       }
-
-      // TODO: Check if granter has permission to modify custom permissions
 
       // Create custom permission record
       const customPermission = {
