@@ -31,17 +31,16 @@ vi.mock("../../utils/logger", () => ({
 }));
 
 // The route wires the real authMiddleware (from ../../middlewares/secure-auth)
-// directly into its handler chain; stub it here so tests exercise the route's
-// own authorization logic rather than session-cookie plumbing, matching the
-// pattern in auth/routes/__tests__/two-factor.test.ts.
+// directly into its handler chain via `authMiddleware()` — a factory call,
+// per the fix in PR #52 — so the mock must also be a factory returning the
+// stub middleware, not the middleware itself, or `authMiddleware()` invokes
+// this function immediately with no (c, next) args and crashes.
 vi.mock("../../middlewares/secure-auth", () => ({
-  authMiddleware: async (
-    c: import("hono").Context,
-    next: () => Promise<void>,
-  ) => {
-    c.set("userEmail", "caller@example.com");
-    await next();
-  },
+  authMiddleware:
+    () => async (c: import("hono").Context, next: () => Promise<void>) => {
+      c.set("userEmail", "caller@example.com");
+      await next();
+    },
 }));
 
 describe("POST /:sessionId/terminate", () => {
