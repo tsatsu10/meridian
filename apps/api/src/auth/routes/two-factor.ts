@@ -10,6 +10,7 @@ import { getDatabase } from "../../database/connection";
 import { users as userTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
 import logger from "../../utils/logger";
+import { verifyPassword } from "../password";
 
 const app = new Hono();
 
@@ -170,10 +171,10 @@ app.post("/disable", async (c) => {
 
     const user = users[0];
 
-    // Verify password (assuming you have a password verification function)
-    // const isValidPassword = await verifyPassword(password, user.password);
-    // For now, we'll just check if password is provided
-    // TODO: Implement proper password verification
+    const isValidPassword = await verifyPassword(password, user.password);
+    if (!isValidPassword) {
+      return c.json({ error: "Incorrect password" }, 401);
+    }
 
     // Disable 2FA
     await db
