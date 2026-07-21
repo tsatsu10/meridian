@@ -41,9 +41,7 @@ async function updateProjectMember(
     updateFields.hoursPerWeek = data.hoursPerWeek;
   if (data.isActive !== undefined) updateFields.isActive = data.isActive;
   if (data.notificationSettings !== undefined) {
-    updateFields.notificationSettings = JSON.stringify(
-      data.notificationSettings,
-    );
+    updateFields.notificationSettings = data.notificationSettings;
   }
 
   // Update member
