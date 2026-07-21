@@ -28,9 +28,6 @@ export async function deleteTheme(themeId: string, userId: string) {
     // Authorization (project-scoped canManageProjectSettings) is enforced by
     // requireThemePermission at the route layer.
 
-    // TODO: Handle tasks assigned to this theme
-    // Either reassign or set to null
-
     // Delete theme
     await db
       .delete(backlogThemesTable)
