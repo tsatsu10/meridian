@@ -10,6 +10,7 @@
 
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { createMiddleware } from "hono/factory";
 import rbacStats from "./stats";
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
@@ -71,6 +72,32 @@ const customPermissionSchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
+/**
+ * Lets a caller view their OWN role assignment without canManageRoles
+ * (self-service, not a disclosure risk); anyone looking up another user's
+ * assignment still needs canManageRoles.
+ */
+const requireCanManageRolesUnlessSelf = createMiddleware(async (c, next) => {
+  const db = getDatabase();
+  const targetUserId = c.req.param("userId");
+  const callerEmail = c.get("userEmail");
+
+  if (callerEmail) {
+    const [caller] = await db
+      .select({ id: userTable.id })
+      .from(userTable)
+      .where(eq(userTable.email, callerEmail))
+      .limit(1);
+
+    if (caller?.id === targetUserId) {
+      await next();
+      return;
+    }
+  }
+
+  return requirePermission("canManageRoles")(c, next);
+});
+
 // ===== ROLE ASSIGNMENT ENDPOINTS =====
 
 /**
@@ -127,49 +154,45 @@ rbac.get("/assignments", requirePermission("canManageRoles"), async (c) => {
 /**
  * GET /roles/assignments/:userId - Get role assignments for specific user
  */
-rbac.get(
-  "/assignments/:userId",
-  requirePermission("canManageRoles"),
-  async (c) => {
-    try {
-      const db = getDatabase();
-      const userId = c.req.param("userId");
+rbac.get("/assignments/:userId", requireCanManageRolesUnlessSelf, async (c) => {
+  try {
+    const db = getDatabase();
+    const userId = c.req.param("userId");
 
-      const assignments = await db
-        .select()
-        .from(roleAssignmentTable)
-        .where(
-          and(
-            eq(roleAssignmentTable.userId, userId),
-            eq(roleAssignmentTable.isActive, true),
-          ),
-        )
-        .orderBy(desc(roleAssignmentTable.assignedAt));
+    const assignments = await db
+      .select()
+      .from(roleAssignmentTable)
+      .where(
+        and(
+          eq(roleAssignmentTable.userId, userId),
+          eq(roleAssignmentTable.isActive, true),
+        ),
+      )
+      .orderBy(desc(roleAssignmentTable.assignedAt));
 
-      return c.json({ assignments });
-    } catch (error) {
-      logger.error("Failed to get user role assignments:", error);
-      // Return empty assignments if table doesn't exist yet
-      if (
-        error instanceof Error &&
-        error.message.includes('relation "role_assignment" does not exist')
-      ) {
-        return c.json({
-          assignments: [],
-          warning:
-            "RBAC tables not yet created in database. Run 'npm run db:push' to create them.",
-        });
-      }
-      return c.json(
-        {
-          error: "Failed to get user role assignments",
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500,
-      );
+    return c.json({ assignments });
+  } catch (error) {
+    logger.error("Failed to get user role assignments:", error);
+    // Return empty assignments if table doesn't exist yet
+    if (
+      error instanceof Error &&
+      error.message.includes('relation "role_assignment" does not exist')
+    ) {
+      return c.json({
+        assignments: [],
+        warning:
+          "RBAC tables not yet created in database. Run 'npm run db:push' to create them.",
+      });
     }
-  },
-);
+    return c.json(
+      {
+        error: "Failed to get user role assignments",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+});
 
 /**
  * POST /roles/assign - Assign role to user
