@@ -18,6 +18,7 @@ type ValidateSessionResult = {
   user: {
     id: string;
     email: string;
+    role: string | null;
   } | null;
 };
 
@@ -77,13 +78,17 @@ export const authMiddleware = () => {
         throw new HTTPException(401, { message: "Invalid or expired session" });
       }
 
-      // SECURITY: Map database user to SessionUser format
+      // SECURITY: Map database user to SessionUser format.
+      // workspaceId/permissions are intentionally left empty: this layer
+      // authenticates a request but doesn't know which workspace it's
+      // scoped to, so per-workspace role/permission checks are done by
+      // middlewares/rbac.ts against the DB, not read off this object.
       const sessionUser: SessionUser = {
         id: result.user.id,
         email: result.user.email,
-        role: "USER", // TODO: Fetch actual role from user roles table
-        workspaceId: "", // TODO: Fetch from user workspace relationship
-        permissions: [], // TODO: Fetch from user permissions
+        role: result.user.role || "member",
+        workspaceId: "",
+        permissions: [],
         sessionId: result.session.id,
         lastActivity: Date.now(),
       };
@@ -132,183 +137,6 @@ export const authMiddleware = () => {
 
       throw new HTTPException(401, { message: "Authentication failed" });
     }
-  };
-};
-
-/**
- * Optional authentication middleware - does not require authentication
- * Sets user context if valid session exists, otherwise continues without user
- */
-export const optionalAuthMiddleware = () => {
-  return async (c: Context, next: Next) => {
-    try {
-      // Get session token from httpOnly cookie
-      let sessionToken = getCookie(c, "session");
-
-      // Fallback: Check Authorization header for API clients
-      if (!sessionToken) {
-        const authHeader = c.req.header("Authorization");
-        if (authHeader?.startsWith("Bearer ")) {
-          sessionToken = authHeader.substring(7);
-        }
-      }
-
-      if (sessionToken) {
-        try {
-          // Validate session token
-          const { validateSessionToken } = await import(
-            "../user/utils/validate-session-token.js"
-          );
-          const result: ValidateSessionResult =
-            await validateSessionToken(sessionToken);
-
-          if (result.user && result.session) {
-            // SECURITY: Map database user to SessionUser format
-            const sessionUser: SessionUser = {
-              id: result.user.id,
-              email: result.user.email,
-              role: "USER", // TODO: Fetch actual role from user roles table
-              workspaceId: "", // TODO: Fetch from user workspace relationship
-              permissions: [], // TODO: Fetch from user permissions
-              sessionId: result.session.id,
-              lastActivity: Date.now(),
-            };
-
-            // Set user context for authenticated requests
-            c.set("userId", sessionUser.id);
-            c.set("userEmail", sessionUser.email);
-            c.set("user", sessionUser);
-            c.set("sessionId", sessionUser.sessionId);
-
-            logger.debug(
-              `🔒 OPTIONAL AUTH: User authenticated: ${sessionUser.email}`,
-            );
-          }
-        } catch (error) {
-          logger.debug(
-            "🔒 OPTIONAL AUTH: Session validation failed, continuing without auth",
-          );
-          // Continue without authentication
-        }
-      }
-
-      await next();
-    } catch (error) {
-      logger.error("🔒 OPTIONAL AUTH: Unexpected error:", error);
-      // Continue without authentication
-      await next();
-    }
-  };
-};
-
-/**
- * Role-based authorization middleware
- * Requires specific role to access the route
- */
-export const requireRole = (requiredRole: string) => {
-  const securityLogger = getSecurityLoggingService();
-
-  return async (c: Context, next: Next) => {
-    const user = c.get("user") as SessionUser;
-    const ip =
-      c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
-    const path = c.req.path;
-
-    if (!user) {
-      throw new HTTPException(401, { message: "Authentication required" });
-    }
-
-    const userRole = user.role || "USER";
-
-    if (userRole !== requiredRole && userRole !== "ADMIN") {
-      securityLogger.logAuthorizationEvent(
-        false,
-        user.id,
-        path,
-        "role_check",
-        ip,
-        {
-          requiredRole,
-          userRole,
-          reason: "insufficient_role",
-        },
-      );
-
-      throw new HTTPException(403, {
-        message: `Access denied. Required role: ${requiredRole}`,
-      });
-    }
-
-    securityLogger.logAuthorizationEvent(
-      true,
-      user.id,
-      path,
-      "role_check",
-      ip,
-      {
-        requiredRole,
-        userRole,
-      },
-    );
-
-    await next();
-  };
-};
-
-/**
- * Permission-based authorization middleware
- * Requires specific permission to access the route
- */
-export const requirePermission = (requiredPermission: string) => {
-  const securityLogger = getSecurityLoggingService();
-
-  return async (c: Context, next: Next) => {
-    const user = c.get("user") as SessionUser;
-    const ip =
-      c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
-    const path = c.req.path;
-
-    if (!user) {
-      throw new HTTPException(401, { message: "Authentication required" });
-    }
-
-    const userPermissions = user.permissions || [];
-
-    if (
-      !userPermissions.includes(requiredPermission) &&
-      !userPermissions.includes("*")
-    ) {
-      securityLogger.logAuthorizationEvent(
-        false,
-        user.id,
-        path,
-        "permission_check",
-        ip,
-        {
-          requiredPermission,
-          userPermissions,
-          reason: "insufficient_permissions",
-        },
-      );
-
-      throw new HTTPException(403, {
-        message: `Access denied. Required permission: ${requiredPermission}`,
-      });
-    }
-
-    securityLogger.logAuthorizationEvent(
-      true,
-      user.id,
-      path,
-      "permission_check",
-      ip,
-      {
-        requiredPermission,
-        userPermissions,
-      },
-    );
-
-    await next();
   };
 };
 
