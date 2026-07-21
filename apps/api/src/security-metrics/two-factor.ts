@@ -100,41 +100,23 @@ twoFactorRoutes.get("/users", authMiddleware(), async (c) => {
 
 // Toggle 2FA enforcement
 twoFactorRoutes.post("/enforcement", authMiddleware(), async (c) => {
-  try {
-    const { enabled } = await c.req.json();
-    const userEmail = c.get("userEmail");
-    if (!userEmail) {
-      return c.json({ error: "Authentication required" }, 401);
-    }
-    const db = getDatabase();
-
-    // TODO: Store enforcement setting in workspace settings table
-    // For now, we'll just log the action
-
-    // Log the enforcement change
-    await db.insert(settingsAuditLogTable).values({
-      id: crypto.randomUUID(),
-      userEmail,
-      section: "security",
-      action: enabled
-        ? "two_factor_enforcement_enabled"
-        : "two_factor_enforcement_disabled",
-      metadata: {
-        enabled,
-        ipAddress: c.req.header("x-forwarded-for") || "unknown",
-        severity: "info",
-      },
-    });
-
-    return c.json({
-      success: true,
-      message: `2FA enforcement ${enabled ? "enabled" : "disabled"}`,
-      enabled,
-    });
-  } catch (error) {
-    logger.error("Error updating 2FA enforcement:", error);
-    return c.json({ error: "Failed to update enforcement" }, 500);
+  const userEmail = c.get("userEmail");
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
   }
+
+  // No workspace-settings table exists yet to persist this in (see the
+  // matching TODO in settings/index.ts), so there is nothing to actually
+  // enable/disable. Previously this endpoint wrote a settings_audit_log
+  // entry claiming "two_factor_enforcement_enabled/disabled" and returned
+  // success regardless — a misleading audit trail for a setting nothing
+  // in the codebase enforces. Report honestly instead of faking it.
+  return c.json(
+    {
+      error: "2FA enforcement is not implemented yet",
+    },
+    501,
+  );
 });
 
 // Send 2FA setup reminder
