@@ -201,31 +201,7 @@ export function RBACProvider({ children }: RBACProviderProps) {
           userRole = determineInitialRole(authUser);
         }
 
-        // 🚀 FORCE WORKSPACE MANAGER FOR TESTING
-        userRole = "workspace-manager";
-
-        // 🚀 PERMISSION OVERRIDE: Grant all permissions
-        let permissions = getRolePermissions(userRole);
-
-        // Override to ensure ALL permissions are true
-        permissions = {
-          ...permissions,
-          // Override key analytics permissions
-          canViewAnalytics: true,
-          canCreateReports: true,
-          canViewWorkspaceAnalytics: true,
-          canManageWorkspace: true,
-          canCreateProjects: true,
-          canEditProjects: true,
-          canDeleteProjects: true,
-          canManageRoles: true,
-          canInviteUsers: true,
-          canRemoveUsers: true,
-          // Grant ALL permissions by setting everything to true
-          ...Object.fromEntries(
-            Object.keys(permissions).map((key) => [key, true]),
-          ),
-        };
+        const permissions = getRolePermissions(userRole);
         const newRBACUser = createRBACUser(authUser, userRole, permissions);
 
         setRBACUser(newRBACUser);
