@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { authenticator } from "otplib";
 import { Hono } from "hono";
 import twoFactorRoutes from "../two-factor";
+import { hashPassword } from "../../password";
 
 // Mock database
 const mockUsers = new Map();
@@ -290,7 +291,7 @@ describe("Two-Factor Authentication Routes", () => {
         limit: vi.fn().mockResolvedValue([
           {
             id: "user-123",
-            password: "hashed-password",
+            password: await hashPassword("correct-password"),
           },
         ]),
       });
@@ -333,6 +334,37 @@ describe("Two-Factor Authentication Routes", () => {
       expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.error).toContain("Password is required");
+    });
+
+    it("rejects an incorrect password instead of disabling 2FA", async () => {
+      // Anyone with a valid session (stolen cookie, XSS, unlocked device)
+      // could otherwise strip 2FA from an account by sending ANY non-empty
+      // string as "password" — the endpoint never actually checked it
+      // against the stored hash.
+      mockDb.select.mockReturnValue({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([
+          {
+            id: "user-123",
+            password: await hashPassword("correct-password"),
+          },
+        ]),
+      });
+
+      mockDb.update.mockReturnThis();
+      mockDb.set.mockReturnThis();
+
+      const req = new Request("http://localhost/auth/two-factor/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: "totally-wrong-password" }),
+      });
+
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(401);
+      expect(mockDb.set).not.toHaveBeenCalled();
     });
   });
 
