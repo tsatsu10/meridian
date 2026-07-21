@@ -15,6 +15,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { auth } from "../middlewares/auth";
+import { requirePermission } from "../middlewares/rbac";
 import {
   calculateUserStatistics,
   getUserStatistics,
@@ -251,6 +252,7 @@ smartProfileRoutes.get("/:userId/milestones", async (c) => {
 // Record major contribution (admin/manager)
 smartProfileRoutes.post(
   "/:userId/contributions",
+  requirePermission("canManageTeamMembers"),
   zValidator(
     "json",
     z.object({
@@ -271,8 +273,6 @@ smartProfileRoutes.post(
       if (!workspaceId) {
         return c.json({ error: "workspaceId required" }, 400);
       }
-
-      // TODO: Check if user has permission to record contributions
 
       const contribution = await recordMajorContribution(
         userId,

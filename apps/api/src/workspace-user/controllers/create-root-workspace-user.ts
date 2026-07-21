@@ -4,6 +4,7 @@ import { getDatabase } from "../../database/connection";
 import {
   workspaceUserTable,
   roleAssignmentTable,
+  roleHistoryTable,
   userTable,
 } from "../../database/schema";
 import logger from "../../utils/logger";
@@ -49,8 +50,15 @@ async function createRootWorkspaceUser(workspaceId: string, userEmail: string) {
       assignedAt: new Date(),
     });
 
-    // TODO: Record in role history when roleHistoryTable is created
-    // Role history table doesn't exist in schema yet
+    await db.insert(roleHistoryTable).values({
+      id: createId(),
+      userId: user.id,
+      role: "workspace-manager",
+      workspaceId: workspaceId,
+      action: "assigned",
+      performedBy: user.id,
+      reason: "Workspace created",
+    });
 
     logger.debug(
       `🛡️ Auto-assigned workspace-manager role to workspace creator: ${userEmail}`,
