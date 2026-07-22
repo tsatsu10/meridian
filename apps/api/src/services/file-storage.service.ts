@@ -190,7 +190,7 @@ class FileStorageService {
 
   /**
    * Upload to Amazon S3
-   * TODO: Implement S3 upload when needed
+   * See https://github.com/tsatsu10/meridian/issues/61
    */
   private async uploadToS3(
     fileBuffer: Buffer,
@@ -199,7 +199,6 @@ class FileStorageService {
     mimeType: string,
     subdir: string,
   ): Promise<UploadedFile> {
-    // TODO: Implement S3 upload
     // const s3 = new S3Client({ region: this.config.s3Config!.region, ... });
     // const command = new PutObjectCommand({ ... });
     // await s3.send(command);
@@ -211,7 +210,7 @@ class FileStorageService {
 
   /**
    * Upload to Cloudflare R2
-   * TODO: Implement R2 upload when needed
+   * See https://github.com/tsatsu10/meridian/issues/61
    */
   private async uploadToR2(
     fileBuffer: Buffer,
@@ -220,7 +219,6 @@ class FileStorageService {
     mimeType: string,
     subdir: string,
   ): Promise<UploadedFile> {
-    // TODO: Implement R2 upload (uses S3-compatible API)
     // R2 is S3-compatible, so similar to S3 implementation
 
     throw new Error(
@@ -239,9 +237,9 @@ class FileStorageService {
         logger.error("Error deleting file:", error);
       }
     } else if (this.config.provider === "s3") {
-      // TODO: Implement S3 delete
+      // See https://github.com/tsatsu10/meridian/issues/61
     } else if (this.config.provider === "r2") {
-      // TODO: Implement R2 delete
+      // See https://github.com/tsatsu10/meridian/issues/61
     }
   }
 

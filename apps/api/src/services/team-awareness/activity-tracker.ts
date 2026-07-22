@@ -61,7 +61,7 @@ export const ActivityTracker = {
         isPublic: params.isPublic ?? true,
       });
 
-      // TODO: Re-enable cache invalidation once Redis is properly initialized
+      // See https://github.com/tsatsu10/meridian/issues/64
       // Invalidate activity cache (skip for now if Redis not available)
       try {
         await CacheService.invalidatePattern(`activity:${params.workspaceId}*`);
@@ -84,7 +84,7 @@ export const ActivityTracker = {
    */
   async getActivities(filters: ActivityFilters) {
     const db = getDatabase();
-    // TODO: Re-enable caching once Redis is properly initialized
+    // See https://github.com/tsatsu10/meridian/issues/64
     // const cacheKey = `activity:${filters.workspaceId}:${filters.userId || 'all'}:${filters.projectId || 'all'}`;
 
     // Directly query without caching for now
@@ -141,7 +141,7 @@ export const ActivityTracker = {
    */
   async getActivityStats(workspaceId: string, userId?: string) {
     const db = getDatabase();
-    // TODO: Re-enable caching once Redis is properly initialized
+    // See https://github.com/tsatsu10/meridian/issues/64
     // const cacheKey = `activity:stats:${workspaceId}:${userId || 'all'}`;
 
     const conditions = [eq(userActivity.workspaceId, workspaceId)];
@@ -189,7 +189,7 @@ export const ActivityTracker = {
    */
   async getMostActiveUsers(workspaceId: string, limit = 10) {
     const db = getDatabase();
-    // TODO: Re-enable caching once Redis is properly initialized
+    // See https://github.com/tsatsu10/meridian/issues/64
     // const cacheKey = `activity:top-users:${workspaceId}`;
 
     const activeUsers = await db

@@ -388,7 +388,7 @@ subscribeToEvent(
 
         if (task) {
           // For now, just create a simple notification
-          // TODO: Implement proper workspace member filtering
+          // See https://github.com/tsatsu10/meridian/issues/75
           const title = isNewVersion
             ? "New File Version Uploaded"
             : "New File Attached";

@@ -49,7 +49,7 @@ class TimelineErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // TODO: Send to error tracking service (e.g., Sentry)
+    // See https://github.com/tsatsu10/meridian/issues/76
     // logErrorToService(error, errorInfo);
   }
 

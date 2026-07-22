@@ -15,7 +15,7 @@ import updateWorkspace from "./controllers/update-workspace";
 import getWorkspaceSettings from "./controllers/get-workspace-settings";
 import updateWorkspaceSettings from "./controllers/update-workspace-settings";
 import uploadWorkspaceLogo from "./controllers/upload-workspace-logo";
-// TODO: Phase 2 - User invitation disabled pending schema implementation
+// Disabled pending schema implementation — see https://github.com/tsatsu10/meridian/issues/68
 // import inviteUser from "./controllers/invite-user";
 // import acceptInvitation from "./controllers/accept-invitation";
 import { getWorkspaceAnalytics } from "../analytics/controllers/get-workspace-analytics";
@@ -107,7 +107,7 @@ workspace.post(
   },
 );
 // 📧 INVITATION ROUTES - Secure multi-tenant invitation system
-// TODO: Phase 2 - User invitation disabled pending schema implementation
+// Disabled pending schema implementation — see https://github.com/tsatsu10/meridian/issues/68
 /*
 // Send workspace invitation
 workspace.post(

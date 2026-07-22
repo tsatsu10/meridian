@@ -165,7 +165,7 @@ async function getAllTasks({
     .from(projectTable)
     .where(eq(projectTable.workspaceId, workspaceId));
 
-  // TODO: Add custom status columns when statusColumnTable schema is created
+  // See https://github.com/tsatsu10/meridian/issues/63
   const projectsWithColumns = projects.map((project) => ({
     ...project,
     columns: [], // Empty array until statusColumnTable is implemented

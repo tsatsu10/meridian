@@ -222,7 +222,7 @@ async function getProjectOverview(c: Context) {
       meta: {
         fetchedAt: new Date().toISOString(),
         duration,
-        cached: false, // TODO: Implement caching
+        cached: false, // See https://github.com/tsatsu10/meridian/issues/70
       },
     });
   } catch (error) {

@@ -133,7 +133,7 @@ export async function getProjectAnalytics(c: Context) {
     // Get per-member task completion data
     const memberPerformance = await Promise.all(
       teamMembers.map(async (member) => {
-        const memberTasks = allTasks.filter((t) => t.status); // TODO: Add assignee filtering when available
+        const memberTasks = allTasks.filter((t) => t.status); // See https://github.com/tsatsu10/meridian/issues/69
         const completedTasks = memberTasks.filter((t) => t.status === "done");
         const inProgressTasks = memberTasks.filter(
           (t) => t.status === "in_progress",

@@ -212,18 +212,6 @@ export async function changeMemberRole(c: Context) {
       logger.error("⚠️ Failed to log role history:", historyError);
     }
 
-    // TODO: Broadcast via WebSocket for real-time updates
-    // const io = c.get('io');
-    // io.to(`workspace:${workspaceId}`).emit('team:role-changed', {
-    //   memberId,
-    //   memberName: targetMember.userName,
-    //   memberEmail: targetMember.userEmail,
-    //   oldRole,
-    //   newRole: role,
-    //   changedBy: currentUser.name,
-    //   timestamp: new Date().toISOString()
-    // });
-
     return c.json({
       success: true,
       message: `Role changed from ${oldRole} to ${role}`,

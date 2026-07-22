@@ -46,7 +46,7 @@ twoFactorRoutes.get("/stats", authMiddleware(), async (c) => {
 
     // Check if enforcement is enabled (stored in settings or environment)
     // For now, we'll return a placeholder
-    const enforcementEnabled = false; // TODO: Add to workspace settings
+    const enforcementEnabled = false; // See https://github.com/tsatsu10/meridian/issues/65
 
     return c.json({
       totalUsers: total,
@@ -87,8 +87,8 @@ twoFactorRoutes.get("/users", authMiddleware(), async (c) => {
       name: user.name || user.email.split("@")[0],
       hasTwoFactor: user.twoFactorEnabled ?? false,
       enabledAt: user.twoFactorEnabled ? user.createdAt : undefined,
-      lastUsed: undefined, // TODO: Track last 2FA usage
-      backupCodesRemaining: undefined, // TODO: Track backup codes
+      lastUsed: undefined, // See https://github.com/tsatsu10/meridian/issues/72
+      backupCodesRemaining: undefined, // See https://github.com/tsatsu10/meridian/issues/72
     }));
 
     return c.json(userStatuses);
@@ -129,7 +129,7 @@ twoFactorRoutes.post("/send-reminder", authMiddleware(), async (c) => {
     }
     const db = getDatabase();
 
-    // TODO: Send actual email reminder
+    // Blocked on real email sending — see https://github.com/tsatsu10/meridian/issues/60
     // For now, we'll just log the action
 
     // Log the reminder
