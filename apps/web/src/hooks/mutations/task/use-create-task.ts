@@ -26,7 +26,7 @@ function useCreateTask() {
         projectId,
         userEmail ?? "",
         status,
-        new Date(dueDate),
+        dueDate ? new Date(dueDate) : null,
         priority,
         parentId,
       ),
