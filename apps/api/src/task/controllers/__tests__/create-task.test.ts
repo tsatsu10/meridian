@@ -171,6 +171,40 @@ describe("CreateTask Controller", () => {
     });
   });
 
+  describe("Due date defaulting", () => {
+    it("stores no due date (not the current timestamp) when none is provided", async () => {
+      // A task created without an explicit due date was silently defaulting
+      // to `new Date()` (right now) instead of staying unset. Since "overdue"
+      // is computed as dueDate < now everywhere else in the app (e.g. the
+      // project grid card's overdueTasks filter treats a missing dueDate as
+      // "never overdue"), a task created this way was immediately flagged as
+      // overdue/missed the moment it existed — reproduced live: an
+      // auto-detected milestone marked a task "missed" seconds after
+      // creating it with no due date picked.
+      const taskData = {
+        projectId: "project-1",
+        title: "No due date task",
+        status: "todo",
+      };
+
+      mockDb.insert.mockReturnThis();
+      mockDb.values.mockReturnThis();
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "task-1",
+          ...taskData,
+          dueDate: null,
+          taskNumber: 1,
+        },
+      ]);
+
+      await createTask(taskData);
+
+      const insertedValues = mockDb.values.mock.calls[0][0];
+      expect(insertedValues.dueDate).toBeNull();
+    });
+  });
+
   describe("Validation errors", () => {
     it("should throw error when assigning to both user and team", async () => {
       // Arrange

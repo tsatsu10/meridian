@@ -170,7 +170,7 @@ const task = new Hono<{
       z.object({
         title: z.string(),
         description: z.string(),
-        dueDate: z.string(),
+        dueDate: z.string().nullable().optional(),
         priority: z.string(),
         status: z.string(),
         userEmail: z.string().optional(),
@@ -207,7 +207,7 @@ const task = new Hono<{
         userEmail,
         title,
         description,
-        dueDate: new Date(dueDate),
+        dueDate: dueDate ? new Date(dueDate) : undefined,
         priority,
         status,
         parentId,
