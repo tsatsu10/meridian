@@ -161,12 +161,21 @@ export default function LazyDashboardLayout({
   }, [loadingComponent, customLoadingComponent]);
 
   return (
-    <div
-      className={layoutConfig.containerClass}
-      style={layoutConfig.performanceOptimizations}
-    >
+    <div className={layoutConfig.containerClass}>
       {/* Main Content Area */}
-      <div className={layoutConfig.contentClass}>
+      {/*
+        The performance styles (transform/will-change/contain) live here,
+        not on the outer container, because each of them independently
+        establishes a new CSS containing block for `position: fixed`
+        descendants. Applied on the outer container, they silently anchor
+        the dock navigation below to this div's own (often very tall)
+        box instead of the real viewport, making it drift away from the
+        screen's bottom edge instead of staying pinned there.
+      */}
+      <div
+        className={layoutConfig.contentClass}
+        style={layoutConfig.performanceOptimizations}
+      >
         <Suspense fallback={LoadingComponent}>{children}</Suspense>
       </div>
 
