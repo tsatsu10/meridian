@@ -18,6 +18,7 @@ import {
   createSlidingWindowRateLimiter,
   RateLimitPresets,
 } from "../middlewares/sliding-window-rate-limiter";
+import { requirePermission } from "../middlewares/rbac";
 
 const app = new Hono<{ Variables: { userEmail: string } }>();
 
@@ -871,25 +872,32 @@ app.get("/:teamId/permissions/advanced", async (c) => {
 });
 
 // @epic-3.4-teams: Update member permissions
-app.put("/:teamId/permissions/:userId", async (c) => {
-  const teamId = c.req.param("teamId");
-  const userId = c.req.param("userId");
+app.put(
+  "/:teamId/permissions/:userId",
+  requirePermission("canManageTeamMembers"),
+  async (c) => {
+    const teamId = c.req.param("teamId");
+    const userId = c.req.param("userId");
 
-  try {
-    const body = await c.req.json();
-    const { permissions } = body;
+    try {
+      const body = await c.req.json();
+      const { permissions } = body;
 
-    // TODO: Implement custom permission storage
-    // For now, we'll just return success
-    return c.json({
-      success: true,
-      message: "Custom permissions will be implemented in future release",
-    });
-  } catch (error) {
-    logger.error("Error updating member permissions:", error);
-    return c.json({ error: "Failed to update member permissions" }, 500);
-  }
-});
+      // No custom-permission storage exists yet, so there is nothing to
+      // persist. Report honestly instead of claiming success — see
+      // https://github.com/tsatsu10/meridian/issues/66
+      return c.json(
+        {
+          error: "Custom permission storage is not implemented yet",
+        },
+        501,
+      );
+    } catch (error) {
+      logger.error("Error updating member permissions:", error);
+      return c.json({ error: "Failed to update member permissions" }, 500);
+    }
+  },
+);
 
 // @epic-3.4-teams: Advanced member search and filtering
 app.get("/:teamId/members/search", async (c) => {

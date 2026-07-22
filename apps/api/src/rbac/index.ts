@@ -637,6 +637,7 @@ async function checkContextualPermissions(
  */
 rbac.post(
   "/permissions/bulk-update",
+  requirePermission("canManageRoles"),
   zValidator(
     "json",
     z.object({
@@ -648,27 +649,22 @@ rbac.post(
       const data = c.req.valid("json");
       const userEmail = c.get("userEmail");
 
-      // TODO: This is a placeholder endpoint for the UI
-      // In a real implementation, you would update the role definitions
-      // For now, we'll just log the changes and return success
-
       logger.debug("Role permissions update requested by:", userEmail);
       logger.debug(
         "New permissions:",
         JSON.stringify(data.permissions, null, 2),
       );
 
-      // In a real system, you would:
-      // 1. Validate the user has permission to update role definitions
-      // 2. Update the role permission definitions in the database
-      // 3. Invalidate cached permissions
-      // 4. Notify affected users of permission changes
-
-      return c.json({
-        success: true,
-        message: "Role permissions updated successfully",
-        note: "This is a placeholder implementation. In production, this would update the role definitions.",
-      });
+      // ROLE_PERMISSIONS is a static constant, not DB-backed, so there is
+      // nothing to actually update here. Report honestly instead of
+      // claiming success — see
+      // https://github.com/tsatsu10/meridian/issues/67
+      return c.json(
+        {
+          error: "Role permission updates are not implemented yet",
+        },
+        501,
+      );
     } catch (error) {
       logger.error("Failed to update role permissions:", error);
       return c.json({ error: "Failed to update role permissions" }, 500);
