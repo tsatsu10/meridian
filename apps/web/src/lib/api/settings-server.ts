@@ -11,15 +11,16 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3005";
 // Production API client for settings
 class ProductionSettingsAPI {
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
-    const token =
-      localStorage.getItem("auth-token") ||
-      sessionStorage.getItem("auth-token");
-
+    // The real app authenticates via an HttpOnly session cookie set on
+    // sign-in (apps/api/src/user/index.ts), not a Bearer token — nothing
+    // in the sign-in flow ever populates localStorage/sessionStorage's
+    // "auth-token" key, so that branch never actually fired. Every call
+    // through this client was hitting the API unauthenticated and 401ing.
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
     });
