@@ -98,4 +98,15 @@ describe("rbac routes require canManageRoles", () => {
     });
     expect(res.status).toBe(403);
   });
+
+  it("blocks POST /permissions/bulk-update for a caller without canManageRoles", async () => {
+    const res = await app.request("/permissions/bulk-update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        permissions: { member: { canManageWorkspace: true } },
+      }),
+    });
+    expect(res.status).toBe(403);
+  });
 });
