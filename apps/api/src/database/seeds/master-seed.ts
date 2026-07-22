@@ -109,7 +109,9 @@ async function masterSeed(): Promise<void> {
   logger.info(`\n✅ Master seed finished in ${ms}ms`);
 }
 
-masterSeed().catch((err) => {
-  logger.error("❌ Master seed failed:", err);
-  process.exit(1);
-});
+masterSeed()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    logger.error("❌ Master seed failed:", err);
+    process.exit(1);
+  });
