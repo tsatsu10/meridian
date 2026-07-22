@@ -17,6 +17,7 @@ import {
 import { format, isPast } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { ProjectDashboardRow } from "@/types/project";
+import projectIcons from "@/constants/project-icons";
 
 type TaskLike = NonNullable<ProjectDashboardRow["tasks"]>[number];
 
@@ -76,6 +77,13 @@ export function EnhancedProjectGridCard({
     isPast(new Date(project.dueDate)) &&
     project.status !== "completed";
 
+  // project.icon stores a Lucide icon name (e.g. "Settings"), not a
+  // renderable emoji/character — resolve it via the shared icon map instead
+  // of printing the raw name.
+  const ProjectIcon = project.icon
+    ? projectIcons[project.icon as keyof typeof projectIcons]
+    : undefined;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -134,7 +142,11 @@ export function EnhancedProjectGridCard({
                 getProjectColor(project.name),
               )}
             >
-              {project.icon || <FolderOpen className="h-6 w-6" />}
+              {ProjectIcon ? (
+                <ProjectIcon className="h-6 w-6" />
+              ) : (
+                <FolderOpen className="h-6 w-6" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 min-w-0">
