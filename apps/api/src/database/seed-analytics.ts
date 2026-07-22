@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { getDatabase } from "./connection";
 import {
   workspaceTable,
@@ -51,13 +52,14 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
       .limit(1);
 
     if (existingAdmin.length === 0) {
+      const hashedPassword = await bcrypt.hash("demo123", 10);
       const [newAdmin] = await db
         .insert(userTable)
         .values({
           id: `user-admin-${Date.now()}`,
           email: adminEmail,
           name: "Admin User",
-          password: "hashed_password_placeholder", // password field, not passwordHash
+          password: hashedPassword, // Demo password: "demo123"
           role: "admin",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -113,11 +115,12 @@ export async function seedAnalyticsData(options: SeedOptions = {}) {
         .limit(1);
 
       if (existingUser.length === 0) {
+        const hashedPassword = await bcrypt.hash("demo123", 10);
         await db.insert(userTable).values({
           id: `user-${i + 1}-${Date.now()}`,
           email,
           name: `Test User ${i + 1}`,
-          password: "hashed_password_placeholder", // password field, not passwordHash
+          password: hashedPassword, // Demo password: "demo123"
           role,
           createdAt: new Date(),
           updatedAt: new Date(),
