@@ -30,7 +30,14 @@ function useCreateTask() {
         priority,
         parentId,
       ),
-    onSuccess: (_data) => {
+    onSuccess: (_data, variables) => {
+      // The board (useGetTasks) reads from ["tasks", projectId] — refetch it
+      // directly so a newly created task shows up immediately instead of
+      // waiting for useGetTasks's 5s poll or a full page reload.
+      queryClient.refetchQueries({
+        queryKey: ["tasks", variables.projectId],
+      });
+
       // Invalidate all task-related queries to ensure calendar synchronization
       if (workspace?.id) {
         // Invalidate all-tasks queries (includes calendar views)
@@ -39,11 +46,6 @@ function useCreateTask() {
         });
         queryClient.invalidateQueries({
           queryKey: ["all-tasks-stats", workspace.id],
-        });
-
-        // Invalidate project-specific task queries
-        queryClient.invalidateQueries({
-          queryKey: ["project-tasks"],
         });
 
         // Invalidate project data that might contain task counts
