@@ -17,6 +17,7 @@ import {
 } from "@/fetchers/profile/smart-profile-fetchers";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/cn";
+import projectIcons from "@/constants/project-icons";
 
 interface ActiveProjectsProps {
   userId: string;
@@ -118,6 +119,12 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
                     )
                   : 0;
 
+              // project.icon stores a Lucide icon name, not an emoji —
+              // resolve it via the shared icon map.
+              const ProjectIcon = project.icon
+                ? projectIcons[project.icon as keyof typeof projectIcons]
+                : undefined;
+
               return (
                 <Link
                   key={project.id}
@@ -135,7 +142,11 @@ export function ActiveProjects({ userId, className }: ActiveProjectsProps) {
                           className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
                           style={{ backgroundColor: `${project.color}20` }}
                         >
-                          {project.icon || "📁"}
+                          {ProjectIcon ? (
+                            <ProjectIcon className="h-5 w-5" />
+                          ) : (
+                            "📁"
+                          )}
                         </div>
                         <div>
                           <h4 className="font-semibold">{project.name}</h4>
