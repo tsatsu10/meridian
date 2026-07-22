@@ -1,5 +1,6 @@
 import clearNotifications from "@/fetchers/notification/clear-notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidateNotificationQueries } from "./invalidate-notifications";
 
 function useClearNotifications() {
   const queryClient = useQueryClient();
@@ -7,7 +8,7 @@ function useClearNotifications() {
   return useMutation({
     mutationFn: clearNotifications,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateNotificationQueries(queryClient);
     },
   });
 }

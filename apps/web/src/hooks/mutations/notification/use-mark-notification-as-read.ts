@@ -1,5 +1,6 @@
 import markNotificationAsRead from "@/fetchers/notification/mark-notification-as-read";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidateNotificationQueries } from "./invalidate-notifications";
 
 function useMarkNotificationAsRead() {
   const queryClient = useQueryClient();
@@ -7,7 +8,7 @@ function useMarkNotificationAsRead() {
   return useMutation({
     mutationFn: (id: string) => markNotificationAsRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateNotificationQueries(queryClient);
     },
   });
 }
