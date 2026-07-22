@@ -273,7 +273,9 @@ upload.delete("/:id", async (c) => {
 
     // Check if user owns the attachment or has permission
     if (attachment.uploadedBy !== user.id) {
-      // TODO: Add workspace admin check
+      // Fails closed already (403) — a workspace-admin override would be a
+      // nice-to-have relaxation, not a fix. Investigated during the Phase
+      // 11 comment triage; not tracked as an issue since there's no bug here.
       return c.json({ error: "Forbidden" }, 403);
     }
 

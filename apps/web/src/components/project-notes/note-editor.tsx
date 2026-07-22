@@ -276,7 +276,7 @@ export function NoteEditor({
           </div>
 
           {/* Content Editor */}
-          {/* TODO: Replace with TipTap or ProseMirror rich text editor */}
+          {/* See https://github.com/tsatsu10/meridian/issues/90 */}
           <div className="space-y-2">
             <Textarea
               ref={textareaRef}

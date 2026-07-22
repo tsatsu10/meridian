@@ -341,7 +341,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    // TODO: Implement edit column functionality
+                    // See https://github.com/tsatsu10/meridian/issues/88
                     toast.info("Edit column feature coming soon");
                   }}
                   className="hover:bg-white/50 dark:hover:bg-zinc-800/50 transition-colors"

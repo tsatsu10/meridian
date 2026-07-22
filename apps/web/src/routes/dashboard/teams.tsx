@@ -2223,7 +2223,7 @@ function TeamsPage() {
                 setSelectedProfileUserId(null);
               }}
               onViewFull={() => {
-                // TODO: Navigate to full profile page
+                // See https://github.com/tsatsu10/meridian/issues/87
                 toast.info("Full profile page coming soon!");
               }}
             />
