@@ -296,10 +296,14 @@ export default function CreateProjectModal({
     onClose();
   };
 
-  // Fetch templates
+  // Fetch templates. Gated on `open` (same as the workspace-members effect
+  // above) so this never fires on an early/prefetched mount of the modal
+  // before the auth session is ready — it only needs to run once the user
+  // has actually opened the dialog.
   const { data: templatesResponse, isLoading: templatesLoading } = useQuery({
     queryKey: ["templates"],
     queryFn: () => getTemplates({ limit: 50, isOfficial: true }),
+    enabled: open,
   });
 
   const templates = templatesResponse?.templates || [];
