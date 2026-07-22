@@ -11,6 +11,7 @@ import { RBACProvider } from "./lib/permissions";
 import { routeTree } from "./routeTree.gen";
 import { TooltipProvider } from "./components/ui/tooltip";
 import WorkspaceProvider from "./components/providers/workspace-provider";
+import { MemoryCleanupProvider } from "./components/performance/memory-cleanup-provider";
 import { initSentry } from "./lib/sentry";
 
 // Initialize Sentry error monitoring first
@@ -156,7 +157,9 @@ if (!rootElement.innerHTML) {
               <AuthProvider>
                 <RBACProvider>
                   <WorkspaceProvider>
-                    <App />
+                    <MemoryCleanupProvider>
+                      <App />
+                    </MemoryCleanupProvider>
                   </WorkspaceProvider>
                 </RBACProvider>
               </AuthProvider>
