@@ -648,9 +648,8 @@ rbac.post(
       const data = c.req.valid("json");
       const userEmail = c.get("userEmail");
 
-      // TODO: This is a placeholder endpoint for the UI
-      // In a real implementation, you would update the role definitions
-      // For now, we'll just log the changes and return success
+      // Placeholder endpoint for the UI — fakes success without persisting
+      // anything. See https://github.com/tsatsu10/meridian/issues/67
 
       logger.debug("Role permissions update requested by:", userEmail);
       logger.debug(

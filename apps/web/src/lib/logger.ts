@@ -103,7 +103,7 @@ class Logger {
   }
 
   private sendToExternalService(entry: LogEntry): void {
-    // TODO: Integrate with external logging service
+    // See https://github.com/tsatsu10/meridian/issues/77
     // Examples: Sentry, LogRocket, Datadog, etc.
     const hasSentry = "Sentry" in window;
     if (entry.level === "error" && hasSentry) {

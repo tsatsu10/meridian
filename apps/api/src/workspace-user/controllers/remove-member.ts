@@ -219,17 +219,6 @@ export async function removeMember(c: Context) {
 
     logger.debug("✅ Member removed successfully");
 
-    // TODO: Broadcast via WebSocket for real-time updates
-    // const io = c.get('io');
-    // io.to(`workspace:${workspaceId}`).emit('team:member-removed', {
-    //   memberId,
-    //   memberName: targetMember.userName,
-    //   memberEmail: targetMember.userEmail,
-    //   removedBy: currentUser.name,
-    //   unassignedTasks: taskCount,
-    //   timestamp: new Date().toISOString()
-    // });
-
     return c.json({
       success: true,
       message: `Successfully removed ${targetMember.userName} from workspace`,

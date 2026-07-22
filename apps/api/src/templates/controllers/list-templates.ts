@@ -80,7 +80,7 @@ export default async function listTemplates(
     );
   }
 
-  // TODO: Implement tag filtering when needed
+  // See https://github.com/tsatsu10/meridian/issues/74
   // Tags are stored as JSONB, would need special handling
 
   const whereClause =

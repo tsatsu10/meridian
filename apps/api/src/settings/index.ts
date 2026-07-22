@@ -161,7 +161,7 @@ app.get("/", async (c) => {
     }
 
     // Return default settings structure
-    // TODO: Settings table not yet implemented in active schema
+    // See https://github.com/tsatsu10/meridian/issues/65
     const settingsObject: Record<string, unknown> = {
       profile: {
         name: "",

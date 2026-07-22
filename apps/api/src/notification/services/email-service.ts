@@ -27,7 +27,7 @@ interface EmailOptions {
 
 /**
  * Send an email (simulated for development)
- * TODO: Replace with real email service in production
+ * See https://github.com/tsatsu10/meridian/issues/60 — replace with real email service in production
  */
 async function sendEmail(options: EmailOptions): Promise<boolean> {
   const { to, subject, html, text } = options;
@@ -47,7 +47,7 @@ async function sendEmail(options: EmailOptions): Promise<boolean> {
 
   // PRODUCTION: Use real email service
   try {
-    // TODO: Implement real email sending
+    // See https://github.com/tsatsu10/meridian/issues/60
     // Example with nodemailer:
     /*
     const nodemailer = require('nodemailer');

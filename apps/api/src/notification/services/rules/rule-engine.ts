@@ -350,8 +350,9 @@ export async function evaluateAllRules(): Promise<void> {
 
     for (const rule of activeRules) {
       try {
-        // Assume workspaceId from rule or fetch from user
-        const workspaceId = "default"; // TODO: Get from user context
+        // workspaceId is unused by every evaluate* function below (they scope
+        // by rule.userEmail instead), so this placeholder has no effect.
+        const workspaceId = "default";
 
         const shouldTrigger = await evaluateRule(
           rule as AlertRule,

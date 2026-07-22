@@ -40,7 +40,7 @@ async function getTasks(projectId: string) {
     });
   }
 
-  // TODO: Fetch custom status columns when statusColumnTable schema is created
+  // See https://github.com/tsatsu10/meridian/issues/63
   const customColumns: StatusColumn[] = []; // Empty until schema exists
 
   // Use default columns until custom columns are implemented
