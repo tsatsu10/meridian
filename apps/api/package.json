@@ -25,7 +25,7 @@
     "db:seed:templates": "tsx src/scripts/seed-project-templates.ts",
     "db:seed:executive": "tsx src/database/seed-executive-data.ts",
     "db:seed:analytics": "tsx src/database/seed-analytics.ts",
-    "db:reset": "npm run db:migrate && npm run db:seed",
+    "db:reset": "npm run db:push && npm run db:seed",
     "seed:all": "tsx src/database/seeds/master-seed.ts",
     "seed:phase1": "tsx src/database/seeds/01-users.ts",
     "seed:phase2": "tsx src/database/seeds/02-workspaces.ts",
