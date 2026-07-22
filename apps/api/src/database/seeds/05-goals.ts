@@ -316,8 +316,10 @@ export default seedGoals;
 
 // Run if executed directly
 if (require.main === module) {
-  seedGoals().catch((error) => {
-    logger.error("Fatal error:", error);
-    process.exit(1);
-  });
+  seedGoals()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      logger.error("Fatal error:", error);
+      process.exit(1);
+    });
 }

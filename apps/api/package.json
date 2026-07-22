@@ -20,7 +20,7 @@
     "db:setup": "drizzle-kit push && npm run db:seed && npm run seed:phase1 && npm run seed:phase2",
     "db:setup:full": "drizzle-kit push && npm run db:seed && npm run seed:all",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/database/seed-rbac.ts",
+    "db:seed": "tsx src/database/seed-rbac.ts seed",
     "db:seed:users": "tsx src/database/seeds/run-user-seed.ts",
     "db:seed:templates": "tsx src/scripts/seed-project-templates.ts",
     "db:seed:executive": "tsx src/database/seed-executive-data.ts",
