@@ -246,7 +246,7 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
         id: `report-${Date.now()}`,
         ...reportData,
         createdAt: new Date().toISOString(),
-        createdBy: "current-user", // TODO: Get from auth context
+        createdBy: "current-user", // See https://github.com/tsatsu10/meridian/issues/78
       };
       saveReports([...reports, newReport]);
       toast.success("Report scheduled successfully");

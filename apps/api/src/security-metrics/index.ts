@@ -299,7 +299,7 @@ securityMetrics.post("/alerts/:id/resolve", authMiddleware(), async (c) => {
     }
     const db = getDatabase();
 
-    // TODO: Add resolved flag to audit log table
+    // See https://github.com/tsatsu10/meridian/issues/71
     // For now, we'll just log the resolution action
     await db.insert(settingsAuditLogTable).values({
       id: crypto.randomUUID(),
@@ -325,7 +325,7 @@ securityMetrics.post("/export-report", authMiddleware(), async (c) => {
   try {
     const { timeRange } = await c.req.json();
 
-    // TODO: Generate PDF report
+    // See https://github.com/tsatsu10/meridian/issues/62
     // For now, return a JSON report
     const report = {
       generatedAt: new Date().toISOString(),

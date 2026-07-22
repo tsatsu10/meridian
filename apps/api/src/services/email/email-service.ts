@@ -64,10 +64,10 @@ export class EmailService {
         this.initialized = true;
         logger.debug("✅ Email service initialized with SendGrid");
       } else if (this.config.provider === "ses") {
-        // TODO: Implement AWS SES
+        // See https://github.com/tsatsu10/meridian/issues/60
         logger.warn("⚠️  AWS SES not implemented yet");
       } else if (this.config.provider === "smtp") {
-        // TODO: Implement SMTP
+        // See https://github.com/tsatsu10/meridian/issues/60
         logger.warn("⚠️  SMTP not implemented yet");
       }
     } catch (error) {

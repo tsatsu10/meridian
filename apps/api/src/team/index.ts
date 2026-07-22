@@ -613,7 +613,7 @@ app.get("/:teamId/notifications", async (c) => {
     const db = getDatabase();
 
     // For now, return default notification preferences
-    // TODO: Implement actual notification preferences storage per team member
+    // See https://github.com/tsatsu10/meridian/issues/73
     return c.json({
       preferences: {
         taskAssigned: true,
@@ -642,7 +642,7 @@ app.put("/:teamId/notifications", async (c) => {
     const body = await c.req.json();
     const { preferences } = body;
 
-    // TODO: Implement actual notification preferences update
+    // See https://github.com/tsatsu10/meridian/issues/73
     // For now, just return success
     return c.json({
       success: true,
