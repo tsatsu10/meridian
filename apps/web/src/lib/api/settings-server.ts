@@ -113,6 +113,10 @@ const defaultSettings: AllSettings = {
     highContrast: false,
     reducedMotion: false,
     compactMode: false,
+    scheduledThemeEnabled: false,
+    lightThemeTime: "06:00",
+    darkThemeTime: "18:00",
+    locationBasedEnabled: false,
   },
   notifications: {
     email: {
