@@ -30,6 +30,10 @@ const projectManagerPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -104,6 +108,10 @@ const executivePreset: SettingsPreset = {
       reducedMotion: true,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -178,6 +186,10 @@ const teamLeadPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -252,6 +264,10 @@ const developerPreset: SettingsPreset = {
       reducedMotion: true,
       compactMode: true,
       sidebarCollapsed: true,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -325,6 +341,10 @@ const designerPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -397,6 +417,10 @@ const minimalistPreset: SettingsPreset = {
       reducedMotion: true,
       compactMode: true,
       sidebarCollapsed: true,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -450,6 +474,10 @@ const collaboratorPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {

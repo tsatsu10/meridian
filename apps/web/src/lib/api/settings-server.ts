@@ -11,15 +11,16 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3005";
 // Production API client for settings
 class ProductionSettingsAPI {
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
-    const token =
-      localStorage.getItem("auth-token") ||
-      sessionStorage.getItem("auth-token");
-
+    // The real app authenticates via an HttpOnly session cookie set on
+    // sign-in (apps/api/src/user/index.ts), not a Bearer token — nothing
+    // in the sign-in flow ever populates localStorage/sessionStorage's
+    // "auth-token" key, so that branch never actually fired. Every call
+    // through this client was hitting the API unauthenticated and 401ing.
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
     });
@@ -34,22 +35,38 @@ class ProductionSettingsAPI {
     return response.json();
   }
 
-  async save(userId: string, settings: AllSettings): Promise<void> {
-    await this.makeRequest(`/api/users/${userId}/settings`, {
-      method: "PUT",
-      body: JSON.stringify(settings),
-    });
+  // :userId is compared against the authenticated user's email server-side
+  // (apps/api/src/settings/index.ts), not a database id — callers must pass
+  // the user's email.
+  async load(userId: string): Promise<Partial<AllSettings>> {
+    const response = await this.makeRequest(`/api/settings/${userId}`);
+    return response.data as Partial<AllSettings>;
   }
 
-  async load(userId: string): Promise<AllSettings | null> {
-    try {
-      return await this.makeRequest(`/api/users/${userId}/settings`);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("404")) {
-        return null; // User settings not found, will use defaults
-      }
-      throw error;
-    }
+  async updateSection(
+    userId: string,
+    section: keyof AllSettings,
+    updates: Partial<AllSettings[keyof AllSettings]>,
+  ): Promise<Partial<AllSettings>> {
+    const response = await this.makeRequest(
+      `/api/settings/${userId}/${section}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ updates }),
+      },
+    );
+    return response.data.settings as Partial<AllSettings>;
+  }
+
+  async resetSection(
+    userId: string,
+    section: keyof AllSettings,
+  ): Promise<Partial<AllSettings>> {
+    const response = await this.makeRequest(
+      `/api/settings/${userId}/${section}/reset`,
+      { method: "POST" },
+    );
+    return response.data as Partial<AllSettings>;
   }
 
   async validateSettings(
@@ -96,6 +113,10 @@ const defaultSettings: AllSettings = {
     highContrast: false,
     reducedMotion: false,
     compactMode: false,
+    scheduledThemeEnabled: false,
+    lightThemeTime: "06:00",
+    darkThemeTime: "18:00",
+    locationBasedEnabled: false,
   },
   notifications: {
     email: {
@@ -154,15 +175,7 @@ export const SettingsAPI = {
   async getSettings(userId: string): Promise<AllSettings> {
     try {
       const settings = await api.load(userId);
-      if (settings) {
-        // Merge with defaults to ensure all required fields exist
-        return SettingsAPI.mergeWithDefaults(settings);
-      }
-
-      // Initialize with defaults for new users
-      const newSettings = { ...defaultSettings };
-      await api.save(userId, newSettings);
-      return newSettings;
+      return SettingsAPI.mergeWithDefaults(settings);
     } catch (error) {
       console.warn("Settings API unavailable, using local fallback:", error);
       return SettingsAPI.getLocalFallback(userId);
@@ -175,19 +188,9 @@ export const SettingsAPI = {
     updates: Partial<AllSettings[keyof AllSettings]>,
   ): Promise<{ settings: AllSettings; conflicts?: unknown[] }> {
     try {
-      const currentSettings = await SettingsAPI.getSettings(userId);
-      const updatedSettings = {
-        ...currentSettings,
-        [section]: {
-          ...currentSettings[section],
-          ...updates,
-        },
-      };
-
-      await api.save(userId, updatedSettings);
-
+      const settings = await api.updateSection(userId, section, updates);
       return {
-        settings: updatedSettings,
+        settings: SettingsAPI.mergeWithDefaults(settings),
         conflicts: [], // Backend will handle conflict resolution
       };
     } catch (error) {
@@ -214,20 +217,19 @@ export const SettingsAPI = {
     userId: string,
     section: keyof AllSettings,
   ): Promise<AllSettings> {
-    const currentSettings = await SettingsAPI.getSettings(userId);
-    const resetSettings = {
-      ...currentSettings,
-      [section]: defaultSettings[section],
-    };
-
     try {
-      await api.save(userId, resetSettings);
+      const settings = await api.resetSection(userId, section);
+      return SettingsAPI.mergeWithDefaults(settings);
     } catch (error) {
       console.warn("Settings reset failed, using local fallback:", error);
+      const currentSettings = SettingsAPI.getLocalFallback(userId);
+      const resetSettings = {
+        ...currentSettings,
+        [section]: defaultSettings[section],
+      };
       SettingsAPI.saveLocalFallback(userId, resetSettings);
+      return resetSettings;
     }
-
-    return resetSettings;
   },
 
   // Fallback methods for offline/error scenarios

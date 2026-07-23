@@ -16,6 +16,7 @@ import {
 import type { UserRole, PermissionAction } from "../types/rbac";
 import { createId } from "@paralleldrive/cuid2";
 import logger from "../utils/logger";
+import getSettings from "../utils/get-settings";
 
 interface SecurityAuditLog {
   id: string;
@@ -246,7 +247,7 @@ export function validateRBACCompliance() {
       });
 
       // In demo mode, only warn instead of blocking
-      const { isDemoMode } = require("../utils/get-settings").default();
+      const { isDemoMode } = getSettings();
       if (isDemoMode) {
         logger.warn(
           "⚠️ Demo mode: Allowing operation despite compliance violations",
@@ -269,10 +270,17 @@ export function validateRBACCompliance() {
 
 // Helper functions for compliance checking
 function isAdminOperation(endpoint: string, method: string): boolean {
+  // Workspace deletion (DELETE /workspace(s)/:id) used to be checked here
+  // too, via userRole — but this middleware is mounted with .use("*")
+  // *before* the route's own requireWorkspacePermission runs, so userRole
+  // was never set yet and this check rejected every caller unconditionally,
+  // demo admin included. requireWorkspacePermission("canDeleteWorkspace",
+  // "id") already performs the correct, DB-backed, workspace-scoped check
+  // on that route, so re-checking a role that isn't known yet here was both
+  // redundant and permanently broken.
   return (
     endpoint.includes("/admin/") ||
     endpoint.includes("/roles/assign") ||
-    (endpoint.includes("/workspace") && method === "DELETE") ||
     endpoint.includes("/billing/")
   );
 }
