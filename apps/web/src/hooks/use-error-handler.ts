@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from "react";
 
 export interface UseErrorHandlerOptions {
   maxRetries?: number;
@@ -15,12 +15,7 @@ export interface ErrorState {
 }
 
 export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
-  const {
-    maxRetries = 3,
-    retryDelay = 1000,
-    onError,
-    onRetry,
-  } = options;
+  const { maxRetries = 3, retryDelay = 1000, onError, onRetry } = options;
 
   const [errorState, setErrorState] = useState<ErrorState>({
     error: null,
@@ -31,69 +26,75 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
 
   const retryTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const handleError = useCallback((error: Error) => {
-    console.error('Error caught by useErrorHandler:', error);
-    
-    setErrorState(prev => ({
-      ...prev,
-      error,
-    }));
+  const handleError = useCallback(
+    (error: Error) => {
+      console.error("Error caught by useErrorHandler:", error);
 
-    if (onError) {
-      onError(error);
-    }
-  }, [onError]);
-
-  const retry = useCallback(async (operation: () => Promise<any>) => {
-    if (errorState.retryCount >= maxRetries) {
-      console.warn('Max retries exceeded');
-      return;
-    }
-
-    setErrorState(prev => ({
-      ...prev,
-      isRetrying: true,
-    }));
-
-    if (onRetry) {
-      onRetry(errorState.retryCount + 1);
-    }
-
-    // Clear any existing timeout
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-    }
-
-    // Wait before retrying
-    await new Promise(resolve => {
-      retryTimeoutRef.current = setTimeout(resolve, retryDelay);
-    });
-
-    try {
-      const result = await operation();
-      
-      // Success - clear error state
-      setErrorState({
-        error: null,
-        isRetrying: false,
-        retryCount: 0,
-        hasRetried: true,
-      });
-
-      return result;
-    } catch (error) {
-      // Failed again - increment retry count
-      setErrorState(prev => ({
+      setErrorState((prev) => ({
         ...prev,
-        error: error as Error,
-        isRetrying: false,
-        retryCount: prev.retryCount + 1,
-        hasRetried: true,
+        error,
       }));
 
-      throw error;
-    }
-  }, [errorState.retryCount, maxRetries, retryDelay, onRetry]);
+      if (onError) {
+        onError(error);
+      }
+    },
+    [onError],
+  );
+
+  const retry = useCallback(
+    async (operation: () => Promise<unknown>) => {
+      if (errorState.retryCount >= maxRetries) {
+        console.warn("Max retries exceeded");
+        return;
+      }
+
+      setErrorState((prev) => ({
+        ...prev,
+        isRetrying: true,
+      }));
+
+      if (onRetry) {
+        onRetry(errorState.retryCount + 1);
+      }
+
+      // Clear any existing timeout
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+
+      // Wait before retrying
+      await new Promise((resolve) => {
+        retryTimeoutRef.current = setTimeout(resolve, retryDelay);
+      });
+
+      try {
+        const result = await operation();
+
+        // Success - clear error state
+        setErrorState({
+          error: null,
+          isRetrying: false,
+          retryCount: 0,
+          hasRetried: true,
+        });
+
+        return result;
+      } catch (error) {
+        // Failed again - increment retry count
+        setErrorState((prev) => ({
+          ...prev,
+          error: error as Error,
+          isRetrying: false,
+          retryCount: prev.retryCount + 1,
+          hasRetried: true,
+        }));
+
+        throw error;
+      }
+    },
+    [errorState.retryCount, maxRetries, retryDelay, onRetry],
+  );
 
   const clearError = useCallback(() => {
     setErrorState({
@@ -124,7 +125,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
 // Hook for API calls with automatic retry
 export function useApiCall<T>(
   apiCall: () => Promise<T>,
-  options: UseErrorHandlerOptions = {}
+  options: UseErrorHandlerOptions = {},
 ) {
   const errorHandler = useErrorHandler(options);
   const [isLoading, setIsLoading] = useState(false);
@@ -132,7 +133,7 @@ export function useApiCall<T>(
 
   const execute = useCallback(async () => {
     setIsLoading(true);
-    
+
     try {
       const result = await apiCall();
       setData(result);
@@ -166,33 +167,39 @@ export function useApiCall<T>(
 }
 
 // Hook for handling async operations with loading and error states
-export function useAsyncOperation<T, P extends any[]>(
+export function useAsyncOperation<T, P extends unknown[]>(
   operation: (...args: P) => Promise<T>,
-  options: UseErrorHandlerOptions = {}
+  options: UseErrorHandlerOptions = {},
 ) {
   const errorHandler = useErrorHandler(options);
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<T | null>(null);
 
-  const execute = useCallback(async (...args: P) => {
-    setIsLoading(true);
-    
-    try {
-      const result = await operation(...args);
-      setData(result);
-      errorHandler.clearError();
-      return result;
-    } catch (error) {
-      errorHandler.handleError(error as Error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [operation, errorHandler]);
+  const execute = useCallback(
+    async (...args: P) => {
+      setIsLoading(true);
 
-  const executeWithRetry = useCallback(async (...args: P) => {
-    return errorHandler.retry(() => execute(...args));
-  }, [errorHandler, execute]);
+      try {
+        const result = await operation(...args);
+        setData(result);
+        errorHandler.clearError();
+        return result;
+      } catch (error) {
+        errorHandler.handleError(error as Error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [operation, errorHandler],
+  );
+
+  const executeWithRetry = useCallback(
+    async (...args: P) => {
+      return errorHandler.retry(() => execute(...args));
+    },
+    [errorHandler, execute],
+  );
 
   return {
     data,
@@ -211,33 +218,39 @@ export function useAsyncOperation<T, P extends any[]>(
 
 // Hook for handling form submissions with error handling
 export function useFormSubmission<T>(
-  submitFn: (data: T) => Promise<any>,
-  options: UseErrorHandlerOptions = {}
+  submitFn: (data: T) => Promise<unknown>,
+  options: UseErrorHandlerOptions = {},
 ) {
   const errorHandler = useErrorHandler(options);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const submit = useCallback(async (data: T) => {
-    setIsSubmitting(true);
-    setIsSuccess(false);
-    
-    try {
-      const result = await submitFn(data);
-      setIsSuccess(true);
-      errorHandler.clearError();
-      return result;
-    } catch (error) {
-      errorHandler.handleError(error as Error);
-      throw error;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [submitFn, errorHandler]);
+  const submit = useCallback(
+    async (data: T) => {
+      setIsSubmitting(true);
+      setIsSuccess(false);
 
-  const submitWithRetry = useCallback(async (data: T) => {
-    return errorHandler.retry(() => submit(data));
-  }, [errorHandler, submit]);
+      try {
+        const result = await submitFn(data);
+        setIsSuccess(true);
+        errorHandler.clearError();
+        return result;
+      } catch (error) {
+        errorHandler.handleError(error as Error);
+        throw error;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [submitFn, errorHandler],
+  );
+
+  const submitWithRetry = useCallback(
+    async (data: T) => {
+      return errorHandler.retry(() => submit(data));
+    },
+    [errorHandler, submit],
+  );
 
   return {
     isSubmitting,

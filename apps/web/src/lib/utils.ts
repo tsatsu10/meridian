@@ -6,4 +6,4 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Re-export from existing cn file for compatibility
-export { cn as default } from "./cn"; 
+export { cn as default } from "./cn";

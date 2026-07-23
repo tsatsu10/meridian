@@ -1,39 +1,36 @@
-import { Context } from 'hono';
-import { cache } from 'hono/cache';
-import logger from '../utils/logger';
+import type { Context } from "hono";
+import { cache } from "hono/cache";
+import logger from "../utils/logger";
 
 // Cache configuration
 export const cacheConfig = {
   // Short-term cache for frequently accessed data
   shortTerm: {
-    cacheName: 'short-term',
-    cacheControl: 'max-age=300', // 5 minutes
+    cacheName: "short-term",
+    cacheControl: "max-age=300", // 5 minutes
   },
-  
+
   // Medium-term cache for moderately changing data
   mediumTerm: {
-    cacheName: 'medium-term',
-    cacheControl: 'max-age=3600', // 1 hour
+    cacheName: "medium-term",
+    cacheControl: "max-age=3600", // 1 hour
   },
-  
+
   // Long-term cache for stable data
   longTerm: {
-    cacheName: 'long-term',
-    cacheControl: 'max-age=86400', // 24 hours
+    cacheName: "long-term",
+    cacheControl: "max-age=86400", // 24 hours
   },
-  
+
   // Static assets cache
   static: {
-    cacheName: 'static-assets',
-    cacheControl: 'max-age=31536000', // 1 year
+    cacheName: "static-assets",
+    cacheControl: "max-age=31536000", // 1 year
   },
 };
 
 // Cache middleware factory
-export function createCacheMiddleware(
-  duration: number,
-  cacheName: string = 'default'
-) {
+export function createCacheMiddleware(duration: number, cacheName = "default") {
   return cache({
     cacheName,
     cacheControl: `max-age=${duration}`,
@@ -41,10 +38,10 @@ export function createCacheMiddleware(
 }
 
 // Specific cache middlewares
-export const shortTermCache = createCacheMiddleware(300, 'short-term');
-export const mediumTermCache = createCacheMiddleware(3600, 'medium-term');
-export const longTermCache = createCacheMiddleware(86400, 'long-term');
-export const staticCache = createCacheMiddleware(31536000, 'static-assets');
+export const shortTermCache = createCacheMiddleware(300, "short-term");
+export const mediumTermCache = createCacheMiddleware(3600, "medium-term");
+export const longTermCache = createCacheMiddleware(86400, "long-term");
+export const staticCache = createCacheMiddleware(31536000, "static-assets");
 
 // Cache invalidation helper
 export function invalidateCache(c: Context, cacheName: string) {
@@ -56,33 +53,33 @@ export function invalidateCache(c: Context, cacheName: string) {
 // Cache key generator
 export function generateCacheKey(
   prefix: string,
-  params: Record<string, any>
+  params: Record<string, unknown>,
 ): string {
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => `${key}:${params[key]}`)
-    .join('|');
-  
+    .map((key) => `${key}:${params[key]}`)
+    .join("|");
+
   return `${prefix}:${sortedParams}`;
 }
 
 // Cache middleware with custom key generation
 export function createCustomCacheMiddleware(
   keyGenerator: (c: Context) => string,
-  duration: number = 300
+  duration = 300,
 ) {
   return async (c: Context, next: () => Promise<void>) => {
     const cacheKey = keyGenerator(c);
-    
+
     // Check if cached response exists
     const cachedResponse = await getCachedResponse(cacheKey);
     if (cachedResponse) {
       return c.json(cachedResponse);
     }
-    
+
     // Execute the handler
     await next();
-    
+
     // Cache the response
     const response = await c.res.clone().json();
     await setCachedResponse(cacheKey, response, duration);
@@ -90,9 +87,9 @@ export function createCustomCacheMiddleware(
 }
 
 // Mock cache implementation (replace with Redis, Memcached, etc.)
-const cacheStore = new Map<string, { data: any; expires: number }>();
+const cacheStore = new Map<string, { data: unknown; expires: number }>();
 
-async function getCachedResponse(key: string): Promise<any> {
+async function getCachedResponse(key: string): Promise<unknown> {
   const cached = cacheStore.get(key);
   if (cached && cached.expires > Date.now()) {
     return cached.data;
@@ -101,7 +98,11 @@ async function getCachedResponse(key: string): Promise<any> {
   return null;
 }
 
-async function setCachedResponse(key: string, data: any, duration: number): Promise<void> {
+async function setCachedResponse(
+  key: string,
+  data: unknown,
+  duration: number,
+): Promise<void> {
   cacheStore.set(key, {
     data,
     expires: Date.now() + duration * 1000,
@@ -112,10 +113,9 @@ async function setCachedResponse(key: string, data: any, duration: number): Prom
 export async function warmCache(c: Context, endpoints: string[]) {
   for (const endpoint of endpoints) {
     try {
-      await fetch(`${c.req.url.split('/api')[0]}/api${endpoint}`);
+      await fetch(`${c.req.url.split("/api")[0]}/api${endpoint}`);
     } catch (error) {
       logger.error(`Failed to warm cache for ${endpoint}:`, error);
     }
   }
 }
-

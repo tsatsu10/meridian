@@ -1,23 +1,23 @@
 /**
  * 📊 Monitoring & Metrics Service
- * 
+ *
  * Centralized monitoring system that collects and aggregates:
  * - Application metrics (requests, errors, latency)
  * - System metrics (CPU, memory, disk)
  * - Business metrics (tasks, projects, users)
  * - Custom metrics
- * 
+ *
  * Integrates with external services like DataDog, Prometheus, CloudWatch
  */
 
-import { EventEmitter } from 'events';
-import logger from '../../utils/logger';
-import { winstonLog } from '../../utils/winston-logger';
+import { EventEmitter } from "node:events";
+import logger from "../../utils/logger";
+import { winstonLog } from "../../utils/winston-logger";
 
 export interface Metric {
   name: string;
   value: number;
-  type: 'counter' | 'gauge' | 'histogram' | 'summary';
+  type: "counter" | "gauge" | "histogram" | "summary";
   tags?: Record<string, string>;
   timestamp: number;
 }
@@ -31,27 +31,23 @@ export interface MetricSnapshot {
 class MonitoringService extends EventEmitter {
   private metrics: Map<string, number> = new Map();
   private histograms: Map<string, number[]> = new Map();
-  private isRunning: boolean = false;
+  private isRunning = false;
   private metricsInterval: NodeJS.Timeout | null = null;
   private startTime: number = Date.now();
-
-  constructor() {
-    super();
-  }
 
   /**
    * Start monitoring service
    */
-  public start(intervalSeconds: number = 60): void {
+  public start(intervalSeconds = 60): void {
     if (this.isRunning) {
-      logger.warn('Monitoring service already running');
+      logger.warn("Monitoring service already running");
       return;
     }
 
     this.isRunning = true;
     this.startTime = Date.now();
 
-    winstonLog.info('📊 Monitoring service started', {
+    winstonLog.info("📊 Monitoring service started", {
       interval: intervalSeconds,
     });
 
@@ -77,20 +73,24 @@ class MonitoringService extends EventEmitter {
       this.metricsInterval = null;
     }
 
-    winstonLog.info('📊 Monitoring service stopped');
+    winstonLog.info("📊 Monitoring service stopped");
   }
 
   /**
    * Increment a counter metric
    */
-  public increment(name: string, value: number = 1, tags?: Record<string, string>): void {
+  public increment(
+    name: string,
+    value = 1,
+    tags?: Record<string, string>,
+  ): void {
     const current = this.metrics.get(name) || 0;
     this.metrics.set(name, current + value);
 
-    this.emit('metric', {
+    this.emit("metric", {
       name,
       value: current + value,
-      type: 'counter',
+      type: "counter",
       tags,
       timestamp: Date.now(),
     });
@@ -99,20 +99,28 @@ class MonitoringService extends EventEmitter {
   /**
    * Decrement a counter metric
    */
-  public decrement(name: string, value: number = 1, tags?: Record<string, string>): void {
+  public decrement(
+    name: string,
+    value = 1,
+    tags?: Record<string, string>,
+  ): void {
     this.increment(name, -value, tags);
   }
 
   /**
    * Set a gauge metric (absolute value)
    */
-  public gauge(name: string, value: number, tags?: Record<string, string>): void {
+  public gauge(
+    name: string,
+    value: number,
+    tags?: Record<string, string>,
+  ): void {
     this.metrics.set(name, value);
 
-    this.emit('metric', {
+    this.emit("metric", {
       name,
       value,
-      type: 'gauge',
+      type: "gauge",
       tags,
       timestamp: Date.now(),
     });
@@ -121,13 +129,17 @@ class MonitoringService extends EventEmitter {
   /**
    * Record a timing/histogram metric
    */
-  public timing(name: string, durationMs: number, tags?: Record<string, string>): void {
+  public timing(
+    name: string,
+    durationMs: number,
+    tags?: Record<string, string>,
+  ): void {
     // Store in histogram
-    if (!this.histograms.has(name)) {
-      this.histograms.set(name, []);
+    let histogram = this.histograms.get(name);
+    if (!histogram) {
+      histogram = [];
+      this.histograms.set(name, histogram);
     }
-
-    const histogram = this.histograms.get(name)!;
     histogram.push(durationMs);
 
     // Keep last 1000 values
@@ -135,10 +147,10 @@ class MonitoringService extends EventEmitter {
       histogram.shift();
     }
 
-    this.emit('metric', {
+    this.emit("metric", {
       name,
       value: durationMs,
-      type: 'histogram',
+      type: "histogram",
       tags,
       timestamp: Date.now(),
     });
@@ -169,14 +181,33 @@ class MonitoringService extends EventEmitter {
     const sorted = [...values].sort((a, b) => a - b);
     const count = sorted.length;
 
+    const min = sorted[0];
+    const max = sorted[count - 1];
+    const p50 = sorted[Math.floor(count * 0.5)];
+    const p95 = sorted[Math.floor(count * 0.95)];
+    const p99 = sorted[Math.floor(count * 0.99)];
+    if (
+      min === undefined ||
+      max === undefined ||
+      p50 === undefined ||
+      p95 === undefined ||
+      p99 === undefined
+    ) {
+      // Unreachable: count > 0 (checked above) guarantees every index used
+      // here is within [0, count).
+      throw new Error(
+        "Histogram stats: unexpected undefined value in non-empty sorted array",
+      );
+    }
+
     return {
       count,
-      min: sorted[0]!,
-      max: sorted[count - 1]!,
+      min,
+      max,
       avg: sorted.reduce((a, b) => a + b, 0) / count,
-      p50: sorted[Math.floor(count * 0.5)]!,
-      p95: sorted[Math.floor(count * 0.95)]!,
-      p99: sorted[Math.floor(count * 0.99)]!,
+      p50,
+      p95,
+      p99,
     };
   }
 
@@ -205,8 +236,8 @@ class MonitoringService extends EventEmitter {
       timestamp: Date.now(),
       metrics,
       tags: {
-        service: 'meridian-api',
-        environment: process.env.NODE_ENV || 'development',
+        service: "meridian-api",
+        environment: process.env.NODE_ENV || "development",
       },
     };
   }
@@ -217,14 +248,14 @@ class MonitoringService extends EventEmitter {
   private collectSystemMetrics(): void {
     // Memory usage
     const memUsage = process.memoryUsage();
-    this.gauge('system.memory.heap_used', memUsage.heapUsed);
-    this.gauge('system.memory.heap_total', memUsage.heapTotal);
-    this.gauge('system.memory.rss', memUsage.rss);
-    this.gauge('system.memory.external', memUsage.external);
+    this.gauge("system.memory.heap_used", memUsage.heapUsed);
+    this.gauge("system.memory.heap_total", memUsage.heapTotal);
+    this.gauge("system.memory.rss", memUsage.rss);
+    this.gauge("system.memory.external", memUsage.external);
 
     // Uptime
     const uptime = Date.now() - this.startTime;
-    this.gauge('system.uptime', uptime);
+    this.gauge("system.uptime", uptime);
 
     // Log if memory usage is high
     const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
@@ -232,7 +263,7 @@ class MonitoringService extends EventEmitter {
     const usagePercent = (heapUsedMB / heapTotalMB) * 100;
 
     if (usagePercent > 90) {
-      winstonLog.warn('High memory usage detected', {
+      winstonLog.warn("High memory usage detected", {
         heapUsedMB: Math.round(heapUsedMB),
         heapTotalMB: Math.round(heapTotalMB),
         usagePercent: Math.round(usagePercent),
@@ -248,38 +279,42 @@ class MonitoringService extends EventEmitter {
     path: string,
     statusCode: number,
     durationMs: number,
-    userId?: string
+    userId?: string,
   ): void {
     // Count total requests
-    this.increment('http.requests.total', 1, {
+    this.increment("http.requests.total", 1, {
       method,
       status: statusCode.toString(),
     });
 
     // Count by status code range
     if (statusCode >= 500) {
-      this.increment('http.requests.5xx', 1, { method, path });
+      this.increment("http.requests.5xx", 1, { method, path });
     } else if (statusCode >= 400) {
-      this.increment('http.requests.4xx', 1, { method, path });
+      this.increment("http.requests.4xx", 1, { method, path });
     } else if (statusCode >= 300) {
-      this.increment('http.requests.3xx', 1, { method, path });
+      this.increment("http.requests.3xx", 1, { method, path });
     } else if (statusCode >= 200) {
-      this.increment('http.requests.2xx', 1, { method, path });
+      this.increment("http.requests.2xx", 1, { method, path });
     }
 
     // Record latency
-    this.timing('http.request.duration', durationMs, { method, path });
+    this.timing("http.request.duration", durationMs, { method, path });
 
     // Log slow requests
     const slowThreshold = 1000; // 1 second
     if (durationMs > slowThreshold) {
-      winstonLog.warn('Slow request detected', {
-        method,
-        path,
-        durationMs,
-        userId,
-        threshold: slowThreshold,
-      }, { category: 'PERFORMANCE' });
+      winstonLog.warn(
+        "Slow request detected",
+        {
+          method,
+          path,
+          durationMs,
+          userId,
+          threshold: slowThreshold,
+        },
+        "PERFORMANCE",
+      );
     }
   }
 
@@ -290,25 +325,29 @@ class MonitoringService extends EventEmitter {
     operation: string,
     table: string,
     durationMs: number,
-    success: boolean
+    success: boolean,
   ): void {
-    this.increment('database.queries.total', 1, { operation, table });
+    this.increment("database.queries.total", 1, { operation, table });
 
     if (!success) {
-      this.increment('database.queries.errors', 1, { operation, table });
+      this.increment("database.queries.errors", 1, { operation, table });
     }
 
-    this.timing('database.query.duration', durationMs, { operation, table });
+    this.timing("database.query.duration", durationMs, { operation, table });
 
     // Log slow queries
     const slowThreshold = 100; // 100ms
     if (durationMs > slowThreshold) {
-      winstonLog.warn('Slow database query', {
-        operation,
-        table,
-        durationMs,
-        threshold: slowThreshold,
-      }, { category: 'DATABASE' });
+      winstonLog.warn(
+        "Slow database query",
+        {
+          operation,
+          table,
+          durationMs,
+          threshold: slowThreshold,
+        },
+        "DATABASE",
+      );
     }
   }
 
@@ -316,19 +355,19 @@ class MonitoringService extends EventEmitter {
    * Record cache metrics
    */
   public recordCacheHit(key: string): void {
-    this.increment('cache.hits', 1, { key });
+    this.increment("cache.hits", 1, { key });
   }
 
   public recordCacheMiss(key: string): void {
-    this.increment('cache.misses', 1, { key });
+    this.increment("cache.misses", 1, { key });
   }
 
   public recordCacheSet(key: string): void {
-    this.increment('cache.sets', 1, { key });
+    this.increment("cache.sets", 1, { key });
   }
 
   public recordCacheDelete(key: string): void {
-    this.increment('cache.deletes', 1, { key });
+    this.increment("cache.deletes", 1, { key });
   }
 
   /**
@@ -336,32 +375,32 @@ class MonitoringService extends EventEmitter {
    */
   public recordWebSocketConnection(connected: boolean): void {
     if (connected) {
-      this.increment('websocket.connections', 1);
+      this.increment("websocket.connections", 1);
     } else {
-      this.decrement('websocket.connections', 1);
+      this.decrement("websocket.connections", 1);
     }
   }
 
   public recordWebSocketEvent(event: string): void {
-    this.increment('websocket.events', 1, { event });
+    this.increment("websocket.events", 1, { event });
   }
 
   /**
    * Record business metrics
    */
   public recordTaskCreated(projectId: string): void {
-    this.increment('business.tasks.created', 1, { projectId });
+    this.increment("business.tasks.created", 1, { projectId });
   }
 
   public recordTaskCompleted(projectId: string): void {
-    this.increment('business.tasks.completed', 1, { projectId });
+    this.increment("business.tasks.completed", 1, { projectId });
   }
 
   public recordUserLogin(success: boolean): void {
     if (success) {
-      this.increment('auth.logins.success', 1);
+      this.increment("auth.logins.success", 1);
     } else {
-      this.increment('auth.logins.failed', 1);
+      this.increment("auth.logins.failed", 1);
     }
   }
 
@@ -369,19 +408,19 @@ class MonitoringService extends EventEmitter {
    * Export metrics in Prometheus format
    */
   public exportPrometheus(): string {
-    let output = '';
+    let output = "";
 
     // Counters
     for (const [name, value] of this.metrics.entries()) {
-      output += `# TYPE ${name.replace(/\./g, '_')} counter\n`;
-      output += `${name.replace(/\./g, '_')} ${value}\n\n`;
+      output += `# TYPE ${name.replace(/\./g, "_")} counter\n`;
+      output += `${name.replace(/\./g, "_")} ${value}\n\n`;
     }
 
     // Histograms
     for (const [name, _] of this.histograms.entries()) {
       const stats = this.getHistogramStats(name);
       if (stats) {
-        const metricName = name.replace(/\./g, '_');
+        const metricName = name.replace(/\./g, "_");
         output += `# TYPE ${metricName} summary\n`;
         output += `${metricName}{quantile="0.5"} ${stats.p50}\n`;
         output += `${metricName}{quantile="0.95"} ${stats.p95}\n`;
@@ -397,9 +436,9 @@ class MonitoringService extends EventEmitter {
   /**
    * Export metrics in JSON format
    */
-  public exportJSON(): any {
+  public exportJSON(): Record<string, unknown> {
     const snapshot = this.getSnapshot();
-    const histogramStats: Record<string, any> = {};
+    const histogramStats: Record<string, unknown> = {};
 
     for (const [name, _] of this.histograms.entries()) {
       const stats = this.getHistogramStats(name);
@@ -424,7 +463,7 @@ class MonitoringService extends EventEmitter {
   public reset(): void {
     this.metrics.clear();
     this.histograms.clear();
-    winstonLog.info('Metrics reset');
+    winstonLog.info("Metrics reset");
   }
 }
 
@@ -432,19 +471,17 @@ class MonitoringService extends EventEmitter {
 export const monitoringService = new MonitoringService();
 
 // Auto-start if not in test mode
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== "test") {
   monitoringService.start(60); // Collect metrics every 60 seconds
 }
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
   monitoringService.stop();
 });
 
-process.on('SIGINT', () => {
+process.on("SIGINT", () => {
   monitoringService.stop();
 });
 
 export default monitoringService;
-
-

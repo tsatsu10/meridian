@@ -19,7 +19,8 @@ export const useUserPreferencesStore = create<UserPreferencesStore>()(
       viewMode: "board",
       setViewMode: (mode) => set({ viewMode: mode }),
       activeWorkspaceId: null,
-      setActiveWorkspaceId: (workspaceId) => set({ activeWorkspaceId: workspaceId }),
+      setActiveWorkspaceId: (workspaceId) =>
+        set({ activeWorkspaceId: workspaceId }),
     }),
     {
       name: "meridian-user-preferences",

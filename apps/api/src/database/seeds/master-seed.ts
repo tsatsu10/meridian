@@ -14,11 +14,8 @@ import seedUsers from "./01-users";
 import seedWorkspaces from "./02-workspaces";
 import seedProjectsAndTasks from "./03-projects-tasks";
 import seedGoals from "./05-goals";
-import seedCommunication from "./06-communication";
 import seedTimeAndActivity from "./07-time-activity";
 import seedAnalytics from "./08-analytics";
-import seedAdvancedFeatures from "./09-advanced";
-import { seedWidgetMarketplace } from "./10-widget-marketplace";
 
 type SeedPhase = {
   id: number;
@@ -32,11 +29,8 @@ const SEED_PHASES: SeedPhase[] = [
   { id: 2, name: "Workspaces & Teams", fn: seedWorkspaces, emoji: "🏢" },
   { id: 3, name: "Projects & Tasks", fn: seedProjectsAndTasks, emoji: "📂" },
   { id: 5, name: "Goals & OKRs", fn: seedGoals, emoji: "🎯" },
-  { id: 6, name: "Communication", fn: seedCommunication, emoji: "💬" },
   { id: 7, name: "Time & Activity", fn: seedTimeAndActivity, emoji: "⏱️" },
   { id: 8, name: "Analytics", fn: seedAnalytics, emoji: "📊" },
-  { id: 9, name: "Advanced Features", fn: seedAdvancedFeatures, emoji: "🤖" },
-  { id: 10, name: "Widget Marketplace", fn: seedWidgetMarketplace, emoji: "🏪" },
 ];
 
 function slugify(name: string): string {
@@ -60,11 +54,14 @@ function parseArgs(): {
 
   for (const arg of args) {
     if (arg.startsWith("--phase=")) {
-      options.startPhase = parseInt(arg.split("=")[1] || "1", 10);
+      options.startPhase = Number.parseInt(arg.split("=")[1] || "1", 10);
     } else if (arg.startsWith("--only=")) {
       options.only = arg.split("=")[1];
     } else if (arg.startsWith("--skip=")) {
-      options.skip = arg.split("=")[1]?.split(",").map((s) => s.trim());
+      options.skip = arg
+        .split("=")[1]
+        ?.split(",")
+        .map((s) => s.trim());
     }
   }
 

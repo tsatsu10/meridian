@@ -31,3 +31,11 @@ apps/api/logs/
 
 # Windows reserved names (accidental empty files break git on Windows)
 nul
+
+# Test output and runtime artifacts
+playwright-report/
+test-results/
+uploads/
+backups/
+*.db
+cookies*.txt

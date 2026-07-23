@@ -3,29 +3,28 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  FolderOpen, 
-  Calendar as CalendarIcon,
+import {
+  ChevronLeft,
+  ChevronRight,
+  FolderOpen,
   Clock,
   Users,
-  User
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { 
-  format, 
-  startOfMonth, 
-  endOfMonth, 
-  startOfWeek, 
-  endOfWeek, 
-  eachDayOfInterval, 
-  isSameMonth, 
-  isSameDay, 
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
   isToday,
   addMonths,
   subMonths,
-  isBefore
+  isBefore,
 } from "date-fns";
 
 // @epic-3.1-dashboards: Jennifer (Exec) needs high-level calendar overview
@@ -45,7 +44,7 @@ interface Task {
     id: string;
     name: string;
   } | null;
-  dueDate?: string;
+  dueDate?: string | null;
   project?: {
     id: string;
     name: string;
@@ -64,28 +63,30 @@ interface AllTasksCalendarViewProps {
 
 const priorityColors = {
   low: "bg-gray-500",
-  medium: "bg-yellow-500", 
+  medium: "bg-yellow-500",
   high: "bg-orange-500",
   urgent: "bg-red-500",
 };
 
 const statusColors = {
-  "todo": "border-l-gray-400",
-  "in_progress": "border-l-blue-500",
-  "done": "border-l-green-500",
+  todo: "border-l-gray-400",
+  in_progress: "border-l-blue-500",
+  done: "border-l-green-500",
 };
 
 // Task Item Component for Calendar
-function CalendarTaskItem({ 
-  task, 
-  isSelected, 
-  onSelect 
-}: { 
+function CalendarTaskItem({
+  task,
+  isSelected,
+  onSelect,
+}: {
   task: Task;
   isSelected: boolean;
   onSelect: (taskId: string) => void;
 }) {
-  const isOverdue = task.dueDate && isBefore(new Date(task.dueDate), new Date()) && 
+  const isOverdue =
+    task.dueDate &&
+    isBefore(new Date(task.dueDate), new Date()) &&
     new Date(task.dueDate).toDateString() !== new Date().toDateString();
 
   return (
@@ -94,8 +95,18 @@ function CalendarTaskItem({
         "text-xs p-1 mb-1 rounded border-l-2 cursor-pointer hover:bg-muted/50 transition-colors",
         statusColors[task.status as keyof typeof statusColors],
         isSelected && "ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/20",
-        isOverdue && "bg-red-50 dark:bg-red-900/20"
+        isOverdue && "bg-red-50 dark:bg-red-900/20",
       )}
+      // biome-ignore lint/a11y/useSemanticElements: styled clickable calendar event, keep as div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.stopPropagation();
+          e.preventDefault();
+          onSelect(task.id);
+        }
+      }}
       onClick={(e) => {
         e.stopPropagation();
         onSelect(task.id);
@@ -103,10 +114,10 @@ function CalendarTaskItem({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-1 min-w-0 flex-1">
-          <div 
+          <div
             className={cn(
               "w-1.5 h-1.5 rounded-full flex-shrink-0",
-              priorityColors[task.priority as keyof typeof priorityColors]
+              priorityColors[task.priority as keyof typeof priorityColors],
             )}
           />
           <span className="truncate font-medium">{task.title}</span>
@@ -115,15 +126,20 @@ function CalendarTaskItem({
           <div className="flex items-center space-x-2">
             <Users className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {task.assignedTeam?.name || 'Assigned Team'}
+              {task.assignedTeam?.name || "Assigned Team"}
             </span>
           </div>
         ) : task.assigneeEmail ? (
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={task.assigneeAvatar ? task.assigneeAvatar : undefined} />
+              <AvatarImage
+                src={task.assigneeAvatar ? task.assigneeAvatar : undefined}
+              />
               <AvatarFallback>
-                {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                {task.assigneeName
+                  ?.split(" ")
+                  .map((n: string) => n[0])
+                  .join("") || "U"}
               </AvatarFallback>
             </Avatar>
             <span className="text-sm text-muted-foreground">
@@ -141,9 +157,7 @@ function CalendarTaskItem({
         <span className="text-muted-foreground text-[10px]">
           {task.project?.slug}-{task.number}
         </span>
-        {isOverdue && (
-          <span className="text-red-600 text-[10px]">⚠️</span>
-        )}
+        {isOverdue && <span className="text-red-600 text-[10px]">⚠️</span>}
       </div>
     </div>
   );
@@ -155,7 +169,7 @@ function CalendarDay({
   tasks,
   isCurrentMonth,
   selectedTasks,
-  onTaskSelect
+  onTaskSelect,
 }: {
   date: Date;
   tasks: Task[];
@@ -164,23 +178,26 @@ function CalendarDay({
   onTaskSelect: (taskId: string) => void;
 }) {
   const isToday_ = isToday(date);
-  const dayTasks = tasks.filter(task => 
-    task.dueDate && isSameDay(new Date(task.dueDate), date)
+  const dayTasks = tasks.filter(
+    (task) => task.dueDate && isSameDay(new Date(task.dueDate), date),
   );
 
   return (
-    <div 
+    <div
       className={cn(
         "min-h-[100px] p-1 border border-border/50",
         !isCurrentMonth && "bg-muted/30 text-muted-foreground",
-        isToday_ && "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+        isToday_ &&
+          "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700",
       )}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className={cn(
-          "text-sm font-medium",
-          isToday_ && "text-blue-600 dark:text-blue-400"
-        )}>
+        <span
+          className={cn(
+            "text-sm font-medium",
+            isToday_ && "text-blue-600 dark:text-blue-400",
+          )}
+        >
           {format(date, "d")}
         </span>
         {dayTasks.length > 0 && (
@@ -189,7 +206,7 @@ function CalendarDay({
           </Badge>
         )}
       </div>
-      
+
       <div className="space-y-0.5 max-h-[70px] overflow-y-auto">
         {dayTasks.slice(0, 3).map((task) => (
           <CalendarTaskItem
@@ -213,14 +230,14 @@ export function AllTasksCalendarView({
   tasks,
   isLoading,
   selectedTasks,
-  onTaskSelect
+  onTaskSelect,
 }: AllTasksCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Get tasks with due dates and tasks without due dates
   const { tasksWithDates, tasksWithoutDates } = useMemo(() => {
-    const withDates = tasks.filter(task => task.dueDate);
-    const withoutDates = tasks.filter(task => !task.dueDate);
+    const withDates = tasks.filter((task) => task.dueDate);
+    const withoutDates = tasks.filter((task) => !task.dueDate);
     return { tasksWithDates: withDates, tasksWithoutDates: withoutDates };
   }, [tasks]);
 
@@ -230,13 +247,13 @@ export function AllTasksCalendarView({
     const monthEnd = endOfMonth(currentDate);
     const calendarStart = startOfWeek(monthStart);
     const calendarEnd = endOfWeek(monthEnd);
-    
+
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [currentDate]);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(prev => 
-      direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1)
+  const navigateMonth = (direction: "prev" | "next") => {
+    setCurrentDate((prev) =>
+      direction === "prev" ? subMonths(prev, 1) : addMonths(prev, 1),
     );
   };
 
@@ -244,15 +261,19 @@ export function AllTasksCalendarView({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
           <div className="flex space-x-2">
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
           </div>
         </div>
         <div className="grid grid-cols-7 gap-1">
           {[...Array(35)].map((_, i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded animate-pulse"></div>
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+              key={i}
+              className="h-24 bg-gray-100 rounded animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -271,12 +292,12 @@ export function AllTasksCalendarView({
             {tasksWithDates.length} tasks with due dates
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigateMonth('prev')}
+            onClick={() => navigateMonth("prev")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -290,7 +311,7 @@ export function AllTasksCalendarView({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigateMonth('next')}
+            onClick={() => navigateMonth("next")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -301,9 +322,9 @@ export function AllTasksCalendarView({
       <Card>
         {/* Day Headers */}
         <div className="grid grid-cols-7 border-b">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div 
-              key={day} 
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div
+              key={day}
               className="p-2 text-center text-sm font-medium text-muted-foreground border-r last:border-r-0"
             >
               {day}
@@ -334,15 +355,25 @@ export function AllTasksCalendarView({
             <h3 className="font-medium">Tasks without due dates</h3>
             <Badge variant="secondary">{tasksWithoutDates.length}</Badge>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {tasksWithoutDates.map((task) => (
               <div
                 key={task.id}
                 className={cn(
                   "p-2 border rounded text-sm cursor-pointer hover:bg-muted/50 transition-colors",
-                  selectedTasks.includes(task.id) && "ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                  selectedTasks.includes(task.id) &&
+                    "ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/20",
                 )}
+                // biome-ignore lint/a11y/useSemanticElements: styled clickable task row, keep as div
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onTaskSelect(task.id);
+                  }
+                }}
                 onClick={() => onTaskSelect(task.id)}
               >
                 <div className="flex items-start justify-between">
@@ -352,22 +383,33 @@ export function AllTasksCalendarView({
                       <FolderOpen className="h-3 w-3" />
                       <span>{task.project?.name}</span>
                       <span>•</span>
-                      <span>{task.project?.slug}-{task.number}</span>
+                      <span>
+                        {task.project?.slug}-{task.number}
+                      </span>
                     </div>
                   </div>
                   {task.assignedTeamId ? (
                     <div className="flex items-center space-x-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">
-                        {task.assignedTeam?.name || 'Assigned Team'}
+                        {task.assignedTeam?.name || "Assigned Team"}
                       </span>
                     </div>
                   ) : task.assigneeEmail ? (
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={task.assigneeAvatar ? task.assigneeAvatar : undefined} />
+                        <AvatarImage
+                          src={
+                            task.assigneeAvatar
+                              ? task.assigneeAvatar
+                              : undefined
+                          }
+                        />
                         <AvatarFallback>
-                          {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                          {task.assigneeName
+                            ?.split(" ")
+                            .map((n: string) => n[0])
+                            .join("") || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-sm text-muted-foreground">
@@ -377,7 +419,9 @@ export function AllTasksCalendarView({
                   ) : (
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Unassigned</span>
+                      <span className="text-sm text-muted-foreground">
+                        Unassigned
+                      </span>
                     </div>
                   )}
                 </div>
@@ -388,4 +432,4 @@ export function AllTasksCalendarView({
       )}
     </div>
   );
-} 
+}

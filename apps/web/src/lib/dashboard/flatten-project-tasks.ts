@@ -14,7 +14,7 @@ const MAX_FLATTENED_TASKS = 5000;
  * Deduplicate by task `id` when present; tasks without ids are all kept (rare).
  */
 export function flattenTasksForProject<T extends { id?: string }>(
-  project: ProjectLikeForTasks<T>
+  project: ProjectLikeForTasks<T>,
 ): T[] {
   const byId = new Map<string, T>();
   const withoutId: T[] = [];
@@ -42,7 +42,7 @@ export function flattenTasksForProject<T extends { id?: string }>(
 }
 
 export function flattenTasksFromProjects<T extends { id?: string }>(
-  projects: ProjectLikeForTasks<T>[]
+  projects: ProjectLikeForTasks<T>[],
 ): T[] {
   const out: T[] = [];
   for (const project of projects) {

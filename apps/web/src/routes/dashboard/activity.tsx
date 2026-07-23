@@ -21,15 +21,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
-import { getActivities, type Activity } from "@/fetchers/activity/get-activities";
+import {
+  getActivities,
+  type Activity,
+  type GetActivitiesResponse,
+} from "@/fetchers/activity/get-activities";
 import useWorkspaceStore from "@/store/workspace";
 import { cn } from "@/lib/cn";
 
-type ActivityTypeFilter = "all" | "task" | "project" | "team" | "workspace" | "comment";
+type ActivityTypeFilter =
+  | "all"
+  | "task"
+  | "project"
+  | "team"
+  | "workspace"
+  | "comment";
 type TimeRangeFilter = "7d" | "30d" | "90d" | "all";
 
 const PAGE_SIZE = 25;
@@ -66,8 +82,13 @@ function ActivityCenter() {
     queryKey: ["workspace-activities", workspace?.id, typeFilter],
     enabled: !!workspace?.id,
     initialPageParam: 0,
-    getNextPageParam: (lastPage, pages) =>
-      lastPage.activities.length < PAGE_SIZE ? undefined : pages.length * PAGE_SIZE,
+    getNextPageParam: (
+      lastPage: GetActivitiesResponse,
+      pages: GetActivitiesResponse[],
+    ) =>
+      lastPage.activities.length < PAGE_SIZE
+        ? undefined
+        : pages.length * PAGE_SIZE,
     queryFn: async ({ pageParam }) => {
       if (!workspace?.id) {
         return { activities: [] };
@@ -83,8 +104,10 @@ function ActivityCenter() {
   });
 
   const allActivities = useMemo(
-    () => data?.pages.flatMap((page) => page.activities) ?? [],
-    [data]
+    () =>
+      data?.pages.flatMap((page: GetActivitiesResponse) => page.activities) ??
+      [],
+    [data],
   );
 
   const filteredActivities = useMemo(() => {
@@ -112,7 +135,7 @@ function ActivityCenter() {
     if (!segment) return filteredActivities;
     if (segment === "mentions") {
       return filteredActivities.filter((a) =>
-        Boolean(a.description?.includes("@") || a.entityTitle?.includes("@"))
+        Boolean(a.description?.includes("@") || a.entityTitle?.includes("@")),
       );
     }
     if (segment === "completed") {
@@ -131,10 +154,18 @@ function ActivityCenter() {
 
   const stats = useMemo(() => {
     const total = displayActivities.length;
-    const tasks = displayActivities.filter((a) => a.entityType === "task").length;
-    const projects = displayActivities.filter((a) => a.entityType === "project").length;
-    const team = displayActivities.filter((a) => a.entityType === "team").length;
-    const workspaceEvents = displayActivities.filter((a) => a.entityType === "workspace").length;
+    const tasks = displayActivities.filter(
+      (a) => a.entityType === "task",
+    ).length;
+    const projects = displayActivities.filter(
+      (a) => a.entityType === "project",
+    ).length;
+    const team = displayActivities.filter(
+      (a) => a.entityType === "team",
+    ).length;
+    const workspaceEvents = displayActivities.filter(
+      (a) => a.entityType === "workspace",
+    ).length;
 
     return {
       total,
@@ -151,14 +182,22 @@ function ActivityCenter() {
     <LazyDashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Recent Activity</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Recent Activity
+          </h1>
           <p className="text-muted-foreground">
-            Explore all workspace updates with richer detail, timeline filters, and quick navigation.
+            Explore all workspace updates with richer detail, timeline filters,
+            and quick navigation.
           </p>
           {segment ? (
             <div className="rounded-lg border border-blue-200 bg-blue-50/70 px-3 py-2 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-100">
-              Showing the <span className="font-medium">{segment}</span> view from the dashboard.{" "}
-              <Link to="/dashboard/activity" search={{}} className="underline underline-offset-2">
+              Showing the <span className="font-medium">{segment}</span> view
+              from the dashboard.{" "}
+              <Link
+                to="/dashboard/activity"
+                search={{}}
+                className="underline underline-offset-2"
+              >
                 Clear segment filter
               </Link>
             </div>
@@ -205,10 +244,17 @@ function ActivityCenter() {
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <Filter className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Filters</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Filters
+                </span>
               </div>
 
-              <Select value={typeFilter} onValueChange={(value: ActivityTypeFilter) => setTypeFilter(value)}>
+              <Select
+                value={typeFilter}
+                onValueChange={(value: ActivityTypeFilter) =>
+                  setTypeFilter(value)
+                }
+              >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
@@ -222,7 +268,10 @@ function ActivityCenter() {
                 </SelectContent>
               </Select>
 
-              <Select value={timeRange} onValueChange={(value: TimeRangeFilter) => setTimeRange(value)}>
+              <Select
+                value={timeRange}
+                onValueChange={(value: TimeRangeFilter) => setTimeRange(value)}
+              >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Time range" />
                 </SelectTrigger>
@@ -259,7 +308,9 @@ function ActivityCenter() {
                   disabled={isRefetching}
                   className="gap-2"
                 >
-                  <RefreshCw className={cn("h-4 w-4", isRefetching && "animate-spin")} />
+                  <RefreshCw
+                    className={cn("h-4 w-4", isRefetching && "animate-spin")}
+                  />
                   Refresh
                 </Button>
               </div>
@@ -297,7 +348,9 @@ function ActivityCenter() {
                   disabled={!hasNextPage || isFetchingNextPage}
                   className="gap-2"
                 >
-                  {isFetchingNextPage && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isFetchingNextPage && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
                   {hasNextPage ? "Load more" : "No more activity"}
                 </Button>
               </div>
@@ -323,10 +376,17 @@ function ActivityStat({
   return (
     <div className="flex items-center justify-between rounded-xl border border-border/40 bg-muted/40 px-4 py-3">
       <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
         <p className="mt-1 text-2xl font-semibold">{value}</p>
       </div>
-      <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", accent)}>
+      <div
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-full",
+          accent,
+        )}
+      >
         <Icon className="h-5 w-5" />
       </div>
     </div>
@@ -344,7 +404,10 @@ function ActivityRow({ activity }: { activity: Activity }) {
         <div className="flex items-start gap-3">
           <Avatar className="h-11 w-11 border border-border/60">
             {activity.user?.avatarUrl ? (
-              <AvatarImage src={activity.user.avatarUrl} alt={activity.user.username} />
+              <AvatarImage
+                src={activity.user.avatarUrl}
+                alt={activity.user.username}
+              />
             ) : (
               <AvatarFallback className="bg-primary/10 text-primary">
                 {activity.user?.username?.charAt(0)?.toUpperCase() || "A"}
@@ -356,7 +419,10 @@ function ActivityRow({ activity }: { activity: Activity }) {
               <span className="text-sm font-semibold leading-none">
                 {activity.user?.username || activity.user?.email || "Someone"}
               </span>
-              <Badge variant="outline" className={cn("text-xs", iconConfig.badgeClass)}>
+              <Badge
+                variant="outline"
+                className={cn("text-xs", iconConfig.badgeClass)}
+              >
                 {iconConfig.label}
               </Badge>
             </div>
@@ -394,7 +460,11 @@ function ActivitySkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="h-20 rounded-xl border border-border/40 bg-muted/60 animate-pulse" />
+        <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+          key={index}
+          className="h-20 rounded-xl border border-border/40 bg-muted/60 animate-pulse"
+        />
       ))}
     </div>
   );
@@ -405,7 +475,9 @@ function EmptyActivityState() {
     <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
       <ActivityIcon className="h-10 w-10 text-muted-foreground/40" />
       <div>
-        <p className="text-sm font-medium">No activity matches your filters yet</p>
+        <p className="text-sm font-medium">
+          No activity matches your filters yet
+        </p>
         <p className="text-xs text-muted-foreground mt-1">
           Try widening your time range or resetting filters to see more events.
         </p>
@@ -464,8 +536,8 @@ function getActivityIcon(activity: Activity) {
     default:
       return {
         label: "General",
-        badgeClass: "border-muted-foreground/20 text-muted-foreground bg-muted/40",
+        badgeClass:
+          "border-muted-foreground/20 text-muted-foreground bg-muted/40",
       };
   }
 }
-

@@ -20,9 +20,13 @@ async function main() {
     GROUP BY workspace_id, user_id
     HAVING COUNT(*) > 1
   `);
-  const rowCount = Array.isArray(dupes) ? dupes.length : (dupes as { rowCount?: number }).rowCount ?? 0;
+  const rowCount = Array.isArray(dupes)
+    ? dupes.length
+    : ((dupes as { rowCount?: number }).rowCount ?? 0);
   if (rowCount > 0) {
-    console.log(`Found duplicate (workspace_id, user_id) groups (see query result)`);
+    console.log(
+      "Found duplicate (workspace_id, user_id) groups (see query result)",
+    );
     console.log(dupes);
   }
 
@@ -50,14 +54,20 @@ async function main() {
         WHERE sub.rn > 1
       )
     `);
-    await tx.execute(sql.raw(`DROP INDEX IF EXISTS idx_workspace_members_workspace_user`));
-    await tx.execute(sql.raw(`
+    await tx.execute(
+      sql.raw("DROP INDEX IF EXISTS idx_workspace_members_workspace_user"),
+    );
+    await tx.execute(
+      sql.raw(`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_workspace_members_workspace_user_unique
       ON workspace_members USING btree (workspace_id, user_id)
-    `));
+    `),
+    );
   });
 
-  console.log("workspace_members: duplicates removed (if any), unique index ensured.");
+  console.log(
+    "workspace_members: duplicates removed (if any), unique index ensured.",
+  );
   process.exit(0);
 }
 

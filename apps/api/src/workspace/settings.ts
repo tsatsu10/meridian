@@ -3,16 +3,16 @@ import { authMiddleware } from "../middlewares/secure-auth";
 import { getDatabase } from "../database/connection";
 import { workspaceSettings } from "../database/schema-features";
 import { eq } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const workspaceSettingsRoutes = new Hono();
 
 // Get workspace settings
-workspaceSettingsRoutes.get("/", authMiddleware, async (c) => {
+workspaceSettingsRoutes.get("/", authMiddleware(), async (c) => {
   try {
     const workspaceId = c.get("workspaceId") as string | undefined;
     const db = getDatabase();
-    
+
     if (!workspaceId) {
       return c.json({ error: "Workspace ID is required" }, 400);
     }
@@ -59,13 +59,13 @@ workspaceSettingsRoutes.get("/", authMiddleware, async (c) => {
 });
 
 // Update workspace settings
-workspaceSettingsRoutes.patch("/", authMiddleware, async (c) => {
+workspaceSettingsRoutes.patch("/", authMiddleware(), async (c) => {
   try {
     const workspaceId = c.get("workspaceId") as string | undefined;
     const userId = c.get("userId") as string | undefined;
     const body = await c.req.json();
     const db = getDatabase();
-    
+
     if (!workspaceId || !userId) {
       return c.json({ error: "Workspace ID and User ID are required" }, 400);
     }
@@ -108,7 +108,10 @@ workspaceSettingsRoutes.patch("/", authMiddleware, async (c) => {
       });
     }
 
-    return c.json({ success: true, message: "Workspace settings updated successfully" });
+    return c.json({
+      success: true,
+      message: "Workspace settings updated successfully",
+    });
   } catch (error) {
     logger.error("Error updating workspace settings:", error);
     return c.json({ error: "Failed to update workspace settings" }, 500);
@@ -116,4 +119,3 @@ workspaceSettingsRoutes.patch("/", authMiddleware, async (c) => {
 });
 
 export default workspaceSettingsRoutes;
-

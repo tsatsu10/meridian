@@ -1,13 +1,13 @@
 /**
  * 👥 Assign Users Modal Component
- * 
+ *
  * Modal for assigning users to a role with bulk support.
- * 
+ *
  * @phase Phase-3-Week-9
  */
 
-import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -15,18 +15,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { API_BASE_URL, API_URL } from '@/constants/urls';
-import { toast } from 'sonner';
-import { Search, Users, Loader2 } from 'lucide-react';
-import useWorkspaceStore from '@/store/workspace';
-import getWorkspaceUsers from '@/fetchers/workspace-user/get-workspace-users';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { API_BASE_URL } from "@/constants/urls";
+import { toast } from "sonner";
+import { Search, Users, Loader2 } from "lucide-react";
+import useWorkspaceStore from "@/store/workspace";
+import getWorkspaceUsers from "@/fetchers/workspace-user/get-workspace-users";
 
 // ==========================================
 // TYPES
@@ -38,6 +38,12 @@ interface AssignUsersModalProps {
   roleId: string;
   roleName: string;
   onSuccess?: () => void;
+}
+
+interface AssignUser {
+  id: string;
+  name: string;
+  email: string;
 }
 
 // ==========================================
@@ -53,27 +59,35 @@ export function AssignUsersModal({
 }: AssignUsersModalProps) {
   const { workspace } = useWorkspaceStore();
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [search, setSearch] = useState('');
-  const [reason, setReason] = useState('');
-  const [notes, setNotes] = useState('');
-  
+  const [search, setSearch] = useState("");
+  const [reason, setReason] = useState("");
+  const [notes, setNotes] = useState("");
+
   // Fetch real workspace users
   const { data: workspaceUsersData, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['workspace-users', workspace?.id],
-    queryFn: () => getWorkspaceUsers({ param: { workspaceId: workspace!.id } }),
+    queryKey: ["workspace-users", workspace?.id],
+    queryFn: () => {
+      if (!workspace?.id) {
+        // `enabled` prevents this; guard instead of asserting non-null.
+        throw new Error("workspace is required to load workspace users");
+      }
+      return getWorkspaceUsers({ param: { workspaceId: workspace.id } });
+    },
     enabled: !!workspace?.id && open,
   });
-  
+
   // Map API response to user list
-  const allUsers = workspaceUsersData?.users || [];
-  
+  // Cast narrows WorkspaceMember's nullable id/name to the non-null shape this
+  // UI already assumes (the previous `any[]` hid the same assumption).
+  const allUsers = (workspaceUsersData || []) as AssignUser[];
+
   // Assign users mutation
   const assignMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`${API_BASE_URL}/roles/assign/bulk`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           userIds: selectedUsers,
           roleId,
@@ -81,25 +95,27 @@ export function AssignUsersModal({
           notes: notes || undefined,
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to assign users');
+        throw new Error(error.error || "Failed to assign users");
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
       const { successful, failed } = data.result;
-      
+
       if (failed.length === 0) {
-        toast.success(`Successfully assigned ${successful.length} user(s) to ${roleName}`);
+        toast.success(
+          `Successfully assigned ${successful.length} user(s) to ${roleName}`,
+        );
       } else {
         toast.warning(
-          `Assigned ${successful.length} user(s). Failed to assign ${failed.length} user(s).`
+          `Assigned ${successful.length} user(s). Failed to assign ${failed.length} user(s).`,
         );
       }
-      
+
       onSuccess?.();
       handleClose();
     },
@@ -107,59 +123,61 @@ export function AssignUsersModal({
       toast.error(error.message);
     },
   });
-  
+
   const handleClose = () => {
     setSelectedUsers([]);
-    setSearch('');
-    setReason('');
-    setNotes('');
+    setSearch("");
+    setReason("");
+    setNotes("");
     onClose();
   };
-  
+
   const handleToggleUser = (userId: string) => {
-    setSelectedUsers(prev =>
+    setSelectedUsers((prev) =>
       prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
     );
   };
-  
+
   const handleSelectAll = () => {
-    const filtered = filteredUsers.map(u => u.id);
+    const filtered = filteredUsers.map((u) => u.id);
     setSelectedUsers(filtered);
   };
-  
+
   const handleClearAll = () => {
     setSelectedUsers([]);
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (selectedUsers.length === 0) {
-      toast.error('Please select at least one user');
+      toast.error("Please select at least one user");
       return;
     }
-    
+
     assignMutation.mutate();
   };
-  
-  const filteredUsers = allUsers.filter((user: any) =>
-    search === '' ||
-    user.name.toLowerCase().includes(search.toLowerCase()) ||
-    user.email.toLowerCase().includes(search.toLowerCase())
+
+  const filteredUsers = allUsers.filter(
+    (user) =>
+      search === "" ||
+      user.name.toLowerCase().includes(search.toLowerCase()) ||
+      user.email.toLowerCase().includes(search.toLowerCase()),
   );
-  
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Assign Users to {roleName}</DialogTitle>
           <DialogDescription>
-            Select users to assign this role to. Selected users will gain all permissions associated with this role.
+            Select users to assign this role to. Selected users will gain all
+            permissions associated with this role.
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             {/* Search */}
@@ -175,7 +193,7 @@ export function AssignUsersModal({
                 />
               </div>
             </div>
-            
+
             {/* User Selection */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -199,38 +217,51 @@ export function AssignUsersModal({
                   </Button>
                 </div>
               </div>
-              
+
               <div className="border rounded-lg max-h-[300px] overflow-y-auto">
                 {isLoadingUsers ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-sm text-muted-foreground">Loading users...</span>
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      Loading users...
+                    </span>
                   </div>
-                ) : filteredUsers.map((user: any) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                    onClick={() => handleToggleUser(user.id)}
-                  >
-                    <Checkbox
-                      checked={selectedUsers.includes(user.id)}
-                      onCheckedChange={() => handleToggleUser(user.id)}
-                    />
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-medium">
-                        {user.name.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{user.name}</div>
-                      <div className="text-sm text-muted-foreground truncate">
-                        {user.email}
+                ) : (
+                  filteredUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                      // biome-ignore lint/a11y/useSemanticElements: styled selectable user row, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleToggleUser(user.id);
+                        }
+                      }}
+                      onClick={() => handleToggleUser(user.id)}
+                    >
+                      <Checkbox
+                        checked={selectedUsers.includes(user.id)}
+                        onCheckedChange={() => handleToggleUser(user.id)}
+                      />
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-medium">
+                          {user.name.substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{user.name}</div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {user.email}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
-              
+
               {filteredUsers.length === 0 && (
                 <div className="text-center py-8 border rounded-lg">
                   <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
@@ -240,14 +271,14 @@ export function AssignUsersModal({
                 </div>
               )}
             </div>
-            
+
             {/* Selected Users Preview */}
             {selectedUsers.length > 0 && (
               <div className="space-y-2">
                 <Label>Selected Users</Label>
                 <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/50">
                   {selectedUsers.map((userId) => {
-                    const user = allUsers.find((u: any) => u.id === userId);
+                    const user = allUsers.find((u) => u.id === userId);
                     return (
                       <Badge key={userId} variant="secondary">
                         {user?.name}
@@ -257,7 +288,7 @@ export function AssignUsersModal({
                 </div>
               </div>
             )}
-            
+
             {/* Reason */}
             <div className="space-y-2">
               <Label htmlFor="reason">Reason (Optional)</Label>
@@ -268,7 +299,7 @@ export function AssignUsersModal({
                 onChange={(e) => setReason(e.target.value)}
               />
             </div>
-            
+
             {/* Notes */}
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (Optional)</Label>
@@ -281,7 +312,7 @@ export function AssignUsersModal({
               />
             </div>
           </div>
-          
+
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
@@ -293,7 +324,8 @@ export function AssignUsersModal({
               {assignMutation.isPending && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}
-              Assign {selectedUsers.length} User{selectedUsers.length !== 1 ? 's' : ''}
+              Assign {selectedUsers.length} User
+              {selectedUsers.length !== 1 ? "s" : ""}
             </Button>
           </DialogFooter>
         </form>
@@ -301,4 +333,3 @@ export function AssignUsersModal({
     </Dialog>
   );
 }
-

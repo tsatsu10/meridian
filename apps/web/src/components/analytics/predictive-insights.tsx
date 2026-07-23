@@ -12,14 +12,15 @@ import {
   Target,
   AlertCircle,
   CheckCircle2,
-  Zap
+  Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
   predictFutureTrends,
   predictResourceNeeds,
   detectSeasonalPatterns,
-  type PredictionResult
+  type PredictionResult,
 } from "@/utils/predictive-analytics";
 import {
   Tooltip,
@@ -29,18 +30,21 @@ import {
 } from "@/components/ui/tooltip";
 
 interface PredictiveInsightsProps {
-  timeSeriesData: any[]; // Accept any type for flexibility
+  timeSeriesData: unknown[]; // Accept any type for flexibility
   className?: string;
 }
 
-export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsightsProps) {
+export function PredictiveInsights({
+  timeSeriesData,
+  className,
+}: PredictiveInsightsProps) {
   const predictions = useMemo(() => {
     if (!timeSeriesData || timeSeriesData.length < 3) return null;
 
     return {
-      productivity: predictFutureTrends(timeSeriesData, 7, 'productivity'),
-      tasksCompleted: predictFutureTrends(timeSeriesData, 7, 'tasksCompleted'),
-      hoursLogged: predictFutureTrends(timeSeriesData, 7, 'hoursLogged'),
+      productivity: predictFutureTrends(timeSeriesData, 7, "productivity"),
+      tasksCompleted: predictFutureTrends(timeSeriesData, 7, "tasksCompleted"),
+      hoursLogged: predictFutureTrends(timeSeriesData, 7, "hoursLogged"),
     };
   }, [timeSeriesData]);
 
@@ -49,7 +53,7 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
   }, [timeSeriesData]);
 
   const seasonalPattern = useMemo(() => {
-    return detectSeasonalPatterns(timeSeriesData, 'productivity');
+    return detectSeasonalPatterns(timeSeriesData, "productivity");
   }, [timeSeriesData]);
 
   if (!predictions) {
@@ -92,9 +96,13 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
     }
   };
 
-  const PredictionCard = ({ prediction, title, icon: Icon }: { prediction: PredictionResult; title: string; icon: any }) => {
+  const PredictionCard = ({
+    prediction,
+    title,
+    icon: Icon,
+  }: { prediction: PredictionResult; title: string; icon: LucideIcon }) => {
     const nextWeekPrediction = prediction.predictions[6]; // 7 days ahead
-    
+
     if (!nextWeekPrediction) return null;
 
     return (
@@ -113,14 +121,24 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className={cn("gap-1", getTrendColor(prediction.trend))}>
+                  <Badge
+                    variant="outline"
+                    className={cn("gap-1", getTrendColor(prediction.trend))}
+                  >
                     {getTrendIcon(prediction.trend)}
                     {prediction.changeRate > 0 && "+"}
                     {prediction.changeRate}%
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Expected {prediction.trend === "increasing" ? "increase" : prediction.trend === "decreasing" ? "decrease" : "stability"}</p>
+                  <p>
+                    Expected{" "}
+                    {prediction.trend === "increasing"
+                      ? "increase"
+                      : prediction.trend === "decreasing"
+                        ? "decrease"
+                        : "stability"}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -129,7 +147,9 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Confidence</span>
-              <span className="font-medium">{nextWeekPrediction.confidence}%</span>
+              <span className="font-medium">
+                {nextWeekPrediction.confidence}%
+              </span>
             </div>
             <Progress value={nextWeekPrediction.confidence} className="h-2" />
           </div>
@@ -194,15 +214,28 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Current</p>
-              <p className="text-2xl font-bold">{resourcePrediction.currentCapacity}</p>
+              <p className="text-2xl font-bold">
+                {resourcePrediction.currentCapacity}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Projected</p>
-              <p className="text-2xl font-bold">{resourcePrediction.projectedCapacity}</p>
+              <p className="text-2xl font-bold">
+                {resourcePrediction.projectedCapacity}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Change</p>
-              <p className={cn("text-2xl font-bold", resourcePrediction.recommendedIncrease > 0 ? "text-green-600" : resourcePrediction.recommendedIncrease < 0 ? "text-red-600" : "")}>
+              <p
+                className={cn(
+                  "text-2xl font-bold",
+                  resourcePrediction.recommendedIncrease > 0
+                    ? "text-green-600"
+                    : resourcePrediction.recommendedIncrease < 0
+                      ? "text-red-600"
+                      : "",
+                )}
+              >
                 {resourcePrediction.recommendedIncrease > 0 && "+"}
                 {resourcePrediction.recommendedIncrease}
               </p>
@@ -217,10 +250,11 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
                 <p className="text-muted-foreground">
                   {resourcePrediction.recommendedIncrease > 0
                     ? `Consider adding ${resourcePrediction.recommendedIncrease} team member(s) to maintain productivity.`
-                    : `Team capacity may be under-utilized. Consider reallocation or project expansion.`}
+                    : "Team capacity may be under-utilized. Consider reallocation or project expansion."}
                 </p>
                 <p className="text-muted-foreground mt-1">
-                  <span className="font-medium">Timeline:</span> {resourcePrediction.timeline}
+                  <span className="font-medium">Timeline:</span>{" "}
+                  {resourcePrediction.timeline}
                 </p>
               </div>
             </div>
@@ -252,7 +286,11 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {seasonalPattern.peakDays.map((day) => (
-                    <Badge key={day} variant="secondary" className="text-xs bg-green-100 text-green-800">
+                    <Badge
+                      key={day}
+                      variant="secondary"
+                      className="text-xs bg-green-100 text-green-800"
+                    >
                       {day}
                     </Badge>
                   ))}
@@ -268,7 +306,11 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {seasonalPattern.lowDays.map((day) => (
-                    <Badge key={day} variant="secondary" className="text-xs bg-red-100 text-red-800">
+                    <Badge
+                      key={day}
+                      variant="secondary"
+                      className="text-xs bg-red-100 text-red-800"
+                    >
                       {day}
                     </Badge>
                   ))}
@@ -277,7 +319,8 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
             )}
 
             <p className="text-xs text-muted-foreground mt-3">
-              Plan important tasks and deadlines around peak performance days for optimal results.
+              Plan important tasks and deadlines around peak performance days
+              for optimal results.
             </p>
           </CardContent>
         </Card>
@@ -285,4 +328,3 @@ export function PredictiveInsights({ timeSeriesData, className }: PredictiveInsi
     </div>
   );
 }
-

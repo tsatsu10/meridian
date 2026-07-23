@@ -12,7 +12,8 @@ const PasswordStrengthIndicator = ({ password = "" }) => {
   };
 
   const strength = getStrength();
-  const strengthLabel = ["Very Weak", "Weak", "Fair", "Good", "Strong"][strength - 1] || "";
+  const strengthLabel =
+    ["Very Weak", "Weak", "Fair", "Good", "Strong"][strength - 1] || "";
 
   return (
     <div className="flex items-center gap-2 mt-1">
@@ -24,7 +25,9 @@ const PasswordStrengthIndicator = ({ password = "" }) => {
           transition={{ ease: "easeOut", duration: 0.5 }}
         />
       </div>
-      <span className="text-xs text-gray-500 dark:text-gray-400 w-20 text-right">{strengthLabel}</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400 w-20 text-right">
+        {strengthLabel}
+      </span>
     </div>
   );
 };

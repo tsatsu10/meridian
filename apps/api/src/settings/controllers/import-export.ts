@@ -3,7 +3,7 @@
  * Handles workspace data export and import with validation
  */
 
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, type SQL } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import {
   workspaceTable,
@@ -13,9 +13,10 @@ import {
   roleAssignmentTable,
 } from "../../database/schema";
 import { createId } from "@paralleldrive/cuid2";
+import { getErrorMessage } from "../../utils/error-utils";
 
 export interface ExportOptions {
-  format: 'json' | 'csv';
+  format: "json" | "csv";
   includeProjects?: boolean;
   includeTasks?: boolean;
   includeUsers?: boolean;
@@ -28,7 +29,7 @@ export interface ExportOptions {
 }
 
 export interface ImportOptions {
-  format: 'json' | 'csv';
+  format: "json" | "csv";
   validateOnly?: boolean;
   skipDuplicates?: boolean;
   updateExisting?: boolean;
@@ -46,85 +47,117 @@ export interface ImportResult {
   }>;
 }
 
+interface ExportDataBag {
+  exportDate: string;
+  workspaceId: string;
+  version: string;
+  workspace?: Record<string, unknown>;
+  projects?: Record<string, unknown>[];
+  tasks?: Record<string, unknown>[];
+  users?: Record<string, unknown>[];
+  roleAssignments?: Record<string, unknown>[];
+}
+
+// Arbitrary user-submitted import data (JSON body or parsed CSV row) --
+// genuinely untyped at this boundary, not a case of laziness.
+type ImportRecord = Record<string, unknown>;
+
+interface ParsedImportData {
+  projects?: ImportRecord[];
+  tasks?: ImportRecord[];
+  users?: ImportRecord[];
+}
+
+function getStringField(record: ImportRecord, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" ? value : undefined;
+}
+
 // Export workspace data
 export async function exportWorkspaceData(
   workspaceId: string,
-  options: ExportOptions
+  options: ExportOptions,
 ): Promise<{ data: string; filename: string; mimeType: string }> {
   const db = getDatabase();
-  const exportData: any = {
+  const exportData: ExportDataBag = {
     exportDate: new Date().toISOString(),
     workspaceId,
-    version: '1.0',
+    version: "1.0",
   };
-  
+
   // Export workspace info
   const [workspace] = await db
     .select()
     .from(workspaceTable)
     .where(eq(workspaceTable.id, workspaceId))
     .limit(1);
-  
+
   if (!workspace) {
-    throw new Error('Workspace not found');
+    throw new Error("Workspace not found");
   }
-  
+
   exportData.workspace = {
     name: workspace.name,
     description: workspace.description,
   };
-  
+
   // Export projects
   if (options.includeProjects) {
-    const projectWhere: any[] = [eq(projectTable.workspaceId, workspaceId)];
-    
+    const projectWhere: SQL<unknown>[] = [
+      eq(projectTable.workspaceId, workspaceId),
+    ];
+
     if (options.projectIds && options.projectIds.length > 0) {
       projectWhere.push(inArray(projectTable.id, options.projectIds));
     }
-    
+
     const projects = await db
       .select()
       .from(projectTable)
       .where(and(...projectWhere));
-    
-    exportData.projects = projects.map(p => ({
+
+    exportData.projects = projects.map((p) => ({
       id: p.id,
       name: p.name,
       description: p.description,
       status: p.status,
       startDate: p.startDate,
-      endDate: p.endDate,
-      ownerEmail: p.ownerEmail,
+      endDate: p.dueDate,
+      ownerId: p.ownerId,
       createdAt: p.createdAt,
     }));
   }
-  
+
   // Export tasks
   if (options.includeTasks) {
-    const taskWhere: any[] = [eq(taskTable.workspaceId, workspaceId)];
-    
+    const taskWhere: SQL<unknown>[] = [
+      eq(projectTable.workspaceId, workspaceId),
+    ];
+
     if (options.projectIds && options.projectIds.length > 0) {
       taskWhere.push(inArray(taskTable.projectId, options.projectIds));
     }
-    
-    const tasks = await db
-      .select()
+
+    const taskRows = await db
+      .select({ task: taskTable })
       .from(taskTable)
+      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
       .where(and(...taskWhere));
-    
-    exportData.tasks = tasks.map(t => ({
+    const tasks = taskRows.map((r) => r.task);
+
+    exportData.tasks = tasks.map((t) => ({
       id: t.id,
       projectId: t.projectId,
       title: t.title,
       description: t.description,
       status: t.status,
       priority: t.priority,
-      assignee: t.assignee,
+      assigneeId: t.assigneeId,
       dueDate: t.dueDate,
       createdAt: t.createdAt,
     }));
   }
-  
+
   // Export users
   if (options.includeUsers) {
     const users = await db
@@ -135,109 +168,111 @@ export async function exportWorkspaceData(
         createdAt: userTable.createdAt,
       })
       .from(userTable);
-    
+
     exportData.users = users;
   }
-  
+
   // Export role assignments
   if (options.includeRoles) {
     const roles = await db
       .select()
       .from(roleAssignmentTable)
       .where(eq(roleAssignmentTable.workspaceId, workspaceId));
-    
-    exportData.roleAssignments = roles.map(r => ({
-      userEmail: r.userEmail,
+
+    exportData.roleAssignments = roles.map((r) => ({
+      userId: r.userId,
       role: r.role,
-      projectId: r.projectId,
+      projectIds: r.projectIds,
       assignedAt: r.assignedAt,
     }));
   }
-  
-  const timestamp = new Date().toISOString().split('T')[0];
-  
-  if (options.format === 'json') {
+
+  const timestamp = new Date().toISOString().split("T")[0];
+
+  if (options.format === "json") {
     return {
       data: JSON.stringify(exportData, null, 2),
       filename: `workspace-export-${timestamp}.json`,
-      mimeType: 'application/json',
-    };
-  } else {
-    // CSV format
-    const csv = convertToCSV(exportData);
-    return {
-      data: csv,
-      filename: `workspace-export-${timestamp}.csv`,
-      mimeType: 'text/csv',
+      mimeType: "application/json",
     };
   }
+  // CSV format
+  const csv = convertToCSV(exportData);
+  return {
+    data: csv,
+    filename: `workspace-export-${timestamp}.csv`,
+    mimeType: "text/csv",
+  };
 }
 
 // Convert data to CSV format
-function convertToCSV(data: any): string {
+function convertToCSV(data: ExportDataBag): string {
   const lines: string[] = [];
-  
+
   // Projects CSV
-  if (data.projects && data.projects.length > 0) {
-    lines.push('## PROJECTS ##');
-    const headers = Object.keys(data.projects[0]);
-    lines.push(headers.join(','));
-    
+  const firstProject = data.projects?.[0];
+  if (data.projects && data.projects.length > 0 && firstProject) {
+    lines.push("## PROJECTS ##");
+    const headers = Object.keys(firstProject);
+    lines.push(headers.join(","));
+
     for (const project of data.projects) {
-      const values = headers.map(h => {
-        const value = project[h] || '';
-        return typeof value === 'string' && value.includes(',') 
-          ? `"${value}"` 
+      const values = headers.map((h) => {
+        const value = project[h] || "";
+        return typeof value === "string" && value.includes(",")
+          ? `"${value}"`
           : value;
       });
-      lines.push(values.join(','));
+      lines.push(values.join(","));
     }
-    lines.push('');
+    lines.push("");
   }
-  
+
   // Tasks CSV
-  if (data.tasks && data.tasks.length > 0) {
-    lines.push('## TASKS ##');
-    const headers = Object.keys(data.tasks[0]);
-    lines.push(headers.join(','));
-    
+  const firstTask = data.tasks?.[0];
+  if (data.tasks && data.tasks.length > 0 && firstTask) {
+    lines.push("## TASKS ##");
+    const headers = Object.keys(firstTask);
+    lines.push(headers.join(","));
+
     for (const task of data.tasks) {
-      const values = headers.map(h => {
-        const value = task[h] || '';
-        return typeof value === 'string' && value.includes(',') 
-          ? `"${value}"` 
+      const values = headers.map((h) => {
+        const value = task[h] || "";
+        return typeof value === "string" && value.includes(",")
+          ? `"${value}"`
           : value;
       });
-      lines.push(values.join(','));
+      lines.push(values.join(","));
     }
-    lines.push('');
+    lines.push("");
   }
-  
+
   // Users CSV
-  if (data.users && data.users.length > 0) {
-    lines.push('## USERS ##');
-    const headers = Object.keys(data.users[0]);
-    lines.push(headers.join(','));
-    
+  const firstUser = data.users?.[0];
+  if (data.users && data.users.length > 0 && firstUser) {
+    lines.push("## USERS ##");
+    const headers = Object.keys(firstUser);
+    lines.push(headers.join(","));
+
     for (const user of data.users) {
-      const values = headers.map(h => {
-        const value = user[h] || '';
-        return typeof value === 'string' && value.includes(',') 
-          ? `"${value}"` 
+      const values = headers.map((h) => {
+        const value = user[h] || "";
+        return typeof value === "string" && value.includes(",")
+          ? `"${value}"`
           : value;
       });
-      lines.push(values.join(','));
+      lines.push(values.join(","));
     }
   }
-  
-  return lines.join('\n');
+
+  return lines.join("\n");
 }
 
 // Validate import data
 export async function validateImportData(
   workspaceId: string,
-  data: any,
-  format: 'json' | 'csv'
+  data: unknown,
+  format: "json" | "csv",
 ): Promise<ImportResult> {
   const result: ImportResult = {
     success: true,
@@ -246,205 +281,240 @@ export async function validateImportData(
     skippedRecords: 0,
     errors: [],
   };
-  
+
   try {
-    let parsedData: any;
-    
-    if (format === 'json') {
-      parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+    let parsedData: ParsedImportData;
+
+    if (format === "json") {
+      parsedData = (
+        typeof data === "string" ? JSON.parse(data) : data
+      ) as ParsedImportData;
     } else {
-      parsedData = parseCSV(data);
+      parsedData = parseCSV(data as string);
     }
-    
+
     // Validate projects
     if (parsedData.projects) {
       result.totalRecords += parsedData.projects.length;
-      
-      for (let i = 0; i < parsedData.projects.length; i++) {
-        const project = parsedData.projects[i];
+
+      for (const [i, project] of parsedData.projects.entries()) {
         const errors = validateProject(project);
-        
+
         if (errors.length > 0) {
-          result.errors.push(...errors.map(e => ({
-            row: i + 1,
-            field: e.field,
-            message: e.message,
-          })));
+          result.errors.push(
+            ...errors.map((e) => ({
+              row: i + 1,
+              field: e.field,
+              message: e.message,
+            })),
+          );
           result.skippedRecords++;
         } else {
           result.importedRecords++;
         }
       }
     }
-    
+
     // Validate tasks
     if (parsedData.tasks) {
       result.totalRecords += parsedData.tasks.length;
-      
-      for (let i = 0; i < parsedData.tasks.length; i++) {
-        const task = parsedData.tasks[i];
+
+      for (const [i, task] of parsedData.tasks.entries()) {
         const errors = validateTask(task);
-        
+
         if (errors.length > 0) {
-          result.errors.push(...errors.map(e => ({
-            row: i + 1,
-            field: e.field,
-            message: e.message,
-          })));
+          result.errors.push(
+            ...errors.map((e) => ({
+              row: i + 1,
+              field: e.field,
+              message: e.message,
+            })),
+          );
           result.skippedRecords++;
         } else {
           result.importedRecords++;
         }
       }
     }
-    
+
     // Validate users
     if (parsedData.users) {
       result.totalRecords += parsedData.users.length;
-      
-      for (let i = 0; i < parsedData.users.length; i++) {
-        const user = parsedData.users[i];
+
+      for (const [i, user] of parsedData.users.entries()) {
         const errors = validateUser(user);
-        
+
         if (errors.length > 0) {
-          result.errors.push(...errors.map(e => ({
-            row: i + 1,
-            field: e.field,
-            message: e.message,
-          })));
+          result.errors.push(
+            ...errors.map((e) => ({
+              row: i + 1,
+              field: e.field,
+              message: e.message,
+            })),
+          );
           result.skippedRecords++;
         } else {
           result.importedRecords++;
         }
       }
     }
-    
+
     result.success = result.errors.length === 0;
-  } catch (error: any) {
+  } catch (error) {
     result.success = false;
     result.errors.push({
       row: 0,
-      message: `Failed to parse import data: ${error.message}`,
+      message: `Failed to parse import data: ${getErrorMessage(error)}`,
     });
   }
-  
+
   return result;
 }
 
 // Parse CSV data
-function parseCSV(csvData: string): any {
-  const result: any = {
+function parseCSV(csvData: string): Required<ParsedImportData> {
+  const result: Required<ParsedImportData> = {
     projects: [],
     tasks: [],
     users: [],
   };
-  
-  const sections = csvData.split('##').filter(s => s.trim());
-  
+
+  const sections = csvData.split("##").filter((s) => s.trim());
+
   for (const section of sections) {
-    const lines = section.trim().split('\n');
+    const lines = section.trim().split("\n");
     if (lines.length < 2) continue;
-    
-    const type = lines[0].trim().toLowerCase();
-    const headers = lines[1].split(',').map(h => h.trim());
-    
+
+    const type = lines[0]?.trim().toLowerCase() ?? "";
+    const headers = (lines[1] ?? "").split(",").map((h) => h.trim());
+
     for (let i = 2; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      
-      const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-      const record: any = {};
-      
-      headers.forEach((header, index) => {
-        record[header] = values[index] || '';
-      });
-      
-      if (type.includes('project')) {
+      const line = lines[i];
+      if (!line || !line.trim()) continue;
+
+      const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+      const record: ImportRecord = {};
+
+      for (const [index, header] of headers.entries()) {
+        record[header] = values[index] || "";
+      }
+
+      if (type.includes("project")) {
         result.projects.push(record);
-      } else if (type.includes('task')) {
+      } else if (type.includes("task")) {
         result.tasks.push(record);
-      } else if (type.includes('user')) {
+      } else if (type.includes("user")) {
         result.users.push(record);
       }
     }
   }
-  
+
   return result;
 }
 
 // Validation helpers
-function validateProject(project: any): Array<{ field: string; message: string }> {
+function validateProject(
+  project: ImportRecord,
+): Array<{ field: string; message: string }> {
   const errors: Array<{ field: string; message: string }> = [];
-  
-  if (!project.name || project.name.length < 1) {
-    errors.push({ field: 'name', message: 'Project name is required' });
+  const name = getStringField(project, "name");
+  const status = getStringField(project, "status");
+
+  if (!name || name.length < 1) {
+    errors.push({ field: "name", message: "Project name is required" });
   }
-  
-  if (project.name && project.name.length > 100) {
-    errors.push({ field: 'name', message: 'Project name must be 100 characters or less' });
+
+  if (name && name.length > 100) {
+    errors.push({
+      field: "name",
+      message: "Project name must be 100 characters or less",
+    });
   }
-  
-  if (project.status && !['active', 'completed', 'archived', 'on-hold'].includes(project.status)) {
-    errors.push({ field: 'status', message: 'Invalid project status' });
+
+  if (
+    status &&
+    !["active", "completed", "archived", "on-hold"].includes(status)
+  ) {
+    errors.push({ field: "status", message: "Invalid project status" });
   }
-  
+
   return errors;
 }
 
-function validateTask(task: any): Array<{ field: string; message: string }> {
+function validateTask(
+  task: ImportRecord,
+): Array<{ field: string; message: string }> {
   const errors: Array<{ field: string; message: string }> = [];
-  
-  if (!task.title || task.title.length < 1) {
-    errors.push({ field: 'title', message: 'Task title is required' });
+  const title = getStringField(task, "title");
+  const status = getStringField(task, "status");
+  const priority = getStringField(task, "priority");
+
+  if (!title || title.length < 1) {
+    errors.push({ field: "title", message: "Task title is required" });
   }
-  
-  if (task.title && task.title.length > 200) {
-    errors.push({ field: 'title', message: 'Task title must be 200 characters or less' });
+
+  if (title && title.length > 200) {
+    errors.push({
+      field: "title",
+      message: "Task title must be 200 characters or less",
+    });
   }
-  
-  if (task.status && !['backlog', 'todo', 'in-progress', 'review', 'done'].includes(task.status)) {
-    errors.push({ field: 'status', message: 'Invalid task status' });
+
+  if (
+    status &&
+    !["backlog", "todo", "in-progress", "review", "done"].includes(status)
+  ) {
+    errors.push({ field: "status", message: "Invalid task status" });
   }
-  
-  if (task.priority && !['low', 'medium', 'high', 'urgent'].includes(task.priority)) {
-    errors.push({ field: 'priority', message: 'Invalid task priority' });
+
+  if (priority && !["low", "medium", "high", "urgent"].includes(priority)) {
+    errors.push({ field: "priority", message: "Invalid task priority" });
   }
-  
+
   return errors;
 }
 
-function validateUser(user: any): Array<{ field: string; message: string }> {
+function validateUser(
+  user: ImportRecord,
+): Array<{ field: string; message: string }> {
   const errors: Array<{ field: string; message: string }> = [];
-  
-  if (!user.email) {
-    errors.push({ field: 'email', message: 'User email is required' });
+  const email = getStringField(user, "email");
+  const name = getStringField(user, "name");
+
+  if (!email) {
+    errors.push({ field: "email", message: "User email is required" });
   }
-  
-  if (user.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
-    errors.push({ field: 'email', message: 'Invalid email format' });
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.push({ field: "email", message: "Invalid email format" });
   }
-  
-  if (!user.name || user.name.length < 1) {
-    errors.push({ field: 'name', message: 'User name is required' });
+
+  if (!name || name.length < 1) {
+    errors.push({ field: "name", message: "User name is required" });
   }
-  
+
   return errors;
 }
 
 // Import workspace data
 export async function importWorkspaceData(
   workspaceId: string,
-  data: any,
-  options: ImportOptions
+  data: unknown,
+  options: ImportOptions,
 ): Promise<ImportResult> {
   const db = getDatabase();
-  
+
   // First validate
-  const validationResult = await validateImportData(workspaceId, data, options.format);
-  
+  const validationResult = await validateImportData(
+    workspaceId,
+    data,
+    options.format,
+  );
+
   if (options.validateOnly || !validationResult.success) {
     return validationResult;
   }
-  
+
   const result: ImportResult = {
     success: true,
     totalRecords: 0,
@@ -452,96 +522,121 @@ export async function importWorkspaceData(
     skippedRecords: 0,
     errors: [],
   };
-  
+
   try {
-    let parsedData: any;
-    
-    if (options.format === 'json') {
-      parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+    let parsedData: ParsedImportData;
+
+    if (options.format === "json") {
+      parsedData = (
+        typeof data === "string" ? JSON.parse(data) : data
+      ) as ParsedImportData;
     } else {
-      parsedData = parseCSV(data);
+      parsedData = parseCSV(data as string);
     }
-    
+
     // Import projects
     if (parsedData.projects) {
       for (const project of parsedData.projects) {
         try {
-          const projectId = project.id || createId();
-          
+          const projectId = getStringField(project, "id") || createId();
+          const startDate = getStringField(project, "startDate");
+          const endDate = getStringField(project, "endDate");
+
           await db.insert(projectTable).values({
             id: projectId,
             workspaceId,
-            name: project.name,
-            description: project.description || null,
-            status: project.status || 'active',
-            startDate: project.startDate ? new Date(project.startDate) : null,
-            endDate: project.endDate ? new Date(project.endDate) : null,
-            ownerEmail: project.ownerEmail,
+            name: getStringField(project, "name") || "",
+            description: getStringField(project, "description") || null,
+            status: getStringField(project, "status") || "active",
+            startDate: startDate ? new Date(startDate) : null,
+            dueDate: endDate ? new Date(endDate) : null,
+            // ownerId is NOT NULL/FK on the schema; an empty string here still
+            // fails the FK constraint at insert time (caught below) exactly
+            // as a `null` value used to under the previous `any` typing.
+            ownerId: getStringField(project, "ownerId") ?? "",
             createdAt: new Date(),
             updatedAt: new Date(),
           });
-          
+
           result.importedRecords++;
-        } catch (error: any) {
-          if (options.skipDuplicates && error.message.includes('duplicate')) {
+        } catch (error) {
+          if (
+            options.skipDuplicates &&
+            getErrorMessage(error).includes("duplicate")
+          ) {
             result.skippedRecords++;
           } else {
             result.errors.push({
               row: result.totalRecords,
-              message: error.message,
+              message: getErrorMessage(error),
             });
           }
         }
-        
+
         result.totalRecords++;
       }
     }
-    
+
     // Import tasks
     if (parsedData.tasks) {
       for (const task of parsedData.tasks) {
         try {
-          const taskId = task.id || createId();
-          
+          const taskId = getStringField(task, "id") || createId();
+          const dueDate = getStringField(task, "dueDate");
+
           await db.insert(taskTable).values({
             id: taskId,
-            workspaceId,
-            projectId: task.projectId,
-            title: task.title,
-            description: task.description || null,
-            status: task.status || 'backlog',
-            priority: task.priority || 'medium',
-            assignee: task.assignee || null,
-            dueDate: task.dueDate ? new Date(task.dueDate) : null,
+            projectId: getStringField(task, "projectId") || "",
+            title: getStringField(task, "title") || "",
+            description: getStringField(task, "description") || null,
+            // request-boundary narrowing onto the enum columns
+            status:
+              (getStringField(task, "status") as
+                | "todo"
+                | "in_progress"
+                | "done"
+                | undefined) || "todo",
+            priority:
+              (getStringField(task, "priority") as
+                | "low"
+                | "medium"
+                | "high"
+                | "urgent"
+                | undefined) || "medium",
+            assigneeId: getStringField(task, "assigneeId") || null,
+            dueDate: dueDate ? new Date(dueDate) : null,
             createdAt: new Date(),
             updatedAt: new Date(),
           });
-          
+
           result.importedRecords++;
-        } catch (error: any) {
-          if (options.skipDuplicates && error.message.includes('duplicate')) {
+        } catch (error) {
+          if (
+            options.skipDuplicates &&
+            getErrorMessage(error).includes("duplicate")
+          ) {
             result.skippedRecords++;
           } else {
             result.errors.push({
               row: result.totalRecords,
-              message: error.message,
+              message: getErrorMessage(error),
             });
           }
         }
-        
+
         result.totalRecords++;
       }
     }
-    
+
     result.success = result.errors.length === 0;
-  } catch (error: any) {
+  } catch (error) {
     result.success = false;
     result.errors.push({
       row: 0,
-      message: `Import failed: ${error.message}`,
+      message: `Import failed: ${getErrorMessage(error)}`,
     });
   }
-  
+
   return result;
 }
 
@@ -549,42 +644,57 @@ export async function importWorkspaceData(
 export function getExportTemplates() {
   return {
     projects: {
-      name: 'Project Template',
-      fields: ['id', 'name', 'description', 'status', 'startDate', 'endDate', 'ownerEmail'],
+      name: "Project Template",
+      fields: [
+        "id",
+        "name",
+        "description",
+        "status",
+        "startDate",
+        "endDate",
+        "ownerEmail",
+      ],
       example: {
-        id: 'proj_123',
-        name: 'Example Project',
-        description: 'Project description',
-        status: 'active',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
-        ownerEmail: 'owner@example.com',
+        id: "proj_123",
+        name: "Example Project",
+        description: "Project description",
+        status: "active",
+        startDate: "2024-01-01",
+        endDate: "2024-12-31",
+        ownerEmail: "owner@example.com",
       },
     },
     tasks: {
-      name: 'Task Template',
-      fields: ['id', 'projectId', 'title', 'description', 'status', 'priority', 'assignee', 'dueDate'],
+      name: "Task Template",
+      fields: [
+        "id",
+        "projectId",
+        "title",
+        "description",
+        "status",
+        "priority",
+        "assignee",
+        "dueDate",
+      ],
       example: {
-        id: 'task_123',
-        projectId: 'proj_123',
-        title: 'Example Task',
-        description: 'Task description',
-        status: 'todo',
-        priority: 'medium',
-        assignee: 'user@example.com',
-        dueDate: '2024-06-30',
+        id: "task_123",
+        projectId: "proj_123",
+        title: "Example Task",
+        description: "Task description",
+        status: "todo",
+        priority: "medium",
+        assignee: "user@example.com",
+        dueDate: "2024-06-30",
       },
     },
     users: {
-      name: 'User Template',
-      fields: ['email', 'name', 'role'],
+      name: "User Template",
+      fields: ["email", "name", "role"],
       example: {
-        email: 'user@example.com',
-        name: 'John Doe',
-        role: 'member',
+        email: "user@example.com",
+        name: "John Doe",
+        role: "member",
       },
     },
   };
 }
-
-

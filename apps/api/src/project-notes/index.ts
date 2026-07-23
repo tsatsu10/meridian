@@ -2,10 +2,16 @@
 import { Hono } from "hono";
 import { eq, and, desc, like } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
-import { projectNotesTable, noteVersionsTable, noteCommentsTable, users } from "../database/schema";
+import {
+  projectNotesTable,
+  noteVersionsTable,
+  noteCommentsTable,
+  users,
+} from "../database/schema";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
 
 const app = new Hono();
 
@@ -16,12 +22,15 @@ const app = new Hono();
 // Create a new note
 app.post(
   "/projects/:projectId/notes",
-  zValidator("json", z.object({
-    title: z.string().min(1).max(200),
-    content: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-    isPinned: z.boolean().optional(),
-  })),
+  zValidator(
+    "json",
+    z.object({
+      title: z.string().min(1).max(200),
+      content: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+      isPinned: z.boolean().optional(),
+    }),
+  ),
   async (c) => {
     const projectId = c.req.param("projectId");
     const data = c.req.valid("json");
@@ -33,7 +42,7 @@ app.post(
 
     try {
       const db = getDatabase();
-      
+
       // Get user ID
       const [user] = await db
         .select()
@@ -58,6 +67,10 @@ app.post(
         })
         .returning();
 
+      if (!note) {
+        throw new Error("note: write returned no row");
+      }
+
       // Create initial version
       await db.insert(noteVersionsTable).values({
         noteId: note.id,
@@ -73,11 +86,11 @@ app.post(
         message: "Note created successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to create note:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
-  }
+  },
 );
 
 // Get all notes for a project
@@ -93,27 +106,29 @@ app.get("/projects/:projectId/notes", async (c) => {
 
   try {
     const db = getDatabase();
-    
-    let query = db
-      .select()
-      .from(projectNotesTable)
-      .where(eq(projectNotesTable.projectId, projectId));
 
+    // Build conditions up front — drizzle builders can't be re-.where()d
+    const noteConditions = [eq(projectNotesTable.projectId, projectId)];
     if (!includeArchived) {
-      query = query.where(eq(projectNotesTable.isArchived, false));
+      noteConditions.push(eq(projectNotesTable.isArchived, false));
     }
 
-    let notes = await query.orderBy(
-      desc(projectNotesTable.isPinned),
-      desc(projectNotesTable.updatedAt)
-    );
+    let notes = await db
+      .select()
+      .from(projectNotesTable)
+      .where(and(...noteConditions))
+      .orderBy(
+        desc(projectNotesTable.isPinned),
+        desc(projectNotesTable.updatedAt),
+      );
 
     // Filter by search if provided
     if (search) {
       const searchLower = search.toLowerCase();
-      notes = notes.filter(note =>
-        note.title.toLowerCase().includes(searchLower) ||
-        note.content?.toLowerCase().includes(searchLower)
+      notes = notes.filter(
+        (note) =>
+          note.title.toLowerCase().includes(searchLower) ||
+          note.content?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -122,9 +137,9 @@ app.get("/projects/:projectId/notes", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch notes:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -154,23 +169,26 @@ app.get("/notes/:noteId", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch note:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
 // Update a note
 app.patch(
   "/notes/:noteId",
-  zValidator("json", z.object({
-    title: z.string().min(1).max(200).optional(),
-    content: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-    isPinned: z.boolean().optional(),
-    isArchived: z.boolean().optional(),
-    changeDescription: z.string().optional(),
-  })),
+  zValidator(
+    "json",
+    z.object({
+      title: z.string().min(1).max(200).optional(),
+      content: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+      isPinned: z.boolean().optional(),
+      isArchived: z.boolean().optional(),
+      changeDescription: z.string().optional(),
+    }),
+  ),
   async (c) => {
     const noteId = c.req.param("noteId");
     const updates = c.req.valid("json");
@@ -182,7 +200,7 @@ app.patch(
 
     try {
       const db = getDatabase();
-      
+
       // Get user ID
       const [user] = await db
         .select()
@@ -216,8 +234,15 @@ app.patch(
         .where(eq(projectNotesTable.id, noteId))
         .returning();
 
+      if (!note) {
+        throw new Error("note: write returned no row");
+      }
+
       // Create new version if content changed
-      if (updates.content !== undefined && updates.content !== currentNote.content) {
+      if (
+        updates.content !== undefined &&
+        updates.content !== currentNote.content
+      ) {
         // Get latest version number
         const versions = await db
           .select()
@@ -233,7 +258,8 @@ app.patch(
           content: updates.content,
           editedBy: user.id,
           versionNumber: nextVersion,
-          changeDescription: updates.changeDescription || `Version ${nextVersion}`,
+          changeDescription:
+            updates.changeDescription || `Version ${nextVersion}`,
         });
       }
 
@@ -243,11 +269,11 @@ app.patch(
         message: "Note updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update note:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
-  }
+  },
 );
 
 // Delete a note
@@ -261,19 +287,17 @@ app.delete("/notes/:noteId", async (c) => {
 
   try {
     const db = getDatabase();
-    
-    await db
-      .delete(projectNotesTable)
-      .where(eq(projectNotesTable.id, noteId));
+
+    await db.delete(projectNotesTable).where(eq(projectNotesTable.id, noteId));
 
     return c.json({
       success: true,
       message: "Note deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete note:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -288,7 +312,7 @@ app.patch("/notes/:noteId/pin", async (c) => {
 
   try {
     const db = getDatabase();
-    
+
     // Get current note
     const [currentNote] = await db
       .select()
@@ -310,15 +334,19 @@ app.patch("/notes/:noteId/pin", async (c) => {
       .where(eq(projectNotesTable.id, noteId))
       .returning();
 
+    if (!note) {
+      throw new Error("note: write returned no row");
+    }
+
     return c.json({
       data: note,
       success: true,
       message: note.isPinned ? "Note pinned" : "Note unpinned",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to pin/unpin note:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -348,9 +376,9 @@ app.get("/notes/:noteId/versions", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch versions:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -380,18 +408,21 @@ app.get("/notes/:noteId/comments", async (c) => {
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to fetch comments:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
 // Add a comment to a note
 app.post(
   "/notes/:noteId/comments",
-  zValidator("json", z.object({
-    comment: z.string().min(1).max(2000),
-  })),
+  zValidator(
+    "json",
+    z.object({
+      comment: z.string().min(1).max(2000),
+    }),
+  ),
   async (c) => {
     const noteId = c.req.param("noteId");
     const { comment } = c.req.valid("json");
@@ -403,7 +434,7 @@ app.post(
 
     try {
       const db = getDatabase();
-      
+
       const [newComment] = await db
         .insert(noteCommentsTable)
         .values({
@@ -419,19 +450,22 @@ app.post(
         message: "Comment added successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to add comment:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
-  }
+  },
 );
 
 // Update a comment
 app.patch(
   "/notes/:noteId/comments/:commentId",
-  zValidator("json", z.object({
-    comment: z.string().min(1).max(2000),
-  })),
+  zValidator(
+    "json",
+    z.object({
+      comment: z.string().min(1).max(2000),
+    }),
+  ),
   async (c) => {
     const commentId = c.req.param("commentId");
     const { comment } = c.req.valid("json");
@@ -443,7 +477,7 @@ app.patch(
 
     try {
       const db = getDatabase();
-      
+
       const [updatedComment] = await db
         .update(noteCommentsTable)
         .set({
@@ -454,8 +488,8 @@ app.patch(
         .where(
           and(
             eq(noteCommentsTable.id, commentId),
-            eq(noteCommentsTable.userEmail, userEmail)
-          )
+            eq(noteCommentsTable.userEmail, userEmail),
+          ),
         )
         .returning();
 
@@ -469,11 +503,11 @@ app.patch(
         message: "Comment updated successfully",
         timestamp: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error("Failed to update comment:", error);
-      return c.json({ error: error.message }, 500);
+      return c.json({ error: getErrorMessage(error) }, 500);
     }
-  }
+  },
 );
 
 // Delete a comment
@@ -487,14 +521,14 @@ app.delete("/notes/:noteId/comments/:commentId", async (c) => {
 
   try {
     const db = getDatabase();
-    
+
     await db
       .delete(noteCommentsTable)
       .where(
         and(
           eq(noteCommentsTable.id, commentId),
-          eq(noteCommentsTable.userEmail, userEmail)
-        )
+          eq(noteCommentsTable.userEmail, userEmail),
+        ),
       );
 
     return c.json({
@@ -502,12 +536,10 @@ app.delete("/notes/:noteId/comments/:commentId", async (c) => {
       message: "Comment deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error("Failed to delete comment:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
 export default app;
-
-

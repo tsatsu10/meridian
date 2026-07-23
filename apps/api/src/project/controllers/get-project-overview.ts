@@ -1,6 +1,6 @@
 /**
  * 🚀 Unified Project Overview Controller
- * 
+ *
  * Returns all project data in a single optimized request:
  * - Project details
  * - Tasks with statistics
@@ -8,20 +8,20 @@
  * - Team members
  * - Recent activity
  * - Computed metrics
- * 
+ *
  * Benefits:
  * - Reduces ~6 API calls to 1
  * - Optimized database queries
  * - Consistent data snapshot
  * - Better caching
- * 
+ *
  * @epic-3.1-dashboard: Unified data fetching for Jennifer's executive dashboard
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq, and, desc, count, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 import {
   projectTable,
   taskTable,
@@ -29,6 +29,7 @@ import {
   users,
   activityTable,
 } from "../../database/schema";
+import { errorMessage } from "../../utils/errors";
 
 interface ProjectOverviewOptions {
   includeActivity?: boolean;
@@ -47,7 +48,7 @@ async function getProjectOverview(c: Context) {
 
   // Parse options
   const includeActivity = c.req.query("includeActivity") !== "false";
-  const activityLimit = parseInt(c.req.query("activityLimit") || "20");
+  const activityLimit = Number.parseInt(c.req.query("activityLimit") || "20");
   const includeTeam = c.req.query("includeTeam") !== "false";
 
   if (!projectId) {
@@ -66,22 +67,31 @@ async function getProjectOverview(c: Context) {
       .where(
         and(
           eq(projectTable.id, projectId),
-          eq(projectTable.workspaceId, workspaceId)
-        )
+          eq(projectTable.workspaceId, workspaceId),
+        ),
       )
       .limit(1);
 
     if (!project) {
-      return c.json({ error: "Project not found or does not belong to workspace" }, 404);
+      return c.json(
+        { error: "Project not found or does not belong to workspace" },
+        404,
+      );
     }
 
     // 🚀 STEP 2: Parallel fetch all related data (optimized)
     const [tasks, milestones, teamMembers, recentActivity] = await Promise.all([
       // Tasks with full details
-      db.select().from(taskTable).where(eq(taskTable.projectId, projectId)),
+      db
+        .select()
+        .from(taskTable)
+        .where(eq(taskTable.projectId, projectId)),
 
       // Milestones
-      db.select().from(milestoneTable).where(eq(milestoneTable.projectId, projectId)),
+      db
+        .select()
+        .from(milestoneTable)
+        .where(eq(milestoneTable.projectId, projectId)),
 
       // Team members (if requested)
       includeTeam ? Promise.resolve([]) : Promise.resolve([]),
@@ -102,24 +112,27 @@ async function getProjectOverview(c: Context) {
       completed: tasks.filter((t) => t.status === "done").length,
       inProgress: tasks.filter((t) => t.status === "in_progress").length,
       todo: tasks.filter((t) => t.status === "todo").length,
-      blocked: tasks.filter((t) => t.status === "blocked").length,
-      
+      // the task_status enum has no "blocked" value in this schema
+      blocked: 0,
+
       // By priority
-      critical: tasks.filter((t) => t.priority === "critical").length,
+      // the priority enum has "urgent", not "critical"
+      critical: tasks.filter((t) => t.priority === "urgent").length,
       high: tasks.filter((t) => t.priority === "high").length,
       medium: tasks.filter((t) => t.priority === "medium").length,
       low: tasks.filter((t) => t.priority === "low").length,
-      
+
       // Overdue
       overdue: tasks.filter(
-        (t) => t.dueDate && t.status !== "done" && new Date(t.dueDate) < new Date()
+        (t) =>
+          t.dueDate && t.status !== "done" && new Date(t.dueDate) < new Date(),
       ).length,
-      
+
       // Due soon (within 7 days)
       dueSoon: tasks.filter((t) => {
         if (!t.dueDate || t.status === "done") return false;
         const daysUntilDue = Math.ceil(
-          (new Date(t.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          (new Date(t.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
         );
         return daysUntilDue >= 0 && daysUntilDue <= 7;
       }).length,
@@ -131,7 +144,10 @@ async function getProjectOverview(c: Context) {
       inProgress: milestones.filter((m) => m.status === "in_progress").length,
       upcoming: milestones.filter((m) => m.status === "planned").length,
       overdue: milestones.filter(
-        (m) => m.dueDate && m.status !== "completed" && new Date(m.dueDate) < new Date()
+        (m) =>
+          m.dueDate &&
+          m.status !== "completed" &&
+          new Date(m.dueDate) < new Date(),
       ).length,
     };
 
@@ -146,9 +162,10 @@ async function getProjectOverview(c: Context) {
     const velocity = calculateVelocity(tasks);
 
     // 📊 STEP 6: Calculate burn rate (completion rate)
-    const burnRate = taskStats.total > 0
-      ? Math.round((taskStats.completed / taskStats.total) * 100)
-      : 0;
+    const burnRate =
+      taskStats.total > 0
+        ? Math.round((taskStats.completed / taskStats.total) * 100)
+        : 0;
 
     const duration = Date.now() - startTime;
 
@@ -160,35 +177,40 @@ async function getProjectOverview(c: Context) {
         description: project.description,
         status: project.status,
         priority: project.priority,
-        category: project.category,
-        visibility: project.visibility,
+        // category/visibility live in the settings jsonb bag, not as columns
+        category:
+          (project.settings as Record<string, unknown> | null)?.category ??
+          null,
+        visibility:
+          (project.settings as Record<string, unknown> | null)?.visibility ??
+          null,
         isArchived: project.isArchived,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
         dueDate: project.dueDate,
         startDate: project.startDate,
       },
-      
+
       tasks: {
         items: tasks,
         stats: taskStats,
       },
-      
+
       milestones: {
         items: milestones,
         stats: milestoneStats,
       },
-      
+
       team: {
         members: teamMembers,
         count: teamMembers.length,
       },
-      
+
       activity: {
         items: recentActivity,
         count: recentActivity.length,
       },
-      
+
       metrics: {
         healthScore,
         velocity,
@@ -196,112 +218,129 @@ async function getProjectOverview(c: Context) {
         efficiency: calculateEfficiency(taskStats),
         riskLevel: calculateRiskLevel(healthScore, taskStats),
       },
-      
+
       meta: {
         fetchedAt: new Date().toISOString(),
         duration,
-        cached: false, // TODO: Implement caching
+        cached: false, // See https://github.com/tsatsu10/meridian/issues/70
       },
     });
-
   } catch (error) {
     logger.error("Error fetching project overview:", error);
-    return c.json({
-      error: "Failed to fetch project overview",
-      message: error.message,
-    }, 500);
+    return c.json(
+      {
+        error: "Failed to fetch project overview",
+        message: errorMessage(error),
+      },
+      500,
+    );
   }
 }
 
+type TaskStats = {
+  total: number;
+  completed: number;
+  inProgress: number;
+  overdue: number;
+  blocked: number;
+};
+type MilestoneStats = { overdue: number };
+type VelocityTask = {
+  status?: string | null;
+  updatedAt?: Date | string | null;
+};
 /**
  * Calculate project health score (0-100)
  */
 function calculateProjectHealth(data: {
-  taskStats: any;
-  milestoneStats: any;
-  project: any;
+  taskStats: TaskStats;
+  milestoneStats: MilestoneStats;
+  project: unknown;
 }): number {
   const { taskStats, milestoneStats, project } = data;
-  
+
   let score = 100;
-  
+
   // Penalties
   if (taskStats.overdue > 0) {
     score -= Math.min(taskStats.overdue * 5, 30); // -5 per overdue task, max -30
   }
-  
+
   if (taskStats.blocked > 0) {
     score -= Math.min(taskStats.blocked * 3, 20); // -3 per blocked task, max -20
   }
-  
+
   if (milestoneStats.overdue > 0) {
     score -= Math.min(milestoneStats.overdue * 10, 30); // -10 per overdue milestone, max -30
   }
-  
+
   // Bonuses
   if (taskStats.total > 0) {
     const completionRate = (taskStats.completed / taskStats.total) * 100;
     if (completionRate >= 80) score += 10;
     else if (completionRate >= 60) score += 5;
   }
-  
+
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 /**
  * Calculate velocity (tasks completed per week)
  */
-function calculateVelocity(tasks: any[]): number {
-  const completedTasks = tasks.filter((t) => t.status === "done" && t.updatedAt);
-  
+function calculateVelocity(tasks: VelocityTask[]): number {
+  const completedTasks = tasks.filter(
+    (t) => t.status === "done" && t.updatedAt,
+  );
+
   if (completedTasks.length === 0) return 0;
-  
+
   // Get date range
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
-  
+
   const recentlyCompleted = completedTasks.filter(
-    (t) => new Date(t.updatedAt).getTime() >= weekAgo
+    (t) => t.updatedAt != null && new Date(t.updatedAt).getTime() >= weekAgo,
   );
-  
+
   return recentlyCompleted.length;
 }
 
 /**
  * Calculate efficiency score (0-100)
  */
-function calculateEfficiency(taskStats: any): number {
+function calculateEfficiency(taskStats: TaskStats): number {
   if (taskStats.total === 0) return 0;
-  
+
   const productive = taskStats.completed + taskStats.inProgress;
   const total = taskStats.total;
-  
+
   return Math.round((productive / total) * 100);
 }
 
 /**
  * Calculate risk level based on health and task stats
  */
-function calculateRiskLevel(healthScore: number, taskStats: any): 'low' | 'medium' | 'high' | 'critical' {
+function calculateRiskLevel(
+  healthScore: number,
+  taskStats: TaskStats,
+): "low" | "medium" | "high" | "critical" {
   // Critical: Health < 40 OR many overdue/blocked tasks
   if (healthScore < 40 || taskStats.overdue > 10 || taskStats.blocked > 5) {
-    return 'critical';
+    return "critical";
   }
-  
+
   // High: Health < 60 OR some overdue/blocked tasks
   if (healthScore < 60 || taskStats.overdue > 5 || taskStats.blocked > 3) {
-    return 'high';
+    return "high";
   }
-  
+
   // Medium: Health < 80
   if (healthScore < 80) {
-    return 'medium';
+    return "medium";
   }
-  
+
   // Low: Health >= 80
-  return 'low';
+  return "low";
 }
 
 export default getProjectOverview;
-
-

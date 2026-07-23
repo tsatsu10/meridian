@@ -58,14 +58,14 @@ export function BulkActionToolbar({
             "fixed bottom-6 left-1/2 -translate-x-1/2 z-50",
             "bg-background border rounded-lg shadow-lg",
             "flex items-center gap-2 px-4 py-3",
-            className
+            className,
           )}
           role="toolbar"
           aria-label="Bulk actions toolbar"
         >
           {/* Selection Count */}
-          <Badge 
-            variant="secondary" 
+          <Badge
+            variant="secondary"
             className="mr-2"
             aria-live="polite"
             aria-atomic="true"
@@ -77,8 +77,8 @@ export function BulkActionToolbar({
           {canEdit && onBulkStatusUpdate && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   aria-label="Update status for selected tasks"
                   aria-haspopup="true"
@@ -89,32 +89,44 @@ export function BulkActionToolbar({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent role="menu" aria-label="Status options">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkStatusUpdate("todo")}
                   role="menuitem"
                 >
-                  <Clock className="mr-2 h-4 w-4 text-gray-500" aria-hidden="true" />
+                  <Clock
+                    className="mr-2 h-4 w-4 text-gray-500"
+                    aria-hidden="true"
+                  />
                   To Do
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkStatusUpdate("in_progress")}
                   role="menuitem"
                 >
-                  <Clock className="mr-2 h-4 w-4 text-blue-500" aria-hidden="true" />
+                  <Clock
+                    className="mr-2 h-4 w-4 text-blue-500"
+                    aria-hidden="true"
+                  />
                   In Progress
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkStatusUpdate("in_review")}
                   role="menuitem"
                 >
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-purple-500" aria-hidden="true" />
+                  <CheckCircle2
+                    className="mr-2 h-4 w-4 text-purple-500"
+                    aria-hidden="true"
+                  />
                   In Review
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkStatusUpdate("done")}
                   role="menuitem"
                 >
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
+                  <CheckCircle2
+                    className="mr-2 h-4 w-4 text-green-500"
+                    aria-hidden="true"
+                  />
                   Done
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -125,8 +137,8 @@ export function BulkActionToolbar({
           {canEdit && onBulkPriorityUpdate && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   aria-label="Update priority for selected tasks"
                   aria-haspopup="true"
@@ -137,32 +149,44 @@ export function BulkActionToolbar({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent role="menu" aria-label="Priority options">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkPriorityUpdate("urgent")}
                   role="menuitem"
                 >
-                  <span className="mr-2 h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
+                  <span
+                    className="mr-2 h-2 w-2 rounded-full bg-red-500"
+                    aria-hidden="true"
+                  />
                   Urgent
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkPriorityUpdate("high")}
                   role="menuitem"
                 >
-                  <span className="mr-2 h-2 w-2 rounded-full bg-orange-500" aria-hidden="true" />
+                  <span
+                    className="mr-2 h-2 w-2 rounded-full bg-orange-500"
+                    aria-hidden="true"
+                  />
                   High
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkPriorityUpdate("medium")}
                   role="menuitem"
                 >
-                  <span className="mr-2 h-2 w-2 rounded-full bg-yellow-500" aria-hidden="true" />
+                  <span
+                    className="mr-2 h-2 w-2 rounded-full bg-yellow-500"
+                    aria-hidden="true"
+                  />
                   Medium
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onBulkPriorityUpdate("low")}
                   role="menuitem"
                 >
-                  <span className="mr-2 h-2 w-2 rounded-full bg-gray-500" aria-hidden="true" />
+                  <span
+                    className="mr-2 h-2 w-2 rounded-full bg-gray-500"
+                    aria-hidden="true"
+                  />
                   Low
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -172,8 +196,8 @@ export function BulkActionToolbar({
           {/* More Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 aria-label="More bulk actions"
                 aria-haspopup="true"
@@ -199,9 +223,9 @@ export function BulkActionToolbar({
               )}
               {canDelete && onBulkDelete && (
                 <>
-                  {(canEdit && onBulkArchive) && <DropdownMenuSeparator />}
-                  <DropdownMenuItem 
-                    onClick={onBulkDelete} 
+                  {canEdit && onBulkArchive && <DropdownMenuSeparator />}
+                  <DropdownMenuItem
+                    onClick={onBulkDelete}
                     className="text-red-600 focus:text-red-600"
                     role="menuitem"
                   >
@@ -214,9 +238,9 @@ export function BulkActionToolbar({
           </DropdownMenu>
 
           {/* Clear Selection */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClearSelection}
             aria-label="Clear selection"
           >
@@ -230,4 +254,3 @@ export function BulkActionToolbar({
 }
 
 export default BulkActionToolbar;
-

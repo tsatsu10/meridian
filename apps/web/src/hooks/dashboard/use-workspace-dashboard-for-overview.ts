@@ -7,5 +7,9 @@ import { useDashboards } from "@/hooks/use-dashboards";
  */
 export function useWorkspaceDashboardForOverview() {
   const { activeDashboard, isLoading, error } = useDashboards();
-  return { activeDashboard, isLoadingDashboards: isLoading, dashboardsError: error };
+  return {
+    activeDashboard,
+    isLoadingDashboards: isLoading,
+    dashboardsError: error,
+  };
 }

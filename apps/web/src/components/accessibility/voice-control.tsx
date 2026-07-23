@@ -10,10 +10,8 @@ import {
   MicOff,
   Volume2,
   VolumeX,
-  Settings,
   AlertCircle,
   CheckCircle2,
-  RefreshCw,
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -53,10 +51,14 @@ interface SpeechRecognition extends EventTarget {
   start: () => void;
   stop: () => void;
   abort: () => void;
-  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void)
+    | null;
+  onerror:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void)
+    | null;
 }
 
 declare global {
@@ -121,7 +123,9 @@ export function VoiceControl() {
       command: "search",
       description: "Focus on search input",
       action: () => {
-        const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
+        const searchInput = document.querySelector(
+          'input[type="search"]',
+        ) as HTMLInputElement;
         if (searchInput) {
           searchInput.focus();
           speak("Search activated");
@@ -133,7 +137,9 @@ export function VoiceControl() {
       command: "help",
       description: "Show available commands",
       action: () => {
-        speak("Here are the available commands: " + commands.map(c => c.command).join(", "));
+        speak(
+          `Here are the available commands: ${commands.map((c) => c.command).join(", ")}`,
+        );
       },
       aliases: ["show commands", "what can you do"],
     },
@@ -157,7 +163,8 @@ export function VoiceControl() {
 
   // Check browser support
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     const supported = !!SpeechRecognition && "speechSynthesis" in window;
     setIsBrowserSupported(supported);
 
@@ -191,11 +198,11 @@ export function VoiceControl() {
         const results = event.results;
         const lastResult = results[results.length - 1];
         const transcriptText = lastResult[0].transcript.toLowerCase().trim();
-        
+
         setCurrentCommand(transcriptText);
 
         if (lastResult.isFinal) {
-          logger.debug("Final transcript:", transcriptText);
+          logger.debug("Final transcript:", { value: transcriptText });
           processCommand(transcriptText);
         }
       };
@@ -221,53 +228,60 @@ export function VoiceControl() {
   }, [isEnabled]);
 
   // Text-to-speech function
-  const speak = useCallback((text: string) => {
-    if (synthRef.current && isEnabled) {
-      // Cancel any ongoing speech
-      synthRef.current.cancel();
+  const speak = useCallback(
+    (text: string) => {
+      if (synthRef.current && isEnabled) {
+        // Cancel any ongoing speech
+        synthRef.current.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
 
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
 
-      synthRef.current.speak(utterance);
-    }
-  }, [isEnabled]);
+        synthRef.current.speak(utterance);
+      }
+    },
+    [isEnabled],
+  );
 
   // Process voice commands
-  const processCommand = useCallback((text: string) => {
-    const lowerText = text.toLowerCase().trim();
-    
-    // Find matching command
-    const matchedCommand = commands.find(cmd => {
-      const allCommands = [cmd.command, ...(cmd.aliases || [])];
-      return allCommands.some(c => lowerText.includes(c));
-    });
+  const processCommand = useCallback(
+    (text: string) => {
+      const lowerText = text.toLowerCase().trim();
 
-    const entry: TranscriptEntry = {
-      id: Date.now().toString(),
-      text: text,
-      timestamp: new Date(),
-      recognized: !!matchedCommand,
-      action: matchedCommand?.command,
-    };
+      // Find matching command
+      const matchedCommand = commands.find((cmd) => {
+        const allCommands = [cmd.command, ...(cmd.aliases || [])];
+        return allCommands.some((c) => lowerText.includes(c));
+      });
 
-    setTranscript(prev => [entry, ...prev].slice(0, 50)); // Keep last 50
+      const entry: TranscriptEntry = {
+        id: Date.now().toString(),
+        text: text,
+        timestamp: new Date(),
+        recognized: !!matchedCommand,
+        action: matchedCommand?.command,
+      };
 
-    if (matchedCommand) {
-      logger.debug("Executing command:", matchedCommand.command);
-      matchedCommand.action();
-    } else {
-      speak("Command not recognized. Say 'help' for available commands.");
-    }
+      setTranscript((prev) => [entry, ...prev].slice(0, 50)); // Keep last 50
 
-    setCurrentCommand("");
-  }, [commands, speak]);
+      if (matchedCommand) {
+        logger.debug("Executing command:", { value: matchedCommand.command });
+        matchedCommand.action();
+      } else {
+        speak("Command not recognized. Say 'help' for available commands.");
+      }
+
+      setCurrentCommand("");
+    },
+    // biome-ignore lint/correctness/useExhaustiveDependencies: commands is a static list rebuilt each render; keeping it as a dep is harmless and preserves latest handlers
+    [commands, speak],
+  );
 
   // Start listening
   const startListening = useCallback(() => {
@@ -293,14 +307,17 @@ export function VoiceControl() {
   }, [isListening]);
 
   // Toggle voice control
-  const toggleVoiceControl = useCallback((enabled: boolean) => {
-    setIsEnabled(enabled);
-    if (enabled) {
-      startListening();
-    } else {
-      stopListening();
-    }
-  }, [startListening, stopListening]);
+  const toggleVoiceControl = useCallback(
+    (enabled: boolean) => {
+      setIsEnabled(enabled);
+      if (enabled) {
+        startListening();
+      } else {
+        stopListening();
+      }
+    },
+    [startListening, stopListening],
+  );
 
   if (!isBrowserSupported) {
     return (
@@ -315,8 +332,9 @@ export function VoiceControl() {
           <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-red-900 dark:text-red-200">
-              <strong>Browser Not Supported:</strong> Your browser does not support the Web Speech API.
-              Please use a modern browser like Chrome, Edge, or Safari to access voice control features.
+              <strong>Browser Not Supported:</strong> Your browser does not
+              support the Web Speech API. Please use a modern browser like
+              Chrome, Edge, or Safari to access voice control features.
             </div>
           </div>
         </CardContent>
@@ -330,7 +348,10 @@ export function VoiceControl() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             {isListening ? (
-              <Mic className="h-5 w-5 text-green-600 animate-pulse" aria-hidden="true" />
+              <Mic
+                className="h-5 w-5 text-green-600 animate-pulse"
+                aria-hidden="true"
+              />
             ) : (
               <MicOff className="h-5 w-5 text-gray-600" aria-hidden="true" />
             )}
@@ -356,19 +377,23 @@ export function VoiceControl() {
       <CardContent className="space-y-6">
         {/* Status Indicators */}
         <div className="grid grid-cols-2 gap-4">
-          <div className={cn(
-            "p-4 border rounded-lg transition-colors",
-            isListening
-              ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-              : "border-border bg-background/50"
-          )}>
+          <div
+            className={cn(
+              "p-4 border rounded-lg transition-colors",
+              isListening
+                ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                : "border-border bg-background/50",
+            )}
+          >
             <div className="flex items-center gap-2 mb-2">
               {isListening ? (
                 <Mic className="h-4 w-4 text-green-600 animate-pulse" />
               ) : (
                 <MicOff className="h-4 w-4 text-muted-foreground" />
               )}
-              <span className="text-xs text-muted-foreground">Listening Status</span>
+              <span className="text-xs text-muted-foreground">
+                Listening Status
+              </span>
             </div>
             <div className="text-xl font-bold">
               {isListening ? "Listening..." : "Not Listening"}
@@ -380,19 +405,23 @@ export function VoiceControl() {
             )}
           </div>
 
-          <div className={cn(
-            "p-4 border rounded-lg transition-colors",
-            isSpeaking
-              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-              : "border-border bg-background/50"
-          )}>
+          <div
+            className={cn(
+              "p-4 border rounded-lg transition-colors",
+              isSpeaking
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                : "border-border bg-background/50",
+            )}
+          >
             <div className="flex items-center gap-2 mb-2">
               {isSpeaking ? (
                 <Volume2 className="h-4 w-4 text-blue-600 animate-pulse" />
               ) : (
                 <VolumeX className="h-4 w-4 text-muted-foreground" />
               )}
-              <span className="text-xs text-muted-foreground">Speech Status</span>
+              <span className="text-xs text-muted-foreground">
+                Speech Status
+              </span>
             </div>
             <div className="text-xl font-bold">
               {isSpeaking ? "Speaking..." : "Silent"}
@@ -410,7 +439,11 @@ export function VoiceControl() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => speak("Here are the available commands: " + commands.map(c => c.command).join(", "))}
+              onClick={() =>
+                speak(
+                  `Here are the available commands: ${commands.map((c) => c.command).join(", ")}`,
+                )
+              }
               disabled={!isEnabled}
             >
               <Volume2 className="h-4 w-4 mr-2" />
@@ -419,9 +452,9 @@ export function VoiceControl() {
           </div>
           <ScrollArea className="h-[250px] pr-4">
             <div className="space-y-2">
-              {commands.map((cmd, index) => (
+              {commands.map((cmd) => (
                 <div
-                  key={index}
+                  key={cmd.command}
                   className="p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-1">
@@ -429,12 +462,20 @@ export function VoiceControl() {
                       "{cmd.command}"
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">{cmd.description}</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {cmd.description}
+                  </p>
                   {cmd.aliases && cmd.aliases.length > 0 && (
                     <div className="flex items-center gap-1 flex-wrap">
-                      <span className="text-xs text-muted-foreground">Also:</span>
-                      {cmd.aliases.map((alias, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
+                      <span className="text-xs text-muted-foreground">
+                        Also:
+                      </span>
+                      {cmd.aliases.map((alias) => (
+                        <Badge
+                          key={alias}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {alias}
                         </Badge>
                       ))}
@@ -477,7 +518,7 @@ export function VoiceControl() {
                       "p-3 border rounded-lg",
                       entry.recognized
                         ? "border-green-200 bg-green-50 dark:bg-green-900/20"
-                        : "border-red-200 bg-red-50 dark:bg-red-900/20"
+                        : "border-red-200 bg-red-50 dark:bg-red-900/20",
                     )}
                   >
                     <div className="flex items-start justify-between mb-1">
@@ -508,9 +549,10 @@ export function VoiceControl() {
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-900 dark:text-blue-200">
-              <strong>Quick Start:</strong> Enable voice control using the toggle above, then say commands like
-              "go to dashboard", "create task", or "help" to see all available commands. The system provides
-              voice feedback for your actions.
+              <strong>Quick Start:</strong> Enable voice control using the
+              toggle above, then say commands like "go to dashboard", "create
+              task", or "help" to see all available commands. The system
+              provides voice feedback for your actions.
             </div>
           </div>
         </div>
@@ -518,4 +560,3 @@ export function VoiceControl() {
     </Card>
   );
 }
-

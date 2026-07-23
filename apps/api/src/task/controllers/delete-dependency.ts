@@ -5,7 +5,7 @@ import { taskDependencyTable } from "../../database/schema";
 
 async function deleteTaskDependency(dependencyId: string) {
   const db = getDatabase();
-  
+
   const [deletedDependency] = await db
     .delete(taskDependencyTable)
     .where(eq(taskDependencyTable.id, dependencyId))
@@ -20,4 +20,4 @@ async function deleteTaskDependency(dependencyId: string) {
   return deletedDependency;
 }
 
-export default deleteTaskDependency; 
+export default deleteTaskDependency;

@@ -15,7 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
@@ -37,7 +43,13 @@ export interface NotificationPreferences {
   autoRefresh: boolean;
   autoRefreshInterval: number;
   defaultView: "list" | "compact" | "grid";
-  defaultFilter: "all" | "unread" | "read" | "important" | "pinned" | "archived";
+  defaultFilter:
+    | "all"
+    | "unread"
+    | "read"
+    | "important"
+    | "pinned"
+    | "archived";
   defaultSort: "date" | "priority" | "type";
   defaultGroupBy: "none" | "date" | "type" | "priority";
   showToastNotifications: boolean;
@@ -70,7 +82,8 @@ export default function NotificationPreferencesDialog({
   currentPreferences,
   onSave,
 }: NotificationPreferencesDialogProps) {
-  const [preferences, setPreferences] = useState<NotificationPreferences>(currentPreferences);
+  const [preferences, setPreferences] =
+    useState<NotificationPreferences>(currentPreferences);
 
   useEffect(() => {
     setPreferences(currentPreferences);
@@ -174,7 +187,10 @@ export default function NotificationPreferencesDialog({
                     step={10}
                     value={[preferences.autoRefreshInterval]}
                     onValueChange={(value) =>
-                      setPreferences({ ...preferences, autoRefreshInterval: value[0] })
+                      setPreferences({
+                        ...preferences,
+                        autoRefreshInterval: value[0],
+                      })
                     }
                     className="w-full"
                   />
@@ -193,14 +209,21 @@ export default function NotificationPreferencesDialog({
             </div>
             <div className="space-y-3 pl-6">
               <div className="space-y-2">
-                <Label htmlFor="default-view" className="text-sm flex items-center gap-2">
+                <Label
+                  htmlFor="default-view"
+                  className="text-sm flex items-center gap-2"
+                >
                   <Eye className="h-3 w-3" />
                   Default view mode
                 </Label>
                 <Select
                   value={preferences.defaultView}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultView: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultView:
+                        value as NotificationPreferences["defaultView"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-view">
@@ -215,14 +238,21 @@ export default function NotificationPreferencesDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="default-filter" className="text-sm flex items-center gap-2">
+                <Label
+                  htmlFor="default-filter"
+                  className="text-sm flex items-center gap-2"
+                >
                   <Filter className="h-3 w-3" />
                   Default filter
                 </Label>
                 <Select
                   value={preferences.defaultFilter}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultFilter: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultFilter:
+                        value as NotificationPreferences["defaultFilter"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-filter">
@@ -240,14 +270,21 @@ export default function NotificationPreferencesDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="default-sort" className="text-sm flex items-center gap-2">
+                <Label
+                  htmlFor="default-sort"
+                  className="text-sm flex items-center gap-2"
+                >
                   <ArrowUpDown className="h-3 w-3" />
                   Default sort
                 </Label>
                 <Select
                   value={preferences.defaultSort}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultSort: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultSort:
+                        value as NotificationPreferences["defaultSort"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-sort">
@@ -262,14 +299,21 @@ export default function NotificationPreferencesDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="default-groupby" className="text-sm flex items-center gap-2">
+                <Label
+                  htmlFor="default-groupby"
+                  className="text-sm flex items-center gap-2"
+                >
                   <Layers className="h-3 w-3" />
                   Default grouping
                 </Label>
                 <Select
                   value={preferences.defaultGroupBy}
-                  onValueChange={(value: any) =>
-                    setPreferences({ ...preferences, defaultGroupBy: value })
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      defaultGroupBy:
+                        value as NotificationPreferences["defaultGroupBy"],
+                    })
                   }
                 >
                   <SelectTrigger id="default-groupby">
@@ -303,7 +347,10 @@ export default function NotificationPreferencesDialog({
                   id="toast-notifications"
                   checked={preferences.showToastNotifications}
                   onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, showToastNotifications: checked })
+                    setPreferences({
+                      ...preferences,
+                      showToastNotifications: checked,
+                    })
                   }
                 />
               </div>
@@ -315,7 +362,10 @@ export default function NotificationPreferencesDialog({
                   id="mark-read-click"
                   checked={preferences.markAsReadOnClick}
                   onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, markAsReadOnClick: checked })
+                    setPreferences({
+                      ...preferences,
+                      markAsReadOnClick: checked,
+                    })
                   }
                 />
               </div>
@@ -344,5 +394,3 @@ export default function NotificationPreferencesDialog({
 }
 
 export { DEFAULT_PREFERENCES };
-export type { NotificationPreferences };
-

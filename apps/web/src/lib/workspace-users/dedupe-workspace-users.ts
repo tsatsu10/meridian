@@ -23,12 +23,8 @@ export function dedupeWorkspaceUsersForList<
     }
     const a = existing;
     const b = row;
-    const aHasId = Boolean(
-      typeof a.id === "string" && a.id.trim().length > 0,
-    );
-    const bHasId = Boolean(
-      typeof b.id === "string" && b.id.trim().length > 0,
-    );
+    const aHasId = Boolean(typeof a.id === "string" && a.id.trim().length > 0);
+    const bHasId = Boolean(typeof b.id === "string" && b.id.trim().length > 0);
     if (aHasId !== bHasId) {
       map.set(key, aHasId ? a : b);
       continue;

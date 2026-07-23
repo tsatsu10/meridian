@@ -1,6 +1,6 @@
 /**
  * 🟢 User Availability Service
- * 
+ *
  * Manages user availability status, working hours, and timezone
  */
 
@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import logger from "../utils/logger";
 
 export interface AvailabilityUpdate {
-  status?: 'available' | 'away' | 'busy' | 'do_not_disturb' | 'offline';
+  status?: "available" | "away" | "busy" | "do_not_disturb" | "offline";
   statusMessage?: string;
   statusEmoji?: string;
   autoStatus?: boolean;
@@ -25,7 +25,7 @@ export interface AvailabilityUpdate {
 /**
  * Get user availability
  */
-export async function getUserAvailability(userId: string): Promise<any> {
+export async function getUserAvailability(userId: string) {
   const db = getDatabase();
 
   try {
@@ -82,8 +82,8 @@ export async function getUserAvailability(userId: string): Promise<any> {
  */
 export async function updateUserAvailability(
   userId: string,
-  data: AvailabilityUpdate
-): Promise<any> {
+  data: AvailabilityUpdate,
+) {
   const db = getDatabase();
 
   try {
@@ -110,16 +110,15 @@ export async function updateUserAvailability(
         .returning();
 
       return created[0];
-    } else {
-      // Update existing
-      const updated = await db
-        .update(userAvailability)
-        .set(updateData)
-        .where(eq(userAvailability.userId, userId))
-        .returning();
-
-      return updated[0];
     }
+    // Update existing
+    const updated = await db
+      .update(userAvailability)
+      .set(updateData)
+      .where(eq(userAvailability.userId, userId))
+      .returning();
+
+    return updated[0];
   } catch (error) {
     logger.error("Error updating user availability:", error);
     throw error;
@@ -147,15 +146,29 @@ export function getCurrentLocalTime(timezone: string): string {
 /**
  * Check if user is currently in working hours
  */
-export function isInWorkingHours(availability: any): boolean {
+export function isInWorkingHours(
+  availability:
+    | {
+        workingDays?: unknown;
+        workingHoursStart?: string | null;
+        workingHoursEnd?: string | null;
+      }
+    | null
+    | undefined,
+): boolean {
   if (!availability) return false;
 
   try {
     const now = new Date();
-    const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "lowercase" });
+    // "lowercase" is not a valid weekday option (it threw RangeError at runtime)
+    const dayOfWeek = now
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
 
     // Check if today is a working day
-    const workingDays = availability.workingDays || [];
+    const workingDays = Array.isArray(availability.workingDays)
+      ? availability.workingDays
+      : [];
     if (!workingDays.includes(dayOfWeek)) {
       return false;
     }
@@ -190,7 +203,7 @@ export async function updateAutoStatus(userId: string): Promise<void> {
   try {
     const availability = await getUserAvailability(userId);
 
-    if (!availability.autoStatus) {
+    if (!availability || !availability.autoStatus) {
       return; // Manual status is set
     }
 
@@ -235,4 +248,3 @@ export async function updateAutoStatus(userId: string): Promise<void> {
     logger.error("Error updating auto status:", error);
   }
 }
-

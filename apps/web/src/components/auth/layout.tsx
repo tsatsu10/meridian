@@ -10,23 +10,24 @@ interface AuthLayoutProps {
   gradientTo?: string;
 }
 
-export function AuthLayout({ 
-  children, 
-  title, 
-  subtitle, 
+export function AuthLayout({
+  children,
+  title,
+  subtitle,
   gradientFrom = "from-blue-400 via-purple-400 to-cyan-400",
-  gradientTo = "to-purple-600"
+  gradientTo = "to-purple-600",
 }: AuthLayoutProps) {
   return (
-    <div className={`w-full bg-gradient-to-br ${gradientFrom} ${gradientTo} relative`}>
+    <div
+      className={`w-full bg-gradient-to-br ${gradientFrom} ${gradientTo} relative`}
+    >
       {/* Background Shapes */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/5 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2" />
-      
+
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 py-12">
-        
         {/* Logo and Branding */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -58,16 +59,14 @@ export function AuthLayout({
             {/* Card Background Pattern */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 rounded-3xl" />
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-full blur-2xl" />
-            
+
             <div className="relative z-10">
               {/* Card Header */}
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   {title}
                 </h2>
-                <p className="text-gray-600">
-                  {subtitle}
-                </p>
+                <p className="text-gray-600">{subtitle}</p>
               </div>
 
               {/* Form Content */}
@@ -93,10 +92,27 @@ export function AuthLayout({
           </div>
 
           {/* Footer Links */}
+          {/* Placeholder actions until these pages exist — buttons, not
+              href="#" anchors that hijack navigation */}
           <div className="flex items-center space-x-4 text-sm">
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Plans</a>
-            <a href="#" className="hover:text-white transition-colors">Contact Us</a>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
+              Terms
+            </button>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
+              Plans
+            </button>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
+              Contact Us
+            </button>
           </div>
         </motion.div>
       </div>

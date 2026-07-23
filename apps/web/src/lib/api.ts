@@ -1,23 +1,19 @@
 import { fetchApi } from "./fetch";
 
-// API client interface
-interface ApiClient {
-  get: (endpoint: string, options?: { params?: Record<string, string> }) => Promise<any>;
-  post: (endpoint: string, data?: any, options?: RequestInit) => Promise<any>;
-  put: (endpoint: string, data?: any, options?: RequestInit) => Promise<any>;
-  delete: (endpoint: string, options?: RequestInit) => Promise<any>;
-}
-
-// Create API client instance
-export const api: ApiClient = {
-  get: async (endpoint: string, options?: { params?: Record<string, string> }) => {
+// Create API client instance. Return types are inferred from `fetchApi`
+// (the parsed JSON payload); request bodies accept any serializable value.
+export const api = {
+  get: async (
+    endpoint: string,
+    options?: { params?: Record<string, string> },
+  ) => {
     return fetchApi(endpoint, {
       method: "GET",
       params: options?.params,
     });
   },
 
-  post: async (endpoint: string, data?: any, options?: RequestInit) => {
+  post: async (endpoint: string, data?: unknown, options?: RequestInit) => {
     return fetchApi(endpoint, {
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
@@ -25,7 +21,7 @@ export const api: ApiClient = {
     });
   },
 
-  put: async (endpoint: string, data?: any, options?: RequestInit) => {
+  put: async (endpoint: string, data?: unknown, options?: RequestInit) => {
     return fetchApi(endpoint, {
       method: "PUT",
       body: data ? JSON.stringify(data) : undefined,

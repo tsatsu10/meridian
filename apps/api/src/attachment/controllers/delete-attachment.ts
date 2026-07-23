@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
-import { unlink } from "fs/promises";
-import { join } from "path";
+import { unlink } from "node:fs/promises";
+import { join } from "node:path";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable, userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 function resolveUploadDiskPath(fileUrl: string): string | null {
   const uploadsDir = join(process.cwd(), "uploads");
@@ -44,11 +44,13 @@ async function deleteAttachment(id: string, userEmail: string) {
     });
 
     if (!existingAttachment) {
-      throw new Error('Attachment not found');
+      throw new Error("Attachment not found");
     }
 
     if (existingAttachment.uploadedBy !== user.id) {
-      throw new Error('Permission denied: You can only delete your own attachments');
+      throw new Error(
+        "Permission denied: You can only delete your own attachments",
+      );
     }
 
     // Delete from database first
@@ -61,19 +63,28 @@ async function deleteAttachment(id: string, userEmail: string) {
         await unlink(filePath);
         logger.debug(`🗑️ File deleted: ${filePath}`);
       } else {
-        logger.warn(`⚠️ Could not resolve disk path for attachment URL: ${existingAttachment.fileUrl}`);
+        logger.warn(
+          `⚠️ Could not resolve disk path for attachment URL: ${existingAttachment.fileUrl}`,
+        );
       }
     } catch (fileError) {
-      logger.warn(`⚠️ Could not delete file: ${existingAttachment.fileUrl}`, fileError);
+      logger.warn(
+        `⚠️ Could not delete file: ${existingAttachment.fileUrl}`,
+        fileError,
+      );
       // Don't throw error if file deletion fails - database record is already deleted
     }
 
-    logger.debug(`📎 Attachment deleted: ${existingAttachment.fileName} (${existingAttachment.id})`);
+    logger.debug(
+      `📎 Attachment deleted: ${existingAttachment.fileName} (${existingAttachment.id})`,
+    );
     return { success: true };
   } catch (error) {
-    logger.error('❌ Delete attachment error:', error);
-    throw new Error(`Failed to delete attachment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error("❌ Delete attachment error:", error);
+    throw new Error(
+      `Failed to delete attachment: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
-export default deleteAttachment; 
+export default deleteAttachment;

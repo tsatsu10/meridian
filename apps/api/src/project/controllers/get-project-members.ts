@@ -1,18 +1,10 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import { projectMemberTable, userTable } from "../../database/schema";
 
 async function getProjectMembers(projectId: string) {
-  // TODO: projectMemberTable doesn't exist in schema yet
-  // Return empty array for now to prevent 500 errors
-  // This feature needs proper database schema migration
+  const db = getDatabase();
 
-  logger.debug(`⚠️ getProjectMembers called for project ${projectId} - table not implemented yet`);
-
-  return [];
-
-  /* Future implementation when projectMemberTable is added to schema:
   const members = await db
     .select({
       id: projectMemberTable.id,
@@ -32,12 +24,7 @@ async function getProjectMembers(projectId: string) {
     .leftJoin(userTable, eq(projectMemberTable.userEmail, userTable.email))
     .where(eq(projectMemberTable.projectId, projectId));
 
-  return members.map(member => ({
-    ...member,
-    permissions: member.permissions ? JSON.parse(member.permissions) : null,
-    notificationSettings: member.notificationSettings ? JSON.parse(member.notificationSettings) : null,
-  }));
-  */
+  return members;
 }
 
-export default getProjectMembers; 
+export default getProjectMembers;

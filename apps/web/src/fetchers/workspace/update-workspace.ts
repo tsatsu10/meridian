@@ -1,17 +1,18 @@
-import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
+import { looseClient } from "@/lib/rpc-client";
 
-type UpdateWorkspaceRequest = InferRequestType<
-  (typeof client.workspace)[":id"]["$put"]
->["param"] &
-  InferRequestType<(typeof client.workspace)[":id"]["$put"]>["json"];
+// The generated AppType is missing workspace[":id"], so type the request locally
+type UpdateWorkspaceRequest = {
+  id: string;
+  name: string;
+  description?: string;
+};
 
 const updateWorkspace = async ({
   id,
   name,
   description,
 }: UpdateWorkspaceRequest) => {
-  const response = await client.workspace[":id"].$put({
+  const response = await looseClient.workspace[":id"].$put({
     param: { id },
     json: { name, description },
   });

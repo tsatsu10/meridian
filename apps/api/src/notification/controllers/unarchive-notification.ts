@@ -2,7 +2,10 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { notifications as notificationTable } from "../../database/schema";
 
-async function unarchiveNotification(userEmail: string, notificationId: string) {
+async function unarchiveNotification(
+  userEmail: string,
+  notificationId: string,
+) {
   const db = getDatabase();
 
   // Update the notification's archived status
@@ -16,14 +19,17 @@ async function unarchiveNotification(userEmail: string, notificationId: string) 
     throw new Error("Notification not found");
   }
 
+  const [notification] = result;
+  if (!notification) {
+    throw new Error("Notification not found");
+  }
+
   // Verify the notification belongs to the user
-  if (result[0].userEmail !== userEmail) {
+  if (notification.userEmail !== userEmail) {
     throw new Error("Unauthorized");
   }
 
-  return result[0];
+  return notification;
 }
 
 export default unarchiveNotification;
-
-

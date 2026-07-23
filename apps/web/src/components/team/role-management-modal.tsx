@@ -1,5 +1,5 @@
 // @epic-3.4-teams: Dedicated role management modal for workspace-wide permissions
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,19 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Shield, 
-  Users, 
+import {
+  Shield,
+  Users,
   Search,
-  Crown,
   UserMinus,
   UserPlus,
   Settings,
-  ChevronDown,
   Edit3,
   Save,
   Lock,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -32,11 +30,9 @@ import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 const ShieldIcon = Shield as React.FC<{ className?: string }>;
 const UsersIcon = Users as React.FC<{ className?: string }>;
 const SearchIcon = Search as React.FC<{ className?: string }>;
-const CrownIcon = Crown as React.FC<{ className?: string }>;
 const UserMinusIcon = UserMinus as React.FC<{ className?: string }>;
 const UserPlusIcon = UserPlus as React.FC<{ className?: string }>;
 const SettingsIcon = Settings as React.FC<{ className?: string }>;
-const ChevronDownIcon = ChevronDown as React.FC<{ className?: string }>;
 const Edit3Icon = Edit3 as React.FC<{ className?: string }>;
 const SaveIcon = Save as React.FC<{ className?: string }>;
 const LockIcon = Lock as React.FC<{ className?: string }>;
@@ -59,6 +55,13 @@ interface Team {
   color: string;
 }
 
+type EnrichedMember = Member & {
+  teamId: string;
+  teamName: string;
+  teamColor: string;
+  projectName: string;
+};
+
 interface RoleManagementModalProps {
   open: boolean;
   onClose: () => void;
@@ -67,96 +70,145 @@ interface RoleManagementModalProps {
 }
 
 const roleHierarchy = [
-  { 
-    value: "workspace-manager", 
-    label: "Workspace Manager", 
-    description: "Full workspace control, can manage all teams, projects and members",
-    permissions: ["All permissions", "Workspace management", "Project creation/deletion", "Team creation/deletion", "Billing access", "User management", "Integration settings"]
+  {
+    value: "workspace-manager",
+    label: "Workspace Manager",
+    description:
+      "Full workspace control, can manage all teams, projects and members",
+    permissions: [
+      "All permissions",
+      "Workspace management",
+      "Project creation/deletion",
+      "Team creation/deletion",
+      "Billing access",
+      "User management",
+      "Integration settings",
+    ],
   },
-  { 
-    value: "department-head", 
-    label: "Department Head", 
+  {
+    value: "department-head",
+    label: "Department Head",
     description: "Can manage teams and projects within assigned departments",
-    permissions: ["Department management", "Team management", "Project oversight", "Member management", "Budget control", "Department analytics"]
+    permissions: [
+      "Department management",
+      "Team management",
+      "Project oversight",
+      "Member management",
+      "Budget control",
+      "Department analytics",
+    ],
   },
-  { 
-    value: "project-manager", 
-    label: "Project Manager", 
+  {
+    value: "project-manager",
+    label: "Project Manager",
     description: "Can manage specific projects and their associated teams",
-    permissions: ["Project management", "Team coordination", "Task assignment", "Project analytics", "Resource allocation", "Timeline management"]
+    permissions: [
+      "Project management",
+      "Team coordination",
+      "Task assignment",
+      "Project analytics",
+      "Resource allocation",
+      "Timeline management",
+    ],
   },
-  { 
-    value: "team-lead", 
-    label: "Team Lead", 
+  {
+    value: "team-lead",
+    label: "Team Lead",
     description: "Can manage team members and assign tasks within projects",
-    permissions: ["Task assignment", "Team member management", "Team analytics", "Time tracking", "Sprint planning", "Code review"]
+    permissions: [
+      "Task assignment",
+      "Team member management",
+      "Team analytics",
+      "Time tracking",
+      "Sprint planning",
+      "Code review",
+    ],
   },
-  { 
-    value: "member", 
-    label: "Member", 
+  {
+    value: "member",
+    label: "Member",
     description: "Can view and complete assigned tasks within projects",
-    permissions: ["Task completion", "Time tracking", "File access", "Basic collaboration", "Project participation", "Comment on issues"]
+    permissions: [
+      "Task completion",
+      "Time tracking",
+      "File access",
+      "Basic collaboration",
+      "Project participation",
+      "Comment on issues",
+    ],
   },
-  { 
-    value: "guest", 
-    label: "Guest", 
+  {
+    value: "guest",
+    label: "Guest",
     description: "Limited access to specific projects or teams",
-    permissions: ["View assigned tasks", "Basic file access", "Limited commenting", "Read-only project access"]
-  }
+    permissions: [
+      "View assigned tasks",
+      "Basic file access",
+      "Limited commenting",
+      "Read-only project access",
+    ],
+  },
 ];
 
 const views = [
   { id: "overview", label: "Role Overview", icon: ShieldIcon },
   { id: "members", label: "Member Roles", icon: UsersIcon },
-  { id: "permissions", label: "Permission Matrix", icon: SettingsIcon }
+  { id: "permissions", label: "Permission Matrix", icon: SettingsIcon },
 ];
 
-export default function RoleManagementModal({ 
-  open, 
-  onClose, 
+export default function RoleManagementModal({
+  open,
+  onClose,
   selectedTeam = null,
-  allTeams = []
+  allTeams = [],
 }: RoleManagementModalProps) {
   const [activeView, setActiveView] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(selectedTeam?.id || null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(
+    selectedTeam?.id || null,
+  );
   const [editingRoles, setEditingRoles] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [showMemberActions, setShowMemberActions] = useState<string | null>(null);
+  const [_selectedMember, setSelectedMember] = useState<EnrichedMember | null>(
+    null,
+  );
+  const [showMemberActions, setShowMemberActions] = useState<string | null>(
+    null,
+  );
 
   // Get permissions for role management
   const globalPermissions = useTeamPermissions();
 
   // Get all members across teams
-  const allMembers = allTeams.flatMap(team => 
-    team.members.map(member => ({ 
-      ...member, 
+  const allMembers = allTeams.flatMap((team) =>
+    team.members.map((member) => ({
+      ...member,
       teamId: team.id,
-      teamName: team.name, 
+      teamName: team.name,
       teamColor: team.color,
-      projectName: team.projectName
-    }))
+      projectName: team.projectName,
+    })),
   );
 
   // Filter members based on search and selected team
-  const filteredMembers = allMembers.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.role.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredMembers = allMembers.filter((member) => {
+    const matchesSearch =
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.role.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTeam = !selectedTeamId || member.teamId === selectedTeamId;
-    
+
     return matchesSearch && matchesTeam;
   });
 
   // Role distribution stats
-  const roleStats = roleHierarchy.map(role => ({
+  const roleStats = roleHierarchy.map((role) => ({
     ...role,
-    count: filteredMembers.filter(m => m.role === role.value).length
+    count: filteredMembers.filter((m) => m.role === role.value).length,
   }));
 
   const handleRoleChange = (memberId: string, newRole: string) => {
-    setEditingRoles(prev => ({ ...prev, [memberId]: newRole }));
+    setEditingRoles((prev) => ({ ...prev, [memberId]: newRole }));
     setHasChanges(true);
   };
 
@@ -172,30 +224,38 @@ export default function RoleManagementModal({
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "workspace-manager": return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
-      case "department-head": return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300";
-      case "project-manager": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-      case "team-lead": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "member": return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-      case "guest": return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+      case "workspace-manager":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
+      case "department-head":
+        return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300";
+      case "project-manager":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+      case "team-lead":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      case "member":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+      case "guest":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   };
 
-  const handleMemberAction = (action: string, member: any) => {
+  const handleMemberAction = (action: string, member: EnrichedMember) => {
     setShowMemberActions(null);
-    
+
     switch (action) {
-      case 'edit':
-        setSelectedMember(member);// In real app, this would open member edit modal
+      case "edit":
+        setSelectedMember(member); // In real app, this would open member edit modal
         break;
-      case 'remove':
-        if (confirm(`Remove ${member.name} from ${member.teamName}?`)) {// In real app, this would call API to remove member
+      case "remove":
+        if (confirm(`Remove ${member.name} from ${member.teamName}?`)) {
+          // In real app, this would call API to remove member
         }
         break;
-      case 'transfer':// In real app, this would open team transfer modal
+      case "transfer": // In real app, this would open team transfer modal
         break;
-      case 'view-profile':// In real app, this would open member profile modal
+      case "view-profile": // In real app, this would open member profile modal
         break;
     }
   };
@@ -217,13 +277,14 @@ export default function RoleManagementModal({
         <div className="flex space-x-1 bg-muted p-1 rounded-lg flex-shrink-0">
           {views.map((view) => (
             <button
+              type="button"
               key={view.id}
               onClick={() => setActiveView(view.id)}
               className={cn(
                 "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                activeView === view.id 
-                  ? "bg-background shadow-sm" 
-                  : "hover:bg-background/50"
+                activeView === view.id
+                  ? "bg-background shadow-sm"
+                  : "hover:bg-background/50",
               )}
             >
               <view.icon className="h-4 w-4" />
@@ -238,7 +299,10 @@ export default function RoleManagementModal({
             <div className="space-y-6 p-1">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {roleStats.map((role) => (
-                  <div key={role.value} className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+                  <div
+                    key={role.value}
+                    className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <Badge className={getRoleColor(role.value)}>
                         {role.label}
@@ -250,7 +314,10 @@ export default function RoleManagementModal({
                     </p>
                     <div className="space-y-1">
                       {role.permissions.slice(0, 2).map((permission) => (
-                        <div key={permission} className="flex items-center space-x-2 text-xs">
+                        <div
+                          key={permission}
+                          className="flex items-center space-x-2 text-xs"
+                        >
                           <CheckCircleIcon className="h-3 w-3 text-green-500" />
                           <span>{permission}</span>
                         </div>
@@ -268,11 +335,15 @@ export default function RoleManagementModal({
               <div className="p-4 bg-muted/30 rounded-lg">
                 <h3 className="font-medium mb-2">Role Hierarchy</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Each role inherits permissions from roles below it in the hierarchy.
+                  Each role inherits permissions from roles below it in the
+                  hierarchy.
                 </p>
                 <div className="flex items-center space-x-4">
                   {roleHierarchy.map((role, index) => (
-                    <div key={role.value} className="flex items-center space-x-2">
+                    <div
+                      key={role.value}
+                      className="flex items-center space-x-2"
+                    >
                       <Badge className={getRoleColor(role.value)}>
                         {role.label}
                       </Badge>
@@ -300,7 +371,7 @@ export default function RoleManagementModal({
                     className="pl-10"
                   />
                 </div>
-                
+
                 <select
                   value={selectedTeamId || ""}
                   onChange={(e) => setSelectedTeamId(e.target.value || null)}
@@ -316,7 +387,11 @@ export default function RoleManagementModal({
 
                 {hasChanges && (
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" onClick={handleCancelChanges}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelChanges}
+                    >
                       Cancel
                     </Button>
                     <Button size="sm" onClick={handleSaveChanges}>
@@ -333,17 +408,32 @@ export default function RoleManagementModal({
                   <table className="w-full">
                     <thead className="bg-muted/50 sticky top-0">
                       <tr>
-                        <th className="text-left p-4 font-medium text-sm">Member</th>
-                        <th className="text-left p-4 font-medium text-sm">Team</th>
-                        <th className="text-left p-4 font-medium text-sm">Project</th>
-                        <th className="text-left p-4 font-medium text-sm">Current Role</th>
-                        <th className="text-left p-4 font-medium text-sm">New Role</th>
-                        <th className="text-left p-4 font-medium text-sm">Actions</th>
+                        <th className="text-left p-4 font-medium text-sm">
+                          Member
+                        </th>
+                        <th className="text-left p-4 font-medium text-sm">
+                          Team
+                        </th>
+                        <th className="text-left p-4 font-medium text-sm">
+                          Project
+                        </th>
+                        <th className="text-left p-4 font-medium text-sm">
+                          Current Role
+                        </th>
+                        <th className="text-left p-4 font-medium text-sm">
+                          New Role
+                        </th>
+                        <th className="text-left p-4 font-medium text-sm">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {filteredMembers.map((member) => (
-                        <tr key={member.id} className="hover:bg-muted/50 transition-colors">
+                        <tr
+                          key={member.id}
+                          className="hover:bg-muted/50 transition-colors"
+                        >
                           <td className="p-4">
                             <div className="flex items-center space-x-3">
                               <Avatar className="w-8 h-8">
@@ -353,22 +443,29 @@ export default function RoleManagementModal({
                               </Avatar>
                               <div>
                                 <div className="font-medium">{member.name}</div>
-                                <div className="text-sm text-muted-foreground">{member.email}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {member.email}
+                                </div>
                               </div>
                             </div>
                           </td>
-                          
+
                           <td className="p-4">
                             <div className="flex items-center space-x-2">
-                              <div className={cn("w-3 h-3 rounded-full", (member as any).teamColor)} />
-                              <span className="text-sm">{(member as any).teamName}</span>
+                              <div
+                                className={cn(
+                                  "w-3 h-3 rounded-full",
+                                  member.teamColor,
+                                )}
+                              />
+                              <span className="text-sm">{member.teamName}</span>
                             </div>
                           </td>
-                          
+
                           <td className="p-4">
-                            <div className="text-sm">{(member as any).projectName}</div>
+                            <div className="text-sm">{member.projectName}</div>
                           </td>
-                          
+
                           <td className="p-4">
                             <Badge className={getRoleColor(member.role)}>
                               {member.role}
@@ -379,7 +476,9 @@ export default function RoleManagementModal({
                             {globalPermissions.isWorkspaceOwner ? (
                               <select
                                 value={editingRoles[member.id] || member.role}
-                                onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                                onChange={(e) =>
+                                  handleRoleChange(member.id, e.target.value)
+                                }
                                 className="px-2 py-1 border border-input bg-background rounded text-sm"
                               >
                                 {roleHierarchy.map((role) => (
@@ -399,33 +498,51 @@ export default function RoleManagementModal({
                           <td className="p-4">
                             {globalPermissions.isWorkspaceOwner ? (
                               <div className="relative">
-                                <Button 
-                                  variant="ghost" 
+                                <Button
+                                  variant="ghost"
                                   size="sm"
-                                  onClick={() => setShowMemberActions(showMemberActions === member.id ? null : member.id)}
+                                  onClick={() =>
+                                    setShowMemberActions(
+                                      showMemberActions === member.id
+                                        ? null
+                                        : member.id,
+                                    )
+                                  }
                                 >
                                   <Edit3Icon className="h-4 w-4" />
                                 </Button>
-                                
+
                                 {showMemberActions === member.id && (
                                   <div className="absolute right-0 top-10 w-48 bg-background border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg z-10">
                                     <div className="py-1">
                                       <button
-                                        onClick={() => handleMemberAction('edit', member)}
+                                        type="button"
+                                        onClick={() =>
+                                          handleMemberAction("edit", member)
+                                        }
                                         className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-muted w-full text-left"
                                       >
                                         <Edit3Icon className="h-4 w-4" />
                                         <span>Edit Member</span>
                                       </button>
                                       <button
-                                        onClick={() => handleMemberAction('view-profile', member)}
+                                        type="button"
+                                        onClick={() =>
+                                          handleMemberAction(
+                                            "view-profile",
+                                            member,
+                                          )
+                                        }
                                         className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-muted w-full text-left"
                                       >
                                         <UsersIcon className="h-4 w-4" />
                                         <span>View Profile</span>
                                       </button>
                                       <button
-                                        onClick={() => handleMemberAction('transfer', member)}
+                                        type="button"
+                                        onClick={() =>
+                                          handleMemberAction("transfer", member)
+                                        }
                                         className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-muted w-full text-left"
                                       >
                                         <UserPlusIcon className="h-4 w-4" />
@@ -433,7 +550,10 @@ export default function RoleManagementModal({
                                       </button>
                                       <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
                                       <button
-                                        onClick={() => handleMemberAction('remove', member)}
+                                        type="button"
+                                        onClick={() =>
+                                          handleMemberAction("remove", member)
+                                        }
                                         className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-muted w-full text-left text-red-600"
                                       >
                                         <UserMinusIcon className="h-4 w-4" />
@@ -465,7 +585,8 @@ export default function RoleManagementModal({
               <div className="p-4 bg-muted/30 rounded-lg">
                 <h3 className="font-medium mb-2">Permission Matrix</h3>
                 <p className="text-sm text-muted-foreground">
-                  Detailed view of what each role can do within the workspace and teams.
+                  Detailed view of what each role can do within the workspace
+                  and teams.
                 </p>
               </div>
 
@@ -474,9 +595,14 @@ export default function RoleManagementModal({
                   <table className="w-full">
                     <thead className="bg-muted/50 sticky top-0">
                       <tr>
-                        <th className="text-left p-4 font-medium text-sm">Permission</th>
+                        <th className="text-left p-4 font-medium text-sm">
+                          Permission
+                        </th>
                         {roleHierarchy.map((role) => (
-                          <th key={role.value} className="text-center p-4 font-medium text-sm">
+                          <th
+                            key={role.value}
+                            className="text-center p-4 font-medium text-sm"
+                          >
                             {role.label}
                           </th>
                         ))}
@@ -493,7 +619,7 @@ export default function RoleManagementModal({
                         "View All Projects",
                         // Team Management
                         "Create Teams",
-                        "Delete Teams", 
+                        "Delete Teams",
                         "Manage All Members",
                         // Analytics & Reports
                         "View Team Analytics",
@@ -508,48 +634,48 @@ export default function RoleManagementModal({
                         "Access Files",
                         "Update Profile",
                         // Workspace
-                        "Manage Workspace Settings"
+                        "Manage Workspace Settings",
                       ].map((permission) => (
-                        <tr key={permission} className="hover:bg-muted/50 transition-colors">
+                        <tr
+                          key={permission}
+                          className="hover:bg-muted/50 transition-colors"
+                        >
                           <td className="p-4 font-medium">{permission}</td>
                           {roleHierarchy.map((role) => (
                             <td key={role.value} className="p-4 text-center">
                               {/* Owner has all permissions */}
                               {role.value === "Owner" ? (
                                 <CheckCircleIcon className="h-5 w-5 text-green-500 mx-auto" />
-                              ) : /* Admin permissions */ 
-                              role.value === "Admin" && (
-                                permission.includes("Create") || 
-                                permission.includes("Edit") || 
-                                permission.includes("Manage") ||
-                                permission.includes("Delete") ||
-                                permission.includes("Archive") ||
-                                permission.includes("View") ||
-                                permission === "Assign Tasks" ||
-                                permission === "Track Time" ||
-                                permission === "Access Files" ||
-                                permission === "Update Profile"
-                              ) ? (
+                              ) : /* Admin permissions */
+                              role.value === "Admin" &&
+                                (permission.includes("Create") ||
+                                  permission.includes("Edit") ||
+                                  permission.includes("Manage") ||
+                                  permission.includes("Delete") ||
+                                  permission.includes("Archive") ||
+                                  permission.includes("View") ||
+                                  permission === "Assign Tasks" ||
+                                  permission === "Track Time" ||
+                                  permission === "Access Files" ||
+                                  permission === "Update Profile") ? (
                                 <CheckCircleIcon className="h-5 w-5 text-green-500 mx-auto" />
                               ) : /* Team Lead permissions */
-                              role.value === "Team Lead" && (
-                                permission === "View Team Analytics" ||
-                                permission === "Create Reports" ||
-                                permission === "Assign Tasks" ||
-                                permission === "View All Tasks" ||
-                                permission === "Track Time" ||
-                                permission === "Access Files" ||
-                                permission === "Update Profile" ||
-                                permission === "View All Projects"
-                              ) ? (
+                              role.value === "Team Lead" &&
+                                (permission === "View Team Analytics" ||
+                                  permission === "Create Reports" ||
+                                  permission === "Assign Tasks" ||
+                                  permission === "View All Tasks" ||
+                                  permission === "Track Time" ||
+                                  permission === "Access Files" ||
+                                  permission === "Update Profile" ||
+                                  permission === "View All Projects") ? (
                                 <CheckCircleIcon className="h-5 w-5 text-green-500 mx-auto" />
                               ) : /* Member permissions */
-                              role.value === "Member" && (
-                                permission === "View All Tasks" ||
-                                permission === "Track Time" ||
-                                permission === "Access Files" ||
-                                permission === "Update Profile"
-                              ) ? (
+                              role.value === "Member" &&
+                                (permission === "View All Tasks" ||
+                                  permission === "Track Time" ||
+                                  permission === "Access Files" ||
+                                  permission === "Update Profile") ? (
                                 <CheckCircleIcon className="h-5 w-5 text-green-500 mx-auto" />
                               ) : (
                                 <span className="text-muted-foreground">—</span>
@@ -568,8 +694,9 @@ export default function RoleManagementModal({
 
         {/* Click outside to close dropdown */}
         {showMemberActions && (
-          <div 
-            className="fixed inset-0 z-0" 
+          // biome-ignore lint/a11y/useKeyWithClickEvents: click-away overlay to close member actions (Esc/blur also close)
+          <div
+            className="fixed inset-0 z-0"
             onClick={() => setShowMemberActions(null)}
           />
         )}
@@ -580,8 +707,8 @@ export default function RoleManagementModal({
             {filteredMembers.length} members • {allTeams.length} teams
           </div>
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowMemberActions(null);
                 onClose();
@@ -600,4 +727,4 @@ export default function RoleManagementModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

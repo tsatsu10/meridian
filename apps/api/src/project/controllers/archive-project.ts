@@ -1,22 +1,23 @@
 /**
  * 🔒 Secure Archive Project Controller
- * 
+ *
  * Archives a project with:
  * - RBAC permission checking
  * - Workspace verification
  * - Audit logging
  * - User context tracking
- * 
+ *
  * @epic-1.1-rbac: Project archive requires canArchiveProjects permission
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { projects, userTable } from "../../database/schema";
 import { eq, and } from "drizzle-orm";
 import { auditLogger } from "../../utils/audit-logger";
 import { CacheInvalidation } from "../../utils/cache-invalidation";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
+import { errorMessage } from "../../utils/errors";
 
 /**
  * 🔒 SECURITY: Archive a project with full audit trail
@@ -26,6 +27,10 @@ export async function archiveProject(c: Context) {
   const projectId = c.req.param("id");
   const workspaceId = c.req.query("workspaceId");
   const userEmail = c.get("userEmail");
+
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
   const startTime = Date.now();
 
   if (!projectId) {
@@ -36,9 +41,12 @@ export async function archiveProject(c: Context) {
     return c.json({ error: "Workspace ID is required" }, 400);
   }
 
+  // Hoisted so the catch block's audit logging can see it
+  let user: typeof userTable.$inferSelect | undefined;
+
   try {
     // Get user context for audit logging
-    const [user] = await db
+    [user] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, userEmail))
@@ -52,43 +60,46 @@ export async function archiveProject(c: Context) {
     const existingProject = await db.query.projects.findFirst({
       where: and(
         eq(projects.id, projectId),
-        eq(projects.workspaceId, workspaceId)
+        eq(projects.workspaceId, workspaceId),
       ),
     });
 
     if (!existingProject) {
       // 📊 AUDIT: Failed archive attempt
       await auditLogger.logEvent({
-        eventType: 'workspace_operation',
-        action: 'project_archive',
+        eventType: "workspace_operation",
+        action: "project_archive",
         userId: user.id,
         userEmail: user.email,
         workspaceId,
         resourceId: projectId,
-        resourceType: 'project',
-        outcome: 'failure',
-        severity: 'medium',
+        resourceType: "project",
+        outcome: "failure",
+        severity: "medium",
         ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
         userAgent: c.req.header("user-agent"),
         details: {
-          reason: 'Project not found or workspace mismatch',
+          reason: "Project not found or workspace mismatch",
           requestedWorkspace: workspaceId,
           requestedProject: projectId,
           userRole: user.role,
         },
         metadata: {
           duration: Date.now() - startTime,
-          errorMessage: 'Project not found',
+          errorMessage: "Project not found",
           timestamp: new Date(),
-        }
+        },
       });
 
-      return c.json({ error: "Project not found or does not belong to workspace" }, 404);
+      return c.json(
+        { error: "Project not found or does not belong to workspace" },
+        404,
+      );
     }
 
     // Check if already archived
     if (existingProject.isArchived) {
-      return c.json({ 
+      return c.json({
         success: true,
         message: `Project "${existingProject.name}" is already archived`,
         project: existingProject,
@@ -105,19 +116,23 @@ export async function archiveProject(c: Context) {
       .where(eq(projects.id, projectId))
       .returning();
 
+    if (!archivedProject) {
+      return c.json({ error: "Archive returned no row" }, 500);
+    }
+
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Successful archive
     await auditLogger.logEvent({
-      eventType: 'workspace_operation',
-      action: 'project_archive',
+      eventType: "workspace_operation",
+      action: "project_archive",
       userId: user.id,
       userEmail: user.email,
       workspaceId,
       resourceId: projectId,
-      resourceType: 'project',
-      outcome: 'success',
-      severity: 'medium', // Archiving is medium severity
+      resourceType: "project",
+      outcome: "success",
+      severity: "medium", // Archiving is medium severity
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
@@ -130,7 +145,7 @@ export async function archiveProject(c: Context) {
       metadata: {
         duration,
         timestamp: new Date(),
-      }
+      },
     });
 
     // 🔴 CACHE: Invalidate project overview and workspace caches
@@ -141,32 +156,31 @@ export async function archiveProject(c: Context) {
       message: `Project "${archivedProject.name}" archived successfully`,
       project: archivedProject,
     });
-
   } catch (error) {
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Failed archive
     await auditLogger.logEvent({
-      eventType: 'workspace_operation',
-      action: 'project_archive',
-      userId: user?.id || 'unknown',
-      userEmail: userEmail || 'unknown',
+      eventType: "workspace_operation",
+      action: "project_archive",
+      userId: user?.id || "unknown",
+      userEmail: userEmail || "unknown",
       workspaceId,
       resourceId: projectId,
-      resourceType: 'project',
-      outcome: 'failure',
-      severity: 'high', // Failed operations are high severity
+      resourceType: "project",
+      outcome: "failure",
+      severity: "high", // Failed operations are high severity
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
-        userRole: user?.role || 'unknown',
+        error: errorMessage(error),
+        userRole: user?.role || "unknown",
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
-      }
+      },
     });
 
     logger.error("Error archiving project:", error);
@@ -182,6 +196,10 @@ export async function restoreProject(c: Context) {
   const projectId = c.req.param("id");
   const workspaceId = c.req.query("workspaceId");
   const userEmail = c.get("userEmail");
+
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
   const startTime = Date.now();
 
   if (!projectId) {
@@ -192,9 +210,12 @@ export async function restoreProject(c: Context) {
     return c.json({ error: "Workspace ID is required" }, 400);
   }
 
+  // Hoisted so the catch block's audit logging can see it
+  let user: typeof userTable.$inferSelect | undefined;
+
   try {
     // Get user context for audit logging
-    const [user] = await db
+    [user] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, userEmail))
@@ -208,43 +229,46 @@ export async function restoreProject(c: Context) {
     const existingProject = await db.query.projects.findFirst({
       where: and(
         eq(projects.id, projectId),
-        eq(projects.workspaceId, workspaceId)
+        eq(projects.workspaceId, workspaceId),
       ),
     });
 
     if (!existingProject) {
       // 📊 AUDIT: Failed restore attempt
       await auditLogger.logEvent({
-        eventType: 'workspace_operation',
-        action: 'project_restore',
+        eventType: "workspace_operation",
+        action: "project_restore",
         userId: user.id,
         userEmail: user.email,
         workspaceId,
         resourceId: projectId,
-        resourceType: 'project',
-        outcome: 'failure',
-        severity: 'medium',
+        resourceType: "project",
+        outcome: "failure",
+        severity: "medium",
         ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
         userAgent: c.req.header("user-agent"),
         details: {
-          reason: 'Project not found or workspace mismatch',
+          reason: "Project not found or workspace mismatch",
           requestedWorkspace: workspaceId,
           requestedProject: projectId,
           userRole: user.role,
         },
         metadata: {
           duration: Date.now() - startTime,
-          errorMessage: 'Project not found',
+          errorMessage: "Project not found",
           timestamp: new Date(),
-        }
+        },
       });
 
-      return c.json({ error: "Project not found or does not belong to workspace" }, 404);
+      return c.json(
+        { error: "Project not found or does not belong to workspace" },
+        404,
+      );
     }
 
     // Check if already active (not archived)
     if (!existingProject.isArchived) {
-      return c.json({ 
+      return c.json({
         success: true,
         message: `Project "${existingProject.name}" is already active`,
         project: existingProject,
@@ -261,19 +285,23 @@ export async function restoreProject(c: Context) {
       .where(eq(projects.id, projectId))
       .returning();
 
+    if (!restoredProject) {
+      return c.json({ error: "Restore returned no row" }, 500);
+    }
+
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Successful restore
     await auditLogger.logEvent({
-      eventType: 'workspace_operation',
-      action: 'project_restore',
+      eventType: "workspace_operation",
+      action: "project_restore",
       userId: user.id,
       userEmail: user.email,
       workspaceId,
       resourceId: projectId,
-      resourceType: 'project',
-      outcome: 'success',
-      severity: 'medium',
+      resourceType: "project",
+      outcome: "success",
+      severity: "medium",
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
@@ -286,7 +314,7 @@ export async function restoreProject(c: Context) {
       metadata: {
         duration,
         timestamp: new Date(),
-      }
+      },
     });
 
     // 🔴 CACHE: Invalidate project overview and workspace caches
@@ -297,36 +325,34 @@ export async function restoreProject(c: Context) {
       message: `Project "${restoredProject.name}" restored successfully`,
       project: restoredProject,
     });
-
   } catch (error) {
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Failed restore
     await auditLogger.logEvent({
-      eventType: 'workspace_operation',
-      action: 'project_restore',
-      userId: user?.id || 'unknown',
-      userEmail: userEmail || 'unknown',
+      eventType: "workspace_operation",
+      action: "project_restore",
+      userId: user?.id || "unknown",
+      userEmail: userEmail || "unknown",
       workspaceId,
       resourceId: projectId,
-      resourceType: 'project',
-      outcome: 'failure',
-      severity: 'high',
+      resourceType: "project",
+      outcome: "failure",
+      severity: "high",
       ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
       userAgent: c.req.header("user-agent"),
       details: {
-        error: error.message,
-        userRole: user?.role || 'unknown',
+        error: errorMessage(error),
+        userRole: user?.role || "unknown",
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
-      }
+      },
     });
 
     logger.error("Error restoring project:", error);
     return c.json({ error: "Failed to restore project" }, 500);
   }
 }
-

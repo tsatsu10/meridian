@@ -1,10 +1,12 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 async function deleteDependency(dependencyId: string) {
-  const response = await client.task.dependencies[":dependencyId"].$delete({
-    param: { dependencyId },
-  });
+  const response = await looseClient.task.dependencies[":dependencyId"].$delete(
+    {
+      param: { dependencyId },
+    },
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -31,4 +33,4 @@ function useDeleteDependency() {
   });
 }
 
-export default useDeleteDependency; 
+export default useDeleteDependency;

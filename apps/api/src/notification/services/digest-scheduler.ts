@@ -1,10 +1,10 @@
-import cron from 'node-cron';
-import { getDatabase } from '../../database/connection';
-import { digestSettings } from '../../database/schema';
-import { eq } from 'drizzle-orm';
-import { generateDigest } from './digest-generator';
-import { sendDigestEmail } from './email-service';
-import { logger } from '../../utils/logger';
+import * as cron from "node-cron";
+import { getDatabase } from "../../database/connection";
+import { digestSettings } from "../../database/schema";
+import { eq } from "drizzle-orm";
+import { generateDigest } from "./digest-generator";
+import { sendDigestEmail } from "./email-service";
+import { logger } from "../../utils/logger";
 
 class DigestScheduler {
   private dailyJob: cron.ScheduledTask | null = null;
@@ -16,16 +16,16 @@ class DigestScheduler {
    */
   public startDailyDigests() {
     // Run every hour to check for users whose digest time has arrived
-    this.dailyJob = cron.schedule('0 * * * *', async () => {
+    this.dailyJob = cron.schedule("0 * * * *", async () => {
       try {
-        logger.info('Running daily digest check...');
+        logger.info("Running daily digest check...");
         await this.processDailyDigests();
       } catch (error) {
-        logger.error('Daily digest job failed:', error);
+        logger.error("Daily digest job failed:", error);
       }
     });
 
-    logger.info('✅ Daily digest scheduler started (runs hourly)');
+    logger.info("✅ Daily digest scheduler started (runs hourly)");
   }
 
   /**
@@ -34,16 +34,16 @@ class DigestScheduler {
    */
   public startWeeklyDigests() {
     // Run every day at midnight to check for users whose weekly digest day has arrived
-    this.weeklyJob = cron.schedule('0 0 * * *', async () => {
+    this.weeklyJob = cron.schedule("0 0 * * *", async () => {
       try {
-        logger.info('Running weekly digest check...');
+        logger.info("Running weekly digest check...");
         await this.processWeeklyDigests();
       } catch (error) {
-        logger.error('Weekly digest job failed:', error);
+        logger.error("Weekly digest job failed:", error);
       }
     });
 
-    logger.info('✅ Weekly digest scheduler started (runs daily at midnight)');
+    logger.info("✅ Weekly digest scheduler started (runs daily at midnight)");
   }
 
   /**
@@ -52,7 +52,7 @@ class DigestScheduler {
   private async processDailyDigests() {
     const db = getDatabase();
     const currentHour = new Date().getHours();
-    const currentTime = `${String(currentHour).padStart(2, '0')}:00`;
+    const currentTime = `${String(currentHour).padStart(2, "0")}:00`;
 
     try {
       // Get all users with daily digests enabled for this hour
@@ -61,27 +61,32 @@ class DigestScheduler {
         .from(digestSettings)
         .where(eq(digestSettings.dailyEnabled, true));
 
-      const filteredUsers = usersToProcess.filter(setting => {
-        const [hour] = setting.dailyTime?.split(':') || ['09'];
-        return parseInt(hour) === currentHour;
+      const filteredUsers = usersToProcess.filter((setting) => {
+        const [hour = "09"] = setting.dailyTime?.split(":") || [];
+        return Number.parseInt(hour) === currentHour;
       });
 
-      logger.info(`Found ${filteredUsers.length} users for daily digest at ${currentTime}`);
+      logger.info(
+        `Found ${filteredUsers.length} users for daily digest at ${currentTime}`,
+      );
 
       for (const setting of filteredUsers) {
         try {
-          const digest = await generateDigest(setting.userEmail, 'daily');
-          
+          const digest = await generateDigest(setting.userEmail, "daily");
+
           if (digest) {
             await sendDigestEmail(digest);
             logger.info(`✅ Daily digest sent to ${setting.userEmail}`);
           }
         } catch (error) {
-          logger.error(`Failed to send daily digest to ${setting.userEmail}:`, error);
+          logger.error(
+            `Failed to send daily digest to ${setting.userEmail}:`,
+            error,
+          );
         }
       }
     } catch (error) {
-      logger.error('Failed to process daily digests:', error);
+      logger.error("Failed to process daily digests:", error);
     }
   }
 
@@ -99,26 +104,31 @@ class DigestScheduler {
         .from(digestSettings)
         .where(eq(digestSettings.weeklyEnabled, true));
 
-      const filteredUsers = usersToProcess.filter(setting => {
+      const filteredUsers = usersToProcess.filter((setting) => {
         return setting.weeklyDay === currentDay;
       });
 
-      logger.info(`Found ${filteredUsers.length} users for weekly digest on day ${currentDay}`);
+      logger.info(
+        `Found ${filteredUsers.length} users for weekly digest on day ${currentDay}`,
+      );
 
       for (const setting of filteredUsers) {
         try {
-          const digest = await generateDigest(setting.userEmail, 'weekly');
-          
+          const digest = await generateDigest(setting.userEmail, "weekly");
+
           if (digest) {
             await sendDigestEmail(digest);
             logger.info(`✅ Weekly digest sent to ${setting.userEmail}`);
           }
         } catch (error) {
-          logger.error(`Failed to send weekly digest to ${setting.userEmail}:`, error);
+          logger.error(
+            `Failed to send weekly digest to ${setting.userEmail}:`,
+            error,
+          );
         }
       }
     } catch (error) {
-      logger.error('Failed to process weekly digests:', error);
+      logger.error("Failed to process weekly digests:", error);
     }
   }
 
@@ -128,11 +138,11 @@ class DigestScheduler {
   public stop() {
     if (this.dailyJob) {
       this.dailyJob.stop();
-      logger.info('Daily digest scheduler stopped');
+      logger.info("Daily digest scheduler stopped");
     }
     if (this.weeklyJob) {
       this.weeklyJob.stop();
-      logger.info('Weekly digest scheduler stopped');
+      logger.info("Weekly digest scheduler stopped");
     }
   }
 
@@ -142,11 +152,9 @@ class DigestScheduler {
   public start() {
     this.startDailyDigests();
     this.startWeeklyDigests();
-    logger.info('🚀 All digest schedulers started');
+    logger.info("🚀 All digest schedulers started");
   }
 }
 
 // Singleton instance
 export const digestScheduler = new DigestScheduler();
-
-

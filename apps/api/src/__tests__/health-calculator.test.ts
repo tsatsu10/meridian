@@ -63,10 +63,16 @@ describe("Health Calculator Functions", () => {
     });
 
     it("should handle single task", () => {
-      expect(calculateCompletionRate([{ id: "1", status: "done", priority: "high" }])).toBe(
-        100
-      );
-      expect(calculateCompletionRate([{ id: "1", status: "todo", priority: "high" }])).toBe(0);
+      expect(
+        calculateCompletionRate([
+          { id: "1", status: "done", priority: "high" },
+        ]),
+      ).toBe(100);
+      expect(
+        calculateCompletionRate([
+          { id: "1", status: "todo", priority: "high" },
+        ]),
+      ).toBe(0);
     });
   });
 
@@ -74,10 +80,10 @@ describe("Health Calculator Functions", () => {
     it("should always produce scores between 0-100", () => {
       const validScores = [0, 25, 50, 75, 100, 42, 88, 15];
 
-      validScores.forEach((score) => {
+      for (const score of validScores) {
         expect(score).toBeGreaterThanOrEqual(0);
         expect(score).toBeLessThanOrEqual(100);
-      });
+      }
     });
 
     it("should handle extreme values", () => {
@@ -92,7 +98,7 @@ describe("Health Calculator Functions", () => {
 
   describe("Status Classification", () => {
     const getHealthStatus = (
-      score: number
+      score: number,
     ): "excellent" | "good" | "fair" | "critical" => {
       if (score >= 80) return "excellent";
       if (score >= 60) return "good";
@@ -140,14 +146,14 @@ describe("Health Calculator Functions", () => {
       timeline: number,
       taskQuality: number,
       resources: number,
-      riskLevel: number
+      riskLevel: number,
     ): number => {
       return Math.round(
         completion * 0.25 +
           timeline * 0.25 +
           taskQuality * 0.2 +
           resources * 0.15 +
-          (100 - riskLevel) * 0.15
+          (100 - riskLevel) * 0.15,
       );
     };
 
@@ -234,7 +240,7 @@ describe("Health Calculator Functions", () => {
       ];
 
       expect(calculateTaskHealth(fullTasks)).toBeGreaterThan(
-        calculateTaskHealth(noDescTasks)
+        calculateTaskHealth(noDescTasks),
       );
     });
 
@@ -260,7 +266,7 @@ describe("Health Calculator Functions", () => {
       ];
 
       expect(calculateTaskHealth(fullTasks)).toBeGreaterThan(
-        calculateTaskHealth(noDueDateTasks)
+        calculateTaskHealth(noDueDateTasks),
       );
     });
 
@@ -286,18 +292,21 @@ describe("Health Calculator Functions", () => {
       ];
 
       expect(calculateTaskHealth(assignedTasks)).toBeGreaterThan(
-        calculateTaskHealth(unassignedTasks)
+        calculateTaskHealth(unassignedTasks),
       );
     });
   });
 
   describe("Risk Calculation", () => {
-    const calculateRiskLevel = (tasks: MockTask[], project: MockProject): number => {
+    const calculateRiskLevel = (
+      tasks: MockTask[],
+      project: MockProject,
+    ): number => {
       let riskScore = 0;
 
       // High priority unstarted = high risk
       const highPriorityTodo = tasks.filter(
-        (t) => t.priority === "high" && t.status === "todo"
+        (t) => t.priority === "high" && t.status === "todo",
       );
       riskScore += highPriorityTodo.length * 10;
 
@@ -311,7 +320,7 @@ describe("Health Calculator Functions", () => {
       if (project.dueDate) {
         const now = new Date();
         const daysRemaining = Math.ceil(
-          (project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          (project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
         );
         const remainingTasks = tasks.filter((t) => t.status !== "done").length;
 
@@ -391,7 +400,8 @@ describe("Health Calculator Functions", () => {
 
       // Unassigned tasks
       const unassignedRatio =
-        (tasks.length - tasks.filter((t) => t.assigneeId).length) / tasks.length;
+        (tasks.length - tasks.filter((t) => t.assigneeId).length) /
+        tasks.length;
       if (unassignedRatio > 0.3) {
         score -= Math.min(20, unassignedRatio * 30);
       }
@@ -414,7 +424,7 @@ describe("Health Calculator Functions", () => {
       ];
 
       expect(calculateResourceAllocation(assignedTasks)).toBeGreaterThan(
-        calculateResourceAllocation(unassignedTasks)
+        calculateResourceAllocation(unassignedTasks),
       );
     });
 
@@ -433,7 +443,7 @@ describe("Health Calculator Functions", () => {
   describe("Timeline Health Assessment", () => {
     const calculateTimelineHealth = (
       project: MockProject,
-      tasks: MockTask[]
+      tasks: MockTask[],
     ): number => {
       let score = 100;
 
@@ -444,7 +454,7 @@ describe("Health Calculator Functions", () => {
       const now = new Date();
       const dueDate = new Date(project.dueDate);
       const daysRemaining = Math.ceil(
-        (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       // Overdue tasks
@@ -488,9 +498,15 @@ describe("Health Calculator Functions", () => {
       ];
 
       expect(
-        calculateTimelineHealth({ id: "proj1", dueDate: new Date() }, futureTasks)
+        calculateTimelineHealth(
+          { id: "proj1", dueDate: new Date() },
+          futureTasks,
+        ),
       ).toBeGreaterThan(
-        calculateTimelineHealth({ id: "proj1", dueDate: new Date() }, overdueTasks)
+        calculateTimelineHealth(
+          { id: "proj1", dueDate: new Date() },
+          overdueTasks,
+        ),
       );
     });
 
@@ -499,9 +515,9 @@ describe("Health Calculator Functions", () => {
       const laterDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
       expect(
-        calculateTimelineHealth({ id: "proj1", dueDate: soonDate }, [])
+        calculateTimelineHealth({ id: "proj1", dueDate: soonDate }, []),
       ).toBeLessThan(
-        calculateTimelineHealth({ id: "proj1", dueDate: laterDate }, [])
+        calculateTimelineHealth({ id: "proj1", dueDate: laterDate }, []),
       );
     });
   });
@@ -516,4 +532,3 @@ describe("Health Calculator Functions", () => {
  * - Individual factor isolation testing
  * - Edge case handling
  */
-

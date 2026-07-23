@@ -6,7 +6,7 @@ interface Activity {
   action: string;
   entityType: string;
   entityId: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   userName: string | null;
   userEmail: string | null;
@@ -29,7 +29,7 @@ export function useGetTeamActivity(
     limit?: number;
     offset?: number;
     enabled?: boolean;
-  }
+  },
 ) {
   const { limit = 50, offset = 0, enabled = true } = options || {};
 
@@ -48,4 +48,3 @@ export function useGetTeamActivity(
     staleTime: 1000 * 60, // 1 minute
   });
 }
-

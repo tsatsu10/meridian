@@ -10,7 +10,7 @@ import type { CreateTemplateInput } from "../../types/templates";
 
 export default async function createTemplate(
   input: CreateTemplateInput,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -49,20 +49,22 @@ export default async function createTemplate(
       taskIds.push(taskId);
       taskPositionToId[taskInput.position] = taskId;
 
-      await getDatabase().insert(templateTasks).values({
-        id: taskId,
-        templateId: templateId,
-        title: taskInput.title,
-        description: taskInput.description,
-        position: taskInput.position,
-        priority: taskInput.priority || "medium",
-        estimatedHours: taskInput.estimatedHours,
-        suggestedAssigneeRole: taskInput.suggestedAssigneeRole,
-        relativeStartDay: taskInput.relativeStartDay,
-        relativeDueDay: taskInput.relativeDueDay,
-        tags: taskInput.tags || [],
-        metadata: {},
-      });
+      await getDatabase()
+        .insert(templateTasks)
+        .values({
+          id: taskId,
+          templateId: templateId,
+          title: taskInput.title,
+          description: taskInput.description,
+          position: taskInput.position,
+          priority: taskInput.priority || "medium",
+          estimatedHours: taskInput.estimatedHours,
+          suggestedAssigneeRole: taskInput.suggestedAssigneeRole,
+          relativeStartDay: taskInput.relativeStartDay,
+          relativeDueDay: taskInput.relativeDueDay,
+          tags: taskInput.tags || [],
+          metadata: {},
+        });
 
       // Insert subtasks for this task
       if (taskInput.subtasks && taskInput.subtasks.length > 0) {
@@ -84,18 +86,22 @@ export default async function createTemplate(
     // Second pass: Create dependencies
     for (const taskInput of input.tasks) {
       const taskId = taskPositionToId[taskInput.position];
+      if (!taskId) continue;
 
       if (taskInput.dependencies && taskInput.dependencies.length > 0) {
         for (const depInput of taskInput.dependencies) {
-          const requiredTaskId = taskPositionToId[depInput.requiredTaskPosition];
+          const requiredTaskId =
+            taskPositionToId[depInput.requiredTaskPosition];
 
           if (requiredTaskId) {
-            await getDatabase().insert(templateDependencies).values({
-              id: createId(),
-              dependentTaskId: taskId,
-              requiredTaskId: requiredTaskId,
-              type: depInput.type || "blocks",
-            });
+            await getDatabase()
+              .insert(templateDependencies)
+              .values({
+                id: createId(),
+                dependentTaskId: taskId,
+                requiredTaskId: requiredTaskId,
+                type: depInput.type || "blocks",
+              });
           }
         }
       }
@@ -104,5 +110,3 @@ export default async function createTemplate(
 
   return template;
 }
-
-

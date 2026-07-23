@@ -11,4 +11,3 @@ async function invalidateSession(token: string) {
 }
 
 export default invalidateSession;
-

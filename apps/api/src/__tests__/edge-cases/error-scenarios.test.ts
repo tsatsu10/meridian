@@ -1,6 +1,6 @@
 /**
  * Edge Cases and Error Scenarios Tests
- * 
+ *
  * Comprehensive tests for error handling:
  * - Network failures
  * - Database errors
@@ -9,80 +9,82 @@
  * - Resource limits
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('Edge Cases and Error Scenarios', () => {
-  describe('Network Failures', () => {
-    it('should handle connection timeout', async () => {
+describe("Edge Cases and Error Scenarios", () => {
+  describe("Network Failures", () => {
+    it("should handle connection timeout", async () => {
       const error = {
-        code: 'ETIMEDOUT',
-        message: 'Connection timeout',
+        code: "ETIMEDOUT",
+        message: "Connection timeout",
       };
 
-      expect(error.code).toBe('ETIMEDOUT');
+      expect(error.code).toBe("ETIMEDOUT");
     });
 
-    it('should retry on network error', async () => {
+    it("should retry on network error", async () => {
       const retryConfig = {
         maxRetries: 3,
         currentAttempt: 1,
       };
 
-      expect(retryConfig.currentAttempt).toBeLessThanOrEqual(retryConfig.maxRetries);
+      expect(retryConfig.currentAttempt).toBeLessThanOrEqual(
+        retryConfig.maxRetries,
+      );
     });
 
-    it('should handle DNS errors', () => {
+    it("should handle DNS errors", () => {
       const error = {
-        code: 'ENOTFOUND',
-        message: 'DNS lookup failed',
+        code: "ENOTFOUND",
+        message: "DNS lookup failed",
       };
 
-      expect(error.code).toBe('ENOTFOUND');
+      expect(error.code).toBe("ENOTFOUND");
     });
   });
 
-  describe('Database Errors', () => {
-    it('should handle connection pool exhaustion', () => {
+  describe("Database Errors", () => {
+    it("should handle connection pool exhaustion", () => {
       const error = {
-        code: 'CONNECTION_POOL_TIMEOUT',
-        message: 'No connections available',
+        code: "CONNECTION_POOL_TIMEOUT",
+        message: "No connections available",
       };
 
-      expect(error.code).toBe('CONNECTION_POOL_TIMEOUT');
+      expect(error.code).toBe("CONNECTION_POOL_TIMEOUT");
     });
 
-    it('should handle deadlock', () => {
+    it("should handle deadlock", () => {
       const error = {
-        code: 'DEADLOCK_DETECTED',
-        message: 'Transaction deadlock',
+        code: "DEADLOCK_DETECTED",
+        message: "Transaction deadlock",
       };
 
-      expect(error.code).toBe('DEADLOCK_DETECTED');
+      expect(error.code).toBe("DEADLOCK_DETECTED");
     });
 
-    it('should handle constraint violations', () => {
+    it("should handle constraint violations", () => {
       const error = {
-        code: '23505',
-        constraint: 'users_email_unique',
-        message: 'Duplicate key violation',
+        code: "23505",
+        constraint: "users_email_unique",
+        message: "Duplicate key violation",
       };
 
-      expect(error.constraint).toBe('users_email_unique');
+      expect(error.constraint).toBe("users_email_unique");
     });
 
-    it('should handle foreign key violations', () => {
+    it("should handle foreign key violations", () => {
       const error = {
-        code: '23503',
-        constraint: 'tasks_project_id_fkey',
-        message: 'Foreign key violation',
+        code: "23503",
+        constraint: "tasks_project_id_fkey",
+        message: "Foreign key violation",
       };
 
-      expect(error.code).toBe('23503');
+      expect(error.code).toBe("23503");
     });
   });
 
-  describe('Validation Edge Cases', () => {
-    it('should handle null values', () => {
+  describe("Validation Edge Cases", () => {
+    it("should handle null values", () => {
       const data = {
         name: null,
         description: null,
@@ -93,7 +95,7 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should handle undefined values', () => {
+    it("should handle undefined values", () => {
       const data = {
         name: undefined,
       };
@@ -103,9 +105,9 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should handle empty strings', () => {
+    it("should handle empty strings", () => {
       const data = {
-        name: '',
+        name: "",
       };
 
       const isValid = data.name.trim().length > 0;
@@ -113,9 +115,9 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should handle whitespace-only strings', () => {
+    it("should handle whitespace-only strings", () => {
       const data = {
-        name: '   ',
+        name: "   ",
       };
 
       const isValid = data.name.trim().length > 0;
@@ -123,27 +125,27 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should handle special characters', () => {
+    it("should handle special characters", async () => {
+      // Exercise the real production sanitizer, not an inline regex copy.
+      const { stripHtml } = await import("../../lib/universal-sanitization");
       const data = {
         name: 'Test & <script>alert("xss")</script>',
       };
 
-      const sanitized = data.name.replace(/<[^>]*>/g, '');
-
-      expect(sanitized).not.toContain('<script>');
+      expect(stripHtml(data.name)).not.toContain("<script>");
     });
 
-    it('should handle unicode characters', () => {
+    it("should handle unicode characters", () => {
       const data = {
-        name: 'Test 你好 🎉',
+        name: "Test 你好 🎉",
       };
 
-      expect(data.name).toContain('你好');
-      expect(data.name).toContain('🎉');
+      expect(data.name).toContain("你好");
+      expect(data.name).toContain("🎉");
     });
 
-    it('should handle extremely long strings', () => {
-      const longString = 'a'.repeat(10000);
+    it("should handle extremely long strings", () => {
+      const longString = "a".repeat(10000);
 
       const maxLength = 1000;
       const isValid = longString.length <= maxLength;
@@ -152,20 +154,28 @@ describe('Edge Cases and Error Scenarios', () => {
     });
   });
 
-  describe('Concurrent Operations', () => {
-    it('should handle simultaneous updates', async () => {
+  describe("Concurrent Operations", () => {
+    it("should handle simultaneous updates", async () => {
       const operations = [
-        { userId: 'user-1', field: 'title', value: 'Title 1' },
-        { userId: 'user-2', field: 'description', value: 'Desc 1' },
+        { userId: "user-1", field: "title", value: "Title 1" },
+        { userId: "user-2", field: "description", value: "Desc 1" },
       ];
 
       expect(operations).toHaveLength(2);
     });
 
-    it('should detect conflict on same field', () => {
+    it("should detect conflict on same field", () => {
       const updates = [
-        { userId: 'user-1', field: 'title', timestamp: new Date('2025-01-01T10:00:00') },
-        { userId: 'user-2', field: 'title', timestamp: new Date('2025-01-01T10:00:01') },
+        {
+          userId: "user-1",
+          field: "title",
+          timestamp: new Date("2025-01-01T10:00:00"),
+        },
+        {
+          userId: "user-2",
+          field: "title",
+          timestamp: new Date("2025-01-01T10:00:01"),
+        },
       ];
 
       const hasConflict = updates[0].field === updates[1].field;
@@ -173,21 +183,21 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(hasConflict).toBe(true);
     });
 
-    it('should handle race conditions', () => {
+    it("should handle race conditions", () => {
       const result = {
-        winner: 'user-1',
-        loser: 'user-2',
-        resolution: 'last-write-wins',
+        winner: "user-1",
+        loser: "user-2",
+        resolution: "last-write-wins",
       };
 
-      expect(result.resolution).toBe('last-write-wins');
+      expect(result.resolution).toBe("last-write-wins");
     });
   });
 
-  describe('Resource Limits', () => {
-    it('should enforce workspace member limit', () => {
+  describe("Resource Limits", () => {
+    it("should enforce workspace member limit", () => {
       const workspace = {
-        plan: 'free',
+        plan: "free",
         maxMembers: 5,
         currentMembers: 5,
       };
@@ -197,9 +207,9 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(canAddMore).toBe(false);
     });
 
-    it('should enforce project limit', () => {
+    it("should enforce project limit", () => {
       const workspace = {
-        plan: 'free',
+        plan: "free",
         maxProjects: 3,
         currentProjects: 3,
       };
@@ -209,7 +219,7 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(canCreate).toBe(false);
     });
 
-    it('should enforce file upload size', () => {
+    it("should enforce file upload size", () => {
       const file = {
         size: 10 * 1024 * 1024, // 10 MB
         maxSize: 5 * 1024 * 1024, // 5 MB
@@ -220,11 +230,11 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should enforce rate limiting', () => {
+    it("should enforce rate limiting", () => {
       const requests = {
         count: 150,
         limit: 100,
-        window: '1 hour',
+        window: "1 hour",
       };
 
       const exceeded = requests.count > requests.limit;
@@ -233,8 +243,8 @@ describe('Edge Cases and Error Scenarios', () => {
     });
   });
 
-  describe('Boundary Conditions', () => {
-    it('should handle zero values', () => {
+  describe("Boundary Conditions", () => {
+    it("should handle zero values", () => {
       const task = {
         estimatedHours: 0,
         actualHours: 0,
@@ -245,44 +255,44 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(variance).toBe(0);
     });
 
-    it('should handle negative values', () => {
+    it("should handle negative values", () => {
       const value = -5;
       const isValid = value >= 0;
 
       expect(isValid).toBe(false);
     });
 
-    it('should handle maximum integer', () => {
+    it("should handle maximum integer", () => {
       const value = Number.MAX_SAFE_INTEGER;
       const isValid = value <= Number.MAX_SAFE_INTEGER;
 
       expect(isValid).toBe(true);
     });
 
-    it('should handle dates at boundaries', () => {
+    it("should handle dates at boundaries", () => {
       const dates = {
-        past: new Date('1970-01-01'),
-        future: new Date('2099-12-31'),
+        past: new Date("1970-01-01"),
+        future: new Date("2099-12-31"),
       };
 
       expect(dates.past.getTime()).toBeLessThan(dates.future.getTime());
     });
   });
 
-  describe('Data Corruption Scenarios', () => {
-    it('should handle missing required fields', () => {
+  describe("Data Corruption Scenarios", () => {
+    it("should handle missing required fields", () => {
       const data = {
         // Missing required 'name' field
-        description: 'Test',
+        description: "Test",
       };
 
-      const isValid = 'name' in data && data.name;
+      const isValid = "name" in data && data.name;
 
       expect(isValid).toBe(false);
     });
 
-    it('should handle invalid JSON', () => {
-      const invalidJSON = '{invalid json}';
+    it("should handle invalid JSON", () => {
+      const invalidJSON = "{invalid json}";
 
       let parsed = null;
       try {
@@ -294,8 +304,8 @@ describe('Edge Cases and Error Scenarios', () => {
       expect(parsed).toBeNull();
     });
 
-    it('should handle circular references', () => {
-      const obj: any = { name: 'test' };
+    it("should handle circular references", () => {
+      const obj: Record<string, unknown> = { name: "test" };
       obj.self = obj;
 
       // JSON.stringify would throw
@@ -312,89 +322,93 @@ describe('Edge Cases and Error Scenarios', () => {
     });
   });
 
-  describe('Permission Edge Cases', () => {
-    it('should handle expired permissions', () => {
+  describe("Permission Edge Cases", () => {
+    it("should handle expired permissions", () => {
       const permission = {
-        userId: 'user-123',
-        permission: 'admin.access',
-        expiresAt: new Date('2025-01-01'),
+        userId: "user-123",
+        permission: "admin.access",
+        expiresAt: new Date("2025-01-01"),
       };
 
-      const now = new Date('2025-01-02');
+      const now = new Date("2025-01-02");
       const isExpired = permission.expiresAt < now;
 
       expect(isExpired).toBe(true);
     });
 
-    it('should handle conflicting permissions', () => {
+    it("should handle conflicting permissions", () => {
       const permissions = [
-        { permission: 'task.delete', effect: 'grant' },
-        { permission: 'task.delete', effect: 'revoke' },
+        { permission: "task.delete", effect: "grant" },
+        { permission: "task.delete", effect: "revoke" },
       ];
 
       // Revoke should take precedence
-      const hasPermission = permissions.some(p => p.effect === 'grant' && p.permission === 'task.delete') &&
-                           !permissions.some(p => p.effect === 'revoke' && p.permission === 'task.delete');
+      const hasPermission =
+        permissions.some(
+          (p) => p.effect === "grant" && p.permission === "task.delete",
+        ) &&
+        !permissions.some(
+          (p) => p.effect === "revoke" && p.permission === "task.delete",
+        );
 
       expect(hasPermission).toBe(false);
     });
   });
 
-  describe('State Management Edge Cases', () => {
-    it('should handle rapid state updates', () => {
+  describe("State Management Edge Cases", () => {
+    it("should handle rapid state updates", () => {
       const updates = [
-        { status: 'todo' },
-        { status: 'in_progress' },
-        { status: 'done' },
+        { status: "todo" },
+        { status: "in_progress" },
+        { status: "done" },
       ];
 
       const finalState = updates[updates.length - 1];
 
-      expect(finalState.status).toBe('done');
+      expect(finalState.status).toBe("done");
     });
 
-    it('should handle state rollback', () => {
+    it("should handle state rollback", () => {
       const history = [
-        { state: 'A', timestamp: new Date('2025-01-01T10:00:00') },
-        { state: 'B', timestamp: new Date('2025-01-01T10:01:00') },
-        { state: 'C', timestamp: new Date('2025-01-01T10:02:00') },
+        { state: "A", timestamp: new Date("2025-01-01T10:00:00") },
+        { state: "B", timestamp: new Date("2025-01-01T10:01:00") },
+        { state: "C", timestamp: new Date("2025-01-01T10:02:00") },
       ];
 
       const rollbackTo = history[1];
 
-      expect(rollbackTo.state).toBe('B');
+      expect(rollbackTo.state).toBe("B");
     });
   });
 
-  describe('Cache Invalidation', () => {
-    it('should invalidate cache on update', () => {
+  describe("Cache Invalidation", () => {
+    it("should invalidate cache on update", () => {
       const cache = {
-        key: 'workspace-123',
-        data: { name: 'Old Name' },
+        key: "workspace-123",
+        data: { name: "Old Name" },
         valid: false,
       };
 
       expect(cache.valid).toBe(false);
     });
 
-    it('should handle cache miss', () => {
+    it("should handle cache miss", () => {
       const cache = new Map();
-      const value = cache.get('non-existent-key');
+      const value = cache.get("non-existent-key");
 
       expect(value).toBeUndefined();
     });
 
-    it('should handle cache expiration', () => {
+    it("should handle cache expiration", () => {
       const cacheEntry = {
-        data: { name: 'Test' },
-        expiresAt: new Date('2025-01-01'),
+        data: { name: "Test" },
+        expiresAt: new Date("2025-01-01"),
       };
 
-      const now = new Date('2025-01-02');
+      const now = new Date("2025-01-02");
       const isExpired = cacheEntry.expiresAt < now;
 
       expect(isExpired).toBe(true);
     });
   });
 });
-

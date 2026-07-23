@@ -9,17 +9,18 @@ export function useWorkspacePermission() {
 
   // 🚨 SECURITY: More restrictive demo user detection
   // Only allow demo permissions for legitimate demo accounts, not just any email pattern
-  const isDemoUser = user?.email?.endsWith('@meridian.app') && 
-                    (user?.email?.includes('demo') || user?.name?.includes('Demo')) &&
-                    user?.email !== 'user@meridian.app'; // Exclude generic user emails
+  const isDemoUser =
+    user?.email?.endsWith("@meridian.app") &&
+    (user?.email?.includes("demo") || user?.name?.includes("Demo")) &&
+    user?.email !== "user@meridian.app"; // Exclude generic user emails
 
   // Determine if user is workspace owner - STRICT CHECK
   const isOwner = workspace?.ownerEmail === user?.email;
 
   // 🔒 SECURITY: Demo users still need proper workspace access
   // Demo mode should not bypass workspace membership checks
-  const hasWorkspaceAccess = isOwner || 
-    (isDemoUser && workspace?.ownerEmail === user?.email); // Demo users must still own or be invited
+  const hasWorkspaceAccess =
+    isOwner || (isDemoUser && workspace?.ownerEmail === user?.email); // Demo users must still own or be invited
 
   const checkPermission = (
     requiredRole: PermissionLevel = "member",
@@ -28,7 +29,9 @@ export function useWorkspacePermission() {
 
     // 🚨 SECURITY: Even demo users must have legitimate workspace access
     if (!hasWorkspaceAccess) {
-      console.warn(`🔒 SECURITY: User ${user.email} denied access to workspace ${workspace.id} - no membership found`);
+      console.warn(
+        `🔒 SECURITY: User ${user.email} denied access to workspace ${workspace.id} - no membership found`,
+      );
       return false;
     }
 
@@ -48,7 +51,7 @@ export function useWorkspacePermission() {
 
     // Determine user's current role in workspace
     const userRole: PermissionLevel = isOwner ? "owner" : "member"; // Simplified for now
-    
+
     return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
   };
 

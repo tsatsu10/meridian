@@ -11,7 +11,7 @@ const inviteRoutes = new Hono();
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Resend invitation
-inviteRoutes.post("/resend", authMiddleware, async (c) => {
+inviteRoutes.post("/resend", authMiddleware(), async (c) => {
   try {
     const workspaceId = c.get("workspaceId") as string | undefined;
     const userId = c.get("userId") as string | undefined;
@@ -88,7 +88,7 @@ inviteRoutes.post("/resend", authMiddleware, async (c) => {
 });
 
 // Generate invite link
-inviteRoutes.post("/generate-link", authMiddleware, async (c) => {
+inviteRoutes.post("/generate-link", authMiddleware(), async (c) => {
   try {
     const workspaceId = c.get("workspaceId") as string | undefined;
     const userId = c.get("userId") as string | undefined;

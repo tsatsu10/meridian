@@ -1,20 +1,25 @@
 /**
  * 🔐 Role Audit Service
- * 
+ *
  * Comprehensive auditing for all RBAC operations:
  * - Role assignments and removals
  * - Permission grants and revokes
  * - Custom permission overrides
  * - Role hierarchy changes
- * 
+ *
  * Provides complete audit trail for compliance and security.
  */
 
-import { createId } from '@paralleldrive/cuid2';
-import { getDatabase } from '../../database/connection';
-import { roleAuditLog, roleHistoryTable, userTable } from '../../database/schema';
-import { winstonLog } from '../../utils/winston-logger';
-import { auditLogger } from '../../utils/audit-logger';
+import { createId } from "@paralleldrive/cuid2";
+import { eq, desc } from "drizzle-orm";
+import { getDatabase } from "../../database/connection";
+import {
+  roleAuditLog,
+  roleHistoryTable,
+  userTable,
+} from "../../database/schema";
+import { winstonLog } from "../../utils/winston-logger";
+import { auditLogger } from "../../utils/audit-logger";
 
 export interface RoleAuditContext {
   userId: string;
@@ -31,21 +36,21 @@ export interface RoleChangeDetails {
   newRole: string;
   previousPermissions?: string[];
   newPermissions?: string[];
-  previousScope?: any;
-  newScope?: any;
+  previousScope?: Record<string, unknown>;
+  newScope?: Record<string, unknown>;
 }
 
 /**
  * Role Audit Service
  */
-export class RoleAuditService {
+export const RoleAuditService = {
   /**
    * Log role assignment
    */
-  static async logRoleAssignment(
+  async logRoleAssignment(
     ctx: RoleAuditContext,
     details: RoleChangeDetails,
-    assignmentId?: string
+    assignmentId?: string,
   ): Promise<void> {
     const db = getDatabase();
 
@@ -53,21 +58,23 @@ export class RoleAuditService {
       // Create audit log entry
       await db.insert(roleAuditLog).values({
         id: createId(),
-        action: 'role_assigned',
+        action: "role_assigned",
         roleId: null, // Legacy field, can be null
         userId: ctx.userId,
         assignmentId,
-        previousValue: details.previousRole ? {
-          role: details.previousRole,
-          permissions: details.previousPermissions,
-          scope: details.previousScope,
-        } : null,
+        previousValue: details.previousRole
+          ? {
+              role: details.previousRole,
+              permissions: details.previousPermissions,
+              scope: details.previousScope,
+            }
+          : null,
         newValue: {
           role: details.newRole,
           permissions: details.newPermissions,
           scope: details.newScope,
         },
-        reason: ctx.reason || 'Role assigned',
+        reason: ctx.reason || "Role assigned",
         changedBy: ctx.changedBy,
         workspaceId: ctx.workspaceId,
         ipAddress: ctx.ipAddress,
@@ -81,9 +88,9 @@ export class RoleAuditService {
         userId: ctx.userId,
         role: details.newRole,
         workspaceId: ctx.workspaceId,
-        action: 'assigned',
+        action: "assigned",
         performedBy: ctx.changedBy,
-        reason: ctx.reason || 'Role assigned',
+        reason: ctx.reason || "Role assigned",
         notes: ctx.notes,
         metadata: {
           previousRole: details.previousRole,
@@ -93,28 +100,32 @@ export class RoleAuditService {
       });
 
       // Log with Winston
-      winstonLog.security('Role assigned', {
-        userId: ctx.userId,
-        previousRole: details.previousRole,
-        newRole: details.newRole,
-        changedBy: ctx.changedBy,
-        workspaceId: ctx.workspaceId,
-        reason: ctx.reason,
-      }, {
-        category: 'AUTH',
-        requestId: ctx.notes,
-      });
+      winstonLog.security(
+        "Role assigned",
+        {
+          userId: ctx.userId,
+          previousRole: details.previousRole,
+          newRole: details.newRole,
+          changedBy: ctx.changedBy,
+          workspaceId: ctx.workspaceId,
+          reason: ctx.reason,
+        },
+        {
+          category: "AUTH",
+          requestId: ctx.notes,
+        },
+      );
 
       // Log with audit logger
       await auditLogger.logEvent({
-        eventType: 'role_change',
-        action: 'role_assigned',
+        eventType: "role_change",
+        action: "role_assigned",
         userId: ctx.changedBy,
         workspaceId: ctx.workspaceId,
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
-        outcome: 'success',
-        severity: 'high',
+        outcome: "success",
+        severity: "high",
         details: {
           targetUserId: ctx.userId,
           previousRole: details.previousRole,
@@ -125,38 +136,41 @@ export class RoleAuditService {
           timestamp: new Date(),
         },
       });
-
     } catch (error) {
-      winstonLog.error('Failed to log role assignment', {
-        error: error instanceof Error ? error.message : String(error),
-        ctx,
-        details,
-      }, { category: 'AUTH' });
-      
+      winstonLog.error(
+        "Failed to log role assignment",
+        {
+          error: error instanceof Error ? error.message : String(error),
+          ctx,
+          details,
+        },
+        "AUTH",
+      );
+
       // Don't throw - audit logging failure shouldn't block the operation
     }
-  }
+  },
 
   /**
    * Log role removal
    */
-  static async logRoleRemoval(
+  async logRoleRemoval(
     ctx: RoleAuditContext,
     previousRole: string,
-    assignmentId?: string
+    assignmentId?: string,
   ): Promise<void> {
     const db = getDatabase();
 
     try {
       await db.insert(roleAuditLog).values({
         id: createId(),
-        action: 'role_removed',
+        action: "role_removed",
         roleId: null,
         userId: ctx.userId,
         assignmentId,
         previousValue: { role: previousRole },
-        newValue: { role: 'guest' },
-        reason: ctx.reason || 'Role removed',
+        newValue: { role: "guest" },
+        reason: ctx.reason || "Role removed",
         changedBy: ctx.changedBy,
         workspaceId: ctx.workspaceId,
         ipAddress: ctx.ipAddress,
@@ -169,9 +183,9 @@ export class RoleAuditService {
         userId: ctx.userId,
         role: previousRole,
         workspaceId: ctx.workspaceId,
-        action: 'removed',
+        action: "removed",
         performedBy: ctx.changedBy,
-        reason: ctx.reason || 'Role removed',
+        reason: ctx.reason || "Role removed",
         notes: ctx.notes,
         metadata: {
           previousRole,
@@ -179,7 +193,7 @@ export class RoleAuditService {
         },
       });
 
-      winstonLog.security('Role removed', {
+      winstonLog.security("Role removed", {
         userId: ctx.userId,
         previousRole,
         changedBy: ctx.changedBy,
@@ -187,43 +201,42 @@ export class RoleAuditService {
       });
 
       await auditLogger.logEvent({
-        eventType: 'role_change',
-        action: 'role_removed',
+        eventType: "role_change",
+        action: "role_removed",
         userId: ctx.changedBy,
         workspaceId: ctx.workspaceId,
-        outcome: 'success',
-        severity: 'high',
+        outcome: "success",
+        severity: "high",
         details: {
           targetUserId: ctx.userId,
           previousRole,
         },
       });
-
     } catch (error) {
-      winstonLog.error('Failed to log role removal', { error, ctx });
+      winstonLog.error("Failed to log role removal", { error, ctx });
     }
-  }
+  },
 
   /**
    * Log permission grant
    */
-  static async logPermissionGrant(
+  async logPermissionGrant(
     ctx: RoleAuditContext,
     permission: string,
-    scope?: any
+    scope?: Record<string, unknown>,
   ): Promise<void> {
     const db = getDatabase();
 
     try {
       await db.insert(roleAuditLog).values({
         id: createId(),
-        action: 'permission_granted',
+        action: "permission_granted",
         roleId: null,
         userId: ctx.userId,
         assignmentId: null,
         previousValue: null,
         newValue: { permission, scope },
-        reason: ctx.reason || 'Permission granted',
+        reason: ctx.reason || "Permission granted",
         changedBy: ctx.changedBy,
         workspaceId: ctx.workspaceId,
         ipAddress: ctx.ipAddress,
@@ -231,38 +244,37 @@ export class RoleAuditService {
         timestamp: new Date(),
       });
 
-      winstonLog.security('Permission granted', {
+      winstonLog.security("Permission granted", {
         userId: ctx.userId,
         permission,
         scope,
         changedBy: ctx.changedBy,
       });
-
     } catch (error) {
-      winstonLog.error('Failed to log permission grant', { error, ctx });
+      winstonLog.error("Failed to log permission grant", { error, ctx });
     }
-  }
+  },
 
   /**
    * Log permission revoke
    */
-  static async logPermissionRevoke(
+  async logPermissionRevoke(
     ctx: RoleAuditContext,
     permission: string,
-    scope?: any
+    scope?: Record<string, unknown>,
   ): Promise<void> {
     const db = getDatabase();
 
     try {
       await db.insert(roleAuditLog).values({
         id: createId(),
-        action: 'permission_revoked',
+        action: "permission_revoked",
         roleId: null,
         userId: ctx.userId,
         assignmentId: null,
         previousValue: { permission, scope },
         newValue: null,
-        reason: ctx.reason || 'Permission revoked',
+        reason: ctx.reason || "Permission revoked",
         changedBy: ctx.changedBy,
         workspaceId: ctx.workspaceId,
         ipAddress: ctx.ipAddress,
@@ -270,30 +282,25 @@ export class RoleAuditService {
         timestamp: new Date(),
       });
 
-      winstonLog.security('Permission revoked', {
+      winstonLog.security("Permission revoked", {
         userId: ctx.userId,
         permission,
         scope,
         changedBy: ctx.changedBy,
       });
-
     } catch (error) {
-      winstonLog.error('Failed to log permission revoke', { error, ctx });
+      winstonLog.error("Failed to log permission revoke", { error, ctx });
     }
-  }
+  },
 
   /**
    * Get complete audit trail for user
    */
-  static async getUserAuditTrail(
-    userId: string,
-    workspaceId?: string,
-    limit: number = 100
-  ): Promise<any[]> {
+  async getUserAuditTrail(userId: string, workspaceId?: string, limit = 100) {
     const db = getDatabase();
 
     try {
-      let query = db
+      const query = db
         .select({
           audit: roleAuditLog,
           changedByUser: userTable,
@@ -306,7 +313,7 @@ export class RoleAuditService {
 
       const results = await query;
 
-      return results.map(r => ({
+      return results.map((r) => ({
         id: r.audit.id,
         action: r.audit.action,
         previousValue: r.audit.previousValue,
@@ -321,20 +328,16 @@ export class RoleAuditService {
         ipAddress: r.audit.ipAddress,
         userAgent: r.audit.userAgent,
       }));
-
     } catch (error) {
-      winstonLog.error('Failed to get user audit trail', { error, userId });
+      winstonLog.error("Failed to get user audit trail", { error, userId });
       return [];
     }
-  }
+  },
 
   /**
    * Get workspace audit trail
    */
-  static async getWorkspaceAuditTrail(
-    workspaceId: string,
-    limit: number = 100
-  ): Promise<any[]> {
+  async getWorkspaceAuditTrail(workspaceId: string, limit = 100) {
     const db = getDatabase();
 
     try {
@@ -351,7 +354,7 @@ export class RoleAuditService {
         .orderBy(desc(roleAuditLog.timestamp))
         .limit(limit);
 
-      return results.map(r => ({
+      return results.map((r) => ({
         id: r.audit.id,
         action: r.audit.action,
         targetUser: {
@@ -369,17 +372,19 @@ export class RoleAuditService {
         },
         timestamp: r.audit.timestamp,
       }));
-
     } catch (error) {
-      winstonLog.error('Failed to get workspace audit trail', { error, workspaceId });
+      winstonLog.error("Failed to get workspace audit trail", {
+        error,
+        workspaceId,
+      });
       return [];
     }
-  }
+  },
 
   /**
    * Get audit statistics
    */
-  static async getAuditStats(workspaceId?: string): Promise<{
+  async getAuditStats(workspaceId?: string): Promise<{
     totalChanges: number;
     roleAssignments: number;
     roleRemovals: number;
@@ -399,20 +404,26 @@ export class RoleAuditService {
       const allLogs = await db
         .select()
         .from(roleAuditLog)
-        .where(workspaceId ? eq(roleAuditLog.workspaceId, workspaceId) : undefined);
+        .where(
+          workspaceId ? eq(roleAuditLog.workspaceId, workspaceId) : undefined,
+        );
 
       return {
         totalChanges: allLogs.length,
-        roleAssignments: allLogs.filter(l => l.action === 'role_assigned').length,
-        roleRemovals: allLogs.filter(l => l.action === 'role_removed').length,
-        permissionGrants: allLogs.filter(l => l.action === 'permission_granted').length,
-        permissionRevokes: allLogs.filter(l => l.action === 'permission_revoked').length,
-        last24Hours: allLogs.filter(l => l.timestamp >= last24h).length,
-        last7Days: allLogs.filter(l => l.timestamp >= last7d).length,
+        roleAssignments: allLogs.filter((l) => l.action === "role_assigned")
+          .length,
+        roleRemovals: allLogs.filter((l) => l.action === "role_removed").length,
+        permissionGrants: allLogs.filter(
+          (l) => l.action === "permission_granted",
+        ).length,
+        permissionRevokes: allLogs.filter(
+          (l) => l.action === "permission_revoked",
+        ).length,
+        last24Hours: allLogs.filter((l) => l.timestamp >= last24h).length,
+        last7Days: allLogs.filter((l) => l.timestamp >= last7d).length,
       };
-
     } catch (error) {
-      winstonLog.error('Failed to get audit stats', { error, workspaceId });
+      winstonLog.error("Failed to get audit stats", { error, workspaceId });
       return {
         totalChanges: 0,
         roleAssignments: 0,
@@ -423,9 +434,7 @@ export class RoleAuditService {
         last7Days: 0,
       };
     }
-  }
-}
+  },
+};
 
 export default RoleAuditService;
-
-

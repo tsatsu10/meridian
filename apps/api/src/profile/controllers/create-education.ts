@@ -1,6 +1,6 @@
 import { getDatabase } from "../../database/connection";
 import { userEducationTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface EducationData {
   school: string;
@@ -17,9 +17,12 @@ interface EducationData {
   order?: number;
 }
 
-const createEducation = async (userId: string, educationData: EducationData) => {
+const createEducation = async (
+  userId: string,
+  educationData: EducationData,
+) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .insert(userEducationTable)
@@ -34,7 +37,9 @@ const createEducation = async (userId: string, educationData: EducationData) => 
         endDate: educationData.endDate,
         isCurrent: educationData.isCurrent || false,
         grade: educationData.grade,
-        activities: educationData.activities ? JSON.stringify(educationData.activities) : null,
+        activities: educationData.activities
+          ? JSON.stringify(educationData.activities)
+          : null,
         schoolLogo: educationData.schoolLogo,
         order: educationData.order || 0,
       })
@@ -47,4 +52,4 @@ const createEducation = async (userId: string, educationData: EducationData) => 
   }
 };
 
-export default createEducation; 
+export default createEducation;

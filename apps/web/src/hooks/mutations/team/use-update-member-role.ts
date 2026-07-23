@@ -14,21 +14,24 @@ export function useUpdateMemberRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ teamId, userId, role, workspaceId }: UpdateMemberRoleData) => {
+    mutationFn: async ({ teamId, userId, role }: UpdateMemberRoleData) => {
       const response = await fetchApi(`/team/${teamId}/members/${userId}`, {
         method: "PATCH",
         body: JSON.stringify({ role }),
       });
       return response;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["team-metrics", variables.workspaceId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.workspaceId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["team-metrics", variables.workspaceId],
+      });
       toast.success("Member role updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to update member role");
     },
   });
 }
-

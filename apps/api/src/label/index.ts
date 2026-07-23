@@ -33,7 +33,7 @@ const label = new Hono<{
 
       // Otherwise return empty array (could fetch all labels if needed)
       return c.json([]);
-    }
+    },
   )
   .get(
     "/:taskId",
@@ -79,4 +79,3 @@ const label = new Hono<{
   );
 
 export default label;
-

@@ -50,6 +50,7 @@ export function AllTasksVirtualGrid<T extends { id: string }>({
     <div
       ref={parentRef}
       className={cn("max-h-[min(70vh,900px)] overflow-auto pr-1", className)}
+      // biome-ignore lint/a11y/useSemanticElements: list semantics on a virtualized container, keep as div
       role="list"
       aria-label="Task list"
     >
@@ -75,7 +76,11 @@ export function AllTasksVirtualGrid<T extends { id: string }>({
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
                 {row.items.map((task) => (
-                  <div key={task.id} role="listitem">
+                  <div
+                    key={task.id}
+                    // biome-ignore lint/a11y/useSemanticElements: listitem within a virtualized role=list container
+                    role="listitem"
+                  >
                     {renderTask(task)}
                   </div>
                 ))}

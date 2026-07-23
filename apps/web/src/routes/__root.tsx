@@ -1,5 +1,4 @@
 import { CommandPalette } from "@/components/command-palette";
-import { ChatWidget } from "@/components/chat/chat-widget";
 import { SkipLink } from "@/components/accessibility/skip-link";
 import { ErrorBoundary } from "@/components/error-boundary";
 import type { LoggedInUser } from "@/types/user";
@@ -8,9 +7,7 @@ import {
   Outlet,
   createRootRouteWithContext,
   redirect,
-  useRouterState,
 } from "@tanstack/react-router";
-import { chatRoute } from './chat'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -19,13 +16,13 @@ export const Route = createRootRouteWithContext<{
   component: RootComponent,
   async beforeLoad({ context: { user }, location }) {
     // Skip auth checks in E2E test mode
-    if (import.meta.env.VITE_E2E_MODE === 'true') {
-      console.log('🧪 E2E mode: Skipping auth guard');
+    if (import.meta.env.VITE_E2E_MODE === "true") {
+      console.log("🧪 E2E mode: Skipping auth guard");
       return;
     }
 
     const isRouteUnprotected = location.pathname.includes("auth");
-    const isOnDashboard = location.pathname.includes("dashboard");
+    void location.pathname.includes("dashboard");
     const isLandingPage = location.pathname === "/";
 
     // Allow access to landing page without authentication
@@ -55,11 +52,6 @@ export const Route = createRootRouteWithContext<{
 });
 
 function RootComponent() {
-  const router = useRouterState();
-  
-  // Don't show chat widget on auth pages or landing page
-  const showChatWidget = !router.location.pathname.includes('/auth') && router.location.pathname !== '/';
-  
   return (
     <ErrorBoundary>
       <SkipLink />
@@ -68,7 +60,6 @@ function RootComponent() {
           <Outlet />
         </main>
         <CommandPalette />
-        {showChatWidget && <ChatWidget />}
       </div>
     </ErrorBoundary>
   );

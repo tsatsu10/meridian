@@ -1,7 +1,7 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Props {
   children: ReactNode;
@@ -25,7 +25,7 @@ class TimelineErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -33,23 +33,23 @@ class TimelineErrorBoundary extends Component<Props, State> {
     return {
       hasError: true,
       error,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Timeline Error:', error);
-      console.error('Error Info:', errorInfo);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Timeline Error:", error);
+      console.error("Error Info:", errorInfo);
     }
 
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
-    // TODO: Send to error tracking service (e.g., Sentry)
+    // See https://github.com/tsatsu10/meridian/issues/76
     // logErrorToService(error, errorInfo);
   }
 
@@ -57,13 +57,16 @@ class TimelineErrorBoundary extends Component<Props, State> {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
   };
 
   render() {
     if (this.state.hasError) {
-      const { fallbackTitle = 'Timeline Error', fallbackMessage = 'Something went wrong displaying the timeline' } = this.props;
+      const {
+        fallbackTitle = "Timeline Error",
+        fallbackMessage = "Something went wrong displaying the timeline",
+      } = this.props;
 
       return (
         <Card className="border-destructive/50">
@@ -72,15 +75,16 @@ class TimelineErrorBoundary extends Component<Props, State> {
               <div className="h-16 w-16 bg-destructive/10 rounded-full flex items-center justify-center">
                 <AlertCircle className="h-8 w-8 text-destructive" />
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">{fallbackTitle}</h3>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  {fallbackMessage}. Please try refreshing the page or contact support if the problem persists.
+                  {fallbackMessage}. Please try refreshing the page or contact
+                  support if the problem persists.
                 </p>
               </div>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {process.env.NODE_ENV === "development" && this.state.error && (
                 <details className="w-full max-w-2xl text-left">
                   <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
                     Error Details (Development Only)
@@ -89,7 +93,7 @@ class TimelineErrorBoundary extends Component<Props, State> {
                     {this.state.error.toString()}
                     {this.state.errorInfo && (
                       <>
-                        {'\n\n'}
+                        {"\n\n"}
                         {this.state.errorInfo.componentStack}
                       </>
                     )}
@@ -102,7 +106,10 @@ class TimelineErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Try Again
                 </Button>
-                <Button onClick={() => window.location.reload()} variant="outline">
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                >
                   Refresh Page
                 </Button>
               </div>
@@ -117,4 +124,3 @@ class TimelineErrorBoundary extends Component<Props, State> {
 }
 
 export default TimelineErrorBoundary;
-

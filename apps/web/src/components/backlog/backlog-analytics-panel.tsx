@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle2,
   Clock,
@@ -17,17 +16,24 @@ interface BacklogAnalyticsPanelProps {
   className?: string;
 }
 
-export function BacklogAnalyticsPanel({ tasks, className }: BacklogAnalyticsPanelProps) {
+export function BacklogAnalyticsPanel({
+  tasks,
+  className,
+}: BacklogAnalyticsPanelProps) {
   // Calculate metrics
   const totalTasks = tasks.length;
-  const highPriorityCount = tasks.filter(t => t.priority === 'high' || t.priority === 'urgent').length;
-  const readyForSprintCount = tasks.filter(t => t.status === 'todo').length;
-  const overdueCount = tasks.filter(t => 
-    t.dueDate && new Date(t.dueDate) < new Date()
+  const highPriorityCount = tasks.filter(
+    (t) => t.priority === "high" || t.priority === "urgent",
+  ).length;
+  const readyForSprintCount = tasks.filter((t) => t.status === "todo").length;
+  const overdueCount = tasks.filter(
+    (t) => t.dueDate && new Date(t.dueDate) < new Date(),
   ).length;
 
-  const highPriorityPercentage = totalTasks > 0 ? (highPriorityCount / totalTasks) * 100 : 0;
-  const readyPercentage = totalTasks > 0 ? (readyForSprintCount / totalTasks) * 100 : 0;
+  const highPriorityPercentage =
+    totalTasks > 0 ? (highPriorityCount / totalTasks) * 100 : 0;
+  const readyPercentage =
+    totalTasks > 0 ? (readyForSprintCount / totalTasks) * 100 : 0;
 
   const metrics = [
     {
@@ -87,7 +93,10 @@ export function BacklogAnalyticsPanel({ tasks, className }: BacklogAnalyticsPane
                   <TrendingUp className="w-3 h-3 text-amber-600" />
                 )}
                 {metric.alert && (
-                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                  <Badge
+                    variant="destructive"
+                    className="text-[10px] px-1.5 py-0"
+                  >
                     !
                   </Badge>
                 )}
@@ -117,13 +126,26 @@ export function BacklogAnalyticsPanel({ tasks, className }: BacklogAnalyticsPane
           <div className="text-xs space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Backlog Health:</span>
-              <Badge variant={overdueCount > 0 ? "destructive" : readyPercentage > 40 ? "default" : "secondary"}>
-                {overdueCount > 0 ? "Needs Attention" : readyPercentage > 40 ? "Healthy" : "OK"}
+              <Badge
+                variant={
+                  overdueCount > 0
+                    ? "destructive"
+                    : readyPercentage > 40
+                      ? "default"
+                      : "secondary"
+                }
+              >
+                {overdueCount > 0
+                  ? "Needs Attention"
+                  : readyPercentage > 40
+                    ? "Healthy"
+                    : "OK"}
               </Badge>
             </div>
             {overdueCount > 0 && (
               <p className="text-muted-foreground mt-2">
-                ⚠️ You have {overdueCount} overdue {overdueCount === 1 ? 'item' : 'items'} that need attention
+                ⚠️ You have {overdueCount} overdue{" "}
+                {overdueCount === 1 ? "item" : "items"} that need attention
               </p>
             )}
             {highPriorityPercentage > 50 && (
@@ -137,4 +159,3 @@ export function BacklogAnalyticsPanel({ tasks, className }: BacklogAnalyticsPane
     </Card>
   );
 }
-

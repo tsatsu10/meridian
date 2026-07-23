@@ -12,4 +12,3 @@ async function clearNotifications(userEmail: string) {
 }
 
 export default clearNotifications;
-

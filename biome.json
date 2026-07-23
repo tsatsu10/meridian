@@ -7,11 +7,18 @@
   },
   "files": {
     "ignore": [
+      "**/routeTree.gen.ts",
       "**/node_modules",
       "**/dist",
       "**/.next",
       "**/coverage",
-      "**/*.min.js"
+      "**/*.min.js",
+      "**/.cursor/**",
+      "**/docs/**",
+      "**/prototypes/**",
+      "**/playwright-report/**",
+      "**/test-results/**",
+      "apps/web/eslint-plugin-meridian-local/**"
     ]
   },
   "formatter": {
@@ -22,10 +29,24 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "error"
+      }
     }
   },
   "organizeImports": {
     "enabled": false
-  }
+  },
+  "overrides": [
+    {
+      "include": ["**/tsconfig.json", "**/tsconfig.*.json", "**/*.jsonc"],
+      "json": {
+        "parser": {
+          "allowComments": true,
+          "allowTrailingCommas": true
+        }
+      }
+    }
+  ]
 }

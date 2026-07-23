@@ -59,10 +59,12 @@ export function BulkOperationsToolbar() {
 
   const assignOptions = [
     { id: "", name: "Unassigned" },
-    ...(workspaceUsers?.map((user) => ({
-      id: user.userEmail ?? "",
-      name: user.userName ?? user.userEmail ?? "",
-    })) || []),
+    ...(workspaceUsers?.map(
+      (user: { userEmail: string; userName?: string }) => ({
+        id: user.userEmail ?? "",
+        name: user.userName ?? user.userEmail ?? "",
+      }),
+    ) || []),
   ];
 
   return (
@@ -71,7 +73,7 @@ export function BulkOperationsToolbar() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
             <div className="w-4 h-4 border-2 border-current rounded flex items-center justify-center">
-              <div className="w-2 h-2 bg-current rounded-sm"></div>
+              <div className="w-2 h-2 bg-current rounded-sm" />
             </div>
             <span>{selectedTasks.size} selected</span>
           </div>
@@ -81,11 +83,12 @@ export function BulkOperationsToolbar() {
           {/* Status Update */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowStatusMenu(!showStatusMenu)}
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
             >
               <div className="w-4 h-4 flex items-center justify-center">
-                <div className="w-3 h-2 border-l-2 border-b-2 border-current transform rotate-[-45deg] translate-y-[-1px]"></div>
+                <div className="w-3 h-2 border-l-2 border-b-2 border-current transform rotate-[-45deg] translate-y-[-1px]" />
               </div>
               Status
             </button>
@@ -93,6 +96,7 @@ export function BulkOperationsToolbar() {
               <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg p-1 min-w-32">
                 {statusOptions.map((status) => (
                   <button
+                    type="button"
                     key={status.id}
                     onClick={() => {
                       bulkUpdateStatus(status.id);
@@ -111,12 +115,13 @@ export function BulkOperationsToolbar() {
           {/* Priority Update */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowPriorityMenu(!showPriorityMenu)}
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-md hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
             >
               <div className="w-4 h-4 flex items-center justify-start">
-                <div className="w-3 h-2 bg-current rounded-r"></div>
-                <div className="w-px h-3 bg-current ml-[-1px]"></div>
+                <div className="w-3 h-2 bg-current rounded-r" />
+                <div className="w-px h-3 bg-current ml-[-1px]" />
               </div>
               Priority
             </button>
@@ -124,6 +129,7 @@ export function BulkOperationsToolbar() {
               <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg p-1 min-w-32">
                 {priorityOptions.map((priority) => (
                   <button
+                    type="button"
                     key={priority.id}
                     onClick={() => {
                       bulkUpdatePriority(priority.id);
@@ -142,12 +148,13 @@ export function BulkOperationsToolbar() {
           {/* Assign */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowAssignMenu(!showAssignMenu)}
               className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
             >
               <div className="w-4 h-4 flex items-center justify-center">
-                <div className="w-2.5 h-2.5 bg-current rounded-full mb-1"></div>
-                <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1"></div>
+                <div className="w-2.5 h-2.5 bg-current rounded-full mb-1" />
+                <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1" />
               </div>
               Assign
             </button>
@@ -155,6 +162,7 @@ export function BulkOperationsToolbar() {
               <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg p-1 min-w-40">
                 {assignOptions.map((assignee) => (
                   <button
+                    type="button"
                     key={assignee.id}
                     onClick={() => {
                       bulkAssign(assignee.id);
@@ -163,8 +171,8 @@ export function BulkOperationsToolbar() {
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md"
                   >
                     <div className="w-4 h-4 flex items-center justify-center text-zinc-400">
-                      <div className="w-2.5 h-2.5 bg-current rounded-full mb-1"></div>
-                      <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1"></div>
+                      <div className="w-2.5 h-2.5 bg-current rounded-full mb-1" />
+                      <div className="w-3 h-1.5 bg-current rounded-b-full absolute mt-1" />
                     </div>
                     {assignee.name}
                   </button>
@@ -175,6 +183,7 @@ export function BulkOperationsToolbar() {
 
           {/* Delete */}
           <button
+            type="button"
             onClick={() => {
               if (confirm(`Delete ${selectedTasks.size} selected tasks?`)) {
                 bulkDelete();
@@ -184,8 +193,8 @@ export function BulkOperationsToolbar() {
           >
             <div className="w-4 h-4 flex items-center justify-center">
               <div className="w-3 h-3 border border-current rounded relative">
-                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-0.5 bg-current rounded"></div>
-                <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-px h-1.5 bg-current"></div>
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-0.5 bg-current rounded" />
+                <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-px h-1.5 bg-current" />
               </div>
             </div>
             Delete
@@ -195,6 +204,7 @@ export function BulkOperationsToolbar() {
 
           {/* Clear Selection */}
           <button
+            type="button"
             onClick={clearSelection}
             className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
           >
@@ -203,13 +213,14 @@ export function BulkOperationsToolbar() {
 
           {/* Exit Selection Mode */}
           <button
+            type="button"
             onClick={exitSelectionMode}
             className="flex items-center gap-1 px-2 py-1.5 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
           >
             <div className="w-4 h-4 flex items-center justify-center">
               <div className="relative">
-                <div className="w-3 h-0.5 bg-current transform rotate-45 absolute"></div>
-                <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute"></div>
+                <div className="w-3 h-0.5 bg-current transform rotate-45 absolute" />
+                <div className="w-3 h-0.5 bg-current transform -rotate-45 absolute" />
               </div>
             </div>
           </button>
@@ -217,4 +228,4 @@ export function BulkOperationsToolbar() {
       </div>
     </div>
   );
-} 
+}

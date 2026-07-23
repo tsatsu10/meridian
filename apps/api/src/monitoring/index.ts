@@ -3,12 +3,12 @@ import { authMiddleware } from "../middlewares/secure-auth";
 import { getDatabase } from "../database/connection";
 import { apiUsageMetrics, apiRateLimits } from "../database/schema";
 import { desc, gte, eq, and, avg, count, sum } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const monitoringRoutes = new Hono();
 
 // Get API metrics
-monitoringRoutes.get("/metrics", authMiddleware, async (c) => {
+monitoringRoutes.get("/metrics", authMiddleware(), async (c) => {
   try {
     const { range } = c.req.query();
     const db = getDatabase();
@@ -37,10 +37,16 @@ monitoringRoutes.get("/metrics", authMiddleware, async (c) => {
     const failedCalls = totalCalls - successfulCalls;
 
     // Calculate response time percentiles
-    const responseTimes = metrics.map((m) => m.responseTime).sort((a, b) => a - b);
-    const avgResponseTime = responseTimes.length > 0
-      ? Math.round(responseTimes.reduce((sum, rt) => sum + rt, 0) / responseTimes.length)
-      : 0;
+    const responseTimes = metrics
+      .map((m) => m.responseTime)
+      .sort((a, b) => a - b);
+    const avgResponseTime =
+      responseTimes.length > 0
+        ? Math.round(
+            responseTimes.reduce((sum, rt) => sum + rt, 0) /
+              responseTimes.length,
+          )
+        : 0;
     const p95Index = Math.floor(responseTimes.length * 0.95);
     const p99Index = Math.floor(responseTimes.length * 0.99);
     const p95ResponseTime = responseTimes[p95Index] || avgResponseTime;
@@ -49,16 +55,20 @@ monitoringRoutes.get("/metrics", authMiddleware, async (c) => {
     const errorRate = totalCalls > 0 ? (failedCalls / totalCalls) * 100 : 0;
 
     // Get rate limit info (get current user's rate limit)
-    const userId = c.get("userId") || 1; // Fallback to 1 if not set
+    // api_rate_limits.userId is an integer with no FK to the text user ids
+    // (schema drift); coerce and fall back to the shared bucket
+    const userId = Number(c.get("userId")) || 1;
     const rateLimitInfo = await db
       .select()
       .from(apiRateLimits)
       .where(eq(apiRateLimits.userId, userId))
       .limit(1);
 
-    const rateLimitTotal = rateLimitInfo[0]?.limitTotal || 10000;
-    const rateLimitRemaining = rateLimitInfo[0]?.limitRemaining || rateLimitTotal;
-    const rateLimitResetAt = rateLimitInfo[0]?.resetAt || new Date(now.getTime() + 60 * 60 * 1000);
+    const rateLimitTotal = rateLimitInfo[0]?.limit ?? 10000;
+    const rateLimitRemaining =
+      rateLimitTotal - (rateLimitInfo[0]?.currentUsage ?? 0);
+    const rateLimitResetAt =
+      rateLimitInfo[0]?.resetAt || new Date(now.getTime() + 60 * 60 * 1000);
 
     return c.json({
       data: {
@@ -81,7 +91,7 @@ monitoringRoutes.get("/metrics", authMiddleware, async (c) => {
 });
 
 // Get endpoint stats
-monitoringRoutes.get("/endpoints", authMiddleware, async (c) => {
+monitoringRoutes.get("/endpoints", authMiddleware(), async (c) => {
   try {
     const { range } = c.req.query();
     const db = getDatabase();
@@ -106,44 +116,52 @@ monitoringRoutes.get("/endpoints", authMiddleware, async (c) => {
       .where(gte(apiUsageMetrics.timestamp, startDate));
 
     // Group by endpoint and method
-    const endpointStats = new Map<string, {
-      endpoint: string;
-      method: string;
-      calls: number;
-      responseTimes: number[];
-      errors: number;
-      lastCalled: Date;
-    }>();
+    const endpointStats = new Map<
+      string,
+      {
+        endpoint: string;
+        method: string;
+        calls: number;
+        responseTimes: number[];
+        errors: number;
+        lastCalled: Date;
+      }
+    >();
 
     for (const metric of allMetrics) {
       const key = `${metric.endpoint}:${metric.method}`;
-      
-      if (!endpointStats.has(key)) {
-        endpointStats.set(key, {
+
+      let stats = endpointStats.get(key);
+      if (!stats) {
+        stats = {
           endpoint: metric.endpoint,
           method: metric.method,
           calls: 0,
           responseTimes: [],
           errors: 0,
           lastCalled: metric.timestamp,
-        });
+        };
+        endpointStats.set(key, stats);
       }
-
-      const stats = endpointStats.get(key)!;
       stats.calls++;
       stats.responseTimes.push(metric.responseTime);
       if (metric.statusCode >= 400) stats.errors++;
-      if (metric.timestamp > stats.lastCalled) stats.lastCalled = metric.timestamp;
+      if (metric.timestamp > stats.lastCalled)
+        stats.lastCalled = metric.timestamp;
     }
 
     // Calculate stats for each endpoint
     const stats = Array.from(endpointStats.values()).map((stat) => {
-      const avgResponseTime = stat.responseTimes.length > 0
-        ? Math.round(stat.responseTimes.reduce((sum, rt) => sum + rt, 0) / stat.responseTimes.length)
-        : 0;
-      
+      const avgResponseTime =
+        stat.responseTimes.length > 0
+          ? Math.round(
+              stat.responseTimes.reduce((sum, rt) => sum + rt, 0) /
+                stat.responseTimes.length,
+            )
+          : 0;
+
       const errorRate = stat.calls > 0 ? (stat.errors / stat.calls) * 100 : 0;
-      
+
       let status: "healthy" | "degraded" | "failing";
       if (errorRate < 2 && avgResponseTime < 300) status = "healthy";
       else if (errorRate < 5 && avgResponseTime < 500) status = "degraded";
@@ -171,7 +189,7 @@ monitoringRoutes.get("/endpoints", authMiddleware, async (c) => {
 });
 
 // Get recent API calls
-monitoringRoutes.get("/recent-calls", authMiddleware, async (c) => {
+monitoringRoutes.get("/recent-calls", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -190,9 +208,10 @@ monitoringRoutes.get("/recent-calls", authMiddleware, async (c) => {
       statusCode: metric.statusCode,
       responseTime: metric.responseTime,
       timestamp: metric.timestamp,
-      error: metric.statusCode >= 400 
-        ? `Error: ${metric.statusCode >= 500 ? "Internal Server Error" : "Client Error"}` 
-        : undefined,
+      error:
+        metric.statusCode >= 400
+          ? `Error: ${metric.statusCode >= 500 ? "Internal Server Error" : "Client Error"}`
+          : undefined,
     }));
 
     return c.json({ data: calls });
@@ -203,7 +222,7 @@ monitoringRoutes.get("/recent-calls", authMiddleware, async (c) => {
 });
 
 // Get timeseries data
-monitoringRoutes.get("/timeseries", authMiddleware, async (c) => {
+monitoringRoutes.get("/timeseries", authMiddleware(), async (c) => {
   try {
     const { range } = c.req.query();
     const db = getDatabase();
@@ -212,7 +231,7 @@ monitoringRoutes.get("/timeseries", authMiddleware, async (c) => {
     const now = new Date();
     let startDate: Date;
     let bucketMs: number;
-    
+
     if (range === "hour") {
       startDate = new Date(now.getTime() - 60 * 60 * 1000);
       bucketMs = 60 * 1000; // 1 minute buckets
@@ -235,24 +254,28 @@ monitoringRoutes.get("/timeseries", authMiddleware, async (c) => {
       .where(gte(apiUsageMetrics.timestamp, startDate));
 
     // Group into time buckets
-    const buckets = new Map<number, {
-      calls: number;
-      errors: number;
-      responseTimes: number[];
-    }>();
+    const buckets = new Map<
+      number,
+      {
+        calls: number;
+        errors: number;
+        responseTimes: number[];
+      }
+    >();
 
     for (const metric of metrics) {
-      const bucketKey = Math.floor(metric.timestamp.getTime() / bucketMs) * bucketMs;
-      
-      if (!buckets.has(bucketKey)) {
-        buckets.set(bucketKey, {
+      const bucketKey =
+        Math.floor(metric.timestamp.getTime() / bucketMs) * bucketMs;
+
+      let bucket = buckets.get(bucketKey);
+      if (!bucket) {
+        bucket = {
           calls: 0,
           errors: 0,
           responseTimes: [],
-        });
+        };
+        buckets.set(bucketKey, bucket);
       }
-
-      const bucket = buckets.get(bucketKey)!;
       bucket.calls++;
       if (metric.statusCode >= 400) bucket.errors++;
       bucket.responseTimes.push(metric.responseTime);
@@ -263,24 +286,41 @@ monitoringRoutes.get("/timeseries", authMiddleware, async (c) => {
     const currentBucket = Math.floor(now.getTime() / bucketMs) * bucketMs;
     const startBucket = Math.floor(startDate.getTime() / bucketMs) * bucketMs;
 
-    for (let bucketTime = startBucket; bucketTime <= currentBucket; bucketTime += bucketMs) {
+    for (
+      let bucketTime = startBucket;
+      bucketTime <= currentBucket;
+      bucketTime += bucketMs
+    ) {
       const bucket = buckets.get(bucketTime);
       const time = new Date(bucketTime);
 
       let timeLabel: string;
       if (range === "hour") {
-        timeLabel = time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+        timeLabel = time.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
       } else if (range === "month") {
-        timeLabel = time.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        timeLabel = time.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
       } else {
-        timeLabel = time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+        timeLabel = time.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
       }
 
       const calls = bucket?.calls || 0;
       const errors = bucket?.errors || 0;
-      const avgResponseTime = bucket && bucket.responseTimes.length > 0
-        ? Math.round(bucket.responseTimes.reduce((sum, rt) => sum + rt, 0) / bucket.responseTimes.length)
-        : 0;
+      const avgResponseTime =
+        bucket && bucket.responseTimes.length > 0
+          ? Math.round(
+              bucket.responseTimes.reduce((sum, rt) => sum + rt, 0) /
+                bucket.responseTimes.length,
+            )
+          : 0;
 
       timeseries.push({
         time: timeLabel,
@@ -298,4 +338,3 @@ monitoringRoutes.get("/timeseries", authMiddleware, async (c) => {
 });
 
 export default monitoringRoutes;
-

@@ -1,12 +1,12 @@
-import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
+import { looseClient } from "@/lib/rpc-client";
 
-type DeleteWorkspaceRequest = InferRequestType<
-  (typeof client.workspace)[":id"]["$delete"]
->["param"];
+// The generated AppType is missing workspace[":id"], so type the request locally
+type DeleteWorkspaceRequest = {
+  id: string;
+};
 
 const deleteWorkspace = async ({ id }: DeleteWorkspaceRequest) => {
-  const response = await client.workspace[":id"].$delete({
+  const response = await looseClient.workspace[":id"].$delete({
     param: { id },
   });
 

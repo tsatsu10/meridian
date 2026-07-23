@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { X, Mail, UserPlus, Send } from "lucide-react";
 import { useSendInvitation } from "../../../lib/api/workspace-invitations";
 
@@ -32,16 +33,23 @@ const roleOptions = [
   },
 ];
 
-export function InviteUserModal({ isOpen, onClose, workspaceId, workspaceName }: InviteUserModalProps) {
+export function InviteUserModal({
+  isOpen,
+  onClose,
+  workspaceId,
+  workspaceName,
+}: InviteUserModalProps) {
   const [inviteeEmail, setInviteeEmail] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"member" | "team-lead" | "project-manager" | "department-head">("member");
+  const [selectedRole, setSelectedRole] = useState<
+    "member" | "team-lead" | "project-manager" | "department-head"
+  >("member");
   const [message, setMessage] = useState("");
 
   const sendInvitation = useSendInvitation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!inviteeEmail.trim()) {
       return;
     }
@@ -85,11 +93,14 @@ export function InviteUserModal({ isOpen, onClose, workspaceId, workspaceName }:
               <UserPlus className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Invite User</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Invite User
+              </h2>
               <p className="text-sm text-gray-500">to {workspaceName}</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={handleClose}
             disabled={sendInvitation.isPending}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
@@ -102,7 +113,10 @@ export function InviteUserModal({ isOpen, onClose, workspaceId, workspaceName }:
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Email Input */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Email Address
             </label>
             <div className="relative">
@@ -122,9 +136,9 @@ export function InviteUserModal({ isOpen, onClose, workspaceId, workspaceName }:
 
           {/* Role Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <span className="block text-sm font-medium text-gray-700 mb-3">
               Role
-            </label>
+            </span>
             <div className="space-y-2">
               {roleOptions.map((role) => (
                 <label
@@ -140,13 +154,19 @@ export function InviteUserModal({ isOpen, onClose, workspaceId, workspaceName }:
                     name="role"
                     value={role.value}
                     checked={selectedRole === role.value}
-                    onChange={(e) => setSelectedRole(e.target.value as any)}
+                    onChange={(e) =>
+                      setSelectedRole(e.target.value as typeof selectedRole)
+                    }
                     className="mt-1 text-blue-600 focus:ring-blue-500"
                     disabled={sendInvitation.isPending}
                   />
                   <div>
-                    <div className="font-medium text-gray-900">{role.label}</div>
-                    <div className="text-sm text-gray-500">{role.description}</div>
+                    <div className="font-medium text-gray-900">
+                      {role.label}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {role.description}
+                    </div>
                   </div>
                 </label>
               ))}
@@ -155,7 +175,10 @@ export function InviteUserModal({ isOpen, onClose, workspaceId, workspaceName }:
 
           {/* Optional Message */}
           <div>
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="message"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Personal Message (Optional)
             </label>
             <textarea
@@ -198,4 +221,4 @@ export function InviteUserModal({ isOpen, onClose, workspaceId, workspaceName }:
       </div>
     </div>
   );
-} 
+}

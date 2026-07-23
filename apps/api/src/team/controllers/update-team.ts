@@ -3,21 +3,35 @@
  * Sanitization + Sentry integration
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { teamTable } from "../../database/schema";
-import { sanitizeText, sanitizeRichText } from "../../lib/universal-sanitization";
-import { captureException, addBreadcrumb } from "../../services/monitoring/sentry";
+import {
+  sanitizeText,
+  sanitizeRichText,
+} from "../../lib/universal-sanitization";
+import {
+  captureException,
+  addBreadcrumb,
+} from "../../services/monitoring/sentry";
 import logger from "../../utils/logger";
 import { HTTPException } from "hono/http-exception";
 
 export async function updateTeam(c: Context) {
   const teamId = c.req.param("teamId");
-  
+  if (!teamId) {
+    throw new HTTPException(400, { message: "Team ID is required" });
+  }
+
   try {
     // Parse request body
-    let body;
+    let body: {
+      name?: string;
+      description?: string;
+      projectId?: string;
+      settings?: Record<string, unknown>;
+    };
     try {
       body = await c.req.json();
     } catch (jsonError) {
@@ -26,41 +40,52 @@ export async function updateTeam(c: Context) {
         message: "Invalid JSON in request body",
       });
     }
-    
+
     if (!body || Object.keys(body).length === 0) {
       throw new HTTPException(400, {
         message: "Request body is empty",
       });
     }
-    
+
     const { name, description, projectId, settings } = body;
 
     const db = getDatabase();
 
     // Validate there's at least one field to update
-    if (!name && description === undefined && projectId === undefined && !settings) {
+    if (
+      !name &&
+      description === undefined &&
+      projectId === undefined &&
+      !settings
+    ) {
       throw new HTTPException(400, {
         message: "No valid fields to update",
       });
     }
 
     // 🔒 SECURITY: Build sanitized update object
-    const updateData: any = { updatedAt: new Date() };
-    
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+
     if (name !== undefined) {
-      const sanitizedName = sanitizeText(name, { maxLength: 100, stripHtmlTags: true });
+      const sanitizedName = sanitizeText(name, {
+        maxLength: 100,
+        stripHtmlTags: true,
+      });
       if (!sanitizedName || sanitizedName.length === 0) {
         throw new HTTPException(400, {
-          message: "Team name cannot be empty or contain only dangerous content",
+          message:
+            "Team name cannot be empty or contain only dangerous content",
         });
       }
       updateData.name = sanitizedName;
     }
-    
+
     if (description !== undefined) {
-      updateData.description = sanitizeRichText(description || '', { maxLength: 2000 });
+      updateData.description = sanitizeRichText(description || "", {
+        maxLength: 2000,
+      });
     }
-    
+
     if (projectId !== undefined) updateData.projectId = projectId;
     if (settings) updateData.settings = settings;
 
@@ -80,7 +105,7 @@ export async function updateTeam(c: Context) {
     }
 
     // 📊 SENTRY: Add breadcrumb for successful update
-    addBreadcrumb('Team updated successfully', 'team', 'info', {
+    addBreadcrumb("Team updated successfully", "team", "info", {
       teamId,
       fieldsUpdated: Object.keys(updateData),
     });
@@ -89,14 +114,20 @@ export async function updateTeam(c: Context) {
     return c.json({ team: updatedTeam });
   } catch (error) {
     logger.error("[Team Update] Error updating team:", error);
-    logger.error("[Team Update] Error details:", error instanceof Error ? error.message : String(error));
-    logger.error("[Team Update] Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    logger.error(
+      "[Team Update] Error details:",
+      error instanceof Error ? error.message : String(error),
+    );
+    logger.error(
+      "[Team Update] Error stack:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
 
     // 📊 SENTRY: Capture team update errors
     if (!(error instanceof HTTPException)) {
       captureException(error as Error, {
-        feature: 'teams',
-        action: 'update_team',
+        feature: "teams",
+        action: "update_team",
         teamId,
       });
     }
@@ -105,10 +136,8 @@ export async function updateTeam(c: Context) {
       throw error;
     }
 
-    throw new HTTPException(500, { 
-      message: "Failed to update team",
-      details: error instanceof Error ? error.message : String(error)
+    throw new HTTPException(500, {
+      message: `Failed to update team: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }
-

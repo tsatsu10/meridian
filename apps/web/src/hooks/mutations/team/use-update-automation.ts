@@ -9,9 +9,9 @@ interface UpdateAutomationData {
   description?: string;
   trigger?: {
     type: string;
-    config: any;
+    config: Record<string, unknown>;
   };
-  actions?: any[];
+  actions?: unknown[];
   enabled?: boolean;
 }
 
@@ -20,20 +20,28 @@ export function useUpdateAutomation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ teamId, automationId, ...data }: UpdateAutomationData) => {
-      const response = await fetchApi(`/team/${teamId}/automations/${automationId}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+    mutationFn: async ({
+      teamId,
+      automationId,
+      ...data
+    }: UpdateAutomationData) => {
+      const response = await fetchApi(
+        `/team/${teamId}/automations/${automationId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(data),
+        },
+      );
       return response;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["team-automations", variables.teamId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["team-automations", variables.teamId],
+      });
       toast.success("Automation updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to update automation");
     },
   });
 }
-

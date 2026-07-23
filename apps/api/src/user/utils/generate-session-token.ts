@@ -8,4 +8,3 @@ function generateSessionToken(): string {
 }
 
 export default generateSessionToken;
-

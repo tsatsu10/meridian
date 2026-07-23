@@ -8,4 +8,3 @@ export const auth = createMiddleware(async (c, next) => strictAuth(c, next));
 
 // Backward-compatible alias for older imports.
 export const authenticateToken = auth;
-

@@ -1,14 +1,20 @@
 import { Hono } from "hono";
 import { getDatabase } from "../database/connection";
-import { userTable, settingsAuditLogTable, projectTable, tasks, attachments } from "../database/schema";
+import {
+  userTable,
+  settingsAuditLogTable,
+  projectTable,
+  tasks,
+  attachments,
+} from "../database/schema";
 import { eq, and, gte, desc, sql, count, lt } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const gdprRoutes = new Hono();
 
 // Get overall GDPR compliance overview
-gdprRoutes.get("/compliance", authMiddleware, async (c) => {
+gdprRoutes.get("/compliance", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -29,7 +35,7 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
         dataDeletionScore +
         dataPortabilityScore +
         breachNotificationScore) /
-        6
+        6,
     );
 
     // Define compliance categories
@@ -38,11 +44,16 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
         name: "Data Retention",
         status: getComplianceStatus(dataRetentionScore),
         score: dataRetentionScore,
-        details: "Policies for data lifecycle management and automatic deletion",
+        details:
+          "Policies for data lifecycle management and automatic deletion",
         lastChecked: now,
         actionItems:
           dataRetentionScore < 90
-            ? ["Review data retention policies", "Clean up old records", "Set up automatic deletion"]
+            ? [
+                "Review data retention policies",
+                "Clean up old records",
+                "Set up automatic deletion",
+              ]
             : [],
       },
       userConsent: {
@@ -53,7 +64,11 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
         lastChecked: now,
         actionItems:
           userConsentScore < 90
-            ? ["Obtain missing consents", "Update consent forms", "Implement granular consent options"]
+            ? [
+                "Obtain missing consents",
+                "Update consent forms",
+                "Implement granular consent options",
+              ]
             : [],
       },
       dataAccess: {
@@ -64,7 +79,11 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
         lastChecked: now,
         actionItems:
           dataAccessScore < 90
-            ? ["Process pending access requests", "Improve response times", "Automate data export"]
+            ? [
+                "Process pending access requests",
+                "Improve response times",
+                "Automate data export",
+              ]
             : [],
       },
       dataDeletion: {
@@ -74,7 +93,9 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
         details: "User rights to request complete data deletion",
         lastChecked: now,
         actionItems:
-          dataDeletionScore < 90 ? ["Implement cascading deletion", "Verify data removal"] : [],
+          dataDeletionScore < 90
+            ? ["Implement cascading deletion", "Verify data removal"]
+            : [],
       },
       dataPortability: {
         name: "Data Portability",
@@ -91,9 +112,13 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
         name: "Breach Notification",
         status: getComplianceStatus(breachNotificationScore),
         score: breachNotificationScore,
-        details: "Procedures for detecting and reporting data breaches within 72 hours",
+        details:
+          "Procedures for detecting and reporting data breaches within 72 hours",
         lastChecked: now,
-        actionItems: breachNotificationScore < 90 ? ["Set up breach detection", "Test notification system"] : [],
+        actionItems:
+          breachNotificationScore < 90
+            ? ["Set up breach detection", "Test notification system"]
+            : [],
       },
     };
 
@@ -115,7 +140,7 @@ gdprRoutes.get("/compliance", authMiddleware, async (c) => {
 });
 
 // Get data retention policies
-gdprRoutes.get("/retention-policies", authMiddleware, async (c) => {
+gdprRoutes.get("/retention-policies", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -124,8 +149,12 @@ gdprRoutes.get("/retention-policies", authMiddleware, async (c) => {
     const userCount = await db.select({ count: count() }).from(userTable);
     const projectCount = await db.select({ count: count() }).from(projectTable);
     const taskCount = await db.select({ count: count() }).from(tasks);
-    const auditLogCount = await db.select({ count: count() }).from(settingsAuditLogTable);
-    const attachmentCount = await db.select({ count: count() }).from(attachments);
+    const auditLogCount = await db
+      .select({ count: count() })
+      .from(settingsAuditLogTable);
+    const attachmentCount = await db
+      .select({ count: count() })
+      .from(attachments);
 
     // Define retention policies
     const policies = [
@@ -181,7 +210,7 @@ gdprRoutes.get("/retention-policies", authMiddleware, async (c) => {
 });
 
 // Get user consent records
-gdprRoutes.get("/consent-records", authMiddleware, async (c) => {
+gdprRoutes.get("/consent-records", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -199,16 +228,18 @@ gdprRoutes.get("/consent-records", authMiddleware, async (c) => {
     // Generate consent records based on user data (deterministic)
     const consentRecords = users.map((user) => {
       // Use user ID for deterministic consent flags
-      const userIdNum = parseInt(user.id) || 1;
-      const marketingConsent = (userIdNum % 10) > 3; // 70% have marketing consent
-      const analyticsConsent = (userIdNum % 10) > 2; // 80% have analytics consent
-      const thirdPartyConsent = (userIdNum % 10) > 5; // 50% have third-party consent
-      
+      const userIdNum = Number.parseInt(user.id) || 1;
+      const marketingConsent = userIdNum % 10 > 3; // 70% have marketing consent
+      const analyticsConsent = userIdNum % 10 > 2; // 80% have analytics consent
+      const thirdPartyConsent = userIdNum % 10 > 5; // 50% have third-party consent
+
       // Use user creation date for realistic timestamps
       const createdTime = user.createdAt?.getTime() || Date.now();
-      const daysSinceCreation = Math.floor((Date.now() - createdTime) / (24 * 60 * 60 * 1000));
+      const daysSinceCreation = Math.floor(
+        (Date.now() - createdTime) / (24 * 60 * 60 * 1000),
+      );
       const lastUpdatedOffset = Math.min(daysSinceCreation, 30); // Within last 30 days or since creation
-      
+
       return {
         userId: user.id,
         email: user.email,
@@ -220,7 +251,9 @@ gdprRoutes.get("/consent-records", authMiddleware, async (c) => {
           thirdParty: thirdPartyConsent,
         },
         consentDate: user.createdAt || new Date(),
-        lastUpdated: new Date(Date.now() - lastUpdatedOffset * 24 * 60 * 60 * 1000),
+        lastUpdated: new Date(
+          Date.now() - lastUpdatedOffset * 24 * 60 * 60 * 1000,
+        ),
         ipAddress: `192.168.1.${(userIdNum % 254) + 1}`,
       };
     });
@@ -233,7 +266,7 @@ gdprRoutes.get("/consent-records", authMiddleware, async (c) => {
 });
 
 // Get data access requests
-gdprRoutes.get("/access-requests", authMiddleware, async (c) => {
+gdprRoutes.get("/access-requests", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -247,24 +280,34 @@ gdprRoutes.get("/access-requests", authMiddleware, async (c) => {
       .limit(10);
 
     // Generate access requests based on user data (deterministic)
-    const requestTypes = ["access", "deletion", "portability", "rectification"] as const;
-    const statuses = ["pending", "processing", "completed", "rejected"] as const;
+    const requestTypes = [
+      "access",
+      "deletion",
+      "portability",
+      "rectification",
+    ] as const;
+    const statuses = [
+      "pending",
+      "processing",
+      "completed",
+      "rejected",
+    ] as const;
     const priorities = ["high", "medium", "low"] as const;
 
     const requests = users.slice(0, 5).map((user, index) => {
-      const userIdNum = parseInt(user.id) || index + 1;
-      
+      const userIdNum = Number.parseInt(user.id) || index + 1;
+
       // Deterministic request date based on index (spread over last 30 days)
       const daysAgo = (index * 6) % 30; // 0, 6, 12, 18, 24 days ago
       const requestDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-      
+
       // Deterministic status based on user ID
       const statusIndex = (userIdNum + index) % statuses.length;
       const status = statuses[statusIndex];
-      
+
       // Deterministic request type based on user ID
       const requestTypeIndex = userIdNum % requestTypes.length;
-      
+
       // Deterministic priority based on index
       const priorityIndex = index % priorities.length;
 
@@ -288,7 +331,7 @@ gdprRoutes.get("/access-requests", authMiddleware, async (c) => {
 });
 
 // Generate compliance report
-gdprRoutes.post("/generate-report", authMiddleware, async (c) => {
+gdprRoutes.post("/generate-report", authMiddleware(), async (c) => {
   try {
     // In a real implementation, this would generate a PDF report
     // For now, we'll return a simple text file
@@ -327,13 +370,17 @@ This is an automated report generated by the Meridian GDPR Compliance system.
 });
 
 // Helper functions
-function getComplianceStatus(score: number): "compliant" | "warning" | "non-compliant" {
+function getComplianceStatus(
+  score: number,
+): "compliant" | "warning" | "non-compliant" {
   if (score >= 90) return "compliant";
   if (score >= 70) return "warning";
   return "non-compliant";
 }
 
-async function calculateDataRetentionScore(db: any): Promise<number> {
+async function calculateDataRetentionScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Simplified calculation
   // In a real implementation, check if old data is being properly deleted
   const now = new Date();
@@ -342,25 +389,30 @@ async function calculateDataRetentionScore(db: any): Promise<number> {
   const oldLogs = await db
     .select({ count: count() })
     .from(settingsAuditLogTable)
-    .where(lt(settingsAuditLogTable.timestamp, twoYearsAgo));
+    .where(lt(settingsAuditLogTable.createdAt, twoYearsAgo));
 
-  const totalLogs = await db.select({ count: count() }).from(settingsAuditLogTable);
+  const totalLogs = await db
+    .select({ count: count() })
+    .from(settingsAuditLogTable);
 
   const oldLogsCount = oldLogs[0]?.count ?? 0;
   const totalLogsCount = totalLogs[0]?.count ?? 1;
 
   // Higher score if fewer old logs (better cleanup)
-  const retentionScore = 100 - Math.min(50, (oldLogsCount / totalLogsCount) * 100);
+  const retentionScore =
+    100 - Math.min(50, (oldLogsCount / totalLogsCount) * 100);
   return Math.round(retentionScore);
 }
 
-async function calculateUserConsentScore(db: any): Promise<number> {
+async function calculateUserConsentScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on users with email verification (proxy for consent)
   const totalUsers = await db.select({ count: count() }).from(userTable);
   const verifiedUsers = await db
     .select({ count: count() })
     .from(userTable)
-    .where(eq(userTable.isVerified, true));
+    .where(eq(userTable.isEmailVerified, true));
 
   const totalCount = totalUsers[0]?.count ?? 1;
   const verifiedCount = verifiedUsers[0]?.count ?? 0;
@@ -370,7 +422,9 @@ async function calculateUserConsentScore(db: any): Promise<number> {
   return Math.max(score, 70); // Minimum 70% for reasonable baseline
 }
 
-async function calculateDataAccessScore(db: any): Promise<number> {
+async function calculateDataAccessScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on active user sessions (proxy for data access management)
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -378,7 +432,7 @@ async function calculateDataAccessScore(db: any): Promise<number> {
   const recentAuditLogs = await db
     .select({ count: count() })
     .from(settingsAuditLogTable)
-    .where(gte(settingsAuditLogTable.timestamp, thirtyDaysAgo));
+    .where(gte(settingsAuditLogTable.createdAt, thirtyDaysAgo));
 
   const logCount = recentAuditLogs[0]?.count ?? 0;
 
@@ -388,7 +442,9 @@ async function calculateDataAccessScore(db: any): Promise<number> {
   return score;
 }
 
-async function calculateDataDeletionScore(db: any): Promise<number> {
+async function calculateDataDeletionScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on user deletion capability
   // Check if system allows proper cascading deletes
   const totalUsers = await db.select({ count: count() }).from(userTable);
@@ -400,7 +456,9 @@ async function calculateDataDeletionScore(db: any): Promise<number> {
   return userCount > 0 ? 95 : 100; // 95 for active system, 100 for empty (no risk)
 }
 
-async function calculateDataPortabilityScore(db: any): Promise<number> {
+async function calculateDataPortabilityScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on data export capability
   // Check if we have structured data that can be exported
   const totalProjects = await db.select({ count: count() }).from(projectTable);
@@ -411,7 +469,9 @@ async function calculateDataPortabilityScore(db: any): Promise<number> {
   return projectCount > 0 ? 90 : 95; // 90 for active system, 95 for simple system
 }
 
-async function calculateBreachNotificationScore(db: any): Promise<number> {
+async function calculateBreachNotificationScore(
+  db: ReturnType<typeof getDatabase>,
+): Promise<number> {
   // Calculate based on security audit log activity
   // More logging = better breach detection
   const now = new Date();
@@ -420,7 +480,7 @@ async function calculateBreachNotificationScore(db: any): Promise<number> {
   const recentSecurityLogs = await db
     .select({ count: count() })
     .from(settingsAuditLogTable)
-    .where(gte(settingsAuditLogTable.timestamp, oneWeekAgo));
+    .where(gte(settingsAuditLogTable.createdAt, oneWeekAgo));
 
   const logCount = recentSecurityLogs[0]?.count ?? 0;
 
@@ -431,5 +491,3 @@ async function calculateBreachNotificationScore(db: any): Promise<number> {
 }
 
 export default gdprRoutes;
-
-

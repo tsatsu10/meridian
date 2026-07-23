@@ -1,10 +1,16 @@
-import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
+import { looseClient } from "@/lib/rpc-client";
 
-export type CreateTaskRequest = InferRequestType<
-  (typeof client)["task"][":projectId"]["$post"]
->["json"] &
-  InferRequestType<(typeof client)["task"][":projectId"]["$post"]>["param"];
+// The generated AppType is missing task[":projectId"], so type the request locally
+export type CreateTaskRequest = {
+  title: string;
+  description: string;
+  projectId: string;
+  userEmail?: string | null;
+  status: string;
+  dueDate: string | null;
+  priority: string;
+  parentId?: string;
+};
 
 async function createTask(
   title: string,
@@ -12,17 +18,17 @@ async function createTask(
   projectId: string,
   userEmail: string,
   status: string,
-  dueDate: Date,
+  dueDate: Date | null,
   priority: string,
   parentId?: string,
 ) {
-  const response = await client.task[":projectId"].$post({
+  const response = await looseClient.task[":projectId"].$post({
     json: {
       title,
       description,
       userEmail,
       status,
-      dueDate: dueDate.toISOString(),
+      dueDate: dueDate ? dueDate.toISOString() : null,
       priority,
       parentId,
     },

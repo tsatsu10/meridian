@@ -12,7 +12,9 @@ function RouteComponent() {
   const { workspaceId } = Route.useParams();
   const { data: projects } = useGetProjects({ workspaceId });
 
-  if (projects && projects.length === 0) {
+  const projectList = Array.isArray(projects) ? projects : projects?.projects;
+
+  if (projectList && projectList.length === 0) {
     return <EmptyProjectState />;
   }
 

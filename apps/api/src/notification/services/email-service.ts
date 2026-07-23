@@ -1,13 +1,16 @@
-import { DigestData } from './digest-generator';
-import { generateDigestEmailHTML, generateDigestEmailText } from '../templates/digest-email';
-import { logger } from '../../utils/logger';
-import { getDatabase } from '../../database/connection';
-import { digestMetrics } from '../../database/schema';
-import { eq, and } from 'drizzle-orm';
+import type { DigestData } from "./digest-generator";
+import {
+  generateDigestEmailHTML,
+  generateDigestEmailText,
+} from "../templates/digest-email";
+import { logger } from "../../utils/logger";
+import { getDatabase } from "../../database/connection";
+import { digestMetrics } from "../../database/schema";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Email service for sending digest emails
- * 
+ *
  * NOTE: This is a simplified implementation for development.
  * In production, you would:
  * 1. Install nodemailer: npm install nodemailer @types/nodemailer
@@ -24,27 +27,27 @@ interface EmailOptions {
 
 /**
  * Send an email (simulated for development)
- * TODO: Replace with real email service in production
+ * See https://github.com/tsatsu10/meridian/issues/60 — replace with real email service in production
  */
 async function sendEmail(options: EmailOptions): Promise<boolean> {
   const { to, subject, html, text } = options;
-  
+
   // DEVELOPMENT: Log email to console
-  if (process.env.NODE_ENV === 'development') {
-    logger.info('📧 [EMAIL SIMULATION] Sending email:');
+  if (process.env.NODE_ENV === "development") {
+    logger.info("📧 [EMAIL SIMULATION] Sending email:");
     logger.info(`   To: ${to}`);
     logger.info(`   Subject: ${subject}`);
     logger.info(`   Preview: ${text.substring(0, 200)}...`);
-    
+
     // Simulate email sending delay
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     return true;
   }
-  
+
   // PRODUCTION: Use real email service
   try {
-    // TODO: Implement real email sending
+    // See https://github.com/tsatsu10/meridian/issues/60
     // Example with nodemailer:
     /*
     const nodemailer = require('nodemailer');
@@ -66,11 +69,13 @@ async function sendEmail(options: EmailOptions): Promise<boolean> {
       text,
     });
     */
-    
-    logger.warn('⚠️ Email sending not configured for production. Email not sent.');
+
+    logger.warn(
+      "⚠️ Email sending not configured for production. Email not sent.",
+    );
     return false;
   } catch (error) {
-    logger.error('Failed to send email:', error);
+    logger.error("Failed to send email:", error);
     return false;
   }
 }
@@ -80,18 +85,18 @@ async function sendEmail(options: EmailOptions): Promise<boolean> {
  */
 export async function sendDigestEmail(digest: DigestData): Promise<boolean> {
   const db = getDatabase();
-  
+
   try {
     const { user, period } = digest;
-    
+
     // Generate email content
     const html = generateDigestEmailHTML(digest);
     const text = generateDigestEmailText(digest);
-    
+
     // Create subject line
-    const periodLabel = period.type === 'daily' ? 'Daily' : 'Weekly';
+    const periodLabel = period.type === "daily" ? "Daily" : "Weekly";
     const subject = `${periodLabel} Digest - ${new Date().toLocaleDateString()}`;
-    
+
     // Send email
     const success = await sendEmail({
       to: user.email,
@@ -99,7 +104,7 @@ export async function sendDigestEmail(digest: DigestData): Promise<boolean> {
       html,
       text,
     });
-    
+
     if (success) {
       // Mark digest as sent
       await db
@@ -109,18 +114,17 @@ export async function sendDigestEmail(digest: DigestData): Promise<boolean> {
           and(
             eq(digestMetrics.userEmail, user.email),
             eq(digestMetrics.periodStart, period.start),
-            eq(digestMetrics.periodEnd, period.end)
-          )
+            eq(digestMetrics.periodEnd, period.end),
+          ),
         );
-      
+
       logger.info(`✅ Digest email sent to ${user.email}`);
       return true;
-    } else {
-      logger.warn(`⚠️ Failed to send digest email to ${user.email}`);
-      return false;
     }
+    logger.warn(`⚠️ Failed to send digest email to ${user.email}`);
+    return false;
   } catch (error) {
-    logger.error('Failed to send digest email:', error);
+    logger.error("Failed to send digest email:", error);
     return false;
   }
 }
@@ -139,17 +143,18 @@ export async function sendTestEmail(to: string): Promise<boolean> {
         </body>
       </html>
     `;
-    
-    const text = 'Email Test Successful!\n\nYour Meridian email configuration is working correctly.';
-    
+
+    const text =
+      "Email Test Successful!\n\nYour Meridian email configuration is working correctly.";
+
     return await sendEmail({
       to,
-      subject: 'Meridian Email Test',
+      subject: "Meridian Email Test",
       html,
       text,
     });
   } catch (error) {
-    logger.error('Failed to send test email:', error);
+    logger.error("Failed to send test email:", error);
     return false;
   }
 }
@@ -183,5 +188,3 @@ To enable real email sending in production:
    - Generate an app-specific password
    - Use that password in SMTP_PASS
 `;
-
-

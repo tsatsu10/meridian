@@ -2,10 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { client } from "@meridian/libs";
-import useProjectStore from "@/store/project";
+import { looseClient } from "@/lib/rpc-client";
 
 interface AddColumnModalProps {
   open: boolean;
@@ -15,15 +20,19 @@ interface AddColumnModalProps {
 }
 
 // @epic-1.1-subtasks: Add custom status columns for Sarah's PM workflow enhancement
-function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddColumnModalProps) {
+function AddColumnModal({
+  open,
+  onClose,
+  projectId,
+  insertAfterPosition,
+}: AddColumnModalProps) {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#6b7280");
   const [isLoading, setIsLoading] = useState(false);
-  const { project, setProject } = useProjectStore();
 
   const predefinedColors = [
     "#6b7280", // gray
-    "#3b82f6", // blue  
+    "#3b82f6", // blue
     "#8b5cf6", // purple
     "#10b981", // green
     "#f59e0b", // amber
@@ -36,7 +45,7 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim()) {
       toast.error("Column name is required");
       return;
@@ -49,7 +58,10 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
 
     setIsLoading(true);
 
-    try {const response = await client.project[":projectId"]["status-columns"].$post({
+    try {
+      const response = await looseClient.project[":projectId"][
+        "status-columns"
+      ].$post({
         param: { projectId },
         json: {
           name: name.trim(),
@@ -62,13 +74,13 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
         throw new Error("Failed to create column");
       }
 
-      const newColumn = await response.json();
+      void (await response.json());
 
       toast.success(`"${name}" column created successfully`);
       setName("");
       setColor("#6b7280");
       onClose();
-      
+
       // Force a page refresh to get the updated column order
       window.location.reload();
     } catch (error) {
@@ -93,10 +105,11 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
         <DialogHeader>
           <DialogTitle>Add New Column</DialogTitle>
           <DialogDescription>
-            Create a new custom column for your kanban board. Choose a name and color that represents this stage of your workflow.
+            Create a new custom column for your kanban board. Choose a name and
+            color that represents this stage of your workflow.
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="column-name">Column Name</Label>
@@ -118,8 +131,8 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
                   key={colorOption}
                   type="button"
                   className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    color === colorOption 
-                      ? "border-zinc-900 dark:border-zinc-100 scale-110" 
+                    color === colorOption
+                      ? "border-zinc-900 dark:border-zinc-100 scale-110"
                       : "border-zinc-300 dark:border-zinc-600 hover:scale-105"
                   }`}
                   style={{ backgroundColor: colorOption }}
@@ -129,7 +142,9 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
               ))}
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <Label htmlFor="custom-color" className="text-sm">Custom:</Label>
+              <Label htmlFor="custom-color" className="text-sm">
+                Custom:
+              </Label>
               <input
                 id="custom-color"
                 type="color"
@@ -142,18 +157,15 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={handleClose}
               disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading || !name.trim()}
-            >
+            <Button type="submit" disabled={isLoading || !name.trim()}>
               {isLoading ? "Creating..." : "Create Column"}
             </Button>
           </div>
@@ -163,4 +175,4 @@ function AddColumnModal({ open, onClose, projectId, insertAfterPosition }: AddCo
   );
 }
 
-export default AddColumnModal; 
+export default AddColumnModal;

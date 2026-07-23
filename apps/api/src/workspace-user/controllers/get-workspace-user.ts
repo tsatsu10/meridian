@@ -21,4 +21,3 @@ async function getWorkspaceUser(id: string) {
 }
 
 export default getWorkspaceUser;
-

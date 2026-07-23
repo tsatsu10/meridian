@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userEducationTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface EducationData {
   school: string;
@@ -18,9 +18,13 @@ interface EducationData {
   order?: number;
 }
 
-const updateEducation = async (userId: string, educationId: string, educationData: EducationData) => {
+const updateEducation = async (
+  userId: string,
+  educationId: string,
+  educationData: EducationData,
+) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .update(userEducationTable)
@@ -34,15 +38,19 @@ const updateEducation = async (userId: string, educationId: string, educationDat
         endDate: educationData.endDate,
         isCurrent: educationData.isCurrent || false,
         grade: educationData.grade,
-        activities: educationData.activities ? JSON.stringify(educationData.activities) : null,
+        activities: educationData.activities
+          ? JSON.stringify(educationData.activities)
+          : null,
         schoolLogo: educationData.schoolLogo,
         order: educationData.order || 0,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(userEducationTable.id, educationId),
-        eq(userEducationTable.userId, userId)
-      ))
+      .where(
+        and(
+          eq(userEducationTable.id, educationId),
+          eq(userEducationTable.userId, userId),
+        ),
+      )
       .returning();
 
     return result[0];
@@ -52,4 +60,4 @@ const updateEducation = async (userId: string, educationId: string, educationDat
   }
 };
 
-export default updateEducation; 
+export default updateEducation;

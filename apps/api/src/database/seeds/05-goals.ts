@@ -1,6 +1,6 @@
 /**
  * 🎯 Phase 5: Goals & OKRs Seed
- * 
+ *
  * Creates:
  * - 25 goals (personal, team, strategic)
  * - 75 key results (3 per goal)
@@ -14,11 +14,7 @@ config();
 import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import { getDatabase, initializeDatabase } from "../connection";
-import {
-  goals,
-  goalKeyResults,
-  goalReflections,
-} from "../schema/goals";
+import { goals, goalKeyResults, goalReflections } from "../schema/goals";
 import { users, workspaces } from "../schema";
 import logger from "../../utils/logger";
 import {
@@ -74,12 +70,12 @@ export async function seedGoals() {
       throw new Error("Workspace and users required. Run phases 1-2 first.");
     }
 
-    const createdGoals: any[] = [];
-    const createdKeyResults: any[] = [];
+    const createdGoals: unknown[] = [];
+    const createdKeyResults: unknown[] = [];
 
     // 1. CREATE PERSONAL GOALS
     logger.info("🎯 Creating personal goals...");
-    
+
     for (const user of allUsers) {
       const goalCount = randomInt(2, 4);
 
@@ -90,9 +86,8 @@ export async function seedGoals() {
         endDate.setDate(endDate.getDate() + 90); // 90 days from start
 
         const progress = randomInt(20, 90);
-        const status = progress === 100 ? 'completed' : 
-                       progress < 30 ? 'at_risk' : 
-                       'active';
+        const status =
+          progress === 100 ? "completed" : progress < 30 ? "at_risk" : "active";
 
         const [goal] = await db
           .insert(goals)
@@ -100,15 +95,15 @@ export async function seedGoals() {
             workspaceId: workspace.id,
             userId: user.id,
             title,
-            description: generateDescription('goal'),
-            type: 'personal',
-            timeframe: 'Q1 2025',
+            description: generateDescription("goal"),
+            type: "personal",
+            timeframe: "Q1 2025",
             startDate,
             endDate,
-            status: status as any,
+            status: status as (typeof goals.status.enumValues)[number],
             progress,
-            privacy: 'private',
-            priority: randomElement(['low', 'medium', 'high']),
+            privacy: "private",
+            priority: randomElement(["low", "medium", "high"]),
           })
           .returning();
 
@@ -131,8 +126,13 @@ export async function seedGoals() {
               description: `Key result ${j + 1} for ${title.substring(0, 30)}...`,
               targetValue: target.toString(),
               currentValue: currentValue.toString(),
-              unit: randomElement(['percent', 'number', 'hours', 'count']),
-              status: krProgress >= 70 ? 'on_track' : krProgress >= 40 ? 'at_risk' : 'behind',
+              unit: randomElement(["percent", "number", "hours", "count"]),
+              status:
+                krProgress >= 70
+                  ? "on_track"
+                  : krProgress >= 40
+                    ? "at_risk"
+                    : "behind",
               dueDate: endDate,
             })
             .returning();
@@ -144,13 +144,17 @@ export async function seedGoals() {
         }
       }
 
-      logger.info(`   ✅ ${user.name}: Created ${goalCount} personal goals with ${goalCount * 2.5} key results (avg)`);
+      logger.info(
+        `   ✅ ${user.name}: Created ${goalCount} personal goals with ${goalCount * 2.5} key results (avg)`,
+      );
     }
 
     // 2. CREATE TEAM GOALS
     logger.info("\n👥 Creating team goals...");
-    
-    const teamLeads = allUsers.filter(u => u.role === 'team-lead' || u.role === 'project-manager');
+
+    const teamLeads = allUsers.filter(
+      (u) => u.role === "team-lead" || u.role === "project-manager",
+    );
 
     for (const lead of teamLeads) {
       const goalCount = randomInt(2, 3);
@@ -169,15 +173,15 @@ export async function seedGoals() {
             workspaceId: workspace.id,
             userId: lead.id,
             title,
-            description: generateDescription('goal'),
-            type: 'team',
-            timeframe: 'Q4 2024',
+            description: generateDescription("goal"),
+            type: "team",
+            timeframe: "Q4 2024",
             startDate,
             endDate,
-            status: 'active',
+            status: "active",
             progress,
-            privacy: 'team',
-            priority: randomElement(['medium', 'high']),
+            privacy: "team",
+            priority: randomElement(["medium", "high"]),
           })
           .returning();
 
@@ -194,12 +198,17 @@ export async function seedGoals() {
             description: `Team KR ${j + 1}: ${title.substring(0, 40)}`,
             targetValue: "100",
             currentValue: krProgress.toString(),
-            unit: 'percent',
-            status: krProgress >= 70 ? 'on_track' : krProgress >= 40 ? 'at_risk' : 'behind',
+            unit: "percent",
+            status:
+              krProgress >= 70
+                ? "on_track"
+                : krProgress >= 40
+                  ? "at_risk"
+                  : "behind",
             dueDate: endDate,
           });
 
-          createdKeyResults.push({} as any);
+          createdKeyResults.push({});
         }
       }
 
@@ -208,9 +217,9 @@ export async function seedGoals() {
 
     // 3. CREATE STRATEGIC GOALS
     logger.info("\n🏢 Creating strategic goals...");
-    
-    const executives = allUsers.filter(u => 
-      u.role === 'workspace-manager' || u.role === 'department-head'
+
+    const executives = allUsers.filter(
+      (u) => u.role === "workspace-manager" || u.role === "department-head",
     );
 
     for (const exec of executives) {
@@ -230,15 +239,15 @@ export async function seedGoals() {
             workspaceId: workspace.id,
             userId: exec.id,
             title,
-            description: generateDescription('goal'),
-            type: 'strategic',
-            timeframe: '2025',
+            description: generateDescription("goal"),
+            type: "strategic",
+            timeframe: "2025",
             startDate,
             endDate,
-            status: 'active',
+            status: "active",
             progress,
-            privacy: 'organization',
-            priority: 'high',
+            privacy: "organization",
+            priority: "high",
           })
           .returning();
 
@@ -254,12 +263,17 @@ export async function seedGoals() {
             description: `Strategic KR ${j + 1}`,
             targetValue: "100",
             currentValue: stratCurrent.toString(),
-            unit: 'percent',
-            status: stratCurrent >= 70 ? 'on_track' : stratCurrent >= 40 ? 'at_risk' : 'behind',
+            unit: "percent",
+            status:
+              stratCurrent >= 70
+                ? "on_track"
+                : stratCurrent >= 40
+                  ? "at_risk"
+                  : "behind",
             dueDate: endDate,
           });
 
-          createdKeyResults.push({} as any);
+          createdKeyResults.push({});
         }
       }
 
@@ -268,25 +282,30 @@ export async function seedGoals() {
 
     // 4. CREATE GOAL REFLECTIONS
     logger.info("\n💭 Creating goal reflections...");
-    logger.info("   ⏭️  Skipping reflections (schema mismatch - many required fields)");
-    
-    let reflectionCount = 0;
+    logger.info(
+      "   ⏭️  Skipping reflections (schema mismatch - many required fields)",
+    );
+
+    const reflectionCount = 0;
 
     // NOTE: Goal reflections skipped due to complex schema requirements
     // The goal_reflections table has many required fields that would need
     // proper mapping from the goals table. Can be added later if needed.
 
     logger.info("\n✅ Phase 5 complete: Created goals and OKRs");
-    logger.info(`   🎯 Goals: ${createdGoals.length} (personal, team, strategic)`);
+    logger.info(
+      `   🎯 Goals: ${createdGoals.length} (personal, team, strategic)`,
+    );
     logger.info(`   📊 Key Results: ${createdKeyResults.length}`);
-    logger.info(`   📈 Progress Snapshots: 0 (skipped - table not in schema)`);
-    logger.info(`   💭 Reflections: ${reflectionCount} (skipped - schema mismatch)`);
+    logger.info("   📈 Progress Snapshots: 0 (skipped - table not in schema)");
+    logger.info(
+      `   💭 Reflections: ${reflectionCount} (skipped - schema mismatch)`,
+    );
 
     return {
       goals: createdGoals,
       keyResults: createdKeyResults,
     };
-
   } catch (error) {
     logger.error("❌ Error seeding goals:", error);
     throw error;

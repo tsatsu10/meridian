@@ -1,20 +1,20 @@
 /**
  * Add Team Member Controller
- * 
+ *
  * Adds a user to a team with specified role
- * 
+ *
  * @epic-3.4-teams: Add member to team functionality
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq, and } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { getDatabase } from "../../../database/connection";
-import logger from '../../../utils/logger';
-import { 
+import logger from "../../../utils/logger";
+import {
   teams,
   teamMembers,
-  userTable as users
+  userTable as users,
 } from "../../../database/schema";
 
 interface AddMemberRequest {
@@ -27,6 +27,9 @@ async function addMember(c: Context) {
   const db = getDatabase();
   const { projectId, teamId } = c.req.param();
   const currentUserEmail = c.get("userEmail");
+  if (!currentUserEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
 
   if (!projectId || !teamId) {
     return c.json({ error: "Project ID and Team ID are required" }, 400);
@@ -49,7 +52,7 @@ async function addMember(c: Context) {
       where: and(
         eq(teams.id, teamId),
         eq(teams.projectId, projectId),
-        eq(teams.isActive, true)
+        eq(teams.isActive, true),
       ),
     });
 
@@ -78,7 +81,7 @@ async function addMember(c: Context) {
     const existingMember = await db.query.teamMembers.findFirst({
       where: and(
         eq(teamMembers.teamId, teamId),
-        eq(teamMembers.userId, userToAdd.id)
+        eq(teamMembers.userId, userToAdd.id),
       ),
     });
 
@@ -99,16 +102,23 @@ async function addMember(c: Context) {
       })
       .returning();
 
+    if (!newMember) {
+      throw new Error("newMember: write returned no row");
+    }
+
     // Return member with user details
-    return c.json({
-      id: newMember.id,
-      userId: userToAdd.id,
-      userEmail: userToAdd.email,
-      userName: userToAdd.name,
-      avatar: userToAdd.avatar,
-      role: newMember.role,
-      joinedAt: newMember.joinedAt,
-    }, 201);
+    return c.json(
+      {
+        id: newMember.id,
+        userId: userToAdd.id,
+        userEmail: userToAdd.email,
+        userName: userToAdd.name,
+        avatar: userToAdd.avatar,
+        role: newMember.role,
+        joinedAt: newMember.joinedAt,
+      },
+      201,
+    );
   } catch (error) {
     logger.error("Error adding team member:", error);
     return c.json({ error: "Failed to add team member" }, 500);
@@ -116,5 +126,3 @@ async function addMember(c: Context) {
 }
 
 export default addMember;
-
-

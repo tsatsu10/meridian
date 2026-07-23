@@ -1,6 +1,13 @@
 import { Star, Clock, Users, TrendingUp, CheckCircle2 } from "lucide-react";
 import type { ProjectTemplate } from "../../types/templates";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
@@ -11,7 +18,11 @@ interface TemplateCardProps {
   onApply?: () => void;
 }
 
-export function TemplateCard({ template, onViewDetails, onApply }: TemplateCardProps) {
+export function TemplateCard({
+  template,
+  onViewDetails,
+  onApply,
+}: TemplateCardProps) {
   const difficultyColor = {
     beginner: "bg-green-500/10 text-green-700 dark:text-green-400",
     intermediate: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
@@ -57,7 +68,10 @@ export function TemplateCard({ template, onViewDetails, onApply }: TemplateCardP
           {/* Difficulty */}
           <Badge
             variant="outline"
-            className={cn("capitalize text-xs", difficultyColor[template.difficulty])}
+            className={cn(
+              "capitalize text-xs",
+              difficultyColor[template.difficulty],
+            )}
           >
             {template.difficulty}
           </Badge>
@@ -66,12 +80,17 @@ export function TemplateCard({ template, onViewDetails, onApply }: TemplateCardP
           <Badge variant="outline" className="flex items-center gap-1 text-xs">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             {template.rating.toFixed(1)}
-            <span className="text-muted-foreground">({template.ratingCount})</span>
+            <span className="text-muted-foreground">
+              ({template.ratingCount})
+            </span>
           </Badge>
 
           {/* Duration */}
           {template.estimatedDuration && (
-            <Badge variant="outline" className="flex items-center gap-1 text-xs">
+            <Badge
+              variant="outline"
+              className="flex items-center gap-1 text-xs"
+            >
               <Clock className="h-3 w-3" />
               {template.estimatedDuration} days
             </Badge>
@@ -110,11 +129,7 @@ export function TemplateCard({ template, onViewDetails, onApply }: TemplateCardP
       </CardContent>
 
       <CardFooter className="gap-2">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={onViewDetails}
-        >
+        <Button variant="outline" className="flex-1" onClick={onViewDetails}>
           View Details
         </Button>
         {onApply && (
@@ -130,4 +145,3 @@ export function TemplateCard({ template, onViewDetails, onApply }: TemplateCardP
     </Card>
   );
 }
-

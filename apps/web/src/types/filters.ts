@@ -3,26 +3,32 @@
  * Shared filter types for dashboard views
  */
 
-export type FilterStatus = 'all' | 'pending' | 'in-progress' | 'done' | 'blocked' | 'overdue';
-export type FilterPriority = 'all' | 'low' | 'medium' | 'high' | 'urgent';
-export type FilterTimeRange = '7d' | '30d' | '90d' | '1y' | 'all' | 'custom';
+export type FilterStatus =
+  | "all"
+  | "pending"
+  | "in-progress"
+  | "done"
+  | "blocked"
+  | "overdue";
+export type FilterPriority = "all" | "low" | "medium" | "high" | "urgent";
+export type FilterTimeRange = "7d" | "30d" | "90d" | "1y" | "all" | "custom";
 
 export interface DashboardFilters {
   // Time-based filters
   timeRange: FilterTimeRange;
   customStartDate?: string;
   customEndDate?: string;
-  
+
   // Entity filters
   projectIds: string[];
   userIds: string[];
   departmentIds?: string[];
-  
+
   // Attribute filters
   priorities: FilterPriority[];
   status: FilterStatus[];
   tags: string[];
-  
+
   // Advanced filters
   hasAttachments?: boolean;
   hasComments?: boolean;
@@ -44,88 +50,90 @@ export interface FilterPreset {
   updatedAt: Date;
 }
 
-export const SYSTEM_FILTER_PRESETS: Omit<FilterPreset, 'id' | 'createdAt' | 'updatedAt'>[] = [
+export const SYSTEM_FILTER_PRESETS: Omit<
+  FilterPreset,
+  "id" | "createdAt" | "updatedAt"
+>[] = [
   {
-    name: 'My Overdue Tasks',
-    description: 'Tasks assigned to me that are past their due date',
+    name: "My Overdue Tasks",
+    description: "Tasks assigned to me that are past their due date",
     filters: {
-      timeRange: 'all',
+      timeRange: "all",
       projectIds: [],
       userIds: [],
       priorities: [],
       status: [],
       tags: [],
       isOverdue: true,
-      assignedToMe: true
+      assignedToMe: true,
     },
     isSystem: true,
     isDefault: false,
-    icon: 'alert-circle',
-    color: 'red'
+    icon: "alert-circle",
+    color: "red",
   },
   {
     name: "Team's This Week",
-    description: 'All tasks for your team due this week',
+    description: "All tasks for your team due this week",
     filters: {
-      timeRange: '7d',
+      timeRange: "7d",
       projectIds: [],
       userIds: [],
       priorities: [],
-      status: ['in-progress', 'pending'],
-      tags: []
+      status: ["in-progress", "pending"],
+      tags: [],
     },
     isSystem: true,
     isDefault: false,
-    icon: 'users',
-    color: 'blue'
+    icon: "users",
+    color: "blue",
   },
   {
-    name: 'High Priority Incomplete',
-    description: 'Urgent and high priority tasks not yet completed',
+    name: "High Priority Incomplete",
+    description: "Urgent and high priority tasks not yet completed",
     filters: {
-      timeRange: 'all',
+      timeRange: "all",
       projectIds: [],
       userIds: [],
-      priorities: ['urgent', 'high'],
-      status: ['pending', 'in-progress'],
-      tags: []
+      priorities: ["urgent", "high"],
+      status: ["pending", "in-progress"],
+      tags: [],
     },
     isSystem: true,
     isDefault: false,
-    icon: 'flame',
-    color: 'orange'
+    icon: "flame",
+    color: "orange",
   },
   {
-    name: 'Recently Updated',
-    description: 'Tasks modified in the last 7 days',
+    name: "Recently Updated",
+    description: "Tasks modified in the last 7 days",
     filters: {
-      timeRange: '7d',
+      timeRange: "7d",
       projectIds: [],
       userIds: [],
       priorities: [],
       status: [],
-      tags: []
+      tags: [],
     },
     isSystem: true,
     isDefault: false,
-    icon: 'clock',
-    color: 'green'
+    icon: "clock",
+    color: "green",
   },
   {
-    name: 'All Active',
-    description: 'All currently active tasks across projects',
+    name: "All Active",
+    description: "All currently active tasks across projects",
     filters: {
-      timeRange: 'all',
+      timeRange: "all",
       projectIds: [],
       userIds: [],
       priorities: [],
-      status: ['pending', 'in-progress'],
-      tags: []
+      status: ["pending", "in-progress"],
+      tags: [],
     },
     isSystem: true,
     isDefault: true,
-    icon: 'check-circle',
-    color: 'purple'
-  }
+    icon: "check-circle",
+    color: "purple",
+  },
 ];
-

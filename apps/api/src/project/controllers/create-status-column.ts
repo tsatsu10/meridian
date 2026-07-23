@@ -2,13 +2,13 @@ import { eq, gte, and } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
 import { projectTable, statusColumnTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // Fix position conflicts by renumbering all columns sequentially
 async function fixPositionConflicts(projectId: string) {
   const db = getDatabase();
-  logger.debug('🔧 Fixing position conflicts for project:', projectId);
-  
+  logger.debug("🔧 Fixing position conflicts for project:", projectId);
+
   // Get all columns sorted by current position, then by creation date for tiebreaker
   const columns = await db
     .select()
@@ -16,28 +16,34 @@ async function fixPositionConflicts(projectId: string) {
     .where(eq(statusColumnTable.projectId, projectId))
     .orderBy(statusColumnTable.position, statusColumnTable.createdAt);
 
-  logger.debug('🔧 Current columns before fix:', columns.map(c => ({ 
-    id: c.id, 
-    name: c.name, 
-    position: c.position, 
-    isDefault: c.isDefault 
-  })));
+  logger.debug(
+    "🔧 Current columns before fix:",
+    columns.map((c) => ({
+      id: c.id,
+      name: c.name,
+      position: c.position,
+      isDefault: c.isDefault,
+    })),
+  );
 
   // Renumber positions sequentially
   for (let i = 0; i < columns.length; i++) {
     const column = columns[i];
+    if (!column) continue;
     const newPosition = i; // 0, 1, 2, 3, 4...
-    
+
     if (column.position !== newPosition) {
-      logger.debug(`🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`);
+      logger.debug(
+        `🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`,
+      );
       await db
         .update(statusColumnTable)
         .set({ position: newPosition })
         .where(eq(statusColumnTable.id, column.id));
     }
   }
-  
-  logger.debug('🔧 Position conflicts fixed');
+
+  logger.debug("🔧 Position conflicts fixed");
 }
 
 // @epic-1.1-subtasks: Create custom status columns for Sarah's PM workflow
@@ -70,15 +76,15 @@ async function createStatusColumn({
   // Generate slug from name
   const slug = name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
     .trim();
 
   // If position is provided, shift existing columns to make room
   if (position !== undefined) {
-    logger.debug('🔧 Shifting columns at position >=', position);
-    
+    logger.debug("🔧 Shifting columns at position >=", position);
+
     // Get all columns at or after this position, ordered by position for predictable shifting
     const columnsToShift = await db
       .select()
@@ -86,27 +92,34 @@ async function createStatusColumn({
       .where(
         and(
           eq(statusColumnTable.projectId, projectId),
-          gte(statusColumnTable.position, position)
-        )
+          gte(statusColumnTable.position, position),
+        ),
       )
       .orderBy(statusColumnTable.position);
 
-    logger.debug('🔧 Columns to shift:', columnsToShift.map(c => ({ 
-      name: c.name, 
-      currentPosition: c.position, 
-      newPosition: c.position + 1 
-    })));
+    logger.debug(
+      "🔧 Columns to shift:",
+      columnsToShift.map((c) => ({
+        name: c.name,
+        currentPosition: c.position,
+        newPosition: c.position + 1,
+      })),
+    );
 
     // Shift each column by 1 position, starting from the highest position to avoid conflicts
-    const sortedColumnsToShift = columnsToShift.sort((a, b) => b.position - a.position);
-    
+    const sortedColumnsToShift = columnsToShift.sort(
+      (a, b) => b.position - a.position,
+    );
+
     for (const column of sortedColumnsToShift) {
       await db
         .update(statusColumnTable)
         .set({ position: column.position + 1 })
         .where(eq(statusColumnTable.id, column.id));
-      
-      logger.debug(`🔧 Shifted ${column.name} from position ${column.position} to ${column.position + 1}`);
+
+      logger.debug(
+        `🔧 Shifted ${column.name} from position ${column.position} to ${column.position + 1}`,
+      );
     }
   } else {
     // If no position provided, get the next available position
@@ -115,13 +128,14 @@ async function createStatusColumn({
       .from(statusColumnTable)
       .where(eq(statusColumnTable.projectId, projectId))
       .orderBy(statusColumnTable.position);
-      
-    position = columns.length > 0 ? Math.max(...columns.map(c => c.position)) + 1 : 4; // Start after default columns
+
+    position =
+      columns.length > 0 ? Math.max(...columns.map((c) => c.position)) + 1 : 4; // Start after default columns
   }
 
-  logger.debug('🔧 Creating new column at position:', position);
+  logger.debug("🔧 Creating new column at position:", position);
 
-  logger.debug('Inserting new column at position:', position);
+  logger.debug("Inserting new column at position:", position);
   // Create the status column
   const [createdColumn] = await db
     .insert(statusColumnTable)
@@ -135,9 +149,16 @@ async function createStatusColumn({
     })
     .returning();
 
-  logger.debug('🔧 Created column:', { name: createdColumn.name, position: createdColumn.position });
+  if (!createdColumn) {
+    throw new Error("createdColumn: write returned no row");
+  }
+
+  logger.debug("🔧 Created column:", {
+    name: createdColumn.name,
+    position: createdColumn.position,
+  });
 
   return createdColumn;
 }
 
-export default createStatusColumn; 
+export default createStatusColumn;

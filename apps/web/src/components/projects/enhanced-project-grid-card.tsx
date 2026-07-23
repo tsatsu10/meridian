@@ -7,10 +7,17 @@ import { Button } from "@/components/ui/button";
 import { HealthBadge } from "./health-badge";
 import { QuickActionsMenu } from "./quick-actions-menu";
 import { useProjectHealth } from "@/hooks/use-project-health";
-import { Star, Calendar, CheckCircle2, AlertCircle, FolderOpen } from "lucide-react";
+import {
+  Star,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  FolderOpen,
+} from "lucide-react";
 import { format, isPast } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { ProjectDashboardRow } from "@/types/project";
+import projectIcons from "@/constants/project-icons";
 
 type TaskLike = NonNullable<ProjectDashboardRow["tasks"]>[number];
 
@@ -52,7 +59,8 @@ export function EnhancedProjectGridCard({
     }).length || 0;
 
   const totalTasks = tasks.length;
-  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const progress =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const overdueTasks =
     tasks.filter((t) => {
@@ -64,8 +72,17 @@ export function EnhancedProjectGridCard({
 
   const members = project.members ?? [];
 
-  const isProjectOverdue = project.dueDate && isPast(new Date(project.dueDate)) && 
+  const isProjectOverdue =
+    project.dueDate &&
+    isPast(new Date(project.dueDate)) &&
     project.status !== "completed";
+
+  // project.icon stores a Lucide icon name (e.g. "Settings"), not a
+  // renderable emoji/character — resolve it via the shared icon map instead
+  // of printing the raw name.
+  const ProjectIcon = project.icon
+    ? projectIcons[project.icon as keyof typeof projectIcons]
+    : undefined;
 
   return (
     <motion.div
@@ -74,7 +91,7 @@ export function EnhancedProjectGridCard({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
     >
-      <Card 
+      <Card
         className="glass-card hover:border-primary/50 transition-all cursor-pointer group relative overflow-hidden"
         onClick={() => onProjectClick(project)}
       >
@@ -89,12 +106,20 @@ export function EnhancedProjectGridCard({
               onTogglePin(project.id);
             }}
           >
-            <Star className={isPinned ? "h-4 w-4 fill-yellow-500 text-yellow-500" : "h-4 w-4"} />
+            <Star
+              className={
+                isPinned ? "h-4 w-4 fill-yellow-500 text-yellow-500" : "h-4 w-4"
+              }
+            />
           </Button>
         )}
 
         {/* Quick Actions - Top Right */}
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onKeyDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
           <QuickActionsMenu
             project={project}
             isPinned={isPinned}
@@ -111,16 +136,26 @@ export function EnhancedProjectGridCard({
         <CardContent className="p-6">
           {/* Project Icon/Color */}
           <div className="flex items-start gap-3 mb-4">
-            <div className={cn(
-              "h-12 w-12 rounded-lg flex items-center justify-center text-white text-xl font-bold",
-              getProjectColor(project.name)
-            )}>
-              {project.icon || <FolderOpen className="h-6 w-6" />}
+            <div
+              className={cn(
+                "h-12 w-12 rounded-lg flex items-center justify-center text-white text-xl font-bold",
+                getProjectColor(project.name),
+              )}
+            >
+              {ProjectIcon ? (
+                <ProjectIcon className="h-6 w-6" />
+              ) : (
+                <FolderOpen className="h-6 w-6" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 min-w-0">
-                <h3 className="font-semibold truncate flex-1 min-w-0">{project.name}</h3>
-                {isPinned && <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 flex-shrink-0" />}
+                <h3 className="font-semibold truncate flex-1 min-w-0">
+                  {project.name}
+                </h3>
+                {isPinned && (
+                  <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 flex-shrink-0" />
+                )}
               </div>
               <HealthBadge health={health} className="text-xs" />
             </div>
@@ -146,21 +181,29 @@ export function EnhancedProjectGridCard({
           <div className="flex items-center flex-wrap gap-3 text-sm mb-4">
             <div className="flex items-center gap-1 text-muted-foreground flex-shrink-0">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-              <span className="text-xs whitespace-nowrap">{completedTasks}/{totalTasks}</span>
+              <span className="text-xs whitespace-nowrap">
+                {completedTasks}/{totalTasks}
+              </span>
             </div>
             {overdueTasks > 0 && (
               <div className="flex items-center gap-1 text-orange-500 flex-shrink-0">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <span className="text-xs whitespace-nowrap">{overdueTasks} overdue</span>
+                <span className="text-xs whitespace-nowrap">
+                  {overdueTasks} overdue
+                </span>
               </div>
             )}
             {project.dueDate && (
-              <div className={cn(
-                "flex items-center gap-1 flex-shrink-0",
-                isProjectOverdue ? "text-red-500" : "text-muted-foreground"
-              )}>
+              <div
+                className={cn(
+                  "flex items-center gap-1 flex-shrink-0",
+                  isProjectOverdue ? "text-red-500" : "text-muted-foreground",
+                )}
+              >
                 <Calendar className="h-4 w-4 flex-shrink-0" />
-                <span className="text-xs whitespace-nowrap">{format(new Date(project.dueDate), "MMM d, yyyy")}</span>
+                <span className="text-xs whitespace-nowrap">
+                  {format(new Date(project.dueDate), "MMM d, yyyy")}
+                </span>
               </div>
             )}
           </div>
@@ -170,8 +213,11 @@ export function EnhancedProjectGridCard({
             <div className="flex items-center justify-between gap-2 min-w-0">
               <div className="flex -space-x-2 flex-shrink-0">
                 {members.slice(0, 4).map((member) => (
-                  <Avatar key={member.id} className="h-8 w-8 border-2 border-background">
-                    <AvatarImage src={member.avatar} />
+                  <Avatar
+                    key={member.id}
+                    className="h-8 w-8 border-2 border-background"
+                  >
+                    <AvatarImage src={member.avatar ?? undefined} />
                     <AvatarFallback className="text-xs">
                       {member.name?.charAt(0) || "?"}
                     </AvatarFallback>
@@ -184,14 +230,34 @@ export function EnhancedProjectGridCard({
                 )}
               </div>
               <div className="flex gap-1 flex-wrap justify-end min-w-0">
-                <Badge variant="outline" className="text-xs capitalize whitespace-nowrap">{project.status}</Badge>
-                <Badge variant="outline" className="text-xs capitalize whitespace-nowrap">{project.priority}</Badge>
+                <Badge
+                  variant="outline"
+                  className="text-xs capitalize whitespace-nowrap"
+                >
+                  {project.status}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="text-xs capitalize whitespace-nowrap"
+                >
+                  {project.priority}
+                </Badge>
               </div>
             </div>
           ) : (
             <div className="flex gap-1 flex-wrap justify-end">
-              <Badge variant="outline" className="text-xs capitalize whitespace-nowrap">{project.status}</Badge>
-              <Badge variant="outline" className="text-xs capitalize whitespace-nowrap">{project.priority}</Badge>
+              <Badge
+                variant="outline"
+                className="text-xs capitalize whitespace-nowrap"
+              >
+                {project.status}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="text-xs capitalize whitespace-nowrap"
+              >
+                {project.priority}
+              </Badge>
             </div>
           )}
         </CardContent>
@@ -212,4 +278,3 @@ function getProjectColor(name: string) {
   const index = name.length % colors.length;
   return colors[index];
 }
-

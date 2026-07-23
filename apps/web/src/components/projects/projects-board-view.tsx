@@ -46,9 +46,11 @@ export function ProjectsBoardView({
 
     for (const p of projects) {
       if (!showArchived && p.isArchived) continue;
-      const key = p.isArchived ? "archived" : normalizeStatus(p.status);
-      const list = map.get(key) ?? map.get("other")!;
-      list.push(p);
+      const key = p.isArchived
+        ? "archived"
+        : normalizeStatus(p.status ?? undefined);
+      const list = map.get(key) ?? map.get("other");
+      list?.push(p);
     }
     return map;
   }, [projects, showArchived]);
@@ -62,7 +64,10 @@ export function ProjectsBoardView({
       {columnKeys.map((key) => {
         const items = columns.get(key) ?? [];
         return (
-          <Card key={key} className="glass-card border-border/50 flex flex-col max-h-[min(70vh,720px)]">
+          <Card
+            key={key}
+            className="glass-card border-border/50 flex flex-col max-h-[min(70vh,720px)]"
+          >
             <CardHeader className="py-3 pb-2">
               <CardTitle className="text-sm font-medium flex items-center justify-between gap-2">
                 {LABELS[key] ?? key}
@@ -84,17 +89,24 @@ export function ProjectsBoardView({
                     >
                       <p className="font-medium text-sm truncate">{p.name}</p>
                       {p.description ? (
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.description}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                          {p.description}
+                        </p>
                       ) : null}
                       <div className="flex flex-wrap gap-1 mt-2">
-                        <Badge variant="outline" className="text-[10px] capitalize">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] capitalize"
+                        >
                           {p.priority ?? "—"}
                         </Badge>
                       </div>
                     </button>
                   ))}
                   {items.length === 0 ? (
-                    <p className="text-xs text-muted-foreground py-6 text-center">No projects</p>
+                    <p className="text-xs text-muted-foreground py-6 text-center">
+                      No projects
+                    </p>
                   ) : null}
                 </div>
               </ScrollArea>

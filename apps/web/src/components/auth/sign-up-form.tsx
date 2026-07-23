@@ -67,7 +67,9 @@ export function SignUpForm() {
         history.push("/dashboard");
       }, 500);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create account");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create account",
+      );
     }
   };
 
@@ -146,7 +148,11 @@ export function SignUpForm() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </FormControl>
@@ -175,10 +181,16 @@ export function SignUpForm() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </FormControl>
@@ -195,11 +207,17 @@ export function SignUpForm() {
               className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               required
             />
-            <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
+            <label
+              htmlFor="terms"
+              className="text-sm text-gray-600 leading-relaxed"
+            >
               I accept the{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+              <button
+                type="button"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
                 Terms
-              </a>
+              </button>
             </label>
           </div>
 
@@ -220,7 +238,9 @@ export function SignUpForm() {
           <div className="w-full border-t border-gray-200" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-white text-gray-500 font-medium">Or with</span>
+          <span className="px-4 bg-white text-gray-500 font-medium">
+            Or with
+          </span>
         </div>
       </div>
 
@@ -248,7 +268,10 @@ export function SignUpForm() {
       <div className="text-center">
         <span className="text-sm text-gray-600">
           Already have an account?{" "}
-          <a href="/auth/sign-in" className="text-blue-600 hover:text-blue-700 font-medium">
+          <a
+            href="/auth/sign-in"
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
             Sign In
           </a>
         </span>

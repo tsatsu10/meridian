@@ -1,5 +1,5 @@
 // @epic-3.5-communication: Professional notifications page with modern UI/UX standards
-// @persona-sarah: PM needs organized notification management 
+// @persona-sarah: PM needs organized notification management
 // @persona-jennifer: Exec needs prioritized notification filtering
 // @persona-david: Team lead needs team activity notifications
 // @persona-mike: Dev needs focused task notifications
@@ -10,10 +10,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import NumberTicker from "@/components/magicui/number-ticker";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
@@ -23,10 +34,10 @@ import useMarkAllNotificationsAsRead from "@/hooks/mutations/notification/use-ma
 import useBatchMarkRead from "@/hooks/mutations/notification/use-batch-mark-read";
 import useBatchArchive from "@/hooks/mutations/notification/use-batch-archive";
 import useBatchDelete from "@/hooks/mutations/notification/use-batch-delete";
-import { 
-  Bell, 
-  CheckCheck, 
-  Trash2, 
+import {
+  Bell,
+  CheckCheck,
+  Trash2,
   Settings,
   Search,
   AlertTriangle,
@@ -49,25 +60,44 @@ import {
   VolumeX,
   BarChart3,
   CheckSquare,
-  Square
+  Square,
 } from "lucide-react";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import NotificationItem from "@/components/notification/notification-item";
-import NotificationPreferencesDialog, { NotificationPreferences, DEFAULT_PREFERENCES } from "@/components/notification/notification-preferences-dialog";
+import NotificationPreferencesDialog, {
+  type NotificationPreferences,
+  DEFAULT_PREFERENCES,
+} from "@/components/notification/notification-preferences-dialog";
 import NotificationAnalyticsModal from "@/components/notification/notification-analytics-modal";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
-import { playNotificationSound, preloadNotificationSound } from "@/lib/notification-sound";
+import {
+  playNotificationSound,
+  preloadNotificationSound,
+} from "@/lib/notification-sound";
 import { logger } from "@/lib/logger";
 
 export const Route = createFileRoute("/dashboard/notifications/")({
   component: NotificationsPanel,
 });
 
-type NotificationFilter = "all" | "unread" | "read" | "important" | "pinned" | "archived";
-type NotificationTypeFilter = "all" | "task" | "project" | "workspace" | "comment" | "system" | "mention";
+type NotificationFilter =
+  | "all"
+  | "unread"
+  | "read"
+  | "important"
+  | "pinned"
+  | "archived";
+type NotificationTypeFilter =
+  | "all"
+  | "task"
+  | "project"
+  | "workspace"
+  | "comment"
+  | "system"
+  | "mention";
 type ViewMode = "list" | "grid" | "compact";
 type GroupBy = "none" | "date" | "type" | "priority";
 
@@ -81,41 +111,46 @@ function NotificationsPanel() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     // Load sound preference from localStorage
-    const saved = localStorage.getItem('notificationSoundEnabled');
-    return saved !== null ? saved === 'true' : true;
+    const saved = localStorage.getItem("notificationSoundEnabled");
+    return saved !== null ? saved === "true" : true;
   });
   const [previousNotificationCount, setPreviousNotificationCount] = useState(0);
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
-  const [liveAnnouncement, setLiveAnnouncement] = useState('');
+  const [selectedNotifications, setSelectedNotifications] = useState<
+    Set<string>
+  >(new Set());
+  const [liveAnnouncement, setLiveAnnouncement] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const [preferences, setPreferences] = useState<NotificationPreferences>(() => {
-    const saved = localStorage.getItem('notificationPreferences');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return DEFAULT_PREFERENCES;
+  const [preferences, setPreferences] = useState<NotificationPreferences>(
+    () => {
+      const saved = localStorage.getItem("notificationPreferences");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          return DEFAULT_PREFERENCES;
+        }
       }
-    }
-    return DEFAULT_PREFERENCES;
-  });
-  
-  const { 
+      return DEFAULT_PREFERENCES;
+    },
+  );
+
+  const {
     data: infiniteData,
-    isLoading, 
+    isLoading,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch
-  } = useGetNotificationsInfinite({ 
-    includeArchived: filter === "archived" 
+    refetch,
+  } = useGetNotificationsInfinite({
+    includeArchived: filter === "archived",
   });
-  
+
   // Preload notification sound on mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one-time preload on mount; soundEnabled read intentionally not a re-run trigger
   useEffect(() => {
     if (soundEnabled) {
       preloadNotificationSound();
@@ -124,33 +159,39 @@ function NotificationsPanel() {
 
   // Persist sound preference to localStorage
   useEffect(() => {
-    localStorage.setItem('notificationSoundEnabled', String(soundEnabled));
+    localStorage.setItem("notificationSoundEnabled", String(soundEnabled));
   }, [soundEnabled]);
 
   // Persist preferences to localStorage
   useEffect(() => {
-    localStorage.setItem('notificationPreferences', JSON.stringify(preferences));
+    localStorage.setItem(
+      "notificationPreferences",
+      JSON.stringify(preferences),
+    );
   }, [preferences]);
 
   // Handle preference save
-  const handleSavePreferences = useCallback((newPreferences: NotificationPreferences) => {
-    setPreferences(newPreferences);
-    setSoundEnabled(newPreferences.soundEnabled);
-    setAutoRefresh(newPreferences.autoRefresh);
-    setViewMode(newPreferences.defaultView);
-    setFilter(newPreferences.defaultFilter);
-    setSortBy(newPreferences.defaultSort);
-    setGroupBy(newPreferences.defaultGroupBy);
-  }, []);
+  const handleSavePreferences = useCallback(
+    (newPreferences: NotificationPreferences) => {
+      setPreferences(newPreferences);
+      setSoundEnabled(newPreferences.soundEnabled);
+      setAutoRefresh(newPreferences.autoRefresh);
+      setViewMode(newPreferences.defaultView);
+      setFilter(newPreferences.defaultFilter);
+      setSortBy(newPreferences.defaultSort);
+      setGroupBy(newPreferences.defaultGroupBy);
+    },
+    [],
+  );
 
   // Auto-refresh implementation with polling
   useEffect(() => {
     if (autoRefresh) {
       const interval = setInterval(() => {
-        logger.debug('🔄 Auto-refreshing notifications...');
+        logger.debug("🔄 Auto-refreshing notifications...");
         refetch();
       }, 30000); // Refresh every 30 seconds
-      
+
       return () => clearInterval(interval);
     }
   }, [autoRefresh, refetch]);
@@ -159,18 +200,23 @@ function NotificationsPanel() {
   const notifications = infiniteData?.notifications || [];
   const pagination = infiniteData?.pagination;
 
-  const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkAllNotificationsAsRead();
-  const { mutate: clearAllNotifications, isPending: isClearing } = useClearNotifications();
-  const { mutate: batchMarkRead, isPending: isBatchMarkingRead } = useBatchMarkRead();
-  const { mutate: batchArchive, isPending: isBatchArchiving } = useBatchArchive();
+  const { mutate: markAllAsRead, isPending: isMarkingAsRead } =
+    useMarkAllNotificationsAsRead();
+  const { mutate: clearAllNotifications, isPending: isClearing } =
+    useClearNotifications();
+  const { mutate: batchMarkRead, isPending: isBatchMarkingRead } =
+    useBatchMarkRead();
+  const { mutate: batchArchive, isPending: isBatchArchiving } =
+    useBatchArchive();
   const { mutate: batchDelete, isPending: isBatchDeleting } = useBatchDelete();
 
   // Filter and search notifications
   const filteredNotifications = useMemo(() => {
-    let filtered = notifications.filter((notification) => {
+    const filtered = notifications.filter((notification) => {
       // Filter by archived status
-      const isArchived = (notification as any).isArchived || false;
-      
+      const isArchived =
+        (notification as { isArchived?: boolean }).isArchived || false;
+
       if (filter === "archived") {
         // Show only archived notifications
         if (!isArchived) return false;
@@ -178,22 +224,31 @@ function NotificationsPanel() {
         // For all other filters, exclude archived notifications
         if (isArchived) return false;
       }
-      
+
       // Filter by read status
       if (filter === "unread" && notification.isRead) return false;
       if (filter === "read" && !notification.isRead) return false;
-      if (filter === "important" && notification.type !== "error" && notification.type !== "warning") return false;
+      if (
+        filter === "important" &&
+        notification.type !== "error" &&
+        notification.type !== "warning"
+      )
+        return false;
       if (filter === "pinned" && !notification.isPinned) return false;
-      
+
       // Filter by type
-      if (typeFilter !== "all" && notification.type !== typeFilter) return false;
-      
+      if (typeFilter !== "all" && notification.type !== typeFilter)
+        return false;
+
       // Search filter
-      if (searchQuery && !notification.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !notification.content?.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (
+        searchQuery &&
+        !notification.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !notification.content?.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
         return false;
       }
-      
+
       return true;
     });
 
@@ -202,30 +257,38 @@ function NotificationsPanel() {
       // Pinned notifications always come first
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-      
+
       switch (sortBy) {
-        case "priority":
+        case "priority": {
           const priorityOrder = { error: 0, warning: 1, success: 2, info: 3 };
-          return (priorityOrder[a.type as keyof typeof priorityOrder] ?? 4) - 
-                 (priorityOrder[b.type as keyof typeof priorityOrder] ?? 4);
+          return (
+            (priorityOrder[a.type as keyof typeof priorityOrder] ?? 4) -
+            (priorityOrder[b.type as keyof typeof priorityOrder] ?? 4)
+          );
+        }
         case "type":
           return a.type.localeCompare(b.type);
-        case "date":
         default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
       }
     });
   }, [notifications, filter, typeFilter, searchQuery, sortBy]);
 
   const stats = useMemo(() => {
     const total = notifications.length;
-    const unread = notifications.filter(n => !n.isRead).length;
-    const read = notifications.filter(n => n.isRead).length;
-    const important = notifications.filter(n => n.type === "error" || n.type === "warning").length;
-    const mentions = notifications.filter(n => n.type === "mention").length;
-    const pinned = notifications.filter(n => n.isPinned).length;
-    const today = notifications.filter(n => isToday(new Date(n.createdAt))).length;
-    
+    const unread = notifications.filter((n) => !n.isRead).length;
+    const read = notifications.filter((n) => n.isRead).length;
+    const important = notifications.filter(
+      (n) => n.type === "error" || n.type === "warning",
+    ).length;
+    const mentions = notifications.filter((n) => n.type === "mention").length;
+    const pinned = notifications.filter((n) => n.isPinned).length;
+    const today = notifications.filter((n) =>
+      isToday(new Date(n.createdAt)),
+    ).length;
+
     return { total, unread, read, important, mentions, pinned, today };
   }, [notifications]);
 
@@ -235,27 +298,26 @@ function NotificationsPanel() {
       const newCount = notifications.length - previousNotificationCount;
       if (newCount > 0) {
         logger.debug(`🔔 ${newCount} new notification(s) detected`);
-        
+
         // Play sound if enabled
         if (soundEnabled) {
           playNotificationSound(0.5);
         }
-        
+
         // Announce to screen readers
-        setLiveAnnouncement(`${newCount} new notification${newCount > 1 ? 's' : ''} received`);
-        setTimeout(() => setLiveAnnouncement(''), 3000);
-        
-        // Show toast for new notifications
-        toast.info(
-          `${newCount} new notification${newCount > 1 ? 's' : ''}`,
-          {
-            icon: '🔔',
-            duration: 3000,
-          }
+        setLiveAnnouncement(
+          `${newCount} new notification${newCount > 1 ? "s" : ""} received`,
         );
+        setTimeout(() => setLiveAnnouncement(""), 3000);
+
+        // Show toast for new notifications
+        toast.info(`${newCount} new notification${newCount > 1 ? "s" : ""}`, {
+          icon: "🔔",
+          duration: 3000,
+        });
       }
     }
-    
+
     // Update previous count
     if (notifications.length > 0) {
       setPreviousNotificationCount(notifications.length);
@@ -263,15 +325,19 @@ function NotificationsPanel() {
   }, [notifications.length, soundEnabled, previousNotificationCount]);
 
   // Keyboard shortcuts
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyboard navigation handler; deps intentionally scoped to avoid re-binding the listener on every list/focus change
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
         return;
       }
 
       // Ctrl/Cmd + A: Mark all as read
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
         if (stats.unread > 0) {
           e.preventDefault();
           handleMarkAllAsRead();
@@ -279,7 +345,7 @@ function NotificationsPanel() {
       }
 
       // Ctrl/Cmd + Shift + D: Clear all
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "D") {
         if (notifications.length > 0) {
           e.preventDefault();
           handleClearAllNotifications();
@@ -287,7 +353,7 @@ function NotificationsPanel() {
       }
 
       // Ctrl/Cmd + S: Toggle selection mode
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         if (notifications.length > 0) {
           e.preventDefault();
           toggleSelectionMode();
@@ -295,7 +361,7 @@ function NotificationsPanel() {
       }
 
       // Ctrl/Cmd + Shift + A: Toggle select all (when in selection mode)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "A") {
         if (selectionMode) {
           e.preventDefault();
           toggleSelectAll();
@@ -303,7 +369,7 @@ function NotificationsPanel() {
       }
 
       // Delete: Batch delete selected (when in selection mode)
-      if (e.key === 'Delete') {
+      if (e.key === "Delete") {
         if (selectionMode && selectedNotifications.size > 0) {
           e.preventDefault();
           handleBatchDelete();
@@ -311,7 +377,7 @@ function NotificationsPanel() {
       }
 
       // Escape: Exit selection mode
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (selectionMode) {
           e.preventDefault();
           toggleSelectionMode();
@@ -319,30 +385,30 @@ function NotificationsPanel() {
       }
 
       // R: Refresh notifications
-      if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
+      if (e.key === "r" && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         refetch();
       }
 
       // Arrow navigation
-      if (e.key === 'ArrowDown') {
+      if (e.key === "ArrowDown") {
         if (filteredNotifications.length > 0) {
           e.preventDefault();
-          setFocusedIndex(prev => 
-            prev < filteredNotifications.length - 1 ? prev + 1 : prev
+          setFocusedIndex((prev) =>
+            prev < filteredNotifications.length - 1 ? prev + 1 : prev,
           );
         }
       }
 
-      if (e.key === 'ArrowUp') {
+      if (e.key === "ArrowUp") {
         if (filteredNotifications.length > 0) {
           e.preventDefault();
-          setFocusedIndex(prev => (prev > 0 ? prev - 1 : 0));
+          setFocusedIndex((prev) => (prev > 0 ? prev - 1 : 0));
         }
       }
 
       // Enter: Mark focused notification as read or toggle selection
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         if (focusedIndex >= 0 && focusedIndex < filteredNotifications.length) {
           e.preventDefault();
           const notification = filteredNotifications[focusedIndex];
@@ -350,14 +416,18 @@ function NotificationsPanel() {
             toggleNotificationSelection(notification.id);
           } else if (!notification.isRead) {
             // Would need to import the mutation here, simplified for now
-            logger.debug('Mark as read:', notification.id);
+            logger.debug("Mark as read:", notification.id);
           }
         }
       }
 
       // Space: Toggle selection (in selection mode)
-      if (e.key === ' ') {
-        if (selectionMode && focusedIndex >= 0 && focusedIndex < filteredNotifications.length) {
+      if (e.key === " ") {
+        if (
+          selectionMode &&
+          focusedIndex >= 0 &&
+          focusedIndex < filteredNotifications.length
+        ) {
           e.preventDefault();
           const notification = filteredNotifications[focusedIndex];
           toggleNotificationSelection(notification.id);
@@ -365,9 +435,17 @@ function NotificationsPanel() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stats.unread, notifications.length, selectionMode, selectedNotifications.size, refetch, filteredNotifications.length, focusedIndex]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    stats.unread,
+    notifications.length,
+    selectionMode,
+    selectedNotifications.size,
+    refetch,
+    filteredNotifications.length,
+    focusedIndex,
+  ]);
 
   // Group notifications
   const groupedNotifications = useMemo(() => {
@@ -375,13 +453,13 @@ function NotificationsPanel() {
       return [{ title: "", notifications: filteredNotifications }];
     }
 
-    const groups: Record<string, any[]> = {};
-    
-    filteredNotifications.forEach((notification) => {
+    const groups: Record<string, (typeof filteredNotifications)[number][]> = {};
+
+    for (const notification of filteredNotifications) {
       let groupKey = "";
-      
+
       switch (groupBy) {
-        case "date":
+        case "date": {
           const date = new Date(notification.createdAt);
           if (isToday(date)) {
             groupKey = "Today";
@@ -391,8 +469,11 @@ function NotificationsPanel() {
             groupKey = format(date, "MMMM d, yyyy");
           }
           break;
+        }
         case "type":
-          groupKey = notification.type.charAt(0).toUpperCase() + notification.type.slice(1);
+          groupKey =
+            notification.type.charAt(0).toUpperCase() +
+            notification.type.slice(1);
           break;
         case "priority":
           if (notification.type === "error") groupKey = "Critical";
@@ -401,12 +482,12 @@ function NotificationsPanel() {
           else groupKey = "General";
           break;
       }
-      
+
       if (!groups[groupKey]) {
         groups[groupKey] = [];
       }
       groups[groupKey].push(notification);
-    });
+    }
 
     return Object.entries(groups).map(([title, notifications]) => ({
       title,
@@ -456,7 +537,7 @@ function NotificationsPanel() {
     if (selectedNotifications.size === filteredNotifications.length) {
       setSelectedNotifications(new Set());
     } else {
-      setSelectedNotifications(new Set(filteredNotifications.map(n => n.id)));
+      setSelectedNotifications(new Set(filteredNotifications.map((n) => n.id)));
     }
   };
 
@@ -491,7 +572,9 @@ function NotificationsPanel() {
   };
 
   const handleBatchDelete = () => {
-    if (window.confirm(`Delete ${selectedNotifications.size} notification(s)?`)) {
+    if (
+      window.confirm(`Delete ${selectedNotifications.size} notification(s)?`)
+    ) {
       const ids = Array.from(selectedNotifications);
       batchDelete(ids, {
         onSuccess: () => {
@@ -504,26 +587,36 @@ function NotificationsPanel() {
 
   const getFilterIcon = (filterType: NotificationFilter) => {
     switch (filterType) {
-      case "all": return <Bell className="h-4 w-4" />;
-      case "unread": return <Mail className="h-4 w-4" />;
-      case "read": return <MailOpen className="h-4 w-4" />;
-      case "important": return <Flag className="h-4 w-4" />;
-      case "pinned": return <Pin className="h-4 w-4" />;
-      default: return <Bell className="h-4 w-4" />;
+      case "all":
+        return <Bell className="h-4 w-4" />;
+      case "unread":
+        return <Mail className="h-4 w-4" />;
+      case "read":
+        return <MailOpen className="h-4 w-4" />;
+      case "important":
+        return <Flag className="h-4 w-4" />;
+      case "pinned":
+        return <Pin className="h-4 w-4" />;
+      default:
+        return <Bell className="h-4 w-4" />;
     }
   };
 
   const getViewModeIcon = (mode: ViewMode) => {
     switch (mode) {
-      case "list": return <List className="h-4 w-4" />;
-      case "grid": return <Grid3X3 className="h-4 w-4" />;
-      case "compact": return <Layers className="h-4 w-4" />;
-      default: return <List className="h-4 w-4" />;
+      case "list":
+        return <List className="h-4 w-4" />;
+      case "grid":
+        return <Grid3X3 className="h-4 w-4" />;
+      case "compact":
+        return <Layers className="h-4 w-4" />;
+      default:
+        return <List className="h-4 w-4" />;
     }
   };
 
   // Show error state if there's an authentication error
-  if (error && error.message?.includes('Forbidden')) {
+  if (error?.message?.includes("Forbidden")) {
     return (
       <LazyDashboardLayout>
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -534,12 +627,14 @@ function NotificationsPanel() {
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
                     <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-100">Authentication Required</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-100">
+                    Authentication Required
+                  </h3>
                   <p className="text-slate-600 dark:text-slate-400 mb-6">
                     Please sign in to view your notifications.
                   </p>
-                  <Button 
-                    onClick={() => window.location.reload()} 
+                  <Button
+                    onClick={() => window.location.reload()}
                     className="w-full"
                   >
                     <RefreshCw className="mr-2 h-4 w-4" />
@@ -558,6 +653,7 @@ function NotificationsPanel() {
     <LazyDashboardLayout>
       {/* Live region for screen reader announcements */}
       <div
+        // biome-ignore lint/a11y/useSemanticElements: intentional status live region
         role="status"
         aria-live="polite"
         aria-atomic="true"
@@ -577,30 +673,41 @@ function NotificationsPanel() {
                     <Bell className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Notifications</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      Notifications
+                    </h1>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {stats.unread > 0 ? `${stats.unread} unread notifications` : 'All caught up!'}
+                      {stats.unread > 0
+                        ? `${stats.unread} unread notifications`
+                        : "All caught up!"}
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Header Actions */}
               <div className="flex items-center space-x-3">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => setSoundEnabled(!soundEnabled)}
                         className="h-9 w-9 p-0"
                       >
-                        {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                        {soundEnabled ? (
+                          <Volume2 className="h-4 w-4" />
+                        ) : (
+                          <VolumeX className="h-4 w-4" />
+                        )}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{soundEnabled ? 'Disable' : 'Enable'} notification sounds</p>
+                      <p>
+                        {soundEnabled ? "Disable" : "Enable"} notification
+                        sounds
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -614,7 +721,9 @@ function NotificationsPanel() {
                           onCheckedChange={setAutoRefresh}
                           className="data-[state=checked]:bg-blue-600"
                         />
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Auto-refresh</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          Auto-refresh
+                        </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -623,14 +732,16 @@ function NotificationsPanel() {
                   </Tooltip>
                 </TooltipProvider>
 
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => refetch()}
                   disabled={isLoading}
                   className="border-slate-200 dark:border-slate-700"
                 >
-                  <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+                  <RefreshCw
+                    className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")}
+                  />
                   Refresh
                 </Button>
               </div>
@@ -643,39 +754,39 @@ function NotificationsPanel() {
           <BlurFade delay={0.1}>
             <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {[
-                { 
-                  label: "Total", 
-                  value: stats.total, 
-                  icon: Bell, 
+                {
+                  label: "Total",
+                  value: stats.total,
+                  icon: Bell,
                   color: "from-blue-500 to-blue-600",
                   bgColor: "bg-blue-50 dark:bg-blue-950/20",
-                  textColor: "text-blue-700 dark:text-blue-300"
+                  textColor: "text-blue-700 dark:text-blue-300",
                 },
-                { 
-                  label: "Unread", 
-                  value: stats.unread, 
-                  icon: Mail, 
+                {
+                  label: "Unread",
+                  value: stats.unread,
+                  icon: Mail,
                   color: "from-orange-500 to-red-500",
                   bgColor: "bg-orange-50 dark:bg-orange-950/20",
                   textColor: "text-orange-700 dark:text-orange-300",
-                  highlight: stats.unread > 0
+                  highlight: stats.unread > 0,
                 },
-                { 
-                  label: "Important", 
-                  value: stats.important, 
-                  icon: Flag, 
+                {
+                  label: "Important",
+                  value: stats.important,
+                  icon: Flag,
                   color: "from-purple-500 to-pink-500",
                   bgColor: "bg-purple-50 dark:bg-purple-950/20",
-                  textColor: "text-purple-700 dark:text-purple-300"
+                  textColor: "text-purple-700 dark:text-purple-300",
                 },
-                { 
-                  label: "Today", 
-                  value: stats.today, 
-                  icon: Calendar, 
+                {
+                  label: "Today",
+                  value: stats.today,
+                  icon: Calendar,
                   color: "from-green-500 to-emerald-500",
                   bgColor: "bg-green-50 dark:bg-green-950/20",
-                  textColor: "text-green-700 dark:text-green-300"
-                }
+                  textColor: "text-green-700 dark:text-green-300",
+                },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -685,21 +796,33 @@ function NotificationsPanel() {
                   whileHover={{ scale: 1.02 }}
                   className="relative"
                 >
-                  <Card className={cn(
-                    "border-0 shadow-sm hover:shadow-md transition-all duration-200",
-                    "bg-white/80 backdrop-blur-sm dark:bg-slate-900/80",
-                    stat.highlight && "ring-2 ring-orange-200 dark:ring-orange-800"
-                  )}>
+                  <Card
+                    className={cn(
+                      "border-0 shadow-sm hover:shadow-md transition-all duration-200",
+                      "bg-white/80 backdrop-blur-sm dark:bg-slate-900/80",
+                      stat.highlight &&
+                        "ring-2 ring-orange-200 dark:ring-orange-800",
+                    )}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
-                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", stat.bgColor)}>
-                          <stat.icon className={cn("h-5 w-5", stat.textColor)} />
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-lg flex items-center justify-center",
+                            stat.bgColor,
+                          )}
+                        >
+                          <stat.icon
+                            className={cn("h-5 w-5", stat.textColor)}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                             <NumberTicker value={stat.value} />
                           </p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400 truncate">{stat.label}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                            {stat.label}
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -739,7 +862,16 @@ function NotificationsPanel() {
 
                 {/* Filter Tabs */}
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                  {(["all", "unread", "read", "important", "pinned", "archived"] as NotificationFilter[]).map((filterOption) => (
+                  {(
+                    [
+                      "all",
+                      "unread",
+                      "read",
+                      "important",
+                      "pinned",
+                      "archived",
+                    ] as NotificationFilter[]
+                  ).map((filterOption) => (
                     <Button
                       key={filterOption}
                       variant={filter === filterOption ? "default" : "outline"}
@@ -747,25 +879,34 @@ function NotificationsPanel() {
                       onClick={() => setFilter(filterOption)}
                       className={cn(
                         "flex items-center space-x-2 transition-all duration-200",
-                        filter === filterOption 
-                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25" 
-                          : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        filter === filterOption
+                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
+                          : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800",
                       )}
                     >
                       {getFilterIcon(filterOption)}
                       <span className="capitalize">{filterOption}</span>
                       {filterOption === "unread" && stats.unread > 0 && (
-                        <Badge variant="secondary" className="ml-1 h-5 text-xs bg-white/20 text-current border-0">
+                        <Badge
+                          variant="secondary"
+                          className="ml-1 h-5 text-xs bg-white/20 text-current border-0"
+                        >
                           {stats.unread}
                         </Badge>
                       )}
                       {filterOption === "important" && stats.important > 0 && (
-                        <Badge variant="secondary" className="ml-1 h-5 text-xs bg-white/20 text-current border-0">
+                        <Badge
+                          variant="secondary"
+                          className="ml-1 h-5 text-xs bg-white/20 text-current border-0"
+                        >
                           {stats.important}
                         </Badge>
                       )}
                       {filterOption === "pinned" && stats.pinned > 0 && (
-                        <Badge variant="secondary" className="ml-1 h-5 text-xs bg-white/20 text-current border-0">
+                        <Badge
+                          variant="secondary"
+                          className="ml-1 h-5 text-xs bg-white/20 text-current border-0"
+                        >
                           {stats.pinned}
                         </Badge>
                       )}
@@ -777,7 +918,12 @@ function NotificationsPanel() {
                 <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                   <div className="flex flex-wrap items-center gap-2 md:gap-3">
                     {/* Type Filter */}
-                    <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as NotificationTypeFilter)}>
+                    <Select
+                      value={typeFilter}
+                      onValueChange={(value) =>
+                        setTypeFilter(value as NotificationTypeFilter)
+                      }
+                    >
                       <SelectTrigger className="w-full sm:w-[160px] border-slate-200 dark:border-slate-700">
                         <FilterIcon className="h-4 w-4 mr-2" />
                         <SelectValue placeholder="Filter by type" />
@@ -793,7 +939,10 @@ function NotificationsPanel() {
                     </Select>
 
                     {/* Group By */}
-                    <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
+                    <Select
+                      value={groupBy}
+                      onValueChange={(value) => setGroupBy(value as GroupBy)}
+                    >
                       <SelectTrigger className="w-full sm:w-[140px] border-slate-200 dark:border-slate-700">
                         <Layers className="h-4 w-4 mr-2" />
                         <SelectValue />
@@ -807,7 +956,12 @@ function NotificationsPanel() {
                     </Select>
 
                     {/* Sort */}
-                    <Select value={sortBy} onValueChange={(value) => setSortBy(value as "date" | "priority" | "type")}>
+                    <Select
+                      value={sortBy}
+                      onValueChange={(value) =>
+                        setSortBy(value as "date" | "priority" | "type")
+                      }
+                    >
                       <SelectTrigger className="w-full sm:w-[140px] border-slate-200 dark:border-slate-700">
                         <SortAsc className="h-4 w-4 mr-2" />
                         <SelectValue />
@@ -821,22 +975,24 @@ function NotificationsPanel() {
 
                     {/* View Mode */}
                     <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1">
-                      {(["list", "grid", "compact"] as ViewMode[]).map((mode) => (
-                        <Button
-                          key={mode}
-                          variant={viewMode === mode ? "default" : "ghost"}
-                          size="sm"
-                          onClick={() => setViewMode(mode)}
-                          className={cn(
-                            "h-8 px-3 rounded-md transition-all duration-200",
-                            viewMode === mode 
-                              ? "bg-white dark:bg-slate-700 shadow-sm" 
-                              : "hover:bg-white/50 dark:hover:bg-slate-700/50"
-                          )}
-                        >
-                          {getViewModeIcon(mode)}
-                        </Button>
-                      ))}
+                      {(["list", "grid", "compact"] as ViewMode[]).map(
+                        (mode) => (
+                          <Button
+                            key={mode}
+                            variant={viewMode === mode ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setViewMode(mode)}
+                            className={cn(
+                              "h-8 px-3 rounded-md transition-all duration-200",
+                              viewMode === mode
+                                ? "bg-white dark:bg-slate-700 shadow-sm"
+                                : "hover:bg-white/50 dark:hover:bg-slate-700/50",
+                            )}
+                          >
+                            {getViewModeIcon(mode)}
+                          </Button>
+                        ),
+                      )}
                     </div>
                   </div>
 
@@ -852,7 +1008,7 @@ function NotificationsPanel() {
                         {selectionMode ? "Cancel" : "Select"}
                       </Button>
                     )}
-                    
+
                     {stats.unread > 0 && !selectionMode && (
                       <Button
                         variant="outline"
@@ -865,7 +1021,7 @@ function NotificationsPanel() {
                         Mark all read
                       </Button>
                     )}
-                    
+
                     {notifications.length > 0 && !selectionMode && (
                       <Button
                         variant="outline"
@@ -878,13 +1034,13 @@ function NotificationsPanel() {
                         Clear all
                       </Button>
                     )}
-                    
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="border-slate-200 dark:border-slate-700"
                             onClick={() => setAnalyticsOpen(true)}
                           >
@@ -896,13 +1052,13 @@ function NotificationsPanel() {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="border-slate-200 dark:border-slate-700"
                             onClick={() => setPreferencesOpen(true)}
                           >
@@ -928,7 +1084,9 @@ function NotificationsPanel() {
                   <CardContent className="flex h-40 items-center justify-center">
                     <div className="flex items-center space-x-4">
                       <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-                      <span className="text-slate-600 dark:text-slate-400">Loading notifications...</span>
+                      <span className="text-slate-600 dark:text-slate-400">
+                        Loading notifications...
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -950,27 +1108,39 @@ function NotificationsPanel() {
                       className="text-center space-y-4"
                     >
                       <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                        {searchQuery ? "No matching notifications" : 
-                         filter === "unread" ? "All caught up!" :
-                         filter === "read" ? "No read notifications" :
-                         filter === "important" ? "No important notifications" :
-                         filter === "pinned" ? "No pinned notifications" :
-                         filter === "archived" ? "No archived notifications" :
-                         "No notifications yet"}
+                        {searchQuery
+                          ? "No matching notifications"
+                          : filter === "unread"
+                            ? "All caught up!"
+                            : filter === "read"
+                              ? "No read notifications"
+                              : filter === "important"
+                                ? "No important notifications"
+                                : filter === "pinned"
+                                  ? "No pinned notifications"
+                                  : filter === "archived"
+                                    ? "No archived notifications"
+                                    : "No notifications yet"}
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400 max-w-md">
-                        {searchQuery ? "Try adjusting your search terms or use different filters to find what you're looking for." : 
-                         filter === "unread" ? "You've read all your notifications. Great job staying on top of things!" :
-                         filter === "read" ? "Mark some notifications as read to see them here." :
-                         filter === "important" ? "Important notifications will appear here when you receive them." :
-                         filter === "pinned" ? "Pin notifications to keep them easily accessible." :
-                         filter === "archived" ? "Archived notifications will appear here. Archive old notifications to declutter your inbox." :
-                         "You're all set! New notifications will appear here when you receive them."}
+                        {searchQuery
+                          ? "Try adjusting your search terms or use different filters to find what you're looking for."
+                          : filter === "unread"
+                            ? "You've read all your notifications. Great job staying on top of things!"
+                            : filter === "read"
+                              ? "Mark some notifications as read to see them here."
+                              : filter === "important"
+                                ? "Important notifications will appear here when you receive them."
+                                : filter === "pinned"
+                                  ? "Pin notifications to keep them easily accessible."
+                                  : filter === "archived"
+                                    ? "Archived notifications will appear here. Archive old notifications to declutter your inbox."
+                                    : "You're all set! New notifications will appear here when you receive them."}
                       </p>
                       <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
                         {searchQuery && (
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             onClick={() => setSearchQuery("")}
                             className="border-slate-200 dark:border-slate-700"
                           >
@@ -979,8 +1149,8 @@ function NotificationsPanel() {
                           </Button>
                         )}
                         {filter !== "all" && !searchQuery && (
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             onClick={() => setFilter("all")}
                             className="border-slate-200 dark:border-slate-700"
                           >
@@ -988,16 +1158,18 @@ function NotificationsPanel() {
                             View all notifications
                           </Button>
                         )}
-                        {(filter === "unread" || filter === "all") && !searchQuery && notifications.length === 0 && (
-                          <Button 
-                            variant="outline" 
-                            onClick={() => refetch()}
-                            className="border-slate-200 dark:border-slate-700"
-                          >
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Check for updates
-                          </Button>
-                        )}
+                        {(filter === "unread" || filter === "all") &&
+                          !searchQuery &&
+                          notifications.length === 0 && (
+                            <Button
+                              variant="outline"
+                              onClick={() => refetch()}
+                              className="border-slate-200 dark:border-slate-700"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Check for updates
+                            </Button>
+                          )}
                       </div>
                     </motion.div>
                   </CardContent>
@@ -1016,44 +1188,65 @@ function NotificationsPanel() {
                           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                             {group.title}
                           </h3>
-                          <Badge variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                          >
                             {group.notifications.length}
                           </Badge>
                           <Separator className="flex-1" />
                         </div>
                       )}
-                      
+
                       <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm dark:bg-slate-900/80 overflow-hidden">
                         <CardContent className="p-0">
-                          <div className={cn(
-                            "divide-y divide-slate-100 dark:divide-slate-800",
-                            viewMode === "grid" && "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 divide-y-0"
-                          )}>
+                          <div
+                            className={cn(
+                              "divide-y divide-slate-100 dark:divide-slate-800",
+                              viewMode === "grid" &&
+                                "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 divide-y-0",
+                            )}
+                          >
                             <AnimatePresence>
-                              {group.notifications.map((notification, notifIndex) => {
-                                const absoluteIndex = filteredNotifications.findIndex(n => n.id === notification.id);
-                                return (
-                                  <motion.div
-                                    key={notification.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ delay: notifIndex * 0.05, duration: 0.3 }}
-                                    className={cn(
-                                      viewMode === "grid" && "border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-800"
-                                    )}
-                                  >
-                                    <NotificationItem
-                                      notification={notification}
-                                      isCompact={viewMode === "compact"}
-                                      selectionMode={selectionMode}
-                                      isSelected={selectedNotifications.has(notification.id)}
-                                      onToggleSelect={toggleNotificationSelection}
-                                      isFocused={absoluteIndex === focusedIndex}
-                                    />
-                                  </motion.div>
-                                );
-                              })}
+                              {group.notifications.map(
+                                (notification, notifIndex) => {
+                                  const absoluteIndex =
+                                    filteredNotifications.findIndex(
+                                      (n) => n.id === notification.id,
+                                    );
+                                  return (
+                                    <motion.div
+                                      key={notification.id}
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -20 }}
+                                      transition={{
+                                        delay: notifIndex * 0.05,
+                                        duration: 0.3,
+                                      }}
+                                      className={cn(
+                                        viewMode === "grid" &&
+                                          "border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-800",
+                                      )}
+                                    >
+                                      <NotificationItem
+                                        notification={notification}
+                                        isCompact={viewMode === "compact"}
+                                        selectionMode={selectionMode}
+                                        isSelected={selectedNotifications.has(
+                                          notification.id,
+                                        )}
+                                        onToggleSelect={
+                                          toggleNotificationSelection
+                                        }
+                                        isFocused={
+                                          absoluteIndex === focusedIndex
+                                        }
+                                      />
+                                    </motion.div>
+                                  );
+                                },
+                              )}
                             </AnimatePresence>
                           </div>
                         </CardContent>
@@ -1102,29 +1295,58 @@ function NotificationsPanel() {
                   <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <div className="flex items-center space-x-6">
                       <div className="text-sm text-slate-600 dark:text-slate-400">
-                        Showing <span className="font-medium text-slate-900 dark:text-slate-100">{filteredNotifications.length}</span> of <span className="font-medium text-slate-900 dark:text-slate-100">{pagination?.total || notifications.length}</span> total notifications
+                        Showing{" "}
+                        <span className="font-medium text-slate-900 dark:text-slate-100">
+                          {filteredNotifications.length}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-medium text-slate-900 dark:text-slate-100">
+                          {pagination?.total || notifications.length}
+                        </span>{" "}
+                        total notifications
                       </div>
-                      {filteredNotifications.length !== notifications.length && (
-                        <Badge variant="outline" className="text-xs border-slate-200 dark:border-slate-700">
-                          {notifications.length - filteredNotifications.length} filtered out
+                      {filteredNotifications.length !==
+                        notifications.length && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-slate-200 dark:border-slate-700"
+                        >
+                          {notifications.length - filteredNotifications.length}{" "}
+                          filtered out
                         </Badge>
                       )}
                       {hasNextPage && (
-                        <Badge variant="outline" className="text-xs border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400">
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400"
+                        >
                           More available
                         </Badge>
                       )}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => refetch()} className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => refetch()}
+                        className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                      >
                         <Activity className="mr-2 h-4 w-4" />
                         Activity
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                      >
                         <BarChart3 className="mr-2 h-4 w-4" />
                         Analytics
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                      >
                         <Archive className="mr-2 h-4 w-4" />
                         Archive
                       </Button>
@@ -1161,7 +1383,8 @@ function NotificationsPanel() {
                       onClick={toggleSelectAll}
                       className="border-slate-200 dark:border-slate-700"
                     >
-                      {selectedNotifications.size === filteredNotifications.length ? (
+                      {selectedNotifications.size ===
+                      filteredNotifications.length ? (
                         <>
                           <Square className="mr-2 h-4 w-4" />
                           Deselect All
@@ -1244,4 +1467,4 @@ function NotificationsPanel() {
       </div>
     </LazyDashboardLayout>
   );
-} 
+}

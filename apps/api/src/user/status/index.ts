@@ -8,11 +8,14 @@ import { z } from "zod";
 const statusRouter = new Hono();
 
 // Get current user's status
-statusRouter.get("/me", authMiddleware, async (c) => {
+statusRouter.get("/me", authMiddleware(), async (c) => {
   try {
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const status = await getUserStatus(userEmail);
-    
+
     return c.json({
       success: true,
       data: status,
@@ -23,17 +26,20 @@ statusRouter.get("/me", authMiddleware, async (c) => {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      500
+      500,
     );
   }
 });
 
 // Get all workspace statuses
-statusRouter.get("/:workspaceId", authMiddleware, async (c) => {
+statusRouter.get("/:workspaceId", authMiddleware(), async (c) => {
   try {
     const { workspaceId } = c.req.param();
+    if (!workspaceId) {
+      return c.json({ success: false, error: "Workspace id is required" }, 400);
+    }
     const statuses = await getWorkspaceStatuses(workspaceId);
-    
+
     return c.json({
       success: true,
       data: statuses,
@@ -44,39 +50,42 @@ statusRouter.get("/:workspaceId", authMiddleware, async (c) => {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      500
+      500,
     );
   }
 });
 
 // Set user status
-statusRouter.post("/", authMiddleware, async (c) => {
+statusRouter.post("/", authMiddleware(), async (c) => {
   try {
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const body = await c.req.json();
-    
+
     const schema = z.object({
       status: z.enum(["available", "in_meeting", "focus_mode", "away"]),
       statusMessage: z.string().max(100).optional(),
       emoji: z.string().max(10).optional(),
       expiresIn: z.number().positive().optional(), // Minutes
     });
-    
+
     const validated = schema.parse(body);
-    
+
     // Calculate expiration date if provided
     let expiresAt: Date | undefined;
     if (validated.expiresIn) {
       expiresAt = new Date(Date.now() + validated.expiresIn * 60 * 1000);
     }
-    
+
     const status = await setUserStatus(userEmail, {
       status: validated.status,
       statusMessage: validated.statusMessage,
       emoji: validated.emoji,
       expiresAt,
     });
-    
+
     return c.json({
       success: true,
       data: status,
@@ -89,26 +98,29 @@ statusRouter.post("/", authMiddleware, async (c) => {
           error: "Invalid request data",
           details: error.errors,
         },
-        400
+        400,
       );
     }
-    
+
     return c.json(
       {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      500
+      500,
     );
   }
 });
 
 // Clear user status
-statusRouter.delete("/", authMiddleware, async (c) => {
+statusRouter.delete("/", authMiddleware(), async (c) => {
   try {
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     await clearUserStatus(userEmail);
-    
+
     return c.json({
       success: true,
       message: "Status cleared",
@@ -119,11 +131,9 @@ statusRouter.delete("/", authMiddleware, async (c) => {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      500
+      500,
     );
   }
 });
 
 export default statusRouter;
-
-

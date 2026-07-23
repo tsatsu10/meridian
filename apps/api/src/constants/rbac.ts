@@ -1,17 +1,17 @@
 /**
  * 🛡️ RBAC Constants for API
- * 
+ *
  * Shared role permissions and hierarchy definitions
  */
 
 import type { UserRole } from "../types/rbac";
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  "guest": 0,
-  "stakeholder": 1,
-  "contractor": 1,
-  "client": 1,
-  "member": 1,
+  guest: 0,
+  stakeholder: 1,
+  contractor: 1,
+  client: 1,
+  member: 1,
   "team-lead": 2,
   "project-viewer": 3,
   "project-manager": 4,
@@ -21,24 +21,24 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
 };
 
 export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
-  "guest": {
+  guest: {
     canViewPublicProjects: true,
   },
-  "stakeholder": {
+  stakeholder: {
     canViewPublicProjects: true,
     canViewReports: true,
   },
-  "contractor": {
+  contractor: {
     canViewPublicProjects: true,
     canViewAssignedTasks: true,
     canUpdateAssignedTasks: true,
   },
-  "client": {
+  client: {
     canViewPublicProjects: true,
     canViewReports: true,
     canCreateFeedback: true,
   },
-  "member": {
+  member: {
     canViewProjects: true,
     canViewTasks: true,
     canUpdateOwnTasks: true,
@@ -118,8 +118,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageWorkspaceSettings: true,
     canManageWorkspaceMembers: true,
     canManageWorkspaceSecurity: true,
-    canManageBilling: true,
-    canViewBillingHistory: true,
     canChangePlan: true,
     canAccessWorkspaceAPI: true,
     canManageIntegrations: true,
@@ -131,7 +129,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageDataGovernance: true,
     canManageDataRetention: true,
     canManageCompliance: true,
-    
+
     // User & Role Management
     canManageRoles: true,
     canInviteUsers: true,
@@ -142,7 +140,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManage2FA: true,
     canManageSecurity: true,
     canViewSecurityLogs: true,
-    
+
     // Project Management
     canViewProjects: true,
     canViewAllProjects: true,
@@ -163,10 +161,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canAccessProjectFiles: true,
     canViewProjectBudget: true,
     canManageProjectBudget: true,
-    canAccessProjectChat: true,
     canCreateProjectAnnouncements: true,
-    canModerateProjectDiscussion: true,
-    
+
     // Task Management
     canCreateTasks: true,
     canEditTasks: true,
@@ -196,7 +192,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canBulkAssignTasks: true,
     canImportTasks: true,
     canExportTasks: true,
-    
+
     // Team Management
     canViewTeam: true,
     canViewTeamMembers: true,
@@ -213,30 +209,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canMentorMembers: true,
     canViewTeamProgress: true,
     canManageTeamCapacity: true,
-    canCreateTeamChannels: true,
-    canManageTeamChannels: true,
-    canModerateTeamChat: true,
     canCreateTeamAnnouncements: true,
-    
+
     // Communication
-    canSendMessages: true,
-    canSendDirectMessages: true,
     canMentionUsers: true,
-    canReactToMessages: true,
-    canCreateChannels: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canManageChannels: true,
-    canArchiveChannels: true,
-    canModerateChat: true,
-    canDeleteMessages: true,
-    canPinMessages: true,
-    canManageChannelPermissions: true,
-    canStartVideoCall: true,
-    canShareScreen: true,
-    canRecordMeetings: true,
     canScheduleMeetings: true,
-    
+
     // Files & Documents
     canUploadFiles: true,
     canDownloadFiles: true,
@@ -249,7 +227,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canEditDocuments: true,
     canDeleteDocuments: true,
     canManageDocumentPermissions: true,
-    
+
     // Calendar & Time
     canViewCalendar: true,
     canCreateEvents: true,
@@ -263,7 +241,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canEditTimeEntries: true,
     canApproveTimeEntries: true,
     canManageTimeTracking: true,
-    
+
     // Analytics & Reporting
     canViewReports: true,
     canViewAnalytics: true,
@@ -287,7 +265,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canCreateDashboards: true,
     canAccessAdvancedAnalytics: true,
     canCreateCustomMetrics: true,
-    
+
     // System & Advanced
     canManageSettings: true,
     canAccessSystemSettings: true,
@@ -299,7 +277,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canUseAI: true,
     canManageAISettings: true,
     canAccessDeveloperTools: true,
-    
+
     // Basic permissions for completeness
     canViewPublicProjects: true,
     canUpdateOwnTasks: true,
@@ -326,8 +304,8 @@ export function isRoleHigher(role1: UserRole, role2: UserRole): boolean {
  * Get the highest role from a list of roles
  */
 export function getHighestRole(roles: UserRole[]): UserRole {
-  return roles.reduce((highest, current) => 
-    isRoleHigher(current, highest) ? current : highest, 
-    "guest"
+  return roles.reduce(
+    (highest, current) => (isRoleHigher(current, highest) ? current : highest),
+    "guest",
   );
-} 
+}

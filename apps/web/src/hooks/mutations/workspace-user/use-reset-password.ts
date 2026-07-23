@@ -11,9 +11,12 @@ interface ResetPasswordData {
 export function useResetPassword() {
   return useMutation({
     mutationFn: async ({ userEmail }: ResetPasswordData) => {
-      const response = await fetchApi(`/workspace-user/${userEmail}/reset-password`, {
-        method: "POST",
-      });
+      const response = await fetchApi(
+        `/workspace-user/${userEmail}/reset-password`,
+        {
+          method: "POST",
+        },
+      );
       return response;
     },
     onSuccess: (data) => {
@@ -23,9 +26,8 @@ export function useResetPassword() {
         logger.debug("Temporary password:", data.tempPassword);
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to reset password");
     },
   });
 }
-

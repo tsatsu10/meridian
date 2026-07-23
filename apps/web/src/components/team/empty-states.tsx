@@ -1,6 +1,6 @@
 // @epic-3.4-teams: Empty state components for teams page
 import { Button } from "@/components/ui/button";
-import { Users, UserPlus, Search, Plus, Inbox } from "lucide-react";
+import { Users, UserPlus, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface EmptyStateProps {
@@ -21,9 +21,7 @@ function EmptyState({ icon, title, description, action }: EmptyStateProps) {
       transition={{ duration: 0.4 }}
       className="col-span-full flex flex-col items-center justify-center py-16 px-4"
     >
-      <div className="rounded-full bg-muted/50 p-6 mb-6">
-        {icon}
-      </div>
+      <div className="rounded-full bg-muted/50 p-6 mb-6">{icon}</div>
       <h3 className="text-2xl font-semibold mb-2">{title}</h3>
       <p className="text-muted-foreground text-center max-w-md mb-6">
         {description}
@@ -104,4 +102,3 @@ export function NoFilteredUsersEmpty() {
     />
   );
 }
-

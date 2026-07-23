@@ -18,28 +18,28 @@ app.use("*", auth);
 app.get(
   "/projects/:projectId/milestones",
   requirePermission("canViewProjectMilestones"),
-  getMilestones
+  getMilestones,
 );
 
 // Create a new milestone
 app.post(
   "/projects/:projectId/milestones",
   requirePermission("canManageProjectMilestones"),
-  createMilestone
+  createMilestone,
 );
 
 // Update a milestone
 app.put(
   "/milestones/:milestoneId",
   requirePermission("canManageProjectMilestones"),
-  updateMilestone
+  updateMilestone,
 );
 
 // Delete a milestone
 app.delete(
   "/milestones/:milestoneId",
   requirePermission("canManageProjectMilestones"),
-  deleteMilestone
+  deleteMilestone,
 );
 
-export default app; 
+export default app;

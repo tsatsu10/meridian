@@ -3,12 +3,35 @@
 // @persona-david: Team Lead workload management
 // @persona-sarah: PM sprint planning
 
-export type EventType = 'meeting' | 'deadline' | 'time-off' | 'workload' | 'milestone' | 'focus-time' | 'break';
-export type EventPriority = 'low' | 'medium' | 'high' | 'critical';
-export type ConflictSeverity = 'low' | 'medium' | 'high';
-export type ConflictType = 'overlap' | 'overload' | 'availability' | 'dependency';
-export type CalendarViewMode = 'day' | 'week' | 'month' | 'timeline' | 'heatmap' | 'agenda';
-export type MemberAvailability = 'available' | 'busy' | 'meeting' | 'focused' | 'unavailable' | 'out-of-office';
+export type EventType =
+  | "meeting"
+  | "deadline"
+  | "time-off"
+  | "workload"
+  | "milestone"
+  | "focus-time"
+  | "break";
+export type EventPriority = "low" | "medium" | "high" | "critical";
+export type ConflictSeverity = "low" | "medium" | "high";
+export type ConflictType =
+  | "overlap"
+  | "overload"
+  | "availability"
+  | "dependency";
+export type CalendarViewMode =
+  | "day"
+  | "week"
+  | "month"
+  | "timeline"
+  | "heatmap"
+  | "agenda";
+export type MemberAvailability =
+  | "available"
+  | "busy"
+  | "meeting"
+  | "focused"
+  | "unavailable"
+  | "out-of-office";
 
 export interface CalendarEvent {
   id: string;
@@ -16,7 +39,7 @@ export interface CalendarEvent {
   description?: string;
   type: EventType;
   priority: EventPriority;
-  
+
   // Timing
   date?: string; // ISO date string (legacy/API compatibility)
   startDate: Date;
@@ -27,33 +50,33 @@ export interface CalendarEvent {
   isAllDay?: boolean;
   isRecurring?: boolean;
   recurrenceRule?: string;
-  
+
   // Participants
   organizerId?: string;
   attendees: string[];
   requiredAttendees?: string[];
   optionalAttendees?: string[];
-  
+
   // Team/Project context
   teamId?: string;
   teamName?: string;
   projectId?: string;
   projectName?: string;
   taskId?: string;
-  
+
   // Metadata
   color?: string;
   location?: string;
   meetingLink?: string;
   estimatedHours?: number;
   actualHours?: number;
-  source?: 'task' | 'milestone' | 'calendar'; // Event source type
-  
+  source?: "task" | "milestone" | "calendar"; // Event source type
+
   // Status
-  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status?: "scheduled" | "in-progress" | "completed" | "cancelled";
   hasConflict?: boolean;
   conflicts?: ScheduleConflict[];
-  
+
   // Permissions
   canEdit?: boolean;
   canDelete?: boolean;
@@ -75,7 +98,7 @@ export interface ScheduleConflict {
 export interface Resolution {
   id: string;
   description: string;
-  action: 'reschedule' | 'reassign' | 'split' | 'cancel' | 'extend';
+  action: "reschedule" | "reassign" | "split" | "cancel" | "extend";
   targetDate?: Date;
   targetMember?: string;
   autoApplicable: boolean;
@@ -87,23 +110,23 @@ export interface MemberSchedule {
   memberEmail: string;
   role: string;
   avatar?: string;
-  
+
   // Availability
   availability: MemberAvailability;
-  status: 'online' | 'away' | 'busy' | 'offline';
+  status: "online" | "away" | "busy" | "offline";
   currentActivity?: string;
-  
+
   // Workload
   workload: number; // percentage
   hoursScheduled: number;
   hoursAvailable: number;
   tasksCount: number;
-  
+
   // Schedule slots
   events: CalendarEvent[];
   blockedSlots: TimeSlot[];
   availableSlots: TimeSlot[];
-  
+
   // Working hours
   workingHours: WorkingHours;
   timezone?: string;
@@ -113,7 +136,7 @@ export interface TimeSlot {
   start: Date;
   end: Date;
   duration: number; // minutes
-  type: 'available' | 'blocked' | 'meeting' | 'focus' | 'break';
+  type: "available" | "blocked" | "meeting" | "focus" | "break";
   eventId?: string;
 }
 
@@ -130,25 +153,25 @@ export interface WorkingHours {
 export interface WorkloadMetrics {
   teamId: string;
   teamName: string;
-  
+
   // Overall metrics
   averageWorkload: number;
   totalHoursScheduled: number;
   totalHoursAvailable: number;
   utilizationRate: number;
-  
+
   // Member breakdown
   memberMetrics: MemberWorkloadMetric[];
-  
+
   // Time-based analysis
   weeklyForecast: WeeklyForecast[];
   overloadedPeriods: DateRange[];
   underutilizedPeriods: DateRange[];
-  
+
   // Health indicators
   healthScore: number;
   balanceScore: number;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
   warnings: string[];
 }
 
@@ -182,14 +205,19 @@ export interface WeeklyForecast {
 export interface DateRange {
   start: Date;
   end: Date;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   description: string;
 }
 
 export interface SmartSuggestion {
   id: string;
-  type: 'best-time' | 'load-balance' | 'break-reminder' | 'deadline-risk' | 'resource-conflict';
-  priority: 'low' | 'medium' | 'high';
+  type:
+    | "best-time"
+    | "load-balance"
+    | "break-reminder"
+    | "deadline-risk"
+    | "resource-conflict";
+  priority: "low" | "medium" | "high";
   title: string;
   description: string;
   suggestedDate?: Date;
@@ -226,7 +254,7 @@ export interface CalendarSettings {
   autoDetectConflicts: boolean;
   showWeekends: boolean;
   firstDayOfWeek: 0 | 1; // 0 = Sunday, 1 = Monday
-  timeFormat: '12h' | '24h';
+  timeFormat: "12h" | "24h";
   notifications: {
     beforeMeeting: number; // minutes
     onConflict: boolean;
@@ -242,7 +270,7 @@ export interface CalendarSettings {
 export interface HeatmapData {
   date: Date;
   value: number; // workload percentage or hours
-  level: 'none' | 'low' | 'medium' | 'high' | 'critical';
+  level: "none" | "low" | "medium" | "high" | "critical";
   events: CalendarEvent[];
   tooltip: string;
 }
@@ -256,8 +284,7 @@ export interface TimelineEntry {
   dependencies: string[];
   assignees: string[];
   color: string;
-  type: 'task' | 'milestone' | 'phase';
+  type: "task" | "milestone" | "phase";
   canDrag: boolean;
   canResize: boolean;
 }
-

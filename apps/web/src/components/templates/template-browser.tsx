@@ -1,8 +1,11 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, Star, Clock, Users, Sparkles } from "lucide-react";
+import { Search, Filter, Sparkles } from "lucide-react";
 import { getTemplates } from "../../fetchers/templates/get-templates";
-import type { TemplateFilterOptions, ProjectTemplate } from "../../types/templates";
+import type {
+  TemplateFilterOptions,
+  ProjectTemplate,
+} from "../../types/templates";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import {
@@ -21,28 +24,28 @@ import { TemplateDetailModal } from "./template-detail-modal";
 export function TemplateBrowser() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [filters, setFilters] = useState<TemplateFilterOptions>({
-    sortBy: 'popular',
-    sortOrder: 'desc',
+    sortBy: "popular",
+    sortOrder: "desc",
     limit: 50,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['templates', filters],
+    queryKey: ["templates", filters],
     queryFn: () => getTemplates(filters),
   });
 
   // Group templates by industry
   const templatesByIndustry = useMemo(() => {
     if (!data?.templates) return {};
-    
+
     const grouped: Record<string, ProjectTemplate[]> = {};
-    data.templates.forEach((template) => {
+    for (const template of data.templates) {
       if (!grouped[template.industry]) {
         grouped[template.industry] = [];
       }
       grouped[template.industry].push(template);
-    });
-    
+    }
+
     return grouped;
   }, [data?.templates]);
 
@@ -55,7 +58,7 @@ export function TemplateBrowser() {
   const handleIndustryFilter = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      industry: value === 'all' ? undefined : value,
+      industry: value === "all" ? undefined : value,
       offset: 0,
     }));
   };
@@ -63,7 +66,10 @@ export function TemplateBrowser() {
   const handleDifficultyFilter = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      difficulty: value === 'all' ? undefined : (value as any),
+      difficulty:
+        value === "all"
+          ? undefined
+          : (value as TemplateFilterOptions["difficulty"]),
       offset: 0,
     }));
   };
@@ -71,7 +77,7 @@ export function TemplateBrowser() {
   const handleSortChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      sortBy: value as any,
+      sortBy: value as TemplateFilterOptions["sortBy"],
       offset: 0,
     }));
   };
@@ -83,7 +89,8 @@ export function TemplateBrowser() {
         <div>
           <h1 className="text-3xl font-bold">Project Templates</h1>
           <p className="text-muted-foreground mt-1">
-            Choose from {data?.total || 0} professional templates across {industries.length} industries
+            Choose from {data?.total || 0} professional templates across{" "}
+            {industries.length} industries
           </p>
         </div>
         <Badge variant="secondary" className="flex items-center gap-1">
@@ -101,14 +108,14 @@ export function TemplateBrowser() {
             <Input
               placeholder="Search templates..."
               className="pl-9"
-              value={filters.searchQuery || ''}
+              value={filters.searchQuery || ""}
               onChange={(e) => handleSearchChange(e.target.value)}
             />
           </div>
 
           {/* Industry Filter */}
           <Select
-            value={filters.industry || 'all'}
+            value={filters.industry || "all"}
             onValueChange={handleIndustryFilter}
           >
             <SelectTrigger>
@@ -126,7 +133,7 @@ export function TemplateBrowser() {
 
           {/* Difficulty Filter */}
           <Select
-            value={filters.difficulty || 'all'}
+            value={filters.difficulty || "all"}
             onValueChange={handleDifficultyFilter}
           >
             <SelectTrigger>
@@ -145,7 +152,10 @@ export function TemplateBrowser() {
         <div className="flex items-center gap-2 mt-4">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Sort by:</span>
-          <Select value={filters.sortBy || 'popular'} onValueChange={handleSortChange}>
+          <Select
+            value={filters.sortBy || "popular"}
+            onValueChange={handleSortChange}
+          >
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -212,7 +222,8 @@ export function TemplateBrowser() {
                   className="mt-4"
                   onClick={() => handleIndustryFilter(industry)}
                 >
-                  View all {templatesByIndustry[industry].length} templates in {industry}
+                  View all {templatesByIndustry[industry].length} templates in{" "}
+                  {industry}
                 </Button>
               )}
             </div>
@@ -232,7 +243,9 @@ export function TemplateBrowser() {
             <Button
               variant="outline"
               className="mt-4"
-              onClick={() => setFilters({ sortBy: 'popular', sortOrder: 'desc', limit: 50 })}
+              onClick={() =>
+                setFilters({ sortBy: "popular", sortOrder: "desc", limit: 50 })
+              }
             >
               Clear Filters
             </Button>
@@ -250,4 +263,3 @@ export function TemplateBrowser() {
     </div>
   );
 }
-

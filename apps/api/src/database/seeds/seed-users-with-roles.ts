@@ -1,24 +1,24 @@
 /**
  * 🎭 Seed Users with Various Roles
- * 
+ *
  * Creates 5 test users with different roles across workspaces, projects, and teams
  * for testing RBAC functionality and permission systems.
  */
 
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../connection";
-import { 
-  users, 
-  workspaces, 
-  workspaceMembers, 
-  projects, 
+import {
+  users,
+  workspaces,
+  workspaceMembers,
+  projects,
   projectMembers,
   teams,
   teamMembers,
-  tasks 
+  tasks,
 } from "../schema";
 import bcrypt from "bcryptjs";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // 🎭 Test users with various roles
 const testUsers = [
@@ -75,7 +75,7 @@ export async function seedUsersWithRoles() {
   try {
     // 1️⃣ CREATE USERS
     logger.debug("👥 Creating test users...");
-    const createdUsers: any[] = [];
+    const createdUsers: Array<{ id: string; [key: string]: unknown }> = [];
 
     for (const userData of testUsers) {
       // Check if user exists
@@ -108,14 +108,45 @@ export async function seedUsersWithRoles() {
         .returning();
 
       createdUsers.push(newUser);
-      logger.debug(`   ✅ Created ${userData.name} (${userData.email}) - Role: ${userData.role}`);
+      logger.debug(
+        `   ✅ Created ${userData.name} (${userData.email}) - Role: ${userData.role}`,
+      );
     }
 
     // 2️⃣ CREATE TEST WORKSPACE
     logger.debug("\n🏢 Creating test workspace...");
-    const adminUser = createdUsers.find(u => u.email === "admin@meridian.app");
+    const adminUser = createdUsers.find(
+      (u) => u.email === "admin@meridian.app",
+    );
+    if (!adminUser) {
+      throw new Error(
+        "Seed invariant violated: admin@meridian.app was not created above",
+      );
+    }
+    const managerUser = createdUsers.find(
+      (u) => u.email === "manager@meridian.app",
+    );
+    if (!managerUser) {
+      throw new Error(
+        "Seed invariant violated: manager@meridian.app was not created above",
+      );
+    }
+    const leadUser = createdUsers.find((u) => u.email === "lead@meridian.app");
+    if (!leadUser) {
+      throw new Error(
+        "Seed invariant violated: lead@meridian.app was not created above",
+      );
+    }
+    const globalMemberUser = createdUsers.find(
+      (u) => u.email === "member@meridian.app",
+    );
+    if (!globalMemberUser) {
+      throw new Error(
+        "Seed invariant violated: member@meridian.app was not created above",
+      );
+    }
 
-    let workspace;
+    let workspace: typeof workspaces.$inferSelect;
     const existingWorkspace = await db
       .select()
       .from(workspaces)
@@ -131,7 +162,7 @@ export async function seedUsersWithRoles() {
         .values({
           name: "Meridian Test Workspace",
           description: "Test workspace with various user roles and permissions",
-          ownerId: adminUser!.id,
+          ownerId: adminUser.id,
           slug: "meridian-test",
           isActive: true,
         })
@@ -142,7 +173,8 @@ export async function seedUsersWithRoles() {
     // 3️⃣ ADD USERS TO WORKSPACE
     logger.debug("\n👥 Adding users to workspace...");
     for (const user of createdUsers) {
-      const workspaceRole = workspaceRoles[user.email as keyof typeof workspaceRoles];
+      const workspaceRole =
+        workspaceRoles[user.email as keyof typeof workspaceRoles];
 
       const existingMember = await db
         .select()
@@ -161,7 +193,7 @@ export async function seedUsersWithRoles() {
         userId: user.id,
         userEmail: user.email,
         role: user.role,
-        status: 'active',
+        status: "active",
         permissions: [],
       });
 
@@ -174,21 +206,21 @@ export async function seedUsersWithRoles() {
       {
         name: "Mobile App Development",
         description: "iOS and Android app development project",
-        ownerId: createdUsers.find(u => u.email === "manager@meridian.app")!.id,
+        ownerId: managerUser.id,
       },
       {
         name: "Website Redesign",
         description: "Company website redesign and modernization",
-        ownerId: createdUsers.find(u => u.email === "manager@meridian.app")!.id,
+        ownerId: managerUser.id,
       },
       {
         name: "Marketing Campaign Q1",
         description: "Q1 marketing initiatives and campaigns",
-        ownerId: createdUsers.find(u => u.email === "lead@meridian.app")!.id,
+        ownerId: leadUser.id,
       },
     ];
 
-    const createdProjects: any[] = [];
+    const createdProjects: Array<{ id: string; [key: string]: unknown }> = [];
     for (const projectData of projectsData) {
       const existing = await db
         .select()
@@ -208,8 +240,8 @@ export async function seedUsersWithRoles() {
         .values({
           ...projectData,
           workspaceId: workspace.id,
-          slug: projectData.name.toLowerCase().replace(/\s+/g, '-'),
-          status: 'active',
+          slug: projectData.name.toLowerCase().replace(/\s+/g, "-"),
+          status: "active",
           progress: 0,
         })
         .returning();
@@ -243,7 +275,7 @@ export async function seedUsersWithRoles() {
       if (!roles) continue;
 
       for (const [email, role] of Object.entries(roles)) {
-        const user = createdUsers.find(u => u.email === email);
+        const user = createdUsers.find((u) => u.email === email);
         if (!user) continue;
 
         const existing = await db
@@ -265,7 +297,9 @@ export async function seedUsersWithRoles() {
           role: user.role,
         });
 
-        logger.debug(`   ✅ Added ${user.name} to "${project.name}" as ${role}`);
+        logger.debug(
+          `   ✅ Added ${user.name} to "${project.name}" as ${role}`,
+        );
       }
     }
 
@@ -275,24 +309,24 @@ export async function seedUsersWithRoles() {
       {
         name: "Frontend Team",
         description: "Frontend development team",
-        leadId: createdUsers.find(u => u.email === "lead@meridian.app")!.id,
+        leadId: leadUser.id,
         projectId: createdProjects[0].id, // Mobile App
       },
       {
         name: "Backend Team",
         description: "Backend development team",
-        leadId: createdUsers.find(u => u.email === "lead@meridian.app")!.id,
+        leadId: leadUser.id,
         projectId: createdProjects[0].id, // Mobile App
       },
       {
         name: "Design Team",
         description: "UI/UX design team",
-        leadId: createdUsers.find(u => u.email === "lead@meridian.app")!.id,
+        leadId: leadUser.id,
         projectId: createdProjects[1].id, // Website Redesign
       },
     ];
 
-    const createdTeams: any[] = [];
+    const createdTeams: Array<{ id: string; [key: string]: unknown }> = [];
     for (const teamData of teamsData) {
       const existing = await db
         .select()
@@ -323,7 +357,7 @@ export async function seedUsersWithRoles() {
     logger.debug("\n👤 Adding members to teams...");
     for (const team of createdTeams) {
       // Add team lead
-      const leadUser = createdUsers.find(u => u.id === team.leadId);
+      const leadUser = createdUsers.find((u) => u.id === team.leadId);
       if (leadUser) {
         const existing = await db
           .select()
@@ -337,14 +371,18 @@ export async function seedUsersWithRoles() {
             teamId: team.id,
             userId: leadUser.id,
             userEmail: leadUser.email,
-            role: 'lead',
+            role: "lead",
           });
-          logger.debug(`   ✅ Added ${leadUser.name} to "${team.name}" as lead`);
+          logger.debug(
+            `   ✅ Added ${leadUser.name} to "${team.name}" as lead`,
+          );
         }
       }
 
       // Add regular member
-      const memberUser = createdUsers.find(u => u.email === "member@meridian.app");
+      const memberUser = createdUsers.find(
+        (u) => u.email === "member@meridian.app",
+      );
       if (memberUser) {
         const existing = await db
           .select()
@@ -358,9 +396,11 @@ export async function seedUsersWithRoles() {
             teamId: team.id,
             userId: memberUser.id,
             userEmail: memberUser.email,
-            role: 'member',
+            role: "member",
           });
-          logger.debug(`   ✅ Added ${memberUser.name} to "${team.name}" as member`);
+          logger.debug(
+            `   ✅ Added ${memberUser.name} to "${team.name}" as member`,
+          );
         }
       }
     }
@@ -372,7 +412,7 @@ export async function seedUsersWithRoles() {
         title: "Design mobile app mockups",
         description: "Create initial design mockups for mobile app",
         projectId: createdProjects[0].id,
-        assigneeId: createdUsers.find(u => u.email === "member@meridian.app")!.id,
+        assigneeId: globalMemberUser.id,
         assigneeEmail: "member@meridian.app",
         status: "todo" as const,
         priority: "high" as const,
@@ -381,7 +421,7 @@ export async function seedUsersWithRoles() {
         title: "Set up API infrastructure",
         description: "Initialize backend API structure",
         projectId: createdProjects[0].id,
-        assigneeId: createdUsers.find(u => u.email === "member@meridian.app")!.id,
+        assigneeId: globalMemberUser.id,
         assigneeEmail: "member@meridian.app",
         status: "in_progress" as const,
         priority: "high" as const,
@@ -390,7 +430,7 @@ export async function seedUsersWithRoles() {
         title: "Review website wireframes",
         description: "Review and approve new website wireframes",
         projectId: createdProjects[1].id,
-        assigneeId: createdUsers.find(u => u.email === "manager@meridian.app")!.id,
+        assigneeId: managerUser.id,
         assigneeEmail: "manager@meridian.app",
         status: "todo" as const,
         priority: "medium" as const,
@@ -413,7 +453,7 @@ export async function seedUsersWithRoles() {
       await db.insert(tasks).values({
         ...taskData,
         workspaceId: workspace.id,
-        createdBy: adminUser!.id,
+        createdBy: adminUser.id,
       });
 
       logger.debug(`   ✅ Created task "${taskData.title}"`);
@@ -423,7 +463,7 @@ export async function seedUsersWithRoles() {
     logger.debug("\n📊 Seeding Summary:");
     logger.debug("═".repeat(60));
     logger.debug(`✅ Users created: ${createdUsers.length}`);
-    logger.debug(`✅ Workspace created: 1`);
+    logger.debug("✅ Workspace created: 1");
     logger.debug(`✅ Projects created: ${createdProjects.length}`);
     logger.debug(`✅ Teams created: ${createdTeams.length}`);
     logger.debug(`✅ Sample tasks created: ${tasksData.length}`);
@@ -432,7 +472,8 @@ export async function seedUsersWithRoles() {
     logger.debug("\n👥 Test User Credentials:");
     logger.debug("─".repeat(60));
     for (const user of testUsers) {
-      const workspaceRole = workspaceRoles[user.email as keyof typeof workspaceRoles];
+      const workspaceRole =
+        workspaceRoles[user.email as keyof typeof workspaceRoles];
       logger.debug(`📧 ${user.email}`);
       logger.debug(`   Password: ${user.password}`);
       logger.debug(`   Role: ${workspaceRole}`);
@@ -468,5 +509,3 @@ if (require.main === module) {
 }
 
 export default seedUsersWithRoles;
-
-

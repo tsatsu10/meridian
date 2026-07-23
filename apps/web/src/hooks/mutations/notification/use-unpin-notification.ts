@@ -1,8 +1,8 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 async function unpinNotification(id: string) {
-  const response = await client.notification[":id"].unpin.$patch({
+  const response = await looseClient.notification[":id"].unpin.$patch({
     param: { id },
   });
 
@@ -26,4 +26,4 @@ function useUnpinNotification() {
   });
 }
 
-export default useUnpinNotification; 
+export default useUnpinNotification;

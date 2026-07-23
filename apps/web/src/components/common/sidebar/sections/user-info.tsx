@@ -1,5 +1,4 @@
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import useSignOut from "@/hooks/mutations/use-sign-out";
 import { cn } from "@/lib/cn";
 import useProjectStore from "@/store/project";
@@ -33,7 +32,8 @@ function UserInfo() {
       // If 401, treat as success in demo mode
       if (
         error instanceof Error &&
-        (error.message.includes("401") || error.message.toLowerCase().includes("unauthorized"))
+        (error.message.includes("401") ||
+          error.message.toLowerCase().includes("unauthorized"))
       ) {
         queryClient.clear();
         setUser(null);
@@ -63,7 +63,7 @@ function UserInfo() {
             "hover:bg-white/5 transition-all duration-200",
             "cursor-pointer group",
             isSidebarOpened ? "gap-3 justify-start" : "justify-center",
-            "focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            "focus:outline-none focus:ring-2 focus:ring-blue-500/50",
           )}
         >
           {/* Avatar */}
@@ -80,7 +80,9 @@ function UserInfo() {
           {/* User Info */}
           {isSidebarOpened && (
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm truncate">{user?.name}</p>
+              <p className="text-white font-medium text-sm truncate">
+                {user?.name}
+              </p>
               <p className="text-slate-400 text-xs truncate">{user?.email}</p>
             </div>
           )}
@@ -98,7 +100,7 @@ function UserInfo() {
         <DropdownMenu.Content
           className={cn(
             "min-w-[200px] bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-1",
-            "z-50 animate-in fade-in-0 zoom-in-95"
+            "z-50 animate-in fade-in-0 zoom-in-95",
           )}
           side="right"
           align="end"
@@ -109,15 +111,15 @@ function UserInfo() {
             className={cn(
               "flex items-center gap-2 px-3 py-2 text-sm rounded-md cursor-pointer",
               "hover:bg-slate-100 dark:hover:bg-slate-700",
-              "focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700"
+              "focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700",
             )}
           >
             <Settings className="w-4 h-4" />
             Settings
           </DropdownMenu.Item>
-          
+
           <DropdownMenu.Separator className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
-          
+
           <DropdownMenu.Item
             onClick={handleSignOut}
             disabled={isPending}
@@ -125,7 +127,7 @@ function UserInfo() {
               "flex items-center gap-2 px-3 py-2 text-sm rounded-md cursor-pointer",
               "hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400",
               "focus:outline-none focus:bg-red-50 dark:focus:bg-red-900/20",
-              isPending && "opacity-50 cursor-not-allowed"
+              isPending && "opacity-50 cursor-not-allowed",
             )}
           >
             <LogOut className="w-4 h-4" />

@@ -1,5 +1,4 @@
 import { priorityColorsTaskCard } from "@/constants/priority-colors";
-import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import { cn } from "@/lib/cn";
 import useProjectStore from "@/store/project";
 import type { ProjectWithTasks } from "@/types/project";
@@ -17,7 +16,6 @@ import {
   MoveRight,
   User as UserIcon,
   Users,
-  ChevronRight,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
@@ -40,10 +38,14 @@ interface BacklogTaskRowProps {
   setBacklogData: (data: BacklogData) => void;
 }
 
-export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBacklogData }: BacklogTaskRowProps) {
+export default function BacklogTaskRow({
+  task,
+  onTaskUpdate,
+  backlogData,
+  setBacklogData,
+}: BacklogTaskRowProps) {
   const navigate = useNavigate();
-  const { project, setProject } = useProjectStore();
-  const { mutate: updateTask } = useUpdateTask();
+  const { project } = useProjectStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const {
@@ -94,16 +96,14 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
         }
 
         // Add to target column
-        const targetColumn = draft.columns.find(
-          (col) => col.id === columnId,
-        );
+        const targetColumn = draft.columns.find((col) => col.id === columnId);
         if (targetColumn) {
           targetColumn.tasks.push({
             ...task,
             status: columnId,
           });
         }
-      })
+      }),
     );
 
     toast.success(`Task moved to ${columnId.replace(/-/g, " ")}`);
@@ -175,15 +175,18 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
                 <div className="flex items-center space-x-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    {task.assignedTeam?.name || 'Assigned Team'}
+                    {task.assignedTeam?.name || "Assigned Team"}
                   </span>
                 </div>
               ) : task.userEmail ? (
                 <div className="flex items-center space-x-2">
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={task.assigneeAvatar} />
+                    <AvatarImage src={task.assigneeAvatar ?? undefined} />
                     <AvatarFallback>
-                      {task.assigneeName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                      {task.assigneeName
+                        ?.split(" ")
+                        .map((n: string) => n[0])
+                        .join("") || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm text-muted-foreground">
@@ -193,7 +196,9 @@ export default function BacklogTaskRow({ task, onTaskUpdate, backlogData, setBac
               ) : (
                 <div className="flex items-center space-x-2">
                   <UserIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Unassigned</span>
+                  <span className="text-sm text-muted-foreground">
+                    Unassigned
+                  </span>
                 </div>
               )}
             </div>

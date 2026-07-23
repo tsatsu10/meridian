@@ -36,8 +36,8 @@ function WorkspacePicker() {
   return (
     <div>
       {isSidebarOpened ? (
-        <DropdownMenu.Root 
-          open={isDropdownOpen} 
+        <DropdownMenu.Root
+          open={isDropdownOpen}
           onOpenChange={(open) => {
             setIsDropdownOpen(open);
             // Manage focus to prevent aria-hidden conflicts
@@ -76,7 +76,7 @@ function WorkspacePicker() {
             >
               {workspaces &&
                 workspaces.length > 0 &&
-                workspaces.map((workspace) => (
+                workspaces.map((workspace: Workspace) => (
                   <DropdownMenu.Item
                     key={workspace.id}
                     className={cn(

@@ -13,4 +13,3 @@ async function markAllNotificationsAsRead(userEmail: string) {
 }
 
 export default markAllNotificationsAsRead;
-

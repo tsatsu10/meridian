@@ -3,13 +3,13 @@
  * Allows users to manage dashboard layout templates
  */
 
-import { createFileRoute } from '@tanstack/react-router';
-import { TemplateGallery } from '@/components/dashboard/template-gallery';
-import { useWorkspaceStore } from '@/store/workspace';
-import { toast } from 'sonner';
+import { createFileRoute } from "@tanstack/react-router";
+import { TemplateGallery } from "@/components/dashboard/template-gallery";
+import { useWorkspaceStore } from "@/store/workspace";
+import { toast } from "sonner";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/templates')({
+export const Route = createFileRoute("/dashboard/settings/templates")({
   component: withErrorBoundary(DashboardTemplatesPage, "Dashboard Templates"),
 });
 
@@ -27,12 +27,16 @@ function DashboardTemplatesPage() {
     );
   }
 
-  const handleApplyTemplate = (template: any) => {
+  const handleApplyTemplate = (template: { name: string }) => {
     // In a real implementation, this would apply the template to the current dashboard
     // For now, we just show a success message
-    toast.success(`Template "${template.name}" will be applied to your dashboard`, {
-      description: 'Dashboard layout will be updated with the selected template',
-    });
+    toast.success(
+      `Template "${template.name}" will be applied to your dashboard`,
+      {
+        description:
+          "Dashboard layout will be updated with the selected template",
+      },
+    );
   };
 
   return (

@@ -13,18 +13,22 @@ export function useDeleteAutomation() {
 
   return useMutation({
     mutationFn: async ({ teamId, automationId }: DeleteAutomationData) => {
-      const response = await fetchApi(`/team/${teamId}/automations/${automationId}`, {
-        method: "DELETE",
-      });
+      const response = await fetchApi(
+        `/team/${teamId}/automations/${automationId}`,
+        {
+          method: "DELETE",
+        },
+      );
       return response;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["team-automations", variables.teamId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["team-automations", variables.teamId],
+      });
       toast.success("Automation deleted successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to delete automation");
     },
   });
 }
-

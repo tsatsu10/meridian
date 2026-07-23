@@ -4,7 +4,6 @@ import { projectTemplates } from "../../database/schema";
 import type { TemplateStats } from "../../types/templates";
 
 export default async function getTemplateStats(): Promise<TemplateStats> {
-
   // Get total templates
   const totalResult = await getDatabase()
     .select({ count: sql<number>`count(*)::int` })
@@ -55,19 +54,21 @@ export default async function getTemplateStats(): Promise<TemplateStats> {
     totalTemplates,
     totalIndustries,
     totalProfessions,
-    mostPopularTemplate: mostPopularTemplate ? {
-      ...mostPopularTemplate,
-      rating: mostPopularTemplate.rating / 10,
-    } : null,
-    highestRatedTemplate: highestRatedTemplate ? {
-      ...highestRatedTemplate,
-      rating: highestRatedTemplate.rating / 10,
-    } : null,
-    recentlyAdded: recentTemplates.map(t => ({
+    mostPopularTemplate: mostPopularTemplate
+      ? {
+          ...mostPopularTemplate,
+          rating: (mostPopularTemplate.rating ?? 0) / 10,
+        }
+      : null,
+    highestRatedTemplate: highestRatedTemplate
+      ? {
+          ...highestRatedTemplate,
+          rating: (highestRatedTemplate.rating ?? 0) / 10,
+        }
+      : null,
+    recentlyAdded: recentTemplates.map((t) => ({
       ...t,
-      rating: t.rating / 10,
+      rating: (t.rating ?? 0) / 10,
     })),
   };
 }
-
-

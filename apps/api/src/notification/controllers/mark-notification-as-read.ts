@@ -21,4 +21,3 @@ async function markNotificationAsRead(id: string) {
 }
 
 export default markNotificationAsRead;
-

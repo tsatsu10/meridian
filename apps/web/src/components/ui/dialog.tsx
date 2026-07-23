@@ -32,18 +32,26 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   // Generate unique IDs for accessibility fallbacks
-  const fallbackTitleId = React.useId() + "-title";
-  const fallbackDescriptionId = React.useId() + "-description";
-  
+  const fallbackTitleId = `${React.useId()}-title`;
+  const fallbackDescriptionId = `${React.useId()}-description`;
+
   // Check if children contain DialogTitle and DialogDescription
-  const hasTitle = React.Children.toArray(children).some((child) => 
-    React.isValidElement(child) && 
-    ((child.type as any)?.displayName === 'DialogTitle' || (child.type as any)?.displayName === DialogPrimitive.Title.displayName)
+  const hasTitle = React.Children.toArray(children).some(
+    (child) =>
+      React.isValidElement(child) &&
+      ((child.type as { displayName?: string })?.displayName ===
+        "DialogTitle" ||
+        (child.type as { displayName?: string })?.displayName ===
+          DialogPrimitive.Title.displayName),
   );
-  
-  const hasDescription = React.Children.toArray(children).some((child) => 
-    React.isValidElement(child) && 
-    ((child.type as any)?.displayName === 'DialogDescription' || (child.type as any)?.displayName === DialogPrimitive.Description.displayName)
+
+  const hasDescription = React.Children.toArray(children).some(
+    (child) =>
+      React.isValidElement(child) &&
+      ((child.type as { displayName?: string })?.displayName ===
+        "DialogDescription" ||
+        (child.type as { displayName?: string })?.displayName ===
+          DialogPrimitive.Description.displayName),
   );
 
   return (

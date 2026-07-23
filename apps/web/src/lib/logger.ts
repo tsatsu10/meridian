@@ -1,18 +1,18 @@
 /**
  * Frontend Logger Utility
  * Centralized logging for the web application
- * 
+ *
  * @epic-3.1-monitoring: Structured logging for better debugging
  * @performance: Efficient logging with configurable levels
  */
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
-  context?: Record<string, any>;
+  context?: object;
   stack?: string;
 }
 
@@ -21,25 +21,30 @@ class Logger {
   private isProduction: boolean;
   private logLevel: LogLevel;
   private logBuffer: LogEntry[] = [];
-  private maxBufferSize: number = 100;
+  private maxBufferSize = 100;
 
   constructor() {
-    this.isDevelopment = import.meta.env.MODE === 'development';
-    this.isProduction = import.meta.env.MODE === 'production';
-    this.logLevel = (import.meta.env.VITE_LOG_LEVEL as LogLevel) || 
-                    (this.isProduction ? 'warn' : 'debug');
+    this.isDevelopment = import.meta.env.MODE === "development";
+    this.isProduction = import.meta.env.MODE === "production";
+    this.logLevel =
+      (import.meta.env.VITE_LOG_LEVEL as LogLevel) ||
+      (this.isProduction ? "warn" : "debug");
   }
 
   private shouldLog(level: LogLevel): boolean {
-    const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+    const levels: LogLevel[] = ["debug", "info", "warn", "error"];
     const currentLevelIndex = levels.indexOf(this.logLevel);
     const messageLevelIndex = levels.indexOf(level);
     return messageLevelIndex >= currentLevelIndex;
   }
 
-  private formatMessage(level: LogLevel, message: string, context?: Record<string, any>): string {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    context?: object,
+  ): string {
     const timestamp = new Date().toISOString();
-    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+    const contextStr = context ? ` ${JSON.stringify(context)}` : "";
     return `[${timestamp}] [${level.toUpperCase()}]: ${message}${contextStr}`;
   }
 
@@ -50,7 +55,12 @@ class Logger {
     }
   }
 
-  private log(level: LogLevel, message: string, context?: Record<string, any>, error?: Error): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: object,
+    error?: Error,
+  ): void {
     if (!this.shouldLog(level)) return;
 
     const entry: LogEntry = {
@@ -58,7 +68,7 @@ class Logger {
       message,
       timestamp: new Date().toISOString(),
       context,
-      stack: error?.stack
+      stack: error?.stack,
     };
 
     this.addToBuffer(entry);
@@ -66,36 +76,37 @@ class Logger {
     // In development, use console with colors
     if (this.isDevelopment) {
       const formattedMessage = this.formatMessage(level, message, context);
-      
+
       switch (level) {
-        case 'debug':
+        case "debug":
           console.debug(formattedMessage);
           break;
-        case 'info':
+        case "info":
           console.info(formattedMessage);
           break;
-        case 'warn':
+        case "warn":
           console.warn(formattedMessage, context);
           break;
-        case 'error':
+        case "error":
           console.error(formattedMessage, context, error);
           break;
       }
     } else {
       // In production, only log errors and warnings to console
-      if (level === 'error' || level === 'warn') {
+      if (level === "error" || level === "warn") {
         console[level](this.formatMessage(level, message, context));
       }
-      
+
       // Send to external logging service (e.g., Sentry, LogRocket)
       this.sendToExternalService(entry);
     }
   }
 
   private sendToExternalService(entry: LogEntry): void {
-    // TODO: Integrate with external logging service
+    // See https://github.com/tsatsu10/meridian/issues/77
     // Examples: Sentry, LogRocket, Datadog, etc.
-    if (entry.level === 'error' && window.Sentry) {
+    const hasSentry = "Sentry" in window;
+    if (entry.level === "error" && hasSentry) {
       // window.Sentry.captureException(new Error(entry.message));
     }
   }
@@ -103,29 +114,29 @@ class Logger {
   /**
    * Log debug information (development only)
    */
-  debug(message: string, context?: Record<string, any>): void {
-    this.log('debug', message, context);
+  debug(message: string, context?: object): void {
+    this.log("debug", message, context);
   }
 
   /**
    * Log informational messages
    */
-  info(message: string, context?: Record<string, any>): void {
-    this.log('info', message, context);
+  info(message: string, context?: object): void {
+    this.log("info", message, context);
   }
 
   /**
    * Log warning messages
    */
-  warn(message: string, context?: Record<string, any>): void {
-    this.log('warn', message, context);
+  warn(message: string, context?: object): void {
+    this.log("warn", message, context);
   }
 
   /**
    * Log error messages
    */
-  error(message: string, contextOrError?: Record<string, any> | Error, error?: Error): void {
-    let context: Record<string, any> | undefined;
+  error(message: string, contextOrError?: object | Error, error?: Error): void {
+    let context: object | undefined;
     let err: Error | undefined;
 
     if (contextOrError instanceof Error) {
@@ -135,13 +146,13 @@ class Logger {
       err = error;
     }
 
-    this.log('error', message, context, err);
+    this.log("error", message, context, err);
   }
 
   /**
    * Get recent log entries (useful for debugging)
    */
-  getRecentLogs(count: number = 50): LogEntry[] {
+  getRecentLogs(count = 50): LogEntry[] {
     return this.logBuffer.slice(-count);
   }
 
@@ -157,7 +168,7 @@ class Logger {
    */
   setLogLevel(level: LogLevel): void {
     this.logLevel = level;
-    this.info('Log level changed', { newLevel: level });
+    this.info("Log level changed", { newLevel: level });
   }
 }
 
@@ -166,11 +177,11 @@ export const logger = new Logger();
 
 // Export convenience functions
 export const log = {
-  debug: (message: string, context?: Record<string, any>) => logger.debug(message, context),
-  info: (message: string, context?: Record<string, any>) => logger.info(message, context),
-  warn: (message: string, context?: Record<string, any>) => logger.warn(message, context),
-  error: (message: string, contextOrError?: Record<string, any> | Error, error?: Error) => 
-    logger.error(message, contextOrError, error)
+  debug: (message: string, context?: object) => logger.debug(message, context),
+  info: (message: string, context?: object) => logger.info(message, context),
+  warn: (message: string, context?: object) => logger.warn(message, context),
+  error: (message: string, contextOrError?: object | Error, error?: Error) =>
+    logger.error(message, contextOrError, error),
 };
 
 export default logger;
