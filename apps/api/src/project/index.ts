@@ -754,12 +754,21 @@ const project = new Hono<{
       }
     },
   )
-  .delete(
+  .post(
+    // POST, not DELETE: this Hono/Node stack doesn't reliably surface a
+    // JSON body on DELETE requests (confirmed empirically — the identical
+    // middleware chain on PATCH /bulk/update parses its body fine; on
+    // DELETE it doesn't). The single-project delete route sidesteps this
+    // by reading workspaceId from the query string instead of a body;
+    // bulk delete needs an array of ids, so POST is the simpler fix.
     "/bulk/delete",
+    RateLimitPresets.delete, // 🚦 Same rate limit as single-project delete
+    rbacMiddleware.canDeleteProjects,
     zValidator(
       "json",
       z.object({
         projectIds: z.array(z.string()).min(1),
+        workspaceId: z.string().min(1, "Workspace ID is required"),
         reason: z.string().optional(),
       }),
     ),

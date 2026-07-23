@@ -187,10 +187,12 @@ export class MemoryMonitor {
       if ("memory" in performance) {
         const memory = (
           performance as Performance & {
-            memory: { usedJSHeapSize: number; totalJSHeapSize: number };
+            memory: { usedJSHeapSize: number; jsHeapSizeLimit: number };
           }
         ).memory;
-        const usage = memory.usedJSHeapSize / memory.totalJSHeapSize;
+        // Ratio against the heap limit (real ceiling), not totalJSHeapSize
+        // (allocated heap), which would read ~90-100% even when healthy.
+        const usage = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
 
         for (const observer of this.observers) {
           if (usage >= observer.threshold) {
@@ -212,10 +214,10 @@ export class MemoryMonitor {
     if ("memory" in performance) {
       const memory = (
         performance as Performance & {
-          memory: { usedJSHeapSize: number; totalJSHeapSize: number };
+          memory: { usedJSHeapSize: number; jsHeapSizeLimit: number };
         }
       ).memory;
-      return memory.usedJSHeapSize / memory.totalJSHeapSize;
+      return memory.usedJSHeapSize / memory.jsHeapSizeLimit;
     }
     return 0;
   }
