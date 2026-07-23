@@ -6,6 +6,7 @@
 // @persona-lisa: Designer needs board views and team collaboration features
 
 import { cn } from "@/lib/cn";
+import useGetProject from "@/hooks/queries/project/use-get-project";
 import useProjectStore from "@/store/project";
 import {
   createFileRoute,
@@ -17,7 +18,7 @@ import {
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import icons from "@/constants/project-icons";
-import { createElement } from "react";
+import { createElement, useEffect } from "react";
 import {
   useProjectNavigation,
   getNavigationItemStyle,
@@ -31,8 +32,22 @@ export const Route = createFileRoute(
 
 function ProjectLayout() {
   const { workspaceId, projectId } = useParams({ strict: false });
-  const { project } = useProjectStore();
+  const { project, setProject } = useProjectStore();
   const location = useLocation();
+
+  // Populate the shared project store here (the common ancestor of every
+  // project sub-route) so the header always has a name/icon, even on routes
+  // that don't otherwise need project data (e.g. Overview, Calendar, Teams).
+  const { data: projectData } = useGetProject({
+    id: projectId || "",
+    workspaceId: workspaceId || "",
+  });
+
+  useEffect(() => {
+    if (projectData) {
+      setProject(projectData);
+    }
+  }, [projectData, setProject]);
 
   // Get navigation items from unified configuration
   const navigationItems = useProjectNavigation(
