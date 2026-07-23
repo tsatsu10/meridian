@@ -238,18 +238,14 @@ subscribeToEvent("user.signed_up", async ({ email }: { email: string }) => {
   await updateWorkspaceUser(email, "active");
 });
 
-subscribeToEvent(
-  "workspace.created",
-  async ({
-    workspaceId,
-    ownerEmail,
-  }: { workspaceId: string; ownerEmail: string }) => {
-    if (!workspaceId || !ownerEmail) {
-      return;
-    }
-
-    await createRootWorkspaceUser(workspaceId, ownerEmail);
-  },
-);
+// No "workspace.created" subscriber here: create-workspace.ts already
+// inserts the owner's workspace_members row (plus role assignment and
+// role history) directly and synchronously before publishing that event.
+// A subscriber calling createRootWorkspaceUser for the same workspace+user
+// pair would always violate idx_workspace_members_workspace_user_unique —
+// confirmed live, on every single workspace creation, via a failed
+// "insert into workspace_members" logged from this exact call site.
+// createRootWorkspaceUser itself is kept for the explicit POST /root route
+// above, a separate, manually-invoked admin action.
 
 export default workspaceUser;
