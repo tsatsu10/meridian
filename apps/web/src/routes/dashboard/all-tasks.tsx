@@ -93,6 +93,7 @@ import type { Project } from "@/types/project";
 // Import All Tasks view components
 import { AllTasksKanbanView } from "@/components/all-tasks/kanban-view";
 import { AllTasksCalendarView } from "@/components/all-tasks/calendar-view";
+import { buildDuplicateTaskPayload } from "@/components/all-tasks/build-duplicate-task-payload";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import ErrorBoundary from "@/components/error-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -643,16 +644,7 @@ export default function AllTasksPage() {
           return;
         }
         try {
-          await createTask({
-            title: `${task.title} (Copy)`,
-            description: task.description || "",
-            projectId: task.project.id,
-            userEmail: user?.email ?? "",
-            status: "todo", // Reset to todo for duplicated task
-            dueDate: task.dueDate ?? new Date().toISOString(),
-            priority: task.priority || "medium",
-            parentId: task.parentId || undefined,
-          });
+          await createTask(buildDuplicateTaskPayload(task, task.project.id));
 
           toast.success(`Task "${task.title}" duplicated successfully!`);
           refetch(); // Refresh the task list
