@@ -11,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Upload,
   Save,
@@ -20,7 +19,6 @@ import {
   MapPin,
   Edit3,
   Loader2,
-  Bell,
   Phone,
   Mail,
   Globe,
@@ -36,8 +34,6 @@ import {
   uploadProfilePicture,
   type ProfileData,
 } from "@/fetchers/profile/profile-mutations";
-import { NotificationPreferences } from "@/components/notifications/notification-preferences";
-import { useWorkspaceStore } from "@/store/workspace";
 
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
@@ -70,7 +66,6 @@ interface RawProfileData {
 
 function ProfileSettings() {
   const { user } = useAuth();
-  const workspace = useWorkspaceStore((state) => state.workspace);
   const { settings, updateSettings, addRecentlyViewed } = useSettingsStore();
   const queryClient = useQueryClient();
 
@@ -103,7 +98,6 @@ function ProfileSettings() {
   const [_uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [activeTab, setActiveTab] = useState("profile");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // API Data fetching
@@ -375,24 +369,7 @@ function ProfileSettings() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger
-              value="notifications"
-              className="flex items-center gap-2"
-            >
-              <Bell className="w-4 h-4" />
-              Notifications
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
+        <div className="space-y-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -596,18 +573,7 @@ function ProfileSettings() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Notifications Tab - real API-backed preferences */}
-          <TabsContent value="notifications" className="space-y-6">
-            <NotificationPreferences
-              userId={user?.id || ""}
-              workspaceId={workspace?.id || ""}
-              onSave={() => toast.success("Notification preferences saved!")}
-              className="border rounded-xl"
-            />
-          </TabsContent>
-        </Tabs>
+        </div>
       </div>
     </div>
   );
