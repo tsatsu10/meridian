@@ -47,7 +47,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import useProjectStore from "@/store/project";
 import useWorkspaceStore from "@/store/workspace";
@@ -58,10 +57,8 @@ import useAddProjectMember from "@/hooks/mutations/project/use-add-project-membe
 import { useChangeMemberRole } from "@/hooks/mutations/workspace-user/use-change-member-role";
 import { useRemoveMember } from "@/hooks/mutations/workspace-user/use-remove-member";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
-import { useOpenDirectMessage } from "@/hooks/use-open-direct-message";
-import { 
-  Search, 
-  Plus, 
+import {
+  Search,
   UserPlus,
   MoreHorizontal,
   Users,
@@ -74,44 +71,34 @@ import {
   Activity,
   AlertTriangle,
   Mail,
-  Phone,
-  MessageSquare,
-  Video,
   Filter,
-  SortDesc,
   Download,
-  Edit,
   Trash2,
   Shield,
   UserCheck,
   UserX,
   BarChart3,
   Eye,
-  Send,
-  FileText,
   Star,
-  StarOff,
-  Ban,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  Info,
   Zap,
   Loader2,
   Lightbulb,
-  Keyboard
+  Keyboard,
 } from "lucide-react";
 import DashboardPopup from "@/components/dashboard/dashboard-popup";
 import { cn } from "@/lib/cn";
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import ProjectMemberManagementModal from "@/components/team/project-member-management-modal";
+import { useState, useMemo, useEffect, useRef } from "react";
 import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
 import { EnhancedMemberDetailsModal } from "@/components/team/enhanced-member-details-modal";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { toast } from "sonner";
+import type { ProjectColumn, ProjectWithTasks } from "@/types/project";
+import type Task from "@/types/task";
 
 export const Route = createFileRoute(
-  "/dashboard/workspace/$workspaceId/project/$projectId/_layout/teams"
+  "/dashboard/workspace/$workspaceId/project/$projectId/_layout/teams",
 )({
   component: ProjectTeams,
 });
@@ -122,7 +109,7 @@ interface ProjectMember {
   email: string;
   avatar?: string;
   role: string;
-  workspaceRole: string;
+  workspaceRole?: string;
   activeTasks: number;
   completedTasks: number;
   hoursThisWeek?: number;
@@ -135,9 +122,16 @@ interface ProjectMember {
   workloadScore?: number;
   estimatedHours?: number;
   capacityUtilization?: number;
-  workloadStatus?: 'balanced' | 'overloaded' | 'underutilized';
+  workloadStatus?: "balanced" | "overloaded" | "underutilized";
   highPriorityTasks?: number;
 }
+
+// Task doesn't declare estimatedHours/actualHours -- kept as optional
+// extras rather than claiming the real Task type has them.
+type WorkloadTask = Task & {
+  estimatedHours?: number;
+  actualHours?: number;
+};
 
 interface TeamMetrics {
   totalMembers: number;
@@ -151,13 +145,20 @@ interface TeamMetrics {
 
 // Enhanced role system with proper RBAC roles
 const roleColors = {
-  "workspace-manager": "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-900 dark:from-purple-900/80 dark:to-purple-800/80 dark:text-purple-100 border-purple-300 dark:border-purple-700 font-semibold shadow-sm",
-  "department-head": "bg-gradient-to-r from-red-100 to-red-200 text-red-900 dark:from-red-900/80 dark:to-red-800/80 dark:text-red-100 border-red-300 dark:border-red-700 font-semibold shadow-sm",
-  "project-manager": "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-900 dark:from-blue-900/80 dark:to-blue-800/80 dark:text-blue-100 border-blue-300 dark:border-blue-700 font-semibold shadow-sm",
-  "team-lead": "bg-gradient-to-r from-green-100 to-green-200 text-green-900 dark:from-green-900/80 dark:to-green-800/80 dark:text-green-100 border-green-300 dark:border-green-700 font-semibold shadow-sm",
-  "project-viewer": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700",
-  member: "bg-secondary text-secondary-foreground dark:bg-secondary-hover dark:text-secondary-foreground border-border",
-  guest: "bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border-orange-300 dark:border-orange-700",
+  "workspace-manager":
+    "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-900 dark:from-purple-900/80 dark:to-purple-800/80 dark:text-purple-100 border-purple-300 dark:border-purple-700 font-semibold shadow-sm",
+  "department-head":
+    "bg-gradient-to-r from-red-100 to-red-200 text-red-900 dark:from-red-900/80 dark:to-red-800/80 dark:text-red-100 border-red-300 dark:border-red-700 font-semibold shadow-sm",
+  "project-manager":
+    "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-900 dark:from-blue-900/80 dark:to-blue-800/80 dark:text-blue-100 border-blue-300 dark:border-blue-700 font-semibold shadow-sm",
+  "team-lead":
+    "bg-gradient-to-r from-green-100 to-green-200 text-green-900 dark:from-green-900/80 dark:to-green-800/80 dark:text-green-100 border-green-300 dark:border-green-700 font-semibold shadow-sm",
+  "project-viewer":
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700",
+  member:
+    "bg-secondary text-secondary-foreground dark:bg-secondary-hover dark:text-secondary-foreground border-border",
+  guest:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border-orange-300 dark:border-orange-700",
 };
 
 const statusColors = {
@@ -168,177 +169,246 @@ const statusColors = {
 
 // Available roles for role changes
 const availableRoles = [
-  { value: "guest", label: "Guest", icon: UserX, description: "Limited access" },
-  { value: "member", label: "Member", icon: UserCheck, description: "Standard access" },
-  { value: "team-lead", label: "Team Lead", icon: Shield, description: "Team management" },
-  { value: "project-viewer", label: "Project Viewer", icon: Eye, description: "Read-only access" },
-  { value: "project-manager", label: "Project Manager", icon: Settings, description: "Full project control" },
-  { value: "department-head", label: "Department Head", icon: Star, description: "Department oversight" },
-  { value: "workspace-manager", label: "Workspace Manager", icon: Zap, description: "Full workspace control" },
+  {
+    value: "guest",
+    label: "Guest",
+    icon: UserX,
+    description: "Limited access",
+  },
+  {
+    value: "member",
+    label: "Member",
+    icon: UserCheck,
+    description: "Standard access",
+  },
+  {
+    value: "team-lead",
+    label: "Team Lead",
+    icon: Shield,
+    description: "Team management",
+  },
+  {
+    value: "project-viewer",
+    label: "Project Viewer",
+    icon: Eye,
+    description: "Read-only access",
+  },
+  {
+    value: "project-manager",
+    label: "Project Manager",
+    icon: Settings,
+    description: "Full project control",
+  },
+  {
+    value: "department-head",
+    label: "Department Head",
+    icon: Star,
+    description: "Department oversight",
+  },
+  {
+    value: "workspace-manager",
+    label: "Workspace Manager",
+    icon: Zap,
+    description: "Full workspace control",
+  },
 ];
 
 function ProjectTeams() {
-  const { workspaceId, projectId } = Route.useParams();
+  const { workspaceId } = Route.useParams();
   const { project } = useProjectStore();
   const { workspace } = useWorkspaceStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"name" | "tasks" | "productivity" | "recent">("name");
+  const [sortBy, setSortBy] = useState<
+    "name" | "tasks" | "productivity" | "recent"
+  >("name");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeTab, setActiveTab] = useState("overview");
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  
+
   // Ref for search input focus
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Role change modal state
   const [isRoleChangeOpen, setIsRoleChangeOpen] = useState(false);
-  const [selectedMemberForRole, setSelectedMemberForRole] = useState<ProjectMember | null>(null);
+  const [selectedMemberForRole, setSelectedMemberForRole] =
+    useState<ProjectMember | null>(null);
   const [newRole, setNewRole] = useState("");
 
   // Member management modal state
   const [isMemberDetailsOpen, setIsMemberDetailsOpen] = useState(false);
-  const [selectedMemberForDetails, setSelectedMemberForDetails] = useState<ProjectMember | null>(null);
+  const [selectedMemberForDetails, setSelectedMemberForDetails] =
+    useState<ProjectMember | null>(null);
 
   // Bulk actions state
-  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(
+    new Set(),
+  );
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [isBulkRoleChangeOpen, setIsBulkRoleChangeOpen] = useState(false);
   const [bulkNewRole, setBulkNewRole] = useState("");
-  
+
   // Remove member confirmation state
-  const [memberToRemove, setMemberToRemove] = useState<ProjectMember | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<ProjectMember | null>(
+    null,
+  );
 
   // @epic-3.4-teams: Mutations for role change and member removal
   const changeRoleMutation = useChangeMemberRole();
   const removeMemberMutation = useRemoveMember();
 
   // @epic-3.4-teams: Get project members (real project team)
-  const { data: realProjectMembers, isLoading: isLoadingMembers } = useGetProjectMembers(project?.id || "");
-  
+  const { data: realProjectMembers, isLoading: isLoadingMembers } =
+    useGetProjectMembers(project?.id || "");
+
   // @epic-3.4-teams: Get workspace users (for adding new members)
-  const { data: workspaceUsers, isLoading: isUsersLoading } = useGetWorkspaceUsers({ 
-    workspaceId: workspace?.id || "" 
+  const { isLoading: isUsersLoading } = useGetWorkspaceUsers({
+    workspaceId: workspace?.id || "",
   });
 
   // @epic-3.4-teams: Get project tasks for workload calculation
-  const { data: tasksData, isLoading: isTasksLoading } = useGetTasks(project?.id || "");
+  const { data: tasksData, isLoading: isTasksLoading } = useGetTasks(
+    project?.id || "",
+  );
 
   // @epic-3.4-teams: Add member mutation
-  const addMemberMutation = useAddProjectMember();
+  void useAddProjectMember();
 
   // @epic-3.4-teams: Get team permissions for current user
   const permissions = useTeamPermissions();
-
-  // @epic-4.1-direct-messaging: Hook for opening direct messages
-  const { openDirectMessage, isLoading: isOpeningMessage } = useOpenDirectMessage();
 
   // @epic-3.4-teams: Transform real project members with enhanced workload calculation
   const projectMembers: ProjectMember[] = useMemo(() => {
     if (!realProjectMembers || !tasksData) return [];
 
-    const allTasks = tasksData?.tasks || [];
-    
-    return realProjectMembers.map(member => {
-      const userTasks = allTasks.filter((task: any) => task.userEmail === member.userEmail);
-      
+    // useGetTasks' response type is untyped upstream (the generated Hono
+    // AppType is missing this route); ProjectWithTasks mirrors the actual
+    // GET /task/tasks/:projectId shape (columns, not a top-level `tasks`).
+    const projectWithTasks = tasksData as ProjectWithTasks | undefined;
+    const columnArray: ProjectColumn[] = projectWithTasks?.columns ?? [];
+    const allTasks = columnArray.flatMap((col) => col.tasks) as WorkloadTask[];
+
+    return realProjectMembers.map((member) => {
+      const userTasks = allTasks.filter(
+        (task) => task.userEmail === member.userEmail,
+      );
+
       // Basic counts
-      const activeTasks = userTasks.filter((task: any) => task.status !== 'done').length;
-      const completedTasks = userTasks.filter((task: any) => task.status === 'done').length;
-      const totalTasks = activeTasks + completedTasks;
-      
+      const activeTasks = userTasks.filter(
+        (task) => task.status !== "done",
+      ).length;
+      const completedTasks = userTasks.filter(
+        (task) => task.status === "done",
+      ).length;
+      void (activeTasks + completedTasks);
+
       // Enhanced workload calculation with complexity and priority
-      const calculateTaskWeight = (task: any) => {
+      const calculateTaskWeight = (task: WorkloadTask) => {
         let weight = 1; // Base weight
-        
+
         // Priority multiplier (high priority tasks count more)
-        if (task.priority === 'urgent' || task.priority === 'high') {
+        if (task.priority === "urgent" || task.priority === "high") {
           weight *= 1.5;
-        } else if (task.priority === 'low') {
+        } else if (task.priority === "low") {
           weight *= 0.75;
         }
-        
+
         // Estimated hours factor (if available)
         if (task.estimatedHours) {
           weight = task.estimatedHours / 4; // Normalize to 4-hour baseline
         }
-        
+
         // Complexity factor (based on subtasks or description length)
         if (task.subtasks && task.subtasks.length > 0) {
-          weight *= (1 + task.subtasks.length * 0.1); // 10% increase per subtask
+          weight *= 1 + task.subtasks.length * 0.1; // 10% increase per subtask
         }
-        
+
         return weight;
       };
-      
+
       // Calculate weighted workload
       const activeTasksWeighted = userTasks
-        .filter((task: any) => task.status !== 'done')
-        .reduce((sum: number, task: any) => sum + calculateTaskWeight(task), 0);
-      
+        .filter((task) => task.status !== "done")
+        .reduce((sum, task) => sum + calculateTaskWeight(task), 0);
+
       const completedTasksWeighted = userTasks
-        .filter((task: any) => task.status === 'done')
-        .reduce((sum: number, task: any) => sum + calculateTaskWeight(task), 0);
-      
+        .filter((task) => task.status === "done")
+        .reduce((sum, task) => sum + calculateTaskWeight(task), 0);
+
       const totalWeightedTasks = activeTasksWeighted + completedTasksWeighted;
-      
+
       // Calculate estimated hours (either from task data or weighted estimate)
-      const estimatedHours = userTasks.reduce((sum: number, task: any) => {
+      const estimatedHours = userTasks.reduce((sum, task) => {
         if (task.estimatedHours) {
-          return sum + (task.status !== 'done' ? task.estimatedHours : 0);
+          return sum + (task.status !== "done" ? task.estimatedHours : 0);
         }
         // Fallback: estimate based on task weight
-        return sum + (task.status !== 'done' ? calculateTaskWeight(task) * 4 : 0);
+        return (
+          sum + (task.status !== "done" ? calculateTaskWeight(task) * 4 : 0)
+        );
       }, 0);
-      
+
       // Calculate actual hours logged (if available)
-      const actualHours = userTasks.reduce((sum: number, task: any) => {
+      const actualHours = userTasks.reduce((sum, task) => {
         return sum + (task.actualHours || 0);
       }, 0);
-      
+
       // Enhanced productivity calculation (weighted)
-      const productivity = totalWeightedTasks > 0 
-        ? Math.round((completedTasksWeighted / totalWeightedTasks) * 100) 
-        : 0;
-      
+      const productivity =
+        totalWeightedTasks > 0
+          ? Math.round((completedTasksWeighted / totalWeightedTasks) * 100)
+          : 0;
+
       // Capacity utilization (assuming 40 hours/week capacity)
       const weeklyCapacity = 40;
-      const capacityUtilization = Math.min(100, Math.round((estimatedHours / weeklyCapacity) * 100));
-      
+      const capacityUtilization = Math.min(
+        100,
+        Math.round((estimatedHours / weeklyCapacity) * 100),
+      );
+
       // Workload status (balanced, overloaded, underutilized)
-      let workloadStatus: 'balanced' | 'overloaded' | 'underutilized' = 'balanced';
+      let workloadStatus: "balanced" | "overloaded" | "underutilized" =
+        "balanced";
       if (capacityUtilization > 100) {
-        workloadStatus = 'overloaded';
+        workloadStatus = "overloaded";
       } else if (capacityUtilization < 50 && activeTasks > 0) {
-        workloadStatus = 'underutilized';
+        workloadStatus = "underutilized";
       }
 
       return {
         id: member.id,
-        name: member.userName || member.userEmail || 'Unknown User',
-        email: member.userEmail || '',
-        role: member.role || 'member',
-        workspaceRole: member.role || 'member',
+        name: member.userName || member.userEmail || "Unknown User",
+        email: member.userEmail || "",
+        role: member.role || "member",
+        workspaceRole: member.role || "member",
         activeTasks,
         completedTasks,
         hoursThisWeek: actualHours || estimatedHours,
         productivity,
-        status: member.isActive ? 'online' : 'offline',
-        joinedProject: member.assignedAt ? new Date(member.assignedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        status: member.isActive ? "online" : "offline",
+        joinedProject: member.assignedAt
+          ? new Date(member.assignedAt).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
         lastActive: "Recently", // Could be enhanced with real last activity data
-        isProjectLead: member.role === 'workspace-manager' || member.role === 'department-head' || member.role === 'project-manager' || member.role === 'team-lead',
+        isProjectLead:
+          member.role === "workspace-manager" ||
+          member.role === "department-head" ||
+          member.role === "project-manager" ||
+          member.role === "team-lead",
         // Enhanced fields for capacity planning
         workloadScore: activeTasksWeighted,
         estimatedHours: Math.round(estimatedHours),
         capacityUtilization,
         workloadStatus,
-        highPriorityTasks: userTasks.filter((t: any) => 
-          (t.priority === 'urgent' || t.priority === 'high') && t.status !== 'done'
-        ).length
+        highPriorityTasks: userTasks.filter(
+          (t) =>
+            (t.priority === "urgent" || t.priority === "high") &&
+            t.status !== "done",
+        ).length,
       };
     });
   }, [realProjectMembers, tasksData]);
@@ -357,31 +427,52 @@ function ProjectTeams() {
       };
     }
 
-    const totalTasksAssigned = projectMembers.reduce((sum, member) => sum + member.activeTasks + member.completedTasks, 0);
-    const totalTasksCompleted = projectMembers.reduce((sum, member) => sum + member.completedTasks, 0);
-    const activeMembers = projectMembers.filter(member => member.status === 'online').length;
-    const avgProductivity = projectMembers.reduce((sum, member) => sum + member.productivity, 0) / projectMembers.length;
+    const totalTasksAssigned = projectMembers.reduce(
+      (sum, member) => sum + member.activeTasks + member.completedTasks,
+      0,
+    );
+    const totalTasksCompleted = projectMembers.reduce(
+      (sum, member) => sum + member.completedTasks,
+      0,
+    );
+    const activeMembers = projectMembers.filter(
+      (member) => member.status === "online",
+    ).length;
+    const avgProductivity =
+      projectMembers.reduce((sum, member) => sum + member.productivity, 0) /
+      projectMembers.length;
 
     return {
       totalMembers: projectMembers.length,
       activeMembers,
-      avgTasksPerMember: totalTasksAssigned > 0 ? Math.round(totalTasksAssigned / projectMembers.length) : 0,
+      avgTasksPerMember:
+        totalTasksAssigned > 0
+          ? Math.round(totalTasksAssigned / projectMembers.length)
+          : 0,
       totalTasksAssigned,
       totalTasksCompleted,
       teamProductivity: Math.round(avgProductivity),
-      projectCompletion: totalTasksAssigned > 0 ? Math.round((totalTasksCompleted / totalTasksAssigned) * 100) : 0,
+      projectCompletion:
+        totalTasksAssigned > 0
+          ? Math.round((totalTasksCompleted / totalTasksAssigned) * 100)
+          : 0,
     };
   }, [projectMembers]);
 
   // @epic-3.4-teams: Filter and sort members
   const filteredAndSortedMembers = useMemo(() => {
-    let filtered = projectMembers.filter(member => {
-      const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           member.role.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = !roleFilter || roleFilter === "all" || member.role === roleFilter;
-      const matchesStatus = !statusFilter || statusFilter === "all" || member.status === statusFilter;
-      
+    const filtered = projectMembers.filter((member) => {
+      const matchesSearch =
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.role.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole =
+        !roleFilter || roleFilter === "all" || member.role === roleFilter;
+      const matchesStatus =
+        !statusFilter ||
+        statusFilter === "all" ||
+        member.status === statusFilter;
+
       return matchesSearch && matchesRole && matchesStatus;
     });
 
@@ -389,11 +480,18 @@ function ProjectTeams() {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "tasks":
-          return (b.activeTasks + b.completedTasks) - (a.activeTasks + a.completedTasks);
+          return (
+            b.activeTasks +
+            b.completedTasks -
+            (a.activeTasks + a.completedTasks)
+          );
         case "productivity":
           return b.productivity - a.productivity;
         case "recent":
-          return new Date(b.joinedProject).getTime() - new Date(a.joinedProject).getTime();
+          return (
+            new Date(b.joinedProject).getTime() -
+            new Date(a.joinedProject).getTime()
+          );
         default:
           return a.name.localeCompare(b.name);
       }
@@ -404,10 +502,10 @@ function ProjectTeams() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -430,29 +528,23 @@ function ProjectTeams() {
     setIsMemberDetailsOpen(true);
   };
 
-  const handleSendMessage = async (member: ProjectMember) => {
-    // @epic-4.1-direct-messaging: Open direct message with selected member
-    await openDirectMessage(member.email, member.name);
-  };
-
-  const handleStartVideoCall = (member: ProjectMember) => {
-    toast.info(`Starting video call with ${member.name}...`);
-    // Implementation for video call system
+  const handleSendMessage = (member: ProjectMember) => {
+    window.location.href = `mailto:${member.email}`;
   };
 
   const handleRemoveMember = (member: ProjectMember) => {
     setMemberToRemove(member);
   };
-  
+
   const confirmRemoveMember = async () => {
     if (!memberToRemove || !workspaceId) return;
-    
+
     try {
       await removeMemberMutation.mutateAsync({
         workspaceId,
-        memberId: memberToRemove.id
+        memberId: memberToRemove.id,
       });
-      
+
       setMemberToRemove(null);
     } catch (error) {
       // Error already handled by mutation hook
@@ -461,14 +553,14 @@ function ProjectTeams() {
 
   const confirmRoleChange = async () => {
     if (!selectedMemberForRole || !newRole || !workspaceId) return;
-    
+
     try {
       await changeRoleMutation.mutateAsync({
         workspaceId,
         memberId: selectedMemberForRole.id,
-        newRole
+        newRole,
       });
-      
+
       setIsRoleChangeOpen(false);
       setSelectedMemberForRole(null);
       setNewRole("");
@@ -479,7 +571,7 @@ function ProjectTeams() {
 
   // Bulk action handlers
   const toggleMemberSelection = (memberId: string) => {
-    setSelectedMembers(prev => {
+    setSelectedMembers((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(memberId)) {
         newSet.delete(memberId);
@@ -494,7 +586,7 @@ function ProjectTeams() {
     if (selectedMembers.size === filteredAndSortedMembers.length) {
       setSelectedMembers(new Set());
     } else {
-      setSelectedMembers(new Set(filteredAndSortedMembers.map(m => m.id)));
+      setSelectedMembers(new Set(filteredAndSortedMembers.map((m) => m.id)));
     }
   };
 
@@ -510,17 +602,19 @@ function ProjectTeams() {
     if (!bulkNewRole || selectedMembers.size === 0 || !workspaceId) return;
 
     try {
-      const promises = Array.from(selectedMembers).map(memberId =>
+      const promises = Array.from(selectedMembers).map((memberId) =>
         changeRoleMutation.mutateAsync({
           workspaceId,
           memberId,
-          newRole: bulkNewRole
-        })
+          newRole: bulkNewRole,
+        }),
       );
 
       await Promise.all(promises);
-      
-      toast.success(`Updated ${selectedMembers.size} member roles to ${bulkNewRole}`);
+
+      toast.success(
+        `Updated ${selectedMembers.size} member roles to ${bulkNewRole}`,
+      );
       setIsBulkRoleChangeOpen(false);
       setBulkNewRole("");
       setSelectedMembers(new Set());
@@ -536,22 +630,26 @@ function ProjectTeams() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to remove ${selectedMembers.size} member(s)?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to remove ${selectedMembers.size} member(s)?`,
+      )
+    ) {
       return;
     }
 
     if (!workspaceId) return;
 
     try {
-      const promises = Array.from(selectedMembers).map(memberId =>
+      const promises = Array.from(selectedMembers).map((memberId) =>
         removeMemberMutation.mutateAsync({
           workspaceId,
-          memberId
-        })
+          memberId,
+        }),
       );
 
       await Promise.all(promises);
-      
+
       toast.success(`Removed ${selectedMembers.size} member(s)`);
       setSelectedMembers(new Set());
       setIsBulkMode(false);
@@ -567,9 +665,11 @@ function ProjectTeams() {
     }
 
     try {
-      const selectedData = filteredAndSortedMembers.filter(m => selectedMembers.has(m.id));
-      
-      const csvData = selectedData.map(member => ({
+      const selectedData = filteredAndSortedMembers.filter((m) =>
+        selectedMembers.has(m.id),
+      );
+
+      const csvData = selectedData.map((member) => ({
         Name: member.name,
         Email: member.email,
         Role: member.role,
@@ -578,41 +678,49 @@ function ProjectTeams() {
         "Productivity %": member.productivity,
         Status: member.status,
         "Last Active": member.lastActive,
-        "Joined Project": member.joinedProject
+        "Joined Project": member.joinedProject,
       }));
-      
+
       const headers = Object.keys(csvData[0]);
       const csvRows = [
-        headers.join(','),
-        ...csvData.map(row => 
-          headers.map(header => {
-            const value = row[header as keyof typeof row];
-            const escaped = String(value).replace(/"/g, '""');
-            return escaped.includes(',') || escaped.includes('\n') || escaped.includes('"') 
-              ? `"${escaped}"` 
-              : escaped;
-          }).join(',')
-        )
+        headers.join(","),
+        ...csvData.map((row) =>
+          headers
+            .map((header) => {
+              const value = row[header as keyof typeof row];
+              const escaped = String(value).replace(/"/g, '""');
+              return escaped.includes(",") ||
+                escaped.includes("\n") ||
+                escaped.includes('"')
+                ? `"${escaped}"`
+                : escaped;
+            })
+            .join(","),
+        ),
       ];
-      
-      const csvContent = csvRows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+      const csvContent = csvRows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      const projectName = project?.name?.replace(/[^a-z0-9]/gi, '_') || 'project';
+      const link = document.createElement("a");
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .slice(0, -5);
+      const projectName =
+        project?.name?.replace(/[^a-z0-9]/gi, "_") || "project";
       link.href = url;
       link.download = `team_${projectName}_selected_${timestamp}.csv`;
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast.success(`Exported ${selectedData.length} selected members to CSV`);
     } catch (error) {
-      console.error('Error exporting selected members:', error);
-      toast.error('Failed to export selected members');
+      console.error("Error exporting selected members:", error);
+      toast.error("Failed to export selected members");
     }
   };
 
@@ -629,7 +737,7 @@ function ProjectTeams() {
   const handleExportTeam = () => {
     try {
       // Prepare CSV data
-      const csvData = projectMembers.map(member => ({
+      const csvData = projectMembers.map((member) => ({
         Name: member.name,
         Email: member.email,
         Role: member.role,
@@ -638,99 +746,110 @@ function ProjectTeams() {
         "Productivity %": member.productivity,
         Status: member.status,
         "Last Active": member.lastActive,
-        "Joined Project": member.joinedProject
+        "Joined Project": member.joinedProject,
       }));
-      
+
       // Generate CSV content
       const headers = Object.keys(csvData[0]);
       const csvRows = [
-        headers.join(','), // Header row
-        ...csvData.map(row => 
-          headers.map(header => {
-            const value = row[header as keyof typeof row];
-            // Escape quotes and wrap in quotes if contains comma/newline
-            const escaped = String(value).replace(/"/g, '""');
-            return escaped.includes(',') || escaped.includes('\n') || escaped.includes('"') 
-              ? `"${escaped}"` 
-              : escaped;
-          }).join(',')
-        )
+        headers.join(","), // Header row
+        ...csvData.map((row) =>
+          headers
+            .map((header) => {
+              const value = row[header as keyof typeof row];
+              // Escape quotes and wrap in quotes if contains comma/newline
+              const escaped = String(value).replace(/"/g, '""');
+              return escaped.includes(",") ||
+                escaped.includes("\n") ||
+                escaped.includes('"')
+                ? `"${escaped}"`
+                : escaped;
+            })
+            .join(","),
+        ),
       ];
-      
-      const csvContent = csvRows.join('\n');
-      
+
+      const csvContent = csvRows.join("\n");
+
       // Create blob and download
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      
+      const link = document.createElement("a");
+
       // Generate filename with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      const projectName = project?.name?.replace(/[^a-z0-9]/gi, '_') || 'project';
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .slice(0, -5);
+      const projectName =
+        project?.name?.replace(/[^a-z0-9]/gi, "_") || "project";
       link.href = url;
       link.download = `team_${projectName}_${timestamp}.csv`;
-      
+
       // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast.success(`Exported ${projectMembers.length} team members to CSV`);
     } catch (error) {
-      console.error('Error exporting team data:', error);
-      toast.error('Failed to export team data');
+      console.error("Error exporting team data:", error);
+      toast.error("Failed to export team data");
     }
   };
 
   // Keyboard shortcuts
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyboard handler; handleExportTeam rebuilt each render, listener re-binds harmlessly to capture the latest
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const modifier = isMac ? e.metaKey : e.ctrlKey;
 
       // Cmd/Ctrl + K: Focus search
-      if (modifier && e.key === 'k') {
+      if (modifier && e.key === "k") {
         e.preventDefault();
         searchInputRef.current?.focus();
         toast.success("Search focused", { duration: 1000 });
       }
 
       // Cmd/Ctrl + I: Open invite modal
-      if (modifier && e.key === 'i' && permissions.permissions.canAddMembers) {
+      if (modifier && e.key === "i" && permissions.permissions.canAddMembers) {
         e.preventDefault();
         setIsInviteModalOpen(true);
         toast.success("Invite member", { duration: 1000 });
       }
 
       // Cmd/Ctrl + E: Export team data
-      if (modifier && e.key === 'e') {
+      if (modifier && e.key === "e") {
         e.preventDefault();
         handleExportTeam();
       }
 
       // Cmd/Ctrl + F: Toggle filters
-      if (modifier && e.key === 'f') {
+      if (modifier && e.key === "f") {
         e.preventDefault();
-        setShowFilters(prev => !prev);
-        toast.success(showFilters ? "Filters hidden" : "Filters shown", { duration: 1000 });
+        setShowFilters((prev) => !prev);
+        toast.success(showFilters ? "Filters hidden" : "Filters shown", {
+          duration: 1000,
+        });
       }
 
       // Cmd/Ctrl + /: Show keyboard shortcuts help
-      if (modifier && e.key === '/') {
+      if (modifier && e.key === "/") {
         e.preventDefault();
-        setShowKeyboardHelp(prev => !prev);
+        setShowKeyboardHelp((prev) => !prev);
       }
 
       // Escape: Close modals/dialogs
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (showKeyboardHelp) setShowKeyboardHelp(false);
         if (showFilters) setShowFilters(false);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [permissions.permissions.canAddMembers, showFilters, showKeyboardHelp]);
 
   return (
@@ -744,7 +863,7 @@ function ProjectTeams() {
               Manage your project team members, roles, and permissions
             </p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {permissions.permissions.canAddMembers && (
               <Button onClick={handleInviteTeamMember}>
@@ -752,7 +871,11 @@ function ProjectTeams() {
                 Invite Member
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => setIsDashboardOpen(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDashboardOpen(true)}
+            >
               <BarChart3 className="mr-2 h-4 w-4" />
               Analytics
             </Button>
@@ -774,8 +897,16 @@ function ProjectTeams() {
                   Clear All Filters
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}>
-                  {viewMode === "grid" ? <Users className="mr-2 h-4 w-4" /> : <BarChart3 className="mr-2 h-4 w-4" />}
+                <DropdownMenuItem
+                  onClick={() =>
+                    setViewMode(viewMode === "grid" ? "list" : "grid")
+                  }
+                >
+                  {viewMode === "grid" ? (
+                    <Users className="mr-2 h-4 w-4" />
+                  ) : (
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                  )}
                   Switch to {viewMode === "grid" ? "List" : "Grid"} View
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -788,6 +919,7 @@ function ProjectTeams() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
                 <Card key={i}>
                   <CardHeader>
                     <Skeleton className="h-4 w-24" />
@@ -805,7 +937,11 @@ function ProjectTeams() {
               <CardContent>
                 <div className="space-y-4">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3">
+                    <div
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                      key={i}
+                      className="flex items-center space-x-3"
+                    >
                       <Skeleton className="h-10 w-10 rounded-full" />
                       <div className="space-y-1">
                         <Skeleton className="h-4 w-32" />
@@ -825,11 +961,15 @@ function ProjectTeams() {
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Members
+                  </CardTitle>
                   <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{teamMetrics.totalMembers}</div>
+                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                    {teamMetrics.totalMembers}
+                  </div>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <span className="flex items-center">
                       <Zap className="h-3 w-3 text-green-600 mr-1" />
@@ -841,37 +981,45 @@ function ProjectTeams() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Tasks</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Avg Tasks
+                  </CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{teamMetrics.avgTasksPerMember}</div>
-                  <p className="text-xs text-muted-foreground">
-                    per member
-                  </p>
+                  <div className="text-2xl font-bold">
+                    {teamMetrics.avgTasksPerMember}
+                  </div>
+                  <p className="text-xs text-muted-foreground">per member</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Tasks Assigned</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Tasks Assigned
+                  </CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{teamMetrics.totalTasksAssigned}</div>
-                  <p className="text-xs text-muted-foreground">
-                    total tasks
-                  </p>
+                  <div className="text-2xl font-bold">
+                    {teamMetrics.totalTasksAssigned}
+                  </div>
+                  <p className="text-xs text-muted-foreground">total tasks</p>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Completed
+                  </CardTitle>
                   <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">{teamMetrics.totalTasksCompleted}</div>
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    {teamMetrics.totalTasksCompleted}
+                  </div>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <TrendingUp className="h-3 w-3 text-green-600" />
                     tasks done
@@ -881,22 +1029,35 @@ function ProjectTeams() {
 
               <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Productivity</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Productivity
+                  </CardTitle>
                   <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">{teamMetrics.teamProductivity}%</div>
+                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    {teamMetrics.teamProductivity}%
+                  </div>
                   <div className="text-xs text-muted-foreground flex items-center gap-1">
                     {teamMetrics.teamProductivity >= 70 ? (
-                      <Badge variant="outline" className="text-xs px-1 py-0 h-4 bg-green-100 text-green-700 border-green-300">
+                      <Badge
+                        variant="outline"
+                        className="text-xs px-1 py-0 h-4 bg-green-100 text-green-700 border-green-300"
+                      >
                         High
                       </Badge>
                     ) : teamMetrics.teamProductivity >= 50 ? (
-                      <Badge variant="outline" className="text-xs px-1 py-0 h-4 bg-yellow-100 text-yellow-700 border-yellow-300">
+                      <Badge
+                        variant="outline"
+                        className="text-xs px-1 py-0 h-4 bg-yellow-100 text-yellow-700 border-yellow-300"
+                      >
                         Medium
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-xs px-1 py-0 h-4 bg-red-100 text-red-700 border-red-300">
+                      <Badge
+                        variant="outline"
+                        className="text-xs px-1 py-0 h-4 bg-red-100 text-red-700 border-red-300"
+                      >
                         Low
                       </Badge>
                     )}
@@ -907,11 +1068,15 @@ function ProjectTeams() {
 
               <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/50 border-amber-200 dark:border-amber-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completion</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Completion
+                  </CardTitle>
                   <Calendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{teamMetrics.projectCompletion}%</div>
+                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+                    {teamMetrics.projectCompletion}%
+                  </div>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Target className="h-3 w-3 text-amber-600" />
                     project done
@@ -924,8 +1089,14 @@ function ProjectTeams() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium">Filters & Search</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
+                  <CardTitle className="text-sm font-medium">
+                    Filters & Search
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
                     <Filter className="h-4 w-4 mr-2" />
                     {showFilters ? "Hide" : "Show"} Filters
                   </Button>
@@ -944,7 +1115,7 @@ function ProjectTeams() {
                         className="pl-9"
                       />
                     </div>
-                    
+
                     <Select value={roleFilter} onValueChange={setRoleFilter}>
                       <SelectTrigger>
                         <SelectValue placeholder="Filter by role" />
@@ -958,8 +1129,11 @@ function ProjectTeams() {
                         ))}
                       </SelectContent>
                     </Select>
-                    
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+
+                    <Select
+                      value={statusFilter}
+                      onValueChange={setStatusFilter}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Filter by status" />
                       </SelectTrigger>
@@ -970,25 +1144,37 @@ function ProjectTeams() {
                         <SelectItem value="offline">Offline</SelectItem>
                       </SelectContent>
                     </Select>
-                    
-                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+
+                    <Select
+                      value={sortBy}
+                      onValueChange={(
+                        value: "name" | "tasks" | "productivity" | "recent",
+                      ) => setSortBy(value)}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="name">Name</SelectItem>
                         <SelectItem value="tasks">Task Count</SelectItem>
-                        <SelectItem value="productivity">Productivity</SelectItem>
+                        <SelectItem value="productivity">
+                          Productivity
+                        </SelectItem>
                         <SelectItem value="recent">Recently Joined</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      Showing {filteredAndSortedMembers.length} of {projectMembers.length} members
+                      Showing {filteredAndSortedMembers.length} of{" "}
+                      {projectMembers.length} members
                     </div>
-                    <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearAllFilters}
+                    >
                       Clear All
                     </Button>
                   </div>
@@ -1003,147 +1189,211 @@ function ProjectTeams() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Lightbulb className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                      <CardTitle className="text-purple-900 dark:text-purple-100">AI Team Insights</CardTitle>
+                      <CardTitle className="text-purple-900 dark:text-purple-100">
+                        AI Team Insights
+                      </CardTitle>
                     </div>
-                    <Badge variant="outline" className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700">
+                    <Badge
+                      variant="outline"
+                      className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700"
+                    >
                       Smart Analysis
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Actionable insights based on team performance and workload analysis
+                    Actionable insights based on team performance and workload
+                    analysis
                   </p>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(() => {
                       const insights = [];
-                      
+
                       // Analyze overloaded members
-                      const overloadedMembers = filteredAndSortedMembers.filter(m => 
-                        m.workloadStatus === 'overloaded' || (m.capacityUtilization || 0) > 100
+                      const overloadedMembers = filteredAndSortedMembers.filter(
+                        (m) =>
+                          m.workloadStatus === "overloaded" ||
+                          (m.capacityUtilization || 0) > 100,
                       );
                       if (overloadedMembers.length > 0) {
                         insights.push({
-                          type: 'warning',
+                          type: "warning",
                           icon: AlertTriangle,
-                          title: 'Overloaded Team Members',
-                          description: `${overloadedMembers.length} member${overloadedMembers.length > 1 ? 's are' : ' is'} at >100% capacity`,
-                          action: 'Redistribute tasks',
-                          members: overloadedMembers.slice(0, 3).map(m => m.name).join(', '),
-                          color: 'text-red-600 dark:text-red-400',
-                          bgColor: 'bg-red-100 dark:bg-red-900/30',
-                          borderColor: 'border-red-300 dark:border-red-800'
+                          title: "Overloaded Team Members",
+                          description: `${overloadedMembers.length} member${overloadedMembers.length > 1 ? "s are" : " is"} at >100% capacity`,
+                          action: "Redistribute tasks",
+                          members: overloadedMembers
+                            .slice(0, 3)
+                            .map((m) => m.name)
+                            .join(", "),
+                          color: "text-red-600 dark:text-red-400",
+                          bgColor: "bg-red-100 dark:bg-red-900/30",
+                          borderColor: "border-red-300 dark:border-red-800",
                         });
                       }
-                      
+
                       // Analyze underutilized members
-                      const underutilizedMembers = filteredAndSortedMembers.filter(m => 
-                        m.workloadStatus === 'underutilized' && m.activeTasks > 0
-                      );
+                      const underutilizedMembers =
+                        filteredAndSortedMembers.filter(
+                          (m) =>
+                            m.workloadStatus === "underutilized" &&
+                            m.activeTasks > 0,
+                        );
                       if (underutilizedMembers.length > 0) {
                         insights.push({
-                          type: 'opportunity',
+                          type: "opportunity",
                           icon: TrendingUp,
-                          title: 'Available Capacity',
-                          description: `${underutilizedMembers.length} member${underutilizedMembers.length > 1 ? 's have' : ' has'} capacity for more work`,
-                          action: 'Assign additional tasks',
-                          members: underutilizedMembers.slice(0, 3).map(m => m.name).join(', '),
-                          color: 'text-green-600 dark:text-green-400',
-                          bgColor: 'bg-green-100 dark:bg-green-900/30',
-                          borderColor: 'border-green-300 dark:border-green-800'
+                          title: "Available Capacity",
+                          description: `${underutilizedMembers.length} member${underutilizedMembers.length > 1 ? "s have" : " has"} capacity for more work`,
+                          action: "Assign additional tasks",
+                          members: underutilizedMembers
+                            .slice(0, 3)
+                            .map((m) => m.name)
+                            .join(", "),
+                          color: "text-green-600 dark:text-green-400",
+                          bgColor: "bg-green-100 dark:bg-green-900/30",
+                          borderColor: "border-green-300 dark:border-green-800",
                         });
                       }
-                      
+
                       // Analyze productivity
                       const avgProductivity = Math.round(
-                        filteredAndSortedMembers.reduce((sum, m) => sum + (m.productivity || 0), 0) / 
-                        filteredAndSortedMembers.length
+                        filteredAndSortedMembers.reduce(
+                          (sum, m) => sum + (m.productivity || 0),
+                          0,
+                        ) / filteredAndSortedMembers.length,
                       );
-                      const lowProductivityMembers = filteredAndSortedMembers.filter(m => 
-                        (m.productivity || 0) < avgProductivity * 0.7 && m.activeTasks > 0
-                      );
+                      const lowProductivityMembers =
+                        filteredAndSortedMembers.filter(
+                          (m) =>
+                            (m.productivity || 0) < avgProductivity * 0.7 &&
+                            m.activeTasks > 0,
+                        );
                       if (lowProductivityMembers.length > 0) {
                         insights.push({
-                          type: 'action',
+                          type: "action",
                           icon: Activity,
-                          title: 'Productivity Support Needed',
-                          description: `${lowProductivityMembers.length} member${lowProductivityMembers.length > 1 ? 's are' : ' is'} below team average (${avgProductivity}%)`,
-                          action: 'Check for blockers',
-                          members: lowProductivityMembers.slice(0, 3).map(m => m.name).join(', '),
-                          color: 'text-amber-600 dark:text-amber-400',
-                          bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-                          borderColor: 'border-amber-300 dark:border-amber-800'
+                          title: "Productivity Support Needed",
+                          description: `${lowProductivityMembers.length} member${lowProductivityMembers.length > 1 ? "s are" : " is"} below team average (${avgProductivity}%)`,
+                          action: "Check for blockers",
+                          members: lowProductivityMembers
+                            .slice(0, 3)
+                            .map((m) => m.name)
+                            .join(", "),
+                          color: "text-amber-600 dark:text-amber-400",
+                          bgColor: "bg-amber-100 dark:bg-amber-900/30",
+                          borderColor: "border-amber-300 dark:border-amber-800",
                         });
                       }
-                      
+
                       // Analyze high priority task distribution
-                      const totalHighPriority = filteredAndSortedMembers.reduce((sum, m) => 
-                        sum + (m.highPriorityTasks || 0), 0
+                      const totalHighPriority = filteredAndSortedMembers.reduce(
+                        (sum, m) => sum + (m.highPriorityTasks || 0),
+                        0,
                       );
-                      const membersWithHighPriority = filteredAndSortedMembers.filter(m => 
-                        (m.highPriorityTasks || 0) > 0
-                      );
-                      if (totalHighPriority > 5 && membersWithHighPriority.length < Math.ceil(filteredAndSortedMembers.length * 0.4)) {
+                      const membersWithHighPriority =
+                        filteredAndSortedMembers.filter(
+                          (m) => (m.highPriorityTasks || 0) > 0,
+                        );
+                      if (
+                        totalHighPriority > 5 &&
+                        membersWithHighPriority.length <
+                          Math.ceil(filteredAndSortedMembers.length * 0.4)
+                      ) {
                         insights.push({
-                          type: 'info',
+                          type: "info",
                           icon: Star,
-                          title: 'High Priority Concentration',
-                          description: `${totalHighPriority} urgent tasks on ${membersWithHighPriority.length} member${membersWithHighPriority.length > 1 ? 's' : ''}`,
-                          action: 'Consider distributing urgency',
-                          members: membersWithHighPriority.slice(0, 3).map(m => m.name).join(', '),
-                          color: 'text-blue-600 dark:text-blue-400',
-                          bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-                          borderColor: 'border-blue-300 dark:border-blue-800'
+                          title: "High Priority Concentration",
+                          description: `${totalHighPriority} urgent tasks on ${membersWithHighPriority.length} member${membersWithHighPriority.length > 1 ? "s" : ""}`,
+                          action: "Consider distributing urgency",
+                          members: membersWithHighPriority
+                            .slice(0, 3)
+                            .map((m) => m.name)
+                            .join(", "),
+                          color: "text-blue-600 dark:text-blue-400",
+                          bgColor: "bg-blue-100 dark:bg-blue-900/30",
+                          borderColor: "border-blue-300 dark:border-blue-800",
                         });
                       }
-                      
+
                       // Analyze team balance
-                      const maxLoad = Math.max(...filteredAndSortedMembers.map(m => m.capacityUtilization || 0));
-                      const minLoad = Math.min(...filteredAndSortedMembers.map(m => m.capacityUtilization || 0));
+                      const maxLoad = Math.max(
+                        ...filteredAndSortedMembers.map(
+                          (m) => m.capacityUtilization || 0,
+                        ),
+                      );
+                      const minLoad = Math.min(
+                        ...filteredAndSortedMembers.map(
+                          (m) => m.capacityUtilization || 0,
+                        ),
+                      );
                       const loadVariance = maxLoad - minLoad;
-                      if (loadVariance > 60 && filteredAndSortedMembers.length > 2) {
+                      if (
+                        loadVariance > 60 &&
+                        filteredAndSortedMembers.length > 2
+                      ) {
                         insights.push({
-                          type: 'balance',
+                          type: "balance",
                           icon: TrendingUp,
-                          title: 'Unbalanced Workload Distribution',
+                          title: "Unbalanced Workload Distribution",
                           description: `${loadVariance}% difference between most and least loaded members`,
-                          action: 'Rebalance task assignments',
+                          action: "Rebalance task assignments",
                           members: `Range: ${minLoad}% to ${maxLoad}%`,
-                          color: 'text-indigo-600 dark:text-indigo-400',
-                          bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
-                          borderColor: 'border-indigo-300 dark:border-indigo-800'
+                          color: "text-indigo-600 dark:text-indigo-400",
+                          bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
+                          borderColor:
+                            "border-indigo-300 dark:border-indigo-800",
                         });
                       }
-                      
+
                       // If no issues, show positive insight
                       if (insights.length === 0) {
                         insights.push({
-                          type: 'success',
+                          type: "success",
                           icon: CheckCircle2,
-                          title: 'Well-Balanced Team',
-                          description: 'Team workload is evenly distributed with healthy productivity',
-                          action: 'Maintain current pace',
+                          title: "Well-Balanced Team",
+                          description:
+                            "Team workload is evenly distributed with healthy productivity",
+                          action: "Maintain current pace",
                           members: `Team avg: ${avgProductivity}% productivity`,
-                          color: 'text-green-600 dark:text-green-400',
-                          bgColor: 'bg-green-100 dark:bg-green-900/30',
-                          borderColor: 'border-green-300 dark:border-green-800'
+                          color: "text-green-600 dark:text-green-400",
+                          bgColor: "bg-green-100 dark:bg-green-900/30",
+                          borderColor: "border-green-300 dark:border-green-800",
                         });
                       }
-                      
-                      return insights.slice(0, 3).map((insight, idx) => {
+
+                      return insights.slice(0, 3).map((insight) => {
                         const IconComponent = insight.icon;
                         return (
-                          <Card key={idx} className={cn("border-l-4", insight.borderColor)}>
+                          <Card
+                            key={insight.title}
+                            className={cn("border-l-4", insight.borderColor)}
+                          >
                             <CardContent className="pt-4">
                               <div className="flex items-start space-x-3">
-                                <div className={cn("p-2 rounded-lg", insight.bgColor)}>
-                                  <IconComponent className={cn("h-5 w-5", insight.color)} />
+                                <div
+                                  className={cn(
+                                    "p-2 rounded-lg",
+                                    insight.bgColor,
+                                  )}
+                                >
+                                  <IconComponent
+                                    className={cn("h-5 w-5", insight.color)}
+                                  />
                                 </div>
                                 <div className="flex-1 space-y-1">
-                                  <h4 className="font-semibold text-sm">{insight.title}</h4>
-                                  <p className="text-xs text-muted-foreground">{insight.description}</p>
+                                  <h4 className="font-semibold text-sm">
+                                    {insight.title}
+                                  </h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    {insight.description}
+                                  </p>
                                   <div className="flex items-center justify-between pt-2">
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {insight.action}
                                     </Badge>
                                   </div>
@@ -1163,30 +1413,35 @@ function ProjectTeams() {
             )}
 
             {/* Team Management Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="space-y-6"
+            >
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <TabsList>
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="workload">Workload</TabsTrigger>
                   <TabsTrigger value="performance">Performance</TabsTrigger>
                 </TabsList>
-                
+
                 {/* Bulk Actions Toggle */}
-                {permissions.permissions.canManageMembers && activeTab === "overview" && (
-                  <Button 
-                    variant={isBulkMode ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => {
-                      setIsBulkMode(!isBulkMode);
-                      if (isBulkMode) {
-                        setSelectedMembers(new Set());
-                      }
-                    }}
-                  >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    {isBulkMode ? "Exit Bulk Mode" : "Bulk Actions"}
-                  </Button>
-                )}
+                {permissions.permissions.canManageMembers &&
+                  activeTab === "overview" && (
+                    <Button
+                      variant={isBulkMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setIsBulkMode(!isBulkMode);
+                        if (isBulkMode) {
+                          setSelectedMembers(new Set());
+                        }
+                      }}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {isBulkMode ? "Exit Bulk Mode" : "Bulk Actions"}
+                    </Button>
+                  )}
               </div>
 
               {/* Select All / Bulk Actions Bar */}
@@ -1197,14 +1452,22 @@ function ProjectTeams() {
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
                           <Checkbox
-                            checked={selectedMembers.size === filteredAndSortedMembers.length && filteredAndSortedMembers.length > 0}
+                            id="select-all-members"
+                            checked={
+                              selectedMembers.size ===
+                                filteredAndSortedMembers.length &&
+                              filteredAndSortedMembers.length > 0
+                            }
                             onCheckedChange={toggleSelectAll}
                           />
-                          <label className="text-sm font-medium cursor-pointer" onClick={toggleSelectAll}>
+                          <label
+                            htmlFor="select-all-members"
+                            className="text-sm font-medium cursor-pointer"
+                          >
                             Select All
                           </label>
                         </div>
-                        
+
                         {selectedMembers.size > 0 && (
                           <>
                             <Badge variant="default" className="text-sm">
@@ -1216,12 +1479,12 @@ function ProjectTeams() {
                           </>
                         )}
                       </div>
-                      
+
                       {selectedMembers.size > 0 && (
                         <div className="flex items-center space-x-2">
                           {permissions.permissions.canChangeRoles && (
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={handleBulkRoleChange}
                             >
@@ -1229,19 +1492,19 @@ function ProjectTeams() {
                               Change Roles
                             </Button>
                           )}
-                          
-                          <Button 
-                            variant="outline" 
+
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={handleBulkExport}
                           >
                             <Download className="mr-2 h-4 w-4" />
                             Export Selected
                           </Button>
-                          
+
                           {permissions.permissions.canRemoveMembers && (
-                            <Button 
-                              variant="destructive" 
+                            <Button
+                              variant="destructive"
                               size="sm"
                               onClick={handleBulkRemove}
                             >
@@ -1249,9 +1512,9 @@ function ProjectTeams() {
                               Remove Selected
                             </Button>
                           )}
-                          
-                          <Button 
-                            variant="ghost" 
+
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => setSelectedMembers(new Set())}
                           >
@@ -1268,11 +1531,12 @@ function ProjectTeams() {
                 {viewMode === "grid" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredAndSortedMembers.map((member) => (
-                      <Card 
-                        key={member.id} 
+                      <Card
+                        key={member.id}
                         className={cn(
                           "group relative hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden",
-                          selectedMembers.has(member.id) && "ring-2 ring-primary"
+                          selectedMembers.has(member.id) &&
+                            "ring-2 ring-primary",
                         )}
                       >
                         {/* Bulk Select Checkbox */}
@@ -1280,23 +1544,28 @@ function ProjectTeams() {
                           <div className="absolute top-3 left-3 z-10">
                             <Checkbox
                               checked={selectedMembers.has(member.id)}
-                              onCheckedChange={() => toggleMemberSelection(member.id)}
+                              onCheckedChange={() =>
+                                toggleMemberSelection(member.id)
+                              }
                               className="bg-background"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
                         )}
-                        
+
                         {/* Project Lead Badge */}
                         {member.isProjectLead && (
                           <div className="absolute top-3 right-3 z-10">
-                            <Badge variant="secondary" className="text-xs shadow-sm">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs shadow-sm"
+                            >
                               <Star className="h-3 w-3 mr-1" />
                               Lead
                             </Badge>
                           </div>
                         )}
-                        
+
                         {/* Compact Header - Always Visible */}
                         <CardHeader className="pb-3 pt-6">
                           <div className="flex items-start space-x-3">
@@ -1307,48 +1576,74 @@ function ProjectTeams() {
                                   {member.name.charAt(0).toUpperCase()}
                                 </div>
                               </Avatar>
-                              <div 
+                              <div
                                 className={cn(
                                   "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background shadow-sm",
-                                  statusColors[member.status]
+                                  statusColors[member.status],
                                 )}
                               />
                             </div>
-                            
+
                             {/* Compact Info */}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold truncate">{member.name}</h3>
-                              <p className="text-xs text-muted-foreground truncate">{member.email}</p>
-                              <Badge 
-                                variant="outline" 
-                                className={cn("text-xs mt-1.5", roleColors[member.role as keyof typeof roleColors] || roleColors.member)}
+                              <h3 className="font-semibold truncate">
+                                {member.name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {member.email}
+                              </p>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-xs mt-1.5",
+                                  roleColors[
+                                    member.role as keyof typeof roleColors
+                                  ] || roleColors.member,
+                                )}
                               >
-                                {availableRoles.find(r => r.value === member.role)?.label || member.role}
+                                {availableRoles.find(
+                                  (r) => r.value === member.role,
+                                )?.label || member.role}
                               </Badge>
                             </div>
                           </div>
                         </CardHeader>
-                        
+
                         {/* Essential Stats - Always Visible */}
                         <CardContent className="space-y-3 pb-3">
                           <div className="grid grid-cols-3 gap-2 text-center">
                             <div className="flex flex-col">
-                              <span className="text-lg font-bold text-primary">{member.activeTasks}</span>
-                              <span className="text-xs text-muted-foreground">Active</span>
+                              <span className="text-lg font-bold text-primary">
+                                {member.activeTasks}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Active
+                              </span>
                             </div>
                             <div className="flex flex-col border-x">
-                              <span className="text-lg font-bold text-green-600 dark:text-green-400">{member.completedTasks}</span>
-                              <span className="text-xs text-muted-foreground">Done</span>
+                              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                {member.completedTasks}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Done
+                              </span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{member.productivity}%</span>
-                              <span className="text-xs text-muted-foreground">Score</span>
+                              <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                                {member.productivity}%
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Score
+                              </span>
                             </div>
                           </div>
-                          
+
                           {/* Productivity Bar - Compact */}
                           <div className="space-y-1">
-                            <Progress value={member.productivity} className="h-1.5" />
+                            <Progress
+                              value={member.productivity}
+                              className="h-1.5"
+                            />
                           </div>
 
                           {/* Expandable Details - Show on Hover */}
@@ -1361,30 +1656,43 @@ function ProjectTeams() {
                                     <Clock className="h-3.5 w-3.5 mr-1.5" />
                                     Workload
                                   </span>
-                                  <span className="font-medium">{member.estimatedHours}h</span>
-                                </div>
-                              )}
-                              
-                              {member.highPriorityTasks !== undefined && member.highPriorityTasks > 0 && (
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground flex items-center">
-                                    <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
-                                    High Priority
+                                  <span className="font-medium">
+                                    {member.estimatedHours}h
                                   </span>
-                                  <Badge variant="destructive" className="text-xs">
-                                    {member.highPriorityTasks}
-                                  </Badge>
                                 </div>
                               )}
-                              
+
+                              {member.highPriorityTasks !== undefined &&
+                                member.highPriorityTasks > 0 && (
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground flex items-center">
+                                      <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
+                                      High Priority
+                                    </span>
+                                    <Badge
+                                      variant="destructive"
+                                      className="text-xs"
+                                    >
+                                      {member.highPriorityTasks}
+                                    </Badge>
+                                  </div>
+                                )}
+
                               {member.workloadStatus && (
                                 <div className="flex items-center justify-between text-sm">
                                   <span className="text-muted-foreground flex items-center">
                                     <Activity className="h-3.5 w-3.5 mr-1.5" />
                                     Capacity
                                   </span>
-                                  <Badge 
-                                    variant={member.workloadStatus === 'overloaded' ? 'destructive' : member.workloadStatus === 'underutilized' ? 'secondary' : 'default'}
+                                  <Badge
+                                    variant={
+                                      member.workloadStatus === "overloaded"
+                                        ? "destructive"
+                                        : member.workloadStatus ===
+                                            "underutilized"
+                                          ? "secondary"
+                                          : "default"
+                                    }
                                     className="text-xs capitalize"
                                   >
                                     {member.workloadStatus}
@@ -1393,16 +1701,28 @@ function ProjectTeams() {
                               )}
                             </div>
                           </div>
-                          
+
                           {/* Actions - Visible on Hover */}
                           {permissions.permissions.canManageMembers && (
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pt-2 border-t mt-2">
                               <div className="grid grid-cols-2 gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleViewMemberDetails(member)} className="w-full h-8">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleViewMemberDetails(member)
+                                  }
+                                  className="w-full h-8"
+                                >
                                   <Eye className="mr-1.5 h-3.5 w-3.5" />
                                   <span className="text-xs">Details</span>
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={() => handleSendMessage(member)} className="w-full h-8">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSendMessage(member)}
+                                  className="w-full h-8"
+                                >
                                   <Mail className="mr-1.5 h-3.5 w-3.5" />
                                   <span className="text-xs">Message</span>
                                 </Button>
@@ -1436,7 +1756,10 @@ function ProjectTeams() {
                           </thead>
                           <tbody>
                             {filteredAndSortedMembers.map((member) => (
-                              <tr key={member.id} className="border-b hover:bg-muted/50">
+                              <tr
+                                key={member.id}
+                                className="border-b hover:bg-muted/50"
+                              >
                                 <td className="py-3">
                                   <div className="flex items-center space-x-3">
                                     <div className="relative">
@@ -1445,63 +1768,101 @@ function ProjectTeams() {
                                           {member.name.charAt(0).toUpperCase()}
                                         </div>
                                       </Avatar>
-                                      <div 
+                                      <div
                                         className={cn(
                                           "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border border-background",
-                                          statusColors[member.status]
+                                          statusColors[member.status],
                                         )}
                                       />
                                     </div>
                                     <div>
-                                      <div className="font-medium">{member.name}</div>
-                                      <div className="text-sm text-muted-foreground">{member.email}</div>
+                                      <div className="font-medium">
+                                        {member.name}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">
+                                        {member.email}
+                                      </div>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="py-3">
-                                  <Badge variant="outline" className={cn("text-xs", roleColors[member.role as keyof typeof roleColors] || roleColors.member)}>
-                                    {availableRoles.find(r => r.value === member.role)?.label || member.role}
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-xs",
+                                      roleColors[
+                                        member.role as keyof typeof roleColors
+                                      ] || roleColors.member,
+                                    )}
+                                  >
+                                    {availableRoles.find(
+                                      (r) => r.value === member.role,
+                                    )?.label || member.role}
                                   </Badge>
                                 </td>
                                 <td className="py-3">
                                   <div className="flex items-center space-x-2">
-                                    <div 
+                                    <div
                                       className={cn(
                                         "w-2 h-2 rounded-full",
-                                        statusColors[member.status]
+                                        statusColors[member.status],
                                       )}
                                     />
-                                    <span className="text-sm capitalize">{member.status}</span>
+                                    <span className="text-sm capitalize">
+                                      {member.status}
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="py-3">
                                   <div className="text-sm">
                                     <div>{member.activeTasks} active</div>
-                                    <div className="text-muted-foreground">{member.completedTasks} done</div>
+                                    <div className="text-muted-foreground">
+                                      {member.completedTasks} done
+                                    </div>
                                   </div>
                                 </td>
                                 <td className="py-3">
                                   <div className="flex items-center space-x-2">
                                     <div className="w-16 bg-secondary rounded-full h-2">
-                                      <div 
+                                      <div
                                         className="bg-primary h-2 rounded-full transition-all"
-                                        style={{ width: `${member.productivity}%` }}
+                                        style={{
+                                          width: `${member.productivity}%`,
+                                        }}
                                       />
                                     </div>
-                                    <span className="text-sm font-medium">{member.productivity}%</span>
+                                    <span className="text-sm font-medium">
+                                      {member.productivity}%
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="py-3">
-                                  <span className="text-sm">{formatDate(member.joinedProject)}</span>
+                                  <span className="text-sm">
+                                    {formatDate(member.joinedProject)}
+                                  </span>
                                 </td>
                                 {permissions.permissions.canManageMembers && (
                                   <td className="py-3">
                                     <div className="flex items-center space-x-1">
                                       {/* Primary Actions - Always Visible */}
-                                      <Button variant="ghost" size="sm" onClick={() => handleViewMemberDetails(member)} title="View Details">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleViewMemberDetails(member)
+                                        }
+                                        title="View Details"
+                                      >
                                         <Eye className="h-4 w-4" />
                                       </Button>
-                                      <Button variant="ghost" size="sm" onClick={() => handleSendMessage(member)} title="Send Message">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleSendMessage(member)
+                                        }
+                                        title="Send Message"
+                                      >
                                         <Mail className="h-4 w-4" />
                                       </Button>
                                       {/* Secondary Actions - Dropdown */}
@@ -1512,23 +1873,29 @@ function ProjectTeams() {
                                           </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                          <DropdownMenuLabel>More Actions</DropdownMenuLabel>
+                                          <DropdownMenuLabel>
+                                            More Actions
+                                          </DropdownMenuLabel>
                                           <DropdownMenuSeparator />
-                                          <DropdownMenuItem onClick={() => handleStartVideoCall(member)}>
-                                            <Video className="mr-2 h-4 w-4" />
-                                            Video Call
-                                          </DropdownMenuItem>
-                                          {permissions.permissions.canChangeRoles && (
-                                            <DropdownMenuItem onClick={() => handleChangeRole(member)}>
+                                          {permissions.permissions
+                                            .canChangeRoles && (
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                handleChangeRole(member)
+                                              }
+                                            >
                                               <Settings className="mr-2 h-4 w-4" />
                                               Change Role
                                             </DropdownMenuItem>
                                           )}
-                                          {permissions.permissions.canRemoveMembers && (
+                                          {permissions.permissions
+                                            .canRemoveMembers && (
                                             <>
                                               <DropdownMenuSeparator />
-                                              <DropdownMenuItem 
-                                                onClick={() => handleRemoveMember(member)}
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  handleRemoveMember(member)
+                                                }
                                                 className="text-red-600 dark:text-red-400"
                                               >
                                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -1556,39 +1923,59 @@ function ProjectTeams() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Team Average Load</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Team Average Load
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
-                        {Math.round(filteredAndSortedMembers.reduce((sum, m) => sum + (m.capacityUtilization || 0), 0) / filteredAndSortedMembers.length || 0)}%
+                        {Math.round(
+                          filteredAndSortedMembers.reduce(
+                            (sum, m) => sum + (m.capacityUtilization || 0),
+                            0,
+                          ) / filteredAndSortedMembers.length || 0,
+                        )}
+                        %
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Of 40hr/week capacity
                       </p>
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Overloaded Members</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Overloaded Members
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {filteredAndSortedMembers.filter(m => m.workloadStatus === 'overloaded').length}
+                        {
+                          filteredAndSortedMembers.filter(
+                            (m) => m.workloadStatus === "overloaded",
+                          ).length
+                        }
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Need workload redistribution
                       </p>
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Estimated Hours</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Total Estimated Hours
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
-                        {filteredAndSortedMembers.reduce((sum, m) => sum + (m.estimatedHours || 0), 0)}h
+                        {filteredAndSortedMembers.reduce(
+                          (sum, m) => sum + (m.estimatedHours || 0),
+                          0,
+                        )}
+                        h
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Across all active tasks
@@ -1610,7 +1997,8 @@ function ProjectTeams() {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Dual-bar visualization showing capacity utilization and workload distribution
+                      Dual-bar visualization showing capacity utilization and
+                      workload distribution
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -1620,14 +2008,29 @@ function ProjectTeams() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            <span className="font-medium text-sm">Team Average</span>
+                            <span className="font-medium text-sm">
+                              Team Average
+                            </span>
                           </div>
                           <div className="flex items-center space-x-3">
                             <span className="text-sm text-muted-foreground">
-                              {Math.round(filteredAndSortedMembers.reduce((sum, m) => sum + (m.capacityUtilization || 0), 0) / filteredAndSortedMembers.length || 0)}% capacity
+                              {Math.round(
+                                filteredAndSortedMembers.reduce(
+                                  (sum, m) =>
+                                    sum + (m.capacityUtilization || 0),
+                                  0,
+                                ) / filteredAndSortedMembers.length || 0,
+                              )}
+                              % capacity
                             </span>
                             <span className="text-sm font-medium">
-                              {Math.round(filteredAndSortedMembers.reduce((sum, m) => sum + (m.estimatedHours || 0), 0) / filteredAndSortedMembers.length || 0)}h/member
+                              {Math.round(
+                                filteredAndSortedMembers.reduce(
+                                  (sum, m) => sum + (m.estimatedHours || 0),
+                                  0,
+                                ) / filteredAndSortedMembers.length || 0,
+                              )}
+                              h/member
                             </span>
                           </div>
                         </div>
@@ -1636,14 +2039,27 @@ function ProjectTeams() {
 
                     {/* Individual Member Workload Bars */}
                     {filteredAndSortedMembers
-                      .sort((a, b) => (b.capacityUtilization || 0) - (a.capacityUtilization || 0))
+                      .sort(
+                        (a, b) =>
+                          (b.capacityUtilization || 0) -
+                          (a.capacityUtilization || 0),
+                      )
                       .map((member) => {
-                        const teamAvgCapacity = Math.round(filteredAndSortedMembers.reduce((sum, m) => sum + (m.capacityUtilization || 0), 0) / filteredAndSortedMembers.length || 0);
-                        const isAboveAverage = (member.capacityUtilization || 0) > teamAvgCapacity;
-                        const statusColor = member.workloadStatus === 'overloaded' ? 'bg-red-500' : 
-                                          member.workloadStatus === 'underutilized' ? 'bg-blue-500' : 
-                                          'bg-green-500';
-                        
+                        const teamAvgCapacity = Math.round(
+                          filteredAndSortedMembers.reduce(
+                            (sum, m) => sum + (m.capacityUtilization || 0),
+                            0,
+                          ) / filteredAndSortedMembers.length || 0,
+                        );
+                        const isAboveAverage =
+                          (member.capacityUtilization || 0) > teamAvgCapacity;
+                        const statusColor =
+                          member.workloadStatus === "overloaded"
+                            ? "bg-red-500"
+                            : member.workloadStatus === "underutilized"
+                              ? "bg-blue-500"
+                              : "bg-green-500";
+
                         return (
                           <div key={member.id} className="space-y-2">
                             {/* Member Info */}
@@ -1656,49 +2072,73 @@ function ProjectTeams() {
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center space-x-2">
-                                    <span className="font-medium truncate">{member.name}</span>
+                                    <span className="font-medium truncate">
+                                      {member.name}
+                                    </span>
                                     {isAboveAverage && (
-                                      <Badge variant="outline" className="text-xs">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
                                         Above Avg
                                       </Badge>
                                     )}
-                                    {member.highPriorityTasks && member.highPriorityTasks > 0 && (
-                                      <Badge variant="destructive" className="text-xs">
-                                        {member.highPriorityTasks} urgent
-                                      </Badge>
-                                    )}
+                                    {member.highPriorityTasks &&
+                                      member.highPriorityTasks > 0 && (
+                                        <Badge
+                                          variant="destructive"
+                                          className="text-xs"
+                                        >
+                                          {member.highPriorityTasks} urgent
+                                        </Badge>
+                                      )}
                                   </div>
                                   <div className="text-xs text-muted-foreground">
-                                    {member.activeTasks} active • {member.estimatedHours || 0}h estimated
+                                    {member.activeTasks} active •{" "}
+                                    {member.estimatedHours || 0}h estimated
                                   </div>
                                 </div>
                               </div>
                               <div className="text-right ml-4">
-                                <div className="font-semibold text-sm">{member.capacityUtilization || 0}%</div>
-                                <Badge 
-                                  variant={member.workloadStatus === 'overloaded' ? 'destructive' : member.workloadStatus === 'underutilized' ? 'secondary' : 'default'}
+                                <div className="font-semibold text-sm">
+                                  {member.capacityUtilization || 0}%
+                                </div>
+                                <Badge
+                                  variant={
+                                    member.workloadStatus === "overloaded"
+                                      ? "destructive"
+                                      : member.workloadStatus ===
+                                          "underutilized"
+                                        ? "secondary"
+                                        : "default"
+                                  }
                                   className="text-xs capitalize"
                                 >
-                                  {member.workloadStatus || 'balanced'}
+                                  {member.workloadStatus || "balanced"}
                                 </Badge>
                               </div>
                             </div>
-                            
+
                             {/* Dual-Bar Visualization */}
                             <div className="space-y-1.5">
                               {/* Capacity Bar (Background - 100% reference) */}
                               <div className="relative h-7 bg-secondary/30 rounded-lg overflow-hidden border">
                                 {/* Team Average Indicator Line */}
-                                <div 
+                                <div
                                   className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10"
                                   style={{ left: `${teamAvgCapacity}%` }}
                                   title={`Team Average: ${teamAvgCapacity}%`}
                                 />
-                                
+
                                 {/* Actual Load Bar */}
-                                <div 
-                                  className={cn("h-full transition-all duration-500 flex items-center justify-end px-2", statusColor)}
-                                  style={{ width: `${Math.min(member.capacityUtilization || 0, 100)}%` }}
+                                <div
+                                  className={cn(
+                                    "h-full transition-all duration-500 flex items-center justify-end px-2",
+                                    statusColor,
+                                  )}
+                                  style={{
+                                    width: `${Math.min(member.capacityUtilization || 0, 100)}%`,
+                                  }}
                                 >
                                   {(member.capacityUtilization || 0) > 15 && (
                                     <span className="text-xs font-medium text-white">
@@ -1706,18 +2146,20 @@ function ProjectTeams() {
                                     </span>
                                   )}
                                 </div>
-                                
+
                                 {/* Over-capacity Extension (if > 100%) */}
                                 {(member.capacityUtilization || 0) > 100 && (
-                                  <div 
+                                  <div
                                     className="absolute top-0 right-0 h-full bg-red-600/80 flex items-center px-2"
-                                    style={{ width: `${Math.min((member.capacityUtilization || 0) - 100, 50)}%` }}
+                                    style={{
+                                      width: `${Math.min((member.capacityUtilization || 0) - 100, 50)}%`,
+                                    }}
                                   >
                                     <AlertTriangle className="h-3 w-3 text-white" />
                                   </div>
                                 )}
                               </div>
-                              
+
                               {/* Capacity Scale */}
                               <div className="flex justify-between text-xs text-muted-foreground">
                                 <span>0h</span>
@@ -1746,7 +2188,10 @@ function ProjectTeams() {
                           .sort((a, b) => b.productivity - a.productivity)
                           .slice(0, 5)
                           .map((member, index) => (
-                            <div key={member.id} className="flex items-center space-x-3 p-3 rounded-lg border">
+                            <div
+                              key={member.id}
+                              className="flex items-center space-x-3 p-3 rounded-lg border"
+                            >
                               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold">
                                 {index + 1}
                               </div>
@@ -1765,8 +2210,7 @@ function ProjectTeams() {
                                 {member.productivity}%
                               </div>
                             </div>
-                          ))
-                        }
+                          ))}
                       </div>
                     </CardContent>
                   </Card>
@@ -1779,27 +2223,45 @@ function ProjectTeams() {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span>Average Productivity</span>
-                          <span className="font-semibold">{teamMetrics.teamProductivity}%</span>
+                          <span className="font-semibold">
+                            {teamMetrics.teamProductivity}%
+                          </span>
                         </div>
-                        <Progress value={teamMetrics.teamProductivity} className="h-2" />
+                        <Progress
+                          value={teamMetrics.teamProductivity}
+                          className="h-2"
+                        />
                       </div>
 
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span>Project Completion</span>
-                          <span className="font-semibold">{teamMetrics.projectCompletion}%</span>
+                          <span className="font-semibold">
+                            {teamMetrics.projectCompletion}%
+                          </span>
                         </div>
-                        <Progress value={teamMetrics.projectCompletion} className="h-2" />
+                        <Progress
+                          value={teamMetrics.projectCompletion}
+                          className="h-2"
+                        />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600">{teamMetrics.activeMembers}</div>
-                          <div className="text-sm text-muted-foreground">Active Members</div>
+                          <div className="text-2xl font-bold text-blue-600">
+                            {teamMetrics.activeMembers}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Active Members
+                          </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-600">{teamMetrics.avgTasksPerMember}</div>
-                          <div className="text-sm text-muted-foreground">Avg Tasks</div>
+                          <div className="text-2xl font-bold text-purple-600">
+                            {teamMetrics.avgTasksPerMember}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Avg Tasks
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -1812,20 +2274,28 @@ function ProjectTeams() {
             {filteredAndSortedMembers.length === 0 && !isLoading && (
               <Card className="border-dashed border-2">
                 <CardContent className="py-12">
-                  {searchTerm || (roleFilter && roleFilter !== "all") || (statusFilter && statusFilter !== "all") ? (
+                  {searchTerm ||
+                  (roleFilter && roleFilter !== "all") ||
+                  (statusFilter && statusFilter !== "all") ? (
                     /* Filtered Empty State */
                     <div className="text-center">
                       <Search className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
-                      <h3 className="text-xl font-semibold mb-2">No members match your filters</h3>
+                      <h3 className="text-xl font-semibold mb-2">
+                        No members match your filters
+                      </h3>
                       <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                        Try adjusting your search terms or filters to find team members
+                        Try adjusting your search terms or filters to find team
+                        members
                       </p>
                       <div className="flex items-center justify-center gap-2">
                         <Button variant="outline" onClick={clearAllFilters}>
                           <XCircle className="mr-2 h-4 w-4" />
                           Clear All Filters
                         </Button>
-                        <Button variant="outline" onClick={() => setSearchTerm("")}>
+                        <Button
+                          variant="outline"
+                          onClick={() => setSearchTerm("")}
+                        >
                           <Search className="mr-2 h-4 w-4" />
                           Clear Search
                         </Button>
@@ -1838,29 +2308,40 @@ function ProjectTeams() {
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                           <Users className="h-8 w-8 text-primary" />
                         </div>
-                        <h3 className="text-2xl font-semibold mb-2">Build Your Team</h3>
+                        <h3 className="text-2xl font-semibold mb-2">
+                          Build Your Team
+                        </h3>
                         <p className="text-muted-foreground mb-2">
-                          This project doesn't have any assigned team members yet
+                          This project doesn't have any assigned team members
+                          yet
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Start by inviting team members or assigning existing workspace members
+                          Start by inviting team members or assigning existing
+                          workspace members
                         </p>
                       </div>
 
                       {/* Suggested Actions */}
                       {permissions.permissions.canAddMembers && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleInviteTeamMember}>
+                          <Card
+                            className="hover:shadow-md transition-shadow cursor-pointer"
+                            onClick={handleInviteTeamMember}
+                          >
                             <CardContent className="p-6 text-center">
                               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-3">
                                 <UserPlus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                               </div>
-                              <h4 className="font-semibold mb-1">Invite Members</h4>
+                              <h4 className="font-semibold mb-1">
+                                Invite Members
+                              </h4>
                               <p className="text-xs text-muted-foreground mb-3">
                                 Send invitations to new team members
                               </p>
                               <div>
-                                <Badge variant="outline" className="text-xs">⌘I</Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  ⌘I
+                                </Badge>
                               </div>
                             </CardContent>
                           </Card>
@@ -1870,11 +2351,17 @@ function ProjectTeams() {
                               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 mb-3">
                                 <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
                               </div>
-                              <h4 className="font-semibold mb-1">Workspace Members</h4>
+                              <h4 className="font-semibold mb-1">
+                                Workspace Members
+                              </h4>
                               <p className="text-xs text-muted-foreground mb-3">
                                 Assign existing workspace members
                               </p>
-                              <Button variant="outline" size="sm" className="mt-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="mt-1"
+                              >
                                 View All
                               </Button>
                             </CardContent>
@@ -1885,11 +2372,17 @@ function ProjectTeams() {
                               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-3">
                                 <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                               </div>
-                              <h4 className="font-semibold mb-1">Import Team</h4>
+                              <h4 className="font-semibold mb-1">
+                                Import Team
+                              </h4>
                               <p className="text-xs text-muted-foreground mb-3">
                                 Bulk import from CSV or another project
                               </p>
-                              <Button variant="outline" size="sm" className="mt-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="mt-1"
+                              >
                                 Import
                               </Button>
                             </CardContent>
@@ -1905,19 +2398,30 @@ function ProjectTeams() {
                               <Lightbulb className="h-5 w-5 text-amber-500" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-semibold text-sm mb-2">Getting Started Tips</h4>
+                              <h4 className="font-semibold text-sm mb-2">
+                                Getting Started Tips
+                              </h4>
                               <ul className="space-y-1 text-sm text-muted-foreground">
                                 <li className="flex items-start">
                                   <span className="mr-2">•</span>
-                                  <span>Invite members by email or assign existing workspace users</span>
+                                  <span>
+                                    Invite members by email or assign existing
+                                    workspace users
+                                  </span>
                                 </li>
                                 <li className="flex items-start">
                                   <span className="mr-2">•</span>
-                                  <span>Assign appropriate roles (Team Lead, Member, Viewer) for access control</span>
+                                  <span>
+                                    Assign appropriate roles (Team Lead, Member,
+                                    Viewer) for access control
+                                  </span>
                                 </li>
                                 <li className="flex items-start">
                                   <span className="mr-2">•</span>
-                                  <span>Use keyboard shortcuts for faster navigation (Press ⌘/ to see all)</span>
+                                  <span>
+                                    Use keyboard shortcuts for faster navigation
+                                    (Press ⌘/ to see all)
+                                  </span>
                                 </li>
                               </ul>
                             </div>
@@ -1951,10 +2455,12 @@ function ProjectTeams() {
                 Update the role for {selectedMemberForRole?.name}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Select New Role</label>
+                <span className="text-sm font-medium mb-2 block">
+                  Select New Role
+                </span>
                 <Select value={newRole} onValueChange={setNewRole}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a role" />
@@ -1968,7 +2474,9 @@ function ProjectTeams() {
                             <IconComponent className="h-4 w-4" />
                             <div>
                               <div className="font-medium">{role.label}</div>
-                              <div className="text-xs text-muted-foreground">{role.description}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {role.description}
+                              </div>
                             </div>
                           </div>
                         </SelectItem>
@@ -1977,24 +2485,35 @@ function ProjectTeams() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {newRole && (
                 <div className="p-3 rounded-lg bg-muted/50">
                   <h4 className="font-medium text-sm mb-1">Role Summary</h4>
                   <p className="text-sm text-muted-foreground">
-                    {availableRoles.find(r => r.value === newRole)?.description}
+                    {
+                      availableRoles.find((r) => r.value === newRole)
+                        ?.description
+                    }
                   </p>
                 </div>
               )}
             </div>
-            
+
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsRoleChangeOpen(false)} disabled={changeRoleMutation.isPending}>
+              <Button
+                variant="outline"
+                onClick={() => setIsRoleChangeOpen(false)}
+                disabled={changeRoleMutation.isPending}
+              >
                 Cancel
               </Button>
-              <Button 
-                onClick={confirmRoleChange} 
-                disabled={!newRole || newRole === selectedMemberForRole?.role || changeRoleMutation.isPending}
+              <Button
+                onClick={confirmRoleChange}
+                disabled={
+                  !newRole ||
+                  newRole === selectedMemberForRole?.role ||
+                  changeRoleMutation.isPending
+                }
               >
                 {changeRoleMutation.isPending ? (
                   <>
@@ -2002,7 +2521,7 @@ function ProjectTeams() {
                     Updating...
                   </>
                 ) : (
-                  'Update Role'
+                  "Update Role"
                 )}
               </Button>
             </DialogFooter>
@@ -2016,7 +2535,6 @@ function ProjectTeams() {
           member={selectedMemberForDetails}
           workspaceId={workspaceId}
           onSendMessage={handleSendMessage}
-          onStartVideoCall={handleStartVideoCall}
           onChangeRole={(member) => {
             setIsMemberDetailsOpen(false);
             handleChangeRole(member);
@@ -2037,32 +2555,39 @@ function ProjectTeams() {
           realProjectStats={{
             totalTasks: teamMetrics.totalTasksAssigned,
             completedTasks: teamMetrics.totalTasksCompleted,
-            inProgressTasks: teamMetrics.totalTasksAssigned - teamMetrics.totalTasksCompleted,
+            inProgressTasks:
+              teamMetrics.totalTasksAssigned - teamMetrics.totalTasksCompleted,
             overdueTasks: 0,
             teamMembers: teamMetrics.totalMembers,
             velocity: teamMetrics.avgTasksPerMember,
             healthScore: teamMetrics.teamProductivity,
-            efficiency: teamMetrics.projectCompletion
+            efficiency: teamMetrics.projectCompletion,
           }}
           realTeamMembers={projectMembers}
         />
 
         {/* Remove Member Confirmation Dialog */}
-        <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+        <AlertDialog
+          open={!!memberToRemove}
+          onOpenChange={(open) => !open && setMemberToRemove(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Remove {memberToRemove?.name}?</AlertDialogTitle>
+              <AlertDialogTitle>
+                Remove {memberToRemove?.name}?
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                This member will be removed from the workspace. All their assigned tasks ({memberToRemove?.activeTasks || 0}) will be unassigned. 
-                This action cannot be undone.
+                This member will be removed from the workspace. All their
+                assigned tasks ({memberToRemove?.activeTasks || 0}) will be
+                unassigned. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={removeMemberMutation.isPending}>
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={confirmRemoveMember} 
+              <AlertDialogAction
+                onClick={confirmRemoveMember}
                 disabled={removeMemberMutation.isPending}
                 className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
               >
@@ -2072,7 +2597,7 @@ function ProjectTeams() {
                     Removing...
                   </>
                 ) : (
-                  'Remove Member'
+                  "Remove Member"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -2087,18 +2612,24 @@ function ProjectTeams() {
         />
 
         {/* Bulk Role Change Modal */}
-        <Dialog open={isBulkRoleChangeOpen} onOpenChange={setIsBulkRoleChangeOpen}>
+        <Dialog
+          open={isBulkRoleChangeOpen}
+          onOpenChange={setIsBulkRoleChangeOpen}
+        >
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Bulk Role Change</DialogTitle>
               <DialogDescription>
-                Change the role for {selectedMembers.size} selected member{selectedMembers.size !== 1 ? 's' : ''}
+                Change the role for {selectedMembers.size} selected member
+                {selectedMembers.size !== 1 ? "s" : ""}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Select New Role</label>
+                <span className="text-sm font-medium mb-2 block">
+                  Select New Role
+                </span>
                 <Select value={bulkNewRole} onValueChange={setBulkNewRole}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a role" />
@@ -2119,22 +2650,31 @@ function ProjectTeams() {
                 </Select>
                 {bulkNewRole && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    {availableRoles.find(r => r.value === bulkNewRole)?.description}
+                    {
+                      availableRoles.find((r) => r.value === bulkNewRole)
+                        ?.description
+                    }
                   </p>
                 )}
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsBulkRoleChangeOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkRoleChangeOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={confirmBulkRoleChange}
                 disabled={!bulkNewRole || changeRoleMutation.isPending}
               >
-                {changeRoleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Update {selectedMembers.size} Role{selectedMembers.size !== 1 ? 's' : ''}
+                {changeRoleMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Update {selectedMembers.size} Role
+                {selectedMembers.size !== 1 ? "s" : ""}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2158,7 +2698,9 @@ function ProjectTeams() {
                   <Search className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Focus search</span>
                 </div>
-                <Badge variant="outline" className="font-mono">⌘K</Badge>
+                <Badge variant="outline" className="font-mono">
+                  ⌘K
+                </Badge>
               </div>
               {permissions.permissions.canAddMembers && (
                 <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
@@ -2166,7 +2708,9 @@ function ProjectTeams() {
                     <UserPlus className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Invite member</span>
                   </div>
-                  <Badge variant="outline" className="font-mono">⌘I</Badge>
+                  <Badge variant="outline" className="font-mono">
+                    ⌘I
+                  </Badge>
                 </div>
               )}
               <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
@@ -2174,38 +2718,44 @@ function ProjectTeams() {
                   <Download className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Export team data</span>
                 </div>
-                <Badge variant="outline" className="font-mono">⌘E</Badge>
+                <Badge variant="outline" className="font-mono">
+                  ⌘E
+                </Badge>
               </div>
               <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                 <div className="flex items-center space-x-2">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Toggle filters</span>
                 </div>
-                <Badge variant="outline" className="font-mono">⌘F</Badge>
+                <Badge variant="outline" className="font-mono">
+                  ⌘F
+                </Badge>
               </div>
               <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                 <div className="flex items-center space-x-2">
                   <Keyboard className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Show shortcuts</span>
                 </div>
-                <Badge variant="outline" className="font-mono">⌘/</Badge>
+                <Badge variant="outline" className="font-mono">
+                  ⌘/
+                </Badge>
               </div>
               <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                 <div className="flex items-center space-x-2">
                   <XCircle className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Close dialogs</span>
                 </div>
-                <Badge variant="outline" className="font-mono">Esc</Badge>
+                <Badge variant="outline" className="font-mono">
+                  Esc
+                </Badge>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => setShowKeyboardHelp(false)}>
-                Got it
-              </Button>
+              <Button onClick={() => setShowKeyboardHelp(false)}>Got it</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
     </LazyDashboardLayout>
   );
-} 
+}

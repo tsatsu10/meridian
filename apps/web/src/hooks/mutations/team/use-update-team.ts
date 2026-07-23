@@ -7,7 +7,7 @@ interface UpdateTeamData {
   name?: string;
   description?: string;
   projectId?: string | null;
-  settings?: any;
+  settings?: Record<string, unknown>;
   workspaceId: string;
 }
 
@@ -23,11 +23,13 @@ export function useUpdateTeam() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.workspaceId],
+      });
       toast.success("Team updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to update team");
     },
   });

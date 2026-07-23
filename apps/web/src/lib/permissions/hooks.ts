@@ -1,13 +1,13 @@
 /**
  * ⚛️ Advanced Permission Hooks
- * 
+ *
  * React hooks for sophisticated permission checking and role-based UI logic.
  * Provides convenient abstractions for common permission patterns.
  */
 
 import { useMemo, useCallback } from "react";
 import { useRBACAuth } from "./context";
-import type { PermissionAction, UserRole, PermissionContext } from "./types";
+import type { PermissionAction, UserRole } from "./types";
 
 // ===== PERMISSION CHECKING HOOKS =====
 
@@ -29,8 +29,12 @@ export function useMultiplePermissions(permissions: PermissionAction[]) {
       };
     }
 
-    const granted = permissions.filter(permission => hasPermission(permission));
-    const missing = permissions.filter(permission => !hasPermission(permission));
+    const granted = permissions.filter((permission) =>
+      hasPermission(permission),
+    );
+    const missing = permissions.filter(
+      (permission) => !hasPermission(permission),
+    );
 
     return {
       hasAll: granted.length === permissions.length,
@@ -50,7 +54,7 @@ export function useMultiplePermissions(permissions: PermissionAction[]) {
  */
 export function useConditionalPermission(
   condition: boolean,
-  permission: PermissionAction
+  permission: PermissionAction,
 ) {
   const { hasPermission } = useRBACAuth();
 
@@ -73,17 +77,17 @@ export function useFeatureFlags() {
         canAccessAdmin: false,
         canManageRoles: false,
         canViewAnalytics: false,
-        
+
         // Project features
         canCreateProjects: false,
         canEditProjects: false,
         canDeleteProjects: false,
-        
+
         // Task features
         canCreateTasks: false,
         canEditTasks: false,
         canAssignTasks: false,
-        
+
         // Team Lead special features
         canManageSubtasks: false,
         canCreateSubtasks: false,
@@ -91,77 +95,83 @@ export function useFeatureFlags() {
         canDeleteSubtasks: false,
         canAssignSubtasks: false,
         canManageSubtaskHierarchy: false,
-        
+
         // Team features
         canManageTeam: false,
         canInviteUsers: false,
         canRemoveMembers: false,
-        
+
         // Communication features
         canCreateChannels: false,
         canModerateChannels: false,
         canDeleteMessages: false,
-        
+
         // Resource features
         canUploadFiles: false,
         canManageFiles: false,
         canDeleteFiles: false,
-        
+
         // External user flags
         isExternalUser: false,
         isInternalUser: false,
         hasRestrictedAccess: false,
-        
+
         isLoading: true,
       };
     }
 
-    const isExternal = ["client", "contractor", "stakeholder", "guest"].includes(user.role || "guest");
+    const isExternal = [
+      "client",
+      "contractor",
+      "stakeholder",
+      "guest",
+    ].includes(user.role || "guest");
 
     return {
       // Admin features
       canAccessAdmin: hasPermission("canManageWorkspace"),
       canManageRoles: hasPermission("canManageRoles"),
       canViewAnalytics: hasPermission("canViewAnalytics"),
-      
-      // Project features  
+
+      // Project features
       canCreateProjects: hasPermission("canCreateProjects"),
       canEditProjects: hasPermission("canEditProjects"),
       canDeleteProjects: hasPermission("canDeleteProjects"),
-      
+
       // Task features
       canCreateTasks: hasPermission("canCreateTasks"),
       canEditTasks: hasPermission("canEditTasks"),
       canAssignTasks: hasPermission("canAssignTasks"),
-      
+
       // Team Lead special features (🛡️ Main requirement!)
-      canManageSubtasks: hasPermission("canCreateSubtasks") && hasPermission("canEditSubtasks"),
+      canManageSubtasks:
+        hasPermission("canCreateSubtasks") && hasPermission("canEditSubtasks"),
       canCreateSubtasks: hasPermission("canCreateSubtasks"),
       canEditSubtasks: hasPermission("canEditSubtasks"),
       canDeleteSubtasks: hasPermission("canDeleteSubtasks"),
       canAssignSubtasks: hasPermission("canAssignSubtasks"),
       canManageSubtaskHierarchy: hasPermission("canManageSubtaskHierarchy"),
-      
+
       // Team features
       canManageTeam: hasPermission("canCreateTeams"),
       canInviteUsers: hasPermission("canInviteUsers"),
       canRemoveMembers: hasPermission("canRemoveMembers"),
-      
+
       // Communication features
       canCreateChannels: hasPermission("canCreateChannels"),
-      canModerateChannels: hasPermission("canModerateChannels"),
+      canModerateChannels: hasPermission("canModerateChat"),
       canDeleteMessages: hasPermission("canDeleteMessages"),
-      
+
       // Resource features
       canUploadFiles: hasPermission("canUploadFiles"),
-      canManageFiles: hasPermission("canManageFiles"),
+      canManageFiles: hasPermission("canOrganizeFiles"),
       canDeleteFiles: hasPermission("canDeleteFiles"),
-      
+
       // User type flags
       isExternalUser: isExternal,
       isInternalUser: !isExternal,
       hasRestrictedAccess: isExternal || user.role === "guest",
-      
+
       isLoading: false,
     };
   }, [hasPermission, user, isLoading]);
@@ -179,11 +189,11 @@ export function useRoleHierarchy() {
 
   const hierarchy = useMemo(() => {
     const roleLevels: Record<UserRole, number> = {
-      "guest": 0,
-      "stakeholder": 1,
-      "contractor": 1,
-      "client": 1,
-      "member": 1,
+      guest: 0,
+      stakeholder: 1,
+      contractor: 1,
+      client: 1,
+      member: 1,
       "team-lead": 2,
       "project-viewer": 3,
       "project-manager": 4,
@@ -202,8 +212,10 @@ export function useRoleHierarchy() {
       isManager: currentLevel >= 6,
       isTeamLead: currentLevel >= 2,
       isMember: currentLevel >= 1,
-      isExternal: ["client", "contractor", "stakeholder", "guest"].includes(currentRole),
-      
+      isExternal: ["client", "contractor", "stakeholder", "guest"].includes(
+        currentRole,
+      ),
+
       canActAs: (role: UserRole) => currentLevel >= roleLevels[role],
       isHigherThan: (role: UserRole) => currentLevel > roleLevels[role],
       isLowerThan: (role: UserRole) => currentLevel < roleLevels[role],
@@ -217,11 +229,11 @@ export function useRoleHierarchy() {
 /**
  * Hook for role-based component rendering
  */
-export function useRoleBasedComponent<T extends Record<UserRole, React.ComponentType<any>>>(
-  roleComponents: Partial<T>
-) {
+export function useRoleBasedComponent<
+  T extends Record<UserRole, React.ComponentType<Record<string, unknown>>>,
+>(roleComponents: Partial<T>) {
   const { user } = useRBACAuth();
-  
+
   const Component = useMemo(() => {
     const role = (user?.role || "guest") as UserRole;
     return roleComponents[role] || roleComponents.guest || null;
@@ -236,11 +248,11 @@ export function useRoleBasedComponent<T extends Record<UserRole, React.Component
  * Hook for workspace-scoped permissions
  */
 export function useWorkspacePermissions(workspaceId?: string) {
-  const { hasPermission, user, workspaceContext } = useRBACAuth();
+  const { hasPermission, currentWorkspace } = useRBACAuth();
 
   const permissions = useMemo(() => {
-    const targetWorkspace = workspaceId || workspaceContext?.workspaceId;
-    
+    const targetWorkspace = workspaceId || currentWorkspace;
+
     if (!targetWorkspace) {
       return {
         canView: false,
@@ -256,13 +268,13 @@ export function useWorkspacePermissions(workspaceId?: string) {
     // For now, use global permissions
     return {
       canView: hasPermission("canViewWorkspace"),
-      canEdit: hasPermission("canEditWorkspace"),
+      canEdit: hasPermission("canManageWorkspace"),
       canManage: hasPermission("canManageWorkspace"),
       canInvite: hasPermission("canInviteUsers"),
       canDelete: hasPermission("canDeleteWorkspace"),
       workspaceId: targetWorkspace,
     };
-  }, [workspaceId, workspaceContext, hasPermission]);
+  }, [workspaceId, currentWorkspace, hasPermission]);
 
   return permissions;
 }
@@ -271,11 +283,11 @@ export function useWorkspacePermissions(workspaceId?: string) {
  * Hook for project-scoped permissions
  */
 export function useProjectPermissions(projectId?: string) {
-  const { hasPermission, workspaceContext } = useRBACAuth();
+  const { hasPermission, currentProject } = useRBACAuth();
 
   const permissions = useMemo(() => {
-    const targetProject = projectId || workspaceContext?.projectId;
-    
+    const targetProject = projectId || currentProject;
+
     if (!targetProject) {
       return {
         canView: false,
@@ -290,7 +302,9 @@ export function useProjectPermissions(projectId?: string) {
 
     // TODO: Implement project-scoped permission checking
     return {
-      canView: hasPermission("canViewProjectDetails") || hasPermission("canViewAllProjects"),
+      canView:
+        hasPermission("canViewProjectDetails") ||
+        hasPermission("canViewAllProjects"),
       canEdit: hasPermission("canEditProjects"),
       canManage: hasPermission("canManageProjectSettings"),
       canDelete: hasPermission("canDeleteProjects"),
@@ -305,7 +319,7 @@ export function useProjectPermissions(projectId?: string) {
       canRemoveMembers: hasPermission("canRemoveFromProject"),
       projectId: targetProject,
     };
-  }, [projectId, workspaceContext, hasPermission]);
+  }, [projectId, currentProject, hasPermission]);
 
   return permissions;
 }
@@ -317,7 +331,7 @@ export function useProjectPermissions(projectId?: string) {
  */
 export function usePermissionGatedAction(
   permission: PermissionAction,
-  action: () => void | Promise<void>
+  action: () => void | Promise<void>,
 ) {
   const { hasPermission } = useRBACAuth();
 
@@ -348,45 +362,54 @@ export function usePermissionGatedAction(
 export function useTeamLeadActions() {
   const { hasPermission } = useRBACAuth();
 
-  const actions = useMemo(() => ({
-    // Subtask management actions
-    createSubtask: {
-      canExecute: hasPermission("canCreateSubtasks"),
-      action: (parentTaskId: string, subtaskData: any) => {// TODO: Implement subtask creation
-      }
-    },
+  const actions = useMemo(
+    () => ({
+      // Subtask management actions
+      createSubtask: {
+        canExecute: hasPermission("canCreateSubtasks"),
+        action: (_parentTaskId: string, _subtaskData: unknown) => {
+          // TODO: Implement subtask creation
+        },
+      },
 
-    editSubtask: {
-      canExecute: hasPermission("canEditSubtasks"),
-      action: (subtaskId: string, updates: any) => {// TODO: Implement subtask editing
-      }
-    },
+      editSubtask: {
+        canExecute: hasPermission("canEditSubtasks"),
+        action: (_subtaskId: string, _updates: unknown) => {
+          // TODO: Implement subtask editing
+        },
+      },
 
-    deleteSubtask: {
-      canExecute: hasPermission("canDeleteSubtasks"),
-      action: (subtaskId: string) => {// TODO: Implement subtask deletion
-      }
-    },
+      deleteSubtask: {
+        canExecute: hasPermission("canDeleteSubtasks"),
+        action: (_subtaskId: string) => {
+          // TODO: Implement subtask deletion
+        },
+      },
 
-    assignSubtask: {
-      canExecute: hasPermission("canAssignSubtasks"),
-      action: (subtaskId: string, assigneeId: string) => {// TODO: Implement subtask assignment
-      }
-    },
+      assignSubtask: {
+        canExecute: hasPermission("canAssignSubtasks"),
+        action: (_subtaskId: string, _assigneeId: string) => {
+          // TODO: Implement subtask assignment
+        },
+      },
 
-    reorderSubtasks: {
-      canExecute: hasPermission("canManageSubtaskHierarchy"),
-      action: (parentTaskId: string, subtaskOrder: string[]) => {// TODO: Implement subtask reordering
-      }
-    },
+      reorderSubtasks: {
+        canExecute: hasPermission("canManageSubtaskHierarchy"),
+        action: (_parentTaskId: string, _subtaskOrder: string[]) => {
+          // TODO: Implement subtask reordering
+        },
+      },
 
-    // Team management actions
-    manageTeam: {
-      canExecute: hasPermission("canCreateTeams"),
-      action: (teamId: string, action: string, data: any) => {// TODO: Implement team management
-      }
-    }
-  }), [hasPermission]);
+      // Team management actions
+      manageTeam: {
+        canExecute: hasPermission("canCreateTeams"),
+        action: (_teamId: string, _action: string, _data: unknown) => {
+          // TODO: Implement team management
+        },
+      },
+    }),
+    [hasPermission],
+  );
 
   return actions;
 }
@@ -397,7 +420,10 @@ export function useTeamLeadActions() {
  * Hook for permission debugging
  */
 export function usePermissionDebug() {
-  const { user, permissions, isLoading } = useRBACAuth();
+  const { user, getAllowedActions, isLoading } = useRBACAuth();
+  const permissions = Object.fromEntries(
+    getAllowedActions().map((a) => [a, true]),
+  );
 
   const debugInfo = useMemo(() => {
     if (isLoading) {
@@ -411,12 +437,14 @@ export function usePermissionDebug() {
     }
 
     return {
-      user: user ? {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      } : null,
+      user: user
+        ? {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          }
+        : null,
       role: user?.role || "guest",
       permissions: permissions || {},
       permissionCount: Object.keys(permissions || {}).length,
@@ -438,10 +466,13 @@ export function usePermissionDebug() {
  */
 export function useOptimizedPermission(permission: PermissionAction) {
   const { hasPermission } = useRBACAuth();
-  
+
   // Memoize the permission check result
-  const result = useMemo(() => hasPermission(permission), [permission, hasPermission]);
-  
+  const result = useMemo(
+    () => hasPermission(permission),
+    [permission, hasPermission],
+  );
+
   return result;
 }
 

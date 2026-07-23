@@ -1,23 +1,30 @@
 /**
  * Remove Team Member Controller
- * 
+ *
  * Removes a user from a team
- * 
+ *
  * @epic-3.4-teams: Remove member from team functionality
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../../database/connection";
-import { teams, teamMembers, userTable as users } from "../../../database/schema";
-import logger from '../../../utils/logger';
+import {
+  teams,
+  teamMembers,
+  userTable as users,
+} from "../../../database/schema";
+import logger from "../../../utils/logger";
 
 async function removeMember(c: Context) {
   const db = getDatabase();
   const { projectId, teamId, memberId } = c.req.param();
 
   if (!projectId || !teamId || !memberId) {
-    return c.json({ error: "Project ID, Team ID, and Member ID are required" }, 400);
+    return c.json(
+      { error: "Project ID, Team ID, and Member ID are required" },
+      400,
+    );
   }
 
   try {
@@ -26,7 +33,7 @@ async function removeMember(c: Context) {
       where: and(
         eq(teams.id, teamId),
         eq(teams.projectId, projectId),
-        eq(teams.isActive, true)
+        eq(teams.isActive, true),
       ),
     });
 
@@ -36,10 +43,7 @@ async function removeMember(c: Context) {
 
     // Get member details before deletion
     const member = await db.query.teamMembers.findFirst({
-      where: and(
-        eq(teamMembers.id, memberId),
-        eq(teamMembers.teamId, teamId)
-      ),
+      where: and(eq(teamMembers.id, memberId), eq(teamMembers.teamId, teamId)),
     });
 
     if (!member) {
@@ -54,13 +58,11 @@ async function removeMember(c: Context) {
       .limit(1);
 
     // Remove member from team
-    await db
-      .delete(teamMembers)
-      .where(eq(teamMembers.id, memberId));
+    await db.delete(teamMembers).where(eq(teamMembers.id, memberId));
 
-    return c.json({ 
-      success: true, 
-      message: `${user?.name || 'Member'} removed from team "${existingTeam.name}"` 
+    return c.json({
+      success: true,
+      message: `${user?.name || "Member"} removed from team "${existingTeam.name}"`,
     });
   } catch (error) {
     logger.error("Error removing team member:", error);
@@ -69,5 +71,3 @@ async function removeMember(c: Context) {
 }
 
 export default removeMember;
-
-

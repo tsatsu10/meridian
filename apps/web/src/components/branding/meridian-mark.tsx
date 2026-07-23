@@ -20,7 +20,7 @@ export function MeridianMark({ className, onDarkSurface }: MeridianMarkProps) {
         "shrink-0 object-contain select-none",
         onDarkSurface &&
           "rounded-lg bg-white/95 p-1 shadow-sm ring-1 ring-white/15 dark:ring-white/10",
-        className
+        className,
       )}
     />
   );

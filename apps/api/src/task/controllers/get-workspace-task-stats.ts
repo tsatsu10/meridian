@@ -13,7 +13,7 @@ export interface WorkspaceTaskStats {
  * Single-query aggregates for the All Tasks overview cards (replaces client-side 10k fetches).
  */
 export default async function getWorkspaceTaskStats(
-  workspaceId: string
+  workspaceId: string,
 ): Promise<WorkspaceTaskStats> {
   const db = getDatabase();
 

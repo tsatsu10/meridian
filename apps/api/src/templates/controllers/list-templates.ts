@@ -1,4 +1,15 @@
-import { desc, asc, and, or, like, gte, eq, sql, inArray } from "drizzle-orm";
+import {
+  desc,
+  asc,
+  and,
+  or,
+  like,
+  gte,
+  eq,
+  sql,
+  inArray,
+  type SQL,
+} from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import {
   projectTemplates,
@@ -8,16 +19,15 @@ import {
 import type { TemplateFilterOptions } from "../../types/templates";
 
 interface ListTemplatesResult {
-  templates: any[];
+  templates: (typeof projectTemplates.$inferSelect)[];
   total: number;
   limit: number;
   offset: number;
 }
 
 export default async function listTemplates(
-  filters: TemplateFilterOptions & { limit?: number; offset?: number }
+  filters: TemplateFilterOptions & { limit?: number; offset?: number },
 ): Promise<ListTemplatesResult> {
-
   const {
     industry,
     profession,
@@ -34,7 +44,7 @@ export default async function listTemplates(
   } = filters;
 
   // Build where conditions
-  const whereConditions: any[] = [];
+  const whereConditions: (SQL | undefined)[] = [];
 
   if (industry) {
     whereConditions.push(eq(projectTemplates.industry, industry));
@@ -65,18 +75,19 @@ export default async function listTemplates(
       or(
         like(projectTemplates.name, `%${searchQuery}%`),
         like(projectTemplates.description, `%${searchQuery}%`),
-        like(projectTemplates.profession, `%${searchQuery}%`)
-      )
+        like(projectTemplates.profession, `%${searchQuery}%`),
+      ),
     );
   }
 
-  // TODO: Implement tag filtering when needed
+  // See https://github.com/tsatsu10/meridian/issues/74
   // Tags are stored as JSONB, would need special handling
 
-  const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+  const whereClause =
+    whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
   // Build order by
-  let orderByClause;
+  let orderByClause: SQL<unknown>;
   const order = sortOrder === "asc" ? asc : desc;
 
   switch (sortBy) {
@@ -127,16 +138,19 @@ export default async function listTemplates(
       .where(inArray(templateTasks.templateId, templateIds))
       .groupBy(templateTasks.templateId);
 
-    taskCounts = counts.reduce((acc, curr) => {
-      acc[curr.templateId] = curr.count;
-      return acc;
-    }, {} as Record<string, number>);
+    taskCounts = counts.reduce(
+      (acc, curr) => {
+        acc[curr.templateId] = curr.count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   }
 
   // Format templates with additional info
   const formattedTemplates = templates.map((template) => ({
     ...template,
-    rating: template.rating / 10, // Convert back to 0-5 scale
+    rating: (template.rating ?? 0) / 10, // Convert back to 0-5 scale
     taskCount: taskCounts[template.id] || 0,
   }));
 
@@ -147,5 +161,3 @@ export default async function listTemplates(
     offset,
   };
 }
-
-

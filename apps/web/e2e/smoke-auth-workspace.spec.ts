@@ -31,8 +31,13 @@ test.describe("@smoke auth + workspace", () => {
     await page.waitForURL(/\/dashboard/, { timeout: 90_000 });
 
     const meResponse = await page.request.get("/api/users/me");
-    expect(meResponse.ok(), `/api/users/me status ${meResponse.status()}`).toBeTruthy();
-    const meBody = (await meResponse.json()) as { user?: { email?: string } | null };
+    expect(
+      meResponse.ok(),
+      `/api/users/me status ${meResponse.status()}`,
+    ).toBeTruthy();
+    const meBody = (await meResponse.json()) as {
+      user?: { email?: string } | null;
+    };
     expect(meBody.user?.email).toBe(email);
 
     await page
@@ -40,7 +45,9 @@ test.describe("@smoke auth + workspace", () => {
       .first()
       .click({ timeout: 30_000 });
 
-    await page.locator("#workspaceName").waitFor({ state: "visible", timeout: 30_000 });
+    await page
+      .locator("#workspaceName")
+      .waitFor({ state: "visible", timeout: 30_000 });
     await page.locator("#workspaceName").fill(`Smoke Workspace ${id}`);
     await page
       .locator('[role="dialog"]')

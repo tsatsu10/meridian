@@ -175,7 +175,7 @@ describe("Recommendation Engine", () => {
       const taskHealth = metrics.factors.taskHealth;
       const allFactors = Object.values(metrics.factors);
       const isLowest = allFactors.every(
-        (f) => f >= taskHealth || f === metrics.factors.riskLevel
+        (f) => f >= taskHealth || f === metrics.factors.riskLevel,
       );
 
       expect(taskHealth).toBeLessThan(60);
@@ -404,7 +404,8 @@ describe("Recommendation Engine", () => {
       // Sort by priority then impact
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       const sorted = recommendations.sort((a, b) => {
-        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        const priorityDiff =
+          priorityOrder[a.priority] - priorityOrder[b.priority];
         if (priorityDiff !== 0) return priorityDiff;
         return (b.estimatedImpact || 0) - (a.estimatedImpact || 0);
       });
@@ -433,7 +434,8 @@ describe("Recommendation Engine", () => {
 
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       const sorted = recommendations.sort((a, b) => {
-        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        const priorityDiff =
+          priorityOrder[a.priority] - priorityOrder[b.priority];
         if (priorityDiff !== 0) return priorityDiff;
         return (b.estimatedImpact || 0) - (a.estimatedImpact || 0);
       });
@@ -491,10 +493,10 @@ describe("Recommendation Engine", () => {
       ];
 
       // Each should be specific and actionable
-      actionItems.forEach((item) => {
+      for (const item of actionItems) {
         expect(item.length).toBeGreaterThan(10);
         expect(item).toMatch(/^[A-Z]/); // Starts with capital letter
-      });
+      }
     });
 
     it("should have 3-4 action items per recommendation", () => {
@@ -593,4 +595,3 @@ describe("Recommendation Engine", () => {
  * - Contextual messaging validation
  * - Action item structure verification
  */
-

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
 
 function useUnarchiveNotification() {
@@ -7,7 +7,7 @@ function useUnarchiveNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await client.notification[":id"]["unarchive"].$patch({
+      const response = await looseClient.notification[":id"].unarchive.$patch({
         param: { id: notificationId },
       });
 
@@ -29,4 +29,3 @@ function useUnarchiveNotification() {
 }
 
 export default useUnarchiveNotification;
-

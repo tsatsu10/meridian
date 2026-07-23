@@ -1,6 +1,6 @@
 /**
  * Error Boundary Tests
- * 
+ *
  * Tests error boundary functionality:
  * - Error catching
  * - Error display
@@ -8,10 +8,10 @@
  * - Fallback UI
  */
 
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { TestWrapper } from '../../test-utils/test-wrapper';
-import React from 'react';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { TestWrapper } from "../../test-utils/test-wrapper";
+import React from "react";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -23,7 +23,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -35,11 +38,13 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || (
-        <div role="alert">
-          <h2>Something went wrong</h2>
-          <p>{this.state.error?.message}</p>
-        </div>
+      return (
+        this.props.fallback || (
+          <div role="alert">
+            <h2>Something went wrong</h2>
+            <p>{this.state.error?.message}</p>
+          </div>
+        )
       );
     }
 
@@ -49,70 +54,69 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
 function ThrowError({ shouldThrow }: { shouldThrow: boolean }) {
   if (shouldThrow) {
-    throw new Error('Test error');
+    throw new Error("Test error");
   }
   return <div>No error</div>;
 }
 
-describe('Error Boundary', () => {
-  it('should render children when no error', () => {
+describe("Error Boundary", () => {
+  it("should render children when no error", () => {
     render(
       <ErrorBoundary>
         <div>Child content</div>
       </ErrorBoundary>,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByText('Child content')).toBeInTheDocument();
+    expect(screen.getByText("Child content")).toBeInTheDocument();
   });
 
-  it('should catch errors and show fallback', () => {
+  it("should catch errors and show fallback", () => {
     // Suppress console.error for this test
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
 
     spy.mockRestore();
   });
 
-  it('should display error message', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it("should display error message", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByText('Test error')).toBeInTheDocument();
+    expect(screen.getByText("Test error")).toBeInTheDocument();
 
     spy.mockRestore();
   });
 
-  it('should render custom fallback', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+  it("should render custom fallback", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const CustomFallback = <div>Custom error UI</div>;
 
     render(
       <ErrorBoundary fallback={CustomFallback}>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>,
-      { wrapper: TestWrapper }
+      { wrapper: TestWrapper },
     );
 
-    expect(screen.getByText('Custom error UI')).toBeInTheDocument();
+    expect(screen.getByText("Custom error UI")).toBeInTheDocument();
 
     spy.mockRestore();
   });
 });
-

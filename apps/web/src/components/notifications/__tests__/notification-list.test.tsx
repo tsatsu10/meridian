@@ -1,6 +1,6 @@
 /**
  * Notification List Tests
- * 
+ *
  * Tests notification list functionality:
  * - Notification display
  * - Mark as read
@@ -9,28 +9,28 @@
  * - Loading states
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import React from 'react'
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type React from "react";
 
 interface Notification {
-  id: string
-  title: string
-  message: string
-  type: 'info' | 'success' | 'warning' | 'error'
-  isRead: boolean
-  createdAt: string
+  id: string;
+  title: string;
+  message: string;
+  type: "info" | "success" | "warning" | "error";
+  isRead: boolean;
+  createdAt: string;
 }
 
 interface NotificationListProps {
-  notifications?: Notification[]
-  isLoading?: boolean
-  onMarkAsRead?: (id: string) => void
-  onMarkAllAsRead?: () => void
-  onClear?: (id: string) => void
-  onClearAll?: () => void
+  notifications?: Notification[];
+  isLoading?: boolean;
+  onMarkAsRead?: (id: string) => void;
+  onMarkAllAsRead?: () => void;
+  onClear?: (id: string) => void;
+  onClearAll?: () => void;
 }
 
 function NotificationList({
@@ -41,15 +41,20 @@ function NotificationList({
   onClear,
   onClearAll,
 }: NotificationListProps) {
-  const unreadCount = notifications.filter(n => !n.isRead).length
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   if (isLoading) {
     return (
-      <div className="notification-list" role="status" aria-label="Loading notifications">
+      <div
+        className="notification-list"
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
+        role="status"
+        aria-label="Loading notifications"
+      >
         <div className="loading-skeleton" />
         <span className="sr-only">Loading notifications...</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -57,7 +62,10 @@ function NotificationList({
       <div className="notification-header">
         <h2>Notifications</h2>
         {unreadCount > 0 && (
-          <span className="unread-badge" aria-label={`${unreadCount} unread notifications`}>
+          <span
+            className="unread-badge"
+            aria-label={`${unreadCount} unread notifications`}
+          >
             {unreadCount}
           </span>
         )}
@@ -66,21 +74,34 @@ function NotificationList({
       {notifications.length > 0 && (
         <div className="notification-actions">
           {unreadCount > 0 && (
-            <button onClick={onMarkAllAsRead} aria-label="Mark all as read">
+            <button
+              type="button"
+              onClick={onMarkAllAsRead}
+              aria-label="Mark all as read"
+            >
               Mark all as read
             </button>
           )}
-          <button onClick={onClearAll} aria-label="Clear all notifications">
+          <button
+            type="button"
+            onClick={onClearAll}
+            aria-label="Clear all notifications"
+          >
             Clear all
           </button>
         </div>
       )}
 
-      <div className="notifications" role="list">
+      <div
+        className="notifications"
+        // biome-ignore lint/a11y/useSemanticElements: test mock component
+        role="list"
+      >
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className={`notification-item ${notification.isRead ? 'read' : 'unread'} ${notification.type}`}
+            className={`notification-item ${notification.isRead ? "read" : "unread"} ${notification.type}`}
+            // biome-ignore lint/a11y/useSemanticElements: test mock component
             role="listitem"
             data-notification-id={notification.id}
           >
@@ -95,6 +116,7 @@ function NotificationList({
             <div className="notification-actions-item">
               {!notification.isRead && (
                 <button
+                  type="button"
                   onClick={() => onMarkAsRead?.(notification.id)}
                   aria-label={`Mark ${notification.title} as read`}
                 >
@@ -102,6 +124,7 @@ function NotificationList({
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => onClear?.(notification.id)}
                 aria-label={`Clear ${notification.title}`}
               >
@@ -113,12 +136,16 @@ function NotificationList({
       </div>
 
       {notifications.length === 0 && (
-        <div className="empty-state" role="status">
+        <div
+          className="empty-state"
+          // biome-ignore lint/a11y/useSemanticElements: test mock component
+          role="status"
+        >
           <p>No notifications</p>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -127,145 +154,159 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
       queries: { retry: false },
       mutations: { retry: false },
     },
-  })
+  });
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
-}
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
 
-describe('NotificationList', () => {
+describe("NotificationList", () => {
   const mockNotifications: Notification[] = [
     {
-      id: 'notif-1',
-      title: 'New task assigned',
-      message: 'You have been assigned to task ABC-123',
-      type: 'info',
+      id: "notif-1",
+      title: "New task assigned",
+      message: "You have been assigned to task ABC-123",
+      type: "info",
       isRead: false,
-      createdAt: '2024-01-01T10:00:00Z',
+      createdAt: "2024-01-01T10:00:00Z",
     },
     {
-      id: 'notif-2',
-      title: 'Task completed',
-      message: 'Task XYZ-456 was completed',
-      type: 'success',
+      id: "notif-2",
+      title: "Task completed",
+      message: "Task XYZ-456 was completed",
+      type: "success",
       isRead: true,
-      createdAt: '2024-01-01T09:00:00Z',
+      createdAt: "2024-01-01T09:00:00Z",
     },
     {
-      id: 'notif-3',
-      title: 'Deadline approaching',
-      message: 'Task DEF-789 is due tomorrow',
-      type: 'warning',
+      id: "notif-3",
+      title: "Deadline approaching",
+      message: "Task DEF-789 is due tomorrow",
+      type: "warning",
       isRead: false,
-      createdAt: '2024-01-01T08:00:00Z',
+      createdAt: "2024-01-01T08:00:00Z",
     },
-  ]
+  ];
 
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
-  it('should render notification list', () => {
-    render(<NotificationList notifications={mockNotifications} />, { wrapper: TestWrapper })
+  it("should render notification list", () => {
+    render(<NotificationList notifications={mockNotifications} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByTestId('notification-list')).toBeInTheDocument()
-    expect(screen.getByText('Notifications')).toBeInTheDocument()
-  })
+    expect(screen.getByTestId("notification-list")).toBeInTheDocument();
+    expect(screen.getByText("Notifications")).toBeInTheDocument();
+  });
 
-  it('should display all notifications', () => {
-    render(<NotificationList notifications={mockNotifications} />, { wrapper: TestWrapper })
+  it("should display all notifications", () => {
+    render(<NotificationList notifications={mockNotifications} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByText('New task assigned')).toBeInTheDocument()
-    expect(screen.getByText('Task completed')).toBeInTheDocument()
-    expect(screen.getByText('Deadline approaching')).toBeInTheDocument()
-  })
+    expect(screen.getByText("New task assigned")).toBeInTheDocument();
+    expect(screen.getByText("Task completed")).toBeInTheDocument();
+    expect(screen.getByText("Deadline approaching")).toBeInTheDocument();
+  });
 
-  it('should show unread count badge', () => {
-    render(<NotificationList notifications={mockNotifications} />, { wrapper: TestWrapper })
+  it("should show unread count badge", () => {
+    render(<NotificationList notifications={mockNotifications} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByLabelText(/2 unread notifications/i)).toBeInTheDocument()
-  })
+    expect(
+      screen.getByLabelText(/2 unread notifications/i),
+    ).toBeInTheDocument();
+  });
 
-  it('should handle mark as read action', async () => {
-    const user = userEvent.setup()
-    const onMarkAsRead = vi.fn()
-
-    render(
-      <NotificationList notifications={mockNotifications} onMarkAsRead={onMarkAsRead} />,
-      { wrapper: TestWrapper }
-    )
-
-    await user.click(screen.getByLabelText(/mark new task assigned as read/i))
-
-    expect(onMarkAsRead).toHaveBeenCalledWith('notif-1')
-  })
-
-  it('should handle mark all as read action', async () => {
-    const user = userEvent.setup()
-    const onMarkAllAsRead = vi.fn()
+  it("should handle mark as read action", async () => {
+    const user = userEvent.setup();
+    const onMarkAsRead = vi.fn();
 
     render(
-      <NotificationList notifications={mockNotifications} onMarkAllAsRead={onMarkAllAsRead} />,
-      { wrapper: TestWrapper }
-    )
+      <NotificationList
+        notifications={mockNotifications}
+        onMarkAsRead={onMarkAsRead}
+      />,
+      { wrapper: TestWrapper },
+    );
 
-    await user.click(screen.getByLabelText(/mark all as read/i))
+    await user.click(screen.getByLabelText(/mark new task assigned as read/i));
 
-    expect(onMarkAllAsRead).toHaveBeenCalled()
-  })
+    expect(onMarkAsRead).toHaveBeenCalledWith("notif-1");
+  });
 
-  it('should handle clear notification action', async () => {
-    const user = userEvent.setup()
-    const onClear = vi.fn()
+  it("should handle mark all as read action", async () => {
+    const user = userEvent.setup();
+    const onMarkAllAsRead = vi.fn();
+
+    render(
+      <NotificationList
+        notifications={mockNotifications}
+        onMarkAllAsRead={onMarkAllAsRead}
+      />,
+      { wrapper: TestWrapper },
+    );
+
+    await user.click(screen.getByLabelText(/mark all as read/i));
+
+    expect(onMarkAllAsRead).toHaveBeenCalled();
+  });
+
+  it("should handle clear notification action", async () => {
+    const user = userEvent.setup();
+    const onClear = vi.fn();
 
     render(
       <NotificationList notifications={mockNotifications} onClear={onClear} />,
-      { wrapper: TestWrapper }
-    )
+      { wrapper: TestWrapper },
+    );
 
-    await user.click(screen.getByLabelText(/clear new task assigned/i))
+    await user.click(screen.getByLabelText(/clear new task assigned/i));
 
-    expect(onClear).toHaveBeenCalledWith('notif-1')
-  })
+    expect(onClear).toHaveBeenCalledWith("notif-1");
+  });
 
-  it('should handle clear all action', async () => {
-    const user = userEvent.setup()
-    const onClearAll = vi.fn()
+  it("should handle clear all action", async () => {
+    const user = userEvent.setup();
+    const onClearAll = vi.fn();
 
     render(
-      <NotificationList notifications={mockNotifications} onClearAll={onClearAll} />,
-      { wrapper: TestWrapper }
-    )
+      <NotificationList
+        notifications={mockNotifications}
+        onClearAll={onClearAll}
+      />,
+      { wrapper: TestWrapper },
+    );
 
-    await user.click(screen.getByLabelText(/clear all notifications/i))
+    await user.click(screen.getByLabelText(/clear all notifications/i));
 
-    expect(onClearAll).toHaveBeenCalled()
-  })
+    expect(onClearAll).toHaveBeenCalled();
+  });
 
-  it('should show empty state when no notifications', () => {
-    render(<NotificationList notifications={[]} />, { wrapper: TestWrapper })
+  it("should show empty state when no notifications", () => {
+    render(<NotificationList notifications={[]} />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('No notifications')).toBeInTheDocument()
-  })
+    expect(screen.getByText("No notifications")).toBeInTheDocument();
+  });
 
-  it('should show loading state', () => {
-    render(<NotificationList isLoading={true} />, { wrapper: TestWrapper })
+  it("should show loading state", () => {
+    render(<NotificationList isLoading={true} />, { wrapper: TestWrapper });
 
-    expect(screen.getByLabelText(/loading notifications/i)).toBeInTheDocument()
-  })
+    expect(screen.getByLabelText(/loading notifications/i)).toBeInTheDocument();
+  });
 
-  it('should apply correct CSS classes based on notification type', () => {
+  it("should apply correct CSS classes based on notification type", () => {
     const { container } = render(
       <NotificationList notifications={mockNotifications} />,
-      { wrapper: TestWrapper }
-    )
+      { wrapper: TestWrapper },
+    );
 
-    expect(container.querySelector('.info')).toBeInTheDocument()
-    expect(container.querySelector('.success')).toBeInTheDocument()
-    expect(container.querySelector('.warning')).toBeInTheDocument()
-  })
-})
-
+    expect(container.querySelector(".info")).toBeInTheDocument();
+    expect(container.querySelector(".success")).toBeInTheDocument();
+    expect(container.querySelector(".warning")).toBeInTheDocument();
+  });
+});

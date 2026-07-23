@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Users, Loader2, Check, ArrowRight } from "lucide-react";
+import { Calendar, Users, Loader2, Check } from "lucide-react";
 import { format } from "date-fns";
 import { applyTemplate } from "../../fetchers/templates/apply-template";
 import getProjects from "../../fetchers/project/get-projects";
@@ -40,7 +40,9 @@ export function TemplateApplicationModal({
   onClose,
   onSuccess,
 }: TemplateApplicationModalProps) {
-  const { workspaceId } = useParams({ from: '/_authenticated/dashboard/workspace/$workspaceId' });
+  const { workspaceId } = useParams({ strict: false }) as {
+    workspaceId: string;
+  };
   const queryClient = useQueryClient();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -48,32 +50,36 @@ export function TemplateApplicationModal({
   const [roleMapping, setRoleMapping] = useState<Record<string, string>>({});
 
   // Fetch projects in workspace
-  const { data: projects } = useQuery({
-    queryKey: ['projects', workspaceId],
-    queryFn: () => getProjects(workspaceId),
+  const { data: projectsData } = useQuery({
+    queryKey: ["projects", workspaceId],
+    queryFn: () => getProjects({ workspaceId }),
     enabled: !!workspaceId,
   });
+  // getProjects returns either a bare array or { projects, pagination }
+  const projects = Array.isArray(projectsData)
+    ? projectsData
+    : (projectsData?.projects as unknown[] | undefined);
 
   // Fetch workspace users
   const { data: users } = useQuery({
-    queryKey: ['workspace-users', workspaceId],
-    queryFn: () => getWorkspaceUsers(workspaceId),
+    queryKey: ["workspace-users", workspaceId],
+    queryFn: () => getWorkspaceUsers({ param: { workspaceId } }),
     enabled: !!workspaceId,
   });
 
   // Extract unique roles from template
   const roles = useMemo(() => {
     const roleSet = new Set<string>();
-    template.tasks.forEach((task) => {
+    for (const task of template.tasks) {
       if (task.suggestedAssigneeRole) {
         roleSet.add(task.suggestedAssigneeRole);
       }
-      task.subtasks.forEach((subtask) => {
+      for (const subtask of task.subtasks) {
         if (subtask.suggestedAssigneeRole) {
           roleSet.add(subtask.suggestedAssigneeRole);
         }
-      });
-    });
+      }
+    }
     return Array.from(roleSet);
   }, [template]);
 
@@ -81,7 +87,7 @@ export function TemplateApplicationModal({
   const applyMutation = useMutation({
     mutationFn: () => {
       if (!selectedProjectId) throw new Error("No project selected");
-      
+
       return applyTemplate(template.id, {
         projectId: selectedProjectId,
         workspaceId,
@@ -93,11 +99,11 @@ export function TemplateApplicationModal({
       toast.success("Template Applied Successfully!", {
         description: `Created ${result.tasksCreated} tasks and ${result.subtasksCreated} subtasks`,
       });
-      
+
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+
       onSuccess();
     },
     onError: (error: Error) => {
@@ -111,8 +117,10 @@ export function TemplateApplicationModal({
     applyMutation.mutate();
   };
 
-  const tasksWithRole = template.tasks.filter(
-    (task) => task.suggestedAssigneeRole || task.subtasks.some((st) => st.suggestedAssigneeRole)
+  void template.tasks.filter(
+    (task) =>
+      task.suggestedAssigneeRole ||
+      task.subtasks.some((st) => st.suggestedAssigneeRole),
   ).length;
 
   return (
@@ -129,12 +137,15 @@ export function TemplateApplicationModal({
           {/* Project Selection */}
           <div className="space-y-2">
             <Label>Select Project</Label>
-            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <Select
+              value={selectedProjectId}
+              onValueChange={setSelectedProjectId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Choose a project..." />
               </SelectTrigger>
               <SelectContent>
-                {projects?.map((project) => (
+                {projects?.map((project: { id: string; name: string }) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
                   </SelectItem>
@@ -142,7 +153,8 @@ export function TemplateApplicationModal({
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              The template's {template.tasks.length} tasks will be added to this project
+              The template's {template.tasks.length} tasks will be added to this
+              project
             </p>
           </div>
 
@@ -155,11 +167,15 @@ export function TemplateApplicationModal({
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !startDate && "text-muted-foreground"
+                    !startDate && "text-muted-foreground",
                   )}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                  {startDate ? (
+                    format(startDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -167,7 +183,7 @@ export function TemplateApplicationModal({
                   mode="single"
                   selected={startDate}
                   onSelect={(date) => date && setStartDate(date)}
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>
@@ -187,7 +203,10 @@ export function TemplateApplicationModal({
               </div>
               <div className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-3 bg-muted/30">
                 {roles.map((role) => (
-                  <div key={role} className="grid grid-cols-2 gap-3 items-center">
+                  <div
+                    key={role}
+                    className="grid grid-cols-2 gap-3 items-center"
+                  >
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">{role}</span>
@@ -207,7 +226,10 @@ export function TemplateApplicationModal({
                       <SelectContent>
                         <SelectItem value="">Unassigned</SelectItem>
                         {users?.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
+                          <SelectItem
+                            key={user.id ?? user.email}
+                            value={user.id ?? ""}
+                          >
                             {user.name}
                           </SelectItem>
                         ))}
@@ -217,7 +239,8 @@ export function TemplateApplicationModal({
                 ))}
               </div>
               <p className="text-sm text-muted-foreground">
-                Optional: Assign team members to automatically set task assignees
+                Optional: Assign team members to automatically set task
+                assignees
               </p>
             </div>
           )}
@@ -233,12 +256,17 @@ export function TemplateApplicationModal({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtasks:</span>
                 <span className="font-medium">
-                  {template.tasks.reduce((sum, t) => sum + t.subtasks.length, 0)}
+                  {template.tasks.reduce(
+                    (sum, t) => sum + t.subtasks.length,
+                    0,
+                  )}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Duration:</span>
-                <span className="font-medium">{template.estimatedDuration || "N/A"} days</span>
+                <span className="font-medium">
+                  {template.estimatedDuration || "N/A"} days
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Roles assigned:</span>
@@ -252,7 +280,12 @@ export function TemplateApplicationModal({
 
         {/* Footer Actions */}
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose} className="flex-1" disabled={applyMutation.isPending}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="flex-1"
+            disabled={applyMutation.isPending}
+          >
             Cancel
           </Button>
           <Button
@@ -278,4 +311,3 @@ export function TemplateApplicationModal({
     </Dialog>
   );
 }
-

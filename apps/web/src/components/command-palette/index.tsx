@@ -15,27 +15,8 @@ import {
   Plus,
   Search,
   Settings,
-  Calendar,
-  Users,
-  BarChart3,
   Clock,
-  Flag,
-  Filter,
-  Download,
-  Upload,
-  Zap,
-  Star,
-  Eye,
-  CheckSquare,
-  Target,
-  TrendingUp,
-  FileText,
-  Palette,
-  Moon,
-  Sun,
-  Monitor,
   Keyboard,
-  HelpCircle,
   FolderOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -47,7 +28,9 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
-  const { data: projects = [] as Project[] } = useGetProjects({ workspaceId: workspace?.id ?? "" });
+  const { data: projects = [] as Project[] } = useGetProjects({
+    workspaceId: workspace?.id ?? "",
+  });
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
@@ -55,14 +38,17 @@ export function CommandPalette() {
   const [pendingAction, setPendingAction] = useState<{
     type: "task" | "project" | "workspace" | "navigation" | "theme" | "export";
     status?: string;
-    payload?: any;
+    payload?: unknown;
   } | null>(null);
   const navigate = useNavigate();
 
   // Track recent commands for better UX
   const addToRecent = (command: string) => {
-    setRecentCommands(prev => {
-      const updated = [command, ...prev.filter(c => c !== command)].slice(0, 5);
+    setRecentCommands((prev) => {
+      const updated = [command, ...prev.filter((c) => c !== command)].slice(
+        0,
+        5,
+      );
       return updated;
     });
   };
@@ -279,8 +265,8 @@ export function CommandPalette() {
                             to: "/dashboard/workspace/$workspaceId/project/$projectId",
                             params: {
                               workspaceId: workspace?.id ?? "",
-                              projectId: project.id
-                            }
+                              projectId: project.id,
+                            },
                           });
                         }}
                         className={commandItemStyles}
@@ -295,7 +281,9 @@ export function CommandPalette() {
                     <Command.Item
                       onSelect={() => {
                         // Trigger global search focus
-                        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+                        const searchInput = document.querySelector(
+                          'input[placeholder*="Search"]',
+                        ) as HTMLInputElement;
                         if (searchInput) {
                           searchInput.focus();
                           setOpen(false);
@@ -306,13 +294,17 @@ export function CommandPalette() {
                     >
                       <Search className="w-4 h-4" />
                       Focus Search
-                      <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">⌘F</kbd>
+                      <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
+                        ⌘F
+                      </kbd>
                     </Command.Item>
 
                     <Command.Item
                       onSelect={() => {
                         // Open keyboard shortcuts modal
-                        const event = new CustomEvent('show-keyboard-shortcuts');
+                        const event = new CustomEvent(
+                          "show-keyboard-shortcuts",
+                        );
                         window.dispatchEvent(event);
                         setOpen(false);
                         addToRecent("Show Keyboard Shortcuts");
@@ -321,19 +313,9 @@ export function CommandPalette() {
                     >
                       <Keyboard className="w-4 h-4" />
                       Show Keyboard Shortcuts
-                      <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">?</kbd>
-                    </Command.Item>
-
-                    <Command.Item
-                      onSelect={() => {
-                        navigate({ to: "/dashboard/help" });
-                        setOpen(false);
-                        addToRecent("Get Help");
-                      }}
-                      className={commandItemStyles}
-                    >
-                      <HelpCircle className="w-4 h-4" />
-                      Get Help
+                      <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
+                        ?
+                      </kbd>
                     </Command.Item>
                   </CommandGroup>
 
@@ -353,10 +335,13 @@ export function CommandPalette() {
                   {/* Recent Commands */}
                   {recentCommands.length > 0 && (
                     <CommandGroup heading="Recent" className="mt-4">
-                      {recentCommands.slice(0, 3).map((command, index) => (
+                      {recentCommands.slice(0, 3).map((command, _index) => (
                         <Command.Item
                           key={command}
-                          className={cn(commandItemStyles, "text-muted-foreground")}
+                          className={cn(
+                            commandItemStyles,
+                            "text-muted-foreground",
+                          )}
                         >
                           <Clock className="w-4 h-4" />
                           {command}
@@ -372,7 +357,7 @@ export function CommandPalette() {
       </AnimatePresence>
 
       <CreateProjectModal
-        isOpen={isCreateProjectOpen}
+        open={isCreateProjectOpen}
         onClose={() => setIsCreateProjectOpen(false)}
       />
       <CreateTaskModal

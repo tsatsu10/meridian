@@ -2,10 +2,10 @@
 export default {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -75,19 +75,19 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        'elevation-1': 'var(--elevation-1)',
-        'elevation-2': 'var(--elevation-2)',
-        'elevation-3': 'var(--elevation-3)',
-        'elevation-4': 'var(--elevation-4)',
-        'card': 'var(--card-shadow)',
-        'glass': 'var(--glass-shadow)',
+        "elevation-1": "var(--elevation-1)",
+        "elevation-2": "var(--elevation-2)",
+        "elevation-3": "var(--elevation-3)",
+        "elevation-4": "var(--elevation-4)",
+        card: "var(--card-shadow)",
+        glass: "var(--glass-shadow)",
       },
       backdropFilter: {
-        'glass': 'var(--glass-backdrop)',
+        glass: "var(--glass-backdrop)",
       },
       backgroundImage: {
-        'gradient-dark': 'var(--background-gradient)',
-        'gradient-secondary': 'var(--background-secondary)',
+        "gradient-dark": "var(--background-gradient)",
+        "gradient-secondary": "var(--background-secondary)",
       },
       keyframes: {
         "accordion-down": {
@@ -159,7 +159,8 @@ export default {
         "collapsible-down": "collapsible-down 0.2s ease-out",
         "collapsible-up": "collapsible-up 0.2s ease-out",
         // Enhanced animations
-        "shimmer-slide": "shimmer-slide var(--speed) ease-in-out infinite alternate",
+        "shimmer-slide":
+          "shimmer-slide var(--speed) ease-in-out infinite alternate",
         "spin-around": "spin-around calc(var(--speed) * 2) infinite linear",
         rainbow: "rainbow var(--speed, 2s) infinite linear",
         rippling: "rippling var(--duration) ease-out",
@@ -172,4 +173,4 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} 
+};

@@ -1,10 +1,14 @@
 import { Hono } from "hono";
 import { getDatabase } from "../database/connection";
-import { projectHealthTable, healthHistoryTable, healthRecommendationsTable } from "../database/schema";
+import {
+  projectHealthTable,
+  healthHistoryTable,
+  healthRecommendationsTable,
+} from "../database/schema";
 import { eq, desc, gte } from "drizzle-orm";
 import { calculateProjectHealth } from "./calculate-project-health";
 import { generateRecommendations } from "./recommendation-engine";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const healthRoute = new Hono();
 
@@ -19,16 +23,19 @@ healthRoute.get("/", async (c) => {
     status: "operational",
     endpoints: {
       "GET /projects/:projectId": "Get current health metrics for a project",
-      "GET /projects/:projectId/history": "Get historical health data (supports ?days=30)",
-      "GET /projects/:projectId/recommendations": "Get AI-generated recommendations",
-      "GET /comparison": "Compare health across projects (requires ?projectIds=id1,id2)",
-      "POST /projects/:projectId/refresh": "Force recalculation of metrics"
+      "GET /projects/:projectId/history":
+        "Get historical health data (supports ?days=30)",
+      "GET /projects/:projectId/recommendations":
+        "Get AI-generated recommendations",
+      "GET /comparison":
+        "Compare health across projects (requires ?projectIds=id1,id2)",
+      "POST /projects/:projectId/refresh": "Force recalculation of metrics",
     },
     examples: {
       getProjectHealth: "/api/health/projects/project-id-123",
       getHistory: "/api/health/projects/project-id-123/history?days=30",
-      compareProjects: "/api/health/comparison?projectIds=id1,id2,id3"
-    }
+      compareProjects: "/api/health/comparison?projectIds=id1,id2,id3",
+    },
   });
 });
 
@@ -43,10 +50,7 @@ healthRoute.get("/projects/:projectId", async (c) => {
     const { projectId } = c.req.param();
 
     if (!projectId) {
-      return c.json(
-        { error: "Project ID is required" },
-        { status: 400 }
-      );
+      return c.json({ error: "Project ID is required" }, { status: 400 });
     }
 
     // Check if health metrics exist and are recent (< 5 min)
@@ -54,12 +58,14 @@ healthRoute.get("/projects/:projectId", async (c) => {
       .select()
       .from(projectHealthTable)
       .where(eq(projectHealthTable.projectId, projectId))
-      .then((rows: any[]) => rows[0]);
+      .then((rows) => rows[0]);
 
     const now = new Date();
-    const cacheExpired = !existingHealth ||
+    const cacheExpired =
+      !existingHealth ||
       !existingHealth.cachedAt ||
-      (now.getTime() - new Date(existingHealth.cachedAt).getTime()) > 5 * 60 * 1000;
+      now.getTime() - new Date(existingHealth.cachedAt).getTime() >
+        5 * 60 * 1000;
 
     if (!cacheExpired && existingHealth) {
       return c.json(existingHealth);
@@ -69,10 +75,7 @@ healthRoute.get("/projects/:projectId", async (c) => {
     const projectMetrics = await calculateProjectHealth(projectId);
 
     if (!projectMetrics) {
-      return c.json(
-        { error: "Project not found" },
-        { status: 404 }
-      );
+      return c.json({ error: "Project not found" }, { status: 404 });
     }
 
     // Store/update metrics in database
@@ -127,10 +130,7 @@ healthRoute.get("/projects/:projectId", async (c) => {
     });
   } catch (error) {
     logger.error("Error fetching project health:", error);
-    return c.json(
-      { error: "Failed to fetch project health" },
-      { status: 500 }
-    );
+    return c.json({ error: "Failed to fetch project health" }, { status: 500 });
   }
 });
 
@@ -144,19 +144,16 @@ healthRoute.get("/projects/:projectId/history", async (c) => {
     const db = getDatabase(); // FIX: Initialize database connection
     const { projectId } = c.req.param();
     const daysParam = c.req.query("days") || "30";
-    const days = parseInt(daysParam);
+    const days = Number.parseInt(daysParam);
 
     if (!projectId) {
-      return c.json(
-        { error: "Project ID is required" },
-        { status: 400 }
-      );
+      return c.json({ error: "Project ID is required" }, { status: 400 });
     }
 
-    if (isNaN(days) || days < 1 || days > 365) {
+    if (Number.isNaN(days) || days < 1 || days > 365) {
       return c.json(
         { error: "Invalid days parameter (1-365)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -170,12 +167,12 @@ healthRoute.get("/projects/:projectId/history", async (c) => {
       .from(healthHistoryTable)
       .where(
         gte(healthHistoryTable.recordedAt, cutoffDate) &&
-        eq(healthHistoryTable.projectId, projectId)
+          eq(healthHistoryTable.projectId, projectId),
       )
       .orderBy(desc(healthHistoryTable.recordedAt));
 
     // Format for frontend charting
-    const formattedHistory = history.map((h: any) => ({
+    const formattedHistory = history.map((h) => ({
       date: new Date(h.recordedAt).toISOString().split("T")[0],
       score: h.score,
       status: h.status,
@@ -195,10 +192,7 @@ healthRoute.get("/projects/:projectId/history", async (c) => {
     });
   } catch (error) {
     logger.error("Error fetching health history:", error);
-    return c.json(
-      { error: "Failed to fetch health history" },
-      { status: 500 }
-    );
+    return c.json({ error: "Failed to fetch health history" }, { status: 500 });
   }
 });
 
@@ -212,20 +206,14 @@ healthRoute.get("/projects/:projectId/recommendations", async (c) => {
     const { projectId } = c.req.param();
 
     if (!projectId) {
-      return c.json(
-        { error: "Project ID is required" },
-        { status: 400 }
-      );
+      return c.json({ error: "Project ID is required" }, { status: 400 });
     }
 
     // Calculate fresh metrics
     const projectMetrics = await calculateProjectHealth(projectId);
 
     if (!projectMetrics) {
-      return c.json(
-        { error: "Project not found" },
-        { status: 404 }
-      );
+      return c.json({ error: "Project not found" }, { status: 404 });
     }
 
     // Generate recommendations
@@ -258,7 +246,7 @@ healthRoute.get("/projects/:projectId/recommendations", async (c) => {
     logger.error("Error generating recommendations:", error);
     return c.json(
       { error: "Failed to generate recommendations" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -275,7 +263,7 @@ healthRoute.get("/comparison", async (c) => {
     if (!projectIdsParam) {
       return c.json(
         { error: "projectIds query parameter is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -284,34 +272,34 @@ healthRoute.get("/comparison", async (c) => {
     if (projectIds.length === 0 || projectIds.length > 10) {
       return c.json(
         { error: "Provide between 1 and 10 project IDs" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Calculate metrics for all projects
     const healthMetrics = await Promise.all(
-      projectIds.map((id) => calculateProjectHealth(id))
+      projectIds.map((id) => calculateProjectHealth(id)),
     );
 
-    const validMetrics = healthMetrics.filter((m): m is typeof healthMetrics[0] => m !== null);
+    const validMetrics = healthMetrics.filter(
+      (m): m is (typeof healthMetrics)[0] => m !== null,
+    );
 
     if (validMetrics.length === 0) {
-      return c.json(
-        { error: "No valid projects found" },
-        { status: 404 }
-      );
+      return c.json({ error: "No valid projects found" }, { status: 404 });
     }
 
     // Calculate aggregated statistics
     const averageScore =
-      validMetrics.reduce((sum, m) => sum + (m?.score || 0), 0) / validMetrics.length;
+      validMetrics.reduce((sum, m) => sum + (m?.score || 0), 0) /
+      validMetrics.length;
 
     const bestProject = validMetrics.reduce((best, m) =>
-      m && m.score > (best?.score || 0) ? m : best
+      m && m.score > (best?.score || 0) ? m : best,
     );
 
     const worstProject = validMetrics.reduce((worst, m) =>
-      m && m.score < (worst?.score || 100) ? m : worst
+      m && m.score < (worst?.score || 100) ? m : worst,
     );
 
     return c.json({
@@ -337,7 +325,7 @@ healthRoute.get("/comparison", async (c) => {
     logger.error("Error comparing project health:", error);
     return c.json(
       { error: "Failed to compare project health" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -352,20 +340,14 @@ healthRoute.post("/projects/:projectId/refresh", async (c) => {
     const { projectId } = c.req.param();
 
     if (!projectId) {
-      return c.json(
-        { error: "Project ID is required" },
-        { status: 400 }
-      );
+      return c.json({ error: "Project ID is required" }, { status: 400 });
     }
 
     // Force calculate fresh metrics
     const projectMetrics = await calculateProjectHealth(projectId);
 
     if (!projectMetrics) {
-      return c.json(
-        { error: "Project not found" },
-        { status: 404 }
-      );
+      return c.json({ error: "Project not found" }, { status: 404 });
     }
 
     const now = new Date();
@@ -375,7 +357,7 @@ healthRoute.post("/projects/:projectId/refresh", async (c) => {
       .select()
       .from(projectHealthTable)
       .where(eq(projectHealthTable.projectId, projectId))
-      .then((rows: any[]) => rows[0]);
+      .then((rows) => rows[0]);
 
     if (existingHealth) {
       await db
@@ -431,10 +413,9 @@ healthRoute.post("/projects/:projectId/refresh", async (c) => {
     logger.error("Error refreshing project health:", error);
     return c.json(
       { error: "Failed to refresh project health" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
 
 export default healthRoute;
-

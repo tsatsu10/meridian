@@ -3,11 +3,17 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { eq, and, count, sql } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
-import { projectTable, taskTable, workspaceUserTable, userTable, activityTable } from "../database/schema";
+import {
+  projectTable,
+  taskTable,
+  workspaceUserTable,
+  userTable,
+  activityTable,
+} from "../database/schema";
 import getAnalytics from "./controllers/get-analytics";
 import getAnalyticsSimple from "./controllers/get-analytics-simple";
 import getEnhancedAnalytics from "./controllers/get-analytics-enhanced";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const dashboard = new Hono()
   .get(
@@ -21,7 +27,7 @@ const dashboard = new Hono()
         timeRange: z.enum(["today", "week", "month", "all"]).optional(),
         projectIds: z.string().optional(),
         userEmails: z.string().optional(),
-      })
+      }),
     ),
     async (c) => {
       const db = getDatabase();
@@ -30,32 +36,52 @@ const dashboard = new Hono()
 
       // Build filter conditions
       const filterConditions = [eq(projectTable.workspaceId, workspaceId)];
-      
+
       // Status filter
       if (filters.status) {
         const statuses = filters.status.split(",");
         if (statuses.length === 1) {
-          filterConditions.push(eq(taskTable.status, statuses[0] as any));
+          filterConditions.push(
+            eq(
+              taskTable.status,
+              statuses[0] as (typeof taskTable.status.enumValues)[number],
+            ),
+          );
         } else {
-          filterConditions.push(sql`${taskTable.status} IN (${sql.join(statuses.map(s => sql`${s}`), sql`, `)})`);
+          filterConditions.push(
+            sql`${taskTable.status} IN (${sql.join(
+              statuses.map((s) => sql`${s}`),
+              sql`, `,
+            )})`,
+          );
         }
       }
-      
+
       // Priority filter
       if (filters.priority) {
         const priorities = filters.priority.split(",");
         if (priorities.length === 1) {
-          filterConditions.push(eq(taskTable.priority, priorities[0] as any));
+          filterConditions.push(
+            eq(
+              taskTable.priority,
+              priorities[0] as (typeof taskTable.priority.enumValues)[number],
+            ),
+          );
         } else {
-          filterConditions.push(sql`${taskTable.priority} IN (${sql.join(priorities.map(p => sql`${p}`), sql`, `)})`);
+          filterConditions.push(
+            sql`${taskTable.priority} IN (${sql.join(
+              priorities.map((p) => sql`${p}`),
+              sql`, `,
+            )})`,
+          );
         }
       }
-      
+
       // Time range filter
       if (filters.timeRange && filters.timeRange !== "all") {
         const now = new Date();
-        let dateFilter: Date;
-        
+        let dateFilter: Date | undefined;
+
         switch (filters.timeRange) {
           case "today":
             dateFilter = new Date(now.setHours(0, 0, 0, 0));
@@ -67,53 +93,62 @@ const dashboard = new Hono()
             dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
             break;
         }
-        
-        if (dateFilter!) {
-          filterConditions.push(sql`${taskTable.createdAt} >= ${dateFilter.toISOString()}`);
+
+        if (dateFilter) {
+          filterConditions.push(
+            sql`${taskTable.createdAt} >= ${dateFilter.toISOString()}`,
+          );
         }
       }
-      
+
       // Project filter
       if (filters.projectIds) {
         const projectIds = filters.projectIds.split(",");
-        if (projectIds.length === 1) {
+        if (projectIds.length === 1 && projectIds[0] !== undefined) {
           filterConditions.push(eq(taskTable.projectId, projectIds[0]));
         } else {
-          filterConditions.push(sql`${taskTable.projectId} IN (${sql.join(projectIds.map(id => sql`${id}`), sql`, `)})`);
+          filterConditions.push(
+            sql`${taskTable.projectId} IN (${sql.join(
+              projectIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})`,
+          );
         }
       }
-      
+
       // User filter
       if (filters.userEmails) {
         const userEmails = filters.userEmails.split(",");
-        if (userEmails.length === 1) {
-          filterConditions.push(eq(taskTable.assigneeEmail, userEmails[0]));
+        if (userEmails.length === 1 && userEmails[0] !== undefined) {
+          filterConditions.push(eq(taskTable.userEmail, userEmails[0]));
         } else {
-          filterConditions.push(sql`${taskTable.assigneeEmail} IN (${sql.join(userEmails.map(e => sql`${e}`), sql`, `)})`);
+          filterConditions.push(
+            sql`${taskTable.userEmail} IN (${sql.join(
+              userEmails.map((e) => sql`${e}`),
+              sql`, `,
+            )})`,
+          );
         }
       }
 
       // Get total tasks with filters
-      const [totalTasksResult] = await db
+      const [totalTasksResult] = (await db
         .select({ count: count() })
         .from(taskTable)
         .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-        .where(and(...filterConditions)) || [{ count: 0 }];
+        .where(and(...filterConditions))) || [{ count: 0 }];
 
       // Get completed tasks with filters
-      const [completedTasksResult] = await db
+      const [completedTasksResult] = (await db
         .select({ count: count() })
         .from(taskTable)
         .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-        .where(
-          and(
-            ...filterConditions,
-            eq(taskTable.status, "done")
-          )
-        ) || [{ count: 0 }];
+        .where(and(...filterConditions, eq(taskTable.status, "done")))) || [
+        { count: 0 },
+      ];
 
       // Get overdue tasks with filters
-      const [overdueTasksResult] = await db
+      const [overdueTasksResult] = (await db
         .select({ count: count() })
         .from(taskTable)
         .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
@@ -121,26 +156,33 @@ const dashboard = new Hono()
           and(
             ...filterConditions,
             sql`${taskTable.dueDate} < CURRENT_TIMESTAMP`,
-            sql`${taskTable.status} != 'done'`
-          )
-        ) || [{ count: 0 }];
+            sql`${taskTable.status} != 'done'`,
+          ),
+        )) || [{ count: 0 }];
 
       // Get active projects
-      const [activeProjectsResult] = await db
+      const [activeProjectsResult] = (await db
         .select({ count: count() })
         .from(projectTable)
-        .where(eq(projectTable.workspaceId, workspaceId)) || [{ count: 0 }];
+        .where(eq(projectTable.workspaceId, workspaceId))) || [{ count: 0 }];
 
       // Get team members
-      const [teamMembersResult] = await db
+      const [teamMembersResult] = (await db
         .select({ count: count() })
         .from(workspaceUserTable)
-        .where(eq(workspaceUserTable.workspaceId, workspaceId)) || [{ count: 0 }];
+        .where(eq(workspaceUserTable.workspaceId, workspaceId))) || [
+        { count: 0 },
+      ];
 
       // Calculate productivity (completed tasks / total tasks * 100)
-      const productivity = (totalTasksResult?.count || 0) > 0
-        ? Math.round(((completedTasksResult?.count || 0) / (totalTasksResult?.count || 1)) * 100)
-        : 0;
+      const productivity =
+        (totalTasksResult?.count || 0) > 0
+          ? Math.round(
+              ((completedTasksResult?.count || 0) /
+                (totalTasksResult?.count || 1)) *
+                100,
+            )
+          : 0;
 
       return c.json({
         totalTasks: totalTasksResult?.count || 0,
@@ -150,14 +192,20 @@ const dashboard = new Hono()
         teamMembers: teamMembersResult?.count || 0,
         productivity,
       });
-    }
+    },
   )
   .get(
     "/activity",
-    zValidator("query", z.object({ 
-      workspaceId: z.string(),
-      limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 5)
-    })),
+    zValidator(
+      "query",
+      z.object({
+        workspaceId: z.string(),
+        limit: z
+          .string()
+          .optional()
+          .transform((val) => (val ? Number.parseInt(val, 10) : 5)),
+      }),
+    ),
     async (c) => {
       const db = getDatabase(); // FIX: Initialize database connection
       const { workspaceId, limit } = c.req.valid("query");
@@ -184,7 +232,7 @@ const dashboard = new Hono()
         .limit(limit);
 
       return c.json(activities);
-    }
+    },
   )
   .get(
     "/task/upcoming",
@@ -213,14 +261,14 @@ const dashboard = new Hono()
           and(
             eq(projectTable.workspaceId, workspaceId),
             sql`${taskTable.dueDate} >= CURRENT_TIMESTAMP`,
-            sql`${taskTable.status} != 'done'`
-          )
+            sql`${taskTable.status} != 'done'`,
+          ),
         )
         .orderBy(taskTable.dueDate)
         .limit(5);
 
       return c.json(tasks);
-    }
+    },
   )
   // @epic-2.1-analytics: Enhanced analytics endpoint with advanced filtering and comparative analytics
   // @role-workspace-manager: Executive-level insights with cross-project visibility
@@ -231,21 +279,37 @@ const dashboard = new Hono()
     zValidator(
       "query",
       z.object({
-        timeRange: z.enum(["7d", "30d", "90d", "1y", "all", "custom"]).optional(),
+        timeRange: z
+          .enum(["7d", "30d", "90d", "1y", "all", "custom"])
+          .optional(),
         projectIds: z.string().optional(),
         userEmails: z.string().optional(),
         departments: z.string().optional(),
         priorities: z.string().optional(),
         statuses: z.string().optional(),
-        includeArchived: z.string().optional().transform(val => val === "true"),
+        includeArchived: z
+          .string()
+          .optional()
+          .transform((val) => val === "true"),
         granularity: z.enum(["daily", "weekly", "monthly"]).optional(),
-        compareWith: z.enum(["previous_period", "previous_year", "baseline"]).optional(),
+        compareWith: z
+          .enum(["previous_period", "previous_year", "baseline"])
+          .optional(),
         customStartDate: z.string().optional(),
         customEndDate: z.string().optional(),
-        includeForecasting: z.string().optional().transform(val => val === "true"),
-        includeBenchmarks: z.string().optional().transform(val => val === "true"),
-        enhanced: z.string().optional().transform(val => val === "true"),
-      })
+        includeForecasting: z
+          .string()
+          .optional()
+          .transform((val) => val === "true"),
+        includeBenchmarks: z
+          .string()
+          .optional()
+          .transform((val) => val === "true"),
+        enhanced: z
+          .string()
+          .optional()
+          .transform((val) => val === "true"),
+      }),
     ),
     async (c) => {
       const { workspaceId } = c.req.valid("param");
@@ -273,7 +337,7 @@ const dashboard = new Hono()
         enhanced,
         includeArchived,
         includeForecasting,
-        includeBenchmarks
+        includeBenchmarks,
       });
 
       try {
@@ -300,126 +364,199 @@ const dashboard = new Hono()
           logger.debug("📊 Enhanced analytics options:", options);
           const analytics = await getEnhancedAnalytics(options);
           return c.json(analytics);
-        } else {
-          // Use simple analytics for backward compatibility
-          const options = {
-            workspaceId,
-            timeRange,
-            projectIds: projectIds ? projectIds.split(",") : undefined,
-          };
+        }
+        // Use simple analytics for backward compatibility
+        const simpleTimeRange =
+          timeRange === "custom" ? "30d" : (timeRange ?? "30d");
+        const options = {
+          workspaceId,
+          timeRange: simpleTimeRange,
+          projectIds: projectIds ? projectIds.split(",") : undefined,
+        };
 
-          logger.debug("📊 Using simple analytics (enhanced analytics temporarily disabled)");
-          const simpleAnalytics = await getAnalyticsSimple(options);
+        logger.debug(
+          "📊 Using simple analytics (enhanced analytics temporarily disabled)",
+        );
+        const simpleAnalytics = await getAnalyticsSimple(options);
 
-          // Helper to create comparative data format
-          const toComparative = (value: number) => ({
-            current: value,
-            comparison: value,
-            change: {
-              absolute: 0,
-              percentage: 0,
-              trend: "stable" as const
-            }
-          });
+        // Helper to create comparative data format
+        const toComparative = (value: number) => ({
+          current: value,
+          comparison: value,
+          change: {
+            absolute: 0,
+            percentage: 0,
+            trend: "stable" as const,
+          },
+        });
 
-          // Transform simple analytics to match enhanced analytics format expected by frontend
-          const enhancedFormat = {
-            projectMetrics: {
-              totalProjects: toComparative(simpleAnalytics.projectMetrics.totalProjects),
-              activeProjects: toComparative(simpleAnalytics.projectMetrics.activeProjects),
-              completedProjects: toComparative(simpleAnalytics.projectMetrics.completedProjects),
-              projectsAtRisk: toComparative(simpleAnalytics.projectMetrics.projectsAtRisk),
-              avgHealthScore: toComparative(simpleAnalytics.summary.overallHealth || 0),
-            },
-            taskMetrics: {
-              totalTasks: toComparative(simpleAnalytics.taskMetrics.totalTasks),
-              completedTasks: toComparative(simpleAnalytics.taskMetrics.completedTasks),
-              inProgressTasks: toComparative(simpleAnalytics.taskMetrics.inProgressTasks),
-              overdueTasks: toComparative(simpleAnalytics.taskMetrics.overdueTasks),
-              avgCycleTime: toComparative(simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0),
-              throughput: toComparative(simpleAnalytics.performanceBenchmarks?.teamVelocity || 0),
-            },
-            teamMetrics: {
-              totalMembers: toComparative(simpleAnalytics.teamMetrics.totalMembers),
-              activeMembers: toComparative(simpleAnalytics.teamMetrics.activeMembers),
-              avgProductivity: toComparative(simpleAnalytics.teamMetrics.avgProductivity),
-              teamEfficiency: toComparative(simpleAnalytics.teamMetrics.teamEfficiency),
-              collaborationIndex: toComparative(0),
-              retentionRate: toComparative(100),
-            },
-            timeMetrics: {
-              totalHours: toComparative(simpleAnalytics.timeMetrics.totalHours),
-              billableHours: toComparative(simpleAnalytics.timeMetrics.billableHours),
-              avgTimePerTask: toComparative(simpleAnalytics.timeMetrics.avgTimePerTask),
-              timeUtilization: toComparative(simpleAnalytics.timeMetrics.timeUtilization),
-              overtime: toComparative(0),
-            },
-            projectHealth: (simpleAnalytics.projectHealth || []).map(p => ({
-              id: p.id,
-              name: p.name,
-              slug: p.slug,
-              completion: p.completion,
-              health: p.health === 'critical' ? 'critical' : p.health === 'warning' ? 'warning' : 'good',
-              healthScore: p.health === 'good' ? 85 : p.health === 'warning' ? 60 : 35,
-              tasksCompleted: p.tasksCompleted,
-              totalTasks: p.totalTasks,
-              teamSize: p.teamSize,
-              daysRemaining: null,
-              overdueTasks: p.overdueTasks,
-              avgTimePerTask: 0,
-              velocity: 0,
-              burndownTrend: p.completion > 75 ? 'on_track' : p.completion > 50 ? 'behind' : 'critical',
-              riskFactors: [],
-              predictedCompletion: null,
-            })),
-            resourceUtilization: (simpleAnalytics.resourceUtilization || []).map(r => ({
+        // Transform simple analytics to match enhanced analytics format expected by frontend
+        const enhancedFormat = {
+          projectMetrics: {
+            totalProjects: toComparative(
+              simpleAnalytics.projectMetrics.totalProjects,
+            ),
+            activeProjects: toComparative(
+              simpleAnalytics.projectMetrics.activeProjects,
+            ),
+            completedProjects: toComparative(
+              simpleAnalytics.projectMetrics.completedProjects,
+            ),
+            projectsAtRisk: toComparative(
+              simpleAnalytics.projectMetrics.projectsAtRisk,
+            ),
+            avgHealthScore: toComparative(
+              simpleAnalytics.summary.overallHealth || 0,
+            ),
+          },
+          taskMetrics: {
+            totalTasks: toComparative(simpleAnalytics.taskMetrics.totalTasks),
+            completedTasks: toComparative(
+              simpleAnalytics.taskMetrics.completedTasks,
+            ),
+            inProgressTasks: toComparative(
+              simpleAnalytics.taskMetrics.inProgressTasks,
+            ),
+            overdueTasks: toComparative(
+              simpleAnalytics.taskMetrics.overdueTasks,
+            ),
+            avgCycleTime: toComparative(
+              simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0,
+            ),
+            throughput: toComparative(
+              simpleAnalytics.performanceBenchmarks?.teamVelocity || 0,
+            ),
+          },
+          teamMetrics: {
+            totalMembers: toComparative(
+              simpleAnalytics.teamMetrics.totalMembers,
+            ),
+            activeMembers: toComparative(
+              simpleAnalytics.teamMetrics.activeMembers,
+            ),
+            avgProductivity: toComparative(
+              simpleAnalytics.teamMetrics.avgProductivity,
+            ),
+            teamEfficiency: toComparative(
+              simpleAnalytics.teamMetrics.teamEfficiency,
+            ),
+            collaborationIndex: toComparative(0),
+            retentionRate: toComparative(100),
+          },
+          timeMetrics: {
+            totalHours: toComparative(simpleAnalytics.timeMetrics.totalHours),
+            billableHours: toComparative(
+              simpleAnalytics.timeMetrics.billableHours,
+            ),
+            avgTimePerTask: toComparative(
+              simpleAnalytics.timeMetrics.avgTimePerTask,
+            ),
+            timeUtilization: toComparative(
+              simpleAnalytics.timeMetrics.timeUtilization,
+            ),
+            overtime: toComparative(0),
+          },
+          projectHealth: (simpleAnalytics.projectHealth || []).map((p) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            completion: p.completion,
+            health:
+              p.health === "critical"
+                ? "critical"
+                : p.health === "warning"
+                  ? "warning"
+                  : "good",
+            healthScore:
+              p.health === "good" ? 85 : p.health === "warning" ? 60 : 35,
+            tasksCompleted: p.tasksCompleted,
+            totalTasks: p.totalTasks,
+            teamSize: p.teamSize,
+            daysRemaining: null,
+            overdueTasks: p.overdueTasks,
+            avgTimePerTask: 0,
+            velocity: 0,
+            burndownTrend:
+              p.completion > 75
+                ? "on_track"
+                : p.completion > 50
+                  ? "behind"
+                  : "critical",
+            riskFactors: [],
+            predictedCompletion: null,
+          })),
+          resourceUtilization: (simpleAnalytics.resourceUtilization || []).map(
+            (r) => ({
               userEmail: r.userEmail,
               userName: r.userName,
               department: undefined,
-              role: 'member',
+              role: "member",
               projectCount: 0,
               taskCount: r.taskCount,
               completedTasks: r.completedTasks,
               totalHours: r.totalHours,
-              utilization: Math.min(100, Math.round((r.totalHours / 160) * 100)), // Assuming 160 hours/month
+              utilization: Math.min(
+                100,
+                Math.round((r.totalHours / 160) * 100),
+              ), // Assuming 160 hours/month
               productivity: r.productivity,
               efficiency: r.productivity,
-              workloadBalance: r.totalHours > 200 ? 'overloaded' : r.totalHours > 120 ? 'optimal' : 'underutilized',
+              workloadBalance:
+                r.totalHours > 200
+                  ? "overloaded"
+                  : r.totalHours > 120
+                    ? "optimal"
+                    : "underutilized",
               skillUtilization: 75,
               collaborationScore: 80,
               recentPerformance: toComparative(r.productivity),
-            })),
-            performanceBenchmarks: {
-              avgProjectCompletion: toComparative(simpleAnalytics.performanceBenchmarks?.avgProjectCompletion || 0),
-              avgTaskCycleTime: toComparative(simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0),
-              teamVelocity: toComparative(simpleAnalytics.performanceBenchmarks?.teamVelocity || 0),
-              qualityScore: toComparative(simpleAnalytics.performanceBenchmarks?.qualityScore || 0),
-              onTimeDelivery: toComparative(simpleAnalytics.performanceBenchmarks?.onTimeDelivery || 100),
-            },
-            timeSeriesData: [],
-            departmentBreakdown: [],
-            skillGapAnalysis: [],
-            capacityPlanning: [],
-            riskAssessment: [],
-            forecasting: null,
-            industryBenchmarks: null,
-            summary: {
-              timeRange: simpleAnalytics.summary.timeRange || timeRange || '30d',
-              comparisonPeriod: 'previous_period',
-              generatedAt: simpleAnalytics.summary.generatedAt || new Date().toISOString(),
-              dataQuality: 85,
-              recommendations: [],
-              alerts: []
-            }
-          };
+            }),
+          ),
+          performanceBenchmarks: {
+            avgProjectCompletion: toComparative(
+              simpleAnalytics.performanceBenchmarks?.avgProjectCompletion || 0,
+            ),
+            avgTaskCycleTime: toComparative(
+              simpleAnalytics.performanceBenchmarks?.avgTaskCycleTime || 0,
+            ),
+            teamVelocity: toComparative(
+              simpleAnalytics.performanceBenchmarks?.teamVelocity || 0,
+            ),
+            qualityScore: toComparative(
+              simpleAnalytics.performanceBenchmarks?.qualityScore || 0,
+            ),
+            onTimeDelivery: toComparative(
+              simpleAnalytics.performanceBenchmarks?.onTimeDelivery || 100,
+            ),
+          },
+          timeSeriesData: [],
+          departmentBreakdown: [],
+          skillGapAnalysis: [],
+          capacityPlanning: [],
+          riskAssessment: [],
+          forecasting: null,
+          industryBenchmarks: null,
+          summary: {
+            timeRange: simpleAnalytics.summary.timeRange || timeRange || "30d",
+            comparisonPeriod: "previous_period",
+            generatedAt:
+              simpleAnalytics.summary.generatedAt || new Date().toISOString(),
+            dataQuality: 85,
+            recommendations: [],
+            alerts: [],
+          },
+        };
 
-          return c.json(enhancedFormat);
-        }
+        return c.json(enhancedFormat);
       } catch (error) {
         logger.error("❌ Analytics error:", error);
-        return c.json({ error: "Failed to fetch analytics", details: error.message }, 500);
+        const message = error instanceof Error ? error.message : String(error);
+        return c.json(
+          { error: "Failed to fetch analytics", details: message },
+          500,
+        );
       }
-    }
+    },
   );
 
-export default dashboard; 
+export default dashboard;

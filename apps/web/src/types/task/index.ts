@@ -1,6 +1,3 @@
-import type { client } from "@meridian/libs";
-import type { InferResponseType } from "hono/client";
-
 export interface Task {
   id: string;
   projectId: string;
@@ -14,13 +11,22 @@ export interface Task {
   priority: string | null;
   dueDate: string | null;
   createdAt: string;
+  updatedAt?: string | null;
   // Additional frontend-specific fields
   assigneeName?: string | null;
   assigneeAvatar?: string | null;
+  assigneeEmail?: string | null;
   assignedTeamId?: string | null;
   assignedTeam?: {
     id: string;
     name: string;
+  } | null;
+  // Populated by endpoints that join the parent project (e.g. all-tasks)
+  project?: {
+    id: string;
+    name: string;
+    icon?: string | null;
+    slug?: string | null;
   } | null;
   // Stats fields
   subtasks?: Task[];
@@ -38,7 +44,7 @@ export type TaskDependency = {
   id: string;
   dependentTaskId: string;
   requiredTaskId: string;
-  type: 'blocks' | 'blocked_by';
+  type: "blocks" | "blocked_by";
   createdAt: string;
   // Related task info for display
   dependentTask?: Task;
@@ -47,7 +53,7 @@ export type TaskDependency = {
 
 export type TaskWithDependencies = Task & {
   dependencies?: TaskDependency[]; // Tasks this task blocks
-  blockedBy?: TaskDependency[];    // Tasks that block this task
+  blockedBy?: TaskDependency[]; // Tasks that block this task
 };
 
 export type TaskWithSubtasks = Task & {

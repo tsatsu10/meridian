@@ -54,4 +54,3 @@ async function signUp(email: string, password: string, name: string) {
 }
 
 export default signUp;
-

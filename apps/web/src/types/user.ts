@@ -10,4 +10,6 @@ export type LoggedInUser = {
   name: string;
   id: string;
   email: string;
+  role?: string;
+  avatar?: string;
 };

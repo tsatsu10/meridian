@@ -20,14 +20,16 @@ export async function fetchApi(endpoint: string, options: FetchOptions = {}) {
   const { params, ...init } = options;
 
   // Ensure endpoint starts with /api for proxy routing
-  const apiEndpoint = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
+  const apiEndpoint = endpoint.startsWith("/api")
+    ? endpoint
+    : `/api${endpoint}`;
 
   // `new URL` requires a valid absolute base; API_URL is "" in dev (same-origin).
   const url = new URL(apiEndpoint, resolveFetchOrigin());
   if (params) {
-    Object.entries(params).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(params)) {
       url.searchParams.append(key, value);
-    });
+    }
   }
 
   // Add default headers
@@ -46,10 +48,12 @@ export async function fetchApi(endpoint: string, options: FetchOptions = {}) {
 
   // Handle non-2xx responses
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: "An error occurred" }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: "An error occurred" }));
     throw new Error(error.message || `HTTP error! status: ${response.status}`);
   }
 
   // Parse JSON response
   return response.json();
-} 
+}

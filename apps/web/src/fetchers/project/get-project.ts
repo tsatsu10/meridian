@@ -1,13 +1,13 @@
-import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
+import { looseClient } from "@/lib/rpc-client";
 
-export type GetProjectRequest = InferRequestType<
-  (typeof client)["project"][":id"]["$get"]
->["param"] &
-  InferRequestType<(typeof client)["project"][":id"]["$get"]>["query"];
+// The generated AppType is missing project[":id"], so type the request locally
+export type GetProjectRequest = {
+  id: string;
+  workspaceId: string;
+};
 
 async function getProject({ id, workspaceId }: GetProjectRequest) {
-  const response = await client.project[":id"].$get({
+  const response = await looseClient.project[":id"].$get({
     param: { id },
     query: { workspaceId },
   });

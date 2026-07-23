@@ -1,20 +1,20 @@
 /**
  * Get Project Teams Controller
- * 
+ *
  * Returns all teams for a specific project with member details
- * 
+ *
  * @epic-3.4-teams: Get all teams for project settings page
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../../database/connection";
-import logger from '../../../utils/logger';
-import { 
-  projectTable as projects, 
+import logger from "../../../utils/logger";
+import {
+  projectTable as projects,
   teams,
   teamMembers,
-  userTable as users 
+  userTable as users,
 } from "../../../database/schema";
 
 async function getProjectTeams(c: Context) {
@@ -46,12 +46,7 @@ async function getProjectTeams(c: Context) {
         createdAt: teams.createdAt,
       })
       .from(teams)
-      .where(
-        and(
-          eq(teams.projectId, projectId),
-          eq(teams.isActive, true)
-        )
-      );
+      .where(and(eq(teams.projectId, projectId), eq(teams.isActive, true)));
 
     // Get members for each team
     const teamsWithMembers = await Promise.all(
@@ -74,7 +69,7 @@ async function getProjectTeams(c: Context) {
           ...team,
           members,
         };
-      })
+      }),
     );
 
     return c.json(teamsWithMembers);
@@ -85,5 +80,3 @@ async function getProjectTeams(c: Context) {
 }
 
 export default getProjectTeams;
-
-

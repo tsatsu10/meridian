@@ -4,7 +4,7 @@ import useWorkspaceStore from "@/store/workspace";
 import getProjects from "@/fetchers/project/get-projects";
 import getWorkspaceUsers from "@/fetchers/workspace-user/get-workspace-users";
 import { getActivities } from "@/fetchers/activity/get-activities";
-import { DashboardFilters } from "@/types/filters";
+import type { DashboardFilters } from "@/types/filters";
 import {
   flattenTasksForProject,
   flattenTasksFromProjects,
@@ -65,9 +65,10 @@ interface ApiProject {
 
 interface RecentProject {
   id: string;
-  name: string;
+  name?: string;
+  icon?: string;
   progress: number;
-  lastActivity: string;
+  lastActivity?: string;
   teamSize: number;
   color?: string;
   status?: string;
@@ -100,11 +101,19 @@ interface DashboardContextOptions {
   dashboardName?: string | null;
 }
 
-export function useDashboardData(filters?: DashboardFilters, context: DashboardContextOptions = {}) {
+export function useDashboardData(
+  filters?: DashboardFilters,
+  context: DashboardContextOptions = {},
+) {
   const { workspace } = useWorkspaceStore();
 
   return useQuery({
-    queryKey: ["dashboard", workspace?.id, context?.dashboardId ?? "default", filters],
+    queryKey: [
+      "dashboard",
+      workspace?.id,
+      context?.dashboardId ?? "default",
+      filters,
+    ],
     queryFn: async (): Promise<DashboardData> => {
       logger.debug("[Dashboard] query start", {
         workspaceId: workspace?.id,
@@ -137,59 +146,72 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
         getWorkspaceUsers({ param: { workspaceId: workspace.id } }),
       ]);
       logger.debug("[Dashboard] projects fetched", {
-        count: Array.isArray(projects) ? projects.length : (projects?.projects?.length || 0),
+        count: Array.isArray(projects)
+          ? projects.length
+          : projects?.projects?.length || 0,
       });
 
-      const teamMembersData = workspaceUsers?.users || [];
+      const teamMembersData = workspaceUsers || [];
 
       let filteredProjects: ApiProject[] = Array.isArray(projects)
         ? projects
-        : (projects?.projects || []);
+        : projects?.projects || [];
 
       if (filters) {
         filteredProjects = filteredProjects.filter((project: ApiProject) => {
           // Status filter
           if (filters.status && filters.status.length > 0) {
-            if (!filters.status.includes(project.status)) return false;
+            if (
+              !filters.status.includes(
+                project.status as (typeof filters.status)[number],
+              )
+            )
+              return false;
           }
-          
+
           // Priority filter
-          if (filters.priority && filters.priority.length > 0) {
-            if (!filters.priority.includes(project.priority || "medium")) return false;
+          if (filters.priorities && filters.priorities.length > 0) {
+            if (
+              !filters.priorities.includes(
+                (project.priority ||
+                  "medium") as (typeof filters.priorities)[number],
+              )
+            )
+              return false;
           }
-          
+
           // Project filter
           if (filters.projectIds && filters.projectIds.length > 0) {
             if (!filters.projectIds.includes(project.id)) return false;
           }
-          
+
           // Time range filter
           if (filters.timeRange && filters.timeRange !== "all") {
-            const createdAt = new Date(project.createdAt);
+            const createdAt = new Date(project.createdAt ?? 0);
             const now = new Date();
             let startDate: Date;
-            
+
             switch (filters.timeRange) {
-              case "today":
-                startDate = new Date(now.setHours(0, 0, 0, 0));
-                break;
-              case "week":
+              case "7d":
                 startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
                 break;
-              case "month":
+              case "30d":
                 startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+              case "90d":
+                startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
                 break;
               default:
                 startDate = new Date(0);
             }
-            
+
             if (createdAt < startDate) return false;
           }
-          
+
           return true;
         });
       }
-      
+
       const allWorkspaceTasks = flattenTasksFromProjects(filteredProjects);
 
       const isDone = (status?: string) =>
@@ -197,7 +219,9 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
 
       const totalTasks = allWorkspaceTasks.length;
 
-      const completedTasks = allWorkspaceTasks.filter((task) => isDone(task.status)).length;
+      const completedTasks = allWorkspaceTasks.filter((task) =>
+        isDone(task.status),
+      ).length;
 
       const now = new Date();
       const overdueTasks = allWorkspaceTasks.filter((task) => {
@@ -215,20 +239,23 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
         if (!task.dueDate) return false;
         const dueDate = new Date(task.dueDate);
         return (
-          dueDate >= todayStart &&
-          dueDate <= todayEnd &&
-          !isDone(task.status)
+          dueDate >= todayStart && dueDate <= todayEnd && !isDone(task.status)
         );
       }).length;
 
-      const activeProjects = filteredProjects.filter(p => p.status !== 'completed' && p.status !== 'archived').length;
+      const activeProjects = filteredProjects.filter(
+        (p) => p.status !== "completed" && p.status !== "archived",
+      ).length;
 
       const mappedProjects = filteredProjects.map((project: ApiProject) => {
         const projectTasks = flattenTasksForProject(project);
         const completed = projectTasks.filter(
-          (t) => t.status === "done" || t.status === "completed"
+          (t) => t.status === "done" || t.status === "completed",
         ).length;
-        const progress = projectTasks.length > 0 ? Math.round((completed / projectTasks.length) * 100) : 0;
+        const progress =
+          projectTasks.length > 0
+            ? Math.round((completed / projectTasks.length) * 100)
+            : 0;
 
         return {
           id: project.id,
@@ -245,80 +272,100 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
       });
 
       let realActivities: RecentActivity[] = [];
-      
+
       try {
         const activitiesData = await getActivities({
           workspaceId: workspace.id,
           limit: 20,
         });
-        
+
         realActivities = activitiesData.activities.map((activity) => {
           // Map API activity type to dashboard activity type
-          const typeMap: Record<string, RecentActivity['type']> = {
-            'created': 'task_created',
-            'completed': 'task_completed',
-            'updated': 'task_created', // Use task_created icon for updates
-            'deleted': 'task_created', // Use task_created icon for deletes
+          const typeMap: Record<string, RecentActivity["type"]> = {
+            created: "task_created",
+            completed: "task_completed",
+            updated: "task_created", // Use task_created icon for updates
+            deleted: "task_created", // Use task_created icon for deletes
           };
           const created = new Date(activity.createdAt);
-          
+
           return {
             id: activity.id,
-            type: typeMap[activity.action] || 'task_created',
-            user: activity.user?.username || activity.user?.email || 'Team Member',
-            description: activity.description || activity.entityTitle || `${activity.action} ${activity.entityType}`,
-            occurredAt: Number.isNaN(created.getTime()) ? new Date().toISOString() : created.toISOString(),
-            project: activity.metadata?.projectName,
+            type: typeMap[activity.action] || "task_created",
+            user:
+              activity.user?.username || activity.user?.email || "Team Member",
+            description:
+              activity.description ||
+              activity.entityTitle ||
+              `${activity.action} ${activity.entityType}`,
+            occurredAt: Number.isNaN(created.getTime())
+              ? new Date().toISOString()
+              : created.toISOString(),
+            project: activity.metadata?.projectName ?? "",
             projectId: activity.projectId,
           };
         });
-        
-        logger.debug("[Dashboard] activities fetched", { count: realActivities.length });
+
+        logger.debug("[Dashboard] activities fetched", {
+          count: realActivities.length,
+        });
       } catch (error) {
         logger.error(
           "[Dashboard] failed to fetch activities",
-          error instanceof Error ? error : new Error(String(error))
+          error instanceof Error ? error : new Error(String(error)),
         );
         // Don't fail - will use empty array as fallback
       }
 
       // Collect all tasks with their project context (for deadlines calculation)
-      type TaskWithProject = ApiTask & { projectName?: string; projectId?: string };
+      type TaskWithProject = ApiTask & {
+        projectName?: string;
+        projectId?: string;
+      };
       const allTasksWithContext: TaskWithProject[] = [];
-      filteredProjects.forEach((project: ApiProject) => {
-        flattenTasksForProject(project).forEach((task) => {
+      for (const project of filteredProjects) {
+        for (const task of flattenTasksForProject(project)) {
           allTasksWithContext.push({
             ...task,
             projectName: project.name,
             projectId: project.id,
           });
-        });
-      });
+        }
+      }
 
       // Generate upcoming deadlines from tasks
       const upcomingDeadlines: UpcomingDeadline[] = [];
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7); // Next 7 days
 
-      allTasksWithContext
-        .filter(task => {
-          if (!task.dueDate || task.status === 'done' || task.status === 'completed') return false;
+      for (const task of allTasksWithContext
+        .filter((task) => {
+          if (
+            !task.dueDate ||
+            task.status === "done" ||
+            task.status === "completed"
+          )
+            return false;
           const dueDate = new Date(task.dueDate);
           return dueDate > new Date() && dueDate <= futureDate;
         })
-        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-        .slice(0, 5)
-        .forEach((task) => {
-          if (!task.id || !task.dueDate || !task.title || !task.projectName) return;
-          upcomingDeadlines.push({
-            id: task.id,
-            title: task.title,
-            project: task.projectName,
-            dueDate: new Date(task.dueDate).toLocaleDateString(),
-            priority: (task.priority as UpcomingDeadline["priority"]) || "medium",
-            assignee: "Team Member",
-          });
+        .sort(
+          (a, b) =>
+            new Date(a.dueDate as string).getTime() -
+            new Date(b.dueDate as string).getTime(),
+        )
+        .slice(0, 5)) {
+        if (!task.id || !task.dueDate || !task.title || !task.projectName)
+          continue;
+        upcomingDeadlines.push({
+          id: task.id,
+          title: task.title,
+          project: task.projectName,
+          dueDate: new Date(task.dueDate).toLocaleDateString(),
+          priority: (task.priority as UpcomingDeadline["priority"]) || "medium",
+          assignee: "Team Member",
         });
+      }
 
       const dashboardData: DashboardData = {
         stats: {
@@ -328,30 +375,33 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
           dueTodayTasks,
           activeProjects,
           teamMembers: teamMembersData.length, // ✅ Now using real workspace members count
-          productivity: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+          productivity:
+            totalTasks > 0
+              ? Math.round((completedTasks / totalTasks) * 100)
+              : 0,
         },
         activities: realActivities, // ✅ Now using real API activities
         deadlines: upcomingDeadlines,
         projects: mappedProjects,
         teamMembers: teamMembersData.map(
           (member: {
-            id: string;
-            name?: string;
-            email?: string;
-            avatar?: string;
-            role?: string;
+            id: string | null;
+            name?: string | null;
+            email?: string | null;
+            avatar?: string | null;
+            role?: string | null;
           }): TeamMember => ({
-            id: member.id,
+            id: member.id ?? "",
             name: member.name ?? "Team member",
-            email: member.email,
-            avatar: member.avatar,
-            role: member.role,
+            email: member.email ?? undefined,
+            avatar: member.avatar ?? undefined,
+            role: member.role ?? undefined,
             status: "online",
             activeTasks: 0,
-          })
+          }),
         ),
       };
-      
+
       logger.debug("[Dashboard] aggregate complete", {
         projectsCount: dashboardData.projects.length,
         activitiesCount: dashboardData.activities.length,
@@ -365,16 +415,37 @@ export function useDashboardData(filters?: DashboardFilters, context: DashboardC
   });
 }
 
-function applyDashboardContext(data: DashboardData, context: DashboardContextOptions): DashboardData {
+function applyDashboardContext(
+  data: DashboardData,
+  context: DashboardContextOptions,
+): DashboardData {
   if (!context.dashboardId) return data;
 
   const layoutState = getDashboardLayout(context.dashboardId);
-  const variant = determineDashboardVariant(context.dashboardName || layoutState?.variant);
+  const variant = determineDashboardVariant(
+    context.dashboardName || layoutState?.variant,
+  );
 
-  const derivedProjects = transformProjects(data.projects, variant, layoutState);
-  const derivedActivities = transformActivities(data.activities, variant, layoutState);
-  const derivedDeadlines = transformDeadlines(data.deadlines, variant, layoutState);
-  const derivedTeamMembers = transformTeamMembers(data.teamMembers, variant, layoutState);
+  const derivedProjects = transformProjects(
+    data.projects,
+    variant,
+    layoutState,
+  );
+  const derivedActivities = transformActivities(
+    data.activities,
+    variant,
+    layoutState,
+  );
+  const derivedDeadlines = transformDeadlines(
+    data.deadlines,
+    variant,
+    layoutState,
+  );
+  const derivedTeamMembers = transformTeamMembers(
+    data.teamMembers,
+    variant,
+    layoutState,
+  );
   const stats = transformStats(data.stats);
 
   return {
@@ -401,16 +472,26 @@ interface DashboardLayoutState {
 function determineDashboardVariant(name?: string | null): DashboardVariant {
   const normalized = (name || "").toLowerCase();
   if (normalized.includes("team")) return "team";
-  if (normalized.includes("personal") || normalized.includes("my")) return "personal";
-  if (normalized.includes("executive") || normalized.includes("analytics")) return "analytics";
-  if (normalized.includes("project-manager") || normalized.includes("project manager")) return "analytics";
+  if (normalized.includes("personal") || normalized.includes("my"))
+    return "personal";
+  if (normalized.includes("executive") || normalized.includes("analytics"))
+    return "analytics";
+  if (
+    normalized.includes("project-manager") ||
+    normalized.includes("project manager")
+  )
+    return "analytics";
   return "custom";
 }
 
-function getDashboardLayout(dashboardId: string): DashboardLayoutState | undefined {
+function getDashboardLayout(
+  dashboardId: string,
+): DashboardLayoutState | undefined {
   if (typeof window === "undefined") return undefined;
   try {
-    const raw = localStorage.getItem(`meridian.dashboard.layout.${dashboardId}`);
+    const raw = localStorage.getItem(
+      `meridian.dashboard.layout.${dashboardId}`,
+    );
     if (!raw) return undefined;
 
     const parsed = JSON.parse(raw);
@@ -429,34 +510,51 @@ function getDashboardLayout(dashboardId: string): DashboardLayoutState | undefin
   }
 }
 
-function transformProjects(projects: RecentProject[], variant: DashboardVariant, layout?: DashboardLayoutState): RecentProject[] {
+function transformProjects(
+  projects: RecentProject[],
+  variant: DashboardVariant,
+  layout?: DashboardLayoutState,
+): RecentProject[] {
   if (!projects.length) return projects;
 
   const favourites = layout?.favouriteProjectIds || [];
   const hidden = new Set(layout?.hiddenProjectIds || []);
-  const visibleProjects = projects.filter(project => !hidden.has(project.id));
+  const visibleProjects = projects.filter((project) => !hidden.has(project.id));
 
-  const favouriteProjects = visibleProjects.filter(project => favourites.includes(project.id));
-  const otherProjects = visibleProjects.filter(project => !favourites.includes(project.id));
+  const favouriteProjects = visibleProjects.filter((project) =>
+    favourites.includes(project.id),
+  );
+  const otherProjects = visibleProjects.filter(
+    (project) => !favourites.includes(project.id),
+  );
 
   let transformedProjects: RecentProject[] = [];
 
   switch (variant) {
     case "team": {
-      const byTeamSize = [...otherProjects].sort((a, b) => (b.teamSize || 0) - (a.teamSize || 0));
-      transformedProjects = [...favouriteProjects, ...byTeamSize].slice(0, Math.max(4, favouriteProjects.length));
+      const byTeamSize = [...otherProjects].sort(
+        (a, b) => (b.teamSize || 0) - (a.teamSize || 0),
+      );
+      transformedProjects = [...favouriteProjects, ...byTeamSize].slice(
+        0,
+        Math.max(4, favouriteProjects.length),
+      );
       break;
     }
     case "personal": {
-      transformedProjects = [...favouriteProjects, ...otherProjects].slice(0, 3);
+      transformedProjects = [...favouriteProjects, ...otherProjects].slice(
+        0,
+        3,
+      );
       break;
     }
     case "analytics": {
-      const byProgress = [...otherProjects].sort((a, b) => (b.progress || 0) - (a.progress || 0));
+      const byProgress = [...otherProjects].sort(
+        (a, b) => (b.progress || 0) - (a.progress || 0),
+      );
       transformedProjects = [...favouriteProjects, ...byProgress].slice(0, 5);
       break;
     }
-    case "custom":
     default: {
       transformedProjects = [...favouriteProjects, ...otherProjects];
     }
@@ -472,23 +570,27 @@ function transformProjects(projects: RecentProject[], variant: DashboardVariant,
 function transformActivities(
   activities: RecentActivity[],
   variant: DashboardVariant,
-  layout?: DashboardLayoutState
+  layout?: DashboardLayoutState,
 ): RecentActivity[] {
   if (!activities.length) return activities;
 
   const hiddenTypes = new Set(layout?.hiddenActivityTypes || []);
-  const filtered = activities.filter(activity => !hiddenTypes.has(activity.type));
+  const filtered = activities.filter(
+    (activity) => !hiddenTypes.has(activity.type),
+  );
 
   if (!filtered.length) return activities;
 
   switch (variant) {
     case "team":
-      return filtered.filter(activity => activity.type === "task_completed" || activity.type === "team_joined");
+      return filtered.filter(
+        (activity) =>
+          activity.type === "task_completed" || activity.type === "team_joined",
+      );
     case "personal":
       return filtered.slice(0, Math.min(5, filtered.length));
     case "analytics":
       return filtered.slice(0, Math.min(8, filtered.length));
-    case "custom":
     default:
       return filtered;
   }
@@ -497,12 +599,12 @@ function transformActivities(
 function transformDeadlines(
   deadlines: UpcomingDeadline[],
   variant: DashboardVariant,
-  layout?: DashboardLayoutState
+  layout?: DashboardLayoutState,
 ): UpcomingDeadline[] {
   if (!deadlines.length) return deadlines;
 
   const hidden = new Set(layout?.hiddenDeadlineIds || []);
-  const filtered = deadlines.filter(deadline => !hidden.has(deadline.id));
+  const filtered = deadlines.filter((deadline) => !hidden.has(deadline.id));
 
   if (!filtered.length) return deadlines;
 
@@ -513,7 +615,6 @@ function transformDeadlines(
       return filtered.slice(0, Math.min(5, filtered.length));
     case "personal":
       return filtered.slice(0, Math.min(3, filtered.length));
-    case "custom":
     default:
       return filtered;
   }
@@ -522,22 +623,26 @@ function transformDeadlines(
 function transformTeamMembers(
   members: TeamMember[],
   variant: DashboardVariant,
-  layout?: DashboardLayoutState
+  layout?: DashboardLayoutState,
 ): TeamMember[] {
   if (!members.length) return members;
 
   const favourites = new Set(layout?.favouriteMemberIds || []);
-  const favouriteMembers = members.filter(member => favourites.has(member.id));
-  const otherMembers = members.filter(member => !favourites.has(member.id));
+  const favouriteMembers = members.filter((member) =>
+    favourites.has(member.id),
+  );
+  const otherMembers = members.filter((member) => !favourites.has(member.id));
 
   switch (variant) {
     case "team":
-      return [...favouriteMembers, ...otherMembers].slice(0, Math.max(8, favouriteMembers.length));
+      return [...favouriteMembers, ...otherMembers].slice(
+        0,
+        Math.max(8, favouriteMembers.length),
+      );
     case "personal":
       return [...favouriteMembers, ...otherMembers].slice(0, 3);
     case "analytics":
       return [...favouriteMembers, ...otherMembers].slice(0, 6);
-    case "custom":
     default:
       return [...favouriteMembers, ...otherMembers];
   }

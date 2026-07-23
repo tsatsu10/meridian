@@ -2,9 +2,14 @@ import { createId } from "@paralleldrive/cuid2";
 import bcrypt from "bcrypt";
 import { eq, and } from "drizzle-orm";
 import { getDatabase, initializeDatabase } from "../database/connection";
-import { userTable, roleAssignmentTable, workspaceTable, workspaceUserTable } from "../database/schema";
+import {
+  userTable,
+  roleAssignmentTable,
+  workspaceTable,
+  workspaceUserTable,
+} from "../database/schema";
 import { appSettings } from "../config/settings";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 export async function ensureAdminUser() {
   const adminEmail = appSettings.adminEmail;
@@ -21,7 +26,7 @@ export async function ensureAdminUser() {
 
   if (existingUser) {
     logger.debug(`✅ Admin user already exists: ${adminEmail}`);
-    
+
     // CRITICAL FIX: Ensure existing admin has workspace membership
     // Check if user has any workspace memberships
     const [workspaceMembership] = await getDatabase()
@@ -31,8 +36,10 @@ export async function ensureAdminUser() {
       .limit(1);
 
     if (!workspaceMembership) {
-      logger.debug(`⚠️  Existing admin user has no workspace membership, creating one...`);
-      
+      logger.debug(
+        "⚠️  Existing admin user has no workspace membership, creating one...",
+      );
+
       // Get or create a workspace
       let [workspace] = await getDatabase()
         .select()
@@ -75,8 +82,8 @@ export async function ensureAdminUser() {
             and(
               eq(roleAssignmentTable.userId, existingUser.id),
               eq(roleAssignmentTable.workspaceId, workspace.id),
-              eq(roleAssignmentTable.isActive, true)
-            )
+              eq(roleAssignmentTable.isActive, true),
+            ),
           )
           .limit(1);
 
@@ -90,20 +97,22 @@ export async function ensureAdminUser() {
             isActive: true,
             workspaceId: workspace.id,
           });
-          logger.debug(`✅ Created role_assignment for WebSocket access`);
+          logger.debug("✅ Created role_assignment for WebSocket access");
         } else {
-          logger.debug(`ℹ️  Role assignment already exists for workspace`);
+          logger.debug("ℹ️  Role assignment already exists for workspace");
         }
 
-        logger.debug(`✅ Created workspace membership for existing admin user in workspace: ${workspace.name}`);
+        logger.debug(
+          `✅ Created workspace membership for existing admin user in workspace: ${workspace.name}`,
+        );
       }
     }
-    
+
     return existingUser;
   }
 
   logger.debug(`🔧 Creating admin user: ${adminEmail}`);
-  
+
   // Create admin user
   const adminId = createId();
   const hashedPassword = await bcrypt.hash("admin123", 10);
@@ -116,10 +125,7 @@ export async function ensureAdminUser() {
   });
 
   // Ensure there's a workspace for the admin
-  let [workspace] = await getDatabase()
-    .select()
-    .from(workspaceTable)
-    .limit(1);
+  let [workspace] = await getDatabase().select().from(workspaceTable).limit(1);
 
   if (!workspace) {
     const workspaceId = createId();
@@ -161,15 +167,19 @@ export async function ensureAdminUser() {
       invitedBy: adminId,
     });
 
-    logger.debug(`✅ Created workspace membership for admin user in workspace: ${workspace.name}`);
+    logger.debug(
+      `✅ Created workspace membership for admin user in workspace: ${workspace.name}`,
+    );
   }
 
-  logger.debug(`✅ Created admin user with workspace-manager role: ${adminEmail}`);
-  
+  logger.debug(
+    `✅ Created admin user with workspace-manager role: ${adminEmail}`,
+  );
+
   return await getDatabase()
     .select()
     .from(userTable)
     .where(eq(userTable.email, adminEmail))
     .limit(1)
-    .then(users => users[0]);
-} 
+    .then((users) => users[0]);
+}

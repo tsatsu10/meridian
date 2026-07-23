@@ -6,12 +6,14 @@ import { sessionTable, userTable } from "../../database/schema";
 
 export async function validateSessionToken(token: string) {
   console.log(`🔍 [validate] Validating token: ${token.substring(0, 20)}...`);
-  
+
   const db = getDatabase();
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-  
-  console.log(`🔍 [validate] Hashed session ID: ${sessionId.substring(0, 20)}...`);
-  
+
+  console.log(
+    `🔍 [validate] Hashed session ID: ${sessionId.substring(0, 20)}...`,
+  );
+
   const sessions = await db
     .select({ user: userTable, session: sessionTable })
     .from(sessionTable)
@@ -21,12 +23,12 @@ export async function validateSessionToken(token: string) {
   console.log(`🔍 [validate] Found ${sessions.length} matching sessions`);
 
   if (sessions.length < 1 || !sessions[0]) {
-    console.error('❌ [validate] No session found in database');
+    console.error("❌ [validate] No session found in database");
     return { session: null, user: null };
   }
 
   const { user, session } = sessions[0];
-  
+
   console.log(`🔍 [validate] Session found for user: ${user.email}`);
   console.log(`🔍 [validate] Session expires at: ${session.expiresAt}`);
   console.log(`🔍 [validate] Current time: ${new Date()}`);
@@ -34,7 +36,7 @@ export async function validateSessionToken(token: string) {
   const isSessionExpired = Date.now() >= session.expiresAt.getTime();
 
   if (isSessionExpired) {
-    console.error('❌ [validate] Session expired, deleting');
+    console.error("❌ [validate] Session expired, deleting");
     await db.delete(sessionTable).where(eq(sessionTable.id, session.id));
     return { session: null, user: null };
   }
@@ -54,4 +56,3 @@ export async function validateSessionToken(token: string) {
 
   return { session, user };
 }
-

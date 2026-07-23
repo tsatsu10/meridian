@@ -1,7 +1,8 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { getErrorMessage } from "@/lib/error-utils";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Building2,
   Users,
@@ -12,25 +13,35 @@ import {
   RotateCcw,
   Trash2,
   ArrowLeft,
-  Globe,
   Clock,
   Palette,
-  Shield,
   Zap,
   Calendar,
   MessageSquare,
-  BarChart3
-} from 'lucide-react';
+  BarChart3,
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,14 +52,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { useWorkspaceStore } from '@/store/workspace';
-import { API_BASE_URL } from '@/constants/urls';
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { useWorkspaceStore } from "@/store/workspace";
+import { API_BASE_URL } from "@/constants/urls";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/workspace')({
+export const Route = createFileRoute("/dashboard/settings/workspace")({
   component: withErrorBoundary(WorkspaceSettings, "Workspace Settings"),
 });
 
@@ -66,7 +77,7 @@ interface WorkspaceSettingsData {
   createdAt: string;
   updatedAt: string | null;
   memberCount: number;
-  
+
   // Member Settings
   allowMemberInvites: boolean;
   requireAdminApproval: boolean;
@@ -74,27 +85,27 @@ interface WorkspaceSettingsData {
   autoRemoveInactive: boolean;
   inactivityDays: number;
   maxMembers: number | null;
-  
+
   // Project Defaults
-  defaultProjectVisibility: 'private' | 'team' | 'workspace';
-  defaultTaskPriority: 'low' | 'medium' | 'high' | 'urgent';
+  defaultProjectVisibility: "private" | "team" | "workspace";
+  defaultTaskPriority: "low" | "medium" | "high" | "urgent";
   enableTimeTracking: boolean;
   requireTaskApproval: boolean;
-  
+
   // Workspace Preferences
   workingDays: string[];
   workingHoursStart: string;
   workingHoursEnd: string;
   timezone: string;
   dateFormat: string;
-  timeFormat: '12h' | '24h';
-  
+  timeFormat: "12h" | "24h";
+
   // Feature Flags
   enableAutomation: boolean;
   enableCalendar: boolean;
   enableMessaging: boolean;
   enableAnalytics: boolean;
-  
+
   // Branding
   primaryColor: string;
   accentColor: string;
@@ -116,39 +127,56 @@ function WorkspaceSettings() {
 
   // Debug: Log current workspace with more details
   useEffect(() => {
-    console.log('🔍 WorkspaceSettings Component:', {
+    console.log("🔍 WorkspaceSettings Component:", {
       currentWorkspace,
       workspace,
       areEqual: currentWorkspace === workspace,
       currentWorkspaceUndefined: currentWorkspace === undefined,
-      workspaceUndefined: workspace === undefined
+      workspaceUndefined: workspace === undefined,
     });
-    console.log('🔍 API Base URL:', API_BASE_URL);
-    
+    console.log("🔍 API Base URL:", API_BASE_URL);
+
     // Check localStorage directly
-    const lsData = localStorage.getItem('meridian-workspace');
-    console.log('🔍 localStorage meridian-workspace:', lsData ? JSON.parse(lsData) : 'EMPTY');
-    
+    const lsData = localStorage.getItem("meridian-workspace");
+    console.log(
+      "🔍 localStorage meridian-workspace:",
+      lsData ? JSON.parse(lsData) : "EMPTY",
+    );
+
     if (currentWorkspace) {
-      console.log('📍 Settings URL:', `${API_BASE_URL}/workspaces/${currentWorkspace.id}/settings`);
+      console.log(
+        "📍 Settings URL:",
+        `${API_BASE_URL}/workspaces/${currentWorkspace.id}/settings`,
+      );
     } else {
-      console.error('❌ currentWorkspace is UNDEFINED in settings component!');
+      console.error("❌ currentWorkspace is UNDEFINED in settings component!");
     }
   }, [currentWorkspace, workspace]);
 
   // Fetch workspace settings
-  const { data: settings, isLoading, error } = useQuery({
-    queryKey: ['workspace-settings', currentWorkspace?.id],
+  const {
+    data: settings,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["workspace-settings", currentWorkspace?.id],
     queryFn: async () => {
-      if (!currentWorkspace) throw new Error('No workspace selected');
+      if (!currentWorkspace) throw new Error("No workspace selected");
 
-      const response = await fetch(`${API_BASE_URL}/workspaces/${currentWorkspace.id}/settings`, {
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/workspaces/${currentWorkspace.id}/settings`,
+        {
+          credentials: "include",
+        },
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch workspace settings' }));
-        throw new Error(errorData.error || 'Failed to fetch workspace settings');
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Failed to fetch workspace settings" }));
+        throw new Error(
+          errorData.error || "Failed to fetch workspace settings",
+        );
       }
 
       return response.json() as Promise<WorkspaceSettingsData>;
@@ -167,25 +195,32 @@ function WorkspaceSettings() {
   // Update settings mutation
   const updateSettingsMutation = useMutation({
     mutationFn: async (updates: Partial<WorkspaceSettingsData>) => {
-      if (!currentWorkspace) throw new Error('No workspace selected');
+      if (!currentWorkspace) throw new Error("No workspace selected");
 
-      const response = await fetch(`${API_BASE_URL}/workspaces/${currentWorkspace.id}/settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(updates),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/workspaces/${currentWorkspace.id}/settings`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(updates),
+        },
+      );
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to update settings' }));
-        throw new Error(error.error || 'Failed to update settings');
+        const error = await response
+          .json()
+          .catch(() => ({ error: "Failed to update settings" }));
+        throw new Error(error.error || "Failed to update settings");
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-settings', currentWorkspace?.id] });
-      toast.success('Workspace settings updated successfully');
+      queryClient.invalidateQueries({
+        queryKey: ["workspace-settings", currentWorkspace?.id],
+      });
+      toast.success("Workspace settings updated successfully");
       setHasChanges(false);
     },
     onError: (error: Error) => {
@@ -196,27 +231,34 @@ function WorkspaceSettings() {
   // Upload logo mutation
   const uploadLogoMutation = useMutation({
     mutationFn: async (file: File) => {
-      if (!currentWorkspace) throw new Error('No workspace selected');
+      if (!currentWorkspace) throw new Error("No workspace selected");
 
       const formData = new FormData();
-      formData.append('logo', file);
+      formData.append("logo", file);
 
-      const response = await fetch(`${API_BASE_URL}/workspaces/${currentWorkspace.id}/logo`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/workspaces/${currentWorkspace.id}/logo`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        },
+      );
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to upload logo' }));
-        throw new Error(error.error || 'Failed to upload logo');
+        const error = await response
+          .json()
+          .catch(() => ({ error: "Failed to upload logo" }));
+        throw new Error(error.error || "Failed to upload logo");
       }
 
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-settings', currentWorkspace?.id] });
-      toast.success('Logo uploaded successfully');
+      queryClient.invalidateQueries({
+        queryKey: ["workspace-settings", currentWorkspace?.id],
+      });
+      toast.success("Logo uploaded successfully");
       setLogoFile(null);
       setLogoPreview(data.logoUrl);
     },
@@ -225,8 +267,11 @@ function WorkspaceSettings() {
     },
   });
 
-  const handleChange = (field: keyof WorkspaceSettingsData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (
+    field: keyof WorkspaceSettingsData,
+    value: WorkspaceSettingsData[keyof WorkspaceSettingsData],
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -248,18 +293,20 @@ function WorkspaceSettings() {
     if (logoFile) {
       await uploadLogoMutation.mutateAsync(logoFile);
     }
-    
-    // Update settings
-    const updates = { ...formData };
-    delete updates.id;
-    delete updates.ownerId;
-    delete updates.ownerEmail;
-    delete updates.ownerName;
-    delete updates.createdAt;
-    delete updates.updatedAt;
-    delete updates.memberCount;
-    delete updates.logo; // Logo is handled separately
-    
+
+    // Update settings — omit server-managed fields (logo is handled separately)
+    const {
+      id: _id,
+      ownerId: _ownerId,
+      ownerEmail: _ownerEmail,
+      ownerName: _ownerName,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      memberCount: _memberCount,
+      logo: _logo,
+      ...updates
+    } = formData;
+
     updateSettingsMutation.mutate(updates);
   };
 
@@ -269,7 +316,7 @@ function WorkspaceSettings() {
       setLogoPreview(settings.logo);
       setLogoFile(null);
       setHasChanges(false);
-      toast.info('Changes reset');
+      toast.info("Changes reset");
     }
   };
 
@@ -277,20 +324,25 @@ function WorkspaceSettings() {
     if (!currentWorkspace) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/workspaces/${currentWorkspace.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/workspaces/${currentWorkspace.id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to delete workspace' }));
-        throw new Error(errorData.error || 'Failed to delete workspace');
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Failed to delete workspace" }));
+        throw new Error(errorData.error || "Failed to delete workspace");
       }
 
-      toast.success('Workspace deleted successfully');
-      navigate({ to: '/dashboard' });
-    } catch (error: any) {
-      toast.error(`Failed to delete workspace: ${error.message}`);
+      toast.success("Workspace deleted successfully");
+      navigate({ to: "/dashboard" });
+    } catch (error) {
+      toast.error(`Failed to delete workspace: ${getErrorMessage(error)}`);
     }
   };
 
@@ -303,9 +355,14 @@ function WorkspaceSettings() {
             <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto" />
             <div>
               <p className="text-lg font-semibold">No Workspace Selected</p>
-              <p className="text-sm text-muted-foreground mt-2">Please select a workspace to view its settings</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Please select a workspace to view its settings
+              </p>
             </div>
-            <Button onClick={() => navigate({ to: '/dashboard' })} variant="outline">
+            <Button
+              onClick={() => navigate({ to: "/dashboard" })}
+              variant="outline"
+            >
               Go to Dashboard
             </Button>
           </div>
@@ -319,9 +376,13 @@ function WorkspaceSettings() {
       <LazyDashboardLayout>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading workspace settings...</p>
-            <p className="text-xs text-muted-foreground mt-2">Workspace: {currentWorkspace.name}</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              Loading workspace settings...
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Workspace: {currentWorkspace?.name}
+            </p>
           </div>
         </div>
       </LazyDashboardLayout>
@@ -335,24 +396,35 @@ function WorkspaceSettings() {
           <div className="text-center space-y-4">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
             <div>
-              <p className="text-lg font-semibold">Failed to load workspace settings</p>
+              <p className="text-lg font-semibold">
+                Failed to load workspace settings
+              </p>
               {error && (
                 <div className="mt-2 space-y-1">
-                  <p className="text-sm text-destructive">{error.message}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Workspace ID: {currentWorkspace.id}
+                  <p className="text-sm text-destructive">
+                    {getErrorMessage(error)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    API: {API_BASE_URL}/workspaces/{currentWorkspace.id}/settings
+                    Workspace ID: {currentWorkspace?.id}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    API: {API_BASE_URL}/workspaces/{currentWorkspace?.id}
+                    /settings
                   </p>
                 </div>
               )}
             </div>
             <div className="flex gap-2 justify-center">
-              <Button onClick={() => navigate({ to: '/dashboard' })} variant="outline">
+              <Button
+                onClick={() => navigate({ to: "/dashboard" })}
+                variant="outline"
+              >
                 Go to Dashboard
               </Button>
-              <Button onClick={() => window.location.reload()} variant="default">
+              <Button
+                onClick={() => window.location.reload()}
+                variant="default"
+              >
                 Try Again
               </Button>
             </div>
@@ -368,14 +440,20 @@ function WorkspaceSettings() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button onClick={() => navigate({ to: '/dashboard/settings' })} variant="ghost" size="sm">
+            <Button
+              onClick={() => navigate({ to: "/dashboard/settings" })}
+              variant="ghost"
+              size="sm"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
             </Button>
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                 <Building2 className="h-8 w-8" /> Workspace Settings
               </h1>
-              <p className="text-muted-foreground">Manage your workspace configuration and preferences</p>
+              <p className="text-muted-foreground">
+                Manage your workspace configuration and preferences
+              </p>
             </div>
           </div>
           {hasChanges && (
@@ -383,9 +461,15 @@ function WorkspaceSettings() {
               <Button onClick={handleReset} variant="outline" size="sm">
                 <RotateCcw className="h-4 w-4 mr-2" /> Reset
               </Button>
-              <Button onClick={handleSave} size="sm" disabled={updateSettingsMutation.isPending}>
+              <Button
+                onClick={handleSave}
+                size="sm"
+                disabled={updateSettingsMutation.isPending}
+              >
                 <Save className="h-4 w-4 mr-2" />
-                {updateSettingsMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateSettingsMutation.isPending
+                  ? "Saving..."
+                  : "Save Changes"}
               </Button>
             </div>
           )}
@@ -398,7 +482,9 @@ function WorkspaceSettings() {
               <Building2 className="h-5 w-5" />
               Workspace Information
             </CardTitle>
-            <CardDescription>Basic information about your workspace</CardDescription>
+            <CardDescription>
+              Basic information about your workspace
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Logo Section */}
@@ -411,7 +497,9 @@ function WorkspaceSettings() {
               </Avatar>
               <div className="flex-1 space-y-2">
                 <Label>Workspace Logo</Label>
-                <p className="text-sm text-muted-foreground">Upload a logo for your workspace (max 5MB)</p>
+                <p className="text-sm text-muted-foreground">
+                  Upload a logo for your workspace (max 5MB)
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -419,7 +507,11 @@ function WorkspaceSettings() {
                   onChange={handleLogoSelect}
                   className="hidden"
                 />
-                <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  size="sm"
+                >
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Logo
                 </Button>
@@ -434,18 +526,18 @@ function WorkspaceSettings() {
                 <Label htmlFor="name">Workspace Name *</Label>
                 <Input
                   id="name"
-                  value={formData.name || ''}
-                  onChange={(e) => handleChange('name', e.target.value)}
+                  value={formData.name || ""}
+                  onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Enter workspace name"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="slug">Workspace Slug</Label>
                 <Input
                   id="slug"
-                  value={formData.slug || ''}
-                  onChange={(e) => handleChange('slug', e.target.value)}
+                  value={formData.slug || ""}
+                  onChange={(e) => handleChange("slug", e.target.value)}
                   placeholder="workspace-slug"
                 />
               </div>
@@ -455,8 +547,8 @@ function WorkspaceSettings() {
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                value={formData.description || ''}
-                onChange={(e) => handleChange('description', e.target.value)}
+                value={formData.description || ""}
+                onChange={(e) => handleChange("description", e.target.value)}
                 placeholder="Describe your workspace"
                 rows={3}
               />
@@ -465,12 +557,18 @@ function WorkspaceSettings() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Owner</Label>
-                <Input value={`${settings.ownerName} (${settings.ownerEmail})`} disabled />
+                <Input
+                  value={`${settings?.ownerName} (${settings?.ownerEmail})`}
+                  disabled
+                />
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Members</Label>
-                <Input value={`${settings.memberCount} members`} disabled />
+                <Input
+                  value={`${settings?.memberCount ?? 0} members`}
+                  disabled
+                />
               </div>
             </div>
 
@@ -478,8 +576,8 @@ function WorkspaceSettings() {
               <Label htmlFor="customDomain">Custom Domain</Label>
               <Input
                 id="customDomain"
-                value={formData.customDomain || ''}
-                onChange={(e) => handleChange('customDomain', e.target.value)}
+                value={formData.customDomain || ""}
+                onChange={(e) => handleChange("customDomain", e.target.value)}
                 placeholder="workspace.example.com"
               />
             </div>
@@ -493,50 +591,68 @@ function WorkspaceSettings() {
               <Users className="h-5 w-5" />
               Member Settings
             </CardTitle>
-            <CardDescription>Configure how members can join and participate</CardDescription>
+            <CardDescription>
+              Configure how members can join and participate
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <Label>Allow Member Invites</Label>
-                <p className="text-sm text-muted-foreground">Members can invite others to the workspace</p>
+                <p className="text-sm text-muted-foreground">
+                  Members can invite others to the workspace
+                </p>
               </div>
               <Switch
                 checked={formData.allowMemberInvites ?? true}
-                onCheckedChange={(checked) => handleChange('allowMemberInvites', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("allowMemberInvites", checked)
+                }
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <Label>Require Admin Approval</Label>
-                <p className="text-sm text-muted-foreground">New members need admin approval to join</p>
+                <p className="text-sm text-muted-foreground">
+                  New members need admin approval to join
+                </p>
               </div>
               <Switch
                 checked={formData.requireAdminApproval ?? false}
-                onCheckedChange={(checked) => handleChange('requireAdminApproval', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("requireAdminApproval", checked)
+                }
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <Label>Enable Guest Access</Label>
-                <p className="text-sm text-muted-foreground">Allow guest users with limited permissions</p>
+                <p className="text-sm text-muted-foreground">
+                  Allow guest users with limited permissions
+                </p>
               </div>
               <Switch
                 checked={formData.enableGuestAccess ?? true}
-                onCheckedChange={(checked) => handleChange('enableGuestAccess', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("enableGuestAccess", checked)
+                }
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <Label>Auto-Remove Inactive Members</Label>
-                <p className="text-sm text-muted-foreground">Automatically remove members after inactivity period</p>
+                <p className="text-sm text-muted-foreground">
+                  Automatically remove members after inactivity period
+                </p>
               </div>
               <Switch
                 checked={formData.autoRemoveInactive ?? false}
-                onCheckedChange={(checked) => handleChange('autoRemoveInactive', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("autoRemoveInactive", checked)
+                }
               />
             </div>
 
@@ -549,7 +665,12 @@ function WorkspaceSettings() {
                   min="1"
                   max="365"
                   value={formData.inactivityDays || 90}
-                  onChange={(e) => handleChange('inactivityDays', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleChange(
+                      "inactivityDays",
+                      Number.parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
             )}
@@ -560,8 +681,13 @@ function WorkspaceSettings() {
                 id="maxMembers"
                 type="number"
                 min="1"
-                value={formData.maxMembers || ''}
-                onChange={(e) => handleChange('maxMembers', e.target.value ? parseInt(e.target.value) : null)}
+                value={formData.maxMembers || ""}
+                onChange={(e) =>
+                  handleChange(
+                    "maxMembers",
+                    e.target.value ? Number.parseInt(e.target.value) : null,
+                  )
+                }
                 placeholder="Unlimited"
               />
             </div>
@@ -580,10 +706,14 @@ function WorkspaceSettings() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="defaultProjectVisibility">Default Project Visibility</Label>
+                <Label htmlFor="defaultProjectVisibility">
+                  Default Project Visibility
+                </Label>
                 <Select
-                  value={formData.defaultProjectVisibility || 'team'}
-                  onValueChange={(value) => handleChange('defaultProjectVisibility', value)}
+                  value={formData.defaultProjectVisibility || "team"}
+                  onValueChange={(value) =>
+                    handleChange("defaultProjectVisibility", value)
+                  }
                 >
                   <SelectTrigger id="defaultProjectVisibility">
                     <SelectValue />
@@ -597,10 +727,14 @@ function WorkspaceSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="defaultTaskPriority">Default Task Priority</Label>
+                <Label htmlFor="defaultTaskPriority">
+                  Default Task Priority
+                </Label>
                 <Select
-                  value={formData.defaultTaskPriority || 'medium'}
-                  onValueChange={(value) => handleChange('defaultTaskPriority', value)}
+                  value={formData.defaultTaskPriority || "medium"}
+                  onValueChange={(value) =>
+                    handleChange("defaultTaskPriority", value)
+                  }
                 >
                   <SelectTrigger id="defaultTaskPriority">
                     <SelectValue />
@@ -618,22 +752,30 @@ function WorkspaceSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <Label>Enable Time Tracking</Label>
-                <p className="text-sm text-muted-foreground">Track time spent on tasks by default</p>
+                <p className="text-sm text-muted-foreground">
+                  Track time spent on tasks by default
+                </p>
               </div>
               <Switch
                 checked={formData.enableTimeTracking ?? true}
-                onCheckedChange={(checked) => handleChange('enableTimeTracking', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("enableTimeTracking", checked)
+                }
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
                 <Label>Require Task Approval</Label>
-                <p className="text-sm text-muted-foreground">Tasks need approval before completion</p>
+                <p className="text-sm text-muted-foreground">
+                  Tasks need approval before completion
+                </p>
               </div>
               <Switch
                 checked={formData.requireTaskApproval ?? false}
-                onCheckedChange={(checked) => handleChange('requireTaskApproval', checked)}
+                onCheckedChange={(checked) =>
+                  handleChange("requireTaskApproval", checked)
+                }
               />
             </div>
           </CardContent>
@@ -646,7 +788,9 @@ function WorkspaceSettings() {
               <Clock className="h-5 w-5" />
               Working Hours
             </CardTitle>
-            <CardDescription>Set your workspace's working schedule</CardDescription>
+            <CardDescription>
+              Set your workspace's working schedule
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -655,8 +799,10 @@ function WorkspaceSettings() {
                 <Input
                   id="workingHoursStart"
                   type="time"
-                  value={formData.workingHoursStart || '09:00'}
-                  onChange={(e) => handleChange('workingHoursStart', e.target.value)}
+                  value={formData.workingHoursStart || "09:00"}
+                  onChange={(e) =>
+                    handleChange("workingHoursStart", e.target.value)
+                  }
                 />
               </div>
 
@@ -665,8 +811,10 @@ function WorkspaceSettings() {
                 <Input
                   id="workingHoursEnd"
                   type="time"
-                  value={formData.workingHoursEnd || '17:00'}
-                  onChange={(e) => handleChange('workingHoursEnd', e.target.value)}
+                  value={formData.workingHoursEnd || "17:00"}
+                  onChange={(e) =>
+                    handleChange("workingHoursEnd", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -676,8 +824,8 @@ function WorkspaceSettings() {
                 <Label htmlFor="timezone">Timezone</Label>
                 <Input
                   id="timezone"
-                  value={formData.timezone || 'UTC'}
-                  onChange={(e) => handleChange('timezone', e.target.value)}
+                  value={formData.timezone || "UTC"}
+                  onChange={(e) => handleChange("timezone", e.target.value)}
                   placeholder="UTC"
                 />
               </div>
@@ -685,8 +833,8 @@ function WorkspaceSettings() {
               <div className="space-y-2">
                 <Label htmlFor="timeFormat">Time Format</Label>
                 <Select
-                  value={formData.timeFormat || '12h'}
-                  onValueChange={(value) => handleChange('timeFormat', value)}
+                  value={formData.timeFormat || "12h"}
+                  onValueChange={(value) => handleChange("timeFormat", value)}
                 >
                   <SelectTrigger id="timeFormat">
                     <SelectValue />
@@ -702,17 +850,29 @@ function WorkspaceSettings() {
             <div className="space-y-2">
               <Label>Working Days</Label>
               <div className="flex flex-wrap gap-2">
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                {[
+                  "monday",
+                  "tuesday",
+                  "wednesday",
+                  "thursday",
+                  "friday",
+                  "saturday",
+                  "sunday",
+                ].map((day) => (
                   <Badge
                     key={day}
-                    variant={formData.workingDays?.includes(day) ? 'default' : 'outline'}
+                    variant={
+                      formData.workingDays?.includes(day)
+                        ? "default"
+                        : "outline"
+                    }
                     className="cursor-pointer"
                     onClick={() => {
                       const current = formData.workingDays || [];
                       const updated = current.includes(day)
-                        ? current.filter(d => d !== day)
+                        ? current.filter((d) => d !== day)
                         : [...current, day];
-                      handleChange('workingDays', updated);
+                      handleChange("workingDays", updated);
                     }}
                   >
                     {day.charAt(0).toUpperCase() + day.slice(1)}
@@ -730,7 +890,9 @@ function WorkspaceSettings() {
               <Zap className="h-5 w-5" />
               Features
             </CardTitle>
-            <CardDescription>Enable or disable workspace features</CardDescription>
+            <CardDescription>
+              Enable or disable workspace features
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -739,12 +901,16 @@ function WorkspaceSettings() {
                   <Zap className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <Label>Automation</Label>
-                    <p className="text-sm text-muted-foreground">Workflow automation and rules</p>
+                    <p className="text-sm text-muted-foreground">
+                      Workflow automation and rules
+                    </p>
                   </div>
                 </div>
                 <Switch
                   checked={formData.enableAutomation ?? true}
-                  onCheckedChange={(checked) => handleChange('enableAutomation', checked)}
+                  onCheckedChange={(checked) =>
+                    handleChange("enableAutomation", checked)
+                  }
                 />
               </div>
 
@@ -753,12 +919,16 @@ function WorkspaceSettings() {
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <Label>Calendar</Label>
-                    <p className="text-sm text-muted-foreground">Integrated calendar features</p>
+                    <p className="text-sm text-muted-foreground">
+                      Integrated calendar features
+                    </p>
                   </div>
                 </div>
                 <Switch
                   checked={formData.enableCalendar ?? true}
-                  onCheckedChange={(checked) => handleChange('enableCalendar', checked)}
+                  onCheckedChange={(checked) =>
+                    handleChange("enableCalendar", checked)
+                  }
                 />
               </div>
 
@@ -767,12 +937,16 @@ function WorkspaceSettings() {
                   <MessageSquare className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <Label>Messaging</Label>
-                    <p className="text-sm text-muted-foreground">Team messaging and chat</p>
+                    <p className="text-sm text-muted-foreground">
+                      Team messaging and chat
+                    </p>
                   </div>
                 </div>
                 <Switch
                   checked={formData.enableMessaging ?? true}
-                  onCheckedChange={(checked) => handleChange('enableMessaging', checked)}
+                  onCheckedChange={(checked) =>
+                    handleChange("enableMessaging", checked)
+                  }
                 />
               </div>
 
@@ -781,12 +955,16 @@ function WorkspaceSettings() {
                   <BarChart3 className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <Label>Analytics</Label>
-                    <p className="text-sm text-muted-foreground">Performance analytics and insights</p>
+                    <p className="text-sm text-muted-foreground">
+                      Performance analytics and insights
+                    </p>
                   </div>
                 </div>
                 <Switch
                   checked={formData.enableAnalytics ?? true}
-                  onCheckedChange={(checked) => handleChange('enableAnalytics', checked)}
+                  onCheckedChange={(checked) =>
+                    handleChange("enableAnalytics", checked)
+                  }
                 />
               </div>
             </div>
@@ -800,7 +978,9 @@ function WorkspaceSettings() {
               <Palette className="h-5 w-5" />
               Branding
             </CardTitle>
-            <CardDescription>Customize your workspace's appearance</CardDescription>
+            <CardDescription>
+              Customize your workspace's appearance
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -810,13 +990,17 @@ function WorkspaceSettings() {
                   <Input
                     id="primaryColor"
                     type="color"
-                    value={formData.primaryColor || '#3B82F6'}
-                    onChange={(e) => handleChange('primaryColor', e.target.value)}
+                    value={formData.primaryColor || "#3B82F6"}
+                    onChange={(e) =>
+                      handleChange("primaryColor", e.target.value)
+                    }
                     className="w-20 h-10"
                   />
                   <Input
-                    value={formData.primaryColor || '#3B82F6'}
-                    onChange={(e) => handleChange('primaryColor', e.target.value)}
+                    value={formData.primaryColor || "#3B82F6"}
+                    onChange={(e) =>
+                      handleChange("primaryColor", e.target.value)
+                    }
                     placeholder="#3B82F6"
                   />
                 </div>
@@ -828,13 +1012,17 @@ function WorkspaceSettings() {
                   <Input
                     id="accentColor"
                     type="color"
-                    value={formData.accentColor || '#8B5CF6'}
-                    onChange={(e) => handleChange('accentColor', e.target.value)}
+                    value={formData.accentColor || "#8B5CF6"}
+                    onChange={(e) =>
+                      handleChange("accentColor", e.target.value)
+                    }
                     className="w-20 h-10"
                   />
                   <Input
-                    value={formData.accentColor || '#8B5CF6'}
-                    onChange={(e) => handleChange('accentColor', e.target.value)}
+                    value={formData.accentColor || "#8B5CF6"}
+                    onChange={(e) =>
+                      handleChange("accentColor", e.target.value)
+                    }
                     placeholder="#8B5CF6"
                   />
                 </div>
@@ -850,7 +1038,9 @@ function WorkspaceSettings() {
               <AlertTriangle className="h-5 w-5" />
               Danger Zone
             </CardTitle>
-            <CardDescription>Irreversible and destructive actions</CardDescription>
+            <CardDescription>
+              Irreversible and destructive actions
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -870,16 +1060,22 @@ function WorkspaceSettings() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle>
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the workspace
-                        "{settings.name}" and remove all associated data including projects, tasks,
-                        and team members.
+                        This action cannot be undone. This will permanently
+                        delete the workspace "{settings?.name}" and remove all
+                        associated data including projects, tasks, and team
+                        members.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteWorkspace} className="bg-destructive text-destructive-foreground">
+                      <AlertDialogAction
+                        onClick={handleDeleteWorkspace}
+                        className="bg-destructive text-destructive-foreground"
+                      >
                         Delete Workspace
                       </AlertDialogAction>
                     </AlertDialogFooter>

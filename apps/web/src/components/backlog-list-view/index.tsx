@@ -221,19 +221,28 @@ function BacklogListView({ project }: BacklogListViewProps) {
                 className="space-y-1 p-2"
               >
                 {column.tasks.length > 0 ? (
-                  column.tasks.map((task: Task) => (
-                    <BacklogTaskRow key={task.id} task={task} />
-                  ))
+                  column.tasks.map(
+                    (task: Task) =>
+                      project && (
+                        <BacklogTaskRow
+                          key={task.id}
+                          task={task}
+                          onTaskUpdate={(updated) => updateTask(updated)}
+                          backlogData={project}
+                          setBacklogData={(data) =>
+                            setProject({ ...project, ...data })
+                          }
+                        />
+                      ),
+                  )
                 ) : (
                   <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                    {/* @ts-expect-error */}
                     No {column.id === "planned" ? "planned" : "archived"} tasks
                   </div>
                 )}
               </motion.div>
             </SortableContext>
 
-            {/* @ts-expect-error */}
             {column.id === "planned" && (
               <button
                 type="button"

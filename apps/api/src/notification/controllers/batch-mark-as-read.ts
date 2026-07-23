@@ -6,9 +6,9 @@ async function batchMarkAsRead(userEmail: string, notificationIds: string[]) {
   const db = getDatabase();
 
   if (notificationIds.length === 0) {
-    return { 
+    return {
       count: 0,
-      notifications: [] 
+      notifications: [],
     };
   }
 
@@ -19,8 +19,8 @@ async function batchMarkAsRead(userEmail: string, notificationIds: string[]) {
     .where(
       and(
         eq(notificationTable.userEmail, userEmail),
-        inArray(notificationTable.id, notificationIds)
-      )
+        inArray(notificationTable.id, notificationIds),
+      ),
     )
     .returning();
 
@@ -31,5 +31,3 @@ async function batchMarkAsRead(userEmail: string, notificationIds: string[]) {
 }
 
 export default batchMarkAsRead;
-
-

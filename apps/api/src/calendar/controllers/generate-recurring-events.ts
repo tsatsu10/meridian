@@ -2,13 +2,13 @@ import { getDatabase } from "../../database/connection";
 import { calendarEvents, recurringPatterns } from "../../database/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // @epic-3.4-teams: Generate recurring event instances
 export async function generateRecurringEvents(
   parentEventId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) {
   const db = getDatabase();
 
@@ -32,8 +32,9 @@ export async function generateRecurringEvents(
 
     const occurrenceDates: Date[] = [];
     const eventStart = new Date(parentEvent.startTime);
-    const eventDuration = parentEvent.endTime 
-      ? new Date(parentEvent.endTime).getTime() - new Date(parentEvent.startTime).getTime()
+    const eventDuration = parentEvent.endTime
+      ? new Date(parentEvent.endTime).getTime() -
+        new Date(parentEvent.startTime).getTime()
       : 60 * 60 * 1000; // Default 1 hour
 
     let currentDate = new Date(eventStart);
@@ -46,7 +47,7 @@ export async function generateRecurringEvents(
       if (currentDate >= startDate && currentDate <= endDate) {
         const dateStr = currentDate.toISOString().split("T")[0] ?? "";
         const exceptionDates = (pattern.exceptionDates as string[]) || [];
-        
+
         if (!exceptionDates.includes(dateStr)) {
           occurrenceDates.push(new Date(currentDate));
         }
@@ -54,22 +55,22 @@ export async function generateRecurringEvents(
 
       // Calculate next occurrence based on frequency
       switch (pattern.frequency) {
-        case 'daily':
+        case "daily":
           currentDate.setDate(currentDate.getDate() + (pattern.interval || 1));
           break;
 
-        case 'weekly':
+        case "weekly":
           if (pattern.weekdays && (pattern.weekdays as number[]).length > 0) {
             // Find next matching weekday
             const weekdays = pattern.weekdays as number[];
             let found = false;
             let daysToAdd = 1;
-            
+
             while (!found && daysToAdd <= 7) {
               const testDate = new Date(currentDate);
               testDate.setDate(testDate.getDate() + daysToAdd);
               const dayOfWeek = testDate.getDay();
-              
+
               if (weekdays.includes(dayOfWeek)) {
                 currentDate = testDate;
                 found = true;
@@ -77,34 +78,44 @@ export async function generateRecurringEvents(
                 daysToAdd++;
               }
             }
-            
+
             if (!found) {
-              currentDate.setDate(currentDate.getDate() + 7 * (pattern.interval || 1));
+              currentDate.setDate(
+                currentDate.getDate() + 7 * (pattern.interval || 1),
+              );
             }
           } else {
-            currentDate.setDate(currentDate.getDate() + 7 * (pattern.interval || 1));
+            currentDate.setDate(
+              currentDate.getDate() + 7 * (pattern.interval || 1),
+            );
           }
           break;
 
-        case 'biweekly':
+        case "biweekly":
           currentDate.setDate(currentDate.getDate() + 14);
           break;
 
-        case 'monthly':
+        case "monthly":
           if (pattern.dayOfMonth) {
-            currentDate.setMonth(currentDate.getMonth() + (pattern.interval || 1));
+            currentDate.setMonth(
+              currentDate.getMonth() + (pattern.interval || 1),
+            );
             currentDate.setDate(pattern.dayOfMonth);
           } else {
-            currentDate.setMonth(currentDate.getMonth() + (pattern.interval || 1));
+            currentDate.setMonth(
+              currentDate.getMonth() + (pattern.interval || 1),
+            );
           }
           break;
 
-        case 'quarterly':
+        case "quarterly":
           currentDate.setMonth(currentDate.getMonth() + 3);
           break;
 
-        case 'yearly':
-          currentDate.setFullYear(currentDate.getFullYear() + (pattern.interval || 1));
+        case "yearly":
+          currentDate.setFullYear(
+            currentDate.getFullYear() + (pattern.interval || 1),
+          );
           break;
 
         default:
@@ -139,15 +150,15 @@ export async function generateRecurringEvents(
 export async function getRecurringEventInstances(
   parentEventId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
 ) {
   const instances = await generateRecurringEvents(
     parentEventId,
     new Date(startDate),
-    new Date(endDate)
+    new Date(endDate),
   );
 
-  return instances.map(instance => ({
+  return instances.map((instance) => ({
     id: instance.id,
     title: instance.title,
     description: instance.description,
@@ -161,10 +172,8 @@ export async function getRecurringEventInstances(
     color: instance.color,
     location: instance.location,
     meetingLink: instance.meetingLink,
-    source: 'calendar' as const,
+    source: "calendar" as const,
     isRecurringInstance: true,
     recurringEventId: parentEventId,
   }));
 }
-
-

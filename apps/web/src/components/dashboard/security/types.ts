@@ -11,7 +11,7 @@ export interface SecurityMetrics {
 
 export interface SecurityAlert {
   id: string;
-  type: 'critical' | 'high' | 'medium' | 'low';
+  type: "critical" | "high" | "medium" | "low";
   title: string;
   description: string;
   timestamp: Date;
@@ -24,24 +24,28 @@ export interface SecurityAlert {
 export interface SecurityEvent {
   id: string;
   eventType: string;
-  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  severity: "critical" | "high" | "medium" | "low" | "info";
   description: string;
   userId?: string;
   userEmail?: string;
   ipAddress?: string;
   userAgent?: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityThreat {
   id: string;
-  type: 'brute_force' | 'suspicious_login' | 'unauthorized_access' | 'data_breach_attempt';
-  severity: 'critical' | 'high' | 'medium' | 'low';
+  type:
+    | "brute_force"
+    | "suspicious_login"
+    | "unauthorized_access"
+    | "data_breach_attempt";
+  severity: "critical" | "high" | "medium" | "low";
   description: string;
   affectedUsers: string[];
   detectedAt: Date;
-  status: 'active' | 'investigating' | 'resolved' | 'false_positive';
+  status: "active" | "investigating" | "resolved" | "false_positive";
   actions: string[];
 }
 
@@ -66,4 +70,3 @@ export interface SecurityActionLog {
   success: boolean;
   details?: string;
 }
-

@@ -18,12 +18,16 @@ export function useDeleteTeam() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["teams", variables.workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["team-metrics", variables.workspaceId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["teams", variables.workspaceId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["team-metrics", variables.workspaceId],
+      });
       toast.success("Team deleted successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to delete team");
     },
   });

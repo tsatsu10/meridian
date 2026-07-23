@@ -2,7 +2,13 @@
 
 import { cn } from "@/lib/cn";
 import { cva, type VariantProps } from "class-variance-authority";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import {
+  motion,
+  useSpring,
+  useTransform,
+  useMotionValue,
+  type MotionValue,
+} from "framer-motion";
 import React, { useRef } from "react";
 
 export interface DockProps extends VariantProps<typeof dockVariants> {
@@ -21,7 +27,17 @@ const dockVariants = cva(
 );
 
 const Dock = React.forwardRef<HTMLDivElement, DockProps>(
-  ({ className, children, direction = "bottom", onMouseMove, onMouseLeave, ...props }, ref) => {
+  (
+    {
+      className,
+      children,
+      direction = "bottom",
+      onMouseMove,
+      onMouseLeave,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <motion.div
         ref={ref}
@@ -46,10 +62,10 @@ export interface DockIconProps {
   size?: number;
   magnification?: number;
   distance?: number;
-  mouseX?: any;
+  mouseX?: MotionValue<number>;
   className?: string;
   children?: React.ReactNode;
-  props?: any;
+  props?: React.HTMLAttributes<HTMLDivElement>;
 }
 
 const DockIcon = ({
@@ -62,20 +78,21 @@ const DockIcon = ({
   ...props
 }: DockIconProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  const fallbackMouseX = useMotionValue(Number.POSITIVE_INFINITY);
 
-  const distanceCalc = useTransform(mouseX, (val: number) => {
+  const distanceCalc = useTransform(mouseX ?? fallbackMouseX, (val: number) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
 
     return val - bounds.x - bounds.width / 2;
   });
 
-  let widthSync = useTransform(
+  const widthSync = useTransform(
     distanceCalc,
     [-distance, 0, distance],
     [40, magnification, 40],
   );
 
-  let width = useSpring(widthSync, {
+  const width = useSpring(widthSync, {
     mass: 0.1,
     stiffness: 150,
     damping: 12,
@@ -98,4 +115,4 @@ const DockIcon = ({
 
 DockIcon.displayName = "DockIcon";
 
-export { Dock, DockIcon, dockVariants }; 
+export { Dock, DockIcon, dockVariants };

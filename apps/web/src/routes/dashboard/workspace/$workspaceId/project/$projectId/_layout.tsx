@@ -7,21 +7,24 @@
 
 import { cn } from "@/lib/cn";
 import useProjectStore from "@/store/project";
-import { 
-  createFileRoute, 
-  Link, 
-  Outlet, 
-  useLocation, 
-  useParams 
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+  useParams,
 } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import icons from "@/constants/project-icons";
 import { createElement } from "react";
-import { useProjectNavigation, getNavigationItemStyle } from "@/components/navigation/unified-navigation-config";
+import {
+  useProjectNavigation,
+  getNavigationItemStyle,
+} from "@/components/navigation/unified-navigation-config";
 
 export const Route = createFileRoute(
-  "/dashboard/workspace/$workspaceId/project/$projectId/_layout"
+  "/dashboard/workspace/$workspaceId/project/$projectId/_layout",
 )({
   component: ProjectLayout,
 });
@@ -32,9 +35,14 @@ function ProjectLayout() {
   const location = useLocation();
 
   // Get navigation items from unified configuration
-  const navigationItems = useProjectNavigation(workspaceId || '', projectId || '');
+  const navigationItems = useProjectNavigation(
+    workspaceId || "",
+    projectId || "",
+  );
 
-  const ProjectIcon = project?.icon ? icons[project.icon as keyof typeof icons] : icons.Layout;
+  const ProjectIcon = project?.icon
+    ? icons[project.icon as keyof typeof icons]
+    : icons.Layout;
 
   return (
     <div className="flex-1 flex flex-col bg-background">
@@ -49,38 +57,43 @@ function ProjectLayout() {
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back to Dashboard
             </Link>
-            
+
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                {ProjectIcon && createElement(ProjectIcon, { className: "h-4 w-4 text-primary" })}
+                {ProjectIcon &&
+                  createElement(ProjectIcon, {
+                    className: "h-4 w-4 text-primary",
+                  })}
               </div>
               <div>
-                <h1 className="text-lg font-semibold">{project?.name || "Loading..."}</h1>
+                <h1 className="text-lg font-semibold">
+                  {project?.name || "Loading..."}
+                </h1>
                 <p className="text-sm text-muted-foreground">{project?.slug}</p>
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm">
               Share
             </Button>
-            <Button size="sm">
-              New Task
-            </Button>
+            <Button size="sm">New Task</Button>
           </div>
         </div>
-        
+
         {/* Project Navigation */}
         <nav className="border-t border-border">
           <div className="flex items-center justify-center px-6 overflow-x-auto">
             {navigationItems.map((item) => {
-              const isActive = location.pathname === item.href || 
-                (item.href !== `/dashboard/workspace/${workspaceId}/project/${projectId}` && 
-                 location.pathname.startsWith(item.href));
-              
+              const isActive =
+                location.pathname === item.href ||
+                (item.href !==
+                  `/dashboard/workspace/${workspaceId}/project/${projectId}` &&
+                  location.pathname.startsWith(item.href));
+
               const styles = getNavigationItemStyle(item, isActive);
-              
+
               return (
                 <Link
                   key={item.id}
@@ -92,19 +105,21 @@ function ProjectLayout() {
                       ? "border-primary text-primary"
                       : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
                     styles.hover,
-                    styles.focus
+                    styles.focus,
                   )}
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.label}</span>
-                  
+
                   {/* Badge */}
                   {item.badge && (
-                    <span className={cn(
-                      "px-1.5 py-0.5 text-xs font-semibold rounded-full",
-                      "bg-red-500 text-white min-w-[1rem] text-center",
-                      "shadow-sm"
-                    )}>
+                    <span
+                      className={cn(
+                        "px-1.5 py-0.5 text-xs font-semibold rounded-full",
+                        "bg-red-500 text-white min-w-[1rem] text-center",
+                        "shadow-sm",
+                      )}
+                    >
                       {item.badge > 99 ? "99+" : item.badge}
                     </span>
                   )}
@@ -121,4 +136,4 @@ function ProjectLayout() {
       </div>
     </div>
   );
-} 
+}

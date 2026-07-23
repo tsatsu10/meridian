@@ -4,7 +4,7 @@ import { taskTable } from "../../database/schema";
 
 async function getNextTaskNumber(projectId: string) {
   const db = getDatabase(); // Must be inside function, not at module level
-  
+
   const [task] = await db
     .select({ count: count() })
     .from(taskTable)
@@ -14,4 +14,3 @@ async function getNextTaskNumber(projectId: string) {
 }
 
 export default getNextTaskNumber;
-

@@ -3,23 +3,25 @@
  * Helper functions for creating test HTTP requests and responses
  */
 
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 /**
  * Create a mock Hono context for testing
  */
-export function createMockContext(options: {
-  method?: string;
-  path?: string;
-  body?: any;
-  headers?: Record<string, string>;
-  query?: Record<string, string>;
-  params?: Record<string, string>;
-  user?: any;
-} = {}) {
+export function createMockContext(
+  options: {
+    method?: string;
+    path?: string;
+    body?: unknown;
+    headers?: Record<string, string>;
+    query?: Record<string, string>;
+    params?: Record<string, string>;
+    user?: Record<string, unknown>;
+  } = {},
+) {
   const {
-    method = 'GET',
-    path = '/',
+    method = "GET",
+    path = "/",
     body = {},
     headers = {},
     query = {},
@@ -27,7 +29,7 @@ export function createMockContext(options: {
     user = null,
   } = options;
 
-  const mockContext: any = {
+  const mockContext: Record<string, unknown> = {
     req: {
       method,
       path,
@@ -38,9 +40,9 @@ export function createMockContext(options: {
       json: vi.fn().mockResolvedValue(body),
       parseBody: vi.fn().mockResolvedValue(body),
       valid: vi.fn((type: string) => {
-        if (type === 'json') return body;
-        if (type === 'query') return query;
-        if (type === 'param') return params;
+        if (type === "json") return body;
+        if (type === "query") return query;
+        if (type === "param") return params;
         return {};
       }),
       raw: {},
@@ -48,7 +50,7 @@ export function createMockContext(options: {
     res: {
       headers: new Map(),
     },
-    json: vi.fn((data: any, status?: number) => {
+    json: vi.fn((data: unknown, status?: number) => {
       return {
         status: status || 200,
         body: data,
@@ -72,7 +74,7 @@ export function createMockContext(options: {
     redirect: vi.fn((url: string, status?: number) => {
       return {
         status: status || 302,
-        headers: new Map([['Location', url]]),
+        headers: new Map([["Location", url]]),
       };
     }),
     status: vi.fn((code: number) => mockContext),
@@ -80,17 +82,19 @@ export function createMockContext(options: {
       mockContext.res.headers.set(name, value);
       return mockContext;
     }),
-    cookie: vi.fn((name: string, value: string, options?: any) => {
-      mockContext.res.headers.set('Set-Cookie', `${name}=${value}`);
-      return mockContext;
-    }),
+    cookie: vi.fn(
+      (name: string, value: string, options?: Record<string, unknown>) => {
+        mockContext.res.headers.set("Set-Cookie", `${name}=${value}`);
+        return mockContext;
+      },
+    ),
     notFound: vi.fn(() => {
       return {
         status: 404,
-        body: { error: 'Not Found' },
+        body: { error: "Not Found" },
       };
     }),
-    set: vi.fn((key: string, value: any) => {
+    set: vi.fn((key: string, value: unknown) => {
       mockContext[key] = value;
     }),
     get: vi.fn((key: string) => {
@@ -111,7 +115,10 @@ export function createMockContext(options: {
 /**
  * Create a mock authenticated context with user
  */
-export function createAuthenticatedContext(user: any, options: any = {}) {
+export function createAuthenticatedContext(
+  user: Record<string, unknown>,
+  options: Record<string, unknown> = {},
+) {
   return createMockContext({
     ...options,
     user,
@@ -125,7 +132,7 @@ export function createAuthenticatedContext(user: any, options: any = {}) {
 /**
  * Mock successful response
  */
-export function mockSuccessResponse(data: any) {
+export function mockSuccessResponse(data: unknown) {
   return {
     success: true,
     data,
@@ -140,7 +147,7 @@ export function mockErrorResponse(message: string, code?: string) {
     success: false,
     error: {
       message,
-      code: code || 'UNKNOWN_ERROR',
+      code: code || "UNKNOWN_ERROR",
     },
   };
 }
@@ -148,9 +155,9 @@ export function mockErrorResponse(message: string, code?: string) {
 /**
  * Assert response structure
  */
-export function assertSuccessResponse(response: any) {
-  expect(response).toHaveProperty('status');
-  expect(response).toHaveProperty('body');
+export function assertSuccessResponse(response: Record<string, unknown>) {
+  expect(response).toHaveProperty("status");
+  expect(response).toHaveProperty("body");
   expect(response.status).toBeGreaterThanOrEqual(200);
   expect(response.status).toBeLessThan(300);
 }
@@ -158,9 +165,8 @@ export function assertSuccessResponse(response: any) {
 /**
  * Assert error response structure
  */
-export function assertErrorResponse(response: any) {
-  expect(response).toHaveProperty('status');
-  expect(response).toHaveProperty('body');
+export function assertErrorResponse(response: Record<string, unknown>) {
+  expect(response).toHaveProperty("status");
+  expect(response).toHaveProperty("body");
   expect(response.status).toBeGreaterThanOrEqual(400);
 }
-

@@ -4,13 +4,13 @@
  * Phase 2 - Team Awareness Features
  */
 
-import { getDatabase } from '../../database/connection';
-import { userActivity } from '../../database/schema/team-awareness';
-import { users } from '../../database/schema';
-import { eq, desc, and, inArray, sql } from 'drizzle-orm';
-import { Logger } from '../logging/logger';
-import { CacheService, CacheKeys, CacheTTL } from '../cache/cache-service';
-import { createId } from '@paralleldrive/cuid2';
+import { getDatabase } from "../../database/connection";
+import { userActivity } from "../../database/schema/team-awareness";
+import { users } from "../../database/schema";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
+import { Logger } from "../logging/logger";
+import { CacheService, CacheKeys, CacheTTL } from "../cache/cache-service";
+import { createId } from "@paralleldrive/cuid2";
 
 export interface ActivityParams {
   userId: string;
@@ -21,7 +21,7 @@ export interface ActivityParams {
   entityId?: string;
   entityTitle?: string;
   description?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   isPublic?: boolean;
 }
 
@@ -38,11 +38,11 @@ export interface ActivityFilters {
 /**
  * Activity Tracker Service
  */
-export class ActivityTracker {
+export const ActivityTracker = {
   /**
    * Log an activity
    */
-  static async logActivity(params: ActivityParams): Promise<void> {
+  async logActivity(params: ActivityParams): Promise<void> {
     try {
       const db = getDatabase();
       const activityId = createId();
@@ -61,30 +61,30 @@ export class ActivityTracker {
         isPublic: params.isPublic ?? true,
       });
 
-      // TODO: Re-enable cache invalidation once Redis is properly initialized
+      // See https://github.com/tsatsu10/meridian/issues/64
       // Invalidate activity cache (skip for now if Redis not available)
       try {
         await CacheService.invalidatePattern(`activity:${params.workspaceId}*`);
       } catch (cacheError) {
         // Ignore cache errors - Redis might not be initialized
       }
-      
-      Logger.business('Activity logged', {
+
+      Logger.business("Activity logged", {
         userId: params.userId,
         action: params.action,
         entityType: params.entityType,
       });
     } catch (error) {
-      Logger.error('Failed to log activity', error, params);
+      Logger.error("Failed to log activity", error, params);
     }
-  }
+  },
 
   /**
    * Get recent activities
    */
-  static async getActivities(filters: ActivityFilters) {
+  async getActivities(filters: ActivityFilters) {
     const db = getDatabase();
-    // TODO: Re-enable caching once Redis is properly initialized
+    // See https://github.com/tsatsu10/meridian/issues/64
     // const cacheKey = `activity:${filters.workspaceId}:${filters.userId || 'all'}:${filters.projectId || 'all'}`;
 
     // Directly query without caching for now
@@ -134,14 +134,14 @@ export class ActivityTracker {
       .offset(filters.offset || 0);
 
     return activities;
-  }
+  },
 
   /**
    * Get activity statistics
    */
-  static async getActivityStats(workspaceId: string, userId?: string) {
+  async getActivityStats(workspaceId: string, userId?: string) {
     const db = getDatabase();
-    // TODO: Re-enable caching once Redis is properly initialized
+    // See https://github.com/tsatsu10/meridian/issues/64
     // const cacheKey = `activity:stats:${workspaceId}:${userId || 'all'}`;
 
     const conditions = [eq(userActivity.workspaceId, workspaceId)];
@@ -175,26 +175,21 @@ export class ActivityTracker {
     const recentCount = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(userActivity)
-      .where(
-        and(
-          ...conditions,
-          sql`${userActivity.createdAt} > ${oneDayAgo}`
-        )
-      );
+      .where(and(...conditions, sql`${userActivity.createdAt} > ${oneDayAgo}`));
 
     return {
       actionCounts,
       entityTypeCounts,
       recentCount: recentCount[0]?.count || 0,
     };
-  }
+  },
 
   /**
    * Get most active users
    */
-  static async getMostActiveUsers(workspaceId: string, limit: number = 10) {
+  async getMostActiveUsers(workspaceId: string, limit = 10) {
     const db = getDatabase();
-    // TODO: Re-enable caching once Redis is properly initialized
+    // See https://github.com/tsatsu10/meridian/issues/64
     // const cacheKey = `activity:top-users:${workspaceId}`;
 
     const activeUsers = await db
@@ -215,139 +210,141 @@ export class ActivityTracker {
       .limit(limit);
 
     return activeUsers;
-  }
+  },
 
   /**
    * Delete old activities (cleanup)
    */
-  static async deleteOldActivities(workspaceId: string, daysToKeep: number = 90): Promise<number> {
+  async deleteOldActivities(
+    workspaceId: string,
+    daysToKeep = 90,
+  ): Promise<number> {
     try {
       const db = getDatabase();
-      const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
+      const cutoffDate = new Date(
+        Date.now() - daysToKeep * 24 * 60 * 60 * 1000,
+      );
 
       const result = await db
         .delete(userActivity)
         .where(
           and(
             eq(userActivity.workspaceId, workspaceId),
-            sql`${userActivity.createdAt} < ${cutoffDate}`
-          )
+            sql`${userActivity.createdAt} < ${cutoffDate}`,
+          ),
         );
 
-      Logger.info('Deleted old activities', {
+      Logger.info("Deleted old activities", {
         workspaceId,
         daysToKeep,
-        deletedCount: result.rowCount,
+        deletedCount: result.count,
       });
 
-      return result.rowCount || 0;
+      return result.count || 0;
     } catch (error) {
-      Logger.error('Failed to delete old activities', error, { workspaceId });
+      Logger.error("Failed to delete old activities", error, { workspaceId });
       return 0;
     }
-  }
+  },
 
   /**
    * Helper: Log task activity
    */
-  static async logTaskActivity(
+  async logTaskActivity(
     userId: string,
     workspaceId: string,
     projectId: string,
-    action: 'created' | 'updated' | 'completed' | 'deleted' | 'commented',
+    action: "created" | "updated" | "completed" | "deleted" | "commented",
     taskId: string,
     taskTitle: string,
-    metadata?: any
+    metadata?: Record<string, unknown>,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,
       action,
-      entityType: 'task',
+      entityType: "task",
       entityId: taskId,
       entityTitle: taskTitle,
       description: `${action} task "${taskTitle}"`,
       metadata,
     });
-  }
+  },
 
   /**
    * Helper: Log project activity
    */
-  static async logProjectActivity(
+  async logProjectActivity(
     userId: string,
     workspaceId: string,
-    action: 'created' | 'updated' | 'deleted',
+    action: "created" | "updated" | "deleted",
     projectId: string,
     projectTitle: string,
-    metadata?: any
+    metadata?: Record<string, unknown>,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,
       action,
-      entityType: 'project',
+      entityType: "project",
       entityId: projectId,
       entityTitle: projectTitle,
       description: `${action} project "${projectTitle}"`,
       metadata,
     });
-  }
+  },
 
   /**
    * Helper: Log comment activity
    */
-  static async logCommentActivity(
+  async logCommentActivity(
     userId: string,
     workspaceId: string,
     projectId: string,
-    entityType: 'task' | 'project',
+    entityType: "task" | "project",
     entityId: string,
     entityTitle: string,
-    commentText: string
+    commentText: string,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,
-      action: 'commented',
+      action: "commented",
       entityType,
       entityId,
       entityTitle,
       description: `commented on ${entityType} "${entityTitle}"`,
       metadata: { commentPreview: commentText.substring(0, 100) },
     });
-  }
+  },
 
   /**
    * Helper: Log file activity
    */
-  static async logFileActivity(
+  async logFileActivity(
     userId: string,
     workspaceId: string,
     projectId: string | undefined,
-    action: 'uploaded' | 'deleted',
+    action: "uploaded" | "deleted",
     fileId: string,
     fileName: string,
-    metadata?: any
+    metadata?: Record<string, unknown>,
   ) {
-    await this.logActivity({
+    await ActivityTracker.logActivity({
       userId,
       workspaceId,
       projectId,
       action,
-      entityType: 'file',
+      entityType: "file",
       entityId: fileId,
       entityTitle: fileName,
       description: `${action} file "${fileName}"`,
       metadata,
     });
-  }
-}
+  },
+};
 
 export default ActivityTracker;
-
-
-

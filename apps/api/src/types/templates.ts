@@ -3,34 +3,36 @@
  * Type definitions for profession-based project templates
  */
 
-export type TemplateDifficulty = 'beginner' | 'intermediate' | 'advanced';
-export type DependencyType = 'blocks' | 'blocked_by';
+export type TemplateDifficulty = "beginner" | "intermediate" | "advanced";
+export type DependencyType = "blocks" | "blocked_by";
 
 /**
  * Project Template
  * Represents a reusable project template for specific professions
  */
+// Field nullability mirrors the project_templates drizzle row so DB results
+// satisfy this type without casts
 export interface ProjectTemplate {
   id: string;
   name: string;
   description: string;
   profession: string;
   industry: string;
-  category?: string;
-  icon?: string;
-  color: string;
-  estimatedDuration?: number; // in days
-  difficulty: TemplateDifficulty;
-  usageCount: number;
-  rating: number; // average rating * 10
-  ratingCount: number;
-  tags: string[];
-  settings: Record<string, any>;
-  isPublic: boolean;
-  isOfficial: boolean;
-  createdBy?: string;
+  category: string | null;
+  icon: string | null;
+  color: string | null;
+  estimatedDuration: number | null; // in days
+  difficulty: TemplateDifficulty | string | null;
+  usageCount: number | null;
+  rating: number | null; // average rating * 10
+  ratingCount: number | null;
+  tags: unknown;
+  settings: unknown;
+  isPublic: boolean | null;
+  isOfficial: boolean | null;
+  createdBy: string | null;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt: Date | null;
 }
 
 /**
@@ -43,13 +45,13 @@ export interface TemplateTask {
   title: string;
   description?: string;
   position: number;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: "low" | "medium" | "high" | "urgent";
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
   relativeStartDay?: number; // days after project start
   relativeDueDay?: number; // days after project start
   tags: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,7 +68,7 @@ export interface TemplateSubtask {
   position: number;
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -109,7 +111,7 @@ export interface CreateTemplateInput {
   estimatedDuration?: number;
   difficulty?: TemplateDifficulty;
   tags?: string[];
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
   isPublic?: boolean;
   isOfficial?: boolean;
   tasks?: CreateTemplateTaskInput[];
@@ -122,7 +124,7 @@ export interface CreateTemplateTaskInput {
   title: string;
   description?: string;
   position: number;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  priority?: "low" | "medium" | "high" | "urgent";
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
   relativeStartDay?: number;
@@ -158,8 +160,8 @@ export interface TemplateFilterOptions {
   searchQuery?: string;
   isOfficial?: boolean;
   minRating?: number;
-  sortBy?: 'popular' | 'recent' | 'rating' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "popular" | "recent" | "rating" | "name";
+  sortOrder?: "asc" | "desc";
 }
 
 /**
@@ -185,5 +187,3 @@ export interface TemplateStats {
   highestRatedTemplate: ProjectTemplate | null;
   recentlyAdded: ProjectTemplate[];
 }
-
-

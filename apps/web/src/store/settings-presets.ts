@@ -1,4 +1,4 @@
-import { AllSettings } from "./settings";
+import type { AllSettings } from "./settings";
 
 export interface SettingsPreset {
   id: string;
@@ -30,6 +30,10 @@ const projectManagerPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -69,6 +73,8 @@ const projectManagerPreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,
@@ -102,6 +108,10 @@ const executivePreset: SettingsPreset = {
       reducedMotion: true,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -141,6 +151,8 @@ const executivePreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: false,
@@ -174,6 +186,10 @@ const teamLeadPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -213,6 +229,8 @@ const teamLeadPreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,
@@ -246,6 +264,10 @@ const developerPreset: SettingsPreset = {
       reducedMotion: true,
       compactMode: true,
       sidebarCollapsed: true,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -285,6 +307,8 @@ const developerPreset: SettingsPreset = {
       sessionTimeout: false,
       deviceTracking: false,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: false,
@@ -317,6 +341,10 @@ const designerPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -356,6 +384,8 @@ const designerPreset: SettingsPreset = {
       sessionTimeout: true,
       deviceTracking: true,
       suspiciousActivityAlerts: true,
+      smsBackup: false,
+      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,
@@ -387,6 +417,10 @@ const minimalistPreset: SettingsPreset = {
       reducedMotion: true,
       compactMode: true,
       sidebarCollapsed: true,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -440,6 +474,10 @@ const collaboratorPreset: SettingsPreset = {
       reducedMotion: false,
       compactMode: false,
       sidebarCollapsed: false,
+      scheduledThemeEnabled: false,
+      lightThemeTime: "06:00",
+      darkThemeTime: "18:00",
+      locationBasedEnabled: false,
     },
     notifications: {
       email: {
@@ -486,12 +524,14 @@ export const SETTINGS_PRESETS: SettingsPreset[] = [
   collaboratorPreset,
 ];
 
-export const POPULAR_PRESETS = SETTINGS_PRESETS.filter(preset => preset.popular);
+export const POPULAR_PRESETS = SETTINGS_PRESETS.filter(
+  (preset) => preset.popular,
+);
 
 export function getPresetById(id: string): SettingsPreset | undefined {
-  return SETTINGS_PRESETS.find(preset => preset.id === id);
+  return SETTINGS_PRESETS.find((preset) => preset.id === id);
 }
 
 export function getPresetsByPersona(persona: string): SettingsPreset[] {
-  return SETTINGS_PRESETS.filter(preset => preset.persona.includes(persona));
-} 
+  return SETTINGS_PRESETS.filter((preset) => preset.persona.includes(persona));
+}

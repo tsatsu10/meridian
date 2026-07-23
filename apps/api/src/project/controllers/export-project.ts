@@ -1,21 +1,60 @@
 /**
  * 🔒 Secure Project Export Controller
- * 
+ *
  * Exports project data with:
  * - Permission checking
- * - Audit logging  
+ * - Audit logging
  * - Multiple format support
  * - Rate limiting
  * - Data filtering based on role
  */
 
 import { getDatabase } from "../../database/connection";
-import { projectTable, tasks, milestoneTable, userTable } from "../../database/schema";
+import {
+  projectTable,
+  tasks,
+  milestoneTable,
+  userTable,
+} from "../../database/schema";
 import { eq, and } from "drizzle-orm";
 import { auditLogger } from "../../utils/audit-logger";
+import { errorMessage } from "../../utils/errors";
+
+interface ExportData {
+  project: {
+    id: string;
+    name: string;
+    description?: string | null;
+    status?: string | null;
+    createdAt?: string | Date | null;
+    updatedAt?: string | Date | null;
+  };
+  exportedAt: string;
+  exportedBy: string;
+  format: string;
+  tasks?: Array<{
+    id: string;
+    title: string;
+    description?: string | null;
+    status?: string | null;
+    priority?: string | null;
+    dueDate?: string | Date | null;
+    assignee?: string | null;
+    createdAt?: string | Date | null;
+    updatedAt?: string | Date | null;
+  }>;
+  milestones?: unknown[];
+  team?: unknown[];
+  stats?: {
+    totalTasks?: number;
+    completedTasks?: number;
+    inProgressTasks?: number;
+    overdueTasks?: number;
+  };
+}
 
 interface ExportOptions {
-  format?: 'json' | 'csv' | 'markdown';
+  format?: "json" | "csv" | "markdown";
   includeComments?: boolean;
   includeAttachments?: boolean;
   includeMilestones?: boolean;
@@ -38,7 +77,7 @@ async function exportProject(
   projectId: string,
   workspaceId: string,
   context: ExportContext,
-  options: ExportOptions = {}
+  options: ExportOptions = {},
 ) {
   const db = getDatabase();
   const startTime = Date.now();
@@ -51,37 +90,37 @@ async function exportProject(
       .where(
         and(
           eq(projectTable.id, projectId),
-          eq(projectTable.workspaceId, workspaceId)
-        )
+          eq(projectTable.workspaceId, workspaceId),
+        ),
       )
       .limit(1);
 
     if (!project) {
       // 📊 AUDIT: Failed export attempt
       await auditLogger.logEvent({
-        eventType: 'data_access',
-        action: 'project_export',
+        eventType: "data_access",
+        action: "project_export",
         userId: context.userId,
         userEmail: context.userEmail,
         workspaceId,
         resourceId: projectId,
-        resourceType: 'project',
-        outcome: 'failure',
-        severity: 'medium',
+        resourceType: "project",
+        outcome: "failure",
+        severity: "medium",
         ipAddress: context.ipAddress,
         userAgent: context.userAgent,
         details: {
-          reason: 'Project not found or workspace mismatch',
+          reason: "Project not found or workspace mismatch",
           requestedWorkspace: workspaceId,
-          requestedProject: projectId
-        }
+          requestedProject: projectId,
+        },
       });
 
       throw new Error("Project not found or does not belong to workspace");
     }
 
     // 🔒 STEP 2: Fetch project data based on options and permissions
-    const exportData: any = {
+    const exportData: ExportData = {
       project: {
         id: project.id,
         name: project.name,
@@ -92,7 +131,7 @@ async function exportProject(
       },
       exportedAt: new Date().toISOString(),
       exportedBy: context.userEmail,
-      format: options.format || 'json',
+      format: options.format || "json",
     };
 
     // Fetch tasks
@@ -101,7 +140,7 @@ async function exportProject(
       .from(tasks)
       .where(eq(tasks.projectId, projectId));
 
-    exportData.tasks = projectTasks.map(task => ({
+    exportData.tasks = projectTasks.map((task) => ({
       id: task.id,
       title: task.title,
       description: task.description,
@@ -126,8 +165,10 @@ async function exportProject(
     // Fetch team members if requested
     if (options.includeTeam) {
       // Get unique team members from tasks
-      const uniqueEmails = [...new Set(projectTasks.map(t => t.userEmail).filter(Boolean))];
-      
+      const uniqueEmails = [
+        ...new Set(projectTasks.map((t) => t.userEmail).filter(Boolean)),
+      ];
+
       if (uniqueEmails.length > 0) {
         const teamMembers = await db
           .select({
@@ -137,13 +178,14 @@ async function exportProject(
             role: userTable.role,
           })
           .from(userTable)
-          .where(eq(userTable.email, uniqueEmails[0])); // Get first user as example
-        
+          .where(eq(userTable.email, uniqueEmails[0] ?? "")); // Get first user as example
+
         // For multiple users, we'd need a different query approach
         // For now, just get team members from task assignees
-        exportData.team = uniqueEmails.map(email => ({
+        exportData.team = uniqueEmails.map((email) => ({
           userEmail: email,
-          assignedTasks: projectTasks.filter(t => t.userEmail === email).length,
+          assignedTasks: projectTasks.filter((t) => t.userEmail === email)
+            .length,
         }));
       } else {
         exportData.team = [];
@@ -153,10 +195,12 @@ async function exportProject(
     // Calculate stats
     exportData.stats = {
       totalTasks: projectTasks.length,
-      completedTasks: projectTasks.filter(t => t.status === 'done').length,
-      inProgressTasks: projectTasks.filter(t => t.status === 'in_progress').length,
-      overdueTasks: projectTasks.filter(t => 
-        t.dueDate && t.status !== 'done' && new Date(t.dueDate) < new Date()
+      completedTasks: projectTasks.filter((t) => t.status === "done").length,
+      inProgressTasks: projectTasks.filter((t) => t.status === "in_progress")
+        .length,
+      overdueTasks: projectTasks.filter(
+        (t) =>
+          t.dueDate && t.status !== "done" && new Date(t.dueDate) < new Date(),
       ).length,
     };
 
@@ -164,20 +208,20 @@ async function exportProject(
 
     // 📊 AUDIT: Successful export
     await auditLogger.logEvent({
-      eventType: 'data_access',
-      action: 'project_export',
+      eventType: "data_access",
+      action: "project_export",
       userId: context.userId,
       userEmail: context.userEmail,
       workspaceId,
       resourceId: projectId,
-      resourceType: 'project',
-      outcome: 'success',
-      severity: 'medium', // Data export is always medium severity
+      resourceType: "project",
+      outcome: "success",
+      severity: "medium", // Data export is always medium severity
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
       details: {
         projectName: project.name,
-        format: options.format || 'json',
+        format: options.format || "json",
         includeComments: options.includeComments || false,
         includeAttachments: options.includeAttachments || false,
         includeMilestones: options.includeMilestones || false,
@@ -188,36 +232,35 @@ async function exportProject(
       metadata: {
         duration,
         timestamp: new Date(),
-      }
+      },
     });
 
     return exportData;
-
   } catch (error) {
     const duration = Date.now() - startTime;
 
     // 📊 AUDIT: Failed export
     await auditLogger.logEvent({
-      eventType: 'data_access',
-      action: 'project_export',
+      eventType: "data_access",
+      action: "project_export",
       userId: context.userId,
       userEmail: context.userEmail,
       workspaceId,
       resourceId: projectId,
-      resourceType: 'project',
-      outcome: 'failure',
-      severity: 'high', // Failed exports are high severity
+      resourceType: "project",
+      outcome: "failure",
+      severity: "high", // Failed exports are high severity
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
       details: {
-        error: error.message,
+        error: errorMessage(error),
         userRole: context.userRole,
       },
       metadata: {
         duration,
-        errorMessage: error.message,
+        errorMessage: errorMessage(error),
         timestamp: new Date(),
-      }
+      },
     });
 
     throw error;
@@ -227,89 +270,89 @@ async function exportProject(
 /**
  * Convert export data to CSV format
  */
-function convertToCSV(exportData: any): string {
+function convertToCSV(exportData: ExportData): string {
   const lines: string[] = [];
-  
+
   // Project info
-  lines.push('Project Export');
+  lines.push("Project Export");
   lines.push(`Name,${exportData.project.name}`);
-  lines.push(`Description,${exportData.project.description || 'N/A'}`);
+  lines.push(`Description,${exportData.project.description || "N/A"}`);
   lines.push(`Status,${exportData.project.status}`);
   lines.push(`Exported By,${exportData.exportedBy}`);
   lines.push(`Exported At,${exportData.exportedAt}`);
-  lines.push('');
-  
+  lines.push("");
+
   // Tasks
-  lines.push('Tasks');
-  lines.push('ID,Title,Description,Status,Priority,Due Date,Assignee,Created At');
-  
-  exportData.tasks.forEach((task: any) => {
+  lines.push("Tasks");
+  lines.push(
+    "ID,Title,Description,Status,Priority,Due Date,Assignee,Created At",
+  );
+
+  for (const task of exportData.tasks ?? []) {
     const row = [
       task.id,
       `"${task.title.replace(/"/g, '""')}"`,
-      `"${(task.description || '').replace(/"/g, '""')}"`,
+      `"${(task.description || "").replace(/"/g, '""')}"`,
       task.status,
-      task.priority || 'N/A',
-      task.dueDate || 'N/A',
-      task.assignee || 'Unassigned',
+      task.priority || "N/A",
+      task.dueDate || "N/A",
+      task.assignee || "Unassigned",
       task.createdAt,
-    ].join(',');
+    ].join(",");
     lines.push(row);
-  });
-  
+  }
+
   // Stats
-  lines.push('');
-  lines.push('Statistics');
-  lines.push(`Total Tasks,${exportData.stats.totalTasks}`);
-  lines.push(`Completed Tasks,${exportData.stats.completedTasks}`);
-  lines.push(`In Progress Tasks,${exportData.stats.inProgressTasks}`);
-  lines.push(`Overdue Tasks,${exportData.stats.overdueTasks}`);
-  
-  return lines.join('\n');
+  lines.push("");
+  lines.push("Statistics");
+  lines.push(`Total Tasks,${exportData.stats?.totalTasks}`);
+  lines.push(`Completed Tasks,${exportData.stats?.completedTasks}`);
+  lines.push(`In Progress Tasks,${exportData.stats?.inProgressTasks}`);
+  lines.push(`Overdue Tasks,${exportData.stats?.overdueTasks}`);
+
+  return lines.join("\n");
 }
 
 /**
  * Convert export data to Markdown format
  */
-function convertToMarkdown(exportData: any): string {
+function convertToMarkdown(exportData: ExportData): string {
   const lines: string[] = [];
-  
+
   // Project header
   lines.push(`# ${exportData.project.name}`);
-  lines.push('');
-  lines.push(`**Description:** ${exportData.project.description || 'N/A'}`);
+  lines.push("");
+  lines.push(`**Description:** ${exportData.project.description || "N/A"}`);
   lines.push(`**Status:** ${exportData.project.status}`);
   lines.push(`**Exported By:** ${exportData.exportedBy}`);
   lines.push(`**Exported At:** ${exportData.exportedAt}`);
-  lines.push('');
-  
+  lines.push("");
+
   // Stats
-  lines.push('## Project Statistics');
-  lines.push('');
-  lines.push(`- **Total Tasks:** ${exportData.stats.totalTasks}`);
-  lines.push(`- **Completed:** ${exportData.stats.completedTasks}`);
-  lines.push(`- **In Progress:** ${exportData.stats.inProgressTasks}`);
-  lines.push(`- **Overdue:** ${exportData.stats.overdueTasks}`);
-  lines.push('');
-  
+  lines.push("## Project Statistics");
+  lines.push("");
+  lines.push(`- **Total Tasks:** ${exportData.stats?.totalTasks}`);
+  lines.push(`- **Completed:** ${exportData.stats?.completedTasks}`);
+  lines.push(`- **In Progress:** ${exportData.stats?.inProgressTasks}`);
+  lines.push(`- **Overdue:** ${exportData.stats?.overdueTasks}`);
+  lines.push("");
+
   // Tasks
-  lines.push('## Tasks');
-  lines.push('');
-  lines.push('| Title | Status | Priority | Due Date | Assignee |');
-  lines.push('|-------|--------|----------|----------|----------|');
-  
-  exportData.tasks.forEach((task: any) => {
+  lines.push("## Tasks");
+  lines.push("");
+  lines.push("| Title | Status | Priority | Due Date | Assignee |");
+  lines.push("|-------|--------|----------|----------|----------|");
+
+  for (const task of exportData.tasks ?? []) {
     lines.push(
-      `| ${task.title} | ${task.status} | ${task.priority || 'N/A'} | ${task.dueDate || 'N/A'} | ${task.assignee || 'Unassigned'} |`
+      `| ${task.title} | ${task.status} | ${task.priority || "N/A"} | ${task.dueDate || "N/A"} | ${task.assignee || "Unassigned"} |`,
     );
-  });
-  
-  lines.push('');
-  
-  return lines.join('\n');
+  }
+
+  lines.push("");
+
+  return lines.join("\n");
 }
 
 export { exportProject, convertToCSV, convertToMarkdown };
 export default exportProject;
-
-

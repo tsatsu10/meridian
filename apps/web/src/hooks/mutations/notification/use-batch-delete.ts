@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
 
 function useBatchDelete() {
@@ -7,7 +7,7 @@ function useBatchDelete() {
 
   return useMutation({
     mutationFn: async (notificationIds: string[]) => {
-      const response = await client.notification.batch.delete.$post({
+      const response = await looseClient.notification.batch.delete.$post({
         json: { ids: notificationIds },
       });
 
@@ -29,4 +29,3 @@ function useBatchDelete() {
 }
 
 export default useBatchDelete;
-

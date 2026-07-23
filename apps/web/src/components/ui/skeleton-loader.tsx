@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 /**
  * Skeleton Loader Component
@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
  */
 
 interface SkeletonProps {
-  className?: string
+  className?: string;
 }
 
 export function Skeleton({ className }: SkeletonProps) {
@@ -15,10 +15,10 @@ export function Skeleton({ className }: SkeletonProps) {
     <div
       className={cn(
         "animate-pulse rounded-md bg-slate-200 dark:bg-slate-800",
-        className
+        className,
       )}
     />
-  )
+  );
 }
 
 /**
@@ -41,7 +41,7 @@ export function ProfileCardSkeleton() {
         <Skeleton className="h-4 w-3/4" />
       </div>
     </div>
-  )
+  );
 }
 
 /**
@@ -63,7 +63,7 @@ export function ExperienceItemSkeleton() {
       </div>
       <Skeleton className="h-8 w-8 rounded" />
     </div>
-  )
+  );
 }
 
 /**
@@ -82,7 +82,7 @@ export function ConnectionItemSkeleton() {
       </div>
       <Skeleton className="h-8 w-8 rounded" />
     </div>
-  )
+  );
 }
 
 /**
@@ -95,7 +95,7 @@ export function FormInputSkeleton() {
       <Skeleton className="h-4 w-24" />
       <Skeleton className="h-10 w-full" />
     </div>
-  )
+  );
 }
 
 /**
@@ -115,7 +115,7 @@ export function ProjectCardSkeleton() {
       <Skeleton className="h-2 w-full rounded-full" />
       <Skeleton className="h-3 w-48" />
     </div>
-  )
+  );
 }
 
 /**
@@ -145,14 +145,20 @@ export function ProfilePageSkeleton() {
               <Skeleton className="h-6 w-48" />
               <div className="grid grid-cols-2 gap-4">
                 {[...Array(4)].map((_, i) => (
-                  <FormInputSkeleton key={i} />
+                  <FormInputSkeleton
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                    key={i}
+                  />
                 ))}
               </div>
             </div>
             <div className="rounded-lg border p-6 space-y-4">
               <Skeleton className="h-6 w-32" />
               {[...Array(2)].map((_, i) => (
-                <ExperienceItemSkeleton key={i} />
+                <ExperienceItemSkeleton
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                  key={i}
+                />
               ))}
             </div>
           </div>
@@ -160,13 +166,15 @@ export function ProfilePageSkeleton() {
             <div className="rounded-lg border p-6 space-y-4">
               <Skeleton className="h-6 w-40" />
               {[...Array(3)].map((_, i) => (
-                <ProjectCardSkeleton key={i} />
+                <ProjectCardSkeleton
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+                  key={i}
+                />
               ))}
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
-

@@ -3,15 +3,21 @@
  * Displays version history for a note with diff comparison
  */
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
-import { History, Clock, User, ChevronRight, FileText } from 'lucide-react';
-import { API_BASE_URL } from '@/constants/urls';
-import { formatDistanceToNow, format } from 'date-fns';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import { History, Clock, User, ChevronRight, FileText } from "lucide-react";
+import { API_BASE_URL } from "@/constants/urls";
+import { formatDistanceToNow, format } from "date-fns";
 
 interface NoteVersion {
   id: string;
@@ -30,10 +36,15 @@ interface VersionHistoryProps {
 
 export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
   const [versions, setVersions] = useState<NoteVersion[]>([]);
-  const [selectedVersion, setSelectedVersion] = useState<NoteVersion | null>(null);
-  const [compareVersion, setCompareVersion] = useState<NoteVersion | null>(null);
+  const [selectedVersion, setSelectedVersion] = useState<NoteVersion | null>(
+    null,
+  );
+  const [compareVersion, setCompareVersion] = useState<NoteVersion | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch versions when noteId changes; fetchVersions intentionally not a dep
   useEffect(() => {
     fetchVersions();
   }, [noteId]);
@@ -41,22 +52,25 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
   const fetchVersions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/project-notes/notes/${noteId}/versions`, {
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/project-notes/notes/${noteId}/versions`,
+        {
+          credentials: "include",
+        },
+      );
 
-      if (!response.ok) throw new Error('Failed to fetch versions');
+      if (!response.ok) throw new Error("Failed to fetch versions");
 
       const data = await response.json();
       setVersions(data.data || []);
-      
+
       // Select latest version by default
       if (data.data && data.data.length > 0) {
         setSelectedVersion(data.data[0]);
       }
     } catch (error) {
-      console.error('Failed to fetch versions:', error);
-      toast.error('Failed to load version history');
+      console.error("Failed to fetch versions:", error);
+      toast.error("Failed to load version history");
     } finally {
       setLoading(false);
     }
@@ -73,18 +87,24 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
   const getDiff = () => {
     if (!selectedVersion || !compareVersion) return null;
 
-    const older = selectedVersion.versionNumber < compareVersion.versionNumber 
-      ? selectedVersion 
-      : compareVersion;
-    const newer = selectedVersion.versionNumber > compareVersion.versionNumber 
-      ? selectedVersion 
-      : compareVersion;
+    const older =
+      selectedVersion.versionNumber < compareVersion.versionNumber
+        ? selectedVersion
+        : compareVersion;
+    const newer =
+      selectedVersion.versionNumber > compareVersion.versionNumber
+        ? selectedVersion
+        : compareVersion;
 
     return {
       older,
       newer,
-      addedLines: newer.content.split('\n').filter(line => !older.content.split('\n').includes(line)),
-      removedLines: older.content.split('\n').filter(line => !newer.content.split('\n').includes(line)),
+      addedLines: newer.content
+        .split("\n")
+        .filter((line) => !older.content.split("\n").includes(line)),
+      removedLines: older.content
+        .split("\n")
+        .filter((line) => !newer.content.split("\n").includes(line)),
     };
   };
 
@@ -121,41 +141,68 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
           <CardContent className="p-0">
             <ScrollArea className="h-[600px]">
               {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading versions...</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading versions...
+                </div>
               ) : versions.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No versions found</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No versions found
+                </div>
               ) : (
                 <div className="space-y-2 p-4">
                   {versions.map((version) => (
                     <div
                       key={version.id}
                       className={`p-3 rounded-lg border cursor-pointer transition-colors hover:bg-accent ${
-                        selectedVersion?.id === version.id ? 'bg-accent border-primary' : ''
-                      } ${compareVersion?.id === version.id ? 'border-secondary' : ''}`}
+                        selectedVersion?.id === version.id
+                          ? "bg-accent border-primary"
+                          : ""
+                      } ${compareVersion?.id === version.id ? "border-secondary" : ""}`}
+                      // biome-ignore lint/a11y/useSemanticElements: styled clickable version row, keep as div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedVersion(version);
+                        }
+                      }}
                       onClick={() => setSelectedVersion(version)}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <Badge variant={version.versionNumber === 1 ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            version.versionNumber === 1
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
                           v{version.versionNumber}
                         </Badge>
                         <Button
-                          variant={compareVersion?.id === version.id ? 'default' : 'ghost'}
+                          variant={
+                            compareVersion?.id === version.id
+                              ? "default"
+                              : "ghost"
+                          }
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCompare(version);
                           }}
                         >
-                          {compareVersion?.id === version.id ? 'Selected' : 'Compare'}
+                          {compareVersion?.id === version.id
+                            ? "Selected"
+                            : "Compare"}
                         </Button>
                       </div>
-                      
+
                       {version.changeDescription && (
                         <p className="text-sm text-muted-foreground mb-2">
                           {version.changeDescription}
                         </p>
                       )}
-                      
+
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         {formatDistanceToNow(new Date(version.createdAt))} ago
@@ -177,11 +224,16 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              {diff ? 'Version Comparison' : selectedVersion ? `Version ${selectedVersion.versionNumber}` : 'Select a Version'}
+              {diff
+                ? "Version Comparison"
+                : selectedVersion
+                  ? `Version ${selectedVersion.versionNumber}`
+                  : "Select a Version"}
             </CardTitle>
             {selectedVersion && !diff && (
               <CardDescription>
-                {format(new Date(selectedVersion.createdAt), 'PPpp')} • Edited by {selectedVersion.editedBy}
+                {format(new Date(selectedVersion.createdAt), "PPpp")} • Edited
+                by {selectedVersion.editedBy}
               </CardDescription>
             )}
           </CardHeader>
@@ -196,16 +248,20 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
                   {/* Comparison Header */}
                   <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                     <div>
-                      <Badge variant="secondary">v{diff.older.versionNumber}</Badge>
+                      <Badge variant="secondary">
+                        v{diff.older.versionNumber}
+                      </Badge>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {format(new Date(diff.older.createdAt), 'PP')}
+                        {format(new Date(diff.older.createdAt), "PP")}
                       </p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <Badge variant="default">v{diff.newer.versionNumber}</Badge>
+                      <Badge variant="default">
+                        v{diff.newer.versionNumber}
+                      </Badge>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {format(new Date(diff.newer.createdAt), 'PP')}
+                        {format(new Date(diff.newer.createdAt), "PP")}
                       </p>
                     </div>
                   </div>
@@ -218,7 +274,11 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
                       </h4>
                       <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
                         {diff.addedLines.map((line, index) => (
-                          <pre key={index} className="text-sm text-green-800 dark:text-green-200">
+                          <pre
+                            // biome-ignore lint/suspicious/noArrayIndexKey: diff lines are positional and may repeat verbatim
+                            key={index}
+                            className="text-sm text-green-800 dark:text-green-200"
+                          >
                             + {line}
                           </pre>
                         ))}
@@ -234,7 +294,11 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
                       </h4>
                       <div className="bg-red-50 dark:bg-red-950 rounded-lg p-4">
                         {diff.removedLines.map((line, index) => (
-                          <pre key={index} className="text-sm text-red-800 dark:text-red-200">
+                          <pre
+                            // biome-ignore lint/suspicious/noArrayIndexKey: diff lines are positional and may repeat verbatim
+                            key={index}
+                            className="text-sm text-red-800 dark:text-red-200"
+                          >
                             - {line}
                           </pre>
                         ))}
@@ -242,15 +306,18 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
                     </div>
                   )}
 
-                  {diff.addedLines.length === 0 && diff.removedLines.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No differences found
-                    </div>
-                  )}
+                  {diff.addedLines.length === 0 &&
+                    diff.removedLines.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No differences found
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className="prose dark:prose-invert max-w-none">
-                  <pre className="whitespace-pre-wrap text-sm">{selectedVersion.content}</pre>
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {selectedVersion.content}
+                  </pre>
                 </div>
               )}
             </ScrollArea>
@@ -260,4 +327,3 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
     </div>
   );
 }
-

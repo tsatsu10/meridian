@@ -14,5 +14,3 @@ async function deleteNotification(userEmail: string, notificationId: string) {
 }
 
 export default deleteNotification;
-
-

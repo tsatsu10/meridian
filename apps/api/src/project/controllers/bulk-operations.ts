@@ -1,8 +1,8 @@
 import { getDatabase } from "../../database/connection";
 import { projectTable } from "../../database/schema";
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 /**
  * Bulk Operations Controller
@@ -23,6 +23,10 @@ export interface BulkUpdatePayload {
 
 export interface BulkDeletePayload {
   projectIds: string[];
+  // Required: every project must belong to this workspace or nothing is
+  // deleted. Without this, any authenticated user could delete any
+  // project workspace-wide given only its id.
+  workspaceId: string;
   reason?: string;
 }
 
@@ -48,7 +52,7 @@ export interface BulkOperationResult {
     id: string;
     status: "success" | "failed";
     error?: string;
-    data?: any;
+    data?: unknown;
   }>;
   duration: number; // milliseconds
 }
@@ -60,7 +64,7 @@ export interface BulkOperationResult {
  * @returns BulkOperationResult with success status and details
  */
 export async function bulkUpdateProjects(
-  payload: BulkUpdatePayload
+  payload: BulkUpdatePayload,
 ): Promise<BulkOperationResult> {
   const startTime = Date.now();
   const operationId = createId();
@@ -88,7 +92,7 @@ export async function bulkUpdateProjects(
     }
 
     // Filter out empty updates
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (payload.updates.status !== undefined)
       updateData.status = payload.updates.status;
     if (payload.updates.priority !== undefined)
@@ -130,7 +134,7 @@ export async function bulkUpdateProjects(
 
     // Build result items
     for (const projectId of payload.projectIds) {
-      const updatedProject = updated.find((p: any) => p.id === projectId);
+      const updatedProject = updated.find((p) => p.id === projectId);
       if (updatedProject) {
         items.push({
           id: projectId,
@@ -183,7 +187,7 @@ export async function bulkUpdateProjects(
  * @returns BulkOperationResult with deletion details
  */
 export async function bulkDeleteProjects(
-  payload: BulkDeletePayload
+  payload: BulkDeletePayload,
 ): Promise<BulkOperationResult> {
   const startTime = Date.now();
   const operationId = createId();
@@ -210,20 +214,71 @@ export async function bulkDeleteProjects(
       };
     }
 
+    if (!payload.workspaceId) {
+      return {
+        success: false,
+        operationId,
+        timestamp: new Date(),
+        type: "delete",
+        count: 0,
+        items: [
+          {
+            id: "",
+            status: "failed",
+            error: "Workspace ID is required",
+          },
+        ],
+        duration: Date.now() - startTime,
+      };
+    }
+
     // Fetch projects before deletion for audit trail
     const projectsToDelete = await db.query.projectTable.findMany({
       where: inArray(projectTable.id, payload.projectIds),
     });
 
-    // Execute bulk delete with cascade
+    // 🔒 SECURITY: Every requested project must exist and belong to the
+    // given workspace. Fail closed — reject the whole batch rather than
+    // silently deleting a subset, so a single bad id (typo, stale cache,
+    // tampered request) can't cause a partial, surprising deletion.
+    const belongsToWorkspace = (project: { workspaceId: string }) =>
+      project.workspaceId === payload.workspaceId;
+
+    if (
+      projectsToDelete.length !== payload.projectIds.length ||
+      !projectsToDelete.every(belongsToWorkspace)
+    ) {
+      return {
+        success: false,
+        operationId,
+        timestamp: new Date(),
+        type: "delete",
+        count: 0,
+        items: payload.projectIds.map((id) => ({
+          id,
+          status: "failed" as const,
+          error: "Project not found or does not belong to workspace",
+        })),
+        duration: Date.now() - startTime,
+      };
+    }
+
+    // Execute bulk delete, scoped to the workspace as defense in depth —
+    // the mutation itself can't reach outside it even if the pre-check
+    // above were ever bypassed or drifted from this query.
     const deleted = await db
       .delete(projectTable)
-      .where(inArray(projectTable.id, payload.projectIds))
+      .where(
+        and(
+          inArray(projectTable.id, payload.projectIds),
+          eq(projectTable.workspaceId, payload.workspaceId),
+        ),
+      )
       .returning();
 
     // Build result items
     for (const project of projectsToDelete) {
-      const deletedProject = deleted.find((p: any) => p.id === project.id);
+      const deletedProject = deleted.find((p) => p.id === project.id);
       if (deletedProject) {
         items.push({
           id: project.id,
@@ -276,7 +331,7 @@ export async function bulkDeleteProjects(
  * @returns BulkOperationResult with created project details
  */
 export async function bulkCreateProjects(
-  payload: BulkCreatePayload
+  payload: BulkCreatePayload,
 ): Promise<BulkOperationResult> {
   const startTime = Date.now();
   const operationId = createId();
@@ -366,7 +421,7 @@ export async function bulkCreateProjects(
  * Get operation history for undo/redo support
  * Returns recent operations with reversibility status
  */
-export async function getOperationHistory(limit: number = 50) {
+export async function getOperationHistory(limit = 50) {
   // This would be implemented with an operations_history table
   // For now, returning stub for integration
   return {
@@ -389,4 +444,3 @@ export async function revertOperation(operationId: string) {
     newOperationId: createId(),
   };
 }
-

@@ -9,7 +9,11 @@
 
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { workspaceTable, workspaceMembers, userTable } from "../../database/schema";
+import {
+  workspaceTable,
+  workspaceMembers,
+  userTable,
+} from "../../database/schema";
 
 export interface WorkspaceSettings {
   // Basic Info
@@ -24,7 +28,7 @@ export interface WorkspaceSettings {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date | null;
-  
+
   // Member Settings
   memberCount: number;
   allowMemberInvites: boolean;
@@ -33,27 +37,27 @@ export interface WorkspaceSettings {
   autoRemoveInactive: boolean;
   inactivityDays: number;
   maxMembers: number | null;
-  
+
   // Project Defaults
-  defaultProjectVisibility: 'private' | 'team' | 'workspace';
-  defaultTaskPriority: 'low' | 'medium' | 'high' | 'urgent';
+  defaultProjectVisibility: "private" | "team" | "workspace";
+  defaultTaskPriority: "low" | "medium" | "high" | "urgent";
   enableTimeTracking: boolean;
   requireTaskApproval: boolean;
-  
+
   // Workspace Preferences
   workingDays: string[]; // ['monday', 'tuesday', ...]
   workingHoursStart: string; // '09:00'
   workingHoursEnd: string; // '17:00'
   timezone: string;
   dateFormat: string;
-  timeFormat: '12h' | '24h';
-  
+  timeFormat: "12h" | "24h";
+
   // Feature Flags
   enableAutomation: boolean;
   enableCalendar: boolean;
   enableMessaging: boolean;
   enableAnalytics: boolean;
-  
+
   // Branding
   primaryColor: string;
   accentColor: string;
@@ -67,31 +71,31 @@ const DEFAULT_SETTINGS = {
   autoRemoveInactive: false,
   inactivityDays: 90,
   maxMembers: null,
-  defaultProjectVisibility: 'team' as const,
-  defaultTaskPriority: 'medium' as const,
+  defaultProjectVisibility: "team" as const,
+  defaultTaskPriority: "medium" as const,
   enableTimeTracking: true,
   requireTaskApproval: false,
-  workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-  workingHoursStart: '09:00',
-  workingHoursEnd: '17:00',
-  timezone: 'UTC',
-  dateFormat: 'MM/DD/YYYY',
-  timeFormat: '12h' as const,
+  workingDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+  workingHoursStart: "09:00",
+  workingHoursEnd: "17:00",
+  timezone: "UTC",
+  dateFormat: "MM/DD/YYYY",
+  timeFormat: "12h" as const,
   enableAutomation: true,
   enableCalendar: true,
   enableMessaging: true,
   enableAnalytics: true,
-  primaryColor: '#3B82F6',
-  accentColor: '#8B5CF6',
+  primaryColor: "#3B82F6",
+  accentColor: "#8B5CF6",
   customDomain: null,
 };
 
 export default async function getWorkspaceSettings(
   userEmail: string,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<WorkspaceSettings> {
   const db = getDatabase();
-  
+
   // Get workspace with owner info
   const [workspace] = await db
     .select({
@@ -102,11 +106,11 @@ export default async function getWorkspaceSettings(
     .leftJoin(userTable, eq(workspaceTable.ownerId, userTable.id))
     .where(eq(workspaceTable.id, workspaceId))
     .limit(1);
-  
+
   if (!workspace) {
-    throw new Error('Workspace not found');
+    throw new Error("Workspace not found");
   }
-  
+
   // Verify user is a member
   const [membership] = await db
     .select()
@@ -114,25 +118,26 @@ export default async function getWorkspaceSettings(
     .where(
       and(
         eq(workspaceMembers.workspaceId, workspaceId),
-        eq(workspaceMembers.userEmail, userEmail)
-      )
+        eq(workspaceMembers.userEmail, userEmail),
+      ),
     )
     .limit(1);
-  
+
   if (!membership) {
-    throw new Error('Access denied: Not a workspace member');
+    throw new Error("Access denied: Not a workspace member");
   }
-  
+
   // Count members
   const memberCount = await db
     .select()
     .from(workspaceMembers)
     .where(eq(workspaceMembers.workspaceId, workspaceId));
-  
+
   // Merge default settings with stored settings
-  const storedSettings = (workspace.workspace.settings as any) || {};
+  const storedSettings =
+    (workspace.workspace.settings as Record<string, unknown>) || {};
   const settings = { ...DEFAULT_SETTINGS, ...storedSettings };
-  
+
   return {
     id: workspace.workspace.id,
     name: workspace.workspace.name,
@@ -140,8 +145,8 @@ export default async function getWorkspaceSettings(
     logo: workspace.workspace.logo,
     slug: workspace.workspace.slug,
     ownerId: workspace.workspace.ownerId,
-    ownerEmail: workspace.owner?.email || '',
-    ownerName: workspace.owner?.name || 'Unknown',
+    ownerEmail: workspace.owner?.email || "",
+    ownerName: workspace.owner?.name || "Unknown",
     isActive: workspace.workspace.isActive ?? true,
     createdAt: workspace.workspace.createdAt,
     updatedAt: workspace.workspace.updatedAt,
@@ -149,5 +154,3 @@ export default async function getWorkspaceSettings(
     ...settings,
   };
 }
-
-

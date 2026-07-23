@@ -5,9 +5,9 @@
 // @persona-mike: Dev needs minimal header interference
 // @persona-lisa: Designer needs clean header design
 
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,35 +17,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { 
-  Bell, 
-  LogOut, 
-  Settings, 
-  User, 
-  Plus, 
+  LogOut,
+  Settings,
+  User,
+  Plus,
   Command,
   FolderPlus,
   CheckSquare,
-  UserPlus
+  UserPlus,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import { useRBACAuth } from "@/lib/permissions";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/shared/notifications/notification-center";
 import useWorkspaceStore from "@/store/workspace";
 import useProjectStore from "@/store/project";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
-import type { Project } from "@/types/project";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
@@ -55,39 +42,34 @@ interface PageHeaderActionsProps {
   showChat?: boolean;
 }
 
-export default function PageHeaderActions({
-  unreadNotifications = 3,
-  showChat = true,
-}: PageHeaderActionsProps) {
-  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const [isInviteTeamMemberOpen, setIsInviteTeamMemberOpen] = useState(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+export default function PageHeaderActions(_props: PageHeaderActionsProps = {}) {
+  const [_isCreateProjectOpen, _setIsCreateProjectOpen] = useState(false);
+  const [_isCreateTaskOpen, _setIsCreateTaskOpen] = useState(false);
+  const [_isInviteTeamMemberOpen, _setIsInviteTeamMemberOpen] = useState(false);
+  const [_isCommandPaletteOpen, _setIsCommandPaletteOpen] = useState(false);
 
   const { workspace } = useWorkspaceStore();
   const { project } = useProjectStore();
-  const { data: projects } = useGetProjects({ workspaceId: workspace?.id ?? "" });
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { hasPermission } = useRBACAuth();
-  const { workspace: workspaceStore } = useWorkspaceStore();
-  
+  const { user } = useAuth();
+
   // Modal states
-  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
+    useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // Enhanced action handlers
   const handleProfile = () => {
-    navigate({ to: '/dashboard/settings/profile' });
+    navigate({ to: "/dashboard/settings/profile" });
   };
 
   const handleSettings = () => {
-    navigate({ to: '/dashboard/settings' });
+    navigate({ to: "/dashboard/settings" });
   };
 
   const handleNotificationSettings = () => {
-    navigate({ to: '/dashboard/settings/notifications' });
+    navigate({ to: "/dashboard/settings/notifications" });
   };
 
   const handleCreateProject = () => {
@@ -118,14 +100,10 @@ export default function PageHeaderActions({
     try {
       // Note: signOut method should be implemented in auth provider
       // For now, just navigate to sign-in page
-      navigate({ to: '/auth/sign-in' });
+      navigate({ to: "/auth/sign-in" });
     } catch (error) {
       toast.error("Failed to sign out");
     }
-  };
-
-  const handleCreateClick = () => {
-    // Default create action - show dropdown or navigate
   };
 
   return (
@@ -134,8 +112,8 @@ export default function PageHeaderActions({
         {/* Quick Actions Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="default"
               className="flex items-center space-x-2 glass-card hover:bg-accent"
               title="Quick Actions"
@@ -147,15 +125,24 @@ export default function PageHeaderActions({
           <DropdownMenuContent align="end" className="w-56 glass-card">
             <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleCreateProject} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleCreateProject}
+              className="cursor-pointer"
+            >
               <FolderPlus className="h-4 w-4 mr-2" />
               New Project
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleCreateTask} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleCreateTask}
+              className="cursor-pointer"
+            >
               <CheckSquare className="h-4 w-4 mr-2" />
               New Task
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleInviteUser} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleInviteUser}
+              className="cursor-pointer"
+            >
               <UserPlus className="h-4 w-4 mr-2" />
               Invite Member
             </DropdownMenuItem>
@@ -163,28 +150,25 @@ export default function PageHeaderActions({
         </DropdownMenu>
 
         {/* Notifications - Using NotificationCenter component */}
-        <NotificationCenter 
-          variant="icon" 
-          className={cn(
-            "glass-card",
-            "h-9 w-9"
-          )}
+        <NotificationCenter
+          variant="icon"
+          className={cn("glass-card", "h-9 w-9")}
         />
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className={cn(
                 "relative glass-card hover:bg-accent",
-                "h-9 w-9 p-0"
-              )} 
+                "h-9 w-9 p-0",
+              )}
               title="User Menu"
             >
               <Avatar className={cn("h-8 w-8")}>
                 <AvatarFallback className="text-xs">
-                  {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                  {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -193,7 +177,7 @@ export default function PageHeaderActions({
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {user?.name || 'User'}
+                  {user?.name || "User"}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {user?.email}
@@ -206,20 +190,32 @@ export default function PageHeaderActions({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleProfile} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleProfile}
+              className="cursor-pointer"
+            >
               <User className="h-4 w-4 mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSettings} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleSettings}
+              className="cursor-pointer"
+            >
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleNotificationSettings} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleNotificationSettings}
+              className="cursor-pointer"
+            >
               <Command className="h-4 w-4 mr-2" />
               Preferences
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400 cursor-pointer">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-red-600 dark:text-red-400 cursor-pointer"
+            >
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </DropdownMenuItem>
@@ -228,9 +224,9 @@ export default function PageHeaderActions({
       </div>
 
       {/* Modals */}
-      <CreateProjectModal 
-        open={isCreateProjectModalOpen} 
-        onClose={() => setIsCreateProjectModalOpen(false)} 
+      <CreateProjectModal
+        open={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
       />
 
       <CreateTaskModal
@@ -238,9 +234,6 @@ export default function PageHeaderActions({
         onOpenChange={setIsCreateTaskModalOpen}
         projectContext={project}
         hideProjectSelection={false}
-        filterOptions={{
-          projects: projects,
-        }}
       />
 
       {workspace && (
@@ -252,4 +245,4 @@ export default function PageHeaderActions({
       )}
     </>
   );
-} 
+}

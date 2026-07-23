@@ -23,17 +23,13 @@ export function ColumnDropzone({ column }: ColumnDropzoneProps) {
   // Only render parent tasks - subtasks are shown in expanded view within parent cards
   const renderParentTasks = (tasks: TaskWithSubtasks[]) => {
     return tasks.map((task) => (
-      <TaskCard 
-        key={task.id} 
-        task={task} 
-        hierarchyLevel={0}
-      />
+      <TaskCard key={task.id} task={task} hierarchyLevel={0} />
     ));
   };
 
   // Get parent task IDs only for sortable context
   const getParentTaskIds = (tasks: TaskWithSubtasks[]): string[] => {
-    return tasks.map(task => task.id);
+    return tasks.map((task) => task.id);
   };
 
   return (

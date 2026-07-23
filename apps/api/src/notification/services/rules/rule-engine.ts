@@ -3,36 +3,47 @@
  * Evaluates alert rules and triggers notifications when conditions are met
  */
 
-import { getDatabase } from '../../../database/connection';
-import { alertRules, tasks, projects, notifications } from '../../../database/schema';
-import { eq, and, gte, lte, count, desc } from 'drizzle-orm';
-import { logger } from '../../../utils/logger';
-import createNotification from '../../controllers/create-notification';
-import { sendThroughIntegrations } from '../../../integrations/services/integration-delivery';
+import { getDatabase } from "../../../database/connection";
+import {
+  alertRules,
+  tasks,
+  projects,
+  notifications,
+} from "../../../database/schema";
+import { eq, and, gte, lte, count, desc } from "drizzle-orm";
+import { logger } from "../../../utils/logger";
+import createNotification from "../../controllers/create-notification";
+import emailService from "../../../services/email-service";
 
 export interface RuleCondition {
-  type: 'project_progress' | 'task_overdue' | 'mention' | 'keyword' | 'task_count' | 'no_activity';
+  type:
+    | "project_progress"
+    | "task_overdue"
+    | "mention"
+    | "keyword"
+    | "task_count"
+    | "no_activity";
   config: {
     // For project_progress
     projectId?: string;
     threshold?: number; // percentage
-    operator?: 'above' | 'below' | 'equals';
-    
+    operator?: "above" | "below" | "equals";
+
     // For task_overdue
     daysOverdue?: number;
-    
+
     // For mention
     keywords?: string[];
-    
+
     // For keyword
     searchText?: string;
-    searchIn?: ('title' | 'content' | 'comments')[];
-    
+    searchIn?: ("title" | "content" | "comments")[];
+
     // For task_count
     status?: string;
     countThreshold?: number;
-    countOperator?: 'above' | 'below' | 'equals';
-    
+    countOperator?: "above" | "below" | "equals";
+
     // For no_activity
     inactivityDays?: number;
   };
@@ -43,7 +54,7 @@ export interface AlertRule {
   userEmail: string;
   name: string;
   conditionType: string;
-  conditionConfig: RuleCondition['config'];
+  conditionConfig: RuleCondition["config"];
   notificationChannels: string[];
   isActive: boolean;
 }
@@ -51,23 +62,26 @@ export interface AlertRule {
 /**
  * Evaluate a single rule
  */
-export async function evaluateRule(rule: AlertRule, workspaceId: string): Promise<boolean> {
+export async function evaluateRule(
+  rule: AlertRule,
+  workspaceId: string,
+): Promise<boolean> {
   const db = getDatabase();
-  
+
   try {
     switch (rule.conditionType) {
-      case 'project_progress':
+      case "project_progress":
         return await evaluateProjectProgress(db, rule, workspaceId);
-      
-      case 'task_overdue':
+
+      case "task_overdue":
         return await evaluateTaskOverdue(db, rule, workspaceId);
-      
-      case 'task_count':
+
+      case "task_count":
         return await evaluateTaskCount(db, rule, workspaceId);
-      
-      case 'no_activity':
+
+      case "no_activity":
         return await evaluateNoActivity(db, rule, workspaceId);
-      
+
       default:
         logger.warn(`Unknown rule type: ${rule.conditionType}`);
         return false;
@@ -81,11 +95,19 @@ export async function evaluateRule(rule: AlertRule, workspaceId: string): Promis
 /**
  * Evaluate project progress condition
  */
-async function evaluateProjectProgress(db: any, rule: AlertRule, workspaceId: string): Promise<boolean> {
-  const { projectId, threshold = 50, operator = 'below' } = rule.conditionConfig;
-  
+async function evaluateProjectProgress(
+  db: ReturnType<typeof getDatabase>,
+  rule: AlertRule,
+  workspaceId: string,
+): Promise<boolean> {
+  const {
+    projectId,
+    threshold = 50,
+    operator = "below",
+  } = rule.conditionConfig;
+
   if (!projectId) return false;
-  
+
   try {
     // Get project
     const [project] = await db
@@ -93,33 +115,33 @@ async function evaluateProjectProgress(db: any, rule: AlertRule, workspaceId: st
       .from(projects)
       .where(eq(projects.id, projectId))
       .limit(1);
-    
+
     if (!project) return false;
-    
+
     // Calculate progress
     const allTasks = await db
       .select()
       .from(tasks)
       .where(eq(tasks.projectId, projectId));
-    
+
     if (allTasks.length === 0) return false;
-    
-    const completedTasks = allTasks.filter((t: any) => t.status === 'done').length;
+
+    const completedTasks = allTasks.filter((t) => t.status === "done").length;
     const progress = (completedTasks / allTasks.length) * 100;
-    
+
     // Check condition
     switch (operator) {
-      case 'above':
+      case "above":
         return progress > threshold;
-      case 'below':
+      case "below":
         return progress < threshold;
-      case 'equals':
+      case "equals":
         return Math.abs(progress - threshold) < 1;
       default:
         return false;
     }
   } catch (error) {
-    logger.error('Failed to evaluate project progress:', error);
+    logger.error("Failed to evaluate project progress:", error);
     return false;
   }
 }
@@ -127,26 +149,32 @@ async function evaluateProjectProgress(db: any, rule: AlertRule, workspaceId: st
 /**
  * Evaluate task overdue condition
  */
-async function evaluateTaskOverdue(db: any, rule: AlertRule, workspaceId: string): Promise<boolean> {
+async function evaluateTaskOverdue(
+  db: ReturnType<typeof getDatabase>,
+  rule: AlertRule,
+  workspaceId: string,
+): Promise<boolean> {
   const { daysOverdue = 1 } = rule.conditionConfig;
-  
+
   try {
     const now = new Date();
-    const overdueDate = new Date(now.getTime() - daysOverdue * 24 * 60 * 60 * 1000);
-    
+    const overdueDate = new Date(
+      now.getTime() - daysOverdue * 24 * 60 * 60 * 1000,
+    );
+
     const overdueTasks = await db
       .select()
       .from(tasks)
       .where(
         and(
-          eq(tasks.assignee, rule.userEmail),
-          lte(tasks.dueDate, overdueDate)
-        )
+          eq(tasks.userEmail, rule.userEmail),
+          lte(tasks.dueDate, overdueDate),
+        ),
       );
-    
+
     return overdueTasks.length > 0;
   } catch (error) {
-    logger.error('Failed to evaluate task overdue:', error);
+    logger.error("Failed to evaluate task overdue:", error);
     return false;
   }
 }
@@ -154,34 +182,43 @@ async function evaluateTaskOverdue(db: any, rule: AlertRule, workspaceId: string
 /**
  * Evaluate task count condition
  */
-async function evaluateTaskCount(db: any, rule: AlertRule, workspaceId: string): Promise<boolean> {
-  const { status = 'pending', countThreshold = 10, countOperator = 'above' } = rule.conditionConfig;
-  
+async function evaluateTaskCount(
+  db: ReturnType<typeof getDatabase>,
+  rule: AlertRule,
+  workspaceId: string,
+): Promise<boolean> {
+  const {
+    status = "pending",
+    countThreshold = 10,
+    countOperator = "above",
+  } = rule.conditionConfig;
+
   try {
     const userTasks = await db
       .select()
       .from(tasks)
       .where(
         and(
-          eq(tasks.assignee, rule.userEmail),
-          eq(tasks.status, status)
-        )
+          eq(tasks.userEmail, rule.userEmail),
+          // rule conditions carry plain strings; narrow onto the enum
+          eq(tasks.status, status as "todo" | "in_progress" | "done"),
+        ),
       );
-    
+
     const taskCount = userTasks.length;
-    
+
     switch (countOperator) {
-      case 'above':
+      case "above":
         return taskCount > countThreshold;
-      case 'below':
+      case "below":
         return taskCount < countThreshold;
-      case 'equals':
+      case "equals":
         return taskCount === countThreshold;
       default:
         return false;
     }
   } catch (error) {
-    logger.error('Failed to evaluate task count:', error);
+    logger.error("Failed to evaluate task count:", error);
     return false;
   }
 }
@@ -189,27 +226,33 @@ async function evaluateTaskCount(db: any, rule: AlertRule, workspaceId: string):
 /**
  * Evaluate no activity condition
  */
-async function evaluateNoActivity(db: any, rule: AlertRule, workspaceId: string): Promise<boolean> {
+async function evaluateNoActivity(
+  db: ReturnType<typeof getDatabase>,
+  rule: AlertRule,
+  workspaceId: string,
+): Promise<boolean> {
   const { inactivityDays = 7 } = rule.conditionConfig;
-  
+
   try {
-    const inactivityDate = new Date(Date.now() - inactivityDays * 24 * 60 * 60 * 1000);
-    
+    const inactivityDate = new Date(
+      Date.now() - inactivityDays * 24 * 60 * 60 * 1000,
+    );
+
     // Check for recent task updates
     const recentTasks = await db
       .select()
       .from(tasks)
       .where(
         and(
-          eq(tasks.assignee, rule.userEmail),
-          gte(tasks.updatedAt, inactivityDate)
-        )
+          eq(tasks.userEmail, rule.userEmail),
+          gte(tasks.updatedAt, inactivityDate),
+        ),
       );
-    
+
     // No activity if no recent task updates
     return recentTasks.length === 0;
   } catch (error) {
-    logger.error('Failed to evaluate no activity:', error);
+    logger.error("Failed to evaluate no activity:", error);
     return false;
   }
 }
@@ -217,35 +260,35 @@ async function evaluateNoActivity(db: any, rule: AlertRule, workspaceId: string)
 /**
  * Trigger alert for a rule
  */
-export async function triggerAlert(rule: AlertRule, workspaceId: string): Promise<void> {
+export async function triggerAlert(
+  rule: AlertRule,
+  workspaceId: string,
+): Promise<void> {
   logger.info(`Triggering alert for rule ${rule.name} (${rule.id})`);
-  
+
   try {
     // Create notification message based on rule type
     const message = generateAlertMessage(rule);
-    
+
     // Send notifications through configured channels
     for (const channel of rule.notificationChannels) {
-      if (channel === 'in_app') {
+      if (channel === "in_app") {
         await createNotification({
           userEmail: rule.userEmail,
           title: `Alert: ${rule.name}`,
           content: message,
-          type: 'alert',
-          priority: 'high',
+          type: "alert",
+          priority: "high",
         });
-      } else if (channel === 'email' || channel === 'slack' || channel === 'teams') {
-        // Send through integrations
-        await sendThroughIntegrations(rule.userEmail, workspaceId, {
-          title: `Alert: ${rule.name}`,
+      } else if (channel === "email") {
+        await emailService.sendNotificationEmail(
+          rule.userEmail,
+          `Alert: ${rule.name}`,
           message,
-          type: 'alert',
-          priority: 'high',
-          createdAt: new Date(),
-        });
+        );
       }
     }
-    
+
     logger.info(`Alert triggered successfully for rule ${rule.id}`);
   } catch (error) {
     logger.error(`Failed to trigger alert for rule ${rule.id}:`, error);
@@ -257,28 +300,32 @@ export async function triggerAlert(rule: AlertRule, workspaceId: string): Promis
  */
 function generateAlertMessage(rule: AlertRule): string {
   switch (rule.conditionType) {
-    case 'project_progress':
+    case "project_progress": {
       const { threshold, operator, projectId } = rule.conditionConfig;
       return `Project progress is ${operator} ${threshold}% (Project: ${projectId})`;
-    
-    case 'task_overdue':
+    }
+
+    case "task_overdue": {
       const { daysOverdue } = rule.conditionConfig;
       return `You have tasks overdue by ${daysOverdue} days`;
-    
-    case 'task_count':
+    }
+
+    case "task_count": {
       const { status, countThreshold, countOperator } = rule.conditionConfig;
       return `You have ${countOperator} ${countThreshold} ${status} tasks`;
-    
-    case 'no_activity':
+    }
+
+    case "no_activity": {
       const { inactivityDays } = rule.conditionConfig;
       return `No activity detected for ${inactivityDays} days`;
-    
-    case 'mention':
-      return 'You were mentioned in a notification';
-    
-    case 'keyword':
+    }
+
+    case "mention":
+      return "You were mentioned in a notification";
+
+    case "keyword":
       return `Keyword detected: ${rule.conditionConfig.searchText}`;
-    
+
     default:
       return `Alert triggered: ${rule.name}`;
   }
@@ -290,24 +337,28 @@ function generateAlertMessage(rule: AlertRule): string {
  */
 export async function evaluateAllRules(): Promise<void> {
   const db = getDatabase();
-  
+
   try {
-    logger.info('Evaluating all active alert rules...');
-    
+    logger.info("Evaluating all active alert rules...");
+
     const activeRules = await db
       .select()
       .from(alertRules)
       .where(eq(alertRules.isActive, true));
-    
+
     logger.info(`Found ${activeRules.length} active rules to evaluate`);
-    
+
     for (const rule of activeRules) {
       try {
-        // Assume workspaceId from rule or fetch from user
-        const workspaceId = 'default'; // TODO: Get from user context
-        
-        const shouldTrigger = await evaluateRule(rule as AlertRule, workspaceId);
-        
+        // workspaceId is unused by every evaluate* function below (they scope
+        // by rule.userEmail instead), so this placeholder has no effect.
+        const workspaceId = "default";
+
+        const shouldTrigger = await evaluateRule(
+          rule as AlertRule,
+          workspaceId,
+        );
+
         if (shouldTrigger) {
           await triggerAlert(rule as AlertRule, workspaceId);
         }
@@ -315,11 +366,9 @@ export async function evaluateAllRules(): Promise<void> {
         logger.error(`Failed to evaluate rule ${rule.id}:`, error);
       }
     }
-    
-    logger.info('Finished evaluating all alert rules');
+
+    logger.info("Finished evaluating all alert rules");
   } catch (error) {
-    logger.error('Failed to evaluate rules:', error);
+    logger.error("Failed to evaluate rules:", error);
   }
 }
-
-

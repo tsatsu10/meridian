@@ -1,12 +1,12 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { calendarEvents } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // @epic-3.4-teams: Get event team ID (for WebSocket broadcasting)
 export async function getEventTeamId(eventId: string): Promise<string | null> {
   const db = getDatabase();
-  
+
   try {
     const event = await db.query.calendarEvents.findFirst({
       where: (events, { eq }) => eq(events.id, eventId),
@@ -33,28 +33,26 @@ export async function deleteEvent(eventId: string, userId: string) {
     });
 
     if (!existingEvent) {
-      throw new Error('Event not found');
+      throw new Error("Event not found");
     }
 
     // Only creator can delete
     if (existingEvent.createdBy !== userId) {
-      throw new Error('Unauthorized to delete this event');
+      throw new Error("Unauthorized to delete this event");
     }
 
     // Soft delete the event
     await db
       .update(calendarEvents)
-      .set({ 
+      .set({
         deletedAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(calendarEvents.id, eventId));
 
-    return { success: true, message: 'Event deleted successfully' };
+    return { success: true, message: "Event deleted successfully" };
   } catch (error) {
     logger.error("Error deleting event:", error);
     throw error;
   }
 }
-
-

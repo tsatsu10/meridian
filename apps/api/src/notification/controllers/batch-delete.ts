@@ -6,9 +6,9 @@ async function batchDelete(userEmail: string, notificationIds: string[]) {
   const db = getDatabase();
 
   if (notificationIds.length === 0) {
-    return { 
+    return {
       count: 0,
-      notifications: []
+      notifications: [],
     };
   }
 
@@ -18,8 +18,8 @@ async function batchDelete(userEmail: string, notificationIds: string[]) {
     .where(
       and(
         eq(notificationTable.userEmail, userEmail),
-        inArray(notificationTable.id, notificationIds)
-      )
+        inArray(notificationTable.id, notificationIds),
+      ),
     )
     .returning();
 
@@ -30,5 +30,3 @@ async function batchDelete(userEmail: string, notificationIds: string[]) {
 }
 
 export default batchDelete;
-
-

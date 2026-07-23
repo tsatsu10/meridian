@@ -3,12 +3,12 @@ import { getDatabase } from "../database/connection";
 import { userTable, settingsAuditLogTable } from "../database/schema";
 import { eq, and, gte, count, sql } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const twoFactorRoutes = new Hono();
 
 // Get 2FA statistics
-twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
+twoFactorRoutes.get("/stats", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -26,7 +26,8 @@ twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
     const total = totalUsers[0]?.count ?? 0;
     const withTwoFactor = usersWithTwoFactor[0]?.count ?? 0;
     const withoutTwoFactor = total - withTwoFactor;
-    const adoptionPercentage = total > 0 ? Math.round((withTwoFactor / total) * 100) : 0;
+    const adoptionPercentage =
+      total > 0 ? Math.round((withTwoFactor / total) * 100) : 0;
 
     // Calculate trend (users who enabled 2FA in the last 30 days)
     const recentEnablements = await db
@@ -35,16 +36,17 @@ twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
       .where(
         and(
           eq(settingsAuditLogTable.action, "two_factor_enabled"),
-          gte(settingsAuditLogTable.timestamp, lastMonth)
-        )
+          gte(settingsAuditLogTable.createdAt, lastMonth),
+        ),
       );
 
     const recentCount = recentEnablements[0]?.count ?? 0;
-    const trendPercentage = total > 0 ? Math.round((recentCount / total) * 100) : 0;
+    const trendPercentage =
+      total > 0 ? Math.round((recentCount / total) * 100) : 0;
 
     // Check if enforcement is enabled (stored in settings or environment)
     // For now, we'll return a placeholder
-    const enforcementEnabled = false; // TODO: Add to workspace settings
+    const enforcementEnabled = false; // See https://github.com/tsatsu10/meridian/issues/65
 
     return c.json({
       totalUsers: total,
@@ -64,7 +66,7 @@ twoFactorRoutes.get("/stats", authMiddleware, async (c) => {
 });
 
 // Get user 2FA status list
-twoFactorRoutes.get("/users", authMiddleware, async (c) => {
+twoFactorRoutes.get("/users", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -85,8 +87,8 @@ twoFactorRoutes.get("/users", authMiddleware, async (c) => {
       name: user.name || user.email.split("@")[0],
       hasTwoFactor: user.twoFactorEnabled ?? false,
       enabledAt: user.twoFactorEnabled ? user.createdAt : undefined,
-      lastUsed: undefined, // TODO: Track last 2FA usage
-      backupCodesRemaining: undefined, // TODO: Track backup codes
+      lastUsed: undefined, // See https://github.com/tsatsu10/meridian/issues/72
+      backupCodesRemaining: undefined, // See https://github.com/tsatsu10/meridian/issues/72
     }));
 
     return c.json(userStatuses);
@@ -97,56 +99,50 @@ twoFactorRoutes.get("/users", authMiddleware, async (c) => {
 });
 
 // Toggle 2FA enforcement
-twoFactorRoutes.post("/enforcement", authMiddleware, async (c) => {
-  try {
-    const { enabled } = await c.req.json();
-    const userEmail = c.get("userEmail");
-    const db = getDatabase();
-
-    // TODO: Store enforcement setting in workspace settings table
-    // For now, we'll just log the action
-
-    // Log the enforcement change
-    await db.insert(settingsAuditLogTable).values({
-      id: crypto.randomUUID(),
-      userEmail,
-      action: enabled ? "two_factor_enforcement_enabled" : "two_factor_enforcement_disabled",
-      details: JSON.stringify({ enabled }),
-      ipAddress: c.req.header("x-forwarded-for") || "unknown",
-      timestamp: new Date(),
-      severity: "info",
-    });
-
-    return c.json({
-      success: true,
-      message: `2FA enforcement ${enabled ? "enabled" : "disabled"}`,
-      enabled,
-    });
-  } catch (error) {
-    logger.error("Error updating 2FA enforcement:", error);
-    return c.json({ error: "Failed to update enforcement" }, 500);
+twoFactorRoutes.post("/enforcement", authMiddleware(), async (c) => {
+  const userEmail = c.get("userEmail");
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
   }
+
+  // No workspace-settings table exists yet to persist this in (see the
+  // matching TODO in settings/index.ts), so there is nothing to actually
+  // enable/disable. Previously this endpoint wrote a settings_audit_log
+  // entry claiming "two_factor_enforcement_enabled/disabled" and returned
+  // success regardless — a misleading audit trail for a setting nothing
+  // in the codebase enforces. Report honestly instead of faking it.
+  return c.json(
+    {
+      error: "2FA enforcement is not implemented yet",
+    },
+    501,
+  );
 });
 
 // Send 2FA setup reminder
-twoFactorRoutes.post("/send-reminder", authMiddleware, async (c) => {
+twoFactorRoutes.post("/send-reminder", authMiddleware(), async (c) => {
   try {
     const { userEmail } = await c.req.json();
     const senderEmail = c.get("userEmail");
+    if (!senderEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const db = getDatabase();
 
-    // TODO: Send actual email reminder
+    // Blocked on real email sending — see https://github.com/tsatsu10/meridian/issues/60
     // For now, we'll just log the action
 
     // Log the reminder
     await db.insert(settingsAuditLogTable).values({
       id: crypto.randomUUID(),
       userEmail: senderEmail,
+      section: "security",
       action: "two_factor_reminder_sent",
-      details: JSON.stringify({ targetUser: userEmail }),
-      ipAddress: c.req.header("x-forwarded-for") || "unknown",
-      timestamp: new Date(),
-      severity: "info",
+      metadata: {
+        targetUser: userEmail,
+        ipAddress: c.req.header("x-forwarded-for") || "unknown",
+        severity: "info",
+      },
     });
 
     return c.json({
@@ -160,5 +156,3 @@ twoFactorRoutes.post("/send-reminder", authMiddleware, async (c) => {
 });
 
 export default twoFactorRoutes;
-
-

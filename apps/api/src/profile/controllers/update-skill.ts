@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userSkillTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface SkillData {
   name: string;
@@ -13,9 +13,13 @@ interface SkillData {
   order?: number;
 }
 
-const updateSkill = async (userId: string, skillId: string, skillData: SkillData) => {
+const updateSkill = async (
+  userId: string,
+  skillId: string,
+  skillData: SkillData,
+) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .update(userSkillTable)
@@ -29,10 +33,9 @@ const updateSkill = async (userId: string, skillId: string, skillData: SkillData
         order: skillData.order || 0,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(userSkillTable.id, skillId),
-        eq(userSkillTable.userId, userId)
-      ))
+      .where(
+        and(eq(userSkillTable.id, skillId), eq(userSkillTable.userId, userId)),
+      )
       .returning();
 
     return result[0];
@@ -42,4 +45,4 @@ const updateSkill = async (userId: string, skillId: string, skillData: SkillData
   }
 };
 
-export default updateSkill; 
+export default updateSkill;

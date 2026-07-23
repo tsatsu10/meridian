@@ -3,135 +3,152 @@
  * Comprehensive tests for notification creation
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createMockDb, resetMockDb } from '../../../tests/helpers/test-database';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  createMockDb,
+  resetMockDb,
+} from "../../../tests/helpers/test-database";
 
-vi.mock('../../../database/connection', () => ({
+vi.mock("../../../database/connection", () => ({
   getDatabase: vi.fn(() => mockDb),
 }));
 
-vi.mock('../../../events', () => ({
+vi.mock("../../../events", () => ({
   publishEvent: vi.fn(),
 }));
 
 const mockDb = createMockDb();
 
-describe('CreateNotification Controller', () => {
+describe("CreateNotification Controller", () => {
   beforeEach(() => {
     resetMockDb(mockDb);
     vi.clearAllMocks();
   });
 
-  describe('Notification types', () => {
-    it('should create task assignment notification', async () => {
+  describe("Notification types", () => {
+    it("should create task assignment notification", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        userId: 'user-1',
-        type: 'task_assigned',
-        message: 'You were assigned to task',
-        read: false,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          userId: "user-1",
+          type: "task_assigned",
+          message: "You were assigned to task",
+          read: false,
+        },
+      ]);
 
       const result = await mockDb.returning();
-      expect(result[0].type).toBe('task_assigned');
+      expect(result[0].type).toBe("task_assigned");
     });
 
-    it('should create mention notification', async () => {
+    it("should create mention notification", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-2',
-        userId: 'user-1',
-        type: 'mention',
-        message: 'You were mentioned in a comment',
-        read: false,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-2",
+          userId: "user-1",
+          type: "mention",
+          message: "You were mentioned in a comment",
+          read: false,
+        },
+      ]);
 
       const result = await mockDb.returning();
-      expect(result[0].type).toBe('mention');
+      expect(result[0].type).toBe("mention");
     });
 
-    it('should create comment notification', async () => {
+    it("should create comment notification", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-3',
-        userId: 'user-1',
-        type: 'comment',
-        message: 'New comment on your task',
-        read: false,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-3",
+          userId: "user-1",
+          type: "comment",
+          message: "New comment on your task",
+          read: false,
+        },
+      ]);
 
       const result = await mockDb.returning();
-      expect(result[0].type).toBe('comment');
+      expect(result[0].type).toBe("comment");
     });
 
-    it('should create status change notification', async () => {
+    it("should create status change notification", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-4',
-        userId: 'user-1',
-        type: 'status_change',
-        message: 'Task status changed to Done',
-        read: false,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-4",
+          userId: "user-1",
+          type: "status_change",
+          message: "Task status changed to Done",
+          read: false,
+        },
+      ]);
 
       const result = await mockDb.returning();
-      expect(result[0].type).toBe('status_change');
-    });
-  });
-
-  describe('Notification metadata', () => {
-    it('should include task reference', async () => {
-      mockDb.insert.mockReturnThis();
-      mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        userId: 'user-1',
-        taskId: 'task-1',
-        type: 'task_assigned',
-      }]);
-
-      const result = await mockDb.returning();
-      expect(result[0].taskId).toBe('task-1');
-    });
-
-    it('should include project reference', async () => {
-      mockDb.insert.mockReturnThis();
-      mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        userId: 'user-1',
-        projectId: 'project-1',
-        type: 'project_update',
-      }]);
-
-      const result = await mockDb.returning();
-      expect(result[0].projectId).toBe('project-1');
-    });
-
-    it('should include actor information', async () => {
-      mockDb.insert.mockReturnThis();
-      mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        userId: 'user-1',
-        actorId: 'user-2',
-        actorName: 'John Doe',
-        type: 'mention',
-      }]);
-
-      const result = await mockDb.returning();
-      expect(result[0].actorId).toBe('user-2');
-      expect(result[0].actorName).toBe('John Doe');
+      expect(result[0].type).toBe("status_change");
     });
   });
 
-  describe('Notification preferences', () => {
-    it('should respect user notification preferences', async () => {
+  describe("Notification metadata", () => {
+    it("should include task reference", async () => {
+      mockDb.insert.mockReturnThis();
+      mockDb.values.mockReturnThis();
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          userId: "user-1",
+          taskId: "task-1",
+          type: "task_assigned",
+        },
+      ]);
+
+      const result = await mockDb.returning();
+      expect(result[0].taskId).toBe("task-1");
+    });
+
+    it("should include project reference", async () => {
+      mockDb.insert.mockReturnThis();
+      mockDb.values.mockReturnThis();
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          userId: "user-1",
+          projectId: "project-1",
+          type: "project_update",
+        },
+      ]);
+
+      const result = await mockDb.returning();
+      expect(result[0].projectId).toBe("project-1");
+    });
+
+    it("should include actor information", async () => {
+      mockDb.insert.mockReturnThis();
+      mockDb.values.mockReturnThis();
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          userId: "user-1",
+          actorId: "user-2",
+          actorName: "John Doe",
+          type: "mention",
+        },
+      ]);
+
+      const result = await mockDb.returning();
+      expect(result[0].actorId).toBe("user-2");
+      expect(result[0].actorName).toBe("John Doe");
+    });
+  });
+
+  describe("Notification preferences", () => {
+    it("should respect user notification preferences", async () => {
       const preferences = {
         email: true,
         push: true,
@@ -141,7 +158,7 @@ describe('CreateNotification Controller', () => {
       expect(preferences.inApp).toBe(true);
     });
 
-    it('should check if notifications are enabled', async () => {
+    it("should check if notifications are enabled", async () => {
       const userSettings = {
         notificationsEnabled: true,
       };
@@ -149,7 +166,7 @@ describe('CreateNotification Controller', () => {
       expect(userSettings.notificationsEnabled).toBe(true);
     });
 
-    it('should filter by notification type preferences', async () => {
+    it("should filter by notification type preferences", async () => {
       const preferences = {
         taskAssigned: true,
         mentions: true,
@@ -160,146 +177,157 @@ describe('CreateNotification Controller', () => {
     });
   });
 
-  describe('Batch notifications', () => {
-    it('should create multiple notifications at once', async () => {
+  describe("Batch notifications", () => {
+    it("should create multiple notifications at once", async () => {
       const notifications = [
-        { userId: 'user-1', type: 'task_assigned' },
-        { userId: 'user-2', type: 'task_assigned' },
-        { userId: 'user-3', type: 'task_assigned' },
+        { userId: "user-1", type: "task_assigned" },
+        { userId: "user-2", type: "task_assigned" },
+        { userId: "user-3", type: "task_assigned" },
       ];
 
       expect(notifications).toHaveLength(3);
     });
 
-    it('should notify all team members', async () => {
-      const teamMembers = ['user-1', 'user-2', 'user-3'];
+    it("should notify all team members", async () => {
+      const teamMembers = ["user-1", "user-2", "user-3"];
 
       expect(teamMembers).toHaveLength(3);
     });
   });
 
-  describe('Priority levels', () => {
-    it('should support high priority notifications', async () => {
+  describe("Priority levels", () => {
+    it("should support high priority notifications", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        priority: 'high',
-        type: 'urgent_task',
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          priority: "high",
+          type: "urgent_task",
+        },
+      ]);
 
       const result = await mockDb.returning();
-      expect(result[0].priority).toBe('high');
+      expect(result[0].priority).toBe("high");
     });
 
-    it('should support normal priority notifications', async () => {
+    it("should support normal priority notifications", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        priority: 'normal',
-        type: 'comment',
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          priority: "normal",
+          type: "comment",
+        },
+      ]);
 
       const result = await mockDb.returning();
-      expect(result[0].priority).toBe('normal');
+      expect(result[0].priority).toBe("normal");
     });
   });
 
-  describe('Notification expiry', () => {
-    it('should set expiration date for temporary notifications', async () => {
+  describe("Notification expiry", () => {
+    it("should set expiration date for temporary notifications", async () => {
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
       expect(expiresAt > new Date()).toBe(true);
     });
 
-    it('should support permanent notifications', async () => {
+    it("should support permanent notifications", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        expiresAt: null,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          expiresAt: null,
+        },
+      ]);
 
       const result = await mockDb.returning();
       expect(result[0].expiresAt).toBeNull();
     });
   });
 
-  describe('Real-time notifications', () => {
-    it('should trigger WebSocket event', async () => {
-      const { publishEvent } = await import('../../../events');
+  describe("Real-time notifications", () => {
+    it("should trigger WebSocket event", async () => {
+      const { publishEvent } = await import("../../../events");
 
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        userId: 'user-1',
-        type: 'task_assigned',
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          userId: "user-1",
+          type: "task_assigned",
+        },
+      ]);
 
       await mockDb.returning();
       // Would verify WebSocket event in actual implementation
     });
   });
 
-  describe('Notification grouping', () => {
-    it('should group similar notifications', async () => {
+  describe("Notification grouping", () => {
+    it("should group similar notifications", async () => {
       const notifications = [
-        { type: 'task_assigned', taskId: 'task-1' },
-        { type: 'task_assigned', taskId: 'task-2' },
-        { type: 'task_assigned', taskId: 'task-3' },
+        { type: "task_assigned", taskId: "task-1" },
+        { type: "task_assigned", taskId: "task-2" },
+        { type: "task_assigned", taskId: "task-3" },
       ];
 
-      const grouped = notifications.filter(n => n.type === 'task_assigned');
+      const grouped = notifications.filter((n) => n.type === "task_assigned");
       expect(grouped).toHaveLength(3);
     });
   });
 
-  describe('Error handling', () => {
-    it('should handle invalid user ID', async () => {
+  describe("Error handling", () => {
+    it("should handle invalid user ID", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockRejectedValue(new Error('User not found'));
+      mockDb.returning.mockRejectedValue(new Error("User not found"));
 
-      await expect(mockDb.returning()).rejects.toThrow('User not found');
+      await expect(mockDb.returning()).rejects.toThrow("User not found");
     });
 
-    it('should handle database errors', async () => {
+    it("should handle database errors", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockRejectedValue(new Error('Database error'));
+      mockDb.returning.mockRejectedValue(new Error("Database error"));
 
-      await expect(mockDb.returning()).rejects.toThrow('Database error');
+      await expect(mockDb.returning()).rejects.toThrow("Database error");
     });
   });
 
-  describe('Notification timestamps', () => {
-    it('should set creation timestamp', async () => {
+  describe("Notification timestamps", () => {
+    it("should set creation timestamp", async () => {
       const now = new Date();
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        createdAt: now,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          createdAt: now,
+        },
+      ]);
 
       const result = await mockDb.returning();
       expect(result[0].createdAt).toEqual(now);
     });
 
-    it('should track read timestamp', async () => {
+    it("should track read timestamp", async () => {
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'notif-1',
-        read: false,
-        readAt: null,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "notif-1",
+          read: false,
+          readAt: null,
+        },
+      ]);
 
       const result = await mockDb.returning();
       expect(result[0].readAt).toBeNull();
     });
   });
 });
-

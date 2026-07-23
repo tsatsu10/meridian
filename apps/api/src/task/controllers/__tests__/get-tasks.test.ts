@@ -3,45 +3,58 @@
  * Unit tests for retrieving tasks
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { HTTPException } from 'hono/http-exception';
-import { createMockDb, mockProjects, mockTasks, resetMockDb } from '../../../tests/helpers/test-database';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { HTTPException } from "hono/http-exception";
+import {
+  createMockDb,
+  mockProjects,
+  mockTasks,
+  resetMockDb,
+} from "../../../tests/helpers/test-database";
 
 // Mock dependencies
-vi.mock('../../../database/connection', () => ({
+vi.mock("../../../database/connection", () => ({
   getDatabase: vi.fn(() => mockDb),
 }));
 
 const mockDb = createMockDb();
 
 // Import after mocking
-const getTasks = (await import('../get-tasks')).default;
+const getTasks = (await import("../get-tasks")).default;
 
-describe('GetTasks Controller', () => {
+describe("GetTasks Controller", () => {
   beforeEach(() => {
     resetMockDb(mockDb);
     vi.clearAllMocks();
   });
 
-  describe('Successful task retrieval', () => {
-    it('should return tasks for a valid project', async () => {
+  describe("Successful task retrieval", () => {
+    it("should return tasks for a valid project", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
-      
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
+
       // Mock select() calls in order: 1st returns tasks, 2nd returns users
       const tasksData = [
-        { ...mockTasks.openTask, status: 'planned', userEmail: 'test@example.com' },
         {
           ...mockTasks.openTask,
-          id: 'task-2',
-          title: 'Second Task',
-          status: 'planned',
-          userEmail: 'test@example.com',
+          status: "todo",
+          userEmail: "test@example.com",
+        },
+        {
+          ...mockTasks.openTask,
+          id: "task-2",
+          title: "Second Task",
+          status: "todo",
+          userEmail: "test@example.com",
         },
       ];
-      const usersData = [{ id: 'user-1', email: 'test@example.com', name: 'Test User' }];
+      const usersData = [
+        { id: "user-1", email: "test@example.com", name: "Test User" },
+      ];
       mockDb.__setSelectResults(tasksData, usersData);
 
       // Act
@@ -49,18 +62,23 @@ describe('GetTasks Controller', () => {
 
       // Assert
       expect(result).toBeDefined();
-      const allTasks = [...(result.archivedTasks || []), ...(result.plannedTasks || [])];
+      // The task_status enum is todo|in_progress|done — tasks land in the
+      // matching status column, not the (always-empty) planned/archived buckets
+      const todoColumn = result.columns.find((c) => c.id === "todo");
+      const allTasks = todoColumn?.tasks ?? [];
       expect(allTasks).toHaveLength(2);
-      expect(allTasks[0].id).toBe('task-1');
-      expect(allTasks[1].id).toBe('task-2');
+      expect(allTasks[0].id).toBe("task-1");
+      expect(allTasks[1].id).toBe("task-2");
     });
 
-    it('should return empty array for project with no tasks', async () => {
+    it("should return empty array for project with no tasks", async () => {
       // Arrange
-      const projectId = 'empty-project';
+      const projectId = "empty-project";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
-      
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
+
       // Mock empty select results: no tasks, no users
       mockDb.__setSelectResults([], []);
 
@@ -69,16 +87,21 @@ describe('GetTasks Controller', () => {
 
       // Assert
       expect(result).toBeDefined();
-      const allTasks = [...(result.archivedTasks || []), ...(result.plannedTasks || [])];
+      const allTasks = [
+        ...(result.archivedTasks || []),
+        ...(result.plannedTasks || []),
+      ];
       expect(allTasks).toHaveLength(0);
     });
 
-    it('should include status columns in response', async () => {
+    it("should include status columns in response", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
-      
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
+
       // Mock tasks and users
       mockDb.__setSelectResults([mockTasks.openTask], []);
 
@@ -91,11 +114,13 @@ describe('GetTasks Controller', () => {
       expect(result.columns.length).toBeGreaterThan(0);
     });
 
-    it('should return default status columns', async () => {
+    it("should return default status columns", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
       mockDb.__setSelectResults([], []);
 
       // Act
@@ -104,80 +129,88 @@ describe('GetTasks Controller', () => {
       // Assert
       expect(result.columns).toContainEqual(
         expect.objectContaining({
-          id: 'to-do',
-          name: 'To Do',
+          id: "todo",
+          name: "To Do",
           isDefault: true,
-        })
+        }),
       );
       expect(result.columns).toContainEqual(
         expect.objectContaining({
-          id: 'in-progress',
-          name: 'In Progress',
+          id: "in_progress",
+          name: "In Progress",
           isDefault: true,
-        })
+        }),
       );
       expect(result.columns).toContainEqual(
         expect.objectContaining({
-          id: 'done',
-          name: 'Done',
+          id: "done",
+          name: "Done",
           isDefault: true,
-        })
+        }),
       );
     });
   });
 
-  describe('Error handling', () => {
-    it('should throw 404 error for non-existent project', async () => {
+  describe("Error handling", () => {
+    it("should throw 404 error for non-existent project", async () => {
       // Arrange
-      const projectId = 'non-existent-project';
+      const projectId = "non-existent-project";
 
       mockDb.query.projectTable.findFirst.mockResolvedValue(null);
 
       // Act & Assert
       await expect(getTasks(projectId)).rejects.toThrow(HTTPException);
-      await expect(getTasks(projectId)).rejects.toThrow('Project not found');
+      await expect(getTasks(projectId)).rejects.toThrow("Project not found");
     });
 
-    it('should handle database errors gracefully', async () => {
+    it("should handle database errors gracefully", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockRejectedValue(new Error('Database connection failed'));
+      mockDb.query.projectTable.findFirst.mockRejectedValue(
+        new Error("Database connection failed"),
+      );
 
       // Act & Assert
-      await expect(getTasks(projectId)).rejects.toThrow('Database connection failed');
+      await expect(getTasks(projectId)).rejects.toThrow(
+        "Database connection failed",
+      );
     });
 
-    it('should handle task query errors', async () => {
+    it("should handle task query errors", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
-      
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
+
       // Mock select() to throw error on the first call
       const originalSelect = mockDb.select;
       mockDb.select = vi.fn(() => {
         // Restore original after this call
         mockDb.select = originalSelect;
-        throw new Error('Task query failed');
+        throw new Error("Task query failed");
       });
 
       // Act & Assert
-      await expect(getTasks(projectId)).rejects.toThrow('Task query failed');
+      await expect(getTasks(projectId)).rejects.toThrow("Task query failed");
     });
   });
 
-  describe('Task grouping by status', () => {
-    it('should group tasks by their status columns', async () => {
+  describe("Task grouping by status", () => {
+    it("should group tasks by their status columns", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
-      
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
+
       const tasksData = [
-        { ...mockTasks.openTask, id: 'task-1', status: 'to-do' },
-        { ...mockTasks.openTask, id: 'task-2', status: 'in-progress' },
-        { ...mockTasks.openTask, id: 'task-3', status: 'done' },
+        { ...mockTasks.openTask, id: "task-1", status: "todo" },
+        { ...mockTasks.openTask, id: "task-2", status: "in_progress" },
+        { ...mockTasks.openTask, id: "task-3", status: "done" },
       ];
       mockDb.__setSelectResults(tasksData, []);
 
@@ -187,9 +220,15 @@ describe('GetTasks Controller', () => {
       // Assert
       // Tasks are grouped into columns by status, not into archivedTasks/plannedTasks
       expect(result.columns).toBeDefined();
-      const todoColumn = result.columns.find((c: any) => c.id === 'to-do');
-      const inProgressColumn = result.columns.find((c: any) => c.id === 'in-progress');
-      const doneColumn = result.columns.find((c: any) => c.id === 'done');
+      const todoColumn = result.columns.find(
+        (c: { id: string }) => c.id === "todo",
+      );
+      const inProgressColumn = result.columns.find(
+        (c: { id: string }) => c.id === "in_progress",
+      );
+      const doneColumn = result.columns.find(
+        (c: { id: string }) => c.id === "done",
+      );
 
       expect(todoColumn.tasks).toHaveLength(1);
       expect(inProgressColumn.tasks).toHaveLength(1);
@@ -197,68 +236,91 @@ describe('GetTasks Controller', () => {
     });
   });
 
-  describe('Task ordering', () => {
-    it('should return tasks in a consistent order', async () => {
+  describe("Task ordering", () => {
+    it("should return tasks in a consistent order", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
-      
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
+
       const tasksData = [
-        { ...mockTasks.openTask, id: 'task-3', number: 3, position: 2, status: 'planned' },
-        { ...mockTasks.openTask, id: 'task-1', number: 1, position: 0, status: 'planned' },
-        { ...mockTasks.openTask, id: 'task-2', number: 2, position: 1, status: 'planned' },
+        {
+          ...mockTasks.openTask,
+          id: "task-3",
+          number: 3,
+          position: 2,
+          status: "todo",
+        },
+        {
+          ...mockTasks.openTask,
+          id: "task-1",
+          number: 1,
+          position: 0,
+          status: "todo",
+        },
+        {
+          ...mockTasks.openTask,
+          id: "task-2",
+          number: 2,
+          position: 1,
+          status: "todo",
+        },
       ];
       mockDb.__setSelectResults(tasksData, []);
 
       // Act
       const result = await getTasks(projectId);
 
-      // Assert
-      const allTasks = [...(result.archivedTasks || []), ...(result.plannedTasks || [])];
+      // Assert — see enum note above: tasks group into status columns
+      const allTasks = result.columns.find((c) => c.id === "todo")?.tasks ?? [];
       expect(allTasks).toHaveLength(3);
       // Verify tasks are sorted by position
-      expect(allTasks[0].id).toBe('task-1');
-      expect(allTasks[1].id).toBe('task-2');
-      expect(allTasks[2].id).toBe('task-3');
+      expect(allTasks[0].id).toBe("task-1");
+      expect(allTasks[1].id).toBe("task-2");
+      expect(allTasks[2].id).toBe("task-3");
     });
   });
 
-  describe('Status column properties', () => {
-    it('should include color for each status column', async () => {
+  describe("Status column properties", () => {
+    it("should include color for each status column", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
       mockDb.__setSelectResults([], []);
 
       // Act
       const result = await getTasks(projectId);
 
       // Assert
-      result.columns.forEach((column: any) => {
-        expect(column).toHaveProperty('color');
-        expect(typeof column.color).toBe('string');
+      for (const column of result.columns) {
+        expect(column).toHaveProperty("color");
+        expect(typeof column.color).toBe("string");
         expect(column.color).toMatch(/^#[0-9a-f]{6}$/i);
-      });
+      }
     });
 
-    it('should include position for each status column', async () => {
+    it("should include position for each status column", async () => {
       // Arrange
-      const projectId = 'project-1';
+      const projectId = "project-1";
 
-      mockDb.query.projectTable.findFirst.mockResolvedValue(mockProjects.activeProject);
+      mockDb.query.projectTable.findFirst.mockResolvedValue(
+        mockProjects.activeProject,
+      );
       mockDb.__setSelectResults([], []);
 
       // Act
       const result = await getTasks(projectId);
 
       // Assert
-      result.columns.forEach((column: any) => {
-        expect(column).toHaveProperty('position');
-        expect(typeof column.position).toBe('number');
-      });
+      for (const column of result.columns) {
+        expect(column).toHaveProperty("position");
+        expect(typeof column.position).toBe("number");
+      }
     });
   });
 });
-

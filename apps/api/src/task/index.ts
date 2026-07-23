@@ -42,11 +42,13 @@ const TaskSchema = z.object({
   subtasks: z.array(z.any()).optional(),
   dependencies: z.array(z.any()).optional(),
   blockedBy: z.array(z.any()).optional(),
-  subtaskProgress: z.object({
-    completed: z.number(),
-    total: z.number(),
-    percentage: z.number(),
-  }).optional(),
+  subtaskProgress: z
+    .object({
+      completed: z.number(),
+      total: z.number(),
+      percentage: z.number(),
+    })
+    .optional(),
 });
 
 const ColumnSchema = z.object({
@@ -91,12 +93,12 @@ const task = new Hono<{
         "GET /dependencies/:taskId": "Get task dependencies",
         "DELETE /dependencies/:dependencyId": "Delete task dependency",
         "POST /import/:projectId": "Import tasks from CSV/JSON",
-        "GET /export/:projectId": "Export tasks to CSV/JSON"
+        "GET /export/:projectId": "Export tasks to CSV/JSON",
       },
       examples: {
         getAllTasks: "/api/task/all/workspace-id-123",
-        getProjectTasks: "/api/task/tasks/project-id-456"
-      }
+        getProjectTasks: "/api/task/tasks/project-id-456",
+      },
     });
   })
   // @epic-3.2-time: Cross-project task view for Mike's efficient task management
@@ -107,7 +109,7 @@ const task = new Hono<{
       const { workspaceId } = c.req.valid("param");
       const stats = await getWorkspaceTaskStats(workspaceId);
       return c.json(stats);
-    }
+    },
   )
   .get(
     "/all/:workspaceId",
@@ -125,7 +127,7 @@ const task = new Hono<{
         search: z.string().optional(),
         limit: z.string().optional(),
         offset: z.string().optional(),
-      })
+      }),
     ),
     async (c) => {
       const { workspaceId } = c.req.valid("param");
@@ -141,13 +143,13 @@ const task = new Hono<{
         dueAfter: query.dueAfter ? new Date(query.dueAfter) : undefined,
         dueBefore: query.dueBefore ? new Date(query.dueBefore) : undefined,
         search: query.search,
-        limit: query.limit ? parseInt(query.limit) : undefined,
-        offset: query.offset ? parseInt(query.offset) : undefined,
+        limit: query.limit ? Number.parseInt(query.limit) : undefined,
+        offset: query.offset ? Number.parseInt(query.offset) : undefined,
       };
 
       const result = await getAllTasks(options);
       return c.json(result);
-    }
+    },
   )
   .get(
     "/tasks/:projectId",
@@ -157,8 +159,7 @@ const task = new Hono<{
 
       const tasks = await getTasks(projectId);
 
-      // Explicitly type the response to ensure position field is recognized
-      return c.json(tasks as z.infer<typeof ProjectWithTasksSchema>);
+      return c.json(tasks);
     },
   )
   .post(
@@ -169,7 +170,7 @@ const task = new Hono<{
       z.object({
         title: z.string(),
         description: z.string(),
-        dueDate: z.string(),
+        dueDate: z.string().nullable().optional(),
         priority: z.string(),
         status: z.string(),
         userEmail: z.string().optional(),
@@ -183,20 +184,30 @@ const task = new Hono<{
         try {
           await checkRateLimit(userId, RATE_LIMITS.CREATE_TASK);
         } catch (rateLimitError) {
-          return c.json({ error: 'Too many tasks created. Please wait a moment.' }, 429);
+          return c.json(
+            { error: "Too many tasks created. Please wait a moment." },
+            429,
+          );
         }
       }
 
       const { projectId } = c.req.param();
-      const { title, description, dueDate, priority, status, userEmail, parentId } =
-        c.req.valid("json");
+      const {
+        title,
+        description,
+        dueDate,
+        priority,
+        status,
+        userEmail,
+        parentId,
+      } = c.req.valid("json");
 
       const task = await createTask({
         projectId,
         userEmail,
         title,
         description,
-        dueDate: new Date(dueDate),
+        dueDate: dueDate ? new Date(dueDate) : undefined,
         priority,
         status,
         parentId,
@@ -249,7 +260,10 @@ const task = new Hono<{
         try {
           await checkRateLimit(userId, RATE_LIMITS.UPDATE_TASK);
         } catch (rateLimitError) {
-          return c.json({ error: 'Too many task updates. Please slow down.' }, 429);
+          return c.json(
+            { error: "Too many task updates. Please slow down." },
+            429,
+          );
         }
       }
 
@@ -317,7 +331,10 @@ const task = new Hono<{
         try {
           await checkRateLimit(userId, RATE_LIMITS.DELETE_TASK);
         } catch (rateLimitError) {
-          return c.json({ error: 'Too many deletions. Please wait a moment.' }, 429);
+          return c.json(
+            { error: "Too many deletions. Please wait a moment." },
+            429,
+          );
         }
       }
 
@@ -347,7 +364,7 @@ const task = new Hono<{
       "json",
       z.object({
         requiredTaskId: z.string(),
-        type: z.enum(['blocks', 'blocked_by']).default('blocks'),
+        type: z.enum(["blocks", "blocked_by"]).default("blocks"),
       }),
     ),
     async (c) => {
@@ -431,9 +448,15 @@ const task = new Hono<{
       }),
     ),
     async (c) => {
-      const { taskIds, assigneeId, assigneeEmail, userId } = c.req.valid("json");
+      const { taskIds, assigneeId, assigneeEmail, userId } =
+        c.req.valid("json");
 
-      const result = await bulkAssignTasks(taskIds, assigneeId, assigneeEmail, userId);
+      const result = await bulkAssignTasks(
+        taskIds,
+        assigneeId,
+        assigneeEmail,
+        userId,
+      );
 
       return c.json({
         success: true,
@@ -485,4 +508,3 @@ const task = new Hono<{
     },
   );
 export default task;
-

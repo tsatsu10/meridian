@@ -1,4 +1,4 @@
-import { AllSettings } from "@/store/settings";
+import type { AllSettings } from "@/store/settings";
 import type { SettingsValidationError } from "./settings-api";
 
 /**
@@ -11,51 +11,75 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3005";
 // Production API client for settings
 class ProductionSettingsAPI {
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
-    const token = localStorage.getItem("auth-token") || sessionStorage.getItem("auth-token");
-    
+    // The real app authenticates via an HttpOnly session cookie set on
+    // sign-in (apps/api/src/user/index.ts), not a Bearer token — nothing
+    // in the sign-in flow ever populates localStorage/sessionStorage's
+    // "auth-token" key, so that branch never actually fired. Every call
+    // through this client was hitting the API unauthenticated and 401ing.
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "Request failed" }));
+      const error = await response
+        .json()
+        .catch(() => ({ message: "Request failed" }));
       throw new Error(error.message || `HTTP ${response.status}`);
     }
 
     return response.json();
   }
 
-  async save(userId: string, settings: AllSettings): Promise<void> {
-    await this.makeRequest(`/api/users/${userId}/settings`, {
-      method: "PUT",
-      body: JSON.stringify(settings),
-    });
+  // :userId is compared against the authenticated user's email server-side
+  // (apps/api/src/settings/index.ts), not a database id — callers must pass
+  // the user's email.
+  async load(userId: string): Promise<Partial<AllSettings>> {
+    const response = await this.makeRequest(`/api/settings/${userId}`);
+    return response.data as Partial<AllSettings>;
   }
 
-  async load(userId: string): Promise<AllSettings | null> {
-    try {
-      return await this.makeRequest(`/api/users/${userId}/settings`);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("404")) {
-        return null; // User settings not found, will use defaults
-      }
-      throw error;
-    }
+  async updateSection(
+    userId: string,
+    section: keyof AllSettings,
+    updates: Partial<AllSettings[keyof AllSettings]>,
+  ): Promise<Partial<AllSettings>> {
+    const response = await this.makeRequest(
+      `/api/settings/${userId}/${section}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ updates }),
+      },
+    );
+    return response.data.settings as Partial<AllSettings>;
+  }
+
+  async resetSection(
+    userId: string,
+    section: keyof AllSettings,
+  ): Promise<Partial<AllSettings>> {
+    const response = await this.makeRequest(
+      `/api/settings/${userId}/${section}/reset`,
+      { method: "POST" },
+    );
+    return response.data as Partial<AllSettings>;
   }
 
   async validateSettings(
     section: keyof AllSettings,
-    settings: Partial<AllSettings[keyof AllSettings]>
+    settings: Partial<AllSettings[keyof AllSettings]>,
   ): Promise<SettingsValidationError[]> {
-    const response = await this.makeRequest(`/api/settings/${section}/validate`, {
-      method: "POST",
-      body: JSON.stringify({ settings }),
-    });
+    const response = await this.makeRequest(
+      `/api/settings/${section}/validate`,
+      {
+        method: "POST",
+        body: JSON.stringify({ settings }),
+      },
+    );
     return response.data || response;
   }
 }
@@ -71,7 +95,7 @@ const defaultSettings: AllSettings = {
     location: "",
     website: "",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-    language: navigator.language.split('-')[0] || "en",
+    language: navigator.language.split("-")[0] || "en",
     jobTitle: "",
     company: "",
     phone: "",
@@ -89,6 +113,10 @@ const defaultSettings: AllSettings = {
     highContrast: false,
     reducedMotion: false,
     compactMode: false,
+    scheduledThemeEnabled: false,
+    lightThemeTime: "06:00",
+    darkThemeTime: "18:00",
+    locationBasedEnabled: false,
   },
   notifications: {
     email: {
@@ -143,101 +171,87 @@ const defaultSettings: AllSettings = {
 };
 
 // Production API interface with fallback support
-export class SettingsAPI {
-  static async getSettings(userId: string): Promise<AllSettings> {
+export const SettingsAPI = {
+  async getSettings(userId: string): Promise<AllSettings> {
     try {
       const settings = await api.load(userId);
-      if (settings) {
-        // Merge with defaults to ensure all required fields exist
-        return this.mergeWithDefaults(settings);
-      }
-      
-      // Initialize with defaults for new users
-      const newSettings = { ...defaultSettings };
-      await api.save(userId, newSettings);
-      return newSettings;
+      return SettingsAPI.mergeWithDefaults(settings);
     } catch (error) {
       console.warn("Settings API unavailable, using local fallback:", error);
-      return this.getLocalFallback(userId);
+      return SettingsAPI.getLocalFallback(userId);
     }
-  }
+  },
 
-  static async updateSettings(
+  async updateSettings(
     userId: string,
     section: keyof AllSettings,
-    updates: Partial<AllSettings[keyof AllSettings]>
-  ): Promise<{ settings: AllSettings; conflicts?: any[] }> {
+    updates: Partial<AllSettings[keyof AllSettings]>,
+  ): Promise<{ settings: AllSettings; conflicts?: unknown[] }> {
     try {
-      const currentSettings = await this.getSettings(userId);
-      const updatedSettings = {
-        ...currentSettings,
-        [section]: {
-          ...currentSettings[section],
-          ...updates,
-        },
-      };
-      
-      await api.save(userId, updatedSettings);
-      
+      const settings = await api.updateSection(userId, section, updates);
       return {
-        settings: updatedSettings,
+        settings: SettingsAPI.mergeWithDefaults(settings),
         conflicts: [], // Backend will handle conflict resolution
       };
     } catch (error) {
       console.warn("Settings update failed, using local fallback:", error);
-      return this.updateLocalFallback(userId, section, updates);
+      return SettingsAPI.updateLocalFallback(userId, section, updates);
     }
-  }
+  },
 
-  static async validateSettings(
+  async validateSettings(
     section: keyof AllSettings,
-    settings: Partial<AllSettings[keyof AllSettings]>
+    settings: Partial<AllSettings[keyof AllSettings]>,
   ): Promise<SettingsValidationError[]> {
     try {
       return await api.validateSettings(section, settings);
     } catch (error) {
-      console.warn("Settings validation API unavailable, using client-side validation");
-      return this.clientSideValidation(section, settings);
+      console.warn(
+        "Settings validation API unavailable, using client-side validation",
+      );
+      return SettingsAPI.clientSideValidation(section, settings);
     }
-  }
+  },
 
-  static async resetSection(userId: string, section: keyof AllSettings): Promise<AllSettings> {
-    const currentSettings = await this.getSettings(userId);
-    const resetSettings = {
-      ...currentSettings,
-      [section]: defaultSettings[section],
-    };
-    
+  async resetSection(
+    userId: string,
+    section: keyof AllSettings,
+  ): Promise<AllSettings> {
     try {
-      await api.save(userId, resetSettings);
+      const settings = await api.resetSection(userId, section);
+      return SettingsAPI.mergeWithDefaults(settings);
     } catch (error) {
       console.warn("Settings reset failed, using local fallback:", error);
-      this.saveLocalFallback(userId, resetSettings);
+      const currentSettings = SettingsAPI.getLocalFallback(userId);
+      const resetSettings = {
+        ...currentSettings,
+        [section]: defaultSettings[section],
+      };
+      SettingsAPI.saveLocalFallback(userId, resetSettings);
+      return resetSettings;
     }
-    
-    return resetSettings;
-  }
+  },
 
   // Fallback methods for offline/error scenarios
-  private static getLocalFallback(userId: string): AllSettings {
+  getLocalFallback(userId: string): AllSettings {
     try {
       const stored = localStorage.getItem(`meridian-settings-${userId}`);
       if (stored) {
         const settings = JSON.parse(stored);
-        return this.mergeWithDefaults(settings);
+        return SettingsAPI.mergeWithDefaults(settings);
       }
     } catch (error) {
       console.warn("Local storage unavailable:", error);
     }
     return { ...defaultSettings };
-  }
+  },
 
-  private static async updateLocalFallback(
+  async updateLocalFallback(
     userId: string,
     section: keyof AllSettings,
-    updates: Partial<AllSettings[keyof AllSettings]>
-  ): Promise<{ settings: AllSettings; conflicts?: any[] }> {
-    const currentSettings = this.getLocalFallback(userId);
+    updates: Partial<AllSettings[keyof AllSettings]>,
+  ): Promise<{ settings: AllSettings; conflicts?: unknown[] }> {
+    const currentSettings = SettingsAPI.getLocalFallback(userId);
     const updatedSettings = {
       ...currentSettings,
       [section]: {
@@ -245,65 +259,73 @@ export class SettingsAPI {
         ...updates,
       },
     };
-    
-    this.saveLocalFallback(userId, updatedSettings);
-    
+
+    SettingsAPI.saveLocalFallback(userId, updatedSettings);
+
     return {
       settings: updatedSettings,
       conflicts: [],
     };
-  }
+  },
 
-  private static saveLocalFallback(userId: string, settings: AllSettings): void {
+  saveLocalFallback(userId: string, settings: AllSettings): void {
     try {
-      localStorage.setItem(`meridian-settings-${userId}`, JSON.stringify(settings));
+      localStorage.setItem(
+        `meridian-settings-${userId}`,
+        JSON.stringify(settings),
+      );
     } catch (error) {
       console.warn("Failed to save settings locally:", error);
     }
-  }
+  },
 
-  private static mergeWithDefaults(settings: Partial<AllSettings>): AllSettings {
+  mergeWithDefaults(settings: Partial<AllSettings>): AllSettings {
     const merged = { ...defaultSettings };
-    
+
     // Deep merge each section
     for (const [section, values] of Object.entries(settings)) {
-      if (section in merged && typeof values === 'object' && values !== null) {
-        merged[section as keyof AllSettings] = {
+      if (section in merged && typeof values === "object" && values !== null) {
+        (merged as Record<string, unknown>)[section] = {
           ...merged[section as keyof AllSettings],
           ...values,
-        } as any;
+        };
       }
     }
-    
-    return merged;
-  }
 
-  private static clientSideValidation(
+    return merged;
+  },
+
+  clientSideValidation(
     section: keyof AllSettings,
-    settings: Partial<AllSettings[keyof AllSettings]>
+    settings: Partial<AllSettings[keyof AllSettings]>,
   ): SettingsValidationError[] {
     const errors: SettingsValidationError[] = [];
-    
+
     // Basic validation rules
     if (section === "profile") {
-      const profile = settings as any;
-      
-      if (profile.email && !this.isValidEmail(profile.email)) {
+      const profile = settings as {
+        email?: string;
+        website?: string;
+        name?: string;
+        phone?: string;
+      };
+
+      if (profile.email && !SettingsAPI.isValidEmail(profile.email)) {
         errors.push({
           field: "email",
           message: "Please enter a valid email address",
           code: "INVALID_EMAIL",
         });
       }
-      
-      if (profile.website && !this.isValidUrl(profile.website)) {
+
+      if (profile.website && !SettingsAPI.isValidUrl(profile.website)) {
         errors.push({
           field: "website",
           message: "Please enter a valid URL",
           code: "INVALID_URL",
         });
       }
-      
+
       if (profile.name && profile.name.length < 2) {
         errors.push({
           field: "name",
@@ -312,7 +334,11 @@ export class SettingsAPI {
         });
       }
 
-      if (profile.phone && profile.phone.length > 0 && !/^\+?[\d\s\-\(\)]+$/.test(profile.phone)) {
+      if (
+        profile.phone &&
+        profile.phone.length > 0 &&
+        !/^\+?[\d\s\-\(\)]+$/.test(profile.phone)
+      ) {
         errors.push({
           field: "phone",
           message: "Please enter a valid phone number",
@@ -320,11 +346,14 @@ export class SettingsAPI {
         });
       }
     }
-    
+
     if (section === "appearance") {
-      const appearance = settings as any;
-      
-      if (appearance.fontSize && (appearance.fontSize < 10 || appearance.fontSize > 24)) {
+      const appearance = settings as { fontSize?: number };
+
+      if (
+        appearance.fontSize &&
+        (appearance.fontSize < 10 || appearance.fontSize > 24)
+      ) {
         errors.push({
           field: "fontSize",
           message: "Font size must be between 10 and 24 pixels",
@@ -332,45 +361,45 @@ export class SettingsAPI {
         });
       }
     }
-    
-    return errors;
-  }
 
-  private static isValidEmail(email: string): boolean {
+    return errors;
+  },
+
+  isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  }
+  },
 
-  private static isValidUrl(url: string): boolean {
+  isValidUrl(url: string): boolean {
     try {
       new URL(url);
       return true;
     } catch {
       return false;
     }
-  }
+  },
 
   // Development/testing helpers
-  static clearAllData(userId?: string): void {
+  clearAllData(userId?: string): void {
     if (userId) {
       localStorage.removeItem(`meridian-settings-${userId}`);
     } else {
       // Clear all Meridian settings from localStorage
       const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('meridian-settings-')) {
+      for (const key of keys) {
+        if (key.startsWith("meridian-settings-")) {
           localStorage.removeItem(key);
         }
-      });
+      }
     }
-  }
+  },
 
-  static exportData(userId: string): Record<string, any> {
+  exportData(userId: string): Record<string, unknown> {
     try {
       const data = localStorage.getItem(`meridian-settings-${userId}`);
       return data ? JSON.parse(data) : {};
     } catch {
       return {};
     }
-  }
-} 
+  },
+};

@@ -42,4 +42,3 @@ async function getProject(id: string, workspaceId: string) {
 }
 
 export default getProject;
-

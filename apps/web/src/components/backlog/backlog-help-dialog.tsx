@@ -14,7 +14,10 @@ interface BacklogHelpDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function BacklogHelpDialog({ open, onOpenChange }: BacklogHelpDialogProps) {
+export function BacklogHelpDialog({
+  open,
+  onOpenChange,
+}: BacklogHelpDialogProps) {
   const shortcuts = [
     {
       category: "Navigation",
@@ -71,14 +74,15 @@ export function BacklogHelpDialog({ open, onOpenChange }: BacklogHelpDialogProps
                 {section.category}
               </h3>
               <div className="space-y-2">
-                {section.items.map((shortcut, index) => (
+                {section.items.map((shortcut) => (
                   <div
-                    key={index}
+                    key={shortcut.description}
                     className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50 transition-colors"
                   >
                     <span className="text-sm">{shortcut.description}</span>
                     <div className="flex items-center gap-1">
                       {shortcut.keys.map((key, keyIndex) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: fixed key-combo list, keyIndex drives separator
                         <div key={keyIndex} className="flex items-center gap-1">
                           <Badge
                             variant="outline"
@@ -87,7 +91,9 @@ export function BacklogHelpDialog({ open, onOpenChange }: BacklogHelpDialogProps
                             {key}
                           </Badge>
                           {keyIndex < shortcut.keys.length - 1 && (
-                            <span className="text-xs text-muted-foreground">+</span>
+                            <span className="text-xs text-muted-foreground">
+                              +
+                            </span>
                           )}
                         </div>
                       ))}
@@ -101,11 +107,14 @@ export function BacklogHelpDialog({ open, onOpenChange }: BacklogHelpDialogProps
 
         <div className="mt-6 p-3 bg-muted/50 rounded-md">
           <p className="text-xs text-muted-foreground">
-            💡 <strong>Tip:</strong> Press <Badge variant="outline" className="mx-1 text-xs">?</Badge> at any time to show this dialog
+            💡 <strong>Tip:</strong> Press{" "}
+            <Badge variant="outline" className="mx-1 text-xs">
+              ?
+            </Badge>{" "}
+            at any time to show this dialog
           </p>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

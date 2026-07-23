@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Filter,
   Plus,
@@ -12,17 +12,29 @@ import {
   ArrowLeft,
   Edit,
   Star,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +42,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,13 +52,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import LazyDashboardLayout from '@/components/performance/lazy-dashboard-layout';
-import { useWorkspaceStore } from '@/store/workspace';
-import { API_BASE_URL } from '@/constants/urls';
+} from "@/components/ui/alert-dialog";
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
+import { useWorkspaceStore } from "@/store/workspace";
+import { API_BASE_URL } from "@/constants/urls";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/filters')({
+export const Route = createFileRoute("/dashboard/settings/filters")({
   component: withErrorBoundary(FiltersSettingsPage, "Saved Filters"),
 });
 
@@ -54,11 +66,18 @@ interface SavedFilter {
   id: string;
   name: string;
   description?: string;
-  filterType: 'projects' | 'tasks' | 'users' | 'messages' | 'files';
+  filterType: "projects" | "tasks" | "users" | "messages" | "files";
   isPinned: boolean;
   isPublic: boolean;
   usageCount: number;
   lastUsed?: Date;
+}
+
+interface FilterTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  filterType: string;
 }
 
 function FiltersSettingsPage() {
@@ -68,38 +87,47 @@ function FiltersSettingsPage() {
   const currentWorkspace = workspace;
   const queryClient = useQueryClient();
 
-  const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<SavedFilter | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<SavedFilter | null>(
+    null,
+  );
 
   // Form state for new filter
-  const [filterName, setFilterName] = useState('');
-  const [filterDescription, setFilterDescription] = useState('');
-  const [filterType, setFilterType] = useState<'projects' | 'tasks' | 'users' | 'messages' | 'files'>('tasks');
+  const [filterName, setFilterName] = useState("");
+  const [filterDescription, setFilterDescription] = useState("");
+  const [filterType, setFilterType] = useState<
+    "projects" | "tasks" | "users" | "messages" | "files"
+  >("tasks");
   const [isPublic, setIsPublic] = useState(false);
 
   // Fetch templates
   const { data: templatesResponse } = useQuery({
-    queryKey: ['filter-templates', selectedType],
+    queryKey: ["filter-templates", selectedType],
     queryFn: async () => {
-      const typeParam = selectedType !== 'all' ? `?filterType=${selectedType}` : '';
-      const response = await fetch(`${API_BASE_URL}/settings/filters/templates${typeParam}`, {
-        credentials: 'include',
-      });
+      const typeParam =
+        selectedType !== "all" ? `?filterType=${selectedType}` : "";
+      const response = await fetch(
+        `${API_BASE_URL}/settings/filters/templates${typeParam}`,
+        {
+          credentials: "include",
+        },
+      );
       return response.ok ? response.json() : null;
     },
   });
 
   // Fetch saved filters
   const { data: filtersResponse, isLoading } = useQuery({
-    queryKey: ['saved-filters', currentWorkspace?.id, selectedType],
+    queryKey: ["saved-filters", currentWorkspace?.id, selectedType],
     queryFn: async () => {
       if (!currentWorkspace) return null;
-      const typeParam = selectedType !== 'all' ? `?filterType=${selectedType}` : '';
+      const typeParam =
+        selectedType !== "all" ? `?filterType=${selectedType}` : "";
       const response = await fetch(
         `${API_BASE_URL}/settings/filters/${currentWorkspace.id}/filters${typeParam}`,
-        { credentials: 'include' }
+        { credentials: "include" },
       );
       return response.ok ? response.json() : null;
     },
@@ -111,115 +139,129 @@ function FiltersSettingsPage() {
 
   // Create filter mutation
   const createFilterMutation = useMutation({
-    mutationFn: async (filterData: any) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+    mutationFn: async (filterData: unknown) => {
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/filters/${currentWorkspace.id}/filters`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(filterData),
-        }
+        },
       );
-      if (!response.ok) throw new Error('Failed to create filter');
+      if (!response.ok) throw new Error("Failed to create filter");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Filter created successfully');
-      queryClient.invalidateQueries({ queryKey: ['saved-filters', currentWorkspace?.id] });
+      toast.success("Filter created successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["saved-filters", currentWorkspace?.id],
+      });
       setIsCreateDialogOpen(false);
       resetForm();
     },
     onError: () => {
-      toast.error('Failed to create filter');
+      toast.error("Failed to create filter");
     },
   });
 
   // Update filter mutation
   const updateFilterMutation = useMutation({
-    mutationFn: async ({ filterId, updates }: { filterId: string; updates: any }) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+    mutationFn: async ({
+      filterId,
+      updates,
+    }: { filterId: string; updates: unknown }) => {
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/filters/${currentWorkspace.id}/filters/${filterId}`,
         {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(updates),
-        }
+        },
       );
-      if (!response.ok) throw new Error('Failed to update filter');
+      if (!response.ok) throw new Error("Failed to update filter");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Filter updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['saved-filters', currentWorkspace?.id] });
+      toast.success("Filter updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["saved-filters", currentWorkspace?.id],
+      });
     },
     onError: () => {
-      toast.error('Failed to update filter');
+      toast.error("Failed to update filter");
     },
   });
 
   // Delete filter mutation
   const deleteFilterMutation = useMutation({
     mutationFn: async (filterId: string) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/filters/${currentWorkspace.id}/filters/${filterId}`,
         {
-          method: 'DELETE',
-          credentials: 'include',
-        }
+          method: "DELETE",
+          credentials: "include",
+        },
       );
-      if (!response.ok) throw new Error('Failed to delete filter');
+      if (!response.ok) throw new Error("Failed to delete filter");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Filter deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['saved-filters', currentWorkspace?.id] });
+      toast.success("Filter deleted successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["saved-filters", currentWorkspace?.id],
+      });
       setIsDeleteDialogOpen(false);
     },
     onError: () => {
-      toast.error('Failed to delete filter');
+      toast.error("Failed to delete filter");
     },
   });
 
   // Clone filter mutation
   const cloneFilterMutation = useMutation({
-    mutationFn: async ({ filterId, name }: { filterId: string; name: string }) => {
-      if (!currentWorkspace) throw new Error('No workspace');
+    mutationFn: async ({
+      filterId,
+      name,
+    }: { filterId: string; name: string }) => {
+      if (!currentWorkspace) throw new Error("No workspace");
       const response = await fetch(
         `${API_BASE_URL}/settings/filters/${currentWorkspace.id}/filters/${filterId}/clone`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ name }),
-        }
+        },
       );
-      if (!response.ok) throw new Error('Failed to clone filter');
+      if (!response.ok) throw new Error("Failed to clone filter");
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Filter cloned successfully');
-      queryClient.invalidateQueries({ queryKey: ['saved-filters', currentWorkspace?.id] });
+      toast.success("Filter cloned successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["saved-filters", currentWorkspace?.id],
+      });
     },
     onError: () => {
-      toast.error('Failed to clone filter');
+      toast.error("Failed to clone filter");
     },
   });
 
   const resetForm = () => {
-    setFilterName('');
-    setFilterDescription('');
-    setFilterType('tasks');
+    setFilterName("");
+    setFilterDescription("");
+    setFilterType("tasks");
     setIsPublic(false);
   };
 
   const handleCreateFilter = () => {
     if (!filterName.trim()) {
-      toast.error('Filter name is required');
+      toast.error("Filter name is required");
       return;
     }
 
@@ -229,7 +271,7 @@ function FiltersSettingsPage() {
       filterType,
       isPublic,
       filterConfig: {
-        logic: 'AND',
+        logic: "AND",
         conditions: [],
       },
     });
@@ -262,19 +304,19 @@ function FiltersSettingsPage() {
     }
   };
 
-  const handleUseTemplate = (template: any) => {
+  const handleUseTemplate = (template: FilterTemplate) => {
     toast.info(`Using template "${template.name}" - Full builder coming soon!`);
   };
 
   const getFilterTypeBadge = (type: string) => {
     const colors: Record<string, string> = {
-      projects: 'bg-blue-500',
-      tasks: 'bg-green-500',
-      users: 'bg-purple-500',
-      messages: 'bg-yellow-500',
-      files: 'bg-pink-500',
+      projects: "bg-blue-500",
+      tasks: "bg-green-500",
+      users: "bg-purple-500",
+      messages: "bg-yellow-500",
+      files: "bg-pink-500",
     };
-    return colors[type] || 'bg-gray-500';
+    return colors[type] || "bg-gray-500";
   };
 
   return (
@@ -283,7 +325,11 @@ function FiltersSettingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button onClick={() => navigate({ to: '/dashboard/settings' })} variant='ghost' size='sm'>
+            <Button
+              onClick={() => navigate({ to: "/dashboard/settings" })}
+              variant="ghost"
+              size="sm"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
             </Button>
             <div className="space-y-1">
@@ -369,16 +415,22 @@ function FiltersSettingsPage() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-1 flex-1">
                           <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg">{filter.name}</CardTitle>
+                            <CardTitle className="text-lg">
+                              {filter.name}
+                            </CardTitle>
                             {filter.isPinned && (
                               <Pin className="h-4 w-4 text-primary fill-current" />
                             )}
                           </div>
                           {filter.description && (
-                            <CardDescription>{filter.description}</CardDescription>
+                            <CardDescription>
+                              {filter.description}
+                            </CardDescription>
                           )}
                         </div>
-                        <Badge className={getFilterTypeBadge(filter.filterType)}>
+                        <Badge
+                          className={getFilterTypeBadge(filter.filterType)}
+                        >
                           {filter.filterType}
                         </Badge>
                       </div>
@@ -389,7 +441,10 @@ function FiltersSettingsPage() {
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>Used {filter.usageCount} times</span>
                           {filter.lastUsed && (
-                            <span>Last used {new Date(filter.lastUsed).toLocaleDateString()}</span>
+                            <span>
+                              Last used{" "}
+                              {new Date(filter.lastUsed).toLocaleDateString()}
+                            </span>
                           )}
                         </div>
 
@@ -401,7 +456,10 @@ function FiltersSettingsPage() {
                               checked={filter.isPinned}
                               onCheckedChange={() => handleTogglePin(filter)}
                             />
-                            <Label htmlFor={`pin-${filter.id}`} className="text-sm">
+                            <Label
+                              htmlFor={`pin-${filter.id}`}
+                              className="text-sm"
+                            >
                               Pin
                             </Label>
                           </div>
@@ -411,7 +469,10 @@ function FiltersSettingsPage() {
                               checked={filter.isPublic}
                               onCheckedChange={() => handleTogglePublic(filter)}
                             />
-                            <Label htmlFor={`public-${filter.id}`} className="text-sm flex items-center gap-1">
+                            <Label
+                              htmlFor={`public-${filter.id}`}
+                              className="text-sm flex items-center gap-1"
+                            >
                               <Users className="h-3 w-3" />
                               Share
                             </Label>
@@ -420,7 +481,11 @@ function FiltersSettingsPage() {
 
                         {/* Actions */}
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                          >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </Button>
@@ -464,21 +529,30 @@ function FiltersSettingsPage() {
               </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {templates.map((template: any) => (
+                {templates.map((template: FilterTemplate) => (
                   <Card key={template.id}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <CardTitle className="text-lg">{template.name}</CardTitle>
-                          <CardDescription>{template.description}</CardDescription>
+                          <CardTitle className="text-lg">
+                            {template.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {template.description}
+                          </CardDescription>
                         </div>
-                        <Badge className={getFilterTypeBadge(template.filterType)}>
+                        <Badge
+                          className={getFilterTypeBadge(template.filterType)}
+                        >
                           {template.filterType}
                         </Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <Button onClick={() => handleUseTemplate(template)} className="w-full">
+                      <Button
+                        onClick={() => handleUseTemplate(template)}
+                        className="w-full"
+                      >
                         Use Template
                       </Button>
                     </CardContent>
@@ -519,7 +593,12 @@ function FiltersSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="filterType">Filter Type *</Label>
-                <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+                <Select
+                  value={filterType}
+                  onValueChange={(value) =>
+                    setFilterType(value as typeof filterType)
+                  }
+                >
                   <SelectTrigger id="filterType">
                     <SelectValue />
                   </SelectTrigger>
@@ -545,10 +624,16 @@ function FiltersSettingsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateFilter} disabled={createFilterMutation.isPending}>
+              <Button
+                onClick={handleCreateFilter}
+                disabled={createFilterMutation.isPending}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Create
               </Button>
@@ -557,17 +642,24 @@ function FiltersSettingsPage() {
         </Dialog>
 
         {/* Delete Confirmation */}
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Filter?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{selectedFilter?.name}"? This action cannot be undone.
+                Are you sure you want to delete "{selectedFilter?.name}"? This
+                action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive">
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive"
+              >
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>

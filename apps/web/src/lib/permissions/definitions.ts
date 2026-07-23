@@ -1,9 +1,9 @@
 /**
  * 🛡️ Permission Definitions & Role Permissions Matrix
- * 
+ *
  * Central configuration for all role permissions and hierarchies.
  * Used by both frontend components and backend middleware.
- * 
+ *
  * @epic-1.1-subtasks - Team leads have special subtask management powers
  * @epic-2.1-files - File access based on role
  * @epic-3.2-time - Time tracking permissions by role
@@ -15,12 +15,12 @@ import type { UserRole, AllPermissions } from "./types";
  * Role hierarchy levels - higher numbers = more permissions
  */
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  "guest": 0,
-  "stakeholder": 1,
-  "contractor": 1,
-  "client": 1,
-  "member": 1,
-  "team-lead": 2,          // @epic-1.1-subtasks - Enhanced subtask powers
+  guest: 0,
+  stakeholder: 1,
+  contractor: 1,
+  client: 1,
+  member: 1,
+  "team-lead": 2, // @epic-1.1-subtasks - Enhanced subtask powers
   "project-viewer": 3,
   "project-manager": 4,
   "workspace-viewer": 5,
@@ -215,13 +215,13 @@ const BASE_PERMISSIONS: Omit<AllPermissions, "role"> = {
  */
 export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> = {
   // ===== GUEST (Level 0) =====
-  "guest": {
+  guest: {
     ...BASE_PERMISSIONS,
     role: "guest",
   },
 
   // ===== STAKEHOLDER (Level 1) =====
-  "stakeholder": {
+  stakeholder: {
     ...BASE_PERMISSIONS,
     canViewWorkspace: true,
     canViewAssignedProjects: true,
@@ -233,7 +233,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> = {
   },
 
   // ===== CONTRACTOR (Level 1) =====
-  "contractor": {
+  contractor: {
     ...BASE_PERMISSIONS,
     canViewAssignedProjects: true,
     canViewProjectDetails: true,
@@ -246,7 +246,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> = {
   },
 
   // ===== CLIENT (Level 1) =====
-  "client": {
+  client: {
     ...BASE_PERMISSIONS,
     canViewWorkspace: true,
     canViewAssignedProjects: true,
@@ -258,7 +258,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> = {
   },
 
   // ===== MEMBER (Level 1) =====
-  "member": {
+  member: {
     ...BASE_PERMISSIONS,
     canViewWorkspace: true,
     canViewAssignedProjects: true,
@@ -428,18 +428,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> = {
     // 💼 PROJECT MANAGER SPECIFIC - FULL PROJECT CONTROL
     canCreateProjects: true,
     canEditProjects: true,
-    canDeleteProjects: true,           // 🔥 ADDED: Full project deletion control
-    canArchiveProjects: true,          // 🔥 ADDED: Project archiving control
-    canCloneProjects: true,            // 🔥 ADDED: Project cloning capability
+    canDeleteProjects: true, // 🔥 ADDED: Full project deletion control
+    canArchiveProjects: true, // 🔥 ADDED: Project archiving control
+    canCloneProjects: true, // 🔥 ADDED: Project cloning capability
     canManageProjectSettings: true,
     canManageProjectTeam: true,
-    canAssignProjectManagers: true,    // 🔥 ADDED: Assign other PMs to projects
+    canAssignProjectManagers: true, // 🔥 ADDED: Assign other PMs to projects
     canInviteToProject: true,
     canRemoveFromProject: true,
-    canAccessProjectFiles: true,       // 🔥 ADDED: Full file access in projects
+    canAccessProjectFiles: true, // 🔥 ADDED: Full file access in projects
     canViewProjectBudget: true,
     canManageProjectBudget: true,
-    canAccessProjectChat: true,        // 🔥 ADDED: Project communication access
+    canAccessProjectChat: true, // 🔥 ADDED: Project communication access
     canCreateProjectAnnouncements: true,
     canModerateProjectDiscussion: true,
     canBulkEditTasks: true,
@@ -447,35 +447,35 @@ export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> = {
     canImportTasks: true,
     canExportTasks: true,
     canCreateReports: true,
-    canScheduleReports: true,          // 🔥 ADDED: Report scheduling capability
+    canScheduleReports: true, // 🔥 ADDED: Report scheduling capability
     canCustomizeReports: true,
     canExportReports: true,
     canShareReports: true,
     canCreateDashboards: true,
-    canManageDashboards: true,         // 🔥 ADDED: Dashboard management
+    canManageDashboards: true, // 🔥 ADDED: Dashboard management
     canViewProjectAnalytics: true,
     canViewProjectReports: true,
     canExportProjectData: true,
     // Team management within projects
-    canCreateTeams: true,              // 🔥 ADDED: Create project teams
-    canEditTeams: true,                // 🔥 ADDED: Edit project teams
-    canAddMembers: true,               // 🔥 ADDED: Add team members
-    canRemoveMembers: true,            // 🔥 ADDED: Remove team members
-    canInviteMembers: true,            // 🔥 ADDED: Invite members to projects
-    canManageTeamRoles: true,          // 🔥 ADDED: Manage roles within project teams
-    canAssignTeamLeads: true,          // 🔥 ADDED: Assign team leads for project teams
+    canCreateTeams: true, // 🔥 ADDED: Create project teams
+    canEditTeams: true, // 🔥 ADDED: Edit project teams
+    canAddMembers: true, // 🔥 ADDED: Add team members
+    canRemoveMembers: true, // 🔥 ADDED: Remove team members
+    canInviteMembers: true, // 🔥 ADDED: Invite members to projects
+    canManageTeamRoles: true, // 🔥 ADDED: Manage roles within project teams
+    canAssignTeamLeads: true, // 🔥 ADDED: Assign team leads for project teams
     // Communication and collaboration
-    canCreateChannels: true,           // 🔥 ADDED: Create project channels
-    canManageChannels: true,           // 🔥 ADDED: Manage project channels
-    canArchiveChannels: true,          // 🔥 ADDED: Archive project channels
-    canModerateChat: true,             // 🔥 ADDED: Moderate project chat
-    canDeleteMessages: true,           // 🔥 ADDED: Delete inappropriate messages
-    canPinMessages: true,              // 🔥 ADDED: Pin important messages
+    canCreateChannels: true, // 🔥 ADDED: Create project channels
+    canManageChannels: true, // 🔥 ADDED: Manage project channels
+    canArchiveChannels: true, // 🔥 ADDED: Archive project channels
+    canModerateChat: true, // 🔥 ADDED: Moderate project chat
+    canDeleteMessages: true, // 🔥 ADDED: Delete inappropriate messages
+    canPinMessages: true, // 🔥 ADDED: Pin important messages
     canManageChannelPermissions: true, // 🔥 ADDED: Manage channel permissions
-    canStartVideoCall: true,           // 🔥 ADDED: Start project video calls
-    canShareScreen: true,              // 🔥 ADDED: Screen sharing in meetings
-    canRecordMeetings: true,           // 🔥 ADDED: Record project meetings
-    canScheduleMeetings: true,         // 🔥 ADDED: Schedule project meetings
+    canStartVideoCall: true, // 🔥 ADDED: Start project video calls
+    canShareScreen: true, // 🔥 ADDED: Screen sharing in meetings
+    canRecordMeetings: true, // 🔥 ADDED: Record project meetings
+    canScheduleMeetings: true, // 🔥 ADDED: Schedule project meetings
     role: "project-manager",
   },
 
@@ -773,7 +773,10 @@ export function isRoleHigher(role1: UserRole, role2: UserRole): boolean {
 /**
  * Check if a role has minimum level access
  */
-export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): boolean {
+export function hasMinimumRole(
+  userRole: UserRole,
+  requiredRole: UserRole,
+): boolean {
   return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole];
 }
 
@@ -781,16 +784,16 @@ export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): bool
  * Get permissions for a specific role
  */
 export function getRolePermissions(role: UserRole): AllPermissions {
-  return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS["guest"];
+  return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.guest;
 }
 
 /**
  * Check if a role has a specific permission
  */
 export function hasPermission(
-  role: UserRole, 
-  permission: keyof AllPermissions
+  role: UserRole,
+  permission: keyof AllPermissions,
 ): boolean {
   const rolePermissions = getRolePermissions(role);
   return rolePermissions[permission] === true;
-} 
+}

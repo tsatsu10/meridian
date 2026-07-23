@@ -7,14 +7,11 @@ import {
   Monitor,
   Smartphone,
   Tablet,
-  MapPin,
   Clock,
   LogOut,
   AlertTriangle,
-  CheckCircle2,
   Wifi,
   WifiOff,
-  Globe,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/cn";
@@ -30,23 +27,26 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+// The sessions table only stores id/userId/expiresAt, so the API reports
+// device/location/activity fields as null rather than fabricating them
 interface ActiveSession {
   id: string;
   userId: string;
   userEmail: string;
   deviceType: "desktop" | "mobile" | "tablet" | "unknown";
   deviceName: string;
-  browser: string;
-  os: string;
-  ipAddress: string;
+  browser: string | null;
+  os: string | null;
+  ipAddress: string | null;
   location: {
     city?: string;
     country?: string;
     coordinates?: { lat: number; lon: number };
-  };
+  } | null;
   isCurrentSession: boolean;
-  createdAt: Date;
-  lastActivity: Date;
+  createdAt: Date | null;
+  lastActivity: Date | null;
+  expiresAt?: Date;
   isSuspicious: boolean;
   status: "active" | "idle" | "expired";
 }
@@ -57,15 +57,17 @@ interface SessionStats {
   idleSessions: number;
   suspiciousSessions: number;
   uniqueLocations: number;
-  averageSessionDuration: string;
+  averageSessionDuration: string | null;
 }
 
 export function SessionManagementWidget() {
   const queryClient = useQueryClient();
-  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [_selectedSession, setSelectedSession] = useState<string | null>(null);
 
   // Fetch active sessions
-  const { data: sessions, isLoading: sessionsLoading } = useQuery<ActiveSession[]>({
+  const { data: sessions, isLoading: sessionsLoading } = useQuery<
+    ActiveSession[]
+  >({
     queryKey: ["active-sessions"],
     queryFn: async () => {
       const response = await fetch("/api/security/sessions/active");
@@ -91,9 +93,12 @@ export function SessionManagementWidget() {
   // Terminate session mutation
   const terminateSessionMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      const response = await fetch(`/api/security/sessions/${sessionId}/terminate`, {
-        method: "POST",
-      });
+      const response = await fetch(
+        `/api/security/sessions/${sessionId}/terminate`,
+        {
+          method: "POST",
+        },
+      );
       if (!response.ok) throw new Error("Failed to terminate session");
       return response.json();
     },
@@ -145,26 +150,15 @@ export function SessionManagementWidget() {
     }
   };
 
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - new Date(date).getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
-  };
-
   if (sessionsLoading || statsLoading) {
     return (
       <Card className="glass-card">
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span className="ml-2 text-muted-foreground">Loading sessions...</span>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+            <span className="ml-2 text-muted-foreground">
+              Loading sessions...
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -183,7 +177,7 @@ export function SessionManagementWidget() {
             <Badge variant="outline" className="text-xs">
               {stats?.activeNow ?? 0} Active Now
             </Badge>
-            {stats?.suspiciousSessions! > 0 && (
+            {(stats?.suspiciousSessions ?? 0) > 0 && (
               <Badge variant="destructive" className="text-xs">
                 {stats?.suspiciousSessions} Suspicious
               </Badge>
@@ -195,30 +189,19 @@ export function SessionManagementWidget() {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Session Statistics */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* Session Statistics — the sessions schema only tracks unexpired
+            sessions, so location/duration breakdowns aren't available */}
+        <div className="grid grid-cols-1 gap-4">
           <div className="p-3 border border-border rounded-lg bg-background/50">
             <div className="flex items-center gap-2 mb-1">
               <Monitor className="h-4 w-4 text-blue-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Total Sessions</span>
+              <span className="text-xs text-muted-foreground">
+                Total Active Sessions
+              </span>
             </div>
-            <div className="text-xl font-bold">{stats?.totalActiveSessions ?? 0}</div>
-          </div>
-
-          <div className="p-3 border border-border rounded-lg bg-background/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Globe className="h-4 w-4 text-green-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Locations</span>
+            <div className="text-xl font-bold">
+              {stats?.totalActiveSessions ?? 0}
             </div>
-            <div className="text-xl font-bold">{stats?.uniqueLocations ?? 0}</div>
-          </div>
-
-          <div className="p-3 border border-border rounded-lg bg-background/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-purple-600" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Avg Duration</span>
-            </div>
-            <div className="text-sm font-bold">{stats?.averageSessionDuration ?? "N/A"}</div>
           </div>
         </div>
 
@@ -228,7 +211,11 @@ export function SessionManagementWidget() {
             <h4 className="text-sm font-semibold">Active Sessions</h4>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" disabled={!sessions || sessions.length === 0}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!sessions || sessions.length === 0}
+                >
                   <LogOut className="h-4 w-4 mr-2" />
                   Terminate All
                 </Button>
@@ -237,8 +224,8 @@ export function SessionManagementWidget() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Terminate All Sessions?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will log out all users from all devices except your current session. This action cannot be
-                    undone.
+                    This will log out all users from all devices except your
+                    current session. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -270,7 +257,8 @@ export function SessionManagementWidget() {
                       session.isCurrentSession
                         ? "border-primary bg-primary/5"
                         : "border-border hover:bg-muted/30",
-                      session.isSuspicious && "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20"
+                      session.isSuspicious &&
+                        "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20",
                     )}
                   >
                     <div className="flex items-start justify-between mb-3">
@@ -280,9 +268,14 @@ export function SessionManagementWidget() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm">{session.deviceName}</span>
+                            <span className="font-medium text-sm">
+                              {session.deviceName}
+                            </span>
                             {session.isCurrentSession && (
-                              <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                              >
                                 Current
                               </Badge>
                             )}
@@ -294,30 +287,26 @@ export function SessionManagementWidget() {
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground space-y-1">
-                            <div className="flex items-center gap-1">
-                              <Monitor className="h-3 w-3" />
-                              {session.browser} on {session.os}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {session.location.city && session.location.country
-                                ? `${session.location.city}, ${session.location.country}`
-                                : "Unknown Location"}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Globe className="h-3 w-3" />
-                              {session.ipAddress}
-                            </div>
+                            {/* Device/location/activity aren't captured by the
+                                sessions schema — expiry is the real signal */}
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Last active: {formatTimeAgo(session.lastActivity)}
+                              {session.expiresAt
+                                ? `Expires ${new Date(session.expiresAt).toLocaleString()}`
+                                : "Expiry unknown"}
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-col items-end gap-2">
-                        <Badge variant="outline" className={cn("text-xs", getStatusColor(session.status))}>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs",
+                            getStatusColor(session.status),
+                          )}
+                        >
                           {session.status}
                         </Badge>
                         {!session.isCurrentSession && (
@@ -335,16 +324,25 @@ export function SessionManagementWidget() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Terminate Session?</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                  Terminate Session?
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This will immediately log out the user from this device. They will need to log in
-                                  again to continue using the application.
+                                  This will immediately log out the user from
+                                  this device. They will need to log in again to
+                                  continue using the application.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setSelectedSession(null)}>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel
+                                  onClick={() => setSelectedSession(null)}
+                                >
+                                  Cancel
+                                </AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => terminateSessionMutation.mutate(session.id)}
+                                  onClick={() =>
+                                    terminateSessionMutation.mutate(session.id)
+                                  }
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Terminate
@@ -358,8 +356,9 @@ export function SessionManagementWidget() {
 
                     {session.isSuspicious && (
                       <div className="mt-3 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded text-xs text-red-900 dark:text-red-200">
-                        <strong>Security Alert:</strong> This session has been flagged as potentially suspicious due to
-                        unusual location or activity patterns.
+                        <strong>Security Alert:</strong> This session has been
+                        flagged as potentially suspicious due to unusual
+                        location or activity patterns.
                       </div>
                     )}
                   </div>
@@ -370,12 +369,16 @@ export function SessionManagementWidget() {
         </div>
 
         {/* Info Banner */}
-        {stats?.suspiciousSessions! > 0 && (
+        {(stats?.suspiciousSessions ?? 0) > 0 && (
           <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <AlertTriangle
+              className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="text-xs text-red-900 dark:text-red-200">
-              <strong>Security Alert:</strong> {stats.suspiciousSessions} suspicious session(s) detected. Review and
-              terminate any unauthorized access immediately.
+              <strong>Security Alert:</strong> {stats?.suspiciousSessions}{" "}
+              suspicious session(s) detected. Review and terminate any
+              unauthorized access immediately.
             </div>
           </div>
         )}
@@ -383,4 +386,3 @@ export function SessionManagementWidget() {
     </Card>
   );
 }
-

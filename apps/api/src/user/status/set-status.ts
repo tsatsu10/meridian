@@ -6,14 +6,14 @@ import { logger } from "../../utils/logger";
 export async function setUserStatus(
   userEmail: string,
   data: {
-    status: 'available' | 'in_meeting' | 'focus_mode' | 'away';
+    status: "available" | "in_meeting" | "focus_mode" | "away";
     statusMessage?: string;
     emoji?: string;
     expiresAt?: Date;
-  }
+  },
 ) {
   const db = getDatabase();
-  
+
   try {
     // Check if status already exists
     const [existing] = await db
@@ -21,7 +21,7 @@ export async function setUserStatus(
       .from(userStatus)
       .where(eq(userStatus.userEmail, userEmail))
       .limit(1);
-    
+
     if (existing) {
       // Update existing status
       const [updated] = await db
@@ -35,29 +35,26 @@ export async function setUserStatus(
         })
         .where(eq(userStatus.userEmail, userEmail))
         .returning();
-      
+
       logger.info(`Status updated for ${userEmail}: ${data.status}`);
       return updated;
-    } else {
-      // Insert new status
-      const [created] = await db
-        .insert(userStatus)
-        .values({
-          userEmail,
-          status: data.status,
-          statusMessage: data.statusMessage || null,
-          emoji: data.emoji || null,
-          expiresAt: data.expiresAt || null,
-        })
-        .returning();
-      
-      logger.info(`Status created for ${userEmail}: ${data.status}`);
-      return created;
     }
+    // Insert new status
+    const [created] = await db
+      .insert(userStatus)
+      .values({
+        userEmail,
+        status: data.status,
+        statusMessage: data.statusMessage || null,
+        emoji: data.emoji || null,
+        expiresAt: data.expiresAt || null,
+      })
+      .returning();
+
+    logger.info(`Status created for ${userEmail}: ${data.status}`);
+    return created;
   } catch (error) {
     logger.error("Failed to set user status:", error);
     throw new Error("Failed to update user status");
   }
 }
-
-

@@ -32,7 +32,7 @@ export const BorderBeam = ({
           "--color-from": colorFrom,
           "--color-to": colorTo,
           "--delay": `-${delay}s`,
-        } as any
+        } as React.CSSProperties
       }
       className={cn(
         "pointer-events-none absolute inset-0 rounded-[inherit] [border:calc(var(--border-width)*1px)_solid_transparent]",
@@ -46,4 +46,4 @@ export const BorderBeam = ({
       )}
     />
   );
-}; 
+};

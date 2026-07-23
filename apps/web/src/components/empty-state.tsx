@@ -1,15 +1,15 @@
-import { motion } from 'framer-motion';
-import { 
-  FileQuestion, 
-  Briefcase, 
-  GraduationCap, 
-  Star, 
-  Users, 
+import { motion } from "framer-motion";
+import {
+  FileQuestion,
+  Briefcase,
+  GraduationCap,
+  Star,
+  Users,
   Plus,
   Search,
-  LucideIcon
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+  type LucideIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Empty State Component
@@ -31,7 +31,7 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
-  className = '',
+  className = "",
 }: EmptyStateProps) {
   return (
     <motion.div
@@ -43,17 +43,17 @@ export function EmptyState({
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ 
+        transition={{
           type: "spring",
           stiffness: 260,
           damping: 20,
-          delay: 0.1 
+          delay: 0.1,
         }}
         className="relative mb-6"
       >
         {/* Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-xl" />
-        
+
         {/* Icon Container */}
         <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center border border-blue-200/50 dark:border-blue-800/50">
           <Icon className="w-10 h-10 text-blue-600 dark:text-blue-400" />
@@ -197,4 +197,3 @@ export function EmptyContent({
 }
 
 export default EmptyState;
-

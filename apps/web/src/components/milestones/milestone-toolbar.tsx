@@ -1,13 +1,12 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Search,
   Filter,
@@ -26,18 +25,17 @@ import {
   Grid as GridIcon,
   Layers,
   CheckSquare,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
 
 interface MilestoneToolbarProps {
   // View mode
-  viewMode: 'list' | 'grid';
-  onViewModeChange: (mode: 'list' | 'grid') => void;
-  
+  viewMode: "list" | "grid";
+  onViewModeChange: (mode: "list" | "grid") => void;
+
   // Search
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  
+
   // Filters
   statusFilter: string;
   onStatusFilterChange: (status: string) => void;
@@ -45,27 +43,27 @@ interface MilestoneToolbarProps {
   onRiskFilterChange: (risk: string) => void;
   typeFilter: string;
   onTypeFilterChange: (type: string) => void;
-  
+
   // Sort
   sortBy: string;
   onSortChange: (sort: string) => void;
-  
+
   // Group
   groupBy: string;
   onGroupChange: (group: string) => void;
-  
+
   // Actions
   hasActiveFilters: boolean;
   onClearFilters: () => void;
-  onExport: (format: 'csv' | 'json') => void;
-  
+  onExport: (format: "csv" | "json") => void;
+
   // Bulk selection
   selectMode: boolean;
   onSelectModeChange: (mode: boolean) => void;
   selectedCount: number;
   onSelectAll: () => void;
   onDeselectAll: () => void;
-  
+
   // Stats
   totalCount: number;
   filteredCount: number;
@@ -104,17 +102,17 @@ export default function MilestoneToolbar({
         {/* View Mode Toggle */}
         <div className="flex items-center gap-1 border rounded-md p-1">
           <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            variant={viewMode === "list" ? "default" : "ghost"}
             size="sm"
-            onClick={() => onViewModeChange('list')}
+            onClick={() => onViewModeChange("list")}
             className="h-8"
           >
             <List className="h-4 w-4" />
           </Button>
           <Button
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
+            variant={viewMode === "grid" ? "default" : "ghost"}
             size="sm"
-            onClick={() => onViewModeChange('grid')}
+            onClick={() => onViewModeChange("grid")}
             className="h-8"
           >
             <GridIcon className="h-4 w-4" />
@@ -134,7 +132,7 @@ export default function MilestoneToolbar({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onSearchChange('')}
+              onClick={() => onSearchChange("")}
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
             >
               <X className="h-4 w-4" />
@@ -144,7 +142,7 @@ export default function MilestoneToolbar({
 
         {/* Select Mode Toggle */}
         <Button
-          variant={selectMode ? 'default' : 'outline'}
+          variant={selectMode ? "default" : "outline"}
           size="sm"
           onClick={() => onSelectModeChange(!selectMode)}
           className="h-9"
@@ -164,10 +162,10 @@ export default function MilestoneToolbar({
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Export Format</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onExport('csv')}>
+            <DropdownMenuItem onClick={() => onExport("csv")}>
               Export as CSV
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onExport('json')}>
+            <DropdownMenuItem onClick={() => onExport("json")}>
               Export as JSON
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -177,7 +175,7 @@ export default function MilestoneToolbar({
         {totalCount > 0 && (
           <div className="text-sm text-muted-foreground ml-auto">
             {filteredCount !== totalCount && `${filteredCount} / `}
-            {totalCount} milestone{totalCount !== 1 ? 's' : ''}
+            {totalCount} milestone{totalCount !== 1 ? "s" : ""}
           </div>
         )}
       </div>
@@ -258,7 +256,12 @@ export default function MilestoneToolbar({
 
         {/* Clear Filters */}
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={onClearFilters} className="h-9">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearFilters}
+            className="h-9"
+          >
             <X className="h-4 w-4 mr-2" />
             Clear Filters
           </Button>
@@ -268,9 +271,7 @@ export default function MilestoneToolbar({
       {/* Selection Bar */}
       {selectMode && selectedCount > 0 && (
         <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
-          <span className="text-sm font-medium">
-            {selectedCount} selected
-          </span>
+          <span className="text-sm font-medium">{selectedCount} selected</span>
           <Button size="sm" variant="outline" onClick={onSelectAll}>
             Select All
           </Button>
@@ -282,4 +283,3 @@ export default function MilestoneToolbar({
     </div>
   );
 }
-

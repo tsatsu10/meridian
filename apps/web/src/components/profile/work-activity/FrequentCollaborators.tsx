@@ -7,7 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { ClickableUserProfile } from "@/components/user/clickable-user-profile";
-import { getFrequentCollaborators, smartProfileKeys } from "@/fetchers/profile/smart-profile-fetchers";
+import {
+  getFrequentCollaborators,
+  smartProfileKeys,
+} from "@/fetchers/profile/smart-profile-fetchers";
 import NumberTicker from "@/components/magicui/number-ticker";
 
 interface FrequentCollaboratorsProps {
@@ -16,7 +19,11 @@ interface FrequentCollaboratorsProps {
   className?: string;
 }
 
-export function FrequentCollaborators({ userId, limit = 5, className }: FrequentCollaboratorsProps) {
+export function FrequentCollaborators({
+  userId,
+  limit = 5,
+  className,
+}: FrequentCollaboratorsProps) {
   const { data, isLoading } = useQuery({
     queryKey: smartProfileKeys.collaborators(userId),
     queryFn: () => getFrequentCollaborators(userId, limit),
@@ -80,39 +87,57 @@ export function FrequentCollaborators({ userId, limit = 5, className }: Frequent
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {collaborators.map((collab: any, index: number) => {
-            const projectCount = collab.sharedProjects?.length || 0;
-            const score = parseFloat(collab.collaborationScore) || 0;
+          {collaborators.map(
+            (
+              collab: {
+                id: string;
+                collaboratorId: string;
+                collaboratorName: string;
+                collaboratorAvatar: string;
+                collaborationCount: number;
+                collaborationScore: string;
+                sharedProjects?: unknown[];
+              },
+              index: number,
+            ) => {
+              const projectCount = collab.sharedProjects?.length || 0;
+              void (Number.parseFloat(collab.collaborationScore) || 0);
 
-            return (
-              <div key={collab.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                <Badge variant="outline" className="h-6 w-6 rounded-full flex items-center justify-center p-0">
-                  {index + 1}
-                </Badge>
-                
-                <ClickableUserProfile
-                  userId={collab.collaboratorId}
-                  userName={collab.collaboratorName}
-                  userAvatar={collab.collaboratorAvatar}
-                  size="md"
-                  openMode="both"
-                  className="flex-1"
-                />
+              return (
+                <div
+                  key={collab.id}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Badge
+                    variant="outline"
+                    className="h-6 w-6 rounded-full flex items-center justify-center p-0"
+                  >
+                    {index + 1}
+                  </Badge>
 
-                <div className="text-right">
-                  <div className="text-sm font-semibold">
-                    <NumberTicker value={collab.collaborationCount} />
+                  <ClickableUserProfile
+                    userId={collab.collaboratorId}
+                    userName={collab.collaboratorName}
+                    userAvatar={collab.collaboratorAvatar}
+                    size="md"
+                    openMode="both"
+                    className="flex-1"
+                  />
+
+                  <div className="text-right">
+                    <div className="text-sm font-semibold">
+                      <NumberTicker value={collab.collaborationCount} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {projectCount} project{projectCount !== 1 ? "s" : ""}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {projectCount} project{projectCount !== 1 ? "s" : ""}
-                  </p>
                 </div>
-              </div>
-            );
-          })}
+              );
+            },
+          )}
         </div>
       </CardContent>
     </Card>
   );
 }
-

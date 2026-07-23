@@ -18,7 +18,10 @@ const useWorkspaceStore = create<WorkspaceStore>()(
         return state.workspace;
       },
       setWorkspace: (updatedWorkspace) => {
-        console.log('🔧 setWorkspace called:', updatedWorkspace?.name || 'undefined');
+        console.log(
+          "🔧 setWorkspace called:",
+          updatedWorkspace?.name || "undefined",
+        );
         set(() => ({ workspace: updatedWorkspace }));
       },
     }),
@@ -28,8 +31,8 @@ const useWorkspaceStore = create<WorkspaceStore>()(
       partialize: (state) => ({
         workspace: state.workspace,
       }),
-    }
-  )
+    },
+  ),
 );
 
 export { useWorkspaceStore };

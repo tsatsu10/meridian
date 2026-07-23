@@ -44,12 +44,12 @@ export function Sidebar() {
         <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-50" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,rgba(120,119,198,0.3),transparent)]" />
         <div className="relative z-10 flex flex-col h-full">
-        <SidebarHeader />
-        <div className="flex-1 overflow-y-auto">
-          <SidebarContent />
-        </div>
-        <div className="relative z-10">
-          <SidebarFooter />
+          <SidebarHeader />
+          <div className="flex-1 overflow-y-auto">
+            <SidebarContent />
+          </div>
+          <div className="relative z-10">
+            <SidebarFooter />
           </div>
         </div>
       </div>

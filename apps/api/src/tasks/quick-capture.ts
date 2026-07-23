@@ -1,20 +1,20 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middlewares/secure-auth";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const quickCaptureRoutes = new Hono();
 
 // Quick capture endpoint
-quickCaptureRoutes.post("/", authMiddleware, async (c) => {
+quickCaptureRoutes.post("/", authMiddleware(), async (c) => {
   try {
     // In production, this would:
     // 1. Parse multipart form data
     // 2. Save voice notes and photos to storage
     // 3. Store geolocation data
     // 4. Create task in database
-    
+
     logger.debug("Quick capture task received");
-    
+
     // Simulate task creation
     const task = {
       id: Date.now().toString(),
@@ -39,5 +39,3 @@ quickCaptureRoutes.post("/", authMiddleware, async (c) => {
 });
 
 export default quickCaptureRoutes;
-
-

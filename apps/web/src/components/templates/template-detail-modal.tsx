@@ -1,5 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { X, Star, Clock, Users, TrendingUp, ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
+import {
+  Star,
+  Clock,
+  TrendingUp,
+  ChevronDown,
+  ChevronRight,
+  CheckCircle2,
+} from "lucide-react";
 import { useState } from "react";
 import { getTemplate } from "../../fetchers/templates/get-template";
 import {
@@ -20,12 +27,15 @@ interface TemplateDetailModalProps {
   onClose: () => void;
 }
 
-export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModalProps) {
+export function TemplateDetailModal({
+  templateId,
+  onClose,
+}: TemplateDetailModalProps) {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [showApplyModal, setShowApplyModal] = useState(false);
 
   const { data: template, isLoading } = useQuery({
-    queryKey: ['template', templateId],
+    queryKey: ["template", templateId],
     queryFn: () => getTemplate(templateId),
   });
 
@@ -41,15 +51,14 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
     });
   };
 
-  const totalEstimatedHours = template?.tasks.reduce(
-    (sum, task) => sum + (task.estimatedHours || 0),
-    0
-  ) || 0;
+  const totalEstimatedHours =
+    template?.tasks.reduce(
+      (sum, task) => sum + (task.estimatedHours || 0),
+      0,
+    ) || 0;
 
-  const totalSubtasks = template?.tasks.reduce(
-    (sum, task) => sum + task.subtasks.length,
-    0
-  ) || 0;
+  const totalSubtasks =
+    template?.tasks.reduce((sum, task) => sum + task.subtasks.length, 0) || 0;
 
   const difficultyColor = {
     beginner: "bg-green-500/10 text-green-700 dark:text-green-400",
@@ -80,7 +89,9 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
               <DialogHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <DialogTitle className="text-2xl">{template.name}</DialogTitle>
+                    <DialogTitle className="text-2xl">
+                      {template.name}
+                    </DialogTitle>
                     <DialogDescription className="mt-2 text-base">
                       {template.profession} • {template.industry}
                     </DialogDescription>
@@ -100,18 +111,25 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                 <div className="flex flex-wrap gap-2 pt-4">
                   <Badge
                     variant="outline"
-                    className={cn("capitalize", difficultyColor[template.difficulty])}
+                    className={cn(
+                      "capitalize",
+                      difficultyColor[template.difficulty],
+                    )}
                   >
                     {template.difficulty}
                   </Badge>
-                  
+
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    {template.rating.toFixed(1)} ({template.ratingCount} ratings)
+                    {template.rating.toFixed(1)} ({template.ratingCount}{" "}
+                    ratings)
                   </Badge>
 
                   {template.estimatedDuration && (
-                    <Badge variant="outline" className="flex items-center gap-1">
+                    <Badge
+                      variant="outline"
+                      className="flex items-center gap-1"
+                    >
                       <Clock className="h-3 w-3" />
                       {template.estimatedDuration} days
                     </Badge>
@@ -136,22 +154,32 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                 {/* Description */}
                 <div>
                   <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground">{template.description}</p>
+                  <p className="text-muted-foreground">
+                    {template.description}
+                  </p>
                 </div>
 
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{template.tasks.length}</div>
+                    <div className="text-2xl font-bold">
+                      {template.tasks.length}
+                    </div>
                     <div className="text-sm text-muted-foreground">Tasks</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{totalSubtasks}</div>
-                    <div className="text-sm text-muted-foreground">Subtasks</div>
+                    <div className="text-sm text-muted-foreground">
+                      Subtasks
+                    </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{totalEstimatedHours}h</div>
-                    <div className="text-sm text-muted-foreground">Estimated</div>
+                    <div className="text-2xl font-bold">
+                      {totalEstimatedHours}h
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Estimated
+                    </div>
                   </div>
                 </div>
 
@@ -171,7 +199,9 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
 
                 {/* Tasks Tree */}
                 <div>
-                  <h3 className="font-semibold mb-3">Tasks ({template.tasks.length})</h3>
+                  <h3 className="font-semibold mb-3">
+                    Tasks ({template.tasks.length})
+                  </h3>
                   <div className="space-y-2">
                     {template.tasks.map((task, index) => {
                       const isExpanded = expandedTasks.has(task.id);
@@ -186,13 +216,22 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                           <div
                             className={cn(
                               "p-3 cursor-pointer hover:bg-muted/50 transition-colors",
-                              hasSubtasks && "cursor-pointer"
+                              hasSubtasks && "cursor-pointer",
                             )}
+                            // biome-ignore lint/a11y/useSemanticElements: styled expandable task row, keep as div
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                if (hasSubtasks) toggleTask(task.id);
+                              }
+                            }}
                             onClick={() => hasSubtasks && toggleTask(task.id)}
                           >
                             <div className="flex items-start gap-3">
                               {hasSubtasks && (
-                                <button className="mt-0.5">
+                                <button type="button" className="mt-0.5">
                                   {isExpanded ? (
                                     <ChevronDown className="h-4 w-4" />
                                   ) : (
@@ -201,7 +240,7 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                                 </button>
                               )}
                               {!hasSubtasks && <div className="w-4" />}
-                              
+
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-xs text-muted-foreground">
@@ -209,17 +248,26 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                                   </span>
                                   <Badge
                                     variant="outline"
-                                    className={cn("text-xs capitalize", priorityColor[task.priority])}
+                                    className={cn(
+                                      "text-xs capitalize",
+                                      priorityColor[task.priority],
+                                    )}
                                   >
                                     {task.priority}
                                   </Badge>
                                   {task.estimatedHours && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {task.estimatedHours}h
                                     </Badge>
                                   )}
                                   {task.suggestedAssigneeRole && (
-                                    <Badge variant="secondary" className="text-xs">
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
                                       {task.suggestedAssigneeRole}
                                     </Badge>
                                   )}
@@ -233,7 +281,8 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                                 {task.relativeStartDay !== undefined && (
                                   <div className="text-xs text-muted-foreground mt-1">
                                     Day {task.relativeStartDay}
-                                    {task.relativeDueDay !== undefined && ` - ${task.relativeDueDay}`}
+                                    {task.relativeDueDay !== undefined &&
+                                      ` - ${task.relativeDueDay}`}
                                   </div>
                                 )}
                               </div>
@@ -259,7 +308,9 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                                       {index + 1}.{subIndex + 1}
                                     </span>
                                     <div className="flex-1">
-                                      <div className="font-medium text-sm">{subtask.title}</div>
+                                      <div className="font-medium text-sm">
+                                        {subtask.title}
+                                      </div>
                                       {subtask.description && (
                                         <p className="text-xs text-muted-foreground mt-1">
                                           {subtask.description}
@@ -267,12 +318,18 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
                                       )}
                                       <div className="flex gap-2 mt-1">
                                         {subtask.estimatedHours && (
-                                          <Badge variant="outline" className="text-xs">
+                                          <Badge
+                                            variant="outline"
+                                            className="text-xs"
+                                          >
                                             {subtask.estimatedHours}h
                                           </Badge>
                                         )}
                                         {subtask.suggestedAssigneeRole && (
-                                          <Badge variant="secondary" className="text-xs">
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-xs"
+                                          >
                                             {subtask.suggestedAssigneeRole}
                                           </Badge>
                                         )}
@@ -322,4 +379,3 @@ export function TemplateDetailModal({ templateId, onClose }: TemplateDetailModal
     </>
   );
 }
-

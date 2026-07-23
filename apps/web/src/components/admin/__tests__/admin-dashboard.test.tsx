@@ -1,6 +1,6 @@
 /**
  * Admin Dashboard Component Tests
- * 
+ *
  * Tests admin dashboard functionality:
  * - Overview statistics
  * - User management
@@ -8,10 +8,9 @@
  * - System health
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { TestWrapper } from '../../../test-utils/test-wrapper';
-import React from 'react';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { TestWrapper } from "../../../test-utils/test-wrapper";
 
 interface AdminDashboardProps {
   stats?: {
@@ -31,9 +30,13 @@ function AdminDashboard({ stats }: AdminDashboardProps) {
   };
 
   return (
-    <div role="main" aria-label="Admin dashboard">
+    <div
+      // biome-ignore lint/a11y/useSemanticElements: test mock component
+      role="main"
+      aria-label="Admin dashboard"
+    >
       <h1>Admin Dashboard</h1>
-      
+
       <div className="stats-grid">
         <div className="stat-card" data-testid="total-users">
           <h3>Total Users</h3>
@@ -59,67 +62,66 @@ function AdminDashboard({ stats }: AdminDashboardProps) {
   );
 }
 
-describe('Admin Dashboard Component', () => {
-  it('should render admin dashboard', () => {
+describe("Admin Dashboard Component", () => {
+  it("should render admin dashboard", () => {
     render(<AdminDashboard />, { wrapper: TestWrapper });
 
-    expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /admin dashboard/i }),
+    ).toBeInTheDocument();
   });
 
-  it('should display total users', () => {
-    render(
-      <AdminDashboard stats={{ totalUsers: 150 }} />,
-      { wrapper: TestWrapper }
-    );
+  it("should display total users", () => {
+    render(<AdminDashboard stats={{ totalUsers: 150 }} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByTestId('total-users')).toHaveTextContent('150');
+    expect(screen.getByTestId("total-users")).toHaveTextContent("150");
   });
 
-  it('should display total workspaces', () => {
-    render(
-      <AdminDashboard stats={{ totalWorkspaces: 25 }} />,
-      { wrapper: TestWrapper }
-    );
+  it("should display total workspaces", () => {
+    render(<AdminDashboard stats={{ totalWorkspaces: 25 }} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByTestId('total-workspaces')).toHaveTextContent('25');
+    expect(screen.getByTestId("total-workspaces")).toHaveTextContent("25");
   });
 
-  it('should display total projects', () => {
-    render(
-      <AdminDashboard stats={{ totalProjects: 75 }} />,
-      { wrapper: TestWrapper }
-    );
+  it("should display total projects", () => {
+    render(<AdminDashboard stats={{ totalProjects: 75 }} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByTestId('total-projects')).toHaveTextContent('75');
+    expect(screen.getByTestId("total-projects")).toHaveTextContent("75");
   });
 
-  it('should display total tasks', () => {
-    render(
-      <AdminDashboard stats={{ totalTasks: 500 }} />,
-      { wrapper: TestWrapper }
-    );
+  it("should display total tasks", () => {
+    render(<AdminDashboard stats={{ totalTasks: 500 }} />, {
+      wrapper: TestWrapper,
+    });
 
-    expect(screen.getByTestId('total-tasks')).toHaveTextContent('500');
+    expect(screen.getByTestId("total-tasks")).toHaveTextContent("500");
   });
 
-  it('should handle zero stats', () => {
+  it("should handle zero stats", () => {
     render(<AdminDashboard />, { wrapper: TestWrapper });
 
-    expect(screen.getByTestId('total-users')).toHaveTextContent('0');
+    expect(screen.getByTestId("total-users")).toHaveTextContent("0");
   });
 
-  it('should display all stat cards', () => {
+  it("should display all stat cards", () => {
     render(<AdminDashboard />, { wrapper: TestWrapper });
 
-    const statCards = screen.getAllByRole('heading', { level: 3 });
+    const statCards = screen.getAllByRole("heading", { level: 3 });
 
     expect(statCards.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('should be accessible', () => {
+  it("should be accessible", () => {
     render(<AdminDashboard />, { wrapper: TestWrapper });
 
-    expect(screen.getByRole('main', { name: /admin dashboard/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("main", { name: /admin dashboard/i }),
+    ).toBeInTheDocument();
   });
 });
-

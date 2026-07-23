@@ -1,6 +1,6 @@
 /**
  * 🎨 Backlog Theme Types
- * 
+ *
  * Type definitions for backlog themes/categories
  */
 
@@ -33,4 +33,3 @@ export interface ThemeApiResponse {
   message?: string;
   error?: string;
 }
-

@@ -19,7 +19,7 @@ const meridianButtonVariants = cva(
     "transition-all duration-200 ease-out",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50",
-    "relative overflow-hidden"
+    "relative overflow-hidden",
   ],
   {
     variants: {
@@ -28,51 +28,51 @@ const meridianButtonVariants = cva(
           "bg-meridian-primary hover:bg-meridian-primary-600 active:bg-meridian-primary-700",
           "text-white shadow-primary hover:shadow-primary-lg",
           "border border-meridian-primary-600/20",
-          "hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0"
+          "hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0",
         ],
         secondary: [
           "bg-meridian-neutral-100 hover:bg-meridian-neutral-200 active:bg-meridian-neutral-300",
           "text-meridian-neutral-900 shadow-meridian-sm hover:shadow-meridian-md",
-          "border border-meridian-neutral-200 hover:border-meridian-neutral-300"
+          "border border-meridian-neutral-200 hover:border-meridian-neutral-300",
         ],
         outline: [
           "border border-meridian-neutral-300 hover:border-meridian-primary-400",
           "bg-transparent hover:bg-meridian-primary-50 active:bg-meridian-primary-100",
           "text-meridian-neutral-700 hover:text-meridian-primary-700",
-          "shadow-meridian-sm hover:shadow-meridian-md"
+          "shadow-meridian-sm hover:shadow-meridian-md",
         ],
         ghost: [
           "border-transparent bg-transparent",
           "hover:bg-meridian-neutral-100 active:bg-meridian-neutral-200",
-          "text-meridian-neutral-700 hover:text-meridian-neutral-900"
+          "text-meridian-neutral-700 hover:text-meridian-neutral-900",
         ],
         destructive: [
           "bg-meridian-error hover:bg-meridian-error-600 active:bg-meridian-error-700",
           "text-white shadow-error hover:shadow-error-lg",
-          "border border-meridian-error-600/20"
+          "border border-meridian-error-600/20",
         ],
         success: [
           "bg-meridian-success hover:bg-meridian-success-600 active:bg-meridian-success-700",
           "text-white shadow-success hover:shadow-success-lg",
-          "border border-meridian-success-600/20"
+          "border border-meridian-success-600/20",
         ],
         warning: [
           "bg-meridian-warning hover:bg-meridian-warning-600 active:bg-meridian-warning-700",
           "text-white shadow-warning hover:shadow-warning-lg",
-          "border border-meridian-warning-600/20"
+          "border border-meridian-warning-600/20",
         ],
         gradient: [
           "bg-gradient-primary hover:opacity-90 active:opacity-80",
           "text-white shadow-primary hover:shadow-primary-lg",
           "border border-meridian-primary-600/20",
-          "hover:scale-[1.02] hover:-translate-y-0.5"
+          "hover:scale-[1.02] hover:-translate-y-0.5",
         ],
         glass: [
           "glass-light hover:bg-glass-bg-light",
           "text-meridian-neutral-700 hover:text-meridian-neutral-900",
           "border border-glass-border-light hover:border-glass-border-light-subtle",
-          "backdrop-blur-lg"
-        ]
+          "backdrop-blur-lg",
+        ],
       },
       size: {
         xs: "h-7 px-2 text-xs gap-1",
@@ -82,7 +82,7 @@ const meridianButtonVariants = cva(
         xl: "h-12 px-8 text-lg gap-3",
         icon: "h-10 w-10 p-0",
         "icon-sm": "h-8 w-8 p-0",
-        "icon-lg": "h-12 w-12 p-0"
+        "icon-lg": "h-12 w-12 p-0",
       },
       persona: {
         none: "",
@@ -90,45 +90,45 @@ const meridianButtonVariants = cva(
           "theme-pm",
           "[&[data-variant=primary]]:bg-persona-pm-primary [&[data-variant=primary]]:hover:bg-persona-pm-primary/90",
           "[&[data-variant=outline]]:border-persona-pm-border [&[data-variant=outline]]:hover:bg-persona-pm-bg",
-          "[&[data-variant=outline]]:text-persona-pm-primary [&[data-variant=outline]]:hover:text-persona-pm-primary/90"
+          "[&[data-variant=outline]]:text-persona-pm-primary [&[data-variant=outline]]:hover:text-persona-pm-primary/90",
         ],
         tl: [
           "theme-tl",
           "[&[data-variant=primary]]:bg-persona-tl-primary [&[data-variant=primary]]:hover:bg-persona-tl-primary/90",
           "[&[data-variant=outline]]:border-persona-tl-border [&[data-variant=outline]]:hover:bg-persona-tl-bg",
-          "[&[data-variant=outline]]:text-persona-tl-primary [&[data-variant=outline]]:hover:text-persona-tl-primary/90"
+          "[&[data-variant=outline]]:text-persona-tl-primary [&[data-variant=outline]]:hover:text-persona-tl-primary/90",
         ],
         exec: [
           "theme-exec",
           "[&[data-variant=primary]]:bg-persona-exec-primary [&[data-variant=primary]]:hover:bg-persona-exec-primary/90",
           "[&[data-variant=outline]]:border-persona-exec-border [&[data-variant=outline]]:hover:bg-persona-exec-bg",
-          "[&[data-variant=outline]]:text-persona-exec-primary [&[data-variant=outline]]:hover:text-persona-exec-primary/90"
+          "[&[data-variant=outline]]:text-persona-exec-primary [&[data-variant=outline]]:hover:text-persona-exec-primary/90",
         ],
         dev: [
           "theme-dev",
           "[&[data-variant=primary]]:bg-persona-dev-primary [&[data-variant=primary]]:hover:bg-persona-dev-primary/90",
           "[&[data-variant=outline]]:border-persona-dev-border [&[data-variant=outline]]:hover:bg-persona-dev-bg",
-          "[&[data-variant=outline]]:text-persona-dev-primary [&[data-variant=outline]]:hover:text-persona-dev-primary/90"
+          "[&[data-variant=outline]]:text-persona-dev-primary [&[data-variant=outline]]:hover:text-persona-dev-primary/90",
         ],
         design: [
           "theme-design",
           "[&[data-variant=primary]]:bg-persona-design-primary [&[data-variant=primary]]:hover:bg-persona-design-primary/90",
           "[&[data-variant=outline]]:border-persona-design-border [&[data-variant=outline]]:hover:bg-persona-design-bg",
-          "[&[data-variant=outline]]:text-persona-design-primary [&[data-variant=outline]]:hover:text-persona-design-primary/90"
-        ]
+          "[&[data-variant=outline]]:text-persona-design-primary [&[data-variant=outline]]:hover:text-persona-design-primary/90",
+        ],
       },
       loading: {
         true: "pointer-events-none",
-        false: ""
-      }
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "primary",
       size: "md",
       persona: "none",
-      loading: false
-    }
-  }
+      loading: false,
+    },
+  },
 );
 
 export interface MeridianButtonProps
@@ -142,36 +142,45 @@ export interface MeridianButtonProps
 }
 
 const MeridianButton = React.forwardRef<HTMLButtonElement, MeridianButtonProps>(
-  ({ 
-    className, 
-    variant, 
-    size, 
-    persona,
-    loading = false,
-    loadingText,
-    leftIcon,
-    rightIcon,
-    asChild = false, 
-    children,
-    disabled,
-    ...props 
-  }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      persona,
+      loading = false,
+      loadingText,
+      leftIcon,
+      rightIcon,
+      asChild = false,
+      children,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : "button";
 
     const isDisabled = disabled || loading;
 
     return (
       <Comp
-        className={cn(meridianButtonVariants({ variant, size, persona, loading, className }))}
+        className={cn(
+          meridianButtonVariants({
+            variant,
+            size,
+            persona,
+            loading,
+            className,
+          }),
+        )}
         ref={ref}
         disabled={isDisabled}
         data-variant={variant}
         {...props}
       >
         {/* Loading state */}
-        {loading && (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        )}
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
 
         {/* Left icon */}
         {leftIcon && !loading && (
@@ -194,20 +203,32 @@ const MeridianButton = React.forwardRef<HTMLButtonElement, MeridianButtonProps>(
         </span>
       </Comp>
     );
-  }
+  },
 );
 MeridianButton.displayName = "MeridianButton";
 
 // Specialized Button Components
 
-export interface IconButtonProps extends Omit<MeridianButtonProps, 'leftIcon' | 'rightIcon'> {
+export interface IconButtonProps
+  extends Omit<MeridianButtonProps, "leftIcon" | "rightIcon"> {
   icon: React.ReactNode;
   label?: string;
   tooltip?: string;
 }
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ icon, label, tooltip, size = "icon", variant = "ghost", className, ...props }, ref) => {
+  (
+    {
+      icon,
+      label,
+      tooltip,
+      size = "icon",
+      variant = "ghost",
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <MeridianButton
         ref={ref}
@@ -221,7 +242,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         {icon}
       </MeridianButton>
     );
-  }
+  },
 );
 IconButton.displayName = "IconButton";
 
@@ -232,7 +253,16 @@ export interface ButtonGroupProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const ButtonGroup = React.forwardRef<HTMLDivElement, ButtonGroupProps>(
-  ({ className, variant = "default", size = "md", orientation = "horizontal", ...props }, ref) => {
+  (
+    {
+      className,
+      variant = "default",
+      size = "md",
+      orientation = "horizontal",
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <div
         ref={ref}
@@ -244,17 +274,17 @@ const ButtonGroup = React.forwardRef<HTMLDivElement, ButtonGroupProps>(
             "[&>button]:rounded-md [&>button]:border-0",
             "[&>button:not([data-state=active])]:bg-transparent",
             "[&>button:not([data-state=active])]:shadow-none",
-            "[&>button[data-state=active]]:bg-white [&>button[data-state=active]]:shadow-meridian-sm"
+            "[&>button[data-state=active]]:bg-white [&>button[data-state=active]]:shadow-meridian-sm",
           ],
           variant === "default" && [
-            orientation === "horizontal" ? "space-x-2" : "space-y-2"
+            orientation === "horizontal" ? "space-x-2" : "space-y-2",
           ],
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 ButtonGroup.displayName = "ButtonGroup";
 
@@ -263,20 +293,26 @@ export interface FloatingActionButtonProps extends MeridianButtonProps {
   offset?: string;
 }
 
-const FloatingActionButton = React.forwardRef<HTMLButtonElement, FloatingActionButtonProps>(
-  ({ 
-    position = "bottom-right", 
-    offset = "1.5rem",
-    className, 
-    size = "lg",
-    variant = "primary",
-    ...props 
-  }, ref) => {
+const FloatingActionButton = React.forwardRef<
+  HTMLButtonElement,
+  FloatingActionButtonProps
+>(
+  (
+    {
+      position = "bottom-right",
+      offset = "1.5rem",
+      className,
+      size = "lg",
+      variant = "primary",
+      ...props
+    },
+    ref,
+  ) => {
     const positionClasses = {
       "bottom-right": "bottom-6 right-6",
-      "bottom-left": "bottom-6 left-6", 
+      "bottom-left": "bottom-6 left-6",
       "top-right": "top-6 right-6",
-      "top-left": "top-6 left-6"
+      "top-left": "top-6 left-6",
     };
 
     return (
@@ -289,16 +325,16 @@ const FloatingActionButton = React.forwardRef<HTMLButtonElement, FloatingActionB
           "transition-all duration-300 ease-out",
           "hover:scale-110 active:scale-95",
           positionClasses[position],
-          className
+          className,
         )}
-        style={{ 
-          [position.includes('bottom') ? 'bottom' : 'top']: offset,
-          [position.includes('right') ? 'right' : 'left']: offset
+        style={{
+          [position.includes("bottom") ? "bottom" : "top"]: offset,
+          [position.includes("right") ? "right" : "left"]: offset,
         }}
         {...props}
       />
     );
-  }
+  },
 );
 FloatingActionButton.displayName = "FloatingActionButton";
 
@@ -307,5 +343,5 @@ export {
   IconButton,
   ButtonGroup,
   FloatingActionButton,
-  meridianButtonVariants
-}; 
+  meridianButtonVariants,
+};

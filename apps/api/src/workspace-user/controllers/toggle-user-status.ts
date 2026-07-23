@@ -3,12 +3,9 @@ import { getDatabase } from "../../database/connection";
 import { workspaceUserTable } from "../../database/schema";
 
 // @epic-3.4-teams: Toggle workspace user status (active/inactive)
-async function toggleUserStatus(
-  workspaceId: string,
-  userEmail: string
-) {
+async function toggleUserStatus(workspaceId: string, userEmail: string) {
   const db = getDatabase();
-  
+
   // Get current status
   const [currentUser] = await db
     .select()
@@ -16,8 +13,8 @@ async function toggleUserStatus(
     .where(
       and(
         eq(workspaceUserTable.workspaceId, workspaceId),
-        eq(workspaceUserTable.userEmail, userEmail)
-      )
+        eq(workspaceUserTable.userEmail, userEmail),
+      ),
     );
 
   if (!currentUser) {
@@ -32,8 +29,8 @@ async function toggleUserStatus(
     .where(
       and(
         eq(workspaceUserTable.workspaceId, workspaceId),
-        eq(workspaceUserTable.userEmail, userEmail)
-      )
+        eq(workspaceUserTable.userEmail, userEmail),
+      ),
     )
     .returning();
 
@@ -41,5 +38,3 @@ async function toggleUserStatus(
 }
 
 export default toggleUserStatus;
-
-

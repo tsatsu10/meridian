@@ -18,7 +18,7 @@ interface AnalyticsOptions {
 interface ProjectHealth {
   id: string;
   name: string;
-  slug: string;
+  slug: string | null;
   completion: number;
   health: "good" | "warning" | "critical";
   tasksCompleted: number;
@@ -57,12 +57,16 @@ interface TimeSeriesData {
   activeUsers: number;
 }
 
-async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: AnalyticsOptions) {
+async function getAnalytics({
+  workspaceId,
+  timeRange = "30d",
+  projectIds,
+}: AnalyticsOptions) {
   const db = getDatabase();
   // Calculate date range filter
   const now = new Date();
   let dateFilter: Date;
-  
+
   switch (timeRange) {
     case "7d":
       dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -83,7 +87,9 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
   // Base conditions for filtering
   const baseConditions = [eq(projectTable.workspaceId, workspaceId)];
   if (projectIds && projectIds.length > 0) {
-    baseConditions.push(sql`${projectTable.id} IN (${projectIds.map(id => `'${id}'`).join(",")})`);
+    baseConditions.push(
+      sql`${projectTable.id} IN (${projectIds.map((id) => `'${id}'`).join(",")})`,
+    );
   }
 
   // 1. Executive Metrics
@@ -102,13 +108,18 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
     .select({
       totalTasks: count(),
       completedTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'done' THEN 1 END)`,
-      inProgressTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'in-progress' THEN 1 END)`,
+      inProgressTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'in_progress' THEN 1 END)`,
       overdueTasks: sql<number>`COUNT(CASE WHEN ${taskTable.dueDate} < CURRENT_TIMESTAMP AND ${taskTable.status} != 'done' THEN 1 END)`,
       avgCompletionTime: sql<number>`AVG(CASE WHEN ${taskTable.status} = 'done' THEN ${taskTable.createdAt} END)`,
     })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(and(...baseConditions, sql`${taskTable.createdAt} >= ${dateFilter.getTime()}`));
+    .where(
+      and(
+        ...baseConditions,
+        sql`${taskTable.createdAt} >= ${dateFilter.getTime()}`,
+      ),
+    );
 
   const [teamMetrics] = await db
     .select({
@@ -130,7 +141,12 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
     .from(timeEntryTable)
     .innerJoin(taskTable, eq(timeEntryTable.taskId, taskTable.id))
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(and(...baseConditions, sql`${timeEntryTable.createdAt} >= ${dateFilter.getTime()}`));
+    .where(
+      and(
+        ...baseConditions,
+        sql`${timeEntryTable.createdAt} >= ${dateFilter.getTime()}`,
+      ),
+    );
 
   // 3. Project Health Analysis
   const projectHealthData = await db
@@ -149,13 +165,22 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
     .leftJoin(taskTable, eq(taskTable.projectId, projectTable.id))
     .leftJoin(timeEntryTable, eq(timeEntryTable.taskId, taskTable.id))
     .where(and(...baseConditions))
-    .groupBy(projectTable.id, projectTable.name, projectTable.slug, projectTable.createdAt);
+    .groupBy(
+      projectTable.id,
+      projectTable.name,
+      projectTable.slug,
+      projectTable.createdAt,
+    );
 
   // Calculate project health scores
-  const projectHealth: ProjectHealth[] = projectHealthData.map(project => {
-    const completion = project.totalTasks > 0 ? (project.completedTasks / project.totalTasks) * 100 : 0;
-    const overdueRatio = project.totalTasks > 0 ? project.overdueTasks / project.totalTasks : 0;
-    
+  const projectHealth: ProjectHealth[] = projectHealthData.map((project) => {
+    const completion =
+      project.totalTasks > 0
+        ? (project.completedTasks / project.totalTasks) * 100
+        : 0;
+    const overdueRatio =
+      project.totalTasks > 0 ? project.overdueTasks / project.totalTasks : 0;
+
     let health: "good" | "warning" | "critical" = "good";
     if (overdueRatio > 0.3 || completion < 30) {
       health = "critical";
@@ -167,7 +192,10 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
     const daysRemaining = null;
 
     // Calculate velocity (tasks completed per week)
-    const projectAge = Math.max(1, (Date.now() - project.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 7));
+    const projectAge = Math.max(
+      1,
+      (Date.now() - project.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 7),
+    );
     const velocity = project.completedTasks / projectAge;
 
     return {
@@ -187,8 +215,12 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
   });
 
   // Update project metrics based on calculated health
-  const completedProjects = projectHealth.filter(p => p.completion === 100).length;
-  const projectsAtRisk = projectHealth.filter(p => p.health === 'critical').length;
+  const completedProjects = projectHealth.filter(
+    (p) => p.completion === 100,
+  ).length;
+  const projectsAtRisk = projectHealth.filter(
+    (p) => p.health === "critical",
+  ).length;
 
   // 4. Resource Utilization
   const resourceData = await db
@@ -201,49 +233,71 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
       totalHours: sql<number>`COALESCE(SUM(${timeEntryTable.duration}), 0) / 3600`,
     })
     .from(userTable)
-    .innerJoin(workspaceUserTable, eq(workspaceUserTable.userEmail, userTable.email))
+    .innerJoin(
+      workspaceUserTable,
+      eq(workspaceUserTable.userEmail, userTable.email),
+    )
     .leftJoin(taskTable, eq(taskTable.userEmail, userTable.email))
     .leftJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .leftJoin(timeEntryTable, eq(timeEntryTable.taskId, taskTable.id))
-    .where(and(
-      eq(workspaceUserTable.workspaceId, workspaceId),
-      sql`${taskTable.createdAt} >= ${dateFilter.getTime()} OR ${taskTable.createdAt} IS NULL`
-    ))
+    .where(
+      and(
+        eq(workspaceUserTable.workspaceId, workspaceId),
+        sql`${taskTable.createdAt} >= ${dateFilter.getTime()} OR ${taskTable.createdAt} IS NULL`,
+      ),
+    )
     .groupBy(userTable.email, userTable.name);
 
-  const resourceUtilization: ResourceUtilization[] = resourceData.map(user => {
-    const productivity = user.totalHours > 0 ? user.completedTasks / user.totalHours : 0;
-    const utilization = Math.min(100, (user.totalHours / (40 * 4)) * 100); // Assuming 40 hours per week, 4 weeks
-    
-    return {
-      userEmail: user.userEmail,
-      userName: user.userName,
-      projectCount: user.projectCount,
-      taskCount: user.taskCount,
-      completedTasks: user.completedTasks,
-      totalHours: Math.round(user.totalHours),
-      utilization: Math.round(utilization),
-      productivity: Math.round(productivity * 100) / 100,
-    };
-  });
+  const resourceUtilization: ResourceUtilization[] = resourceData.map(
+    (user) => {
+      const productivity =
+        user.totalHours > 0 ? user.completedTasks / user.totalHours : 0;
+      const utilization = Math.min(100, (user.totalHours / (40 * 4)) * 100); // Assuming 40 hours per week, 4 weeks
+
+      return {
+        userEmail: user.userEmail,
+        userName: user.userName,
+        projectCount: user.projectCount,
+        taskCount: user.taskCount,
+        completedTasks: user.completedTasks,
+        totalHours: Math.round(user.totalHours),
+        utilization: Math.round(utilization),
+        productivity: Math.round(productivity * 100) / 100,
+      };
+    },
+  );
 
   // 5. Performance Benchmarks
-  const avgProjectCompletion = projectHealth.length > 0 
-    ? Math.round(projectHealth.reduce((sum, p) => sum + p.completion, 0) / projectHealth.length)
-    : 0;
+  const avgProjectCompletion =
+    projectHealth.length > 0
+      ? Math.round(
+          projectHealth.reduce((sum, p) => sum + p.completion, 0) /
+            projectHealth.length,
+        )
+      : 0;
 
-  const avgTaskCycleTime = taskMetrics?.avgCompletionTime 
+  const avgTaskCycleTime = taskMetrics?.avgCompletionTime
     ? Math.round(taskMetrics.avgCompletionTime / (1000 * 60 * 60)) // Convert to hours
     : 0;
 
-  const teamVelocity = projectHealth.length > 0
-    ? Math.round((projectHealth.reduce((sum, p) => sum + p.velocity, 0) / projectHealth.length) * 100) / 100
-    : 0;
+  const teamVelocity =
+    projectHealth.length > 0
+      ? Math.round(
+          (projectHealth.reduce((sum, p) => sum + p.velocity, 0) /
+            projectHealth.length) *
+            100,
+        ) / 100
+      : 0;
 
   // Calculate quality score based on task completion efficiency
-  const qualityScore = (taskMetrics?.totalTasks || 0) > 0 
-    ? Math.round(((taskMetrics?.completedTasks || 0) / (taskMetrics?.totalTasks || 1)) * 100)
-    : 100;
+  const qualityScore =
+    (taskMetrics?.totalTasks || 0) > 0
+      ? Math.round(
+          ((taskMetrics?.completedTasks || 0) /
+            (taskMetrics?.totalTasks || 1)) *
+            100,
+        )
+      : 100;
 
   // Calculate on-time delivery
   const deliveryResult = await db
@@ -253,13 +307,19 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
     })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(and(...baseConditions, sql`${taskTable.createdAt} >= ${dateFilter.getTime()}`));
+    .where(
+      and(
+        ...baseConditions,
+        sql`${taskTable.createdAt} >= ${dateFilter.getTime()}`,
+      ),
+    );
 
   const deliveryData = deliveryResult[0] || { totalWithDueDate: 0, onTime: 0 };
-  
-  const onTimeDelivery = deliveryData.totalWithDueDate > 0
-    ? Math.round((deliveryData.onTime / deliveryData.totalWithDueDate) * 100)
-    : 100;
+
+  const onTimeDelivery =
+    deliveryData.totalWithDueDate > 0
+      ? Math.round((deliveryData.onTime / deliveryData.totalWithDueDate) * 100)
+      : 100;
 
   const performanceBenchmarks: PerformanceBenchmarks = {
     avgProjectCompletion,
@@ -273,10 +333,10 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
   const timeSeriesData: TimeSeriesData[] = [];
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split("T")[0] ?? "";
     const dayStartTimestamp = new Date(dateStr).getTime();
     const dayEndTimestamp = dayStartTimestamp + 24 * 60 * 60 * 1000;
-    
+
     const dayResult = await db
       .select({
         tasksCreated: sql<number>`COUNT(CASE WHEN ${taskTable.createdAt} >= ${dayStartTimestamp} AND ${taskTable.createdAt} < ${dayEndTimestamp} THEN 1 END)`,
@@ -289,7 +349,12 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
       .leftJoin(timeEntryTable, eq(timeEntryTable.taskId, taskTable.id))
       .where(and(...baseConditions));
 
-    const dayData = dayResult[0] || { tasksCreated: 0, tasksCompleted: 0, hoursLogged: 0, activeUsers: 0 };
+    const dayData = dayResult[0] || {
+      tasksCreated: 0,
+      tasksCompleted: 0,
+      hoursLogged: 0,
+      activeUsers: 0,
+    };
 
     timeSeriesData.push({
       date: dateStr,
@@ -301,13 +366,23 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
   }
 
   // Calculate productivity percentage with safe fallbacks
-  const productivity = (taskMetrics?.totalTasks || 0) > 0 
-    ? Math.round(((taskMetrics?.completedTasks || 0) / (taskMetrics?.totalTasks || 1)) * 100)
-    : 0;
+  const productivity =
+    (taskMetrics?.totalTasks || 0) > 0
+      ? Math.round(
+          ((taskMetrics?.completedTasks || 0) /
+            (taskMetrics?.totalTasks || 1)) *
+            100,
+        )
+      : 0;
 
-  const timeUtilization = (timeMetrics?.totalHours || 0) > 0 && (teamMetrics?.totalMembers || 0) > 0
-    ? Math.round(((timeMetrics?.totalHours || 0) / ((teamMetrics?.totalMembers || 1) * 40 * 4)) * 100) // 40 hours/week, 4 weeks
-    : 0;
+  const timeUtilization =
+    (timeMetrics?.totalHours || 0) > 0 && (teamMetrics?.totalMembers || 0) > 0
+      ? Math.round(
+          ((timeMetrics?.totalHours || 0) /
+            ((teamMetrics?.totalMembers || 1) * 40 * 4)) *
+            100,
+        ) // 40 hours/week, 4 weeks
+      : 0;
 
   return {
     // Executive Dashboard Metrics
@@ -335,19 +410,19 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
       avgTimePerTask: Math.round((timeMetrics?.avgTimePerTask || 0) * 10) / 10,
       timeUtilization,
     },
-    
+
     // Portfolio Overview
     projectHealth,
-    
+
     // Resource Utilization
     resourceUtilization,
-    
+
     // Performance Benchmarks
     performanceBenchmarks,
-    
+
     // Time Series Data for Charts
     timeSeriesData,
-    
+
     // Summary
     summary: {
       timeRange,
@@ -355,11 +430,16 @@ async function getAnalytics({ workspaceId, timeRange = "30d", projectIds }: Anal
       totalProjects: projectMetrics?.totalProjects || 0,
       totalTasks: taskMetrics?.totalTasks || 0,
       totalMembers: teamMetrics?.totalMembers || 0,
-      overallHealth: projectHealth.length > 0 
-        ? Math.round(projectHealth.filter(p => p.health === 'good').length / projectHealth.length * 100)
-        : 100,
+      overallHealth:
+        projectHealth.length > 0
+          ? Math.round(
+              (projectHealth.filter((p) => p.health === "good").length /
+                projectHealth.length) *
+                100,
+            )
+          : 100,
     },
   };
 }
 
-export default getAnalytics; 
+export default getAnalytics;
