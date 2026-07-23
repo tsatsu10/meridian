@@ -36,7 +36,10 @@ describe("apiClient.auth.twoFactor", () => {
   });
 
   it("calls verifyLogin under /api/auth/two-factor", async () => {
-    await apiClient.auth.twoFactor.verifyLogin({ userId: "u1", token: "123456" });
+    await apiClient.auth.twoFactor.verifyLogin({
+      userId: "u1",
+      token: "123456",
+    });
     const url = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(url).toContain("/api/auth/two-factor/verify-login");
   });
