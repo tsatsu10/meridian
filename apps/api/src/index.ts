@@ -468,7 +468,6 @@ async function startServer() {
         )
           .then((response: Response) => {
             res.statusCode = response.status;
-            // biome-ignore lint/complexity/noForEach: Headers is not an Array and this TS lib has no Headers iterator
             response.headers.forEach((value, key) => {
               res.setHeader(key, value);
             });

@@ -341,7 +341,6 @@ export function PulseDotsLoading() {
     <div className="flex items-center gap-1">
       {[0, 1, 2].map((i) => (
         <div
-          // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
           key={i}
           className="h-2 w-2 bg-primary rounded-full animate-pulse"
           style={{
