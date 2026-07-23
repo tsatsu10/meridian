@@ -7,7 +7,7 @@ export type CreateTaskRequest = {
   projectId: string;
   userEmail?: string | null;
   status: string;
-  dueDate: string;
+  dueDate: string | null;
   priority: string;
   parentId?: string;
 };
@@ -18,7 +18,7 @@ async function createTask(
   projectId: string,
   userEmail: string,
   status: string,
-  dueDate: Date,
+  dueDate: Date | null,
   priority: string,
   parentId?: string,
 ) {
@@ -28,7 +28,7 @@ async function createTask(
       description,
       userEmail,
       status,
-      dueDate: dueDate.toISOString(),
+      dueDate: dueDate ? dueDate.toISOString() : null,
       priority,
       parentId,
     },

@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import projectIcons from "@/constants/project-icons";
 import type { RBACAuthContextType } from "@/lib/permissions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -302,6 +303,15 @@ export function DashboardOverviewLoaded({
                             )
                           : 0;
 
+                      // project.icon stores a Lucide icon name, not a
+                      // renderable character — resolve it via the shared
+                      // icon map, falling back to the name's initial.
+                      const ProjectIcon = project.icon
+                        ? projectIcons[
+                            project.icon as keyof typeof projectIcons
+                          ]
+                        : undefined;
+
                       return (
                         <Link
                           key={project.id}
@@ -312,11 +322,14 @@ export function DashboardOverviewLoaded({
                           <div className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer">
                             <div className="flex items-center space-x-3 flex-1 min-w-0">
                               <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <span className="text-primary font-semibold text-sm">
-                                  {project.icon ||
-                                    project.name?.charAt(0)?.toUpperCase() ||
-                                    "P"}
-                                </span>
+                                {ProjectIcon ? (
+                                  <ProjectIcon className="h-5 w-5 text-primary" />
+                                ) : (
+                                  <span className="text-primary font-semibold text-sm">
+                                    {project.name?.charAt(0)?.toUpperCase() ||
+                                      "P"}
+                                  </span>
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">

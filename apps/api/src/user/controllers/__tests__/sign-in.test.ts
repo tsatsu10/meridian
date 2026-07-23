@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import bcrypt from "bcrypt";
 import signIn from "../sign-in";
 import { getErrorMessage } from "../../../utils/error-utils";
+import { getErrorDetails, isOperationalError } from "../../../utils/errors";
 import {
   createMockDb,
   mockUsers,
@@ -92,7 +93,9 @@ describe("SignIn Controller", () => {
       mockDb.limit.mockResolvedValue([]); // No user found
 
       // Act & Assert
-      await expect(signIn(email, password)).rejects.toThrow("User not found");
+      await expect(signIn(email, password)).rejects.toThrow(
+        "Invalid email or password",
+      );
     });
 
     it("should throw error with incorrect password", async () => {
@@ -114,8 +117,94 @@ describe("SignIn Controller", () => {
 
       // Act & Assert
       await expect(signIn(email, incorrectPassword)).rejects.toThrow(
-        "Invalid credentials",
+        "Invalid email or password",
       );
+    });
+
+    it("should reject invalid credentials with a 401-mapped error, not a 500", async () => {
+      // A bare `throw new Error("Invalid credentials")` is invisible to the
+      // global error handler's AppError check (utils/errors.ts), which maps
+      // any plain Error to statusCode 500 and isOperational: false — so a
+      // routine wrong-password attempt was surfacing as a 500 "unexpected
+      // error", getting logged as a CRITICAL AUDIT EVENT
+      // (security_violation/unexpected_error), instead of an ordinary,
+      // operational 401 "unauthorized_access".
+      const email = "test@example.com";
+      const correctPassword = "password123";
+      const incorrectPassword = "wrongpassword";
+      const hashedPassword = await bcrypt.hash(correctPassword, 10);
+
+      mockDb.select.mockReturnThis();
+      mockDb.from.mockReturnThis();
+      mockDb.where.mockReturnThis();
+      mockDb.limit.mockResolvedValue([
+        {
+          ...mockUsers.validUser,
+          password: hashedPassword,
+        },
+      ]);
+
+      let caught: unknown;
+      try {
+        await signIn(email, incorrectPassword);
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeDefined();
+      const details = getErrorDetails(caught);
+      expect(details.statusCode).toBe(401);
+      expect(isOperationalError(caught as Error)).toBe(true);
+    });
+
+    it("should reject an unknown user with a 401-mapped error, not a 500", async () => {
+      const email = "nonexistent@example.com";
+      const password = "password123";
+
+      mockDb.select.mockReturnThis();
+      mockDb.from.mockReturnThis();
+      mockDb.where.mockReturnThis();
+      mockDb.limit.mockResolvedValue([]);
+
+      let caught: unknown;
+      try {
+        await signIn(email, password);
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeDefined();
+      const details = getErrorDetails(caught);
+      expect(details.statusCode).toBe(401);
+      expect(isOperationalError(caught as Error)).toBe(true);
+    });
+
+    it("should give an identical error message for unknown-user and wrong-password (no account enumeration)", async () => {
+      // "User not found" vs "Invalid credentials" lets a caller distinguish
+      // a non-existent email from a real one with a wrong password, i.e.
+      // enumerate valid accounts by trying candidate emails and reading
+      // which message comes back. Both should read identically.
+      mockDb.select.mockReturnThis();
+      mockDb.from.mockReturnThis();
+      mockDb.where.mockReturnThis();
+      mockDb.limit.mockResolvedValueOnce([]); // no such user
+
+      const unknownEmailMessage = await signIn(
+        "nonexistent@example.com",
+        "password123",
+      ).catch((error) => (error as Error).message);
+
+      const hashedPassword = await bcrypt.hash("password123", 10);
+      mockDb.limit.mockResolvedValueOnce([
+        { ...mockUsers.validUser, password: hashedPassword },
+      ]);
+
+      const wrongPasswordMessage = await signIn(
+        "test@example.com",
+        "wrongpassword",
+      ).catch((error) => (error as Error).message);
+
+      expect(unknownEmailMessage).toBe(wrongPasswordMessage);
     });
 
     it("should handle database errors gracefully", async () => {
@@ -147,7 +236,9 @@ describe("SignIn Controller", () => {
       mockDb.limit.mockResolvedValue([]);
 
       // Act & Assert
-      await expect(signIn(email, password)).rejects.toThrow("User not found");
+      await expect(signIn(email, password)).rejects.toThrow(
+        "Invalid email or password",
+      );
     });
 
     it("should handle empty password", async () => {
@@ -168,7 +259,7 @@ describe("SignIn Controller", () => {
 
       // Act & Assert
       await expect(signIn(email, password)).rejects.toThrow(
-        "Invalid credentials",
+        "Invalid email or password",
       );
     });
 
@@ -185,7 +276,7 @@ describe("SignIn Controller", () => {
 
       // Act & Assert
       await expect(signIn(uppercaseEmail, password)).rejects.toThrow(
-        "User not found",
+        "Invalid email or password",
       );
     });
   });

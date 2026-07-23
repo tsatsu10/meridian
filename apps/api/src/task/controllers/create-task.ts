@@ -95,7 +95,7 @@ async function createTask({
         // request-boundary narrowing onto the enum column
         status:
           (status as "todo" | "in_progress" | "done" | undefined) || "todo",
-        dueDate: dueDate || new Date(),
+        dueDate: dueDate ?? null,
         description: sanitizedDescription,
         priority:
           (priority as "low" | "medium" | "high" | "urgent" | undefined) ||

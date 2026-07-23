@@ -8,6 +8,7 @@
 import { config } from "dotenv";
 config({ path: "./.env" });
 
+import bcrypt from "bcrypt";
 import { createId } from "@paralleldrive/cuid2";
 import { getDatabase, initializeDatabase } from "./connection";
 import {
@@ -227,11 +228,12 @@ export async function seedRBACData() {
       if (!user.length) {
         // Create user
         userId = createId();
+        const hashedPassword = await bcrypt.hash("demo123", 10);
         await db.insert(userTable).values({
           id: userId,
           email: userData.email,
           name: userData.name,
-          password: "demo123", // Demo password
+          password: hashedPassword, // Demo password: "demo123"
           createdAt: new Date(),
         });
         logger.debug(`  ✅ Created user: ${userData.name} (${userData.email})`);

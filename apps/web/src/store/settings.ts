@@ -37,6 +37,10 @@ export interface AppearanceSettings {
   highContrast: boolean;
   reducedMotion: boolean;
   compactMode: boolean;
+  scheduledThemeEnabled: boolean;
+  lightThemeTime: string;
+  darkThemeTime: string;
+  locationBasedEnabled: boolean;
 }
 
 export interface NotificationSettings {
@@ -183,7 +187,7 @@ const defaultSettings: AllSettings = {
   },
   appearance: {
     theme: "system",
-    fontSize: 14,
+    fontSize: 16,
     sidebarCollapsed: false,
     density: "comfortable",
     animations: true,
@@ -191,6 +195,10 @@ const defaultSettings: AllSettings = {
     highContrast: false,
     reducedMotion: false,
     compactMode: false,
+    scheduledThemeEnabled: false,
+    lightThemeTime: "06:00",
+    darkThemeTime: "18:00",
+    locationBasedEnabled: false,
   },
   notifications: {
     email: {

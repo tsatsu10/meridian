@@ -300,7 +300,7 @@ export default function CreateTaskModal({
         description: formData.description,
         status: formData.status,
         priority: formData.priority,
-        dueDate: formData.dueDate || new Date().toISOString(),
+        dueDate: formData.dueDate || null,
         projectId:
           selectedProject?.id || getContextProjectId(projectContext) || "",
         parentId: formData.parentId || undefined,
