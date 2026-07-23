@@ -114,6 +114,37 @@ describe("CreateProjectModal", () => {
     mockWorkspace = { id: "workspace-123", name: "Test Workspace" };
   });
 
+  describe("Templates query gating (#95)", () => {
+    it("does not fetch templates while the modal is closed", async () => {
+      const { getTemplates } = await import(
+        "@/fetchers/templates/get-templates"
+      );
+
+      render(<CreateProjectModal open={false} onClose={mockOnClose} />, {
+        wrapper: TestWrapperWithMocks,
+      });
+
+      // Give any would-be-fired query a tick to resolve.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(getTemplates).not.toHaveBeenCalled();
+    });
+
+    it("fetches templates once the modal is open", async () => {
+      const { getTemplates } = await import(
+        "@/fetchers/templates/get-templates"
+      );
+
+      render(<CreateProjectModal open={true} onClose={mockOnClose} />, {
+        wrapper: TestWrapperWithMocks,
+      });
+
+      await waitFor(() => {
+        expect(getTemplates).toHaveBeenCalled();
+      });
+    });
+  });
+
   describe("Permission Handling", () => {
     it("should show access restricted message when user lacks permission", () => {
       mockHasPermission.mockReturnValue(false);
