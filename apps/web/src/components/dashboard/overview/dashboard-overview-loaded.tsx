@@ -54,8 +54,6 @@ export interface DashboardOverviewLoadedProps {
   hasPermission: RBACAuthContextType["hasPermission"];
   activityFeedWindow: DashboardActivityFeedItem[];
   currentTime: Date;
-  /** Shown in header for support clarity (server default dashboard name). */
-  activeDashboardLabel: string | null;
   lastDataFetch: Date;
   riskData: ReturnType<typeof useRiskMonitor>;
   handleRefresh: () => void | Promise<void>;
@@ -70,7 +68,6 @@ export function DashboardOverviewLoaded({
   hasPermission,
   activityFeedWindow,
   currentTime,
-  activeDashboardLabel,
   lastDataFetch,
   riskData,
   handleRefresh,
@@ -93,13 +90,6 @@ export function DashboardOverviewLoaded({
         title="Dashboard"
         subtitle="Welcome back! Here's what's happening with your projects."
         variant="default"
-        meta={
-          activeDashboardLabel ? (
-            <span className="text-muted-foreground text-xs">
-              {activeDashboardLabel}
-            </span>
-          ) : undefined
-        }
         customActions={
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             <StaleDataIndicator

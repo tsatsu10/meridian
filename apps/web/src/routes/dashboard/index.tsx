@@ -20,7 +20,6 @@ import {
   type RBACAuthContextType,
 } from "@/lib/permissions";
 import { flattenTasksFromProjects } from "@/lib/dashboard/flatten-project-tasks";
-import { useWorkspaceDashboardForOverview } from "@/hooks/dashboard/use-workspace-dashboard-for-overview";
 import { useDashboardActivityFeed } from "@/hooks/dashboard/use-dashboard-activity-feed";
 import { useDashboardOverviewRefresh } from "@/hooks/dashboard/use-dashboard-overview-refresh";
 import { DashboardOverviewLoaded } from "@/components/dashboard/overview/dashboard-overview-loaded";
@@ -42,17 +41,12 @@ export function DashboardOverviewPage() {
   const rbacAuth = useOptionalRBACAuth();
   const hasPermission = rbacAuth?.hasPermission ?? denyAllPermissions;
 
-  const { activeDashboard } = useWorkspaceDashboardForOverview();
-
   const {
     data: dashboardDataRaw,
     isLoading,
     error,
     refetch,
-  } = useDashboardData(undefined, {
-    dashboardId: activeDashboard?.id,
-    dashboardName: activeDashboard?.name ?? undefined,
-  });
+  } = useDashboardData(undefined, {});
 
   const dashboardData = useMemo(() => {
     if (!dashboardDataRaw) return null;
@@ -199,10 +193,6 @@ export function DashboardOverviewPage() {
     );
   }
 
-  const activeDashboardLabel = activeDashboard?.name
-    ? `Workspace dashboard: ${activeDashboard.name}`
-    : null;
-
   return (
     <Suspense
       fallback={
@@ -233,7 +223,6 @@ export function DashboardOverviewPage() {
           hasPermission={hasPermission}
           activityFeedWindow={activityFeedWindow}
           currentTime={currentTime}
-          activeDashboardLabel={activeDashboardLabel}
           lastDataFetch={lastDataFetch}
           riskData={riskData}
           handleRefresh={handleRefresh}
