@@ -80,7 +80,8 @@ function createRBACUser(
  * Determine user's initial role based on various factors
  */
 function determineInitialRole(user: LoggedInUser): UserRole {
-  // TODO: This will later be determined by:
+  // See https://github.com/tsatsu10/meridian/issues/84 — should be
+  // determined by:
   // 1. Database role assignments
   // 2. Workspace creator status
   // 3. Invitation context
@@ -252,7 +253,7 @@ export function RBACProvider({ children }: RBACProviderProps) {
       setIsRoleLoading(true);
 
       try {
-        // TODO: Make API call to assign role
+        // See https://github.com/tsatsu10/meridian/issues/83
         // For now, simulate the operation
 
         if (rbacUser && rbacUser.id === userId) {
@@ -293,7 +294,7 @@ export function RBACProvider({ children }: RBACProviderProps) {
 
   const removeRole = useCallback(
     async (_userId: string, _context?: PermissionContext): Promise<void> => {
-      // TODO: Implement role removal
+      // See https://github.com/tsatsu10/meridian/issues/83
       toast.info("Role removal not yet implemented");
     },
     [],

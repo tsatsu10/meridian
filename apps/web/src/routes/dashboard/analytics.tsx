@@ -627,7 +627,7 @@ const exportToCSV = (data: object | null | undefined, filename: string) => {
 
 const exportToPDF = async (_elementId: string, _filename: string) => {
   toast.info("PDF export will be available soon");
-  // TODO: Implement PDF export using html2canvas + jsPDF
+  // See https://github.com/tsatsu10/meridian/issues/91
 };
 
 // Analytics Dashboard Component with Enhanced Features
@@ -796,7 +796,7 @@ function AnalyticsPage() {
 
   // Comparison analytics query (only when comparison mode is enabled)
   const {
-    data: _comparisonAnalytics, // TODO: Use for period-over-period comparison
+    data: _comparisonAnalytics, // See https://github.com/tsatsu10/meridian/issues/91
     isLoading: isComparisonLoading,
   } = useEnhancedAnalytics({
     timeRange: state.comparisonTimeRange,
@@ -2350,7 +2350,7 @@ function AnalyticsPage() {
           }
           onLayoutChange={(widgets) => {
             logger.debug("Dashboard widgets updated:", widgets);
-            // TODO: Apply widget layout to dashboard
+            // See https://github.com/tsatsu10/meridian/issues/91
           }}
         />
       </div>

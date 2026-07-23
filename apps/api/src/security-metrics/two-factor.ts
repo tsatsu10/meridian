@@ -105,12 +105,13 @@ twoFactorRoutes.post("/enforcement", authMiddleware(), async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  // No workspace-settings table exists yet to persist this in (see the
-  // matching TODO in settings/index.ts), so there is nothing to actually
-  // enable/disable. Previously this endpoint wrote a settings_audit_log
-  // entry claiming "two_factor_enforcement_enabled/disabled" and returned
-  // success regardless — a misleading audit trail for a setting nothing
-  // in the codebase enforces. Report honestly instead of faking it.
+  // workspace_settings exists but has no enforcement column yet (see
+  // https://github.com/tsatsu10/meridian/issues/65), so there is nothing
+  // to actually enable/disable. Previously this endpoint wrote a
+  // settings_audit_log entry claiming
+  // "two_factor_enforcement_enabled/disabled" and returned success
+  // regardless — a misleading audit trail for a setting nothing in the
+  // codebase enforces. Report honestly instead of faking it.
   return c.json(
     {
       error: "2FA enforcement is not implemented yet",
