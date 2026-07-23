@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { API_BASE_URL } from "@/constants/urls";
 
 /**
  * Regression: apiClient.auth.twoFactor.* built its URL as
@@ -11,6 +12,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * index.html (200, wrong content, not JSON); the whole 2FA UI silently
  * never worked — getStatus() always rejected trying to parse HTML as JSON,
  * so twoFactorStatus stayed undefined forever.
+ *
+ * Assertions compare against the real API_BASE_URL constant rather than a
+ * hardcoded origin — API_BASE_URL resolves differently depending on
+ * VITE_API_URL/DEV (e.g. a gitignored local .env vs. CI having neither
+ * set), so a literal "http://localhost:3005/..." string only holds in
+ * whatever environment happened to produce it.
  */
 describe("apiClient.auth.twoFactor URLs", () => {
   beforeEach(() => {
@@ -30,40 +37,38 @@ describe("apiClient.auth.twoFactor URLs", () => {
   it("generate() calls the /api-prefixed route", async () => {
     const { apiClient } = await import("../api-client");
     await apiClient.auth.twoFactor.generate();
-    expect(urlOf()).toBe("http://localhost:3005/api/auth/two-factor/generate");
+    expect(urlOf()).toBe(`${API_BASE_URL}/auth/two-factor/generate`);
   });
 
   it("verify() calls the /api-prefixed route", async () => {
     const { apiClient } = await import("../api-client");
     await apiClient.auth.twoFactor.verify({ secret: "s", token: "123456" });
-    expect(urlOf()).toBe("http://localhost:3005/api/auth/two-factor/verify");
+    expect(urlOf()).toBe(`${API_BASE_URL}/auth/two-factor/verify`);
   });
 
   it("disable() calls the /api-prefixed route", async () => {
     const { apiClient } = await import("../api-client");
     await apiClient.auth.twoFactor.disable({ password: "pw" });
-    expect(urlOf()).toBe("http://localhost:3005/api/auth/two-factor/disable");
+    expect(urlOf()).toBe(`${API_BASE_URL}/auth/two-factor/disable`);
   });
 
   it("verifyLogin() calls the /api-prefixed route", async () => {
     const { apiClient } = await import("../api-client");
     await apiClient.auth.twoFactor.verifyLogin({ userId: "u1", token: "1" });
-    expect(urlOf()).toBe(
-      "http://localhost:3005/api/auth/two-factor/verify-login",
-    );
+    expect(urlOf()).toBe(`${API_BASE_URL}/auth/two-factor/verify-login`);
   });
 
   it("regenerateBackupCodes() calls the /api-prefixed route", async () => {
     const { apiClient } = await import("../api-client");
     await apiClient.auth.twoFactor.regenerateBackupCodes();
     expect(urlOf()).toBe(
-      "http://localhost:3005/api/auth/two-factor/backup-codes/regenerate",
+      `${API_BASE_URL}/auth/two-factor/backup-codes/regenerate`,
     );
   });
 
   it("getStatus() calls the /api-prefixed route", async () => {
     const { apiClient } = await import("../api-client");
     await apiClient.auth.twoFactor.getStatus();
-    expect(urlOf()).toBe("http://localhost:3005/api/auth/two-factor/status");
+    expect(urlOf()).toBe(`${API_BASE_URL}/auth/two-factor/status`);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import changePassword from "../change-password";
+import { API_BASE_URL } from "@/constants/urls";
 
 describe("changePassword", () => {
   beforeEach(() => {
@@ -23,7 +24,7 @@ describe("changePassword", () => {
 
     const [url, options] = (global.fetch as ReturnType<typeof vi.fn>).mock
       .calls[0];
-    expect(url).toBe("http://localhost:3005/api/users/change-password");
+    expect(url).toBe(`${API_BASE_URL}/users/change-password`);
     expect(options.method).toBe("POST");
     expect(options.credentials).toBe("include");
     expect(JSON.parse(options.body as string)).toEqual({

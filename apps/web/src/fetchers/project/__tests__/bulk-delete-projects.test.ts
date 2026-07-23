@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import bulkDeleteProjects from "../bulk-delete-projects";
+import { API_BASE_URL } from "@/constants/urls";
 
 describe("bulkDeleteProjects", () => {
   beforeEach(() => {
@@ -23,7 +24,7 @@ describe("bulkDeleteProjects", () => {
 
     const [url, options] = (global.fetch as ReturnType<typeof vi.fn>).mock
       .calls[0];
-    expect(url).toBe("http://localhost:3005/api/projects/bulk/delete");
+    expect(url).toBe(`${API_BASE_URL}/projects/bulk/delete`);
     expect(options.method).toBe("POST");
     expect(options.credentials).toBe("include");
     expect(JSON.parse(options.body as string)).toEqual({
