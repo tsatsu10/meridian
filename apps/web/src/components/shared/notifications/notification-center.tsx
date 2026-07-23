@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,21 +7,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell, AlertTriangle, Target, Trash2 } from "lucide-react";
+import { Bell, AlertTriangle, Target, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { format, isToday, isYesterday } from "date-fns";
-import {
-  getNotificationsFromStore,
-  markNotificationAsRead,
-  clearAllNotifications,
-  type NotificationData,
-} from "@/hooks/mutations/task/use-auto-status-update";
+import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
+import useMarkNotificationAsRead from "@/hooks/mutations/notification/use-mark-notification-as-read";
+import useMarkAllNotificationsAsRead from "@/hooks/mutations/notification/use-mark-all-notifications-as-read";
+import useClearNotifications from "@/hooks/mutations/notification/use-clear-notifications";
+import type { Notification } from "@/types/notification";
 
 // @epic-2.3-notifications: Unified notification system for all alerts
-// @epic-1.2-dependencies: Auto-status update notifications
 // @epic-2.4-risk-detection: Risk alert notifications
-// @persona-sarah: PM needs operational notifications
-// @persona-jennifer: Executive needs strategic alerts
 
 interface NotificationCenterProps {
   className?: string;
@@ -30,20 +26,16 @@ interface NotificationCenterProps {
   maxNotifications?: number;
 }
 
-const getNotificationIcon = (notification: NotificationData) => {
-  if (
-    notification.title.includes("🚨") ||
-    notification.data?.reason === "risk-detected"
-  ) {
+const isCritical = (notification: Notification) =>
+  notification.priority === "urgent" || notification.priority === "high";
+
+const getNotificationIcon = (notification: Notification) => {
+  if (isCritical(notification)) {
     return <AlertTriangle className="h-4 w-4 text-red-500" />;
   }
 
-  if (notification.type === "auto-status-update") {
+  if (notification.type === "task") {
     return <Target className="h-4 w-4 text-blue-500" />;
-  }
-
-  if (notification.priority === "high") {
-    return <AlertTriangle className="h-4 w-4 text-orange-500" />;
   }
 
   return <Bell className="h-4 w-4 text-gray-500" />;
@@ -51,10 +43,10 @@ const getNotificationIcon = (notification: NotificationData) => {
 
 const getPriorityColor = (priority: string) => {
   switch (priority) {
-    case "high":
+    case "urgent":
       return "bg-red-100 text-red-800 border-red-200";
-    case "medium":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "high":
+      return "bg-orange-100 text-orange-800 border-orange-200";
     case "low":
       return "bg-blue-100 text-blue-800 border-blue-200";
     default:
@@ -62,8 +54,8 @@ const getPriorityColor = (priority: string) => {
   }
 };
 
-const formatNotificationTime = (timestamp: string) => {
-  const date = new Date(timestamp);
+const formatNotificationTime = (createdAt: string) => {
+  const date = new Date(createdAt);
 
   if (isToday(date)) {
     return format(date, "h:mm a");
@@ -83,34 +75,22 @@ export default function NotificationCenter({
   maxNotifications = 50,
 }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationData[]>([]);
 
-  // Refresh notifications periodically
-  useEffect(() => {
-    const refreshNotifications = () => {
-      const allNotifications = getNotificationsFromStore();
-      // Ensure allNotifications is always an array
-      const notifications = Array.isArray(allNotifications)
-        ? allNotifications
-        : [];
-      setNotifications(notifications.slice(0, maxNotifications));
-    };
+  const { data: allNotifications, isLoading } = useGetNotifications();
+  const markAsReadMutation = useMarkNotificationAsRead();
+  const markAllReadMutation = useMarkAllNotificationsAsRead();
+  const clearAllMutation = useClearNotifications();
 
-    // Initial load
-    refreshNotifications();
+  const notifications = useMemo(
+    () => (allNotifications ?? []).slice(0, maxNotifications),
+    [allNotifications, maxNotifications],
+  );
 
-    // Refresh every 5 seconds
-    const interval = setInterval(refreshNotifications, 5000);
-
-    return () => clearInterval(interval);
-  }, [maxNotifications]);
-
-  // Group notifications by date
   const groupedNotifications = useMemo(() => {
-    const groups: { [key: string]: NotificationData[] } = {};
+    const groups: { [key: string]: Notification[] } = {};
 
     for (const notification of notifications) {
-      const date = new Date(notification.timestamp);
+      const date = new Date(notification.createdAt);
       let groupKey: string;
 
       if (isToday(date)) {
@@ -131,36 +111,20 @@ export default function NotificationCenter({
   }, [notifications]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const criticalCount = notifications.filter(
-    (n) =>
-      n.priority === "high" &&
-      (n.title.includes("🚨") || n.data?.reason === "risk-detected"),
-  ).length;
+  const criticalCount = notifications.filter(isCritical).length;
 
-  const handleNotificationClick = (notification: NotificationData) => {
+  const handleNotificationClick = (notification: Notification) => {
     if (!notification.isRead) {
-      markNotificationAsRead(notification.id);
-      // Refresh local state
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notification.id ? { ...n, isRead: true } : n,
-        ),
-      );
+      markAsReadMutation.mutate(notification.id);
     }
   };
 
   const handleClearAll = () => {
-    clearAllNotifications();
-    setNotifications([]);
+    clearAllMutation.mutate();
   };
 
   const handleMarkAllRead = () => {
-    for (const notification of notifications) {
-      if (!notification.isRead) {
-        markNotificationAsRead(notification.id);
-      }
-    }
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    markAllReadMutation.mutate();
   };
 
   const TriggerComponent =
@@ -181,7 +145,12 @@ export default function NotificationCenter({
         )}
       </Button>
     ) : (
-      <Button variant="ghost" size="icon" className={cn("relative", className)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn("relative", className)}
+        aria-label="Notifications"
+      >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
           <Badge
@@ -223,7 +192,7 @@ export default function NotificationCenter({
                   variant="ghost"
                   size="sm"
                   onClick={handleMarkAllRead}
-                  disabled={unreadCount === 0}
+                  disabled={unreadCount === 0 || markAllReadMutation.isPending}
                   className="text-xs"
                 >
                   Mark all read
@@ -232,6 +201,7 @@ export default function NotificationCenter({
                   variant="ghost"
                   size="icon"
                   onClick={handleClearAll}
+                  disabled={clearAllMutation.isPending}
                   className="h-7 w-7"
                 >
                   <Trash2 className="h-3 w-3" />
@@ -252,12 +222,7 @@ export default function NotificationCenter({
             </div>
             <div className="space-y-2">
               {notifications
-                .filter(
-                  (n) =>
-                    n.priority === "high" &&
-                    (n.title.includes("🚨") ||
-                      n.data?.reason === "risk-detected"),
-                )
+                .filter(isCritical)
                 .slice(0, 2)
                 .map((notification) => (
                   <div
@@ -278,22 +243,24 @@ export default function NotificationCenter({
                       {getNotificationIcon(notification)}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-red-800 line-clamp-1">
-                          {notification.title.replace("🚨 ", "")}
+                          {notification.title}
                         </p>
                         <p className="text-xs text-red-600 line-clamp-2 mt-1">
-                          {notification.message}
+                          {notification.content ?? notification.message}
                         </p>
                         <div className="flex items-center justify-between mt-2">
                           <Badge
                             className={cn(
                               "text-xs",
-                              getPriorityColor(notification.priority),
+                              getPriorityColor(
+                                notification.priority ?? "normal",
+                              ),
                             )}
                           >
                             {notification.priority}
                           </Badge>
                           <span className="text-xs text-red-500">
-                            {formatNotificationTime(notification.timestamp)}
+                            {formatNotificationTime(notification.createdAt)}
                           </span>
                         </div>
                       </div>
@@ -309,7 +276,11 @@ export default function NotificationCenter({
 
         {/* Notifications List */}
         <ScrollArea className="max-h-96">
-          {notifications.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No notifications yet</p>
@@ -327,14 +298,7 @@ export default function NotificationCenter({
                     </div>
                     <div className="space-y-2">
                       {groupNotifications
-                        .filter(
-                          (n) =>
-                            !(
-                              n.priority === "high" &&
-                              (n.title.includes("🚨") ||
-                                n.data?.reason === "risk-detected")
-                            ),
-                        )
+                        .filter((n) => !isCritical(n))
                         .map((notification) => (
                           <div
                             key={notification.id}
@@ -370,21 +334,23 @@ export default function NotificationCenter({
                                 {notification.title}
                               </h4>
                               <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                                {notification.message}
+                                {notification.content ?? notification.message}
                               </p>
                               <div className="flex items-center justify-between mt-2">
                                 <Badge
                                   variant="outline"
                                   className={cn(
                                     "text-xs",
-                                    getPriorityColor(notification.priority),
+                                    getPriorityColor(
+                                      notification.priority ?? "normal",
+                                    ),
                                   )}
                                 >
                                   {notification.priority}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">
                                   {formatNotificationTime(
-                                    notification.timestamp,
+                                    notification.createdAt,
                                   )}
                                 </span>
                               </div>
@@ -403,7 +369,7 @@ export default function NotificationCenter({
         </ScrollArea>
 
         {/* Footer */}
-        {notifications.length > maxNotifications && (
+        {(allNotifications?.length ?? 0) > maxNotifications && (
           <div className="p-4 border-t">
             <Button variant="ghost" size="sm" className="w-full text-xs">
               View older notifications
