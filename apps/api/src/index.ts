@@ -17,6 +17,7 @@ import reports from "./reports";
 import { getDatabase } from "./database/connection";
 import label from "./label";
 import { auth } from "./middlewares/auth";
+import cacheHeaders from "./middlewares/cache-headers";
 import notification from "./notification";
 import project from "./project";
 import task from "./task";
@@ -133,37 +134,7 @@ app.use("*", requestLogger);
 app.use("*", compress());
 
 // ⚡ Add caching headers for better performance
-app.use("*", async (c, next) => {
-  await next();
-
-  // Only add caching to successful GET requests
-  if (c.req.method === "GET" && c.res.status === 200) {
-    const path = c.req.path;
-
-    // Static assets - aggressive caching
-    if (path.includes("/uploads/") || path.includes("/assets/")) {
-      c.header("Cache-Control", "public, max-age=31536000, immutable");
-    }
-    // API responses - short-term caching with revalidation
-    else if (path.startsWith("/api/")) {
-      c.header("Cache-Control", "private, max-age=60, must-revalidate");
-
-      // Add ETag for conditional requests and return 304 when matched
-      const body = await c.res.clone().text();
-      if (body) {
-        const hash = Buffer.from(body).toString("base64").substring(0, 27);
-        const etag = `"${hash}"`;
-        c.header("ETag", etag);
-
-        const ifNoneMatch = c.req.header("if-none-match");
-        if (ifNoneMatch && ifNoneMatch === etag) {
-          // Short-circuit with 304 Not Modified
-          c.res = new Response(null, { status: 304, headers: c.res.headers });
-        }
-      }
-    }
-  }
-});
+app.use("*", cacheHeaders());
 
 app.use(
   "*",

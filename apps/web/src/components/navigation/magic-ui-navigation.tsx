@@ -110,7 +110,7 @@ export const DockNavigation: React.FC<MagicUINavigationProps> = ({
         <Link
           to={item.href}
           className="flex items-center justify-center w-full h-full text-white"
-          onClick={(e) => handleItemClick(item, e)}
+          onClick={(e: React.MouseEvent) => handleItemClick(item, e)}
         >
           <item.icon className="w-5 h-5" />
           {showBadges && item.badge && (
@@ -389,7 +389,7 @@ export const HeaderNavigation: React.FC<MagicUINavigationProps> = ({
               styles.focus,
               enableGlassMorphism && styles.glass,
             )}
-            onClick={(_e) => onItemClick?.(item)}
+            onClick={(_e: React.MouseEvent) => onItemClick?.(item)}
           >
             <item.icon className="h-4 w-4" />
             {showLabels && <span>{item.label}</span>}
