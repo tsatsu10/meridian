@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
+import { invalidateNotificationQueries } from "./invalidate-notifications";
 
 function useBatchDelete() {
   const queryClient = useQueryClient();
@@ -18,7 +19,7 @@ function useBatchDelete() {
       return await response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateNotificationQueries(queryClient);
       toast.success(`${data.deleted} notification(s) deleted`);
     },
     onError: (error) => {

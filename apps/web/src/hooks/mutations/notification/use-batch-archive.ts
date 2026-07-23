@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
+import { invalidateNotificationQueries } from "./invalidate-notifications";
 
 function useBatchArchive() {
   const queryClient = useQueryClient();
@@ -18,7 +19,7 @@ function useBatchArchive() {
       return await response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateNotificationQueries(queryClient);
       toast.success(`${data.updated} notification(s) archived`);
     },
     onError: (error) => {
