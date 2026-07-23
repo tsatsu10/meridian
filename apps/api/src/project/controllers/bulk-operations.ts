@@ -1,6 +1,6 @@
 import { getDatabase } from "../../database/connection";
 import { projectTable } from "../../database/schema";
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import logger from "../../utils/logger";
 
@@ -23,6 +23,10 @@ export interface BulkUpdatePayload {
 
 export interface BulkDeletePayload {
   projectIds: string[];
+  // Required: every project must belong to this workspace or nothing is
+  // deleted. Without this, any authenticated user could delete any
+  // project workspace-wide given only its id.
+  workspaceId: string;
   reason?: string;
 }
 
@@ -210,15 +214,66 @@ export async function bulkDeleteProjects(
       };
     }
 
+    if (!payload.workspaceId) {
+      return {
+        success: false,
+        operationId,
+        timestamp: new Date(),
+        type: "delete",
+        count: 0,
+        items: [
+          {
+            id: "",
+            status: "failed",
+            error: "Workspace ID is required",
+          },
+        ],
+        duration: Date.now() - startTime,
+      };
+    }
+
     // Fetch projects before deletion for audit trail
     const projectsToDelete = await db.query.projectTable.findMany({
       where: inArray(projectTable.id, payload.projectIds),
     });
 
-    // Execute bulk delete with cascade
+    // 🔒 SECURITY: Every requested project must exist and belong to the
+    // given workspace. Fail closed — reject the whole batch rather than
+    // silently deleting a subset, so a single bad id (typo, stale cache,
+    // tampered request) can't cause a partial, surprising deletion.
+    const belongsToWorkspace = (project: { workspaceId: string }) =>
+      project.workspaceId === payload.workspaceId;
+
+    if (
+      projectsToDelete.length !== payload.projectIds.length ||
+      !projectsToDelete.every(belongsToWorkspace)
+    ) {
+      return {
+        success: false,
+        operationId,
+        timestamp: new Date(),
+        type: "delete",
+        count: 0,
+        items: payload.projectIds.map((id) => ({
+          id,
+          status: "failed" as const,
+          error: "Project not found or does not belong to workspace",
+        })),
+        duration: Date.now() - startTime,
+      };
+    }
+
+    // Execute bulk delete, scoped to the workspace as defense in depth —
+    // the mutation itself can't reach outside it even if the pre-check
+    // above were ever bypassed or drifted from this query.
     const deleted = await db
       .delete(projectTable)
-      .where(inArray(projectTable.id, payload.projectIds))
+      .where(
+        and(
+          inArray(projectTable.id, payload.projectIds),
+          eq(projectTable.workspaceId, payload.workspaceId),
+        ),
+      )
       .returning();
 
     // Build result items

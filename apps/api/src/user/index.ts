@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
+import changePassword from "./controllers/change-password";
 import signIn from "./controllers/sign-in";
 import signUp from "./controllers/sign-up";
 import createSession from "./utils/create-session";
@@ -121,6 +122,27 @@ const user = new Hono<{
       });
 
       return c.json(user);
+    },
+  )
+  .post(
+    "/change-password",
+    zValidator(
+      "json",
+      z.object({
+        currentPassword: z.string().min(1, "Current password is required"),
+        newPassword: z.string().min(1, "New password is required"),
+      }),
+    ),
+    async (c) => {
+      const userEmail = c.get("userEmail");
+      if (!userEmail) {
+        return c.json({ error: "Authentication required" }, 401);
+      }
+
+      const { currentPassword, newPassword } = c.req.valid("json");
+      await changePassword(userEmail, currentPassword, newPassword);
+
+      return c.json({ message: "Password updated" });
     },
   )
   .post("/sign-out", async (c) => {
