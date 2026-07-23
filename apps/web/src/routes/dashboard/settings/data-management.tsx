@@ -68,6 +68,9 @@ import { API_BASE_URL } from "@/constants/urls";
 import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
+import getProjects from "@/fetchers/project/get-projects";
+import bulkDeleteProjects from "@/fetchers/project/bulk-delete-projects";
+import deleteWorkspace from "@/fetchers/workspace/delete-workspace";
 
 export const Route = createFileRoute("/dashboard/settings/data-management")({
   component: withErrorBoundary(DataManagementSettings, "Data Management"),
@@ -144,8 +147,10 @@ interface ImportResult {
   }>;
 }
 
+type DeleteAction = "completed-projects" | "all-workspace-data";
+
 function DataManagementSettings() {
-  void useNavigate();
+  const navigate = useNavigate();
   const workspace = useWorkspaceStore((state) => state.workspace);
   const currentWorkspace = workspace;
   const queryClient = useQueryClient();
@@ -160,6 +165,7 @@ function DataManagementSettings() {
   const [_backupLoading, _setBackupLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string>("");
+  const [deleteAction, setDeleteAction] = useState<DeleteAction | null>(null);
 
   // Import/Export State
   const [exportFormat, setExportFormat] = useState<"json" | "csv">("json");
@@ -455,19 +461,51 @@ function DataManagementSettings() {
     });
   };
 
-  const confirmDeleteData = (type: string) => {
+  const confirmDeleteData = (type: string, action: DeleteAction) => {
     setDeleteTarget(type);
+    setDeleteAction(action);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteData = async () => {
+    if (!currentWorkspace || !deleteAction) return;
+
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(`${deleteTarget} deletion initiated`);
-      setDeleteDialogOpen(false);
+      if (deleteAction === "completed-projects") {
+        const result = await getProjects({
+          workspaceId: currentWorkspace.id,
+          status: ["completed"],
+        });
+        const completedProjects = Array.isArray(result)
+          ? result
+          : result.projects;
+
+        if (completedProjects.length === 0) {
+          toast.info("No completed projects to delete");
+          setDeleteDialogOpen(false);
+          return;
+        }
+
+        const deletion = await bulkDeleteProjects({
+          projectIds: completedProjects.map((p) => (p as { id: string }).id),
+          workspaceId: currentWorkspace.id,
+          reason: "Data Management: Delete Completed Projects",
+        });
+
+        queryClient.invalidateQueries({ queryKey: ["projects"] });
+        toast.success(`${deletion.count} completed project(s) deleted`);
+        setDeleteDialogOpen(false);
+      } else {
+        await deleteWorkspace({ id: currentWorkspace.id });
+        toast.success("Workspace and all its data deleted");
+        setDeleteDialogOpen(false);
+        navigate({ to: "/dashboard" });
+      }
     } catch (error) {
-      toast.error("Failed to delete data");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete data",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -624,7 +662,12 @@ function DataManagementSettings() {
                       Remove all completed projects and associated data
                     </p>
                     <Button
-                      onClick={() => confirmDeleteData("completed projects")}
+                      onClick={() =>
+                        confirmDeleteData(
+                          "completed projects",
+                          "completed-projects",
+                        )
+                      }
                       disabled={isLoading}
                       size="sm"
                       variant="destructive"
@@ -640,7 +683,12 @@ function DataManagementSettings() {
                       Permanently delete your entire workspace and all data
                     </p>
                     <Button
-                      onClick={() => confirmDeleteData("all workspace data")}
+                      onClick={() =>
+                        confirmDeleteData(
+                          "all workspace data",
+                          "all-workspace-data",
+                        )
+                      }
                       disabled={isLoading}
                       size="sm"
                       variant="destructive"
