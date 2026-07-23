@@ -29,8 +29,9 @@ vi.mock("@/components/providers/auth-provider/hooks/use-auth", () => ({
 
 const stableWorkspace = { id: "ws-1", name: "Acme" };
 vi.mock("@/store/workspace", () => ({
-  useWorkspaceStore: (selector: (s: { workspace: typeof stableWorkspace }) => unknown) =>
-    selector({ workspace: stableWorkspace }),
+  useWorkspaceStore: (
+    selector: (s: { workspace: typeof stableWorkspace }) => unknown,
+  ) => selector({ workspace: stableWorkspace }),
 }));
 
 vi.mock("@/components/shared/modals/invite-user-modal", () => ({
