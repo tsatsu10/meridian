@@ -11,9 +11,9 @@ describe("invalidateNotificationQueries", () => {
 
     invalidateNotificationQueries(queryClient);
 
-    expect(
-      queryClient.getQueryState(["notifications"])?.isInvalidated,
-    ).toBe(true);
+    expect(queryClient.getQueryState(["notifications"])?.isInvalidated).toBe(
+      true,
+    );
     expect(
       queryClient.getQueryState(["notifications-infinite", false])
         ?.isInvalidated,

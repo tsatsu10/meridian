@@ -8,10 +8,22 @@ describe("sortDateGroupsChronologically", () => {
     // building groups via plain-object insertion order yields headers like
     // "Yesterday, July 19, July 20, July 18" instead of a chronological list.
     const groups = [
-      { title: "Yesterday", notifications: [{ createdAt: "2026-07-21T10:00:00Z" }] },
-      { title: "July 19, 2026", notifications: [{ createdAt: "2026-07-19T10:00:00Z" }] },
-      { title: "July 20, 2026", notifications: [{ createdAt: "2026-07-20T10:00:00Z" }] },
-      { title: "July 18, 2026", notifications: [{ createdAt: "2026-07-18T10:00:00Z" }] },
+      {
+        title: "Yesterday",
+        notifications: [{ createdAt: "2026-07-21T10:00:00Z" }],
+      },
+      {
+        title: "July 19, 2026",
+        notifications: [{ createdAt: "2026-07-19T10:00:00Z" }],
+      },
+      {
+        title: "July 20, 2026",
+        notifications: [{ createdAt: "2026-07-20T10:00:00Z" }],
+      },
+      {
+        title: "July 18, 2026",
+        notifications: [{ createdAt: "2026-07-18T10:00:00Z" }],
+      },
     ];
 
     const sorted = sortDateGroupsChronologically(groups);

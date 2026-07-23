@@ -15,7 +15,9 @@ export function sortDateGroupsChronologically<T extends { createdAt: string }>(
   groups: DateGroup<T>[],
 ): DateGroup<T>[] {
   const latestTimestamp = (group: DateGroup<T>) =>
-    Math.max(...group.notifications.map((n) => new Date(n.createdAt).getTime()));
+    Math.max(
+      ...group.notifications.map((n) => new Date(n.createdAt).getTime()),
+    );
 
   return [...groups].sort((a, b) => latestTimestamp(b) - latestTimestamp(a));
 }
