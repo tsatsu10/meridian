@@ -48,8 +48,8 @@ Comprehensive API documentation covering:
 
 ```bash
 # 1. Setup development environment
-pnpm install
-pnpm dev
+npm install
+npm run dev
 
 # 2. Create a new component
 mkdir src/components/dashboard/my-component
@@ -131,31 +131,31 @@ registerWidget('my-widget', MyWidget)
 ### Unit Tests
 ```bash
 # Run unit tests
-pnpm test
+npm run test
 
 # Run with coverage
-pnpm test:coverage
+npm run test:coverage
 
 # Run specific component tests
-pnpm test -- dashboard-stats
+npm run test -- dashboard-stats
 ```
 
 ### Integration Tests
 ```bash
 # Run integration tests
-pnpm test:integration
+npm run test:integration
 
 # Run with coverage
-pnpm test:integration:coverage
+npm run test:integration:coverage
 ```
 
 ### E2E Tests
 ```bash
 # Run E2E tests
-pnpm test:e2e
+npm run test:e2e
 
 # Run specific E2E suite
-pnpm test:e2e -- dashboard-critical-flows
+npm run test:e2e -- dashboard-critical-flows
 ```
 
 ## 🎨 Design System Integration
@@ -233,13 +233,13 @@ const features = {
 ### Build Process
 ```bash
 # Production build
-pnpm build
+npm run build
 
 # Analyze bundle
-pnpm analyze-bundle
+npm run analyze-bundle
 
 # Preview production build
-pnpm preview
+npm run preview
 ```
 
 ### Deployment Checklist

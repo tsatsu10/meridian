@@ -61,7 +61,7 @@ async function fixEnum() {
 
     logger.info("\n✅ Enum fix complete!");
     logger.info(
-      "\n📋 Next step: Run 'pnpm run seed:all' to populate database\n",
+      "\n📋 Next step: Run 'npm run seed:all' to populate database\n",
     );
   } catch (error) {
     logger.error("❌ Error fixing enum:", error);

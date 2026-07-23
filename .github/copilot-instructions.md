@@ -27,8 +27,7 @@ meridian/
 - **Drizzle ORM** for type-safe database access (NOT Prisma despite package.json artifacts)
 - **PostgreSQL only** - SQLite support fully removed (use PostgreSQL for all environments)
 - **Better Auth** for authentication with anonymous/demo mode support
-- **Socket.IO** for real-time WebSocket features (`realtime/unified-websocket-server.ts`)
-- **Single port architecture**: HTTP + WebSocket on port 1337 (NOT separate ports)
+- **API port**: the API server listens on port **3005** (`DEFAULT_API_PORT`); the web app runs separately on the Vite dev server. There is no WebSocket/Socket.IO layer in the codebase.
 - **RBAC System**: Full role-based access control with 11 role types (workspace-manager, department-head, etc.)
 - **Teams Module**: Dynamic team organization based on projects + general workspace teams
 
@@ -138,7 +137,7 @@ DEMO_MODE=true  # Bypasses auth, uses admin@meridian.app
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:1337", // API base URL
+  baseURL: "http://localhost:3005", // API base URL
 });
 ```
 
@@ -298,10 +297,10 @@ socket.on("task:updated", (data) => {
 
 ```bash
 # Root level - run frontend only (most common)
-pnpm dev
+npm run dev
 
 # Run all apps (API + Web + Docs)
-pnpm dev:all
+npm run dev:all
 
 # API only
 cd apps/api && npm run dev
@@ -377,7 +376,7 @@ cd apps/api
 npm run build       # Verify esbuild compilation
 
 # Manual endpoint testing
-curl http://localhost:1337/api/projects
+curl http://localhost:3005/api/projects
 ```
 
 ## 🎯 Common Tasks & Solutions
@@ -468,11 +467,11 @@ function FeatureComponent() {
 **Common Issue**: Module not found errors in monorepo
 ```bash
 # From root - rebuild all packages
-pnpm build
+npm run build
 
 # Clear Turbo cache
 rm -rf .turbo
-pnpm build
+npm run build
 ```
 
 **TypeScript Config**: Each app extends `packages/typescript-config/base.json`
@@ -496,7 +495,7 @@ DATABASE_URL="postgresql://user:pass@ep-xxx.region.aws.neon.tech/meridian?sslmod
 Get-Process | Where-Object {$_.ProcessName -like "*node*"} | Stop-Process -Force
 
 # Linux/Mac
-lsof -ti:1337 | xargs kill -9
+lsof -ti:3005 | xargs kill -9
 ```
 
 3. **Check demo mode**:
@@ -508,13 +507,12 @@ DEMO_MODE=true  # Should be set for development
 ### WebSocket Connection Issues
 
 **Problem**: "WebSocket connection failed"
-**Solution**: Ensure API is running on port 1337 (NOT 3005 or 3008 - those are legacy references)
+**Solution**: The API server listens on port 3005 (`DEFAULT_API_PORT`). Note: the codebase has no WebSocket/Socket.IO server — the snippets in this section are stale and should be treated as non-authoritative.
 
 **Check**:
 ```typescript
 // apps/web/src/constants/urls.ts
-export const API_URL = "http://localhost:1337";
-export const WS_URL = "ws://localhost:1337";
+export const API_URL = "http://localhost:3005";
 ```
 
 ### Build Failures
@@ -553,7 +551,7 @@ npx tsc --noEmit
 
 1. **Single .env Location**: Only `apps/api/.env` is used. Frontend gets config from constants.
 2. **Demo Mode Required**: Set `DEMO_MODE=true` for local development (bypasses auth).
-3. **Port 1337**: API + WebSocket both on 1337. Ignore legacy references to 3005/3008/3006.
+3. **Port 3005**: the API server listens on port 3005 (`DEFAULT_API_PORT`, override with `API_PORT`). There is no WebSocket server.
 4. **PostgreSQL Only**: No SQLite support. All environments use PostgreSQL.
 5. **Migration Before Start**: Always apply migrations before starting API server.
 6. **Drizzle NOT Prisma**: Despite Prisma artifacts in package.json, project uses Drizzle ORM.

@@ -1,32 +1,33 @@
+# syntax=docker/dockerfile:1
+
 # Build stage
 FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
-# Install build dependencies in a single layer
-RUN apk add --no-cache python3 make g++ && \
-    corepack enable && \
-    corepack prepare pnpm@10.7.0 --activate
+# Native build deps for any node-gyp modules pulled in transitively
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-# Copy package files first for better layer caching
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+# Copy workspace manifests first for deterministic, cache-friendly install.
+# `npm ci` validates the entire workspace tree, so every workspace's
+# package.json must be present before install.
+COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
-COPY packages/typescript-config/package.json ./packages/typescript-config/
-COPY packages/libs/package.json ./packages/libs/
 COPY apps/api/package.json ./apps/api/
+COPY packages/libs/package.json ./packages/libs/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN npm ci
 
-# Copy only necessary source code
+# Copy the source needed to build the web app. @meridian/libs re-exports
+# @meridian/api types, so the api source must be present too.
 COPY packages/typescript-config ./packages/typescript-config
 COPY packages/libs ./packages/libs
 COPY apps/api ./apps/api
 COPY apps/web ./apps/web
 
-# Build the application
-WORKDIR /app/apps/web
-RUN pnpm run build
+# Build the web app (Vite output lands in apps/web/dist)
+RUN npm run build --workspace=@meridian/web
 
 # Production stage with specific version
 FROM nginx:1.25-alpine AS runtime

@@ -29,14 +29,14 @@ By participating in this project, you agree to abide by our Code of Conduct. We 
 
 ### Prerequisites
 - Node.js 18 or higher
-- pnpm 8 or higher
+- npm 10 or higher (bundled with Node.js)
 - Git
 
 ### Quick Start
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/meridian.git`
-3. Install dependencies: `pnpm install`
-4. Start development servers: `pnpm dev:all`
+3. Install dependencies: `npm install`
+4. Start development servers: `npm run dev:all`
 5. Create a feature branch: `git checkout -b feature/your-feature-name`
 
 ## 🛠️ Development Setup
@@ -73,11 +73,11 @@ meridian/
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start web development server only |
-| `pnpm dev:all` | Start both API and web servers |
-| `pnpm build` | Build all applications |
-| `pnpm test` | Run all tests |
-| `pnpm lint` | Run linting on all packages |
+| `npm run dev` | Start web development server only |
+| `npm run dev:all` | Start both API and web servers |
+| `npm run build` | Build all applications |
+| `npm run test` | Run all tests |
+| `npm run lint` | Run linting on all packages |
 
 ## 📝 Contribution Guidelines
 
@@ -285,7 +285,7 @@ describe('UserService', () => {
 
 ```bash
 # Run all tests
-pnpm test
+npm run test
 
 # Run tests with coverage
 cd apps/web && npm run test:coverage
