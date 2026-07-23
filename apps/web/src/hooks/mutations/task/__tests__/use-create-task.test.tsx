@@ -26,7 +26,7 @@ vi.mock("@/store/workspace", () => ({
 }));
 
 describe("useCreateTask invalidates the board's actual task query", () => {
-  it("refetches [\"tasks\", projectId] — the key useGetTasks reads from", async () => {
+  it('refetches ["tasks", projectId] — the key useGetTasks reads from', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -34,9 +34,7 @@ describe("useCreateTask invalidates the board's actual task query", () => {
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     const { result } = renderHook(() => useCreateTask(), { wrapper });

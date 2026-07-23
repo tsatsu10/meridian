@@ -307,7 +307,9 @@ export function DashboardOverviewLoaded({
                       // renderable character — resolve it via the shared
                       // icon map, falling back to the name's initial.
                       const ProjectIcon = project.icon
-                        ? projectIcons[project.icon as keyof typeof projectIcons]
+                        ? projectIcons[
+                            project.icon as keyof typeof projectIcons
+                          ]
                         : undefined;
 
                       return (

@@ -34,7 +34,6 @@ import {
   TrendingUp,
   FileCode,
   Terminal,
-  Globe,
   type LucideIcon,
 } from "lucide-react";
 import type { AllPermissions } from "@/lib/permissions/types";
@@ -266,13 +265,6 @@ export const useSettingsNavigation = (): NavigationItem[] => {
         label: "Email & SMTP",
         icon: MessageSquare,
         href: "/dashboard/settings/email",
-        category: "utility" as const,
-      },
-      {
-        id: "localization",
-        label: "Localization",
-        icon: Globe,
-        href: "/dashboard/settings/localization",
         category: "utility" as const,
       },
     ],
