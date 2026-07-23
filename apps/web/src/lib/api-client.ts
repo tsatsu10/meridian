@@ -6,7 +6,7 @@
 import { client } from "@meridian/libs";
 import { liveApi } from "./live-api-client";
 import { shouldUseMocks, getAppConfig } from "@/config/app-mode";
-import { API_URL } from "@/constants/urls";
+import { API_BASE_URL } from "@/constants/urls";
 import { logger } from "@/lib/logger";
 
 // AppType lacks several mounted routes; single escape hatch until it is complete.
@@ -101,17 +101,20 @@ class SmartApiClient {
 
     twoFactor: {
       generate: async () => {
-        const response = await fetch(`${API_URL}/auth/two-factor/generate`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/auth/two-factor/generate`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          },
+        );
         if (!response.ok) throw new Error("Failed to generate 2FA secret");
         return response.json();
       },
 
       verify: async (data: { secret: string; token: string }) => {
-        const response = await fetch(`${API_URL}/auth/two-factor/verify`, {
+        const response = await fetch(`${API_BASE_URL}/auth/two-factor/verify`, {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -122,12 +125,15 @@ class SmartApiClient {
       },
 
       disable: async (data: { password: string }) => {
-        const response = await fetch(`${API_URL}/auth/two-factor/disable`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/auth/two-factor/disable`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          },
+        );
         if (!response.ok) throw new Error("Failed to disable 2FA");
         return response.json();
       },
@@ -138,7 +144,7 @@ class SmartApiClient {
         backupCode?: string;
       }) => {
         const response = await fetch(
-          `${API_URL}/auth/two-factor/verify-login`,
+          `${API_BASE_URL}/auth/two-factor/verify-login`,
           {
             method: "POST",
             credentials: "include",
@@ -152,7 +158,7 @@ class SmartApiClient {
 
       regenerateBackupCodes: async () => {
         const response = await fetch(
-          `${API_URL}/auth/two-factor/backup-codes/regenerate`,
+          `${API_BASE_URL}/auth/two-factor/backup-codes/regenerate`,
           {
             method: "POST",
             credentials: "include",
@@ -164,7 +170,7 @@ class SmartApiClient {
       },
 
       getStatus: async () => {
-        const response = await fetch(`${API_URL}/auth/two-factor/status`, {
+        const response = await fetch(`${API_BASE_URL}/auth/two-factor/status`, {
           method: "GET",
           credentials: "include",
           headers: { "Content-Type": "application/json" },

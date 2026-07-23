@@ -1,4 +1,5 @@
 import useGetMe from "@/hooks/queries/use-get-me";
+import { useInitializeUserSettings } from "@/hooks/use-initialize-user-settings";
 import type { LoggedInUser } from "@/types/user";
 import { MeridianMark } from "@/components/branding/meridian-mark";
 import {
@@ -45,6 +46,8 @@ function AuthProvider({ children }: PropsWithChildren) {
       setUser({ ...data });
     }
   }, [data, isError]);
+
+  useInitializeUserSettings(user?.email);
 
   const memoizedValues = useMemo(
     () => ({
