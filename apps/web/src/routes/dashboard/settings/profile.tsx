@@ -370,209 +370,197 @@ function ProfileSettings() {
         </div>
 
         <div className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Personal Information
-                  </CardTitle>
-                  <CardDescription>
-                    Update your personal details and contact information
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  <Edit3 className="w-4 h-4 mr-2" />
-                  {isEditing ? "Cancel" : "Edit"}
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      Full Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={localSettings.name}
-                      onChange={(e) =>
-                        handleInputChange("name", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={errors.name ? "border-red-500" : ""}
-                      placeholder="Enter your full name"
-                    />
-                    {errors.name && (
-                      <p className="text-sm text-red-600">{errors.name}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={localSettings.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={errors.email ? "border-red-500" : ""}
-                      placeholder="your.email@example.com"
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-red-600">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Phone
-                    </Label>
-                    <Input
-                      id="phone"
-                      value={localSettings.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={errors.phone ? "border-red-500" : ""}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-red-600">{errors.phone}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="location"
-                      className="flex items-center gap-2"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </Label>
-                    <Input
-                      id="location"
-                      value={localSettings.location}
-                      onChange={(e) =>
-                        handleInputChange("location", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      placeholder="City, Country"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="website"
-                      className="flex items-center gap-2"
-                    >
-                      <Globe className="w-4 h-4" />
-                      Website
-                    </Label>
-                    <Input
-                      id="website"
-                      value={localSettings.website}
-                      onChange={(e) =>
-                        handleInputChange("website", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={errors.website ? "border-red-500" : ""}
-                      placeholder="https://yourwebsite.com"
-                    />
-                    {errors.website && (
-                      <p className="text-sm text-red-600">{errors.website}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="jobTitle">Job Title</Label>
-                    <Input
-                      id="jobTitle"
-                      value={localSettings.jobTitle}
-                      onChange={(e) =>
-                        handleInputChange("jobTitle", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      placeholder="Your role"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
-                    <Input
-                      id="company"
-                      value={localSettings.company}
-                      onChange={(e) =>
-                        handleInputChange("company", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      placeholder="Your company"
-                    />
-                  </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Personal Information
+                </CardTitle>
+                <CardDescription>
+                  Update your personal details and contact information
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                {isEditing ? "Cancel" : "Edit"}
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Full Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={localSettings.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    disabled={!isEditing}
+                    className={errors.name ? "border-red-500" : ""}
+                    placeholder="Enter your full name"
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-red-600">{errors.name}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={localSettings.bio}
-                    onChange={(e) => handleInputChange("bio", e.target.value)}
+                  <Label htmlFor="email" className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={localSettings.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     disabled={!isEditing}
-                    rows={4}
-                    className={errors.bio ? "border-red-500" : ""}
-                    placeholder="Tell us about yourself..."
+                    className={errors.email ? "border-red-500" : ""}
+                    placeholder="your.email@example.com"
                   />
-                  <div className="flex items-center justify-between">
-                    {errors.bio && (
-                      <p className="text-sm text-red-600">{errors.bio}</p>
-                    )}
-                    <p className="text-sm text-slate-500 ml-auto">
-                      {localSettings.bio?.length || 0}/500 characters
-                    </p>
-                  </div>
+                  {errors.email && (
+                    <p className="text-sm text-red-600">{errors.email}</p>
+                  )}
                 </div>
 
-                {isEditing && (
-                  <div className="flex gap-2 pt-4">
-                    <Button
-                      onClick={handleSave}
-                      disabled={isSaving || updateProfileMutation.isPending}
-                    >
-                      {isSaving || updateProfileMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4 mr-2" />
-                      )}
-                      Save Changes
-                    </Button>
-                    <Button variant="outline" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                    {profileImage && (
-                      <Button
-                        variant="destructive"
-                        onClick={removeProfilePhoto}
-                        className="ml-auto"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Remove Photo
-                      </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    Phone
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={localSettings.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    disabled={!isEditing}
+                    className={errors.phone ? "border-red-500" : ""}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-red-600">{errors.phone}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Location
+                  </Label>
+                  <Input
+                    id="location"
+                    value={localSettings.location}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    placeholder="City, Country"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="website" className="flex items-center gap-2">
+                    <Globe className="w-4 h-4" />
+                    Website
+                  </Label>
+                  <Input
+                    id="website"
+                    value={localSettings.website}
+                    onChange={(e) =>
+                      handleInputChange("website", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={errors.website ? "border-red-500" : ""}
+                    placeholder="https://yourwebsite.com"
+                  />
+                  {errors.website && (
+                    <p className="text-sm text-red-600">{errors.website}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="jobTitle">Job Title</Label>
+                  <Input
+                    id="jobTitle"
+                    value={localSettings.jobTitle}
+                    onChange={(e) =>
+                      handleInputChange("jobTitle", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    placeholder="Your role"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    value={localSettings.company}
+                    onChange={(e) =>
+                      handleInputChange("company", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    placeholder="Your company"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={localSettings.bio}
+                  onChange={(e) => handleInputChange("bio", e.target.value)}
+                  disabled={!isEditing}
+                  rows={4}
+                  className={errors.bio ? "border-red-500" : ""}
+                  placeholder="Tell us about yourself..."
+                />
+                <div className="flex items-center justify-between">
+                  {errors.bio && (
+                    <p className="text-sm text-red-600">{errors.bio}</p>
+                  )}
+                  <p className="text-sm text-slate-500 ml-auto">
+                    {localSettings.bio?.length || 0}/500 characters
+                  </p>
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving || updateProfileMutation.isPending}
+                  >
+                    {isSaving || updateProfileMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
                     )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    Save Changes
+                  </Button>
+                  <Button variant="outline" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  {profileImage && (
+                    <Button
+                      variant="destructive"
+                      onClick={removeProfilePhoto}
+                      className="ml-auto"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Remove Photo
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
