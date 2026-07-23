@@ -151,6 +151,7 @@ const LABELS = [
 // ==========================================
 
 export async function seedProjectsAndTasks() {
+  await initializeDatabase();
   const db = getDatabase();
   logger.info("🌱 Phase 3: Seeding projects, tasks, and milestones...\n");
 
@@ -442,8 +443,10 @@ export async function seedProjectsAndTasks() {
 export default seedProjectsAndTasks;
 // Run if executed directly
 if (require.main === module) {
-  seedProjectsAndTasks().catch((error) => {
-    logger.error("Fatal error:", error);
-    process.exit(1);
-  });
+  seedProjectsAndTasks()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      logger.error("Fatal error:", error);
+      process.exit(1);
+    });
 }
