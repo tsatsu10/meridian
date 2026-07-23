@@ -45,6 +45,7 @@ import { useSettingsStore } from "@/store/settings";
 import { toast } from "sonner";
 import { TwoFactorSetup } from "@/components/auth/two-factor-setup";
 import { apiClient } from "@/lib/api-client";
+import changePassword from "@/fetchers/user/change-password";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
@@ -53,8 +54,7 @@ export const Route = createFileRoute("/dashboard/settings/security")({
 });
 
 function SecuritySettings() {
-  const { settings, updateSettings, isLoading, addRecentlyViewed } =
-    useSettingsStore();
+  const { settings, updateSettings, addRecentlyViewed } = useSettingsStore();
   const [localSettings, setLocalSettings] = useState(settings.security);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -90,6 +90,19 @@ function SecuritySettings() {
     },
     onError: () => {
       toast.error("Failed to disable 2FA. Please check your password.");
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      toast.success("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update password");
     },
   });
 
@@ -131,21 +144,10 @@ function SecuritySettings() {
       return;
     }
 
-    try {
-      toast.promise(new Promise((resolve) => setTimeout(resolve, 2000)), {
-        loading: "Updating password...",
-        success: "Password updated successfully!",
-        error: "Failed to update password",
-      });
-
-      setTimeout(() => {
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      }, 2000);
-    } catch (error) {
-      console.error("Password change error:", error);
-    }
+    changePasswordMutation.mutate({
+      currentPassword,
+      newPassword,
+    });
   };
 
   const handleSettingChange = async (key: string, value: unknown) => {
@@ -481,7 +483,7 @@ function SecuritySettings() {
                 <Button
                   onClick={handlePasswordChange}
                   disabled={
-                    isLoading ||
+                    changePasswordMutation.isPending ||
                     !currentPassword ||
                     !newPassword ||
                     !confirmPassword ||
@@ -489,7 +491,7 @@ function SecuritySettings() {
                   }
                   className="w-full"
                 >
-                  {isLoading ? (
+                  {changePasswordMutation.isPending ? (
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <Key className="w-4 h-4 mr-2" />

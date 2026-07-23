@@ -61,13 +61,9 @@ function AppearanceSettings() {
   const { settings, updateSettings } = useSettingsStore();
   const { user } = useAuthStore();
 
-  // @epic-4.2-scheduled-theme: Scheduled theme switching
-  const [scheduledThemeEnabled, setScheduledThemeEnabled] = useState(false);
-  const [lightThemeTime, setLightThemeTime] = useState("06:00");
-  const [darkThemeTime, setDarkThemeTime] = useState("18:00");
-
-  // @epic-4.2-location-theme: Location-based theme switching
-  const [locationBasedEnabled, setLocationBasedEnabled] = useState(false);
+  // @epic-4.2-location-theme: Location-based theme switching.
+  // currentLocation/sunTimes stay local — they're derived from the browser's
+  // geolocation API and today's date, not configuration to persist.
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -88,7 +84,7 @@ function AppearanceSettings() {
 
   // @epic-4.4-font-customization: Font customization
   const [fontFamily, setFontFamily] = useState("Inter");
-  const [fontSize, setFontSize] = useState(14);
+  const [fontSize, setFontSize] = useState(16);
   const [fontWeight, setFontWeight] = useState(400);
   const [lineHeight, setLineHeight] = useState(1.5);
   const [letterSpacing, setLetterSpacing] = useState(0);
@@ -171,6 +167,22 @@ function AppearanceSettings() {
       toast.error("Failed to update setting");
     }
   };
+
+  // Scheduled/location theme config — persisted appearance settings, not
+  // local state, so they survive a reload like every other appearance field.
+  const scheduledThemeEnabled = settings.appearance.scheduledThemeEnabled;
+  const lightThemeTime = settings.appearance.lightThemeTime;
+  const darkThemeTime = settings.appearance.darkThemeTime;
+  const locationBasedEnabled = settings.appearance.locationBasedEnabled;
+
+  const setScheduledThemeEnabled = (value: boolean) =>
+    handleSettingUpdate("appearance", "scheduledThemeEnabled", value);
+  const setLightThemeTime = (value: string) =>
+    handleSettingUpdate("appearance", "lightThemeTime", value);
+  const setDarkThemeTime = (value: string) =>
+    handleSettingUpdate("appearance", "darkThemeTime", value);
+  const setLocationBasedEnabled = (value: boolean) =>
+    handleSettingUpdate("appearance", "locationBasedEnabled", value);
 
   const handleResetToDefaults = () => {
     setTheme("system");
@@ -412,11 +424,11 @@ function AppearanceSettings() {
 
   const handleResetFonts = () => {
     setFontFamily("Inter");
-    setFontSize(14);
+    setFontSize(16);
     setFontWeight(400);
     setLineHeight(1.5);
     setLetterSpacing(0);
-    saveFontPreferences("Inter", 14, 400, 1.5, 0);
+    saveFontPreferences("Inter", 16, 400, 1.5, 0);
     toast.success("Font settings reset to defaults");
   };
 
