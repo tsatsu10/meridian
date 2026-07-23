@@ -20,9 +20,7 @@ describe("workspace-user event subscriptions", () => {
     // admin route.
     await import("../index");
 
-    const subscribedEvents = subscribeToEvent.mock.calls.map(
-      (call) => call[0],
-    );
+    const subscribedEvents = subscribeToEvent.mock.calls.map((call) => call[0]);
     expect(subscribedEvents).toContain("user.signed_up");
     expect(subscribedEvents).not.toContain("workspace.created");
   });
