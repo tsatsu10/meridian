@@ -109,8 +109,8 @@ export const useFilterStore = create<FilterStore>()(
           localStorage.removeItem(key);
         },
       },
-    }
-  )
+    },
+  ),
 );
 
 export default useFilterStore;

@@ -3,25 +3,26 @@
 // @persona-david: Team lead needs customizable team metrics
 // @persona-sarah: PM needs project-specific widget arrangements
 
-import React, { useState, useEffect } from 'react'
+import type React from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   LayoutGrid,
   Plus,
@@ -31,134 +32,129 @@ import {
   PieChart,
   LineChart,
   TrendingUp,
-  Users,
   Target,
-  Clock,
   Activity,
   CheckCircle2,
-  AlertTriangle,
   Sparkles,
-  Settings,
-  Save,
-  RotateCcw
-} from 'lucide-react'
-import { cn } from '@/lib/cn'
-import { toast } from 'sonner'
+  RotateCcw,
+} from "lucide-react";
+import { cn } from "@/lib/cn";
+import { toast } from "sonner";
 
 // Widget type definitions
-export type WidgetType = 
-  | 'metric-card'
-  | 'bar-chart'
-  | 'line-chart'
-  | 'pie-chart'
-  | 'progress-bar'
-  | 'list'
-  | 'heatmap'
-  | 'gauge';
+export type WidgetType =
+  | "metric-card"
+  | "bar-chart"
+  | "line-chart"
+  | "pie-chart"
+  | "progress-bar"
+  | "list"
+  | "heatmap"
+  | "gauge";
 
-export type WidgetSize = 'small' | 'medium' | 'large' | 'full';
+export type WidgetSize = "small" | "medium" | "large" | "full";
 
 export interface DashboardWidget {
-  id: string
-  type: WidgetType
-  title: string
-  description?: string
-  size: WidgetSize
-  dataSource: string
-  config: Record<string, any>
-  position: number
+  id: string;
+  type: WidgetType;
+  title: string;
+  description?: string;
+  size: WidgetSize;
+  dataSource: string;
+  config: Record<string, unknown>;
+  position: number;
 }
 
 export interface WidgetTemplate {
-  type: WidgetType
-  title: string
-  description: string
-  icon: React.ReactNode
-  defaultSize: WidgetSize
-  dataSource: string
-  configOptions: string[]
+  type: WidgetType;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  defaultSize: WidgetSize;
+  dataSource: string;
+  configOptions: string[];
 }
 
 // Available widget templates
 const widgetTemplates: WidgetTemplate[] = [
   {
-    type: 'metric-card',
-    title: 'Key Metric',
-    description: 'Display a single important metric with trend',
+    type: "metric-card",
+    title: "Key Metric",
+    description: "Display a single important metric with trend",
     icon: <TrendingUp className="w-5 h-5" />,
-    defaultSize: 'small',
-    dataSource: 'analytics',
-    configOptions: ['metric', 'timeRange', 'comparisonMode'],
+    defaultSize: "small",
+    dataSource: "analytics",
+    configOptions: ["metric", "timeRange", "comparisonMode"],
   },
   {
-    type: 'bar-chart',
-    title: 'Bar Chart',
-    description: 'Compare values across categories',
+    type: "bar-chart",
+    title: "Bar Chart",
+    description: "Compare values across categories",
     icon: <BarChart3 className="w-5 h-5" />,
-    defaultSize: 'medium',
-    dataSource: 'analytics',
-    configOptions: ['dataType', 'groupBy', 'timeRange'],
+    defaultSize: "medium",
+    dataSource: "analytics",
+    configOptions: ["dataType", "groupBy", "timeRange"],
   },
   {
-    type: 'line-chart',
-    title: 'Trend Chart',
-    description: 'Visualize trends over time',
+    type: "line-chart",
+    title: "Trend Chart",
+    description: "Visualize trends over time",
     icon: <LineChart className="w-5 h-5" />,
-    defaultSize: 'medium',
-    dataSource: 'analytics',
-    configOptions: ['metrics', 'timeRange', 'smoothing'],
+    defaultSize: "medium",
+    dataSource: "analytics",
+    configOptions: ["metrics", "timeRange", "smoothing"],
   },
   {
-    type: 'pie-chart',
-    title: 'Pie Chart',
-    description: 'Show proportional distribution',
+    type: "pie-chart",
+    title: "Pie Chart",
+    description: "Show proportional distribution",
     icon: <PieChart className="w-5 h-5" />,
-    defaultSize: 'small',
-    dataSource: 'analytics',
-    configOptions: ['dataType', 'topN'],
+    defaultSize: "small",
+    dataSource: "analytics",
+    configOptions: ["dataType", "topN"],
   },
   {
-    type: 'progress-bar',
-    title: 'Progress Tracker',
-    description: 'Track goal completion',
+    type: "progress-bar",
+    title: "Progress Tracker",
+    description: "Track goal completion",
     icon: <Target className="w-5 h-5" />,
-    defaultSize: 'small',
-    dataSource: 'projects',
-    configOptions: ['project', 'goalType'],
+    defaultSize: "small",
+    dataSource: "projects",
+    configOptions: ["project", "goalType"],
   },
   {
-    type: 'list',
-    title: 'Data List',
-    description: 'Show ordered list of items',
+    type: "list",
+    title: "Data List",
+    description: "Show ordered list of items",
     icon: <CheckCircle2 className="w-5 h-5" />,
-    defaultSize: 'medium',
-    dataSource: 'projects',
-    configOptions: ['listType', 'sortBy', 'limit'],
+    defaultSize: "medium",
+    dataSource: "projects",
+    configOptions: ["listType", "sortBy", "limit"],
   },
   {
-    type: 'heatmap',
-    title: 'Activity Heatmap',
-    description: 'Visualize activity patterns',
+    type: "heatmap",
+    title: "Activity Heatmap",
+    description: "Visualize activity patterns",
     icon: <Activity className="w-5 h-5" />,
-    defaultSize: 'large',
-    dataSource: 'team',
-    configOptions: ['timeRange', 'groupBy'],
+    defaultSize: "large",
+    dataSource: "team",
+    configOptions: ["timeRange", "groupBy"],
   },
   {
-    type: 'gauge',
-    title: 'Performance Gauge',
-    description: 'Display performance score',
+    type: "gauge",
+    title: "Performance Gauge",
+    description: "Display performance score",
     icon: <Sparkles className="w-5 h-5" />,
-    defaultSize: 'small',
-    dataSource: 'team',
-    configOptions: ['metric', 'threshold'],
+    defaultSize: "small",
+    dataSource: "team",
+    configOptions: ["metric", "threshold"],
   },
 ];
 
 interface CustomWidgetsManagerProps {
-  isOpen: boolean
-  onClose: () => void
-  onLayoutChange?: (widgets: DashboardWidget[]) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onLayoutChange?: (widgets: DashboardWidget[]) => void;
 }
 
 export function CustomWidgetsManager({
@@ -166,74 +162,81 @@ export function CustomWidgetsManager({
   onClose,
   onLayoutChange,
 }: CustomWidgetsManagerProps) {
-  const [widgets, setWidgets] = useState<DashboardWidget[]>([])
-  const [showAddWidget, setShowAddWidget] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<WidgetTemplate | null>(null)
-  const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null)
+  const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
+  const [showAddWidget, setShowAddWidget] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<WidgetTemplate | null>(null);
+  const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null);
 
   // Load widgets from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('customDashboardWidgets')
+    const saved = localStorage.getItem("customDashboardWidgets");
     if (saved) {
       try {
-        setWidgets(JSON.parse(saved))
+        setWidgets(JSON.parse(saved));
       } catch (e) {
-        console.error('Failed to load widgets:', e)
+        console.error("Failed to load widgets:", e);
       }
     } else {
       // Set default widgets
-      setWidgets(getDefaultWidgets())
+      setWidgets(getDefaultWidgets());
     }
-  }, [])
+  }, []);
 
   // Save widgets to localStorage
   const saveWidgets = (updatedWidgets: DashboardWidget[]) => {
-    setWidgets(updatedWidgets)
-    localStorage.setItem('customDashboardWidgets', JSON.stringify(updatedWidgets))
-    onLayoutChange?.(updatedWidgets)
-  }
+    setWidgets(updatedWidgets);
+    localStorage.setItem(
+      "customDashboardWidgets",
+      JSON.stringify(updatedWidgets),
+    );
+    onLayoutChange?.(updatedWidgets);
+  };
 
   // Get default widget layout
   const getDefaultWidgets = (): DashboardWidget[] => {
     return [
       {
-        id: 'widget-1',
-        type: 'metric-card',
-        title: 'Total Projects',
-        size: 'small',
-        dataSource: 'projects',
-        config: { metric: 'totalProjects', showTrend: true },
+        id: "widget-1",
+        type: "metric-card",
+        title: "Total Projects",
+        size: "small",
+        dataSource: "projects",
+        config: { metric: "totalProjects", showTrend: true },
         position: 0,
       },
       {
-        id: 'widget-2',
-        type: 'metric-card',
-        title: 'Team Productivity',
-        size: 'small',
-        dataSource: 'team',
-        config: { metric: 'avgProductivity', showTrend: true },
+        id: "widget-2",
+        type: "metric-card",
+        title: "Team Productivity",
+        size: "small",
+        dataSource: "team",
+        config: { metric: "avgProductivity", showTrend: true },
         position: 1,
       },
       {
-        id: 'widget-3',
-        type: 'line-chart',
-        title: 'Project Trends',
-        size: 'large',
-        dataSource: 'analytics',
-        config: { metrics: ['productivity', 'tasksCompleted'], timeRange: '30d' },
+        id: "widget-3",
+        type: "line-chart",
+        title: "Project Trends",
+        size: "large",
+        dataSource: "analytics",
+        config: {
+          metrics: ["productivity", "tasksCompleted"],
+          timeRange: "30d",
+        },
         position: 2,
       },
       {
-        id: 'widget-4',
-        type: 'bar-chart',
-        title: 'Team Performance',
-        size: 'medium',
-        dataSource: 'team',
-        config: { dataType: 'utilization', groupBy: 'user' },
+        id: "widget-4",
+        type: "bar-chart",
+        title: "Team Performance",
+        size: "medium",
+        dataSource: "team",
+        config: { dataType: "utilization", groupBy: "user" },
         position: 3,
       },
-    ]
-  }
+    ];
+  };
 
   // Add new widget
   const handleAddWidget = (template: WidgetTemplate) => {
@@ -246,91 +249,76 @@ export function CustomWidgetsManager({
       dataSource: template.dataSource,
       config: {},
       position: widgets.length,
-    }
-    saveWidgets([...widgets, newWidget])
-    setShowAddWidget(false)
-    setSelectedTemplate(null)
-    toast.success('Widget added successfully')
-  }
+    };
+    saveWidgets([...widgets, newWidget]);
+    setShowAddWidget(false);
+    setSelectedTemplate(null);
+    toast.success("Widget added successfully");
+  };
 
   // Remove widget
   const handleRemoveWidget = (widgetId: string) => {
     const updatedWidgets = widgets
-      .filter(w => w.id !== widgetId)
-      .map((w, index) => ({ ...w, position: index }))
-    saveWidgets(updatedWidgets)
-    toast.success('Widget removed')
-  }
+      .filter((w) => w.id !== widgetId)
+      .map((w, index) => ({ ...w, position: index }));
+    saveWidgets(updatedWidgets);
+    toast.success("Widget removed");
+  };
 
   // Update widget size
   const handleUpdateSize = (widgetId: string, size: WidgetSize) => {
-    const updatedWidgets = widgets.map(w =>
-      w.id === widgetId ? { ...w, size } : w
-    )
-    saveWidgets(updatedWidgets)
-  }
+    const updatedWidgets = widgets.map((w) =>
+      w.id === widgetId ? { ...w, size } : w,
+    );
+    saveWidgets(updatedWidgets);
+  };
 
   // Drag and drop handlers
   const handleDragStart = (widgetId: string) => {
-    setDraggedWidgetId(widgetId)
-  }
+    setDraggedWidgetId(widgetId);
+  };
 
   const handleDragOver = (e: React.DragEvent, targetWidgetId: string) => {
-    e.preventDefault()
-    if (!draggedWidgetId || draggedWidgetId === targetWidgetId) return
+    e.preventDefault();
+    if (!draggedWidgetId || draggedWidgetId === targetWidgetId) return;
 
-    const draggedIndex = widgets.findIndex(w => w.id === draggedWidgetId)
-    const targetIndex = widgets.findIndex(w => w.id === targetWidgetId)
+    const draggedIndex = widgets.findIndex((w) => w.id === draggedWidgetId);
+    const targetIndex = widgets.findIndex((w) => w.id === targetWidgetId);
 
-    if (draggedIndex === -1 || targetIndex === -1) return
+    if (draggedIndex === -1 || targetIndex === -1) return;
 
-    const reorderedWidgets = [...widgets]
-    const [removed] = reorderedWidgets.splice(draggedIndex, 1)
-    reorderedWidgets.splice(targetIndex, 0, removed)
+    const reorderedWidgets = [...widgets];
+    const [removed] = reorderedWidgets.splice(draggedIndex, 1);
+    reorderedWidgets.splice(targetIndex, 0, removed);
 
     const updatedWidgets = reorderedWidgets.map((w, index) => ({
       ...w,
       position: index,
-    }))
+    }));
 
-    setWidgets(updatedWidgets)
-  }
+    setWidgets(updatedWidgets);
+  };
 
   const handleDragEnd = () => {
     if (draggedWidgetId) {
-      localStorage.setItem('customDashboardWidgets', JSON.stringify(widgets))
-      onLayoutChange?.(widgets)
+      localStorage.setItem("customDashboardWidgets", JSON.stringify(widgets));
+      onLayoutChange?.(widgets);
     }
-    setDraggedWidgetId(null)
-  }
+    setDraggedWidgetId(null);
+  };
 
   // Reset to default layout
   const handleResetLayout = () => {
-    const defaultWidgets = getDefaultWidgets()
-    saveWidgets(defaultWidgets)
-    toast.success('Layout reset to default')
-  }
+    const defaultWidgets = getDefaultWidgets();
+    saveWidgets(defaultWidgets);
+    toast.success("Layout reset to default");
+  };
 
   // Get size class for widget preview
-  const getSizeClass = (size: WidgetSize) => {
-    switch (size) {
-      case 'small':
-        return 'col-span-1'
-      case 'medium':
-        return 'col-span-2'
-      case 'large':
-        return 'col-span-3'
-      case 'full':
-        return 'col-span-4'
-      default:
-        return 'col-span-1'
-    }
-  }
-
   // Get size label
   const getSizeLabel = (size: WidgetSize) => {
-    return size.charAt(0).toUpperCase() + size.slice(1)
-  }
+    return size.charAt(0).toUpperCase() + size.slice(1);
+  };
 
   return (
     <>
@@ -342,7 +330,8 @@ export function CustomWidgetsManager({
               Customize Dashboard
             </DialogTitle>
             <DialogDescription>
-              Add, remove, and arrange widgets to personalize your analytics dashboard
+              Add, remove, and arrange widgets to personalize your analytics
+              dashboard
             </DialogDescription>
           </DialogHeader>
 
@@ -369,7 +358,7 @@ export function CustomWidgetsManager({
                 </Button>
               </div>
               <div className="text-sm text-muted-foreground">
-                {widgets.length} {widgets.length === 1 ? 'widget' : 'widgets'}
+                {widgets.length} {widgets.length === 1 ? "widget" : "widgets"}
               </div>
             </div>
 
@@ -379,12 +368,13 @@ export function CustomWidgetsManager({
                 <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-3">
                   Drag to reorder widgets
                 </div>
-                
+
                 {widgets.length === 0 ? (
                   <div className="text-center py-12">
                     <LayoutGrid className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-sm text-muted-foreground mb-4">
-                      No widgets added yet. Add your first widget to get started.
+                      No widgets added yet. Add your first widget to get
+                      started.
                     </p>
                     <Button
                       onClick={() => setShowAddWidget(true)}
@@ -408,7 +398,7 @@ export function CustomWidgetsManager({
                           onDragEnd={handleDragEnd}
                           className={cn(
                             "cursor-move transition-all hover:shadow-md",
-                            draggedWidgetId === widget.id && "opacity-50"
+                            draggedWidgetId === widget.id && "opacity-50",
                           )}
                         >
                           <CardHeader className="pb-3">
@@ -420,7 +410,10 @@ export function CustomWidgetsManager({
                                     <CardTitle className="text-sm">
                                       {widget.title}
                                     </CardTitle>
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {widget.type}
                                     </Badge>
                                   </div>
@@ -443,9 +436,13 @@ export function CustomWidgetsManager({
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="small">Small</SelectItem>
-                                    <SelectItem value="medium">Medium</SelectItem>
+                                    <SelectItem value="medium">
+                                      Medium
+                                    </SelectItem>
                                     <SelectItem value="large">Large</SelectItem>
-                                    <SelectItem value="full">Full Width</SelectItem>
+                                    <SelectItem value="full">
+                                      Full Width
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <Button
@@ -483,9 +480,7 @@ export function CustomWidgetsManager({
             <div className="text-xs text-muted-foreground">
               Changes are saved automatically
             </div>
-            <Button onClick={onClose}>
-              Done
-            </Button>
+            <Button onClick={onClose}>Done</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -508,7 +503,7 @@ export function CustomWidgetsManager({
                   className={cn(
                     "cursor-pointer transition-all hover:shadow-md hover:border-primary",
                     selectedTemplate?.type === template.type &&
-                      "border-primary ring-2 ring-primary/20"
+                      "border-primary ring-2 ring-primary/20",
                   )}
                   onClick={() => setSelectedTemplate(template)}
                 >
@@ -547,14 +542,16 @@ export function CustomWidgetsManager({
             <Button
               variant="outline"
               onClick={() => {
-                setShowAddWidget(false)
-                setSelectedTemplate(null)
+                setShowAddWidget(false);
+                setSelectedTemplate(null);
               }}
             >
               Cancel
             </Button>
             <Button
-              onClick={() => selectedTemplate && handleAddWidget(selectedTemplate)}
+              onClick={() =>
+                selectedTemplate && handleAddWidget(selectedTemplate)
+              }
               disabled={!selectedTemplate}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -564,6 +561,5 @@ export function CustomWidgetsManager({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
-

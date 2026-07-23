@@ -2,26 +2,44 @@
  * Sentry Integration
  * Error tracking and performance monitoring
  * Phase 1 - Monitoring & Observability
- * 
+ *
  * NOTE: Sentry is optional - app works without it
  * Install with: cd apps/api && pnpm add @sentry/node @sentry/profiling-node
  */
 
-import { Logger } from '../logging/logger';
+import { Logger } from "../logging/logger";
+
+// Minimal structural type for the optional @sentry/node runtime require.
+// The package ships no types in this project, so we describe only the surface
+// we actually call. Everything is best-effort inside try/catch.
+interface SentryLike {
+  init(options: Record<string, unknown>): void;
+  captureException(error: Error, context?: Record<string, unknown>): void;
+  captureMessage(message: string, options?: Record<string, unknown>): void;
+  setUser(user: Record<string, unknown> | null): void;
+  addBreadcrumb(breadcrumb: Record<string, unknown>): void;
+  startTransaction(context: Record<string, unknown>): unknown;
+  setTag(key: string, value: string): void;
+  setContext(name: string, context: Record<string, unknown>): void;
+  flush(timeout?: number): Promise<boolean>;
+  close(timeout?: number): Promise<boolean>;
+}
 
 // 🔧 Optional Sentry import - gracefully handle if not installed
-let Sentry: any = null;
-let ProfilingIntegration: any = null;
+let Sentry: SentryLike | null = null;
+let ProfilingIntegration: (new () => unknown) | null = null;
 let isSentryAvailable = false;
 
 try {
-  Sentry = require('@sentry/node');
-  ProfilingIntegration = require('@sentry/profiling-node').ProfilingIntegration;
+  Sentry = require("@sentry/node");
+  ProfilingIntegration = require("@sentry/profiling-node").ProfilingIntegration;
   isSentryAvailable = true;
-  Logger.info('✅ Sentry package loaded successfully');
+  Logger.info("✅ Sentry package loaded successfully");
 } catch (error) {
-  Logger.warn('⚠️ Sentry not installed - error tracking disabled');
-  Logger.info('💡 To enable Sentry: cd apps/api && pnpm add @sentry/node @sentry/profiling-node');
+  Logger.warn("⚠️ Sentry not installed - error tracking disabled");
+  Logger.info(
+    "💡 To enable Sentry: cd apps/api && pnpm add @sentry/node @sentry/profiling-node",
+  );
   isSentryAvailable = false;
 }
 
@@ -38,72 +56,90 @@ interface SentryConfig {
  * Initialize Sentry
  */
 export function initializeSentry(config: SentryConfig) {
-  if (!isSentryAvailable) {
-    Logger.info('Sentry not available - skipping initialization');
+  if (!isSentryAvailable || !Sentry || !ProfilingIntegration) {
+    Logger.info("Sentry not available - skipping initialization");
     return;
   }
 
   if (!config.enabled || !config.dsn) {
-    Logger.info('Sentry is disabled or DSN not configured');
+    Logger.info("Sentry is disabled or DSN not configured");
     return;
   }
 
   try {
     Sentry.init({
       dsn: config.dsn,
-      environment: config.environment || process.env.NODE_ENV || 'development',
-      
+      environment: config.environment || process.env.NODE_ENV || "development",
+
       // Performance Monitoring
       tracesSampleRate: config.tracesSampleRate || 0.1, // 10% of transactions
-      
+
       // Profiling
       profilesSampleRate: config.profilesSampleRate || 0.1, // 10% of transactions
-      integrations: [
-        new ProfilingIntegration(),
-      ],
-      
+      integrations: [new ProfilingIntegration()],
+
       // Error sampling
       sampleRate: config.sampleRate || 1.0, // 100% of errors
-      
+
       // Additional options
-      beforeSend(event, hint) {
+      // Sentry is an optional runtime require with no importable types, so
+      // these callback params are described structurally by what we touch.
+      beforeSend(
+        event: {
+          request?: {
+            cookies?: unknown;
+            headers?: { authorization?: unknown; cookie?: unknown };
+          };
+        },
+        _hint: unknown,
+      ) {
         // Filter out sensitive data
         if (event.request) {
-          delete event.request.cookies;
-          delete event.request.headers?.['authorization'];
-          delete event.request.headers?.['cookie'];
+          // Assign undefined instead of delete — undefined keys are dropped
+          // at serialization, and it avoids delete's hidden-class churn.
+          event.request.cookies = undefined;
+          if (event.request.headers) {
+            event.request.headers.authorization = undefined;
+            event.request.headers.cookie = undefined;
+          }
         }
-        
+
         return event;
       },
-      
-      beforeBreadcrumb(breadcrumb) {
+
+      beforeBreadcrumb(breadcrumb: {
+        category?: string;
+        data?: { Authorization?: unknown; Cookie?: unknown };
+      }) {
         // Filter sensitive breadcrumbs
-        if (breadcrumb.category === 'http' && breadcrumb.data) {
-          delete breadcrumb.data.Authorization;
-          delete breadcrumb.data.Cookie;
+        if (breadcrumb.category === "http" && breadcrumb.data) {
+          breadcrumb.data.Authorization = undefined;
+          breadcrumb.data.Cookie = undefined;
         }
-        
+
         return breadcrumb;
       },
     });
 
-    Logger.info('✅ Sentry initialized successfully', {
+    Logger.info("✅ Sentry initialized successfully", {
       environment: config.environment,
       dsn: `${config.dsn.substring(0, 20)}...`,
     });
   } catch (error) {
-    Logger.error('❌ Failed to initialize Sentry', error);
+    Logger.error("❌ Failed to initialize Sentry", error);
   }
 }
 
 /**
  * Capture exception
  */
-export function captureException(error: Error, context?: Record<string, any>) {
+export function captureException(
+  error: Error,
+  context?: Record<string, unknown>,
+) {
   if (!isSentryAvailable || !Sentry) {
     // Fallback: Just log to console if Sentry not available
-    Logger.error('Error (Sentry not available):', error, context);
+    Logger.error("Error (Sentry not available):", error, context);
     return;
   }
 
@@ -112,14 +148,18 @@ export function captureException(error: Error, context?: Record<string, any>) {
       extra: context,
     });
   } catch (err) {
-    Logger.error('Failed to capture exception in Sentry', err);
+    Logger.error("Failed to capture exception in Sentry", err);
   }
 }
 
 /**
  * Capture message
  */
-export function captureMessage(message: string, level: string = 'info', context?: Record<string, any>) {
+export function captureMessage(
+  message: string,
+  level = "info",
+  context?: Record<string, unknown>,
+) {
   if (!isSentryAvailable || !Sentry) {
     Logger.info(message, context);
     return;
@@ -127,20 +167,24 @@ export function captureMessage(message: string, level: string = 'info', context?
 
   try {
     Sentry.captureMessage(message, {
-      level: level as any,
+      level,
       extra: context,
     });
   } catch (err) {
-    Logger.error('Failed to capture message in Sentry', err);
+    Logger.error("Failed to capture message in Sentry", err);
   }
 }
 
 /**
  * Set user context
  */
-export function setUser(user: { id: string; email?: string; username?: string }) {
+export function setUser(user: {
+  id: string;
+  email?: string;
+  username?: string;
+}) {
   if (!isSentryAvailable || !Sentry) return;
-  
+
   try {
     Sentry.setUser({
       id: user.id,
@@ -148,7 +192,7 @@ export function setUser(user: { id: string; email?: string; username?: string })
       username: user.username,
     });
   } catch (err) {
-    Logger.error('Failed to set user in Sentry', err);
+    Logger.error("Failed to set user in Sentry", err);
   }
 }
 
@@ -157,11 +201,11 @@ export function setUser(user: { id: string; email?: string; username?: string })
  */
 export function clearUser() {
   if (!isSentryAvailable || !Sentry) return;
-  
+
   try {
     Sentry.setUser(null);
   } catch (err) {
-    Logger.error('Failed to clear user in Sentry', err);
+    Logger.error("Failed to clear user in Sentry", err);
   }
 }
 
@@ -171,24 +215,24 @@ export function clearUser() {
 export function addBreadcrumb(
   message: string,
   category: string,
-  level: string = 'info',
-  data?: Record<string, any>
+  level = "info",
+  data?: Record<string, unknown>,
 ) {
   if (!isSentryAvailable || !Sentry) {
     // Fallback: Log as debug message
     Logger.debug(`[${category}] ${message}`, data);
     return;
   }
-  
+
   try {
     Sentry.addBreadcrumb({
       message,
       category,
-      level: level as any,
+      level,
       data,
     });
   } catch (err) {
-    Logger.error('Failed to add breadcrumb in Sentry', err);
+    Logger.error("Failed to add breadcrumb in Sentry", err);
   }
 }
 
@@ -197,14 +241,14 @@ export function addBreadcrumb(
  */
 export function startTransaction(name: string, op: string) {
   if (!isSentryAvailable || !Sentry) return null;
-  
+
   try {
     return Sentry.startTransaction({
       name,
       op,
     });
   } catch (err) {
-    Logger.error('Failed to start transaction in Sentry', err);
+    Logger.error("Failed to start transaction in Sentry", err);
     return null;
   }
 }
@@ -214,37 +258,37 @@ export function startTransaction(name: string, op: string) {
  */
 export function setTag(key: string, value: string) {
   if (!isSentryAvailable || !Sentry) return;
-  
+
   try {
     Sentry.setTag(key, value);
   } catch (err) {
-    Logger.error('Failed to set tag in Sentry', err);
+    Logger.error("Failed to set tag in Sentry", err);
   }
 }
 
 /**
  * Set context
  */
-export function setContext(name: string, context: Record<string, any>) {
+export function setContext(name: string, context: Record<string, unknown>) {
   if (!isSentryAvailable || !Sentry) return;
-  
+
   try {
     Sentry.setContext(name, context);
   } catch (err) {
-    Logger.error('Failed to set context in Sentry', err);
+    Logger.error("Failed to set context in Sentry", err);
   }
 }
 
 /**
  * Flush events
  */
-export async function flushSentry(timeout: number = 2000): Promise<boolean> {
+export async function flushSentry(timeout = 2000): Promise<boolean> {
   if (!isSentryAvailable || !Sentry) return true;
-  
+
   try {
     return await Sentry.flush(timeout);
   } catch (err) {
-    Logger.error('Failed to flush Sentry', err);
+    Logger.error("Failed to flush Sentry", err);
     return false;
   }
 }
@@ -252,17 +296,15 @@ export async function flushSentry(timeout: number = 2000): Promise<boolean> {
 /**
  * Close Sentry
  */
-export async function closeSentry(timeout: number = 2000): Promise<boolean> {
+export async function closeSentry(timeout = 2000): Promise<boolean> {
   if (!isSentryAvailable || !Sentry) return true;
-  
+
   try {
     return await Sentry.close(timeout);
   } catch (err) {
-    Logger.error('Failed to close Sentry', err);
+    Logger.error("Failed to close Sentry", err);
     return false;
   }
 }
 
 export default Sentry;
-
-

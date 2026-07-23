@@ -1,13 +1,13 @@
 /**
  * 💫 Enhanced Loading States
- * 
+ *
  * Comprehensive loading skeletons and indicators for dashboard components
  */
 
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, TrendingUp } from 'lucide-react';
-import { cn } from '@/lib/cn';
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCw, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/cn";
 
 /**
  * Dashboard Stats Cards Loading
@@ -16,7 +16,11 @@ export function DashboardStatsLoading() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="glass-card">
+        <Card
+          // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+          key={i}
+          className="glass-card"
+        >
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <Skeleton className="h-4 w-24" />
@@ -52,7 +56,11 @@ export function ProjectListLoading({ count = 6 }: { count?: number }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 p-4 border rounded-lg animate-pulse">
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+            key={i}
+            className="flex items-center gap-3 p-4 border rounded-lg animate-pulse"
+          >
             <Skeleton className="h-10 w-10 rounded-lg flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <Skeleton className="h-4 w-48 mb-2" />
@@ -83,7 +91,11 @@ export function MilestoneDashboardLoading() {
       </CardHeader>
       <CardContent className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="p-4 border rounded-lg">
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+            key={i}
+            className="p-4 border rounded-lg"
+          >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <Skeleton className="h-5 w-48 mb-2" />
@@ -137,7 +149,11 @@ export function ActivityFeedLoading({ count = 5 }: { count?: number }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="flex items-start gap-3 p-3 border rounded-lg">
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+            key={i}
+            className="flex items-start gap-3 p-3 border rounded-lg"
+          >
             <Skeleton className="h-8 w-8 rounded-full flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <Skeleton className="h-4 w-full mb-2" />
@@ -167,14 +183,15 @@ export function ChartLoading({ height = 300 }: { height?: number }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div 
-          className="flex items-end justify-between gap-2 animate-pulse" 
+        <div
+          className="flex items-end justify-between gap-2 animate-pulse"
           style={{ height: `${height}px` }}
         >
           {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton 
-              key={i} 
-              className="w-full rounded-t" 
+            <Skeleton
+              // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
+              key={i}
+              className="w-full rounded-t"
               style={{ height: `${Math.random() * 60 + 40}%` }}
             />
           ))}
@@ -188,25 +205,26 @@ export function ChartLoading({ height = 300 }: { height?: number }) {
  * Stale Data Indicator
  * Shows when data is outdated and needs refresh
  */
-export function StaleDataIndicator({ 
-  lastUpdated, 
-  threshold = 5 * 60 * 1000 // 5 minutes
-}: { 
-  lastUpdated: Date; 
+export function StaleDataIndicator({
+  lastUpdated,
+  threshold = 5 * 60 * 1000, // 5 minutes
+}: {
+  lastUpdated: Date;
   threshold?: number;
 }) {
   const now = Date.now();
   const ageMs = now - lastUpdated.getTime();
-  
+
   if (ageMs < threshold) return null;
-  
+
   const minutesAgo = Math.floor(ageMs / 60000);
   const hoursAgo = Math.floor(minutesAgo / 60);
-  
-  const timeStr = hoursAgo > 0 
-    ? `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`
-    : `${minutesAgo} minute${minutesAgo > 1 ? 's' : ''} ago`;
-  
+
+  const timeStr =
+    hoursAgo > 0
+      ? `${hoursAgo} hour${hoursAgo > 1 ? "s" : ""} ago`
+      : `${minutesAgo} minute${minutesAgo > 1 ? "s" : ""} ago`;
+
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/30 rounded-lg">
       <RefreshCw className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
@@ -221,7 +239,9 @@ export function StaleDataIndicator({
  * Loading Overlay
  * For showing loading state over existing content
  */
-export function LoadingOverlay({ message = 'Loading...' }: { message?: string }) {
+export function LoadingOverlay({
+  message = "Loading...",
+}: { message?: string }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50 rounded-lg">
       <div className="flex flex-col items-center gap-3">
@@ -248,11 +268,11 @@ export function InlineLoading({ message }: { message?: string }) {
  * Progressive Loading
  * Shows loading progress for multi-step operations
  */
-export function ProgressiveLoading({ 
-  steps, 
-  currentStep 
-}: { 
-  steps: string[]; 
+export function ProgressiveLoading({
+  steps,
+  currentStep,
+}: {
+  steps: string[];
   currentStep: number;
 }) {
   return (
@@ -261,25 +281,25 @@ export function ProgressiveLoading({
         const isComplete = i < currentStep;
         const isCurrent = i === currentStep;
         const isPending = i > currentStep;
-        
+
         return (
-          <div key={i} className="flex items-center gap-3">
+          <div key={step} className="flex items-center gap-3">
             <div
               className={cn(
-                'flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium',
-                isComplete && 'bg-green-500 text-white',
-                isCurrent && 'bg-primary text-primary-foreground animate-pulse',
-                isPending && 'bg-muted text-muted-foreground'
+                "flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium",
+                isComplete && "bg-green-500 text-white",
+                isCurrent && "bg-primary text-primary-foreground animate-pulse",
+                isPending && "bg-muted text-muted-foreground",
               )}
             >
-              {isComplete ? '✓' : i + 1}
+              {isComplete ? "✓" : i + 1}
             </div>
             <span
               className={cn(
-                'text-sm',
-                isComplete && 'text-muted-foreground line-through',
-                isCurrent && 'text-foreground font-medium',
-                isPending && 'text-muted-foreground'
+                "text-sm",
+                isComplete && "text-muted-foreground line-through",
+                isCurrent && "text-foreground font-medium",
+                isPending && "text-muted-foreground",
               )}
             >
               {step}
@@ -302,11 +322,11 @@ export function ShimmerLoading({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-muted rounded',
-        'before:absolute before:inset-0',
-        'before:-translate-x-full before:animate-shimmer',
-        'before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent',
-        className
+        "relative overflow-hidden bg-muted rounded",
+        "before:absolute before:inset-0",
+        "before:-translate-x-full before:animate-shimmer",
+        "before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent",
+        className,
       )}
     />
   );
@@ -321,11 +341,12 @@ export function PulseDotsLoading() {
     <div className="flex items-center gap-1">
       {[0, 1, 2].map((i) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholders never reorder
           key={i}
           className="h-2 w-2 bg-primary rounded-full animate-pulse"
           style={{
             animationDelay: `${i * 150}ms`,
-            animationDuration: '1s'
+            animationDuration: "1s",
           }}
         />
       ))}
@@ -337,7 +358,9 @@ export function PulseDotsLoading() {
  * Full Page Loading
  * For initial page load
  */
-export function FullPageLoading({ message = 'Loading Dashboard...' }: { message?: string }) {
+export function FullPageLoading({
+  message = "Loading Dashboard...",
+}: { message?: string }) {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50/50 dark:bg-gradient-dark">
       <div className="text-center space-y-4">
@@ -349,11 +372,12 @@ export function FullPageLoading({ message = 'Loading Dashboard...' }: { message?
         </div>
         <div className="space-y-2">
           <p className="text-lg font-medium text-foreground">{message}</p>
-          <p className="text-sm text-muted-foreground">This won't take long...</p>
+          <p className="text-sm text-muted-foreground">
+            This won't take long...
+          </p>
         </div>
         <PulseDotsLoading />
       </div>
     </div>
   );
 }
-

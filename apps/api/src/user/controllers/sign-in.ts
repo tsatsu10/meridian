@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { getDatabase } from "../../database/connection";
 import { userTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
+import { UnauthorizedError } from "../../utils/errors";
 
 async function signIn(email: string, password: string) {
   const db = getDatabase();
@@ -10,17 +11,19 @@ async function signIn(email: string, password: string) {
     .from(userTable)
     .where(eq(userTable.email, email))
     .limit(1);
-  
+
   const user = users[0];
 
+  // Same message for "no such user" and "wrong password" — distinguishing
+  // them lets a caller enumerate valid accounts by email.
   if (!user) {
-    throw new Error("User not found");
+    throw new UnauthorizedError("Invalid email or password");
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    throw new Error("Invalid credentials");
+    throw new UnauthorizedError("Invalid email or password");
   }
 
   return {
@@ -31,4 +34,3 @@ async function signIn(email: string, password: string) {
 }
 
 export default signIn;
-

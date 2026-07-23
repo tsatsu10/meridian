@@ -1,13 +1,17 @@
 /**
  * ✏️ Update Theme Controller
- * 
+ *
  * Updates an existing backlog theme
  */
 
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { backlogThemesTable, activityTable, userTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import {
+  backlogThemesTable,
+  activityTable,
+  userTable,
+} from "../../database/schema";
+import logger from "../../utils/logger";
 
 interface UpdateThemeInput {
   name?: string;
@@ -18,7 +22,7 @@ interface UpdateThemeInput {
 export async function updateTheme(
   themeId: string,
   updates: UpdateThemeInput,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -34,8 +38,8 @@ export async function updateTheme(
       throw new Error("Theme not found");
     }
 
-    // TODO: Add permission check
-    // Ensure user has permission to update this theme
+    // Authorization (project-scoped canManageProjectSettings) is enforced by
+    // requireThemePermission at the route layer.
 
     // Update theme
     const [updatedTheme] = await db
@@ -75,5 +79,3 @@ export async function updateTheme(
     throw error;
   }
 }
-
-

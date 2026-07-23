@@ -1,11 +1,22 @@
 /**
  * Get Audit Logs Controller
- * Retrieves workspace activity logs with filtering and pagination
+ * Retrieves workspace activity logs with filtering and pagination.
+ *
+ * NOTE: the `activities` table is task-scoped (id, taskId, userId, type,
+ * content, metadata, createdAt) — there is no workspace/entity/ip metadata on
+ * it. Workspace filtering goes through tasks -> projects, "action" maps to
+ * activities.type, and every row's entityType is "task". A previous revision
+ * queried columns that never existed and could not return data.
  */
 
 import { eq, and, gte, lte, desc, like, or, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { activityTable, userTable } from "../../database/schema";
+import {
+  activityTable,
+  userTable,
+  taskTable,
+  projectTable,
+} from "../../database/schema";
 
 export interface AuditLog {
   id: string;
@@ -15,8 +26,8 @@ export interface AuditLog {
   entityType: string;
   entityId: string | null;
   entityName: string | null;
-  changes: any;
-  metadata: any;
+  changes: unknown;
+  metadata: unknown;
   ipAddress: string | null;
   userAgent: string | null;
   timestamp: Date;
@@ -41,99 +52,113 @@ export interface AuditLogsResponse {
   totalPages: number;
 }
 
+function buildWorkspaceConditions(
+  workspaceId: string,
+  filters: Pick<
+    AuditLogFilters,
+    "startDate" | "endDate" | "userEmail" | "action" | "searchTerm"
+  >,
+) {
+  const conditions = [eq(projectTable.workspaceId, workspaceId)];
+
+  if (filters.startDate) {
+    conditions.push(gte(activityTable.createdAt, new Date(filters.startDate)));
+  }
+  if (filters.endDate) {
+    conditions.push(lte(activityTable.createdAt, new Date(filters.endDate)));
+  }
+  if (filters.userEmail) {
+    conditions.push(eq(userTable.email, filters.userEmail));
+  }
+  if (filters.action) {
+    conditions.push(eq(activityTable.type, filters.action));
+  }
+  if (filters.searchTerm) {
+    const search = or(
+      like(activityTable.type, `%${filters.searchTerm}%`),
+      like(taskTable.title, `%${filters.searchTerm}%`),
+    );
+    if (search) {
+      conditions.push(search);
+    }
+  }
+
+  return conditions;
+}
+
 export default async function getAuditLogs(
   workspaceId: string,
-  filters: AuditLogFilters = {}
+  filters: AuditLogFilters = {},
 ): Promise<AuditLogsResponse> {
   const db = getDatabase();
-  
-  const {
-    startDate,
-    endDate,
-    userEmail,
-    action,
-    entityType,
-    searchTerm,
-    page = 1,
-    pageSize = 50
-  } = filters;
-  
+
+  const { entityType, page = 1, pageSize = 50 } = filters;
   const offset = (page - 1) * pageSize;
-  
-  // Build where conditions
-  const whereConditions: any[] = [
-    eq(activityTable.workspaceId, workspaceId)
-  ];
-  
-  if (startDate) {
-    whereConditions.push(gte(activityTable.createdAt, new Date(startDate)));
+
+  // All activity rows are task activities; any other entity filter has no data
+  if (entityType && entityType !== "task") {
+    return { logs: [], total: 0, page, pageSize, totalPages: 0 };
   }
-  
-  if (endDate) {
-    whereConditions.push(lte(activityTable.createdAt, new Date(endDate)));
-  }
-  
-  if (userEmail) {
-    whereConditions.push(eq(activityTable.userEmail, userEmail));
-  }
-  
-  if (action) {
-    whereConditions.push(eq(activityTable.action, action));
-  }
-  
-  if (entityType) {
-    whereConditions.push(eq(activityTable.entityType, entityType));
-  }
-  
-  if (searchTerm) {
-    whereConditions.push(
-      or(
-        like(activityTable.action, `%${searchTerm}%`),
-        like(activityTable.entityType, `%${searchTerm}%`),
-        like(activityTable.entityName, `%${searchTerm}%`)
-      )
-    );
-  }
-  
+
+  const whereConditions = buildWorkspaceConditions(workspaceId, filters);
+
   // Get total count
   const [countResult] = await db
     .select({ count: sql<number>`count(*)` })
     .from(activityTable)
+    .innerJoin(taskTable, eq(activityTable.taskId, taskTable.id))
+    .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+    .leftJoin(userTable, eq(activityTable.userId, userTable.id))
     .where(and(...whereConditions));
-  
+
   const total = Number(countResult?.count || 0);
-  
+
   // Get paginated logs with user information
-  const logs = await db
+  const rows = await db
     .select({
       id: activityTable.id,
-      userEmail: activityTable.userEmail,
+      userEmail: userTable.email,
       userName: userTable.name,
-      action: activityTable.action,
-      entityType: activityTable.entityType,
-      entityId: activityTable.entityId,
-      entityName: activityTable.entityName,
-      changes: activityTable.changes,
+      action: activityTable.type,
+      entityId: activityTable.taskId,
+      entityName: taskTable.title,
+      changes: activityTable.content,
       metadata: activityTable.metadata,
-      ipAddress: activityTable.ipAddress,
-      userAgent: activityTable.userAgent,
       timestamp: activityTable.createdAt,
     })
     .from(activityTable)
-    .leftJoin(userTable, eq(activityTable.userEmail, userTable.email))
+    .innerJoin(taskTable, eq(activityTable.taskId, taskTable.id))
+    .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+    .leftJoin(userTable, eq(activityTable.userId, userTable.id))
     .where(and(...whereConditions))
     .orderBy(desc(activityTable.createdAt))
     .limit(pageSize)
     .offset(offset);
-  
+
+  const logs: AuditLog[] = rows.map((row) => ({
+    id: row.id,
+    userEmail: row.userEmail ?? "unknown",
+    userName: row.userName ?? row.userEmail ?? "Unknown User",
+    action: row.action,
+    entityType: "task",
+    entityId: row.entityId,
+    entityName: row.entityName ?? null,
+    changes: row.changes,
+    metadata: row.metadata,
+    // Not captured by the activities schema
+    ipAddress: null,
+    userAgent: null,
+    timestamp: row.timestamp,
+  }));
+
   const totalPages = Math.ceil(total / pageSize);
-  
+
   return {
-    logs: logs as AuditLog[],
+    logs,
     total,
     page,
     pageSize,
-    totalPages
+    totalPages,
   };
 }
 
@@ -141,7 +166,7 @@ export default async function getAuditLogs(
 export async function getAuditStats(
   workspaceId: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
 ): Promise<{
   totalActions: number;
   actionsByType: Record<string, number>;
@@ -150,142 +175,91 @@ export async function getAuditStats(
   actionsOverTime: Array<{ date: string; count: number }>;
 }> {
   const db = getDatabase();
-  
-  const whereConditions: any[] = [
-    eq(activityTable.workspaceId, workspaceId)
-  ];
-  
-  if (startDate) {
-    whereConditions.push(gte(activityTable.createdAt, new Date(startDate)));
-  }
-  
-  if (endDate) {
-    whereConditions.push(lte(activityTable.createdAt, new Date(endDate)));
-  }
-  
-  // Get total actions
-  const [totalResult] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(activityTable)
-    .where(and(...whereConditions));
-  
-  const totalActions = Number(totalResult?.count || 0);
-  
-  // Get actions by type
-  const actionTypeResults = await db
-    .select({
-      action: activityTable.action,
-      count: sql<number>`count(*)`
-    })
-    .from(activityTable)
-    .where(and(...whereConditions))
-    .groupBy(activityTable.action);
-  
+
+  const whereConditions = buildWorkspaceConditions(workspaceId, {
+    startDate,
+    endDate,
+  });
+
+  const baseQuery = () =>
+    db
+      .select({
+        type: activityTable.type,
+        userEmail: userTable.email,
+        createdAt: activityTable.createdAt,
+      })
+      .from(activityTable)
+      .innerJoin(taskTable, eq(activityTable.taskId, taskTable.id))
+      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+      .leftJoin(userTable, eq(activityTable.userId, userTable.id))
+      .where(and(...whereConditions));
+
+  const rows = await baseQuery();
+
+  const totalActions = rows.length;
+
   const actionsByType: Record<string, number> = {};
-  actionTypeResults.forEach(result => {
-    actionsByType[result.action] = Number(result.count);
-  });
-  
-  // Get actions by user
-  const userResults = await db
-    .select({
-      userEmail: activityTable.userEmail,
-      count: sql<number>`count(*)`
-    })
-    .from(activityTable)
-    .where(and(...whereConditions))
-    .groupBy(activityTable.userEmail);
-  
   const actionsByUser: Record<string, number> = {};
-  userResults.forEach(result => {
-    actionsByUser[result.userEmail] = Number(result.count);
-  });
-  
-  // Get actions by entity type
-  const entityResults = await db
-    .select({
-      entityType: activityTable.entityType,
-      count: sql<number>`count(*)`
-    })
-    .from(activityTable)
-    .where(and(...whereConditions))
-    .groupBy(activityTable.entityType);
-  
-  const actionsByEntity: Record<string, number> = {};
-  entityResults.forEach(result => {
-    actionsByEntity[result.entityType] = Number(result.count);
-  });
-  
-  // Get actions over time (daily)
-  const timeResults = await db
-    .select({
-      date: sql<string>`DATE(${activityTable.createdAt})`,
-      count: sql<number>`count(*)`
-    })
-    .from(activityTable)
-    .where(and(...whereConditions))
-    .groupBy(sql`DATE(${activityTable.createdAt})`)
-    .orderBy(sql`DATE(${activityTable.createdAt})`);
-  
-  const actionsOverTime = timeResults.map(result => ({
-    date: result.date,
-    count: Number(result.count)
-  }));
-  
+  const actionsOverTime: Record<string, number> = {};
+
+  for (const row of rows) {
+    actionsByType[row.type] = (actionsByType[row.type] ?? 0) + 1;
+    const email = row.userEmail ?? "unknown";
+    actionsByUser[email] = (actionsByUser[email] ?? 0) + 1;
+    const date = row.createdAt.toISOString().slice(0, 10);
+    actionsOverTime[date] = (actionsOverTime[date] ?? 0) + 1;
+  }
+
   return {
     totalActions,
     actionsByType,
     actionsByUser,
-    actionsByEntity,
-    actionsOverTime
+    // All activity rows are task activities in this schema
+    actionsByEntity: totalActions > 0 ? { task: totalActions } : {},
+    actionsOverTime: Object.entries(actionsOverTime)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, count]) => ({ date, count })),
   };
 }
 
 // Get available filter options
-export async function getAuditFilterOptions(
-  workspaceId: string
-): Promise<{
+export async function getAuditFilterOptions(workspaceId: string): Promise<{
   actions: string[];
   entityTypes: string[];
   users: Array<{ email: string; name: string }>;
 }> {
   const db = getDatabase();
-  
-  // Get unique actions
+
+  // Get unique actions (activity types)
   const actionResults = await db
-    .selectDistinct({ action: activityTable.action })
+    .selectDistinct({ action: activityTable.type })
     .from(activityTable)
-    .where(eq(activityTable.workspaceId, workspaceId));
-  
-  const actions = actionResults.map(r => r.action).filter(Boolean);
-  
-  // Get unique entity types
-  const entityResults = await db
-    .selectDistinct({ entityType: activityTable.entityType })
-    .from(activityTable)
-    .where(eq(activityTable.workspaceId, workspaceId));
-  
-  const entityTypes = entityResults.map(r => r.entityType).filter(Boolean);
-  
+    .innerJoin(taskTable, eq(activityTable.taskId, taskTable.id))
+    .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+    .where(eq(projectTable.workspaceId, workspaceId));
+
+  const actions = actionResults.map((r) => r.action).filter(Boolean);
+
   // Get unique users
   const userResults = await db
     .selectDistinct({
-      email: activityTable.userEmail,
-      name: userTable.name
+      email: userTable.email,
+      name: userTable.name,
     })
     .from(activityTable)
-    .leftJoin(userTable, eq(activityTable.userEmail, userTable.email))
-    .where(eq(activityTable.workspaceId, workspaceId));
-  
+    .innerJoin(taskTable, eq(activityTable.taskId, taskTable.id))
+    .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+    .innerJoin(userTable, eq(activityTable.userId, userTable.id))
+    .where(eq(projectTable.workspaceId, workspaceId));
+
   const users = userResults
-    .filter(r => r.email)
-    .map(r => ({ email: r.email!, name: r.name || r.email! }));
-  
+    .filter((r) => r.email)
+    .map((r) => ({ email: r.email, name: r.name || r.email }));
+
   return {
     actions,
-    entityTypes,
-    users
+    // All activity rows are task activities in this schema
+    entityTypes: ["task"],
+    users,
   };
 }
-
-

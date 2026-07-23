@@ -1,19 +1,25 @@
 /**
- * 🔒 SECURED: Delete Team Controller  
+ * 🔒 SECURED: Delete Team Controller
  * Sentry integration
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { teamTable } from "../../database/schema";
-import { captureException, addBreadcrumb } from "../../services/monitoring/sentry";
+import {
+  captureException,
+  addBreadcrumb,
+} from "../../services/monitoring/sentry";
 import logger from "../../utils/logger";
 import { HTTPException } from "hono/http-exception";
 
 export async function deleteTeam(c: Context) {
   const teamId = c.req.param("teamId");
-  
+  if (!teamId) {
+    throw new HTTPException(400, { message: "Team ID is required" });
+  }
+
   try {
     const db = getDatabase();
 
@@ -29,7 +35,7 @@ export async function deleteTeam(c: Context) {
     }
 
     // 📊 SENTRY: Add breadcrumb for successful deletion
-    addBreadcrumb('Team deleted successfully', 'team', 'info', {
+    addBreadcrumb("Team deleted successfully", "team", "info", {
       teamId,
       teamName: deletedTeam.name,
     });
@@ -41,8 +47,8 @@ export async function deleteTeam(c: Context) {
     // 📊 SENTRY: Capture team deletion errors
     if (!(error instanceof HTTPException)) {
       captureException(error as Error, {
-        feature: 'teams',
-        action: 'delete_team',
+        feature: "teams",
+        action: "delete_team",
         teamId,
       });
     }
@@ -54,4 +60,3 @@ export async function deleteTeam(c: Context) {
     throw new HTTPException(500, { message: "Failed to delete team" });
   }
 }
-

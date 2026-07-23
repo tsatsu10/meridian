@@ -17,4 +17,3 @@ async function getLabel(id: string) {
 }
 
 export default getLabel;
-

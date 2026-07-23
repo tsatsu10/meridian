@@ -1,21 +1,20 @@
 /**
  * 📋 Get Project Themes Controller
- * 
+ *
  * Retrieves all themes for a specific project
  */
 
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { backlogThemesTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 export async function getProjectThemes(projectId: string, userId: string) {
   const db = getDatabase();
 
   try {
-    // TODO: Add permission check
-    // Ensure user has access to this project
-
+    // Authorization (project-scoped canViewWorkspace) is enforced by
+    // requireThemeProjectPermission at the route layer.
     const themes = await db
       .select()
       .from(backlogThemesTable)
@@ -28,5 +27,3 @@ export async function getProjectThemes(projectId: string, userId: string) {
     throw new Error("Failed to fetch themes");
   }
 }
-
-

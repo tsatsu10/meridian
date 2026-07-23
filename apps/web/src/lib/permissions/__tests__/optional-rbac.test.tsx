@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { RBACAuthContext, useOptionalRBACAuth } from "../context";
@@ -40,7 +40,9 @@ describe("useOptionalRBACAuth", () => {
 
   it("returns context when inside RBACAuthContext.Provider", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <RBACAuthContext.Provider value={mockContext}>{children}</RBACAuthContext.Provider>
+      <RBACAuthContext.Provider value={mockContext}>
+        {children}
+      </RBACAuthContext.Provider>
     );
     const { result } = renderHook(() => useOptionalRBACAuth(), { wrapper });
     expect(result.current).toBe(mockContext);

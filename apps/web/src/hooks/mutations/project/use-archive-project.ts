@@ -18,7 +18,7 @@ export function useArchiveProject() {
         {
           method: "PATCH",
           credentials: "include",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -31,7 +31,9 @@ export function useArchiveProject() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       invalidateWorkspaceProjectSurface(queryClient, variables.workspaceId);
-      queryClient.invalidateQueries({ queryKey: ["project", variables.projectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables.projectId],
+      });
 
       toast.success(data.message || "Project archived successfully");
     },
@@ -51,7 +53,7 @@ export function useRestoreProject() {
         {
           method: "PATCH",
           credentials: "include",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -64,7 +66,9 @@ export function useRestoreProject() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       invalidateWorkspaceProjectSurface(queryClient, variables.workspaceId);
-      queryClient.invalidateQueries({ queryKey: ["project", variables.projectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables.projectId],
+      });
 
       toast.success(data.message || "Project restored successfully");
     },

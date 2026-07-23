@@ -10,8 +10,8 @@ async function getProjectSettings(projectId: string, category: string) {
     .where(
       and(
         eq(projectSettingsTable.projectId, projectId),
-        eq(projectSettingsTable.category, category)
-      )
+        eq(projectSettingsTable.category, category),
+      ),
     );
 
   if (!settings) {
@@ -27,8 +27,11 @@ async function getProjectSettings(projectId: string, category: string) {
 
   return {
     ...settings,
-    settings: JSON.parse(settings.settings),
+    settings:
+      typeof settings.settings === "string"
+        ? JSON.parse(settings.settings)
+        : settings.settings,
   };
 }
 
-export default getProjectSettings; 
+export default getProjectSettings;

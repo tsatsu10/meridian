@@ -1,6 +1,6 @@
 import { getDatabase } from "../../database/connection";
 import { userSkillTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface SkillData {
   name: string;
@@ -14,7 +14,7 @@ interface SkillData {
 
 const createSkill = async (userId: string, skillData: SkillData) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .insert(userSkillTable)
@@ -39,4 +39,4 @@ const createSkill = async (userId: string, skillData: SkillData) => {
   }
 };
 
-export default createSkill; 
+export default createSkill;

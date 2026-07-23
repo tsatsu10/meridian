@@ -1,6 +1,6 @@
 /**
  * Logging Middleware Tests
- * 
+ *
  * Comprehensive tests for request logging:
  * - Request logging
  * - Response logging
@@ -9,54 +9,54 @@
  * - Audit trails
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('Logging Middleware', () => {
-  describe('requestLogging', () => {
-    it('should log incoming requests', () => {
+describe("Logging Middleware", () => {
+  describe("requestLogging", () => {
+    it("should log incoming requests", () => {
       const logEntry = {
-        method: 'POST',
-        path: '/api/tasks',
+        method: "POST",
+        path: "/api/tasks",
         timestamp: new Date(),
-        userId: 'user-123',
-        ip: '192.168.1.1',
+        userId: "user-123",
+        ip: "192.168.1.1",
       };
 
-      expect(logEntry.method).toBe('POST');
-      expect(logEntry.path).toBe('/api/tasks');
+      expect(logEntry.method).toBe("POST");
+      expect(logEntry.path).toBe("/api/tasks");
     });
 
-    it('should log request headers', () => {
+    it("should log request headers", () => {
       const headers = {
-        'user-agent': 'Mozilla/5.0',
-        'content-type': 'application/json',
+        "user-agent": "Mozilla/5.0",
+        "content-type": "application/json",
       };
 
-      expect(headers['user-agent']).toBeDefined();
+      expect(headers["user-agent"]).toBeDefined();
     });
 
-    it('should mask sensitive data', () => {
+    it("should mask sensitive data", () => {
       const body = {
-        email: 'user@example.com',
-        password: '***REDACTED***',
+        email: "user@example.com",
+        password: "***REDACTED***",
       };
 
-      expect(body.password).toBe('***REDACTED***');
+      expect(body.password).toBe("***REDACTED***");
     });
   });
 
-  describe('responseLogging', () => {
-    it('should log response status', () => {
+  describe("responseLogging", () => {
+    it("should log response status", () => {
       const logEntry = {
         status: 200,
         duration: 150, // ms
-        path: '/api/tasks',
+        path: "/api/tasks",
       };
 
       expect(logEntry.status).toBe(200);
     });
 
-    it('should log response time', () => {
+    it("should log response time", () => {
       const startTime = Date.now();
       const endTime = Date.now() + 100;
       const duration = endTime - startTime;
@@ -64,7 +64,7 @@ describe('Logging Middleware', () => {
       expect(duration).toBeGreaterThanOrEqual(0);
     });
 
-    it('should log slow requests', () => {
+    it("should log slow requests", () => {
       const duration = 5000; // 5 seconds
       const threshold = 1000; // 1 second
       const isSlow = duration > threshold;
@@ -73,76 +73,76 @@ describe('Logging Middleware', () => {
     });
   });
 
-  describe('errorLogging', () => {
-    it('should log errors with stack trace', () => {
+  describe("errorLogging", () => {
+    it("should log errors with stack trace", () => {
       const error = {
-        message: 'Database connection failed',
-        stack: 'Error: Database connection failed\n  at ...',
-        code: 'DB_ERROR',
+        message: "Database connection failed",
+        stack: "Error: Database connection failed\n  at ...",
+        code: "DB_ERROR",
       };
 
-      expect(error.stack).toContain('Database connection failed');
+      expect(error.stack).toContain("Database connection failed");
     });
 
-    it('should log error context', () => {
+    it("should log error context", () => {
       const errorLog = {
-        error: 'Validation failed',
+        error: "Validation failed",
         context: {
-          userId: 'user-123',
-          endpoint: '/api/tasks',
-          input: { title: '' },
+          userId: "user-123",
+          endpoint: "/api/tasks",
+          input: { title: "" },
         },
       };
 
-      expect(errorLog.context.endpoint).toBe('/api/tasks');
+      expect(errorLog.context.endpoint).toBe("/api/tasks");
     });
   });
 
-  describe('auditLogging', () => {
-    it('should log security events', () => {
+  describe("auditLogging", () => {
+    it("should log security events", () => {
       const auditLog = {
-        event: 'failed_login',
-        userId: 'user-123',
-        ip: '192.168.1.1',
+        event: "failed_login",
+        userId: "user-123",
+        ip: "192.168.1.1",
         timestamp: new Date(),
         metadata: {
           attempts: 3,
         },
       };
 
-      expect(auditLog.event).toBe('failed_login');
+      expect(auditLog.event).toBe("failed_login");
     });
 
-    it('should log data modifications', () => {
+    it("should log data modifications", () => {
       const auditLog = {
-        event: 'workspace_deleted',
-        userId: 'user-123',
-        resourceId: 'workspace-123',
+        event: "workspace_deleted",
+        userId: "user-123",
+        resourceId: "workspace-123",
         changes: {
-          before: { status: 'active' },
-          after: { status: 'deleted' },
+          before: { status: "active" },
+          after: { status: "deleted" },
         },
       };
 
-      expect(auditLog.event).toBe('workspace_deleted');
+      expect(auditLog.event).toBe("workspace_deleted");
     });
 
-    it('should log permission changes', () => {
+    it("should log permission changes", () => {
       const auditLog = {
-        event: 'role_assigned',
-        targetUserId: 'user-456',
-        roleId: 'admin',
-        performedBy: 'user-123',
+        event: "role_assigned",
+        targetUserId: "user-456",
+        roleId: "admin",
+        performedBy: "user-123",
       };
 
-      expect(auditLog.event).toBe('role_assigned');
+      expect(auditLog.event).toBe("role_assigned");
     });
   });
 
-  describe('performanceLogging', () => {
-    it('should track endpoint performance', () => {
+  describe("performanceLogging", () => {
+    it("should track endpoint performance", () => {
       const metrics = {
-        endpoint: '/api/tasks',
+        endpoint: "/api/tasks",
         avgDuration: 150,
         p95Duration: 300,
         p99Duration: 500,
@@ -152,9 +152,9 @@ describe('Logging Middleware', () => {
       expect(metrics.avgDuration).toBeLessThan(metrics.p95Duration);
     });
 
-    it('should identify performance bottlenecks', () => {
+    it("should identify performance bottlenecks", () => {
       const endpoint = {
-        path: '/api/analytics',
+        path: "/api/analytics",
         avgDuration: 3000, // 3 seconds
         threshold: 1000, // 1 second
       };
@@ -165,11 +165,11 @@ describe('Logging Middleware', () => {
     });
   });
 
-  describe('logFormatting', () => {
-    it('should format log entries', () => {
+  describe("logFormatting", () => {
+    it("should format log entries", () => {
       const log = {
-        level: 'info',
-        message: 'Request completed',
+        level: "info",
+        message: "Request completed",
         timestamp: new Date().toISOString(),
         metadata: {
           duration: 150,
@@ -177,16 +177,15 @@ describe('Logging Middleware', () => {
         },
       };
 
-      expect(log.level).toBe('info');
+      expect(log.level).toBe("info");
       expect(log.timestamp).toBeDefined();
     });
 
-    it('should use different log levels', () => {
-      const levels = ['debug', 'info', 'warn', 'error'];
+    it("should use different log levels", () => {
+      const levels = ["debug", "info", "warn", "error"];
 
-      expect(levels).toContain('error');
-      expect(levels).toContain('info');
+      expect(levels).toContain("error");
+      expect(levels).toContain("info");
     });
   });
 });
-

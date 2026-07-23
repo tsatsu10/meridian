@@ -3,12 +3,12 @@ import { authMiddleware } from "../middlewares/secure-auth";
 import { getDatabase } from "../database/connection";
 import { scheduledReports, reportExecutions } from "../database/schema";
 import { eq, desc } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const reportsRoutes = new Hono();
 
 // Get scheduled reports
-reportsRoutes.get("/scheduled", authMiddleware, async (c) => {
+reportsRoutes.get("/scheduled", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -18,19 +18,18 @@ reportsRoutes.get("/scheduled", authMiddleware, async (c) => {
       .from(scheduledReports)
       .orderBy(desc(scheduledReports.createdAt));
 
-    // Transform to API format
+    // Transform to API format (mapped to the real scheduled_reports columns:
+    // frequency/isActive/lastRunAt/nextRunAt; recipients is jsonb, not a string)
     const reports = dbReports.map((report) => ({
       id: report.id.toString(),
       name: report.name,
-      description: report.description,
       reportType: report.reportType,
-      schedule: report.schedule ? JSON.parse(report.schedule) : {},
-      recipients: report.recipients ? JSON.parse(report.recipients) : [],
+      schedule: { frequency: report.frequency },
+      recipients: (report.recipients as string[] | null) ?? [],
       format: report.format,
-      enabled: report.enabled,
-      lastRun: report.lastRun,
-      nextRun: report.nextRun,
-      runCount: report.runCount,
+      enabled: report.isActive,
+      lastRun: report.lastRunAt,
+      nextRun: report.nextRunAt,
       createdAt: report.createdAt,
       createdBy: report.createdBy || "System",
     }));
@@ -43,7 +42,7 @@ reportsRoutes.get("/scheduled", authMiddleware, async (c) => {
 });
 
 // Create scheduled report
-reportsRoutes.post("/schedule", authMiddleware, async (c) => {
+reportsRoutes.post("/schedule", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const body = await c.req.json();
@@ -52,14 +51,15 @@ reportsRoutes.post("/schedule", authMiddleware, async (c) => {
       .insert(scheduledReports)
       .values({
         name: body.name,
-        description: body.description,
         reportType: body.reportType,
-        schedule: JSON.stringify(body.schedule),
-        recipients: JSON.stringify(body.recipients),
+        frequency: body.schedule?.frequency ?? body.frequency ?? "weekly",
+        recipients: body.recipients ?? [],
+        filters: body.filters ?? null,
         format: body.format || "pdf",
-        enabled: body.enabled !== false,
-        createdBy: body.createdBy || "User",
-        runCount: 0,
+        isActive: body.enabled !== false,
+        // scheduled_reports.createdBy is an integer with no FK to the text user
+        // ids — schema drift; 0 marks "unattributed" until the column is fixed
+        createdBy: Number(body.createdBy) || 0,
       })
       .returning();
 
@@ -71,24 +71,26 @@ reportsRoutes.post("/schedule", authMiddleware, async (c) => {
 });
 
 // Update scheduled report
-reportsRoutes.put("/schedule/:id", authMiddleware, async (c) => {
+reportsRoutes.put("/schedule/:id", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const { id } = c.req.param();
+    if (!id) {
+      return c.json({ error: "Report id is required" }, 400);
+    }
     const body = await c.req.json();
 
     const updated = await db
       .update(scheduledReports)
       .set({
         name: body.name,
-        description: body.description,
         reportType: body.reportType,
-        schedule: body.schedule ? JSON.stringify(body.schedule) : undefined,
-        recipients: body.recipients ? JSON.stringify(body.recipients) : undefined,
+        frequency: body.schedule?.frequency ?? body.frequency,
+        recipients: body.recipients ?? undefined,
         format: body.format,
-        enabled: body.enabled,
+        isActive: body.enabled,
       })
-      .where(eq(scheduledReports.id, parseInt(id)))
+      .where(eq(scheduledReports.id, Number.parseInt(id)))
       .returning();
 
     if (updated.length === 0) {
@@ -103,14 +105,17 @@ reportsRoutes.put("/schedule/:id", authMiddleware, async (c) => {
 });
 
 // Delete scheduled report
-reportsRoutes.delete("/schedule/:id", authMiddleware, async (c) => {
+reportsRoutes.delete("/schedule/:id", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const { id } = c.req.param();
+    if (!id) {
+      return c.json({ error: "Report id is required" }, 400);
+    }
 
     const deleted = await db
       .delete(scheduledReports)
-      .where(eq(scheduledReports.id, parseInt(id)))
+      .where(eq(scheduledReports.id, Number.parseInt(id)))
       .returning();
 
     if (deleted.length === 0) {
@@ -125,7 +130,7 @@ reportsRoutes.delete("/schedule/:id", authMiddleware, async (c) => {
 });
 
 // Run report now
-reportsRoutes.post("/send-now", authMiddleware, async (c) => {
+reportsRoutes.post("/send-now", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const { reportId } = await c.req.json();
@@ -134,18 +139,22 @@ reportsRoutes.post("/send-now", authMiddleware, async (c) => {
     const execution = await db
       .insert(reportExecutions)
       .values({
-        reportId: parseInt(reportId),
+        reportId: Number.parseInt(reportId),
         status: "pending",
-        startedAt: new Date(),
       })
       .returning();
+
+    const [createdExecution] = execution;
+    if (!createdExecution) {
+      return c.json({ error: "Execution insert returned no row" }, 500);
+    }
 
     // In production, this would trigger actual report generation
     // For now, just return success
     return c.json({
       success: true,
       data: {
-        executionId: execution[0].id,
+        executionId: createdExecution.id,
         reportId,
         message: "Report generation started",
         estimatedTime: "2-5 minutes",
@@ -158,7 +167,7 @@ reportsRoutes.post("/send-now", authMiddleware, async (c) => {
 });
 
 // Keep old endpoints for backward compatibility (deprecated)
-reportsRoutes.get("/scheduled-old", authMiddleware, async (c) => {
+reportsRoutes.get("/scheduled-old", authMiddleware(), async (c) => {
   try {
     // Legacy mock data for backward compatibility
     const reports = [
@@ -247,26 +256,32 @@ reportsRoutes.get("/scheduled-old", authMiddleware, async (c) => {
 });
 
 // Toggle report enabled status
-reportsRoutes.post("/scheduled/:reportId/toggle", authMiddleware, async (c) => {
-  try {
-    const { reportId } = c.req.param();
-    const { enabled } = await c.req.json();
+reportsRoutes.post(
+  "/scheduled/:reportId/toggle",
+  authMiddleware(),
+  async (c) => {
+    try {
+      const { reportId } = c.req.param();
+      const { enabled } = await c.req.json();
 
-    // In production, update the report in the database
-    logger.debug(`Toggling report ${reportId} to ${enabled ? "enabled" : "disabled"}`);
+      // In production, update the report in the database
+      logger.debug(
+        `Toggling report ${reportId} to ${enabled ? "enabled" : "disabled"}`,
+      );
 
-    return c.json({
-      success: true,
-      data: { reportId, enabled },
-    });
-  } catch (error) {
-    logger.error("Error toggling report:", error);
-    return c.json({ error: "Failed to toggle report" }, 500);
-  }
-});
+      return c.json({
+        success: true,
+        data: { reportId, enabled },
+      });
+    } catch (error) {
+      logger.error("Error toggling report:", error);
+      return c.json({ error: "Failed to toggle report" }, 500);
+    }
+  },
+);
 
 // Delete scheduled report
-reportsRoutes.delete("/scheduled/:reportId", authMiddleware, async (c) => {
+reportsRoutes.delete("/scheduled/:reportId", authMiddleware(), async (c) => {
   try {
     const { reportId } = c.req.param();
 
@@ -284,7 +299,7 @@ reportsRoutes.delete("/scheduled/:reportId", authMiddleware, async (c) => {
 });
 
 // Run report now
-reportsRoutes.post("/scheduled/:reportId/run", authMiddleware, async (c) => {
+reportsRoutes.post("/scheduled/:reportId/run", authMiddleware(), async (c) => {
   try {
     const { reportId } = c.req.param();
 
@@ -306,4 +321,3 @@ reportsRoutes.post("/scheduled/:reportId/run", authMiddleware, async (c) => {
 });
 
 export default reportsRoutes;
-

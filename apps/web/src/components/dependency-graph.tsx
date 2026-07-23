@@ -1,14 +1,21 @@
-import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { GitBranch, Target, CheckCircle2, Clock, AlertTriangle, X } from 'lucide-react';
-import { cn } from '@/lib/cn';
+import { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  GitBranch,
+  Target,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/cn";
 
 interface DependencyNode {
   id: string;
   title: string;
-  type: 'task' | 'milestone';
+  type: "task" | "milestone";
   status: string;
   dependencies: string[];
   level: number;
@@ -16,9 +23,17 @@ interface DependencyNode {
   y: number;
 }
 
+interface DependencyNodeInput {
+  id: string;
+  title?: string;
+  status?: string;
+  // Dependency IDs; typed loosely since callers pass task-dependency objects.
+  dependencies?: unknown[];
+}
+
 interface DependencyGraphProps {
-  tasks: any[];
-  milestones: any[];
+  tasks: DependencyNodeInput[];
+  milestones: DependencyNodeInput[];
   focusId?: string;
   onClose?: () => void;
 }
@@ -27,23 +42,29 @@ interface DependencyGraphProps {
  * Visual Dependency Graph Component
  * Shows task and milestone dependencies in a hierarchical layout
  */
-export function DependencyGraph({ tasks, milestones, focusId, onClose }: DependencyGraphProps) {
+export function DependencyGraph({
+  tasks,
+  milestones,
+  focusId,
+  onClose,
+}: DependencyGraphProps) {
   const { nodes, edges, focusNode } = useMemo(() => {
     const allItems = [
-      ...tasks.map(t => ({ ...t, type: 'task' as const })),
-      ...milestones.map(m => ({ ...m, type: 'milestone' as const }))
+      ...tasks.map((t) => ({ ...t, type: "task" as const })),
+      ...milestones.map((m) => ({ ...m, type: "milestone" as const })),
     ];
 
     // Build dependency graph
     const nodeMap = new Map<string, DependencyNode>();
-    const visited = new Set<string>();
+    void new Set<string>();
     const levels = new Map<string, number>();
 
     // Calculate levels (depth in dependency tree)
     const calculateLevel = (id: string): number => {
-      if (levels.has(id)) return levels.get(id)!;
-      
-      const item = allItems.find(i => i.id === id);
+      const cached = levels.get(id);
+      if (cached !== undefined) return cached;
+
+      const item = allItems.find((i) => i.id === id);
       if (!item) return 0;
 
       if (!item.dependencies || item.dependencies.length === 0) {
@@ -52,7 +73,7 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
       }
 
       const maxDepLevel = Math.max(
-        ...item.dependencies.map(depId => calculateLevel(depId))
+        ...item.dependencies.map((depId) => calculateLevel(depId as string)),
       );
       const level = maxDepLevel + 1;
       levels.set(id, level);
@@ -60,124 +81,133 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
     };
 
     // Calculate levels for all items
-    allItems.forEach(item => calculateLevel(item.id));
+    for (const item of allItems) {
+      calculateLevel(item.id);
+    }
 
     // Group nodes by level
     const levelGroups = new Map<number, string[]>();
-    allItems.forEach(item => {
+    for (const item of allItems) {
       const level = levels.get(item.id) || 0;
       if (!levelGroups.has(level)) {
         levelGroups.set(level, []);
       }
-      levelGroups.get(level)!.push(item.id);
-    });
+      levelGroups.get(level)?.push(item.id);
+    }
 
     // Position nodes
-    const nodeWidth = 200;
-    const nodeHeight = 80;
     const levelWidth = 250;
     const levelHeight = 100;
 
-    allItems.forEach(item => {
+    for (const item of allItems) {
       const level = levels.get(item.id) || 0;
       const itemsInLevel = levelGroups.get(level) || [];
       const indexInLevel = itemsInLevel.indexOf(item.id);
 
       nodeMap.set(item.id, {
         id: item.id,
-        title: item.title,
+        title: item.title || "",
         type: item.type,
-        status: item.status,
-        dependencies: item.dependencies || [],
+        status: item.status || "",
+        dependencies: (item.dependencies as string[]) || [],
         level,
         x: level * levelWidth,
-        y: indexInLevel * levelHeight
+        y: indexInLevel * levelHeight,
       });
-    });
+    }
 
     // Build edges
     const edges: Array<{ from: string; to: string }> = [];
-    allItems.forEach(item => {
+    for (const item of allItems) {
       if (item.dependencies) {
-        item.dependencies.forEach((depId: string) => {
-          edges.push({ from: depId, to: item.id });
-        });
+        for (const depId of item.dependencies) {
+          edges.push({ from: depId as string, to: item.id });
+        }
       }
-    });
+    }
 
     // Find focus node and its related nodes
     let focusNode: DependencyNode | null = null;
     let relevantNodes = Array.from(nodeMap.values());
-    
+
     if (focusId) {
       focusNode = nodeMap.get(focusId) || null;
-      
+
       if (focusNode) {
         // Get all ancestors and descendants
         const relatedIds = new Set<string>([focusId]);
-        
+
         const addAncestors = (id: string) => {
           const node = nodeMap.get(id);
           if (node) {
-            node.dependencies.forEach(depId => {
+            for (const depId of node.dependencies) {
               if (!relatedIds.has(depId)) {
                 relatedIds.add(depId);
                 addAncestors(depId);
               }
-            });
+            }
           }
         };
-        
+
         const addDescendants = (id: string) => {
-          edges.filter(e => e.from === id).forEach(edge => {
+          for (const edge of edges.filter((e) => e.from === id)) {
             if (!relatedIds.has(edge.to)) {
               relatedIds.add(edge.to);
               addDescendants(edge.to);
             }
-          });
+          }
         };
-        
+
         addAncestors(focusId);
         addDescendants(focusId);
-        
-        relevantNodes = Array.from(nodeMap.values()).filter(n => relatedIds.has(n.id));
+
+        relevantNodes = Array.from(nodeMap.values()).filter((n) =>
+          relatedIds.has(n.id),
+        );
       }
     }
 
     return {
       nodes: relevantNodes,
-      edges: edges.filter(e => 
-        relevantNodes.some(n => n.id === e.from) && 
-        relevantNodes.some(n => n.id === e.to)
+      edges: edges.filter(
+        (e) =>
+          relevantNodes.some((n) => n.id === e.from) &&
+          relevantNodes.some((n) => n.id === e.to),
       ),
-      focusNode
+      focusNode,
     };
   }, [tasks, milestones, focusId]);
 
-  const getStatusColor = (status: string, type: 'task' | 'milestone') => {
-    if (type === 'milestone') {
+  const getStatusColor = (status: string, type: "task" | "milestone") => {
+    if (type === "milestone") {
       switch (status) {
-        case 'achieved': return 'bg-green-500 border-green-600';
-        case 'missed': return 'bg-red-500 border-red-600';
-        default: return 'bg-orange-500 border-orange-600';
+        case "achieved":
+          return "bg-green-500 border-green-600";
+        case "missed":
+          return "bg-red-500 border-red-600";
+        default:
+          return "bg-orange-500 border-orange-600";
       }
     }
 
     switch (status) {
-      case 'done': return 'bg-green-500 border-green-600';
-      case 'in_progress': return 'bg-blue-500 border-blue-600';
-      default: return 'bg-gray-500 border-gray-600';
+      case "done":
+        return "bg-green-500 border-green-600";
+      case "in_progress":
+        return "bg-blue-500 border-blue-600";
+      default:
+        return "bg-gray-500 border-gray-600";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'done':
-      case 'achieved':
+      case "done":
+      case "achieved":
         return <CheckCircle2 className="h-4 w-4" />;
-      case 'in_progress':
+      case "in_progress":
         return <Clock className="h-4 w-4" />;
-      case 'missed':
+      case "missed":
         return <AlertTriangle className="h-4 w-4" />;
       default:
         return null;
@@ -198,8 +228,8 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
   }
 
   // Calculate viewBox dimensions
-  const maxX = Math.max(...nodes.map(n => n.x)) + 250;
-  const maxY = Math.max(...nodes.map(n => n.y)) + 100;
+  const maxX = Math.max(...nodes.map((n) => n.x)) + 250;
+  const maxY = Math.max(...nodes.map((n) => n.y)) + 100;
 
   return (
     <Card className="w-full">
@@ -208,9 +238,7 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
           <GitBranch className="h-5 w-5 text-blue-500" />
           <CardTitle>Dependency Graph</CardTitle>
           {focusNode && (
-            <Badge variant="outline">
-              Focused on: {focusNode.title}
-            </Badge>
+            <Badge variant="outline">Focused on: {focusNode.title}</Badge>
           )}
         </div>
         {onClose && (
@@ -220,8 +248,12 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
         )}
       </CardHeader>
       <CardContent>
-        <div className="relative overflow-auto border rounded-lg bg-muted/20" style={{ maxHeight: '600px' }}>
+        <div
+          className="relative overflow-auto border rounded-lg bg-muted/20"
+          style={{ maxHeight: "600px" }}
+        >
           <svg
+            aria-hidden="true"
             width="100%"
             height="600"
             viewBox={`0 0 ${maxX} ${maxY}`}
@@ -230,10 +262,10 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
           >
             {/* Draw edges */}
             <g className="edges">
-              {edges.map((edge, i) => {
-                const fromNode = nodes.find(n => n.id === edge.from);
-                const toNode = nodes.find(n => n.id === edge.to);
-                
+              {edges.map((edge) => {
+                const fromNode = nodes.find((n) => n.id === edge.from);
+                const toNode = nodes.find((n) => n.id === edge.to);
+
                 if (!fromNode || !toNode) return null;
 
                 const x1 = fromNode.x + 200;
@@ -244,7 +276,7 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
                 const midX = (x1 + x2) / 2;
 
                 return (
-                  <g key={`edge-${i}`}>
+                  <g key={`edge-${edge.from}-${edge.to}`}>
                     <path
                       d={`M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`}
                       stroke="currentColor"
@@ -275,20 +307,21 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
 
             {/* Draw nodes */}
             <g className="nodes">
-              {nodes.map(node => (
+              {nodes.map((node) => (
                 <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
                   <foreignObject width="200" height="80">
                     <div className="p-1">
                       <div
                         className={cn(
-                          'rounded-lg border-2 p-3 bg-card shadow-sm transition-all hover:shadow-md',
+                          "rounded-lg border-2 p-3 bg-card shadow-sm transition-all hover:shadow-md",
                           getStatusColor(node.status, node.type),
-                          node.id === focusId && 'ring-2 ring-primary ring-offset-2'
+                          node.id === focusId &&
+                            "ring-2 ring-primary ring-offset-2",
                         )}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <div className="flex items-center gap-1">
-                            {node.type === 'milestone' ? (
+                            {node.type === "milestone" ? (
                               <Target className="h-3 w-3 text-white" />
                             ) : (
                               <GitBranch className="h-3 w-3 text-white" />
@@ -303,7 +336,10 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
                             </div>
                           )}
                         </div>
-                        <p className="text-sm font-medium text-white truncate" title={node.title}>
+                        <p
+                          className="text-sm font-medium text-white truncate"
+                          title={node.title}
+                        >
                           {node.title}
                         </p>
                       </div>
@@ -318,19 +354,19 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
         {/* Legend */}
         <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-500"></div>
+            <div className="w-4 h-4 rounded bg-green-500" />
             <span className="text-muted-foreground">Complete</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-500"></div>
+            <div className="w-4 h-4 rounded bg-blue-500" />
             <span className="text-muted-foreground">In Progress</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-orange-500"></div>
+            <div className="w-4 h-4 rounded bg-orange-500" />
             <span className="text-muted-foreground">Upcoming</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-500"></div>
+            <div className="w-4 h-4 rounded bg-gray-500" />
             <span className="text-muted-foreground">Pending</span>
           </div>
           <div className="flex items-center gap-2">
@@ -346,7 +382,10 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
         {focusNode && nodes.length > 1 && (
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
             <p className="text-sm text-blue-900 dark:text-blue-100">
-              <span className="font-medium">Dependency Chain:</span> Showing {nodes.length - 1} related {nodes.length - 1 === 1 ? 'item' : 'items'} connected to "{focusNode.title}"
+              <span className="font-medium">Dependency Chain:</span> Showing{" "}
+              {nodes.length - 1} related{" "}
+              {nodes.length - 1 === 1 ? "item" : "items"} connected to "
+              {focusNode.title}"
             </p>
           </div>
         )}
@@ -356,4 +395,3 @@ export function DependencyGraph({ tasks, milestones, focusId, onClose }: Depende
 }
 
 export default DependencyGraph;
-

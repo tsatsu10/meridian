@@ -11,9 +11,9 @@ interface UpdateMemberData {
 }
 
 async function updateProjectMember(
-  projectId: string, 
-  memberEmail: string, 
-  data: UpdateMemberData
+  projectId: string,
+  memberEmail: string,
+  data: UpdateMemberData,
 ) {
   const db = getDatabase();
   // Check if member exists
@@ -23,8 +23,8 @@ async function updateProjectMember(
     .where(
       and(
         eq(projectMemberTable.projectId, projectId),
-        eq(projectMemberTable.userEmail, memberEmail)
-      )
+        eq(projectMemberTable.userEmail, memberEmail),
+      ),
     );
 
   if (!existingMember) {
@@ -34,13 +34,14 @@ async function updateProjectMember(
   }
 
   // Build update object
-  const updateFields: any = {};
-  
+  const updateFields: Record<string, unknown> = {};
+
   if (data.role !== undefined) updateFields.role = data.role;
-  if (data.hoursPerWeek !== undefined) updateFields.hoursPerWeek = data.hoursPerWeek;
+  if (data.hoursPerWeek !== undefined)
+    updateFields.hoursPerWeek = data.hoursPerWeek;
   if (data.isActive !== undefined) updateFields.isActive = data.isActive;
   if (data.notificationSettings !== undefined) {
-    updateFields.notificationSettings = JSON.stringify(data.notificationSettings);
+    updateFields.notificationSettings = data.notificationSettings;
   }
 
   // Update member
@@ -50,12 +51,12 @@ async function updateProjectMember(
     .where(
       and(
         eq(projectMemberTable.projectId, projectId),
-        eq(projectMemberTable.userEmail, memberEmail)
-      )
+        eq(projectMemberTable.userEmail, memberEmail),
+      ),
     )
     .returning();
 
   return updatedMember;
 }
 
-export default updateProjectMember; 
+export default updateProjectMember;

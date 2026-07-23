@@ -3,11 +3,17 @@
  * Sanitization + Sentry integration
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { teamTable, teamMemberTable } from "../../database/schema";
-import { sanitizeText, sanitizeRichText } from "../../lib/universal-sanitization";
-import { captureException, addBreadcrumb } from "../../services/monitoring/sentry";
+import {
+  sanitizeText,
+  sanitizeRichText,
+} from "../../lib/universal-sanitization";
+import {
+  captureException,
+  addBreadcrumb,
+} from "../../services/monitoring/sentry";
 import logger from "../../utils/logger";
 import { HTTPException } from "hono/http-exception";
 
@@ -24,8 +30,13 @@ export async function createTeam(c: Context) {
     }
 
     // 🔒 SECURITY: Sanitize all user inputs to prevent XSS
-    const sanitizedName = sanitizeText(name || '', { maxLength: 100, stripHtmlTags: true });
-    const sanitizedDescription = sanitizeRichText(description || '', { maxLength: 2000 });
+    const sanitizedName = sanitizeText(name || "", {
+      maxLength: 100,
+      stripHtmlTags: true,
+    });
+    const sanitizedDescription = sanitizeRichText(description || "", {
+      maxLength: 2000,
+    });
 
     if (!sanitizedName || sanitizedName.length === 0) {
       throw new HTTPException(400, {
@@ -47,6 +58,10 @@ export async function createTeam(c: Context) {
       })
       .returning();
 
+    if (!newTeam) {
+      throw new Error("newTeam: write returned no row");
+    }
+
     // Add members if provided
     if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
       await db.insert(teamMemberTable).values(
@@ -54,12 +69,12 @@ export async function createTeam(c: Context) {
           teamId: newTeam.id,
           userId,
           role: "member",
-        }))
+        })),
       );
     }
 
     // 📊 SENTRY: Add breadcrumb for successful team creation
-    addBreadcrumb('Team created successfully', 'team', 'info', {
+    addBreadcrumb("Team created successfully", "team", "info", {
       teamId: newTeam.id,
       workspaceId,
       hasDescription: !!description,
@@ -73,8 +88,8 @@ export async function createTeam(c: Context) {
     // 📊 SENTRY: Capture team creation errors
     if (!(error instanceof HTTPException)) {
       captureException(error as Error, {
-        feature: 'teams',
-        action: 'create_team',
+        feature: "teams",
+        action: "create_team",
         workspaceId: (await c.req.json()).workspaceId,
         name: (await c.req.json()).name?.substring(0, 100),
       });
@@ -87,4 +102,3 @@ export async function createTeam(c: Context) {
     throw new HTTPException(500, { message: "Failed to create team" });
   }
 }
-

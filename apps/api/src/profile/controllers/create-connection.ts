@@ -1,15 +1,18 @@
 import { getDatabase } from "../../database/connection";
 import { userConnectionTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface ConnectionData {
   followingId: string;
   note?: string;
 }
 
-const createConnection = async (userId: string, connectionData: ConnectionData) => {
+const createConnection = async (
+  userId: string,
+  connectionData: ConnectionData,
+) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .insert(userConnectionTable)
@@ -30,4 +33,4 @@ const createConnection = async (userId: string, connectionData: ConnectionData) 
   }
 };
 
-export default createConnection; 
+export default createConnection;

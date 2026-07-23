@@ -1,8 +1,8 @@
-import { Context } from "hono";
+import type { Context } from "hono";
 import { getDatabase } from "../../database/connection";
 import { milestoneTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // @epic-1.3-milestones: Update project milestones
 // @role-project-manager: PM needs to update milestone details and status
@@ -12,6 +12,9 @@ export async function updateMilestone(c: Context) {
   try {
     const db = getDatabase();
     const milestoneId = c.req.param("milestoneId");
+    if (!milestoneId) {
+      return c.json({ error: "Milestone ID is required" }, 400);
+    }
     const body = await c.req.json();
     const {
       title,
@@ -27,7 +30,7 @@ export async function updateMilestone(c: Context) {
     } = body;
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 
@@ -44,33 +47,39 @@ export async function updateMilestone(c: Context) {
     }
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (riskLevel) updateData.riskLevel = riskLevel;
-    if (riskDescription !== undefined) updateData.riskDescription = riskDescription;
-    if (dependencyTaskIds) updateData.dependencyTaskIds = JSON.stringify(dependencyTaskIds);
-    if (stakeholderIds) updateData.stakeholderIds = JSON.stringify(stakeholderIds);
+    if (riskDescription !== undefined)
+      updateData.riskDescription = riskDescription;
+    if (dependencyTaskIds)
+      updateData.dependencyTaskIds = JSON.stringify(dependencyTaskIds);
+    if (stakeholderIds)
+      updateData.stakeholderIds = JSON.stringify(stakeholderIds);
     if (progress !== undefined) updateData.progress = progress;
 
     // Update milestone
-    const milestone = await db
+    const [milestone] = await db
       .update(milestoneTable)
       .set(updateData)
       .where(eq(milestoneTable.id, milestoneId))
-      .returning()
-      .get();
+      .returning();
 
     if (!milestone) {
       return c.json(
         {
           error: "Milestone not found",
         },
-        404
+        404,
       );
     }
 
     // Parse JSON fields for response
     return c.json({
       ...milestone,
-      dependencyTaskIds: milestone.dependencyTaskIds ? JSON.parse(milestone.dependencyTaskIds) : [],
-      stakeholderIds: milestone.stakeholderIds ? JSON.parse(milestone.stakeholderIds) : [],
+      dependencyTaskIds: milestone.dependencyTaskIds
+        ? JSON.parse(milestone.dependencyTaskIds)
+        : [],
+      stakeholderIds: milestone.stakeholderIds
+        ? JSON.parse(milestone.stakeholderIds)
+        : [],
     });
   } catch (error) {
     logger.error("Error updating milestone:", error);
@@ -78,7 +87,7 @@ export async function updateMilestone(c: Context) {
       {
         error: "Failed to update milestone",
       },
-      500
+      500,
     );
   }
-} 
+}

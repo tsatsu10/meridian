@@ -10,47 +10,48 @@
  * Memory-efficient flatMap implementation
  */
 export function optimizedFlatMap<T, U>(
-  array: T[], 
-  mapper: (item: T, index: number) => U[]
+  array: T[],
+  mapper: (item: T, index: number) => U[],
 ): U[] {
   const result: U[] = [];
   const batchSize = 1000; // Process in batches to avoid blocking main thread
-  
+
   for (let i = 0; i < array.length; i += batchSize) {
     const batch = array.slice(i, i + batchSize);
     for (let j = 0; j < batch.length; j++) {
       const mapped = mapper(batch[j], i + j);
       result.push(...mapped);
     }
-    
+
     // Yield control back to the browser
     if (i + batchSize < array.length && i % (batchSize * 5) === 0) {
       setTimeout(() => {}, 0);
     }
   }
-  
+
   return result;
 }
 
 /**
  * Memory-efficient task flattening for hierarchical data
  */
-export function optimizedFlattenTasks(tasks: any[]): any[] {
-  const flattened: any[] = [];
-  const stack: any[] = [...tasks];
-  
+export function optimizedFlattenTasks<T>(tasks: T[]): T[] {
+  const flattened: T[] = [];
+  const stack: T[] = [...tasks];
+
   while (stack.length > 0) {
     const task = stack.pop();
     if (!task) continue;
-    
+
     flattened.push(task);
-    
+
     // Add subtasks to stack if they exist
-    if (task.subtasks && Array.isArray(task.subtasks) && task.subtasks.length > 0) {
-      stack.push(...task.subtasks);
+    const subtasks = (task as { subtasks?: unknown }).subtasks;
+    if (Array.isArray(subtasks) && subtasks.length > 0) {
+      stack.push(...(subtasks as T[]));
     }
   }
-  
+
   return flattened;
 }
 
@@ -60,16 +61,16 @@ export function optimizedFlattenTasks(tasks: any[]): any[] {
 export function optimizedFilter<T>(
   array: T[],
   predicate: (item: T, index: number) => boolean,
-  maxResults: number = 1000
+  maxResults = 1000,
 ): T[] {
   const result: T[] = [];
-  
+
   for (let i = 0; i < array.length && result.length < maxResults; i++) {
     if (predicate(array[i], i)) {
       result.push(array[i]);
     }
   }
-  
+
   return result;
 }
 
@@ -78,13 +79,13 @@ export function optimizedFilter<T>(
  */
 export function optimizedSort<T>(
   array: T[],
-  compareFn: (a: T, b: T) => number
+  compareFn: (a: T, b: T) => number,
 ): T[] {
   // For large arrays, use a more memory-efficient approach
   if (array.length > 1000) {
     return array.slice().sort(compareFn);
   }
-  
+
   return [...array].sort(compareFn);
 }
 
@@ -94,22 +95,22 @@ export function optimizedSort<T>(
 export function createMemoizedComputation<T, R>(
   computeFn: (input: T) => R,
   keyFn: (input: T) => string,
-  ttl: number = 5000 // 5 seconds TTL
+  ttl = 5000, // 5 seconds TTL
 ): (input: T) => R {
   const cache = new Map<string, { result: R; timestamp: number }>();
-  
+
   return (input: T): R => {
     const key = keyFn(input);
     const now = Date.now();
     const cached = cache.get(key);
-    
-    if (cached && (now - cached.timestamp) < ttl) {
+
+    if (cached && now - cached.timestamp < ttl) {
       return cached.result;
     }
-    
+
     const result = computeFn(input);
     cache.set(key, { result, timestamp: now });
-    
+
     // Cleanup old entries
     if (cache.size > 100) {
       const cutoffTime = now - ttl;
@@ -119,7 +120,7 @@ export function createMemoizedComputation<T, R>(
         }
       }
     }
-    
+
     return result;
   };
 }
@@ -130,19 +131,19 @@ export function createMemoizedComputation<T, R>(
 export async function processBatches<T, R>(
   items: T[],
   processor: (batch: T[]) => Promise<R[]> | R[],
-  batchSize: number = 100
+  batchSize = 100,
 ): Promise<R[]> {
   const results: R[] = [];
-  
+
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     const batchResults = await processor(batch);
     results.push(...batchResults);
-    
+
     // Yield control between batches
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
-  
+
   return results;
 }
 
@@ -153,60 +154,70 @@ export class MemoryMonitor {
   private static instance: MemoryMonitor;
   private observers: Array<{ threshold: number; callback: () => void }> = [];
   private checkInterval: NodeJS.Timeout | null = null;
-  
+
   static getInstance(): MemoryMonitor {
     if (!MemoryMonitor.instance) {
       MemoryMonitor.instance = new MemoryMonitor();
     }
     return MemoryMonitor.instance;
   }
-  
+
   addObserver(threshold: number, callback: () => void): () => void {
     const observer = { threshold, callback };
     this.observers.push(observer);
-    
+
     if (!this.checkInterval) {
       this.startMonitoring();
     }
-    
+
     return () => {
       const index = this.observers.indexOf(observer);
       if (index > -1) {
         this.observers.splice(index, 1);
       }
-      
+
       if (this.observers.length === 0) {
         this.stopMonitoring();
       }
     };
   }
-  
+
   private startMonitoring(): void {
     this.checkInterval = setInterval(() => {
-      if ('memory' in performance) {
-        const memory = (performance as any).memory;
-        const usage = memory.usedJSHeapSize / memory.totalJSHeapSize;
-        
-        this.observers.forEach(observer => {
+      if ("memory" in performance) {
+        const memory = (
+          performance as Performance & {
+            memory: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+          }
+        ).memory;
+        // Ratio against the heap limit (real ceiling), not totalJSHeapSize
+        // (allocated heap), which would read ~90-100% even when healthy.
+        const usage = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+
+        for (const observer of this.observers) {
           if (usage >= observer.threshold) {
             observer.callback();
           }
-        });
+        }
       }
     }, 15000); // Check every 15 seconds instead of 5 seconds
   }
-  
+
   private stopMonitoring(): void {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
   }
-  
+
   getCurrentUsage(): number {
-    if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      return memory.usedJSHeapSize / memory.totalJSHeapSize;
+    if ("memory" in performance) {
+      const memory = (
+        performance as Performance & {
+          memory: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+        }
+      ).memory;
+      return memory.usedJSHeapSize / memory.jsHeapSizeLimit;
     }
     return 0;
   }
@@ -218,19 +229,21 @@ export class MemoryMonitor {
 export function useOptimizedMemo<T>(
   factory: () => T,
   deps: React.DependencyList,
-  maxSize: number = 1000
+  maxSize = 1000,
 ): T {
-  const React = require('react');
-  
+  const React = require("react");
+
   return React.useMemo(() => {
     const result = factory();
-    
+
     // If result is an array and too large, limit it
     if (Array.isArray(result) && result.length > maxSize) {
-      console.warn(`🧠 Large array detected (${result.length} items), limiting to ${maxSize} for memory efficiency`);
+      console.warn(
+        `🧠 Large array detected (${result.length} items), limiting to ${maxSize} for memory efficiency`,
+      );
       return result.slice(0, maxSize) as T;
     }
-    
+
     return result;
   }, deps);
 }
@@ -243,20 +256,20 @@ export function createCleanupManager(): {
   cleanup: () => void;
 } {
   const cleanupFunctions: Array<() => void> = [];
-  
+
   return {
     add: (cleanup: () => void) => {
       cleanupFunctions.push(cleanup);
     },
     cleanup: () => {
-      cleanupFunctions.forEach(fn => {
+      for (const fn of cleanupFunctions) {
         try {
           fn();
         } catch (error) {
-          console.warn('Cleanup function failed:', error);
+          console.warn("Cleanup function failed:", error);
         }
-      });
+      }
       cleanupFunctions.length = 0;
-    }
+    },
   };
-} 
+}

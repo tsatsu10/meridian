@@ -1,11 +1,11 @@
 import { eq, desc } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userEducationTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 const getEducation = async (userId: string) => {
   const db = getDatabase();
-  
+
   try {
     const education = await db
       .select()
@@ -13,7 +13,7 @@ const getEducation = async (userId: string) => {
       .where(eq(userEducationTable.userId, userId))
       .orderBy(desc(userEducationTable.createdAt));
 
-    return education.map(edu => ({
+    return education.map((edu) => ({
       ...edu,
       activities: edu.activities ? JSON.parse(edu.activities) : [],
     }));
@@ -23,4 +23,4 @@ const getEducation = async (userId: string) => {
   }
 };
 
-export default getEducation; 
+export default getEducation;

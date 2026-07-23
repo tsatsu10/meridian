@@ -5,7 +5,7 @@ import { projectTemplates } from "../../database/schema";
 export default async function rateTemplate(
   templateId: string,
   userId: string,
-  rating: number
+  rating: number,
 ): Promise<{ success: boolean; error?: string; averageRating?: number }> {
   if (rating < 1 || rating > 5) {
     return { success: false, error: "Rating must be between 1 and 5" };
@@ -23,9 +23,9 @@ export default async function rateTemplate(
   // Calculate new average rating
   // Current average = (current rating * 10) / 10
   // New average = ((current total) + new rating) / (count + 1)
-  const currentTotal = template.rating * template.ratingCount;
-  const newTotal = currentTotal + (rating * 10); // Store as * 10
-  const newCount = template.ratingCount + 1;
+  const currentTotal = (template.rating ?? 0) * (template.ratingCount ?? 0);
+  const newTotal = currentTotal + rating * 10; // Store as * 10
+  const newCount = (template.ratingCount ?? 0) + 1;
   const newAverage = Math.round(newTotal / newCount);
 
   // Update template
@@ -42,5 +42,3 @@ export default async function rateTemplate(
     averageRating: newAverage / 10,
   };
 }
-
-

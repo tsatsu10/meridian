@@ -1,5 +1,8 @@
 name: Security Scan
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 on:
   push:
     branches: [main, develop]
@@ -16,27 +19,24 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '18'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Run npm audit
-        run: pnpm audit --audit-level=moderate
+        run: npm audit --audit-level=moderate
         continue-on-error: true
 
       - name: Check for outdated dependencies
-        run: pnpm outdated
+        run: npm outdated
         continue-on-error: true
 
   dependency-review:
@@ -46,7 +46,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
@@ -61,7 +61,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -97,10 +97,15 @@ jobs:
   trivy-scan:
     name: Trivy Container Scan
     runs-on: ubuntu-latest
-    
+    # upload-sarif requires security-events:write (see codeql-analysis job).
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -111,8 +116,12 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
 
+      # Fork PRs cannot upload SARIF with GITHUB_TOKEN (403 / not accessible by integration).
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: >-
+          always() &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
         with:
           sarif_file: 'trivy-results.sarif'

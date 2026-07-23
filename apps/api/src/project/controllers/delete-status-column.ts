@@ -1,7 +1,11 @@
 import { eq, and } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
-import { projectTable, statusColumnTable, taskTable } from "../../database/schema";
+import {
+  projectTable,
+  statusColumnTable,
+  taskTable,
+} from "../../database/schema";
 
 // @epic-1.1-subtasks: Delete custom status columns for Sarah's PM workflow
 async function deleteStatusColumn({
@@ -27,7 +31,7 @@ async function deleteStatusColumn({
   const statusColumn = await db.query.statusColumnTable.findFirst({
     where: and(
       eq(statusColumnTable.slug, columnId), // Look up by slug instead of ID
-      eq(statusColumnTable.projectId, projectId)
+      eq(statusColumnTable.projectId, projectId),
     ),
   });
 
@@ -48,10 +52,16 @@ async function deleteStatusColumn({
   const tasksWithStatus = await db
     .select({ count: taskTable.id })
     .from(taskTable)
-    .where(and(
-      eq(taskTable.projectId, projectId),
-      eq(taskTable.status, statusColumn.slug)
-    ));
+    .where(
+      and(
+        eq(taskTable.projectId, projectId),
+        // slug is a free string; the status column is a pg enum
+        eq(
+          taskTable.status,
+          statusColumn.slug as "todo" | "in_progress" | "done",
+        ),
+      ),
+    );
 
   if (tasksWithStatus.length > 0) {
     throw new HTTPException(400, {
@@ -67,4 +77,4 @@ async function deleteStatusColumn({
   return { success: true, message: "Status column deleted successfully" };
 }
 
-export default deleteStatusColumn; 
+export default deleteStatusColumn;

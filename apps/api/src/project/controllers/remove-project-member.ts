@@ -12,8 +12,8 @@ async function removeProjectMember(projectId: string, memberEmail: string) {
     .where(
       and(
         eq(projectMemberTable.projectId, projectId),
-        eq(projectMemberTable.userEmail, memberEmail)
-      )
+        eq(projectMemberTable.userEmail, memberEmail),
+      ),
     );
 
   if (!existingMember) {
@@ -28,15 +28,15 @@ async function removeProjectMember(projectId: string, memberEmail: string) {
     .where(
       and(
         eq(projectMemberTable.projectId, projectId),
-        eq(projectMemberTable.userEmail, memberEmail)
-      )
+        eq(projectMemberTable.userEmail, memberEmail),
+      ),
     );
 
-  return { 
-    success: true, 
+  return {
+    success: true,
     message: "Project member removed successfully",
-    removedMember: existingMember 
+    removedMember: existingMember,
   };
 }
 
-export default removeProjectMember; 
+export default removeProjectMember;

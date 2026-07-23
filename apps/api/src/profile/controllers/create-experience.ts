@@ -1,6 +1,6 @@
 import { getDatabase } from "../../database/connection";
 import { userExperienceTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 interface ExperienceData {
   title: string;
@@ -16,17 +16,24 @@ interface ExperienceData {
   order?: number;
 }
 
-const createExperience = async (userId: string, experienceData: ExperienceData) => {
+const createExperience = async (
+  userId: string,
+  experienceData: ExperienceData,
+) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .insert(userExperienceTable)
       .values({
         userId,
         ...experienceData,
-        skills: experienceData.skills ? JSON.stringify(experienceData.skills) : null,
-        achievements: experienceData.achievements ? JSON.stringify(experienceData.achievements) : null,
+        skills: experienceData.skills
+          ? JSON.stringify(experienceData.skills)
+          : null,
+        achievements: experienceData.achievements
+          ? JSON.stringify(experienceData.achievements)
+          : null,
       })
       .returning();
 
@@ -37,4 +44,4 @@ const createExperience = async (userId: string, experienceData: ExperienceData) 
   }
 };
 
-export default createExperience; 
+export default createExperience;

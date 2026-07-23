@@ -1,13 +1,12 @@
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { dedupeWorkspaceUsersForList } from "@/lib/workspace-users/dedupe-workspace-users";
 import type { WorkspaceMember } from "@/types/workspace-user";
-import type { InferRequestType } from "hono/client";
+// The generated AppType is missing workspace-user[":workspaceId"], so type locally
+export type GetWorkspaceUsersRequest = { param: { workspaceId: string } };
 
-export type GetWorkspaceUsersRequest = InferRequestType<
-  (typeof client)["workspace-user"][":workspaceId"]["$get"]
->;
-
-function normalizeWorkspaceMember(raw: Record<string, unknown>): WorkspaceMember {
+function normalizeWorkspaceMember(
+  raw: Record<string, unknown>,
+): WorkspaceMember {
   const emailRaw = (raw.email ?? raw.userEmail ?? "") as string;
   const email = String(emailRaw).trim().toLowerCase();
   const name = (raw.name ?? raw.userName ?? null) as string | null;
@@ -36,7 +35,7 @@ function normalizeWorkspaceMember(raw: Record<string, unknown>): WorkspaceMember
 }
 
 async function getWorkspaceUsers({ param }: GetWorkspaceUsersRequest) {
-  const response = await client["workspace-user"][":workspaceId"].$get({
+  const response = await looseClient["workspace-user"][":workspaceId"].$get({
     param,
   });
 

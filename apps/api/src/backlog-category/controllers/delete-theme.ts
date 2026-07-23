@@ -1,13 +1,13 @@
 /**
  * 🗑️ Delete Theme Controller
- * 
+ *
  * Deletes a backlog theme
  */
 
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { backlogThemesTable, activityTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 export async function deleteTheme(themeId: string, userId: string) {
   const db = getDatabase();
@@ -20,20 +20,18 @@ export async function deleteTheme(themeId: string, userId: string) {
       .where(eq(backlogThemesTable.id, themeId))
       .limit(1);
 
-    if (existing.length === 0) {
+    const [theme] = existing;
+    if (!theme) {
       throw new Error("Theme not found");
     }
 
-    const theme = existing[0]!;
-
-    // TODO: Add permission check
-    // Ensure user has permission to delete this theme
-
-    // TODO: Handle tasks assigned to this theme
-    // Either reassign or set to null
+    // Authorization (project-scoped canManageProjectSettings) is enforced by
+    // requireThemePermission at the route layer.
 
     // Delete theme
-    await db.delete(backlogThemesTable).where(eq(backlogThemesTable.id, themeId));
+    await db
+      .delete(backlogThemesTable)
+      .where(eq(backlogThemesTable.id, themeId));
 
     // 📊 Log activity
     try {
@@ -58,5 +56,3 @@ export async function deleteTheme(themeId: string, userId: string) {
     throw error;
   }
 }
-
-

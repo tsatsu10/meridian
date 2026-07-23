@@ -10,7 +10,7 @@ function useGetMe() {
     refetchOnWindowFocus: false,
     staleTime: 0, // Consider data stale immediately
   });
-  
+
   return query;
 }
 

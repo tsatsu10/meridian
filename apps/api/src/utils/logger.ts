@@ -1,36 +1,54 @@
 /**
  * 🔊 Enhanced Logging System with Environment-Based Controls
- * 
+ *
  * Addresses console logging noise by providing comprehensive log level
  * enforcement, structured output, and environment-specific configurations.
  */
 
-import fs from 'fs/promises';
-import path from 'path';
-import { getLogAggregationService, LogMetrics } from '../services/log-aggregation';
-import { getLoggingConfig } from '../config/logging';
+import fs from "node:fs/promises";
+import path from "node:path";
+import {
+  getLogAggregationService,
+  type LogMetrics,
+} from "../services/log-aggregation";
+import { getLoggingConfig } from "../config/logging";
 
-export type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
-export type LogCategory = 'SYSTEM' | 'AUTH' | 'DATABASE' | 'API' | 'WEBSOCKET' | 'ERROR' | 'VALIDATION' | 'PERFORMANCE';
+export type LogLevel =
+  | "silent"
+  | "error"
+  | "warn"
+  | "info"
+  | "debug"
+  | "verbose";
+export type LogCategory =
+  | "SYSTEM"
+  | "AUTH"
+  | "DATABASE"
+  | "API"
+  | "WEBSOCKET"
+  | "ERROR"
+  | "VALIDATION"
+  | "PERFORMANCE"
+  | "RBAC";
 
-interface LoggerConfig {
+export interface LoggerConfig {
   level: LogLevel;
   enableConsole: boolean;
   enableFileLogging: boolean;
   logDirectory: string;
   colorOutput: boolean;
-  timestampFormat: 'iso' | 'short' | 'none';
+  timestampFormat: "iso" | "short" | "none";
   categoryFilters: LogCategory[];
   quietMode: boolean;
   structuredOutput: boolean;
 }
 
-interface LogEntry {
+export interface LogEntry {
   timestamp: string;
   level: LogLevel;
   category: LogCategory;
   message: string;
-  data?: any;
+  data?: unknown;
   context?: {
     userId?: string;
     endpoint?: string;
@@ -38,7 +56,49 @@ interface LogEntry {
   };
 }
 
-class EnhancedLogger {
+// Keys whose values must never reach console/file/aggregation output.
+const SENSITIVE_KEY_PATTERN =
+  /pass(word)?|token|secret|auth|cookie|session[-_]?id|api[-_]?key|credential|jwt|bearer/i;
+const MAX_REDACTION_DEPTH = 6;
+
+/**
+ * Deep-copies log payloads with sensitive-looking keys masked. Loggers are a
+ * sink for arbitrary caller data (request bodies, headers, errors), so
+ * redaction has to happen here at the sink, not at each call site.
+ */
+export function redactSensitive(value: unknown, depth = 0): unknown {
+  if (value === null || typeof value !== "object") return value;
+  if (depth >= MAX_REDACTION_DEPTH) return "[MAX_DEPTH]";
+  if (value instanceof Error) {
+    return { name: value.name, message: value.message, stack: value.stack };
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => redactSensitive(item, depth + 1));
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    result[key] = SENSITIVE_KEY_PATTERN.test(key)
+      ? "[REDACTED]"
+      : redactSensitive(entry, depth + 1);
+  }
+  return result;
+}
+
+/** Reads a string-typed field off an unknown log payload, if present. */
+function getStringField(value: unknown, key: string): string | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" ? field : undefined;
+}
+
+/** Reads a number-typed field off an unknown log payload, if present. */
+function getNumberField(value: unknown, key: string): number | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "number" ? field : undefined;
+}
+
+export class EnhancedLogger {
   private config: LoggerConfig;
   private levels: Record<LogLevel, number> = {
     silent: -1,
@@ -46,35 +106,35 @@ class EnhancedLogger {
     warn: 1,
     info: 2,
     debug: 3,
-    verbose: 4
+    verbose: 4,
   };
 
   private colors = {
-    reset: '\x1b[0m',
-    bright: '\x1b[1m',
-    red: '\x1b[31m',
-    yellow: '\x1b[33m',
-    blue: '\x1b[34m',
-    green: '\x1b[32m',
-    cyan: '\x1b[36m',
-    magenta: '\x1b[35m',
-    gray: '\x1b[90m'
+    reset: "\x1b[0m",
+    bright: "\x1b[1m",
+    red: "\x1b[31m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m",
+    green: "\x1b[32m",
+    cyan: "\x1b[36m",
+    magenta: "\x1b[35m",
+    gray: "\x1b[90m",
   };
 
   constructor() {
     // Get centralized logging configuration
     const loggingConfig = getLoggingConfig();
-    
+
     this.config = {
       level: loggingConfig.level,
       enableConsole: loggingConfig.enableConsole,
       enableFileLogging: loggingConfig.enableFileLogging,
       logDirectory: loggingConfig.logDirectory,
       colorOutput: loggingConfig.colorOutput,
-      timestampFormat: loggingConfig.structuredOutput ? 'iso' : 'short',
+      timestampFormat: loggingConfig.structuredOutput ? "iso" : "short",
       categoryFilters: loggingConfig.categoryFilters,
-      quietMode: process.env.QUIET_MODE === 'true',
-      structuredOutput: loggingConfig.structuredOutput
+      quietMode: process.env.QUIET_MODE === "true",
+      structuredOutput: loggingConfig.structuredOutput,
     };
 
     // Ensure log directory exists if file logging is enabled
@@ -85,7 +145,9 @@ class EnhancedLogger {
 
   private parseCategoryFilters(categoriesEnv?: string): LogCategory[] {
     if (!categoriesEnv) return [];
-    return categoriesEnv.split(',').map(c => c.trim().toUpperCase() as LogCategory);
+    return categoriesEnv
+      .split(",")
+      .map((c) => c.trim().toUpperCase() as LogCategory);
   }
 
   private async ensureLogDirectory(): Promise<void> {
@@ -99,28 +161,28 @@ class EnhancedLogger {
 
   private shouldLog(level: LogLevel, category?: LogCategory): boolean {
     // Silent mode blocks everything
-    if (this.config.level === 'silent') return false;
-    
+    if (this.config.level === "silent") return false;
+
     // Check log level
     if (this.levels[level] > this.levels[this.config.level]) return false;
-    
+
     // Check category filters
     if (category && this.config.categoryFilters.length > 0) {
       return this.config.categoryFilters.includes(category);
     }
-    
+
     return true;
   }
 
   private formatTimestamp(): string {
     const now = new Date();
     switch (this.config.timestampFormat) {
-      case 'iso':
+      case "iso":
         return now.toISOString();
-      case 'short':
+      case "short":
         return now.toLocaleTimeString();
-      case 'none':
-        return '';
+      case "none":
+        return "";
       default:
         return now.toISOString();
     }
@@ -136,38 +198,38 @@ class EnhancedLogger {
       return JSON.stringify(entry);
     }
 
-    const timestamp = entry.timestamp ? `[${entry.timestamp}] ` : '';
+    const timestamp = entry.timestamp ? `[${entry.timestamp}] ` : "";
     const level = entry.level.toUpperCase().padEnd(7);
-    const category = entry.category ? `[${entry.category}] ` : '';
-    
+    const category = entry.category ? `[${entry.category}] ` : "";
+
     let coloredLevel = level;
     switch (entry.level) {
-      case 'error':
-        coloredLevel = this.colorize(level, 'red');
+      case "error":
+        coloredLevel = this.colorize(level, "red");
         break;
-      case 'warn':
-        coloredLevel = this.colorize(level, 'yellow');
+      case "warn":
+        coloredLevel = this.colorize(level, "yellow");
         break;
-      case 'info':
-        coloredLevel = this.colorize(level, 'blue');
+      case "info":
+        coloredLevel = this.colorize(level, "blue");
         break;
-      case 'debug':
-        coloredLevel = this.colorize(level, 'cyan');
+      case "debug":
+        coloredLevel = this.colorize(level, "cyan");
         break;
-      case 'verbose':
-        coloredLevel = this.colorize(level, 'gray');
+      case "verbose":
+        coloredLevel = this.colorize(level, "gray");
         break;
     }
 
-    return `${this.colorize(timestamp, 'gray')}${coloredLevel}${this.colorize(category, 'magenta')}${entry.message}`;
+    return `${this.colorize(timestamp, "gray")}${coloredLevel}${this.colorize(category, "magenta")}${entry.message}`;
   }
 
   private async writeToFile(entry: LogEntry): Promise<void> {
     if (!this.config.enableFileLogging) return;
 
     try {
-      const logFile = path.join(this.config.logDirectory, `app.log`);
-      const logLine = JSON.stringify(entry) + '\n';
+      const logFile = path.join(this.config.logDirectory, "app.log");
+      const logLine = `${JSON.stringify(entry)}\n`;
       await fs.appendFile(logFile, logLine);
     } catch (error) {
       // Silently fail file logging to avoid recursion
@@ -177,40 +239,46 @@ class EnhancedLogger {
   private async log(
     level: LogLevel,
     message: string,
-    data?: any,
-    category: LogCategory = 'SYSTEM',
-    context?: any
+    data?: unknown,
+    category: LogCategory = "SYSTEM",
+    context?: unknown,
   ): Promise<void> {
     if (!this.shouldLog(level, category)) return;
+
+    // Redact once at the sink so console, file, and aggregation all get the
+    // same sanitized payload regardless of what call sites pass in.
+    const safeData = redactSensitive(data);
+    const safeContext = redactSensitive(context) as LogEntry["context"];
 
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level,
       category,
       message,
-      data,
-      context
+      data: safeData,
+      context: safeContext,
     };
 
-    // Console output
+    // Console output. The "%s" placeholder keeps caller-supplied text from
+    // being interpreted as a console format string.
     if (this.config.enableConsole && !this.config.quietMode) {
       const formattedMessage = this.formatConsoleMessage(entry);
-      
+
       switch (level) {
-        case 'error':
-          console.error(formattedMessage, data || '');
+        case "error":
+          console.error("%s", formattedMessage, safeData ?? "");
           break;
-        case 'warn':
-          console.warn(formattedMessage, data || '');
+        case "warn":
+          console.warn("%s", formattedMessage, safeData ?? "");
           break;
-        case 'info':
-          console.info(formattedMessage);
+        case "info":
+          console.info("%s", formattedMessage);
           break;
-        case 'debug':
-          console.debug(formattedMessage);
+        case "debug":
+          console.debug("%s", formattedMessage);
           break;
-        case 'verbose':
-          console.log(formattedMessage);
+        case "verbose":
+          console.log("%s", formattedMessage);
           break;
       }
     }
@@ -226,14 +294,18 @@ class EnhancedLogger {
         level,
         category,
         message,
-        duration: data?.duration,
-        userId: context?.userId,
-        endpoint: context?.endpoint,
-        statusCode: context?.statusCode,
-        errorCode: data?.code || data?.errorCode,
-        metadata: { ...data, ...context }
+        duration: getNumberField(data, "duration"),
+        userId: getStringField(context, "userId"),
+        endpoint: getStringField(context, "endpoint"),
+        statusCode: getNumberField(context, "statusCode"),
+        errorCode:
+          getStringField(data, "code") ?? getStringField(data, "errorCode"),
+        metadata: {
+          ...(safeData as Record<string, unknown>),
+          ...(safeContext as Record<string, unknown>),
+        },
       };
-      
+
       logAggregationService.recordLog(logMetrics);
     } catch (error) {
       // Silently fail log aggregation to avoid recursion
@@ -241,155 +313,277 @@ class EnhancedLogger {
   }
 
   // Standard log methods
-  async error(message: string, data?: any, category: LogCategory = 'ERROR', context?: any): Promise<void> {
-    await this.log('error', message, data, category, context);
+  async error(
+    message: string,
+    data?: unknown,
+    category: LogCategory = "ERROR",
+    context?: unknown,
+  ): Promise<void> {
+    await this.log("error", message, data, category, context);
   }
 
-  async warn(message: string, data?: any, category: LogCategory = 'SYSTEM', context?: any): Promise<void> {
-    await this.log('warn', message, data, category, context);
+  async warn(
+    message: string,
+    data?: unknown,
+    category: LogCategory = "SYSTEM",
+    context?: unknown,
+  ): Promise<void> {
+    await this.log("warn", message, data, category, context);
   }
 
-  async info(message: string, data?: any, category: LogCategory = 'SYSTEM', context?: any): Promise<void> {
-    await this.log('info', message, data, category, context);
+  async info(
+    message: string,
+    data?: unknown,
+    category: LogCategory = "SYSTEM",
+    context?: unknown,
+  ): Promise<void> {
+    await this.log("info", message, data, category, context);
   }
 
-  async debug(message: string, data?: any, category: LogCategory = 'SYSTEM', context?: any): Promise<void> {
-    await this.log('debug', message, data, category, context);
+  async debug(
+    message: string,
+    data?: unknown,
+    category: LogCategory = "SYSTEM",
+    context?: unknown,
+  ): Promise<void> {
+    await this.log("debug", message, data, category, context);
   }
 
-  async verbose(message: string, data?: any, category: LogCategory = 'SYSTEM', context?: any): Promise<void> {
-    await this.log('verbose', message, data, category, context);
+  async verbose(
+    message: string,
+    data?: unknown,
+    category: LogCategory = "SYSTEM",
+    context?: unknown,
+  ): Promise<void> {
+    await this.log("verbose", message, data, category, context);
   }
 
   // Category-specific methods
-  async auth(level: LogLevel, message: string, data?: any, context?: any): Promise<void> {
-    await this.log(level, message, data, 'AUTH', context);
+  async auth(
+    level: LogLevel,
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
+    await this.log(level, message, data, "AUTH", context);
   }
 
-  async database(level: LogLevel, message: string, data?: any, context?: any): Promise<void> {
-    await this.log(level, message, data, 'DATABASE', context);
+  async database(
+    level: LogLevel,
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
+    await this.log(level, message, data, "DATABASE", context);
   }
 
-  async api(level: LogLevel, message: string, data?: any, context?: any): Promise<void> {
-    await this.log(level, message, data, 'API', context);
+  async api(
+    level: LogLevel,
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
+    await this.log(level, message, data, "API", context);
   }
 
-  async websocket(level: LogLevel, message: string, data?: any, context?: any): Promise<void> {
-    await this.log(level, message, data, 'WEBSOCKET', context);
+  async websocket(
+    level: LogLevel,
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
+    await this.log(level, message, data, "WEBSOCKET", context);
   }
 
-  async validation(level: LogLevel, message: string, data?: any, context?: any): Promise<void> {
-    await this.log(level, message, data, 'VALIDATION', context);
+  async validation(
+    level: LogLevel,
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
+    await this.log(level, message, data, "VALIDATION", context);
   }
 
-  async performance(level: LogLevel, message: string, data?: any, context?: any): Promise<void> {
-    await this.log(level, message, data, 'PERFORMANCE', context);
+  async performance(
+    level: LogLevel,
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
+    await this.log(level, message, data, "PERFORMANCE", context);
   }
 
   // Special system event methods (always visible unless silent mode)
-  async startup(message: string, data?: any): Promise<void> {
-    if (this.config.level === 'silent') return;
-    
-    const emoji = this.config.colorOutput ? '🚀' : '[STARTUP]';
-    await this.log('info', `${emoji} ${message}`, data, 'SYSTEM');
+  async startup(message: string, data?: unknown): Promise<void> {
+    if (this.config.level === "silent") return;
+
+    const emoji = this.config.colorOutput ? "🚀" : "[STARTUP]";
+    await this.log("info", `${emoji} ${message}`, data, "SYSTEM");
   }
 
-  async shutdown(message: string, data?: any): Promise<void> {
-    if (this.config.level === 'silent') return;
-    
-    const emoji = this.config.colorOutput ? '🛑' : '[SHUTDOWN]';
-    await this.log('info', `${emoji} ${message}`, data, 'SYSTEM');
+  async shutdown(message: string, data?: unknown): Promise<void> {
+    if (this.config.level === "silent") return;
+
+    const emoji = this.config.colorOutput ? "🛑" : "[SHUTDOWN]";
+    await this.log("info", `${emoji} ${message}`, data, "SYSTEM");
   }
 
-  async success(message: string, data?: any, category: LogCategory = 'SYSTEM'): Promise<void> {
-    if (this.config.level === 'silent') return;
-    
-    const emoji = this.config.colorOutput ? '✅' : '[SUCCESS]';
-    await this.log('info', `${emoji} ${message}`, data, category);
+  async success(
+    message: string,
+    data?: unknown,
+    category: LogCategory = "SYSTEM",
+  ): Promise<void> {
+    if (this.config.level === "silent") return;
+
+    const emoji = this.config.colorOutput ? "✅" : "[SUCCESS]";
+    await this.log("info", `${emoji} ${message}`, data, category);
   }
 
-  async failure(message: string, data?: any, category: LogCategory = 'ERROR'): Promise<void> {
-    if (this.config.level === 'silent') return;
-    
-    const emoji = this.config.colorOutput ? '❌' : '[FAILURE]';
-    await this.log('error', `${emoji} ${message}`, data, category);
+  async failure(
+    message: string,
+    data?: unknown,
+    category: LogCategory = "ERROR",
+  ): Promise<void> {
+    if (this.config.level === "silent") return;
+
+    const emoji = this.config.colorOutput ? "❌" : "[FAILURE]";
+    await this.log("error", `${emoji} ${message}`, data, category);
   }
 
-  async security(message: string, data?: any, context?: any): Promise<void> {
-    if (this.config.level === 'silent') return;
-    
-    const emoji = this.config.colorOutput ? '🔒' : '[SECURITY]';
-    await this.log('warn', `${emoji} ${message}`, data, 'AUTH', context);
+  async security(
+    message: string,
+    data?: unknown,
+    context?: unknown,
+  ): Promise<void> {
+    if (this.config.level === "silent") return;
+
+    const emoji = this.config.colorOutput ? "🔒" : "[SECURITY]";
+    await this.log("warn", `${emoji} ${message}`, data, "AUTH", context);
   }
 
   // Development-only logging
-  dev(message: string, data?: any, category: LogCategory = 'SYSTEM'): void {
-    if (process.env.NODE_ENV === 'development' && this.shouldLog('debug', category)) {
-      const emoji = this.config.colorOutput ? '🔧' : '[DEV]';
-      console.debug(this.colorize(`${emoji} ${message}`, 'cyan'), data || '');
+  dev(message: string, data?: unknown, category: LogCategory = "SYSTEM"): void {
+    if (
+      process.env.NODE_ENV === "development" &&
+      this.shouldLog("debug", category)
+    ) {
+      const emoji = this.config.colorOutput ? "🔧" : "[DEV]";
+      console.debug(this.colorize(`${emoji} ${message}`, "cyan"), data || "");
     }
   }
 
   // Performance timing utilities
   time(label: string): void {
-    if (this.shouldLog('debug', 'PERFORMANCE')) {
+    if (this.shouldLog("debug", "PERFORMANCE")) {
       console.time(label);
     }
   }
 
   timeEnd(label: string): void {
-    if (this.shouldLog('debug', 'PERFORMANCE')) {
+    if (this.shouldLog("debug", "PERFORMANCE")) {
       console.timeEnd(label);
     }
   }
 
   // Request/Response logging utilities
-  async request(method: string, url: string, context?: { userId?: string; requestId?: string }): Promise<void> {
-    await this.log('info', `${method} ${url}`, { method, url }, 'API', context);
+  async request(
+    method: string,
+    url: string,
+    context?: { userId?: string; requestId?: string },
+  ): Promise<void> {
+    await this.log("info", `${method} ${url}`, { method, url }, "API", context);
   }
 
-  async response(method: string, url: string, statusCode: number, duration: number, context?: { userId?: string; requestId?: string }): Promise<void> {
-    const level: LogLevel = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
-    await this.log(level, `${method} ${url} ${statusCode} (${duration}ms)`, { 
-      method, url, statusCode, duration 
-    }, 'API', context);
+  async response(
+    method: string,
+    url: string,
+    statusCode: number,
+    duration: number,
+    context?: { userId?: string; requestId?: string },
+  ): Promise<void> {
+    const level: LogLevel =
+      statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "info";
+    await this.log(
+      level,
+      `${method} ${url} ${statusCode} (${duration}ms)`,
+      {
+        method,
+        url,
+        statusCode,
+        duration,
+      },
+      "API",
+      context,
+    );
   }
 
   // Structured query logging for database operations
-  async query(query: string, duration?: number, context?: { userId?: string; operation?: string }): Promise<void> {
-    const truncatedQuery = query.length > 200 ? query.substring(0, 200) + '...' : query;
-    await this.log('debug', `DB Query: ${truncatedQuery}`, { 
-      fullQuery: query, 
-      duration,
-      operation: context?.operation 
-    }, 'DATABASE', context);
+  async query(
+    query: string,
+    duration?: number,
+    context?: { userId?: string; operation?: string },
+  ): Promise<void> {
+    const truncatedQuery =
+      query.length > 200 ? `${query.substring(0, 200)}...` : query;
+    await this.log(
+      "debug",
+      `DB Query: ${truncatedQuery}`,
+      {
+        fullQuery: query,
+        duration,
+        operation: context?.operation,
+      },
+      "DATABASE",
+      context,
+    );
   }
 
   // WebSocket event logging
-  async websocketEvent(event: string, data?: any, context?: { userId?: string; connectionId?: string }): Promise<void> {
-    await this.log('debug', `WebSocket: ${event}`, data, 'WEBSOCKET', context);
+  async websocketEvent(
+    event: string,
+    data?: unknown,
+    context?: { userId?: string; connectionId?: string },
+  ): Promise<void> {
+    await this.log("debug", `WebSocket: ${event}`, data, "WEBSOCKET", context);
   }
 
   // Authentication event logging
-  async authEvent(event: string, success: boolean, context?: { userId?: string; email?: string; ip?: string }): Promise<void> {
-    const level: LogLevel = success ? 'info' : 'warn';
-    const message = `Auth ${event}: ${success ? 'SUCCESS' : 'FAILED'}`;
-    await this.log(level, message, { event, success }, 'AUTH', context);
+  async authEvent(
+    event: string,
+    success: boolean,
+    context?: { userId?: string; email?: string; ip?: string },
+  ): Promise<void> {
+    const level: LogLevel = success ? "info" : "warn";
+    const message = `Auth ${event}: ${success ? "SUCCESS" : "FAILED"}`;
+    await this.log(level, message, { event, success }, "AUTH", context);
   }
 
   // Business logic event logging
-  async businessEvent(event: string, data?: any, context?: { userId?: string; workspaceId?: string; projectId?: string }): Promise<void> {
-    await this.log('info', `Business Event: ${event}`, data, 'SYSTEM', context);
+  async businessEvent(
+    event: string,
+    data?: unknown,
+    context?: { userId?: string; workspaceId?: string; projectId?: string },
+  ): Promise<void> {
+    await this.log("info", `Business Event: ${event}`, data, "SYSTEM", context);
   }
 
   // Structured validation output (for environment validation, etc.)
-  validationResults(title: string, results: { errors: string[], warnings: string[], recommendations: string[] }): void {
-    if (this.config.level === 'silent') return;
-    
+  validationResults(
+    title: string,
+    results: {
+      errors: string[];
+      warnings: string[];
+      recommendations: string[];
+    },
+  ): void {
+    if (this.config.level === "silent") return;
+
     if (!this.config.enableConsole) return;
 
     console.debug("\n🔍 ${title}");
-    console.info("═══════════════════════════════════════════════════════════════");
+    console.info(
+      "═══════════════════════════════════════════════════════════════",
+    );
 
     if (results.errors.length === 0) {
       console.info("✅ Validation passed!");
@@ -399,20 +593,28 @@ class EnhancedLogger {
 
     if (results.errors.length > 0) {
       console.error("\n❌ Errors:");
-      results.errors.forEach(error => console.error("   • ${error}"));
+      for (const error of results.errors) {
+        console.error("   • ${error}");
+      }
     }
 
     if (results.warnings.length > 0) {
       console.warn("\n⚠️  Warnings:");
-      results.warnings.forEach(warning => console.warn("   • ${warning}"));
+      for (const warning of results.warnings) {
+        console.warn("   • ${warning}");
+      }
     }
 
     if (results.recommendations.length > 0) {
       console.info("\n💡 Recommendations:");
-      results.recommendations.forEach(rec => console.info("   • ${rec}"));
+      for (const rec of results.recommendations) {
+        console.info("   • ${rec}");
+      }
     }
 
-    console.info("═══════════════════════════════════════════════════════════════\n");
+    console.info(
+      "═══════════════════════════════════════════════════════════════\n",
+    );
   }
 
   // Configuration utilities
@@ -429,11 +631,11 @@ class EnhancedLogger {
   }
 
   isDebugEnabled(): boolean {
-    return this.shouldLog('debug');
+    return this.shouldLog("debug");
   }
 
   isVerboseEnabled(): boolean {
-    return this.shouldLog('verbose');
+    return this.shouldLog("verbose");
   }
 }
 
@@ -451,4 +653,3 @@ export const debug = logger.debug.bind(logger);
 export const Logger = EnhancedLogger;
 
 export default logger;
-

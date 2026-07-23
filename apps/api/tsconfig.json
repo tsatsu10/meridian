@@ -2,16 +2,13 @@
   // If drizzle relational where-clauses fail with duplicate SQL types, pin typescript@5.6.x in package.json (TS 5.7+ vs drizzle-orm).
   "extends": "../../packages/typescript-config/base.json",
 
-    "compilerOptions": {
+  "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "dist",
     "rootDir": "src",
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM"
-    ],
+    "lib": ["ES2022", "DOM"],
     "sourceMap": true,
     "declaration": true,
     "skipLibCheck": true,
@@ -19,12 +16,15 @@
     "types": ["node"],
     "typeRoots": ["./node_modules/@types", "../../node_modules/@types"]
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "dist",
+    "src/database/relations-introspected.ts",
+    "src/database/seed*.ts",
+    "src/database/seeds",
+    "src/scripts/**",
+    "src/docs/**/*",
     "src-backup-*",
     "src/**/__tests__/**",
     "src/__tests__/**",

@@ -1,6 +1,6 @@
 // @epic-2.2-realtime: Email service for sending invitations and notifications
-import nodemailer from 'nodemailer';
-import logger from '../utils/logger';
+import nodemailer from "nodemailer";
+import logger from "../utils/logger";
 
 export interface EmailConfig {
   host: string;
@@ -34,17 +34,21 @@ class EmailService {
       const emailPort = process.env.EMAIL_PORT;
       const emailUser = process.env.EMAIL_USER;
       const emailPass = process.env.EMAIL_PASS;
-      const emailSecure = process.env.EMAIL_SECURE === 'true';
+      const emailSecure = process.env.EMAIL_SECURE === "true";
 
       if (!emailHost || !emailPort || !emailUser || !emailPass) {
-        logger.debug('📧 Email service not configured - missing environment variables');
-        logger.debug('📧 Required: EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS');
+        logger.debug(
+          "📧 Email service not configured - missing environment variables",
+        );
+        logger.debug(
+          "📧 Required: EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS",
+        );
         return;
       }
 
       const config: EmailConfig = {
         host: emailHost,
-        port: parseInt(emailPort),
+        port: Number.parseInt(emailPort),
         secure: emailSecure,
         auth: {
           user: emailUser,
@@ -54,15 +58,17 @@ class EmailService {
 
       this.transporter = nodemailer.createTransport(config);
       this.isConfigured = true;
-      logger.debug('📧 Email service configured successfully');
+      logger.debug("📧 Email service configured successfully");
     } catch (error) {
-      logger.error('❌ Failed to configure email service:', error);
+      logger.error("❌ Failed to configure email service:", error);
     }
   }
 
   async sendInvitationEmail(data: InvitationEmailData): Promise<boolean> {
     if (!this.isConfigured || !this.transporter) {
-      logger.debug('📧 Email service not configured - invitation email not sent');
+      logger.debug(
+        "📧 Email service not configured - invitation email not sent",
+      );
       logger.debug(`📧 Would send invitation to: ${data.inviteeEmail}`);
       logger.debug(`📧 Workspace: ${data.workspaceName}`);
       logger.debug(`📧 Invite URL: ${data.inviteUrl}`);
@@ -79,10 +85,16 @@ class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      logger.debug(`📧 Invitation email sent to ${data.inviteeEmail}:`, result.messageId);
+      logger.debug(
+        `📧 Invitation email sent to ${data.inviteeEmail}:`,
+        result.messageId,
+      );
       return true;
     } catch (error) {
-      logger.error(`❌ Failed to send invitation email to ${data.inviteeEmail}:`, error);
+      logger.error(
+        `❌ Failed to send invitation email to ${data.inviteeEmail}:`,
+        error,
+      );
       return false;
     }
   }
@@ -153,6 +165,33 @@ The Meridian Team
     `.trim();
   }
 
+  async sendNotificationEmail(
+    to: string,
+    subject: string,
+    text: string,
+  ): Promise<boolean> {
+    if (!this.isConfigured || !this.transporter) {
+      logger.debug(
+        `📧 Email service not configured - notification email to ${to} not sent`,
+      );
+      return false;
+    }
+
+    try {
+      const result = await this.transporter.sendMail({
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to,
+        subject,
+        text,
+      });
+      logger.debug(`📧 Notification email sent to ${to}:`, result.messageId);
+      return true;
+    } catch (error) {
+      logger.error(`❌ Failed to send notification email to ${to}:`, error);
+      return false;
+    }
+  }
+
   async testConnection(): Promise<boolean> {
     if (!this.isConfigured || !this.transporter) {
       return false;
@@ -160,13 +199,13 @@ The Meridian Team
 
     try {
       await this.transporter.verify();
-      logger.debug('📧 Email service connection test successful');
+      logger.debug("📧 Email service connection test successful");
       return true;
     } catch (error) {
-      logger.error('❌ Email service connection test failed:', error);
+      logger.error("❌ Email service connection test failed:", error);
       return false;
     }
   }
 }
 
-export default new EmailService(); 
+export default new EmailService();

@@ -3,12 +3,12 @@ import { getDatabase } from "../database/connection";
 import { userTable, settingsAuditLogTable } from "../database/schema";
 import { eq, and, gte, desc, sql, count } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const rbacStats = new Hono();
 
 // Get overall access control stats
-rbacStats.get("/stats", authMiddleware, async (c) => {
+rbacStats.get("/stats", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
@@ -21,7 +21,7 @@ rbacStats.get("/stats", authMiddleware, async (c) => {
     const activeUsers = await db
       .select({ count: count() })
       .from(userTable)
-      .where(gte(userTable.lastActiveAt, last7Days));
+      .where(gte(userTable.lastSeen, last7Days));
 
     // Count unique roles
     const uniqueRoles = await db
@@ -36,8 +36,8 @@ rbacStats.get("/stats", authMiddleware, async (c) => {
       .where(
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%'`,
-          gte(settingsAuditLogTable.timestamp, last7Days)
-        )
+          gte(settingsAuditLogTable.createdAt, last7Days),
+        ),
       );
 
     return c.json({
@@ -53,7 +53,7 @@ rbacStats.get("/stats", authMiddleware, async (c) => {
 });
 
 // Get role distribution
-rbacStats.get("/distribution", authMiddleware, async (c) => {
+rbacStats.get("/distribution", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
 
@@ -67,7 +67,10 @@ rbacStats.get("/distribution", authMiddleware, async (c) => {
       .groupBy(userTable.role);
 
     // Get total users for percentage calculation
-    const totalUsers = roleDistribution.reduce((sum, item) => sum + (item.count || 0), 0);
+    const totalUsers = roleDistribution.reduce(
+      (sum, item) => sum + (item.count || 0),
+      0,
+    );
 
     // Define colors for each role
     const roleColors: Record<string, string> = {
@@ -85,7 +88,8 @@ rbacStats.get("/distribution", authMiddleware, async (c) => {
     const formattedDistribution = roleDistribution.map((item) => ({
       role: item.role || "member",
       count: item.count || 0,
-      percentage: totalUsers > 0 ? Math.round(((item.count || 0) / totalUsers) * 100) : 0,
+      percentage:
+        totalUsers > 0 ? Math.round(((item.count || 0) / totalUsers) * 100) : 0,
       color: roleColors[item.role || "member"] || "#8b5cf6",
     }));
 
@@ -97,7 +101,7 @@ rbacStats.get("/distribution", authMiddleware, async (c) => {
 });
 
 // Get recent permission changes
-rbacStats.get("/recent-changes", authMiddleware, async (c) => {
+rbacStats.get("/recent-changes", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -109,32 +113,33 @@ rbacStats.get("/recent-changes", authMiddleware, async (c) => {
       .where(
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%' OR ${settingsAuditLogTable.action} LIKE '%permission%'`,
-          gte(settingsAuditLogTable.timestamp, last30Days)
-        )
+          gte(settingsAuditLogTable.createdAt, last30Days),
+        ),
       )
-      .orderBy(desc(settingsAuditLogTable.timestamp))
+      .orderBy(desc(settingsAuditLogTable.createdAt))
       .limit(20);
 
     // Format changes
     const formattedChanges = changes.map((change) => {
-      let details: any = {};
-      try {
-        details = typeof change.details === 'string' 
-          ? JSON.parse(change.details) 
-          : change.details || {};
-      } catch (e) {
-        details = {};
-      }
+      // settings_audit_log stores before/after as JSON strings in oldValue/newValue
+      const parse = (value: string | null): unknown => {
+        if (!value) return undefined;
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      };
 
       return {
         id: change.id,
         userEmail: change.userEmail || "Unknown",
         userName: change.userEmail?.split("@")[0] || "Unknown User",
         action: change.action,
-        oldRole: details.oldRole,
-        newRole: details.newRole,
+        oldRole: parse(change.oldValue),
+        newRole: parse(change.newValue),
         performedBy: change.userEmail || "System",
-        timestamp: change.timestamp,
+        timestamp: change.createdAt,
       };
     });
 
@@ -146,5 +151,3 @@ rbacStats.get("/recent-changes", authMiddleware, async (c) => {
 });
 
 export default rbacStats;
-
-

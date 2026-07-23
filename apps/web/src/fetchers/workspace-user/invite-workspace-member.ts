@@ -1,19 +1,21 @@
-import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
+import { looseClient } from "@/lib/rpc-client";
 
-export type InviteWorkspaceMemberRequest = InferRequestType<
-  (typeof client)["workspace-user"][":workspaceId"]["invite"]["$post"]
->["json"] &
-  InferRequestType<
-    (typeof client)["workspace-user"][":workspaceId"]["invite"]["$post"]
-  >["param"];
+// The generated AppType is missing workspace-user[":workspaceId"], so type the request locally
+export type InviteWorkspaceMemberRequest = {
+  workspaceId: string;
+  userEmail: string;
+  role?: string;
+};
 
 const inviteWorkspaceMember = async ({
   workspaceId,
   userEmail,
+  role,
 }: InviteWorkspaceMemberRequest) => {
-  const response = await client["workspace-user"][":workspaceId"].invite.$post({
-    json: { userEmail },
+  const response = await looseClient["workspace-user"][
+    ":workspaceId"
+  ].invite.$post({
+    json: { userEmail, ...(role ? { role } : {}) },
     param: { workspaceId },
   });
 

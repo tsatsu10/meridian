@@ -5,7 +5,7 @@ export interface Team {
   id: string;
   name: string;
   description: string;
-  type: 'general' | 'project';
+  type: "general" | "project";
   workspaceId: string;
   projectId?: string;
   projectName?: string;
@@ -19,7 +19,7 @@ export interface TeamMember {
   name: string;
   email: string;
   role: string;
-  status: 'online' | 'away' | 'busy' | 'offline';
+  status: "online" | "away" | "busy" | "offline";
   joinedAt: Date;
 }
 
@@ -34,4 +34,4 @@ export function useTeams(workspaceId: string) {
     },
     enabled: !!workspaceId && workspaceId.length > 0,
   });
-} 
+}

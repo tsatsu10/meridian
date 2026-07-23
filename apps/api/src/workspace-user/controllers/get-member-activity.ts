@@ -1,34 +1,37 @@
 /**
  * 📊 Get Member Activity Controller
- * 
+ *
  * @epic-3.4-teams - Enhanced member details with activity timeline
  * @persona-sarah - PM needs visibility into member contributions
  * @persona-david - Team lead needs performance insights
  */
 
-import { Context } from 'hono';
-import { getDatabase } from '../../database/connection';
-import { 
-  workspaceUserTable, 
+import type { Context } from "hono";
+import { getDatabase } from "../../database/connection";
+import {
+  workspaceUserTable,
   userTable,
   taskTable,
   activityTable,
   attachmentTable,
-  timeEntryTable
-} from '../../database/schema';
-import { eq, and, desc, gte, sql } from 'drizzle-orm';
-import logger from '../../utils/logger';
+  timeEntryTable,
+} from "../../database/schema";
+import { eq, and, desc, gte, sql } from "drizzle-orm";
+import logger from "../../utils/logger";
+import { getErrorMessage } from "../../utils/error-utils";
 
 export async function getMemberActivity(c: Context) {
   const db = getDatabase();
-  const workspaceId = c.req.param('workspaceId');
-  const memberId = c.req.param('memberId');
+  const workspaceId = c.req.param("workspaceId");
+  const memberId = c.req.param("memberId");
   if (!workspaceId || !memberId) {
-    return c.json({ error: 'workspaceId and memberId are required' }, 400);
+    return c.json({ error: "workspaceId and memberId are required" }, 400);
   }
-  
-  logger.debug(`📊 Fetching activity for member: workspace=${workspaceId}, member=${memberId}`);
-  
+
+  logger.debug(
+    `📊 Fetching activity for member: workspace=${workspaceId}, member=${memberId}`,
+  );
+
   try {
     // Get member info
     const [member] = await db
@@ -45,21 +48,21 @@ export async function getMemberActivity(c: Context) {
       .where(
         and(
           eq(workspaceUserTable.workspaceId, workspaceId),
-          eq(workspaceUserTable.id, memberId)
-        )
+          eq(workspaceUserTable.id, memberId),
+        ),
       )
       .limit(1);
-    
+
     if (!member) {
       logger.debug(`❌ Member not found: ${memberId}`);
-      return c.json({ error: 'Member not found' }, 404);
+      return c.json({ error: "Member not found" }, 404);
     }
-    
+
     // Get time periods for analysis
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
+
     // Get tasks statistics
     const allTasks = await db
       .select({
@@ -74,21 +77,23 @@ export async function getMemberActivity(c: Context) {
       })
       .from(taskTable)
       .where(eq(taskTable.userEmail, member.userEmail));
-    
+
     const taskStats = {
       total: allTasks.length,
-      completed: allTasks.filter(t => t.status === 'done').length,
-      inProgress: allTasks.filter(t => t.status === 'in_progress').length,
-      todo: allTasks.filter(t => t.status === 'todo').length,
-      highPriority: allTasks.filter(t => t.priority === 'high' || t.priority === 'urgent').length,
-      completedThisWeek: allTasks.filter(t => 
-        t.completedAt && new Date(t.completedAt) >= oneWeekAgo
+      completed: allTasks.filter((t) => t.status === "done").length,
+      inProgress: allTasks.filter((t) => t.status === "in_progress").length,
+      todo: allTasks.filter((t) => t.status === "todo").length,
+      highPriority: allTasks.filter(
+        (t) => t.priority === "high" || t.priority === "urgent",
       ).length,
-      completedThisMonth: allTasks.filter(t => 
-        t.completedAt && new Date(t.completedAt) >= oneMonthAgo
+      completedThisWeek: allTasks.filter(
+        (t) => t.completedAt && new Date(t.completedAt) >= oneWeekAgo,
+      ).length,
+      completedThisMonth: allTasks.filter(
+        (t) => t.completedAt && new Date(t.completedAt) >= oneMonthAgo,
       ).length,
     };
-    
+
     // Get activity timeline (last 30 days)
     const activities = await db
       .select({
@@ -102,12 +107,12 @@ export async function getMemberActivity(c: Context) {
       .where(
         and(
           eq(activityTable.userId, member.userId),
-          gte(activityTable.createdAt, oneMonthAgo)
-        )
+          gte(activityTable.createdAt, oneMonthAgo),
+        ),
       )
       .orderBy(desc(activityTable.createdAt))
       .limit(50);
-    
+
     // Get file uploads
     const attachments = await db
       .select({
@@ -121,7 +126,7 @@ export async function getMemberActivity(c: Context) {
       .where(eq(attachmentTable.uploadedBy, member.userId))
       .orderBy(desc(attachmentTable.createdAt))
       .limit(10);
-    
+
     // Get time entries for the last 30 days
     const timeEntries = await db
       .select({
@@ -135,90 +140,111 @@ export async function getMemberActivity(c: Context) {
       .where(
         and(
           eq(timeEntryTable.userEmail, member.userEmail),
-          gte(timeEntryTable.startTime, oneMonthAgo)
-        )
+          gte(timeEntryTable.startTime, oneMonthAgo),
+        ),
       )
       .orderBy(desc(timeEntryTable.startTime));
-    
+
     // Calculate daily contribution for the last 30 days (contribution graph)
     const contributionMap = new Map<string, number>();
     for (let i = 0; i < 30; i++) {
       const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const dateKey = date.toISOString().split('T')[0] ?? '';
+      const dateKey = date.toISOString().split("T")[0] ?? "";
       contributionMap.set(dateKey, 0);
     }
-    
+
     // Count activities per day
-    activities.forEach(activity => {
+    for (const activity of activities) {
       if (activity.createdAt) {
-        const dateKey = new Date(activity.createdAt).toISOString().split('T')[0] ?? '';
-        if (contributionMap.has(dateKey)) {
-          contributionMap.set(dateKey, contributionMap.get(dateKey)! + 1);
+        const dateKey =
+          new Date(activity.createdAt).toISOString().split("T")[0] ?? "";
+        const current = contributionMap.get(dateKey);
+        if (current !== undefined) {
+          contributionMap.set(dateKey, current + 1);
         }
       }
-    });
-    
+    }
+
     // Count time entries per day
-    timeEntries.forEach(entry => {
+    for (const entry of timeEntries) {
       if (entry.startTime) {
-        const dateKey = new Date(entry.startTime).toISOString().split('T')[0] ?? '';
-        if (contributionMap.has(dateKey)) {
+        const dateKey =
+          new Date(entry.startTime).toISOString().split("T")[0] ?? "";
+        const current = contributionMap.get(dateKey);
+        if (current !== undefined) {
           const hours = entry.duration ? Math.ceil(entry.duration / 3600) : 1; // Convert seconds to hours
-          contributionMap.set(dateKey, contributionMap.get(dateKey)! + hours);
+          contributionMap.set(dateKey, current + hours);
         }
       }
-    });
-    
+    }
+
     const contributionGraph = Array.from(contributionMap.entries())
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
-    
+
     // Calculate performance trends (weekly breakdown over last 4 weeks)
     const performanceTrends = [];
     for (let weekIndex = 0; weekIndex < 4; weekIndex++) {
-      const weekStart = new Date(now.getTime() - (weekIndex + 1) * 7 * 24 * 60 * 60 * 1000);
-      const weekEnd = new Date(now.getTime() - weekIndex * 7 * 24 * 60 * 60 * 1000);
-      
-      const weekTasks = allTasks.filter(t => 
-        t.completedAt && 
-        new Date(t.completedAt) >= weekStart && 
-        new Date(t.completedAt) < weekEnd
+      const weekStart = new Date(
+        now.getTime() - (weekIndex + 1) * 7 * 24 * 60 * 60 * 1000,
       );
-      
-      const weekTimeEntries = timeEntries.filter(e => 
-        e.startTime &&
-        new Date(e.startTime) >= weekStart &&
-        new Date(e.startTime) < weekEnd
+      const weekEnd = new Date(
+        now.getTime() - weekIndex * 7 * 24 * 60 * 60 * 1000,
       );
-      
-      const totalHours = weekTimeEntries.reduce((sum, e) => sum + ((e.duration ?? 0) / 3600), 0);
-      
+
+      const weekTasks = allTasks.filter(
+        (t) =>
+          t.completedAt &&
+          new Date(t.completedAt) >= weekStart &&
+          new Date(t.completedAt) < weekEnd,
+      );
+
+      const weekTimeEntries = timeEntries.filter(
+        (e) =>
+          e.startTime &&
+          new Date(e.startTime) >= weekStart &&
+          new Date(e.startTime) < weekEnd,
+      );
+
+      const totalHours = weekTimeEntries.reduce(
+        (sum, e) => sum + (e.duration ?? 0) / 3600,
+        0,
+      );
+
       performanceTrends.unshift({
         week: `Week ${4 - weekIndex}`,
         weekStart: weekStart.toISOString(),
         weekEnd: weekEnd.toISOString(),
         tasksCompleted: weekTasks.length,
-        hoursLogged: parseFloat(totalHours.toFixed(1)),
-        productivity: weekTasks.length > 0 ? Math.min(100, (weekTasks.length / 10) * 100) : 0
+        hoursLogged: Number.parseFloat(totalHours.toFixed(1)),
+        productivity:
+          weekTasks.length > 0
+            ? Math.min(100, (weekTasks.length / 10) * 100)
+            : 0,
       });
     }
-    
+
     // Calculate total time logged
-    const totalTimeLogged = timeEntries.reduce((sum, e) => sum + ((e.duration ?? 0) / 3600), 0);
-    
+    const totalTimeLogged = timeEntries.reduce(
+      (sum, e) => sum + (e.duration ?? 0) / 3600,
+      0,
+    );
+
     // Format activity timeline with better grouping
-    const formattedTimeline = activities.map(activity => ({
+    const formattedTimeline = activities.map((activity) => ({
       id: activity.id,
       type: activity.type,
       action: activity.type,
-      details: typeof activity.content === 'string' ? activity.content : null,
+      details: typeof activity.content === "string" ? activity.content : null,
       createdAt: activity.createdAt,
       icon: getActivityIcon(activity.type),
-      color: getActivityColor(activity.type)
+      color: getActivityColor(activity.type),
     }));
-    
-    logger.debug(`✅ Fetched activity for ${member.userName}: ${activities.length} activities, ${attachments.length} files`);
-    
+
+    logger.debug(
+      `✅ Fetched activity for ${member.userName}: ${activities.length} activities, ${attachments.length} files`,
+    );
+
     return c.json({
       member: {
         id: member.id,
@@ -230,7 +256,7 @@ export async function getMemberActivity(c: Context) {
       },
       taskStats,
       timeline: formattedTimeline,
-      attachments: attachments.map(a => ({
+      attachments: attachments.map((a) => ({
         id: a.id,
         fileName: a.fileName,
         fileSize: a.fileSize,
@@ -240,45 +266,48 @@ export async function getMemberActivity(c: Context) {
       contributionGraph,
       performanceTrends,
       timeStats: {
-        totalHoursLogged: parseFloat(totalTimeLogged.toFixed(1)),
-        averageHoursPerWeek: parseFloat((totalTimeLogged / 4).toFixed(1)),
+        totalHoursLogged: Number.parseFloat(totalTimeLogged.toFixed(1)),
+        averageHoursPerWeek: Number.parseFloat(
+          (totalTimeLogged / 4).toFixed(1),
+        ),
         timeEntriesCount: timeEntries.length,
       },
     });
-  } catch (error: any) {
-    logger.error('❌ Error fetching member activity:', error);
-    return c.json({ 
-      error: 'Failed to fetch member activity',
-      details: error.message 
-    }, 500);
+  } catch (error) {
+    logger.error("❌ Error fetching member activity:", error);
+    return c.json(
+      {
+        error: "Failed to fetch member activity",
+        details: getErrorMessage(error),
+      },
+      500,
+    );
   }
 }
 
 // Helper functions for activity formatting
 function getActivityIcon(type: string): string {
   const iconMap: Record<string, string> = {
-    task_created: 'plus',
-    task_completed: 'check-circle',
-    task_updated: 'edit',
-    comment_added: 'message-square',
-    file_uploaded: 'file',
-    time_logged: 'clock',
-    status_changed: 'arrow-right',
+    task_created: "plus",
+    task_completed: "check-circle",
+    task_updated: "edit",
+    comment_added: "message-square",
+    file_uploaded: "file",
+    time_logged: "clock",
+    status_changed: "arrow-right",
   };
-  return iconMap[type] || 'activity';
+  return iconMap[type] || "activity";
 }
 
 function getActivityColor(type: string): string {
   const colorMap: Record<string, string> = {
-    task_created: 'blue',
-    task_completed: 'green',
-    task_updated: 'yellow',
-    comment_added: 'purple',
-    file_uploaded: 'orange',
-    time_logged: 'cyan',
-    status_changed: 'indigo',
+    task_created: "blue",
+    task_completed: "green",
+    task_updated: "yellow",
+    comment_added: "purple",
+    file_uploaded: "orange",
+    time_logged: "cyan",
+    status_changed: "indigo",
   };
-  return colorMap[type] || 'gray';
+  return colorMap[type] || "gray";
 }
-
-

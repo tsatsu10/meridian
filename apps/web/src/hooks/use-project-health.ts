@@ -16,7 +16,9 @@ export interface HealthMetrics {
  * Calculate project health based on tasks and deadlines
  * Uses local project data - NO API calls
  */
-export function useProjectHealth(project: ProjectDashboardRow | null | undefined): HealthMetrics {
+export function useProjectHealth(
+  project: ProjectDashboardRow | null | undefined,
+): HealthMetrics {
   return useMemo(() => {
     if (!project) {
       return {
@@ -32,7 +34,7 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
     // Use tasks from project data (already included)
     const tasks = project.tasks || [];
     const totalTasks = tasks.length;
-    
+
     if (totalTasks === 0) {
       // No tasks - consider as starting/planning
       return {
@@ -68,7 +70,8 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
     if (project.dueDate) {
       const projectDue = new Date(project.dueDate);
       const projectStatus = project.status?.toLowerCase();
-      const isComplete = projectStatus === "completed" || projectStatus === "done";
+      const isComplete =
+        projectStatus === "completed" || projectStatus === "done";
       projectOverdue = !isComplete && projectDue < now;
     }
 
@@ -88,7 +91,8 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
         label: "On Track",
         score,
       };
-    } else if (score >= 40 && overdueRate < 30) {
+    }
+    if (score >= 40 && overdueRate < 30) {
       return {
         health: "at-risk" as ProjectHealth,
         color: "text-yellow-600 dark:text-yellow-400",
@@ -97,16 +101,15 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
         label: "At Risk",
         score,
       };
-    } else {
-      return {
-        health: "delayed" as ProjectHealth,
-        color: "text-red-600 dark:text-red-400",
-        bgColor: "bg-red-100 dark:bg-red-900/20",
-        icon: "!",
-        label: "Delayed",
-        score,
-      };
     }
+    return {
+      health: "delayed" as ProjectHealth,
+      color: "text-red-600 dark:text-red-400",
+      bgColor: "bg-red-100 dark:bg-red-900/20",
+      icon: "!",
+      label: "Delayed",
+      score,
+    };
   }, [project]);
 }
 
@@ -114,9 +117,9 @@ export function useProjectHealth(project: ProjectDashboardRow | null | undefined
  * Pure helper for Projects hub filtering — matches filter chip values (on-track, at-risk, behind, ahead).
  */
 export function getProjectHealthFilterKey(project: {
-  tasks?: Array<{ status?: string; dueDate?: string | Date | null }>;
+  tasks?: Array<{ status?: string | null; dueDate?: string | Date | null }>;
   dueDate?: string | Date | null;
-  status?: string;
+  status?: string | null;
 }): "on-track" | "at-risk" | "behind" | "ahead" {
   const tasks = project.tasks ?? [];
   const totalTasks = tasks.length;
@@ -141,7 +144,8 @@ export function getProjectHealthFilterKey(project: {
   if (project.dueDate) {
     const projectDue = new Date(project.dueDate);
     const projectStatus = project.status?.toLowerCase();
-    const isComplete = projectStatus === "completed" || projectStatus === "done";
+    const isComplete =
+      projectStatus === "completed" || projectStatus === "done";
     projectOverdue = !isComplete && projectDue < now;
   }
   let score = completionRate;
@@ -159,4 +163,3 @@ export function getProjectHealthFilterKey(project: {
 }
 
 export default useProjectHealth;
-

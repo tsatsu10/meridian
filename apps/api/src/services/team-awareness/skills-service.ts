@@ -4,16 +4,28 @@
  * Phase 2 - Team Awareness Features
  */
 
-import { getDatabase } from '../../database/connection';
-import { userSkills } from '../../database/schema/team-awareness';
-import { users } from '../../database/schema';
-import { eq, desc, and, sql, inArray, like } from 'drizzle-orm';
-import { Logger } from '../logging/logger';
-import { CacheService, CacheTTL } from '../cache/cache-service';
-import { createId } from '@paralleldrive/cuid2';
+import { getDatabase } from "../../database/connection";
+import { userSkills } from "../../database/schema/team-awareness";
+import { users } from "../../database/schema";
+import { eq, desc, and, sql, inArray, like } from "drizzle-orm";
+import { Logger } from "../logging/logger";
+import { CacheService, CacheTTL } from "../cache/cache-service";
+import { createId } from "@paralleldrive/cuid2";
 
-export type ProficiencyLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
-export type SkillCategory = 'frontend' | 'backend' | 'design' | 'management' | 'devops' | 'data' | 'mobile' | 'other';
+export type ProficiencyLevel =
+  | "beginner"
+  | "intermediate"
+  | "advanced"
+  | "expert";
+export type SkillCategory =
+  | "frontend"
+  | "backend"
+  | "design"
+  | "management"
+  | "devops"
+  | "data"
+  | "mobile"
+  | "other";
 
 export interface AddSkillParams {
   userId: string;
@@ -46,29 +58,29 @@ export interface SkillFilters {
 /**
  * Skills Service
  */
-export class SkillsService {
-  private static getDb() {
+export const SkillsService = {
+  getDb() {
     return getDatabase();
-  }
+  },
 
   /**
    * Proficiency level to score mapping
    */
-  private static readonly PROFICIENCY_SCORES: Record<ProficiencyLevel, number> = {
+  PROFICIENCY_SCORES: {
     beginner: 1,
     intermediate: 2,
     advanced: 3,
     expert: 5,
-  };
+  } as Record<ProficiencyLevel, number>,
 
   /**
    * Add skill to user profile
    */
-  static async addSkill(params: AddSkillParams) {
+  async addSkill(params: AddSkillParams) {
     try {
       const skillId = createId();
 
-      const [newSkill] = await this.getDb()
+      const [newSkill] = await SkillsService.getDb()
         .insert(userSkills)
         .values({
           id: skillId,
@@ -87,9 +99,11 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${params.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${params.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${params.workspaceId}*`,
+      );
 
-      Logger.business('Skill added', {
+      Logger.business("Skill added", {
         userId: params.userId,
         skillName: params.skillName,
         proficiencyLevel: params.proficiencyLevel,
@@ -97,41 +111,41 @@ export class SkillsService {
 
       return newSkill;
     } catch (error) {
-      Logger.error('Failed to add skill', error, params);
+      Logger.error("Failed to add skill", error, params);
       throw error;
     }
-  }
+  },
 
   /**
    * Get user skills
    */
-  static async getUserSkills(userId: string, workspaceId: string) {
+  async getUserSkills(userId: string, workspaceId: string) {
     const cacheKey = `skills:user:${userId}:${workspaceId}`;
 
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const skills = await this.getDb()
+        const skills = await SkillsService.getDb()
           .select()
           .from(userSkills)
           .where(
             and(
               eq(userSkills.userId, userId),
-              eq(userSkills.workspaceId, workspaceId)
-            )
+              eq(userSkills.workspaceId, workspaceId),
+            ),
           )
           .orderBy(desc(userSkills.proficiencyScore), userSkills.skillName);
 
         return skills;
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Search skills with filters
    */
-  static async searchSkills(filters: SkillFilters) {
+  async searchSkills(filters: SkillFilters) {
     const cacheKey = `skills:search:${filters.workspaceId}:${JSON.stringify(filters)}`;
 
     return CacheService.getOrCompute(
@@ -152,11 +166,15 @@ export class SkillsService {
         }
 
         if (filters.proficiencyLevel) {
-          conditions.push(eq(userSkills.proficiencyLevel, filters.proficiencyLevel));
+          conditions.push(
+            eq(userSkills.proficiencyLevel, filters.proficiencyLevel),
+          );
         }
 
         if (filters.minProficiencyScore) {
-          conditions.push(sql`${userSkills.proficiencyScore} >= ${filters.minProficiencyScore}`);
+          conditions.push(
+            sql`${userSkills.proficiencyScore} >= ${filters.minProficiencyScore}`,
+          );
         }
 
         if (filters.isVerified !== undefined) {
@@ -167,7 +185,7 @@ export class SkillsService {
           conditions.push(eq(userSkills.isPublic, filters.isPublic));
         }
 
-        const skills = await this.getDb()
+        const skills = await SkillsService.getDb()
           .select({
             id: userSkills.id,
             userId: userSkills.userId,
@@ -199,30 +217,35 @@ export class SkillsService {
 
         return skills;
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Endorse skill
    */
-  static async endorseSkill(params: EndorseSkillParams) {
+  async endorseSkill(params: EndorseSkillParams) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, params.skillId))
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
-      const endorsements = (skill.endorsements as any[]) || [];
+      const endorsements =
+        (skill.endorsements as Array<{
+          userId?: string;
+          comment?: string;
+          createdAt?: string;
+        }>) || [];
 
       // Check if already endorsed
       const existingIndex = endorsements.findIndex(
-        (e: any) => e.userId === params.endorserId
+        (e) => e.userId === params.endorserId,
       );
 
       if (existingIndex > -1) {
@@ -241,7 +264,7 @@ export class SkillsService {
         });
       }
 
-      await this.getDb()
+      await SkillsService.getDb()
         .update(userSkills)
         .set({
           endorsements,
@@ -252,36 +275,38 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.business('Skill endorsed', {
+      Logger.business("Skill endorsed", {
         skillId: params.skillId,
         endorserId: params.endorserId,
       });
 
       return endorsements;
     } catch (error) {
-      Logger.error('Failed to endorse skill', error, params);
+      Logger.error("Failed to endorse skill", error, params);
       throw error;
     }
-  }
+  },
 
   /**
    * Verify skill (by manager/team lead)
    */
-  static async verifySkill(skillId: string, verifierId: string) {
+  async verifySkill(skillId: string, verifierId: string) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, skillId))
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
-      await this.getDb()
+      await SkillsService.getDb()
         .update(userSkills)
         .set({
           isVerified: true,
@@ -293,19 +318,21 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.business('Skill verified', { skillId, verifierId });
+      Logger.business("Skill verified", { skillId, verifierId });
     } catch (error) {
-      Logger.error('Failed to verify skill', error, { skillId, verifierId });
+      Logger.error("Failed to verify skill", error, { skillId, verifierId });
       throw error;
     }
-  }
+  },
 
   /**
    * Update skill
    */
-  static async updateSkill(
+  async updateSkill(
     skillId: string,
     updates: Partial<{
       proficiencyLevel: ProficiencyLevel;
@@ -313,20 +340,20 @@ export class SkillsService {
       yearsOfExperience: number;
       isPublic: boolean;
       skillCategory: SkillCategory;
-    }>
+    }>,
   ) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, skillId))
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
-      await this.getDb()
+      await SkillsService.getDb()
         .update(userSkills)
         .set({
           ...updates,
@@ -336,93 +363,103 @@ export class SkillsService {
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.info('Skill updated', { skillId, updates });
+      Logger.info("Skill updated", { skillId, updates });
     } catch (error) {
-      Logger.error('Failed to update skill', error, { skillId, updates });
+      Logger.error("Failed to update skill", error, { skillId, updates });
       throw error;
     }
-  }
+  },
 
   /**
    * Delete skill
    */
-  static async deleteSkill(skillId: string, userId: string) {
+  async deleteSkill(skillId: string, userId: string) {
     try {
-      const [skill] = await this.getDb()
+      const [skill] = await SkillsService.getDb()
         .select()
         .from(userSkills)
         .where(eq(userSkills.id, skillId))
         .limit(1);
 
       if (!skill) {
-        throw new Error('Skill not found');
+        throw new Error("Skill not found");
       }
 
       // Only skill owner can delete
       if (skill.userId !== userId) {
-        throw new Error('Only the skill owner can delete');
+        throw new Error("Only the skill owner can delete");
       }
 
-      await this.getDb().delete(userSkills).where(eq(userSkills.id, skillId));
+      await SkillsService.getDb()
+        .delete(userSkills)
+        .where(eq(userSkills.id, skillId));
 
       // Invalidate caches
       await CacheService.invalidatePattern(`skills:user:${skill.userId}*`);
-      await CacheService.invalidatePattern(`skills:workspace:${skill.workspaceId}*`);
+      await CacheService.invalidatePattern(
+        `skills:workspace:${skill.workspaceId}*`,
+      );
 
-      Logger.info('Skill deleted', { skillId, userId });
+      Logger.info("Skill deleted", { skillId, userId });
     } catch (error) {
-      Logger.error('Failed to delete skill', error, { skillId, userId });
+      Logger.error("Failed to delete skill", error, { skillId, userId });
       throw error;
     }
-  }
+  },
 
   /**
    * Get skill matrix (all skills in workspace)
    */
-  static async getSkillMatrix(workspaceId: string) {
+  async getSkillMatrix(workspaceId: string) {
     const cacheKey = `skills:workspace:${workspaceId}:matrix`;
 
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const skills = await this.searchSkills({
+        const skills = await SkillsService.searchSkills({
           workspaceId,
           isPublic: true,
         });
 
         // Group by skill name
-        const matrix: Record<string, any[]> = {};
+        const matrix: Record<string, (typeof skills)[number][]> = {};
 
         for (const skill of skills) {
-          if (!matrix[skill.skillName]) {
-            matrix[skill.skillName] = [];
+          let bucket = matrix[skill.skillName];
+          if (!bucket) {
+            bucket = [];
+            matrix[skill.skillName] = bucket;
           }
-          matrix[skill.skillName].push(skill);
+          bucket.push(skill);
         }
 
         // Sort by proficiency
         for (const skillName in matrix) {
-          matrix[skillName].sort((a, b) => b.proficiencyScore - a.proficiencyScore);
+          matrix[skillName]?.sort(
+            (a, b) => b.proficiencyScore - a.proficiencyScore,
+          );
         }
 
         return matrix;
       },
-      CacheTTL.LONG
+      CacheTTL.LONG,
     );
-  }
+  },
 
   /**
    * Get most common skills
    */
-  static async getPopularSkills(workspaceId: string, limit: number = 10) {
+  async getPopularSkills(workspaceId: string, limit = 10) {
     const cacheKey = `skills:workspace:${workspaceId}:popular`;
 
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const popularSkills = await this.getDb()
+        const popularSkills = await SkillsService.getDb()
           .select({
             skillName: userSkills.skillName,
             count: sql<number>`count(*)::int`,
@@ -436,20 +473,20 @@ export class SkillsService {
 
         return popularSkills;
       },
-      CacheTTL.LONG
+      CacheTTL.LONG,
     );
-  }
+  },
 
   /**
    * Find experts (users with advanced/expert level skills)
    */
-  static async findExperts(workspaceId: string, skillName: string) {
+  async findExperts(workspaceId: string, skillName: string) {
     const cacheKey = `skills:experts:${workspaceId}:${skillName}`;
 
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const experts = await this.searchSkills({
+        const experts = await SkillsService.searchSkills({
           workspaceId,
           skillName,
           minProficiencyScore: 3, // Advanced or Expert
@@ -458,20 +495,20 @@ export class SkillsService {
 
         return experts;
       },
-      CacheTTL.MEDIUM
+      CacheTTL.MEDIUM,
     );
-  }
+  },
 
   /**
    * Get skill gaps (skills with low coverage)
    */
-  static async getSkillGaps(workspaceId: string, threshold: number = 2) {
+  async getSkillGaps(workspaceId: string, threshold = 2) {
     const cacheKey = `skills:workspace:${workspaceId}:gaps`;
 
     return CacheService.getOrCompute(
       cacheKey,
       async () => {
-        const skillCounts = await this.getDb()
+        const skillCounts = await SkillsService.getDb()
           .select({
             skillName: userSkills.skillName,
             count: sql<number>`count(*)::int`,
@@ -483,17 +520,14 @@ export class SkillsService {
 
         // Find skills with low coverage or low proficiency
         const gaps = skillCounts.filter(
-          skill => skill.count < threshold || skill.avgProficiency < 2.5
+          (skill) => skill.count < threshold || skill.avgProficiency < 2.5,
         );
 
         return gaps;
       },
-      CacheTTL.LONG
+      CacheTTL.LONG,
     );
-  }
-}
+  },
+};
 
 export default SkillsService;
-
-
-

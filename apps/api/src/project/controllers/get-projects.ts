@@ -60,7 +60,9 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
     sortOrder,
   });
 
-  const { initializeDatabase, getDatabase } = await import("../../database/connection");
+  const { initializeDatabase, getDatabase } = await import(
+    "../../database/connection"
+  );
   await initializeDatabase();
   const db = getDatabase();
 
@@ -75,26 +77,37 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
   const q = options?.q?.trim();
   if (q) {
     const term = `%${q}%`;
-    whereConditions.push(
-      or(ilike(projectTable.name, term), ilike(projectTable.description, term))!,
+    const searchCondition = or(
+      ilike(projectTable.name, term),
+      ilike(projectTable.description, term),
     );
+    // or() only returns undefined when called with zero conditions; both
+    // are always passed above.
+    if (searchCondition) {
+      whereConditions.push(searchCondition);
+    }
   }
 
   if (options?.status?.length) {
     whereConditions.push(inArray(projectTable.status, options.status));
   }
   if (options?.priority?.length) {
-    whereConditions.push(inArray(projectTable.priority, options.priority));
+    // request-boundary narrowing onto the enum column
+    whereConditions.push(
+      inArray(
+        projectTable.priority,
+        options.priority as ("low" | "medium" | "high" | "urgent")[],
+      ),
+    );
   }
   if (options?.ownerIds?.length) {
     whereConditions.push(inArray(projectTable.ownerId, options.ownerIds));
   }
   if (options?.teamMemberIds?.length) {
     const ids = options.teamMemberIds;
-    whereConditions.push(
-      or(
-        inArray(projectTable.ownerId, ids),
-        sql`EXISTS (
+    const teamMemberCondition = or(
+      inArray(projectTable.ownerId, ids),
+      sql`EXISTS (
           SELECT 1 FROM ${taskTable} t
           WHERE t.project_id = ${projectTable.id}
           AND t.assignee_id IN (${sql.join(
@@ -102,7 +115,7 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
             sql`, `,
           )})
         )`,
-        sql`EXISTS (
+      sql`EXISTS (
           SELECT 1 FROM ${projectMembers} pm
           INNER JOIN ${userTable} u ON pm.user_email = u.email
           WHERE pm.project_id = ${projectTable.id}
@@ -111,8 +124,12 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
             sql`, `,
           )})
         )`,
-      )!,
     );
+    // or() only returns undefined when called with zero conditions; three
+    // are always passed above.
+    if (teamMemberCondition) {
+      whereConditions.push(teamMemberCondition);
+    }
   }
   const whereClause = and(...whereConditions);
 
@@ -219,10 +236,17 @@ async function getProjects(workspaceId: string, options?: GetProjectsOptions) {
         .where(eq(userTable.id, project.ownerId))
         .limit(1);
 
-      const allMembers = [...workspaceMembers];
-      if (owner.length > 0 && !workspaceMembers.find((m) => m.id === owner[0].id)) {
+      const allMembers: Array<{
+        id: string | null;
+        name: string | null;
+        email: string | null;
+        avatar: string | null;
+        role: string | null;
+      }> = [...workspaceMembers];
+      const [ownerRow] = owner;
+      if (ownerRow && !workspaceMembers.find((m) => m.id === ownerRow.id)) {
         allMembers.push({
-          ...owner[0],
+          ...ownerRow,
           role: "owner",
         });
       }

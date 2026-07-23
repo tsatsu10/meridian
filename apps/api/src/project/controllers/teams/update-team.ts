@@ -1,16 +1,16 @@
 /**
  * Update Project Team Controller
- * 
+ *
  * Updates team information (name, description, color, leadId)
- * 
+ *
  * @epic-3.4-teams: Edit team functionality
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../../database/connection";
 import { teams } from "../../../database/schema";
-import logger from '../../../utils/logger';
+import logger from "../../../utils/logger";
 
 interface UpdateTeamRequest {
   name?: string;
@@ -33,7 +33,7 @@ async function updateTeam(c: Context) {
       where: and(
         eq(teams.id, teamId),
         eq(teams.projectId, projectId),
-        eq(teams.isActive, true)
+        eq(teams.isActive, true),
       ),
     });
 
@@ -51,15 +51,15 @@ async function updateTeam(c: Context) {
     if (body.name !== undefined && body.name.trim().length > 0) {
       updates.name = body.name.trim();
     }
-    
+
     if (body.description !== undefined) {
       updates.description = body.description.trim() || null;
     }
-    
+
     if (body.color !== undefined) {
       updates.color = body.color;
     }
-    
+
     if (body.leadId !== undefined) {
       updates.leadId = body.leadId;
     }
@@ -79,5 +79,3 @@ async function updateTeam(c: Context) {
 }
 
 export default updateTeam;
-
-

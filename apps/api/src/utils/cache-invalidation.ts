@@ -1,8 +1,8 @@
 /**
  * 🔴 Cache Invalidation Utilities
- * 
+ *
  * Centralized cache invalidation logic for maintaining data consistency
- * 
+ *
  * When to invalidate:
  * - Project updated → Invalidate project overview
  * - Task created/updated/deleted → Invalidate project overview
@@ -11,34 +11,56 @@
  * - Project deleted → Invalidate all project caches
  */
 
-import { deletePattern, CacheKeys } from './redis-client';
-import logger from '../utils/logger';
+import { deletePattern, CacheKeys } from "./redis-client";
+import logger from "../utils/logger";
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 /**
  * Invalidate all caches for a specific project
  */
-export async function invalidateProjectCaches(projectId: string): Promise<void> {
+export async function invalidateProjectCaches(
+  projectId: string,
+): Promise<void> {
   try {
-    const deletedCount = await deletePattern(CacheKeys.allProjectCaches(projectId));
+    const deletedCount = await deletePattern(
+      CacheKeys.allProjectCaches(projectId),
+    );
     if (deletedCount > 0) {
-      logger.debug(`🔴 Cache invalidated: ${deletedCount} keys for project ${projectId}`);
+      logger.debug(
+        `🔴 Cache invalidated: ${deletedCount} keys for project ${projectId}`,
+      );
     }
   } catch (error) {
-    logger.error(`🔴 Failed to invalidate project caches for ${projectId}:`, error.message);
+    logger.error(
+      `🔴 Failed to invalidate project caches for ${projectId}:`,
+      errorMessage(error),
+    );
   }
 }
 
 /**
  * Invalidate all caches for a specific workspace
  */
-export async function invalidateWorkspaceCaches(workspaceId: string): Promise<void> {
+export async function invalidateWorkspaceCaches(
+  workspaceId: string,
+): Promise<void> {
   try {
-    const deletedCount = await deletePattern(CacheKeys.allWorkspaceCaches(workspaceId));
+    const deletedCount = await deletePattern(
+      CacheKeys.allWorkspaceCaches(workspaceId),
+    );
     if (deletedCount > 0) {
-      logger.debug(`🔴 Cache invalidated: ${deletedCount} keys for workspace ${workspaceId}`);
+      logger.debug(
+        `🔴 Cache invalidated: ${deletedCount} keys for workspace ${workspaceId}`,
+      );
     }
   } catch (error) {
-    logger.error(`🔴 Failed to invalidate workspace caches for ${workspaceId}:`, error.message);
+    logger.error(
+      `🔴 Failed to invalidate workspace caches for ${workspaceId}:`,
+      errorMessage(error),
+    );
   }
 }
 
@@ -47,7 +69,7 @@ export async function invalidateWorkspaceCaches(workspaceId: string): Promise<vo
  */
 export async function invalidateProjectOverview(
   projectId: string,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<void> {
   try {
     // Invalidate all variations of the overview cache (different query params)
@@ -57,19 +79,27 @@ export async function invalidateProjectOverview(
       logger.debug(`🔴 Cache invalidated: Project overview for ${projectId}`);
     }
   } catch (error) {
-    logger.error(`🔴 Failed to invalidate project overview for ${projectId}:`, error.message);
+    logger.error(
+      `🔴 Failed to invalidate project overview for ${projectId}:`,
+      errorMessage(error),
+    );
   }
 }
 
 /**
  * Batch invalidation for multiple projects
  */
-export async function invalidateMultipleProjects(projectIds: string[]): Promise<void> {
+export async function invalidateMultipleProjects(
+  projectIds: string[],
+): Promise<void> {
   try {
-    await Promise.all(projectIds.map(id => invalidateProjectCaches(id)));
+    await Promise.all(projectIds.map((id) => invalidateProjectCaches(id)));
     logger.debug(`🔴 Cache invalidated: ${projectIds.length} projects`);
   } catch (error) {
-    logger.error(`🔴 Failed to batch invalidate projects:`, error.message);
+    logger.error(
+      "🔴 Failed to batch invalidate projects:",
+      errorMessage(error),
+    );
   }
 }
 
@@ -83,7 +113,7 @@ export const CacheInvalidation = {
   onProjectUpdate: async (projectId: string, workspaceId: string) => {
     await invalidateProjectOverview(projectId, workspaceId);
   },
-  
+
   /**
    * Called when a project is deleted
    */
@@ -91,7 +121,7 @@ export const CacheInvalidation = {
     await invalidateProjectCaches(projectId);
     await invalidateWorkspaceCaches(workspaceId);
   },
-  
+
   /**
    * Called when a project is archived/restored
    */
@@ -99,28 +129,28 @@ export const CacheInvalidation = {
     await invalidateProjectOverview(projectId, workspaceId);
     await invalidateWorkspaceCaches(workspaceId); // Workspace project lists
   },
-  
+
   /**
    * Called when a task is created/updated/deleted
    */
   onTaskChange: async (projectId: string, workspaceId: string) => {
     await invalidateProjectOverview(projectId, workspaceId);
   },
-  
+
   /**
    * Called when a milestone is created/updated/deleted
    */
   onMilestoneChange: async (projectId: string, workspaceId: string) => {
     await invalidateProjectOverview(projectId, workspaceId);
   },
-  
+
   /**
    * Called when a project member is added/removed
    */
   onTeamChange: async (projectId: string, workspaceId: string) => {
     await invalidateProjectOverview(projectId, workspaceId);
   },
-  
+
   /**
    * Called when multiple projects are bulk updated
    */
@@ -129,5 +159,3 @@ export const CacheInvalidation = {
     await invalidateWorkspaceCaches(workspaceId);
   },
 };
-
-

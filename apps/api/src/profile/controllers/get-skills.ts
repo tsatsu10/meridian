@@ -1,11 +1,11 @@
 import { eq, desc } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userSkillTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 const getSkills = async (userId: string) => {
   const db = getDatabase();
-  
+
   try {
     const skills = await db
       .select()
@@ -20,4 +20,4 @@ const getSkills = async (userId: string) => {
   }
 };
 
-export default getSkills; 
+export default getSkills;

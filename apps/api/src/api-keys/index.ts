@@ -1,36 +1,37 @@
-import { Hono } from 'hono';
-import { getDatabase } from '../database/connection';
-import { apiKeyTable, users } from '../database/schema';
-import { eq, and, desc } from 'drizzle-orm';
-import { createId } from '@paralleldrive/cuid2';
-import crypto from 'crypto';
-import logger from '../utils/logger';
+import { Hono } from "hono";
+import { getDatabase } from "../database/connection";
+import { apiKeyTable, users } from "../database/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { createId } from "@paralleldrive/cuid2";
+import crypto from "node:crypto";
+import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
 
 const app = new Hono();
 
 // Helper: Generate a secure API key
 function generateSecureApiKey(): { key: string; hash: string } {
-  const key = `meridian_${crypto.randomBytes(32).toString('hex')}`;
-  const hash = crypto.createHash('sha256').update(key).digest('hex');
+  const key = `meridian_${crypto.randomBytes(32).toString("hex")}`;
+  const hash = crypto.createHash("sha256").update(key).digest("hex");
   return { key, hash };
 }
 
 // Helper: Hash an API key for storage
 function hashApiKey(key: string): string {
-  return crypto.createHash('sha256').update(key).digest('hex');
+  return crypto.createHash("sha256").update(key).digest("hex");
 }
 
 // GET /api/api-keys - List all API keys for a workspace
-app.get('/', async (c) => {
+app.get("/", async (c) => {
   try {
     const { workspaceId } = c.req.query();
-    const userEmail = c.get('userEmail');
+    const userEmail = c.get("userEmail");
 
     if (!workspaceId) {
-      return c.json({ error: 'Missing workspaceId parameter' }, 400);
+      return c.json({ error: "Missing workspaceId parameter" }, 400);
     }
     if (!userEmail) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({ error: "Unauthorized" }, 401);
     }
 
     const db = getDatabase();
@@ -41,7 +42,7 @@ app.get('/', async (c) => {
     });
 
     if (!user) {
-      return c.json({ error: 'User not found' }, 404);
+      return c.json({ error: "User not found" }, 404);
     }
 
     // Fetch API keys for workspace
@@ -62,36 +63,42 @@ app.get('/', async (c) => {
       .orderBy(desc(apiKeyTable.createdAt));
 
     // Calculate status for each key
-    const keysWithStatus = keys.map(key => ({
+    const keysWithStatus = keys.map((key) => ({
       ...key,
-      status: (!key.isActive || (key.expiresAt && new Date(key.expiresAt) < new Date())) ? 'inactive' : 'active',
-      lastUsed: key.lastUsed ? formatLastUsed(new Date(key.lastUsed)) : 'Never',
+      status:
+        !key.isActive || (key.expiresAt && new Date(key.expiresAt) < new Date())
+          ? "inactive"
+          : "active",
+      lastUsed: key.lastUsed ? formatLastUsed(new Date(key.lastUsed)) : "Never",
     }));
 
-    logger.debug('[API Keys] Fetched keys for workspace:', workspaceId);
+    logger.debug("[API Keys] Fetched keys for workspace:", workspaceId);
     return c.json({
       data: keysWithStatus,
       success: true,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    logger.error('[API Keys] Error fetching keys:', error);
-    return c.json({ error: error.message }, 500);
+  } catch (error) {
+    logger.error("[API Keys] Error fetching keys:", error);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
 // POST /api/api-keys - Generate a new API key
-app.post('/', async (c) => {
+app.post("/", async (c) => {
   try {
     const body = await c.req.json();
     const { workspaceId, name, scopes, expiresAt } = body;
-    const userEmail = c.get('userEmail');
+    const userEmail = c.get("userEmail");
 
     if (!workspaceId || !name) {
-      return c.json({ error: 'Missing required fields: workspaceId, name' }, 400);
+      return c.json(
+        { error: "Missing required fields: workspaceId, name" },
+        400,
+      );
     }
     if (!userEmail) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({ error: "Unauthorized" }, 401);
     }
 
     const db = getDatabase();
@@ -102,7 +109,7 @@ app.post('/', async (c) => {
     });
 
     if (!user) {
-      return c.json({ error: 'User not found' }, 404);
+      return c.json({ error: "User not found" }, 404);
     }
 
     // Generate secure API key
@@ -116,7 +123,7 @@ app.post('/', async (c) => {
         name,
         key: hash, // Store hashed version
         workspaceId,
-        scopes: scopes || ['read'],
+        scopes: scopes || ["read"],
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         isActive: true,
         createdBy: user.id,
@@ -125,36 +132,41 @@ app.post('/', async (c) => {
       })
       .returning();
 
-    logger.info('[API Keys] Created new API key:', { name, workspaceId, userId: user.id });
+    logger.info("[API Keys] Created new API key:", {
+      name,
+      workspaceId,
+      userId: user.id,
+    });
 
     // Return the plain key ONLY once - user must save it
     return c.json({
       data: {
         ...newKey,
         key, // Plain text key (only returned this once!)
-        status: 'active',
-        lastUsed: 'Never',
+        status: "active",
+        lastUsed: "Never",
       },
       success: true,
-      message: 'API key created successfully. Save this key now - it will not be shown again!',
+      message:
+        "API key created successfully. Save this key now - it will not be shown again!",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    logger.error('[API Keys] Error creating key:', error);
-    return c.json({ error: error.message }, 500);
+  } catch (error) {
+    logger.error("[API Keys] Error creating key:", error);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
 // PATCH /api/api-keys/:keyId - Update API key (toggle active, update scopes, etc.)
-app.patch('/:keyId', async (c) => {
+app.patch("/:keyId", async (c) => {
   try {
     const { keyId } = c.req.param();
     const body = await c.req.json();
     const { name, scopes, isActive, expiresAt } = body;
-    const userEmail = c.get('userEmail');
+    const userEmail = c.get("userEmail");
 
     if (!userEmail) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({ error: "Unauthorized" }, 401);
     }
 
     const db = getDatabase();
@@ -165,7 +177,7 @@ app.patch('/:keyId', async (c) => {
     });
 
     if (!user) {
-      return c.json({ error: 'User not found' }, 404);
+      return c.json({ error: "User not found" }, 404);
     }
 
     // Check if key exists
@@ -174,7 +186,7 @@ app.patch('/:keyId', async (c) => {
     });
 
     if (!existing) {
-      return c.json({ error: 'API key not found' }, 404);
+      return c.json({ error: "API key not found" }, 404);
     }
 
     // Update the key
@@ -184,42 +196,53 @@ app.patch('/:keyId', async (c) => {
         name: name || existing.name,
         scopes: scopes || existing.scopes,
         isActive: isActive !== undefined ? isActive : existing.isActive,
-        expiresAt: expiresAt !== undefined ? (expiresAt ? new Date(expiresAt) : null) : existing.expiresAt,
+        expiresAt:
+          expiresAt !== undefined
+            ? expiresAt
+              ? new Date(expiresAt)
+              : null
+            : existing.expiresAt,
         updatedAt: new Date(),
       })
       .where(eq(apiKeyTable.id, keyId))
       .returning();
 
     if (!updated) {
-      return c.json({ error: 'Update failed' }, 500);
+      return c.json({ error: "Update failed" }, 500);
     }
 
-    logger.info('[API Keys] Updated API key:', { keyId, userId: user.id });
+    logger.info("[API Keys] Updated API key:", { keyId, userId: user.id });
 
     return c.json({
       data: {
         ...updated,
-        status: !updated.isActive || (updated.expiresAt && new Date(updated.expiresAt) < new Date()) ? 'inactive' : 'active',
-        lastUsed: updated.lastUsed ? formatLastUsed(new Date(updated.lastUsed)) : 'Never',
+        status:
+          !updated.isActive ||
+          (updated.expiresAt && new Date(updated.expiresAt) < new Date())
+            ? "inactive"
+            : "active",
+        lastUsed: updated.lastUsed
+          ? formatLastUsed(new Date(updated.lastUsed))
+          : "Never",
       },
       success: true,
-      message: 'API key updated successfully',
+      message: "API key updated successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    logger.error('[API Keys] Error updating key:', error);
-    return c.json({ error: error.message }, 500);
+  } catch (error) {
+    logger.error("[API Keys] Error updating key:", error);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
 // DELETE /api/api-keys/:keyId - Delete/revoke an API key
-app.delete('/:keyId', async (c) => {
+app.delete("/:keyId", async (c) => {
   try {
     const { keyId } = c.req.param();
-    const userEmail = c.get('userEmail');
+    const userEmail = c.get("userEmail");
 
     if (!userEmail) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({ error: "Unauthorized" }, 401);
     }
 
     const db = getDatabase();
@@ -230,7 +253,7 @@ app.delete('/:keyId', async (c) => {
     });
 
     if (!user) {
-      return c.json({ error: 'User not found' }, 404);
+      return c.json({ error: "User not found" }, 404);
     }
 
     // Check if key exists
@@ -239,22 +262,22 @@ app.delete('/:keyId', async (c) => {
     });
 
     if (!existing) {
-      return c.json({ error: 'API key not found' }, 404);
+      return c.json({ error: "API key not found" }, 404);
     }
 
     // Delete the key
     await db.delete(apiKeyTable).where(eq(apiKeyTable.id, keyId));
 
-    logger.info('[API Keys] Deleted API key:', { keyId, userId: user.id });
+    logger.info("[API Keys] Deleted API key:", { keyId, userId: user.id });
 
     return c.json({
       success: true,
-      message: 'API key deleted successfully',
+      message: "API key deleted successfully",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    logger.error('[API Keys] Error deleting key:', error);
-    return c.json({ error: error.message }, 500);
+  } catch (error) {
+    logger.error("[API Keys] Error deleting key:", error);
+    return c.json({ error: getErrorMessage(error) }, 500);
   }
 });
 
@@ -262,15 +285,14 @@ app.delete('/:keyId', async (c) => {
 function formatLastUsed(date: Date): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
-  
+
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
-  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-  return `${days} day${days !== 1 ? 's' : ''} ago`;
+
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+  if (hours < 24) return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+  return `${days} day${days !== 1 ? "s" : ""} ago`;
 }
 
 export default app;
-

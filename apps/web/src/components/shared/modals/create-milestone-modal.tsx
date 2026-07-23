@@ -4,13 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -19,20 +18,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Target, 
-  Plus, 
-  X, 
-  CheckCircle2, 
+import {
+  Target,
+  Plus,
+  X,
+  CheckCircle2,
   AlertTriangle,
   User,
   Calendar,
-  Flag
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { toast } from "sonner";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import { flattenTasks } from "@/utils/task-hierarchy";
+import type { TaskWithSubtasks } from "@/types/task";
+
+type TaskColumn = { tasks?: TaskWithSubtasks[] };
 
 // @epic-1.3-milestones: Sarah (PM) and Jennifer (Exec) need milestone tracking
 // @epic-2.1-dashboard: Milestone creation across different views
@@ -73,22 +73,26 @@ interface CreateMilestoneModalProps {
   editingMilestone?: MilestoneTask | null;
 }
 
-const milestoneStatusColors = {
+void {
   upcoming: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   achieved: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   missed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-const milestoneTypeColors = {
-  phase_completion: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-  deliverable: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  approval: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+void {
+  phase_completion:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  deliverable:
+    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  approval:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   deadline: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-const riskLevelColors = {
+void {
   low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  medium:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
   critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
@@ -99,7 +103,7 @@ export default function CreateMilestoneModal({
   projectId,
   projectName,
   onMilestoneCreated,
-  editingMilestone
+  editingMilestone,
 }: CreateMilestoneModalProps) {
   const { data: tasksData, isLoading: isTasksLoading } = useGetTasks(projectId);
   const [formData, setFormData] = useState<MilestoneFormData>({
@@ -117,6 +121,7 @@ export default function CreateMilestoneModal({
   const [taskSearchTerm, setTaskSearchTerm] = useState("");
 
   // Initialize form data when editing
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-initialize form each time the modal opens or the edited milestone changes
   useEffect(() => {
     if (editingMilestone) {
       setFormData({
@@ -147,14 +152,15 @@ export default function CreateMilestoneModal({
   }, [editingMilestone, open]);
 
   // Handle both array and object-with-columns cases for tasks
-  const columnArray = Array.isArray(tasksData)
-    ? tasksData
-    : tasksData && Array.isArray((tasksData as any).columns)
-      ? (tasksData as any).columns
+  const columnArray: TaskColumn[] = Array.isArray(tasksData)
+    ? (tasksData as TaskColumn[])
+    : tasksData &&
+        Array.isArray((tasksData as { columns?: TaskColumn[] }).columns)
+      ? (tasksData as { columns: TaskColumn[] }).columns
       : [];
 
   // Get all available tasks for dependencies
-  const allTasks = flattenTasks(columnArray.flatMap((col: any) => col.tasks || []));
+  const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks || []));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +176,7 @@ export default function CreateMilestoneModal({
     }
 
     try {
-      const milestone: MilestoneTask = editingMilestone 
+      const milestone: MilestoneTask = editingMilestone
         ? { ...editingMilestone, ...formData }
         : {
             id: Date.now().toString(),
@@ -181,7 +187,11 @@ export default function CreateMilestoneModal({
       // Call the callback to handle milestone creation/update
       onMilestoneCreated?.(milestone);
 
-      toast.success(editingMilestone ? "Milestone updated successfully" : "Milestone created successfully");
+      toast.success(
+        editingMilestone
+          ? "Milestone updated successfully"
+          : "Milestone created successfully",
+      );
       onClose();
     } catch (error) {
       toast.error("Failed to save milestone");
@@ -206,38 +216,32 @@ export default function CreateMilestoneModal({
   };
 
   const handleDependencyToggle = (taskId: string, checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       dependencies: checked
         ? [...prev.dependencies, taskId]
-        : prev.dependencies.filter(id => id !== taskId)
+        : prev.dependencies.filter((id) => id !== taskId),
     }));
   };
 
   const addStakeholder = () => {
-    if (newStakeholder.trim() && !formData.stakeholders.includes(newStakeholder.trim())) {
-      setFormData(prev => ({
+    if (
+      newStakeholder.trim() &&
+      !formData.stakeholders.includes(newStakeholder.trim())
+    ) {
+      setFormData((prev) => ({
         ...prev,
-        stakeholders: [...prev.stakeholders, newStakeholder.trim()]
+        stakeholders: [...prev.stakeholders, newStakeholder.trim()],
       }));
       setNewStakeholder("");
     }
   };
 
   const removeStakeholder = (email: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      stakeholders: prev.stakeholders.filter(s => s !== email)
+      stakeholders: prev.stakeholders.filter((s) => s !== email),
     }));
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    });
   };
 
   return (
@@ -249,34 +253,46 @@ export default function CreateMilestoneModal({
             <div className="space-y-2">
               <DialogTitle className="text-3xl font-bold gradient-text flex items-center space-x-3">
                 <Target className="h-6 w-6 text-emerald-600" />
-                <span>{editingMilestone ? 'Edit Milestone' : 'Create New Milestone'}</span>
+                <span>
+                  {editingMilestone ? "Edit Milestone" : "Create New Milestone"}
+                </span>
               </DialogTitle>
               <DialogDescription className="text-lg">
-                {editingMilestone 
-                  ? 'Update the milestone details and dependencies below.'
-                  : `Create a new milestone for ${projectName || 'this project'} to track important deliverables and deadlines.`
-                }
+                {editingMilestone
+                  ? "Update the milestone details and dependencies below."
+                  : `Create a new milestone for ${projectName || "this project"} to track important deliverables and deadlines.`}
               </DialogDescription>
             </div>
 
             <div className="max-h-[70vh] overflow-y-auto space-y-8 pr-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-              <form onSubmit={handleSubmit} className="space-y-8 w-full max-w-none">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-8 w-full max-w-none"
+              >
                 {/* Basic Information */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-start space-x-3">
                     <Target className="h-5 w-5 text-emerald-600" />
                     <h3 className="text-xl font-semibold">Basic Information</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor="title" className="text-sm font-medium flex items-center">
+                      <Label
+                        htmlFor="title"
+                        className="text-sm font-medium flex items-center"
+                      >
                         Title *
                       </Label>
                       <Input
                         id="title"
                         value={formData.title}
-                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            title: e.target.value,
+                          }))
+                        }
                         placeholder="Enter milestone title"
                         className="glass-card h-11 w-full font-medium"
                         required
@@ -284,7 +300,10 @@ export default function CreateMilestoneModal({
                     </div>
 
                     <div className="space-y-3">
-                      <Label htmlFor="date" className="text-sm font-medium flex items-center space-x-2">
+                      <Label
+                        htmlFor="date"
+                        className="text-sm font-medium flex items-center space-x-2"
+                      >
                         <Calendar className="h-4 w-4" />
                         <span>Due Date *</span>
                       </Label>
@@ -292,7 +311,12 @@ export default function CreateMilestoneModal({
                         id="date"
                         type="date"
                         value={formData.date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            date: e.target.value,
+                          }))
+                        }
                         className="glass-card h-11 w-full"
                         required
                       />
@@ -302,15 +326,26 @@ export default function CreateMilestoneModal({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="milestoneType">Type</Label>
-                      <Select value={formData.milestoneType} onValueChange={(value: any) => 
-                        setFormData(prev => ({ ...prev, milestoneType: value }))
-                      }>
+                      <Select
+                        value={formData.milestoneType}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            milestoneType:
+                              value as MilestoneFormData["milestoneType"],
+                          }))
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select milestone type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="phase_completion">Phase Completion</SelectItem>
-                          <SelectItem value="deliverable">Deliverable</SelectItem>
+                          <SelectItem value="phase_completion">
+                            Phase Completion
+                          </SelectItem>
+                          <SelectItem value="deliverable">
+                            Deliverable
+                          </SelectItem>
                           <SelectItem value="approval">Approval</SelectItem>
                           <SelectItem value="deadline">Deadline</SelectItem>
                         </SelectContent>
@@ -319,9 +354,15 @@ export default function CreateMilestoneModal({
 
                     <div className="space-y-2">
                       <Label htmlFor="status">Status</Label>
-                      <Select value={formData.status} onValueChange={(value: any) => 
-                        setFormData(prev => ({ ...prev, status: value }))
-                      }>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            status: value as MilestoneFormData["status"],
+                          }))
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
@@ -339,7 +380,12 @@ export default function CreateMilestoneModal({
                     <Textarea
                       id="description"
                       value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       placeholder="Enter milestone description"
                       rows={3}
                     />
@@ -352,13 +398,18 @@ export default function CreateMilestoneModal({
                     <CheckCircle2 className="h-4 w-4" />
                     Success Criteria & Risk
                   </h4>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="successCriteria">Success Criteria *</Label>
                     <Textarea
                       id="successCriteria"
                       value={formData.successCriteria}
-                      onChange={(e) => setFormData(prev => ({ ...prev, successCriteria: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          successCriteria: e.target.value,
+                        }))
+                      }
                       placeholder="Define what constitutes successful completion of this milestone"
                       rows={2}
                       required
@@ -367,9 +418,15 @@ export default function CreateMilestoneModal({
 
                   <div className="space-y-2">
                     <Label htmlFor="riskLevel">Risk Level</Label>
-                    <Select value={formData.riskLevel} onValueChange={(value: any) => 
-                      setFormData(prev => ({ ...prev, riskLevel: value }))
-                    }>
+                    <Select
+                      value={formData.riskLevel}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          riskLevel: value as MilestoneFormData["riskLevel"],
+                        }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select risk level" />
                       </SelectTrigger>
@@ -390,7 +447,7 @@ export default function CreateMilestoneModal({
                       <AlertTriangle className="h-4 w-4" />
                       Dependencies
                     </h4>
-                    
+
                     <div className="space-y-2">
                       <Label>Task Dependencies</Label>
                       <Input
@@ -401,48 +458,78 @@ export default function CreateMilestoneModal({
                       />
                       <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
                         {allTasks
-                          .filter((task: any) => 
-                            task.title.toLowerCase().includes(taskSearchTerm.toLowerCase()) ||
-                            task.status.toLowerCase().includes(taskSearchTerm.toLowerCase())
+                          .filter(
+                            (task) =>
+                              task.title
+                                .toLowerCase()
+                                .includes(taskSearchTerm.toLowerCase()) ||
+                              task.status
+                                .toLowerCase()
+                                .includes(taskSearchTerm.toLowerCase()),
                           )
                           .slice(0, 50)
-                          .map((task: any) => (
-                          <div key={task.id} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              id={`task-${task.id}`}
-                              checked={formData.dependencies.includes(task.id)}
-                              onChange={(e) => handleDependencyToggle(task.id, e.target.checked)}
-                              className="rounded"
-                            />
-                            <Label htmlFor={`task-${task.id}`} className="text-sm cursor-pointer flex-1">
-                              {task.title}
-                            </Label>
-                            <Badge variant="outline" className="text-xs">
-                              {task.status}
-                            </Badge>
-                          </div>
-                        ))}
-                        {allTasks.filter((task: any) => 
-                          task.title.toLowerCase().includes(taskSearchTerm.toLowerCase()) ||
-                          task.status.toLowerCase().includes(taskSearchTerm.toLowerCase())
+                          .map((task) => (
+                            <div
+                              key={task.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="checkbox"
+                                id={`task-${task.id}`}
+                                checked={formData.dependencies.includes(
+                                  task.id,
+                                )}
+                                onChange={(e) =>
+                                  handleDependencyToggle(
+                                    task.id,
+                                    e.target.checked,
+                                  )
+                                }
+                                className="rounded"
+                              />
+                              <Label
+                                htmlFor={`task-${task.id}`}
+                                className="text-sm cursor-pointer flex-1"
+                              >
+                                {task.title}
+                              </Label>
+                              <Badge variant="outline" className="text-xs">
+                                {task.status}
+                              </Badge>
+                            </div>
+                          ))}
+                        {allTasks.filter(
+                          (task) =>
+                            task.title
+                              .toLowerCase()
+                              .includes(taskSearchTerm.toLowerCase()) ||
+                            task.status
+                              .toLowerCase()
+                              .includes(taskSearchTerm.toLowerCase()),
                         ).length === 0 && (
                           <div className="text-xs text-muted-foreground text-center py-4">
                             No tasks found matching "{taskSearchTerm}"
                           </div>
                         )}
-                        {allTasks.filter((task: any) => 
-                          task.title.toLowerCase().includes(taskSearchTerm.toLowerCase()) ||
-                          task.status.toLowerCase().includes(taskSearchTerm.toLowerCase())
+                        {allTasks.filter(
+                          (task) =>
+                            task.title
+                              .toLowerCase()
+                              .includes(taskSearchTerm.toLowerCase()) ||
+                            task.status
+                              .toLowerCase()
+                              .includes(taskSearchTerm.toLowerCase()),
                         ).length > 50 && (
                           <div className="text-xs text-muted-foreground text-center">
-                            Showing first 50 matching tasks. Use search to narrow down results.
+                            Showing first 50 matching tasks. Use search to
+                            narrow down results.
                           </div>
                         )}
                       </div>
                       {formData.dependencies.length > 0 && (
                         <div className="text-sm text-muted-foreground">
-                          {formData.dependencies.length} task{formData.dependencies.length > 1 ? 's' : ''} selected
+                          {formData.dependencies.length} task
+                          {formData.dependencies.length > 1 ? "s" : ""} selected
                         </div>
                       )}
                     </div>
@@ -455,7 +542,7 @@ export default function CreateMilestoneModal({
                     <User className="h-4 w-4" />
                     Stakeholders
                   </h4>
-                  
+
                   <div className="space-y-2">
                     <Label>Notify Stakeholders</Label>
                     <div className="flex space-x-2">
@@ -464,24 +551,24 @@ export default function CreateMilestoneModal({
                         onChange={(e) => setNewStakeholder(e.target.value)}
                         placeholder="Enter email address"
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                          if (e.key === "Enter") {
                             e.preventDefault();
                             addStakeholder();
                           }
                         }}
                       />
-                      <Button 
-                        type="button" 
-                        onClick={addStakeholder}
-                        size="sm"
-                      >
+                      <Button type="button" onClick={addStakeholder} size="sm">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     {formData.stakeholders.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {formData.stakeholders.map((email) => (
-                          <Badge key={email} variant="secondary" className="flex items-center gap-1">
+                          <Badge
+                            key={email}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
                             {email}
                             <Button
                               type="button"
@@ -501,11 +588,19 @@ export default function CreateMilestoneModal({
 
                 <DialogFooter className="flex justify-between pt-6">
                   <div className="flex space-x-3 w-full justify-end">
-                    <Button type="button" variant="outline" onClick={handleClose} className="glass-card">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClose}
+                      className="glass-card"
+                    >
                       Cancel
                     </Button>
-                    <Button type="submit" className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-medium px-6">
-                      {editingMilestone ? 'Update' : 'Create'} Milestone
+                    <Button
+                      type="submit"
+                      className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-medium px-6"
+                    >
+                      {editingMilestone ? "Update" : "Create"} Milestone
                     </Button>
                   </div>
                 </DialogFooter>
@@ -513,7 +608,7 @@ export default function CreateMilestoneModal({
             </div>
           </div>
         </div>
-        </DialogContent>
-      </Dialog>
-    );
-  } 
+      </DialogContent>
+    </Dialog>
+  );
+}

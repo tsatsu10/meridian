@@ -45,9 +45,9 @@ function ListView({ project }: ListViewProps) {
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({
-    "todo": true,
-    "in_progress": true,
-    "done": true,
+    todo: true,
+    in_progress: true,
+    done: true,
   });
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string | null>(null);
@@ -97,13 +97,13 @@ function ListView({ project }: ListViewProps) {
         });
       }
 
-      destinationColumn.tasks.forEach((t, index) => {
+      for (const [index, t] of destinationColumn.tasks.entries()) {
         updateTask({
           ...t,
           status: destinationColumn.id,
           position: index + 1,
         });
-      });
+      }
     });
 
     setProject(updatedProject);

@@ -35,7 +35,7 @@ type LabelColor =
   | "pink"
   | "red";
 
-type Label = {
+type TaskLabelData = {
   id: string;
   name: string;
   color: string;
@@ -67,24 +67,26 @@ function TaskLabels({
 
   // ✅ FIX: Use stable dependency to prevent infinite loop
   // Only update when the actual label IDs change, not the array reference
+  // biome-ignore lint/correctness/useExhaustiveDependencies: taskLabels intentionally omitted; the effect writes it and guards via id comparison to avoid a loop
   useEffect(() => {
-    const labelIds = labels?.map((label: Label) => label.id) ?? [];
+    const labelIds = labels?.map((label: TaskLabelData) => label.id) ?? [];
     const labelIdsString = JSON.stringify(labelIds.sort()); // Stable comparison
     const currentIdsString = JSON.stringify([...taskLabels].sort());
-    
+
     if (labelIdsString !== currentIdsString) {
       setTaskLabels(labelIds);
     }
   }, [labels]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredLabels = labels.filter((label: Label) =>
+  const filteredLabels = labels.filter((label: TaskLabelData) =>
     label.name.toLowerCase().includes(searchValue.toLowerCase()),
   );
 
   const isCreatingNewLabel =
     searchValue &&
     !labels.some(
-      (label: Label) => label.name.toLowerCase() === searchValue.toLowerCase(),
+      (label: TaskLabelData) =>
+        label.name.toLowerCase() === searchValue.toLowerCase(),
     );
 
   useEffect(() => {
@@ -109,7 +111,7 @@ function TaskLabels({
   const toggleLabel = async (labelId: string) => {
     setIsSaving(true);
     try {
-      const label = labels.find((l: Label) => l.id === labelId);
+      const label = labels.find((l: TaskLabelData) => l.id === labelId);
       if (!label) {
         throw new Error("Label not found");
       }
@@ -136,7 +138,7 @@ function TaskLabels({
       console.error(error);
 
       if (labels?.length) {
-        setTaskLabels(labels.map((label: Label) => label.id));
+        setTaskLabels(labels.map((label: TaskLabelData) => label.id));
       }
     } finally {
       setIsSaving(false);
@@ -148,11 +150,11 @@ function TaskLabels({
 
     setIsSaving(true);
     try {
-      const newLabel = await createLabel({
+      const newLabel = (await createLabel({
         name: searchValue.trim(),
         color: selectedColor,
         taskId,
-      });
+      })) as { id?: string };
 
       setSearchValue("");
       setSelectedColor("gray");
@@ -160,7 +162,7 @@ function TaskLabels({
       await queryClient.invalidateQueries({ queryKey: ["labels", taskId] });
 
       if (newLabel?.id) {
-        setTaskLabels((prev) => [...prev, newLabel.id]);
+        setTaskLabels((prev) => [...prev, newLabel.id as string]);
       }
 
       toast.success("Label created successfully");
@@ -179,8 +181,8 @@ function TaskLabels({
       <Label>Labels</Label>
       <div className="flex flex-wrap gap-2 mt-1">
         {labels
-          .filter((label: Label) => taskLabels.includes(label.id))
-          .map((label: Label) => (
+          .filter((label: TaskLabelData) => taskLabels.includes(label.id))
+          .map((label: TaskLabelData) => (
             <Badge
               key={label.id}
               badgeColor={label.color as LabelColor}
@@ -251,7 +253,7 @@ function TaskLabels({
               >
                 {filteredLabels.length > 0 ? (
                   <div className="py-1">
-                    {filteredLabels.map((label: Label) => (
+                    {filteredLabels.map((label: TaskLabelData) => (
                       <button
                         key={label.id}
                         type="button"

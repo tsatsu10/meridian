@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import useWorkspaceStore from "@/store/workspace";
-import { API_BASE_URL, API_URL } from '@/constants/urls';
+import { API_BASE_URL } from "@/constants/urls";
 
 // @epic-3.1-analytics: Enhanced analytics hook with advanced filtering and comparative analytics
 // @role-workspace-manager: Executive-level insights with cross-project visibility
@@ -24,8 +24,8 @@ interface EnhancedAnalyticsOptions {
 }
 
 interface ComparativeData {
-  current: any;
-  comparison: any;
+  current: number;
+  comparison: number;
   change: {
     absolute: number;
     percentage: number;
@@ -127,7 +127,7 @@ interface EnhancedAnalyticsResponse {
     projectsAtRisk: ComparativeData;
     avgHealthScore: ComparativeData;
   };
-  
+
   taskMetrics: {
     totalTasks: ComparativeData;
     completedTasks: ComparativeData;
@@ -136,7 +136,7 @@ interface EnhancedAnalyticsResponse {
     avgCycleTime: ComparativeData;
     throughput: ComparativeData;
   };
-  
+
   teamMetrics: {
     totalMembers: ComparativeData;
     activeMembers: ComparativeData;
@@ -145,7 +145,7 @@ interface EnhancedAnalyticsResponse {
     collaborationIndex: ComparativeData;
     retentionRate?: ComparativeData;
   };
-  
+
   timeMetrics: {
     totalHours: ComparativeData;
     billableHours: ComparativeData;
@@ -158,15 +158,15 @@ interface EnhancedAnalyticsResponse {
   resourceUtilization: EnhancedResourceUtilization[];
   performanceBenchmarks: AdvancedPerformanceBenchmarks;
   timeSeriesData: TimeSeriesDataPoint[];
-  
-  departmentBreakdown?: any[];
-  skillGapAnalysis?: any[];
-  capacityPlanning?: any[];
-  riskAssessment?: any[];
-  
+
+  departmentBreakdown?: unknown[];
+  skillGapAnalysis?: unknown[];
+  capacityPlanning?: unknown[];
+  riskAssessment?: unknown[];
+
   forecasting?: ForecastingData;
-  industryBenchmarks?: any;
-  
+  industryBenchmarks?: unknown;
+
   summary: {
     timeRange: string;
     comparisonPeriod?: string;
@@ -225,12 +225,16 @@ export function useEnhancedAnalytics(options: EnhancedAnalyticsOptions = {}) {
       }
 
       const queryParams = new URLSearchParams();
-      
+
       if (timeRange) queryParams.set("timeRange", timeRange);
-      if (projectIds?.length) queryParams.set("projectIds", projectIds.join(","));
-      if (userEmails?.length) queryParams.set("userEmails", userEmails.join(","));
-      if (departments?.length) queryParams.set("departments", departments.join(","));
-      if (priorities?.length) queryParams.set("priorities", priorities.join(","));
+      if (projectIds?.length)
+        queryParams.set("projectIds", projectIds.join(","));
+      if (userEmails?.length)
+        queryParams.set("userEmails", userEmails.join(","));
+      if (departments?.length)
+        queryParams.set("departments", departments.join(","));
+      if (priorities?.length)
+        queryParams.set("priorities", priorities.join(","));
       if (statuses?.length) queryParams.set("statuses", statuses.join(","));
       if (includeArchived) queryParams.set("includeArchived", "true");
       if (granularity) queryParams.set("granularity", granularity);
@@ -239,17 +243,19 @@ export function useEnhancedAnalytics(options: EnhancedAnalyticsOptions = {}) {
       if (customEndDate) queryParams.set("customEndDate", customEndDate);
       if (includeForecasting) queryParams.set("includeForecasting", "true");
       if (includeBenchmarks) queryParams.set("includeBenchmarks", "true");
-      
+
       // Always request enhanced analytics
       queryParams.set("enhanced", "true");
 
       const url = `${API_BASE_URL}/dashboard/analytics/${workspace.id}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`Failed to fetch enhanced analytics: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch enhanced analytics: ${response.statusText}`,
+        );
       }
-      
+
       return response.json();
     },
     enabled: enabled && !!workspace?.id,
@@ -263,61 +269,97 @@ export function useEnhancedAnalytics(options: EnhancedAnalyticsOptions = {}) {
         change: {
           absolute: 0,
           percentage: 0,
-          trend: "stable" as const
-        }
+          trend: "stable" as const,
+        },
       };
 
       return {
         projectMetrics: {
-          totalProjects: data?.projectMetrics?.totalProjects || defaultComparativeData,
-          activeProjects: data?.projectMetrics?.activeProjects || defaultComparativeData,
-          completedProjects: data?.projectMetrics?.completedProjects || defaultComparativeData,
-          projectsAtRisk: data?.projectMetrics?.projectsAtRisk || defaultComparativeData,
-          avgHealthScore: data?.projectMetrics?.avgHealthScore || defaultComparativeData,
+          totalProjects:
+            data?.projectMetrics?.totalProjects || defaultComparativeData,
+          activeProjects:
+            data?.projectMetrics?.activeProjects || defaultComparativeData,
+          completedProjects:
+            data?.projectMetrics?.completedProjects || defaultComparativeData,
+          projectsAtRisk:
+            data?.projectMetrics?.projectsAtRisk || defaultComparativeData,
+          avgHealthScore:
+            data?.projectMetrics?.avgHealthScore || defaultComparativeData,
         },
         taskMetrics: {
           totalTasks: data?.taskMetrics?.totalTasks || defaultComparativeData,
-          completedTasks: data?.taskMetrics?.completedTasks || defaultComparativeData,
-          inProgressTasks: data?.taskMetrics?.inProgressTasks || defaultComparativeData,
-          overdueTasks: data?.taskMetrics?.overdueTasks || defaultComparativeData,
-          avgCycleTime: data?.taskMetrics?.avgCycleTime || defaultComparativeData,
+          completedTasks:
+            data?.taskMetrics?.completedTasks || defaultComparativeData,
+          inProgressTasks:
+            data?.taskMetrics?.inProgressTasks || defaultComparativeData,
+          overdueTasks:
+            data?.taskMetrics?.overdueTasks || defaultComparativeData,
+          avgCycleTime:
+            data?.taskMetrics?.avgCycleTime || defaultComparativeData,
           throughput: data?.taskMetrics?.throughput || defaultComparativeData,
         },
         teamMetrics: {
-          totalMembers: data?.teamMetrics?.totalMembers || defaultComparativeData,
-          activeMembers: data?.teamMetrics?.activeMembers || defaultComparativeData,
-          avgProductivity: data?.teamMetrics?.avgProductivity || defaultComparativeData,
-          teamEfficiency: data?.teamMetrics?.teamEfficiency || defaultComparativeData,
-          collaborationIndex: data?.teamMetrics?.collaborationIndex || defaultComparativeData,
-          retentionRate: data?.teamMetrics?.retentionRate || defaultComparativeData,
+          totalMembers:
+            data?.teamMetrics?.totalMembers || defaultComparativeData,
+          activeMembers:
+            data?.teamMetrics?.activeMembers || defaultComparativeData,
+          avgProductivity:
+            data?.teamMetrics?.avgProductivity || defaultComparativeData,
+          teamEfficiency:
+            data?.teamMetrics?.teamEfficiency || defaultComparativeData,
+          collaborationIndex:
+            data?.teamMetrics?.collaborationIndex || defaultComparativeData,
+          retentionRate:
+            data?.teamMetrics?.retentionRate || defaultComparativeData,
         },
         timeMetrics: {
           totalHours: data?.timeMetrics?.totalHours || defaultComparativeData,
-          billableHours: data?.timeMetrics?.billableHours || defaultComparativeData,
-          avgTimePerTask: data?.timeMetrics?.avgTimePerTask || defaultComparativeData,
-          timeUtilization: data?.timeMetrics?.timeUtilization || defaultComparativeData,
+          billableHours:
+            data?.timeMetrics?.billableHours || defaultComparativeData,
+          avgTimePerTask:
+            data?.timeMetrics?.avgTimePerTask || defaultComparativeData,
+          timeUtilization:
+            data?.timeMetrics?.timeUtilization || defaultComparativeData,
           overtime: data?.timeMetrics?.overtime || defaultComparativeData,
         },
-        projectHealth: Array.isArray(data?.projectHealth) ? data.projectHealth : [],
-        resourceUtilization: Array.isArray(data?.resourceUtilization) ? data.resourceUtilization : [],
-        timeSeriesData: Array.isArray(data?.timeSeriesData) ? data.timeSeriesData : [],
+        projectHealth: Array.isArray(data?.projectHealth)
+          ? data.projectHealth
+          : [],
+        resourceUtilization: Array.isArray(data?.resourceUtilization)
+          ? data.resourceUtilization
+          : [],
+        timeSeriesData: Array.isArray(data?.timeSeriesData)
+          ? data.timeSeriesData
+          : [],
         performanceBenchmarks: data?.performanceBenchmarks || {},
-        departmentBreakdown: Array.isArray(data?.departmentBreakdown) ? data.departmentBreakdown : [],
-        skillGapAnalysis: Array.isArray(data?.skillGapAnalysis) ? data.skillGapAnalysis : [],
-        capacityPlanning: Array.isArray(data?.capacityPlanning) ? data.capacityPlanning : [],
-        riskAssessment: Array.isArray(data?.riskAssessment) ? data.riskAssessment : [],
-        forecasting: data?.forecasting || null,
+        departmentBreakdown: Array.isArray(data?.departmentBreakdown)
+          ? data.departmentBreakdown
+          : [],
+        skillGapAnalysis: Array.isArray(data?.skillGapAnalysis)
+          ? data.skillGapAnalysis
+          : [],
+        capacityPlanning: Array.isArray(data?.capacityPlanning)
+          ? data.capacityPlanning
+          : [],
+        riskAssessment: Array.isArray(data?.riskAssessment)
+          ? data.riskAssessment
+          : [],
+        forecasting: data?.forecasting ?? undefined,
         industryBenchmarks: data?.industryBenchmarks || null,
         summary: {
           timeRange: data?.summary?.timeRange || "",
           comparisonPeriod: data?.summary?.comparisonPeriod || "",
           generatedAt: data?.summary?.generatedAt || new Date().toISOString(),
           dataQuality: data?.summary?.dataQuality || 0,
-          recommendations: Array.isArray(data?.summary?.recommendations) ? data.summary.recommendations : [],
-          alerts: Array.isArray(data?.summary?.alerts) ? data.summary.alerts : []
-        }
+          recommendations: Array.isArray(data?.summary?.recommendations)
+            ? data.summary.recommendations
+            : [],
+          alerts: Array.isArray(data?.summary?.alerts)
+            ? data.summary.alerts
+            : [],
+        },
       };
-    }
+    },
   });
 }
 
@@ -330,4 +372,4 @@ export type {
   AdvancedPerformanceBenchmarks,
   TimeSeriesDataPoint,
   ForecastingData,
-}; 
+};

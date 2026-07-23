@@ -9,11 +9,11 @@ interface HealthBadgeProps {
   showLabel?: boolean;
 }
 
-export function HealthBadge({ 
-  health, 
+export function HealthBadge({
+  health,
   className,
   showIcon = true,
-  showLabel = true 
+  showLabel = true,
 }: HealthBadgeProps) {
   return (
     <Badge
@@ -22,7 +22,7 @@ export function HealthBadge({
         "font-medium border-0",
         health.bgColor,
         health.color,
-        className
+        className,
       )}
     >
       {showIcon && <span className="mr-1">{health.icon}</span>}
@@ -30,4 +30,3 @@ export function HealthBadge({
     </Badge>
   );
 }
-

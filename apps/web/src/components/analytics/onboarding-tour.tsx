@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +23,7 @@ import {
   Download,
   TrendingDown,
   Keyboard,
-  Check
+  Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/cn";
@@ -31,126 +38,140 @@ const tourSteps = [
   {
     icon: BarChart3,
     title: "Welcome to Analytics Dashboard",
-    description: "Get comprehensive insights into your workspace performance, team productivity, and project health.",
+    description:
+      "Get comprehensive insights into your workspace performance, team productivity, and project health.",
     tips: [
       "Track key metrics in real-time",
       "Compare performance across time periods",
       "Export data in multiple formats",
-      "Set up custom filters for focused insights"
+      "Set up custom filters for focused insights",
     ],
-    color: "bg-blue-500"
+    color: "bg-blue-500",
   },
   {
     icon: Target,
     title: "Overview Tab",
-    description: "Your command center for workspace-wide metrics. Monitor total projects, completed tasks, team productivity, and time utilization at a glance.",
+    description:
+      "Your command center for workspace-wide metrics. Monitor total projects, completed tasks, team productivity, and time utilization at a glance.",
     tips: [
       "8 key performance indicators",
       "Performance trend charts",
       "Resource distribution visualization",
-      "Click any metric card to drill down"
+      "Click any metric card to drill down",
     ],
-    color: "bg-purple-500"
+    color: "bg-purple-500",
   },
   {
     icon: Target,
     title: "Projects Tab",
-    description: "View detailed health metrics for each project including completion rates, velocity, risk levels, and team allocation.",
+    description:
+      "View detailed health metrics for each project including completion rates, velocity, risk levels, and team allocation.",
     tips: [
       "Project health scoring (0-100)",
       "Risk assessment indicators",
       "Completion rate tracking",
-      "Click projects to view detailed analytics"
+      "Click projects to view detailed analytics",
     ],
-    color: "bg-green-500"
+    color: "bg-green-500",
   },
   {
     icon: Users,
     title: "Teams Tab",
-    description: "Analyze team member resource utilization, workload balance, and productivity metrics to optimize team performance.",
+    description:
+      "Analyze team member resource utilization, workload balance, and productivity metrics to optimize team performance.",
     tips: [
       "Individual utilization percentages",
       "Workload balance indicators (optimal/overloaded/critical)",
       "Task completion tracking per member",
-      "Hours logged and project assignments"
+      "Hours logged and project assignments",
     ],
-    color: "bg-orange-500"
+    color: "bg-orange-500",
   },
   {
     icon: Sparkles,
     title: "Insights Tab",
-    description: "Access AI-powered recommendations, alerts, and actionable insights to improve workspace efficiency and identify potential issues.",
+    description:
+      "Access AI-powered recommendations, alerts, and actionable insights to improve workspace efficiency and identify potential issues.",
     tips: [
       "Automated performance recommendations",
       "Risk and bottleneck alerts",
       "Trend analysis and predictions",
-      "Actionable improvement suggestions"
+      "Actionable improvement suggestions",
     ],
-    color: "bg-pink-500"
+    color: "bg-pink-500",
   },
   {
     icon: Filter,
     title: "Advanced Filtering",
-    description: "Use the Filter button to narrow down your analytics by specific projects, users, or time ranges for focused analysis.",
+    description:
+      "Use the Filter button to narrow down your analytics by specific projects, users, or time ranges for focused analysis.",
     tips: [
       "Multi-select projects and team members",
       "Time range selection (7d, 30d, 90d)",
       "Comparison mode for period-over-period analysis",
-      "Filters apply in real-time"
+      "Filters apply in real-time",
     ],
-    color: "bg-cyan-500"
+    color: "bg-cyan-500",
   },
   {
     icon: TrendingDown,
     title: "Comparison Mode",
-    description: "Enable comparison mode in the filters panel to analyze performance changes between different time periods.",
+    description:
+      "Enable comparison mode in the filters panel to analyze performance changes between different time periods.",
     tips: [
       "Compare current vs. previous period",
       "Identify positive and negative trends",
       "Percentage change indicators",
-      "Visual trend direction arrows"
+      "Visual trend direction arrows",
     ],
-    color: "bg-indigo-500"
+    color: "bg-indigo-500",
   },
   {
     icon: Download,
     title: "Export Analytics",
-    description: "Export your analytics data in CSV, PDF, or Excel formats for presentations, reports, or further analysis.",
+    description:
+      "Export your analytics data in CSV, PDF, or Excel formats for presentations, reports, or further analysis.",
     tips: [
       "CSV for data analysis",
       "PDF for printable reports",
       "Excel with multiple formatted sheets",
-      "Exports include all filtered data"
+      "Exports include all filtered data",
     ],
-    color: "bg-emerald-500"
+    color: "bg-emerald-500",
   },
   {
     icon: Keyboard,
     title: "Keyboard Shortcuts",
-    description: "Speed up your workflow with powerful keyboard shortcuts for navigation, actions, and view controls.",
+    description:
+      "Speed up your workflow with powerful keyboard shortcuts for navigation, actions, and view controls.",
     tips: [
       "Press Ctrl+/ (or Cmd+/) to view all shortcuts",
       "Use 1-4 to switch between tabs",
       "Ctrl+R to refresh data",
-      "Ctrl+F to open filters"
+      "Ctrl+F to open filters",
     ],
-    color: "bg-violet-500"
+    color: "bg-violet-500",
   },
   {
     icon: Check,
     title: "You're All Set!",
-    description: "You're now ready to explore your analytics dashboard. Remember, you can revisit this tour anytime from the settings.",
+    description:
+      "You're now ready to explore your analytics dashboard. Remember, you can revisit this tour anytime from the settings.",
     tips: [
       "Data updates in real-time",
       "Customize your view with filters",
       "Export reports whenever needed",
-      "Check insights regularly for recommendations"
+      "Check insights regularly for recommendations",
     ],
-    color: "bg-green-600"
-  }
+    color: "bg-green-600",
+  },
 ];
 
-export function OnboardingTour({ open, onOpenChange, onComplete }: OnboardingTourProps) {
+export function OnboardingTour({
+  open,
+  onOpenChange,
+  onComplete,
+}: OnboardingTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const currentStepData = tourSteps[currentStep];
   const Icon = currentStepData.icon;
@@ -237,6 +258,7 @@ export function OnboardingTour({ open, onOpenChange, onComplete }: OnboardingTou
                 <ul className="space-y-2">
                   {currentStepData.tips.map((tip, index) => (
                     <motion.li
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static tips list, index drives stagger delay
                       key={index}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -268,17 +290,10 @@ export function OnboardingTour({ open, onOpenChange, onComplete }: OnboardingTou
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSkip}
-            >
+            <Button variant="ghost" size="sm" onClick={handleSkip}>
               Skip Tour
             </Button>
-            <Button
-              onClick={handleNext}
-              className="gap-2"
-            >
+            <Button onClick={handleNext} className="gap-2">
               {currentStep === tourSteps.length - 1 ? (
                 <>
                   <Check className="h-4 w-4" />
@@ -297,4 +312,3 @@ export function OnboardingTour({ open, onOpenChange, onComplete }: OnboardingTou
     </Dialog>
   );
 }
-

@@ -10,20 +10,23 @@ import uploadFile from "./controllers/upload-file";
 import { getDatabase } from "../database/connection";
 import { attachmentTable } from "../database/schema";
 import { eq, desc } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
   .get(
     "/",
-    zValidator("query", z.object({
-      workspaceId: z.string().optional(),
-      projectId: z.string().optional(),
-      taskId: z.string().optional(),
-      limit: z.string().optional(),
-    })),
+    zValidator(
+      "query",
+      z.object({
+        workspaceId: z.string().optional(),
+        projectId: z.string().optional(),
+        taskId: z.string().optional(),
+        limit: z.string().optional(),
+      }),
+    ),
     async (c) => {
       const { workspaceId, projectId, taskId, limit } = c.req.valid("query");
-      const limitNum = limit ? parseInt(limit) : 50;
+      const limitNum = limit ? Number.parseInt(limit) : 50;
 
       try {
         const db = getDatabase();
@@ -63,10 +66,10 @@ const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
         // Otherwise return empty array
         return c.json([]);
       } catch (error) {
-        logger.error('❌ Get attachments error:', error);
+        logger.error("❌ Get attachments error:", error);
         return c.json({ error: "Failed to get attachments" }, 500);
       }
-    }
+    },
   )
   // @epic-2.1-files: Get all attachments for a task
   .get(
@@ -74,11 +77,11 @@ const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
     zValidator("param", z.object({ taskId: z.string() })),
     async (c) => {
       try {
-      const { taskId } = c.req.valid("param");
-      const attachments = await getAttachments(taskId);
-      return c.json(attachments);
+        const { taskId } = c.req.valid("param");
+        const attachments = await getAttachments(taskId);
+        return c.json(attachments);
       } catch (error) {
-        logger.error('❌ Get task attachments error:', error);
+        logger.error("❌ Get task attachments error:", error);
         return c.json({ error: "Failed to get attachments" }, 500);
       }
     },
@@ -89,46 +92,43 @@ const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
     zValidator("param", z.object({ commentId: z.string() })),
     async (c) => {
       try {
-      const { commentId } = c.req.valid("param");
-      const attachments = await getAttachments(null, commentId);
-      return c.json(attachments);
+        const { commentId } = c.req.valid("param");
+        const attachments = await getAttachments(null, commentId);
+        return c.json(attachments);
       } catch (error) {
-        logger.error('❌ Get comment attachments error:', error);
+        logger.error("❌ Get comment attachments error:", error);
         return c.json({ error: "Failed to get attachments" }, 500);
       }
     },
   )
   // @epic-2.1-files: Get specific attachment by ID
-  .get(
-    "/:id",
-    zValidator("param", z.object({ id: z.string() })),
-    async (c) => {
-      try {
+  .get("/:id", zValidator("param", z.object({ id: z.string() })), async (c) => {
+    try {
       const { id } = c.req.valid("param");
       const attachment = await getAttachmentById(id);
       return c.json(attachment);
-      } catch (error) {
-        logger.error('❌ Get attachment by ID error:', error);
-        return c.json({ error: "Failed to get attachment" }, 500);
-      }
-    },
-  )
+    } catch (error) {
+      logger.error("❌ Get attachment by ID error:", error);
+      return c.json({ error: "Failed to get attachment" }, 500);
+    }
+  })
   // @epic-2.1-files: Upload file and create attachment
-  .post(
-    "/upload",
-    async (c) => {
-      logger.debug('📎 ATTACHMENT UPLOAD ROUTE HIT!');
-      logger.debug('📎 Request method:', c.req.method);
-      logger.debug('📎 Request URL:', c.req.url);
-      logger.debug('📎 Request headers:', JSON.stringify(Object.fromEntries(Object.entries(c.req.header()))));
-      
-      try {
-        logger.debug('📎 Parsing request body...');
+  .post("/upload", async (c) => {
+    logger.debug("📎 ATTACHMENT UPLOAD ROUTE HIT!");
+    logger.debug("📎 Request method:", c.req.method);
+    logger.debug("📎 Request URL:", c.req.url);
+    logger.debug(
+      "📎 Request headers:",
+      JSON.stringify(Object.fromEntries(Object.entries(c.req.header()))),
+    );
+
+    try {
+      logger.debug("📎 Parsing request body...");
       const body = await c.req.parseBody();
-        logger.debug('📎 Body parsed successfully');
-        logger.debug('📎 Body keys:', Object.keys(body));
-        logger.debug('📎 Body content:', body);
-        
+      logger.debug("📎 Body parsed successfully");
+      logger.debug("📎 Body keys:", Object.keys(body));
+      logger.debug("📎 Body content:", body);
+
       const file = body.file as File;
       const taskId = body.taskId as string;
       const commentId = body.commentId as string;
@@ -136,41 +136,41 @@ const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
       const description = body.description as string;
       const version = body.version as string;
 
-        logger.debug('📎 Extracted form data:', {
-          hasFile: !!file,
-          fileName: file?.name,
-          fileSize: file?.size,
-          fileType: typeof file,
-          fileConstructor: file?.constructor?.name,
-          taskId,
-          commentId,
-          userEmail,
-          description,
-          version
-        });
+      logger.debug("📎 Extracted form data:", {
+        hasFile: !!file,
+        fileName: file?.name,
+        fileSize: file?.size,
+        fileType: typeof file,
+        fileConstructor: file?.constructor?.name,
+        taskId,
+        commentId,
+        userEmail,
+        description,
+        version,
+      });
 
       if (!file) {
-          logger.debug('📎 ERROR: No file provided');
-          logger.debug('📎 File value:', file);
-          logger.debug('📎 File type:', typeof file);
+        logger.debug("📎 ERROR: No file provided");
+        logger.debug("📎 File value:", file);
+        logger.debug("📎 File type:", typeof file);
         return c.json({ error: "No file provided" }, 400);
       }
 
       if (!userEmail) {
-          logger.debug('📎 ERROR: No user email provided');
+        logger.debug("📎 ERROR: No user email provided");
         return c.json({ error: "User email required" }, 400);
       }
 
       if (!taskId && !commentId) {
-          logger.debug('📎 ERROR: No taskId or commentId provided');
+        logger.debug("📎 ERROR: No taskId or commentId provided");
         return c.json({ error: "Either taskId or commentId required" }, 400);
       }
 
-        logger.debug('📎 Starting file upload...');
+      logger.debug("📎 Starting file upload...");
       const uploadResult = await uploadFile(file, userEmail);
-        logger.debug('📎 File upload completed:', uploadResult);
-      
-        logger.debug('📎 Creating attachment record...');
+      logger.debug("📎 File upload completed:", uploadResult);
+
+      logger.debug("📎 Creating attachment record...");
       const attachment = await createAttachment({
         name: file.name,
         url: uploadResult.url,
@@ -182,18 +182,20 @@ const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
         description: description || null,
         version: version || "1.0",
       });
-        logger.debug('📎 Attachment record created:', attachment);
+      logger.debug("📎 Attachment record created:", attachment);
 
       return c.json(attachment);
-      } catch (error) {
-        logger.error('❌ Upload attachment error:', error);
-        if (error instanceof Error) {
-          return c.json({ error: `Failed to upload attachment: ${error.message}` }, 500);
-        }
-        return c.json({ error: "Failed to upload attachment" }, 500);
+    } catch (error) {
+      logger.error("❌ Upload attachment error:", error);
+      if (error instanceof Error) {
+        return c.json(
+          { error: `Failed to upload attachment: ${error.message}` },
+          500,
+        );
       }
-    },
-  )
+      return c.json({ error: "Failed to upload attachment" }, 500);
+    }
+  })
   // @epic-2.1-files: Update attachment metadata
   .put(
     "/:id",
@@ -208,18 +210,18 @@ const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
     ),
     async (c) => {
       try {
-      const { id } = c.req.valid("param");
-      const { name, description, userEmail } = c.req.valid("json");
+        const { id } = c.req.valid("param");
+        const { name, description, userEmail } = c.req.valid("json");
 
-      const attachment = await updateAttachment(id, {
-        name,
-        description,
-        userEmail,
-      });
+        const attachment = await updateAttachment(id, {
+          name,
+          description,
+          userEmail,
+        });
 
-      return c.json(attachment);
+        return c.json(attachment);
       } catch (error) {
-        logger.error('❌ Update attachment error:', error);
+        logger.error("❌ Update attachment error:", error);
         return c.json({ error: "Failed to update attachment" }, 500);
       }
     },
@@ -236,14 +238,14 @@ const attachmentCore = new Hono<{ Variables: { userEmail: string } }>()
     ),
     async (c) => {
       try {
-      const { id } = c.req.valid("param");
-      const { userEmail } = c.req.valid("json");
+        const { id } = c.req.valid("param");
+        const { userEmail } = c.req.valid("json");
 
-      await deleteAttachment(id, userEmail);
+        await deleteAttachment(id, userEmail);
 
-      return c.json({ message: "Attachment deleted successfully" });
+        return c.json({ message: "Attachment deleted successfully" });
       } catch (error) {
-        logger.error('❌ Delete attachment error:', error);
+        logger.error("❌ Delete attachment error:", error);
         return c.json({ error: "Failed to delete attachment" }, 500);
       }
     },
@@ -270,4 +272,4 @@ attachment.all("/annotations/*", (c) =>
 );
 attachment.route("/", attachmentCore);
 
-export default attachment; 
+export default attachment;

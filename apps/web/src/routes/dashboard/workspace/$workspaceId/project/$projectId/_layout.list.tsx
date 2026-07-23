@@ -5,42 +5,45 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { EmptyState } from "@/components/empty-state";
 import { ExperienceItemSkeleton } from "@/components/ui/skeleton-loader";
-import { 
-  Search, 
-  Plus, 
+import {
+  Search,
+  Plus,
   Filter,
   Target,
   ChevronDown,
   Layout,
-  CheckSquare
+  CheckSquare,
 } from "lucide-react";
-import { cn } from "@/lib/cn";
-import { useState, useMemo, useCallback, useRef } from "react";
+import {
+  type ComponentProps,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { debounce, throttle } from "lodash";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
-import useProjectStore from "@/store/project";
-import { flattenTasks } from "@/utils/task-hierarchy";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
-import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-active-workspace-users";
 import { toast } from "sonner";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useMilestones } from "@/hooks/use-milestones";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
+import type Task from "@/types/task";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 // 🧠 MEMORY: Optimization utilities for large task lists
-import { optimizedFlattenTasks, optimizedFilter } from "@/utils/memory-optimization";
+import {
+  optimizedFlattenTasks,
+  optimizedFilter,
+} from "@/utils/memory-optimization";
 import { useMemoryCleanup } from "@/components/performance/memory-cleanup-provider";
-import { MemoryStatusBadge } from "@/components/performance/memory-status-badge";
 // 🔒 SECURITY: XSS protection for user inputs
 import { sanitizeString } from "@/utils/xss-protection";
 // 🔒 SECURITY: Role-based access control
@@ -62,7 +65,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute(
-  "/dashboard/workspace/$workspaceId/project/$projectId/_layout/list"
+  "/dashboard/workspace/$workspaceId/project/$projectId/_layout/list",
 )({
   component: () => (
     <ErrorBoundary>
@@ -71,47 +74,41 @@ export const Route = createFileRoute(
   ),
 });
 
-// Pagination interface for consistency with All Tasks
+// Pagination interface matching VirtualizedTaskList's expected shape
 interface PaginationInfo {
-  page: number;
-  pageSize: number;
   total: number;
-  totalPages: number;
+  limit: number;
+  offset: number;
+  pages: number;
+  currentPage: number;
 }
 
 function ProjectListView() {
   const { projectId, workspaceId } = Route.useParams();
   const { data: columns, isLoading } = useGetTasks(projectId);
   const { data: projectData } = useGetProject({ id: projectId, workspaceId });
-  const { setProject } = useProjectStore();
-  const { getCurrentUsage, isHighMemory } = useMemoryCleanup();
-  
+  useMemoryCleanup();
+
   // 🔒 SECURITY: Check user permissions for this project
-  const {
-    canCreateTasks,
-    canEditTasks,
-    canDeleteTasks,
-    canManageProject,
-    hasProjectAccess,
-    isLoading: permissionsLoading,
-  } = useProjectPermissions(projectId, workspaceId);
-  
+  const { canCreateTasks, canEditTasks, canDeleteTasks, canManageProject } =
+    useProjectPermissions(projectId, workspaceId);
+
   // Task management mutations
-  const { mutateAsync: updateTask, isPending: isUpdating } = useUpdateTask();
-  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask();
-  
+  const { mutateAsync: updateTask } = useUpdateTask();
+  const { mutateAsync: deleteTask } = useDeleteTask(projectId);
+
   // ♻️ UX: Undo delete with 5-second window
-  const { deleteWithUndo, isPendingDelete } = useUndo(
+  const { deleteWithUndo } = useUndo(
     async (taskId: string) => {
       await deleteTask(taskId);
-      setSelectedTasks(prev => prev.filter(id => id !== taskId));
+      setSelectedTasks((prev) => prev.filter((id) => id !== taskId));
     },
-    { 
-      delay: 5000, 
-      message: 'Task deleted. Click to undo.' 
-    }
+    {
+      delay: 5000,
+      message: "Task deleted. Click to undo.",
+    },
   );
-  
+
   // Milestone management - moved to component level
   const { createMilestone } = useMilestones(projectId);
 
@@ -123,59 +120,68 @@ function ProjectListView() {
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
-  
+
   // Pagination state - same as All Tasks page
   const [pageSize, setPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Keyboard shortcuts state
   const [isShortcutsDialogOpen, setIsShortcutsDialogOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
   // 📱 MOBILE: Mobile filter sheet state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  
+
   // Calculate active filters count for mobile badge
-  const activeFiltersCount = [statusFilter, priorityFilter, sortBy].filter(Boolean).length;
+  const activeFiltersCount = [statusFilter, priorityFilter, sortBy].filter(
+    Boolean,
+  ).length;
 
   // 🔒 SECURITY: Rate limiting for search and updates
   const debouncedSearch = useMemo(
     () => debounce((value: string) => setSearchTerm(value), 300),
-    []
+    [],
   );
 
-  const throttledUpdate = useMemo(
-    () => throttle(async (task: any, updates: any) => {
-      try {
-        await updateTask({
-          ...task,
-          ...updates,
-          dueDate: task.dueDate ? task.dueDate.toISOString() : null
-        });
-        toast.success("Task updated successfully");
-      } catch (error) {
-        toast.error("Failed to update task");
-      }
-    }, 1000, { leading: true, trailing: false }),
-    [updateTask]
+  void useMemo(
+    () =>
+      throttle(
+        async (task: Task, updates: Partial<Task>) => {
+          try {
+            await updateTask({
+              ...task,
+              ...updates,
+              dueDate: task.dueDate
+                ? new Date(task.dueDate).toISOString()
+                : null,
+            });
+            toast.success("Task updated successfully");
+          } catch (error) {
+            toast.error("Failed to update task");
+          }
+        },
+        1000,
+        { leading: true, trailing: false },
+      ),
+    [updateTask],
   );
 
   // Memory-optimized task processing
   const allTasks = useMemo(() => {
     if (!columns) return [];
-    
-    const columnArray = Array.isArray(columns)
+
+    const columnArray: Array<{ tasks?: unknown[] }> = Array.isArray(columns)
       ? columns
-      : columns && Array.isArray((columns as any).columns)
-        ? (columns as any).columns
+      : columns && Array.isArray(columns.columns)
+        ? columns.columns
         : [];
 
     // Use optimized flattening for large datasets
-    const flattened = columnArray.flatMap((col: any) => col.tasks || []);
-    const result = optimizedFlattenTasks(flattened);
-    
+    const flattened = columnArray.flatMap((col) => col.tasks || []);
+    const result = optimizedFlattenTasks(flattened as Task[]);
+
     // Transform to match VirtualizedTaskList format
-    return result.map((task: any) => ({
+    return result.map((task) => ({
       ...task,
       number: task.number || 0,
       dueDate: task.dueDate ? new Date(task.dueDate) : null,
@@ -184,48 +190,63 @@ function ProjectListView() {
       assigneeEmail: task.userEmail || null,
       project: {
         id: projectId,
-        name: projectData?.name || 'Project',
-        slug: projectData?.slug || 'project',
-        icon: projectData?.icon ? <Layout className="h-4 w-4 text-muted-foreground" /> : '📋',
-        workspaceId: workspaceId
-      }
+        name: projectData?.name || "Project",
+        slug: projectData?.slug || "project",
+        icon: projectData?.icon ? (
+          <Layout className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          "📋"
+        ),
+        workspaceId: workspaceId,
+      },
     }));
   }, [columns, projectId, projectData, workspaceId]);
 
   // Apply filtering and sorting - consistent with All Tasks
   const filteredAndSortedTasks = useMemo(() => {
     if (!allTasks.length) return [];
-    
-    let filtered = optimizedFilter(
+
+    const filtered = optimizedFilter(
       allTasks,
-      (task: any) => {
-        const matchesSearch = task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (task) => {
+        const matchesSearch =
+          task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (task.userEmail?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+          (task.userEmail?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase(),
+          );
         const matchesStatus = !statusFilter || task.status === statusFilter;
-        const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+        const matchesPriority =
+          !priorityFilter || task.priority === priorityFilter;
         return matchesSearch && matchesStatus && matchesPriority;
       },
-      1000 // Limit for project view
+      1000, // Limit for project view
     );
 
     // Apply sorting
     if (sortBy) {
-      filtered.sort((a: any, b: any) => {
+      filtered.sort((a, b) => {
         switch (sortBy) {
           case "title":
             return a.title.localeCompare(b.title);
           case "status":
             return a.status.localeCompare(b.status);
-          case "priority":
+          case "priority": {
             const priorityOrder = { low: 1, medium: 2, high: 3, urgent: 4 };
-            return (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
-          case "dueDate":
+            return (
+              (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) -
+              (priorityOrder[a.priority as keyof typeof priorityOrder] || 0)
+            );
+          }
+          case "dueDate": {
             const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0;
             const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0;
             return dateA - dateB;
+          }
           case "created":
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
           default:
             return 0;
         }
@@ -243,18 +264,19 @@ function ProjectListView() {
   }, [filteredAndSortedTasks, currentPage, pageSize]);
 
   const pagination: PaginationInfo = {
-    page: currentPage,
-    pageSize,
     total: filteredAndSortedTasks.length,
-    totalPages: Math.ceil(filteredAndSortedTasks.length / pageSize)
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize,
+    pages: Math.ceil(filteredAndSortedTasks.length / pageSize),
+    currentPage,
   };
 
   // Task management functions - same as All Tasks
   const handleTaskSelect = (taskId: string) => {
-    setSelectedTasks(prev => 
-      prev.includes(taskId) 
-        ? prev.filter(id => id !== taskId)
-        : [...prev, taskId]
+    setSelectedTasks((prev) =>
+      prev.includes(taskId)
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId],
     );
   };
 
@@ -262,30 +284,35 @@ function ProjectListView() {
     if (selectedTasks.length === paginatedTasks.length) {
       setSelectedTasks([]);
     } else {
-      setSelectedTasks(paginatedTasks.map(task => task.id));
+      setSelectedTasks(paginatedTasks.map((task) => task.id));
     }
   };
 
   // 🔒 SECURITY: Throttled reorder to prevent API spam
+  // biome-ignore lint/correctness/useExhaustiveDependencies: throttled callback must capture latest allTasks/updateTask; biome under-detects usage through throttle()
   const handleTaskReorder = useCallback(
-    throttle(async (taskId: string, newPosition: number) => {
-      try {
-        const task = allTasks.find(t => t.id === taskId);
-        if (!task) return;
-        
-        await updateTask({
-          ...task,
-          position: newPosition,
-          dueDate: task.dueDate ? task.dueDate.toISOString() : null
-        });
-        
-        toast.success("Task reordered successfully");
-      } catch (error) {
-        toast.error("Failed to reorder task");
-        console.error("Task reorder error:", error);
-      }
-    }, 1000, { leading: true, trailing: false }),
-    [allTasks, updateTask]
+    throttle(
+      async (taskId: string, newPosition: number) => {
+        try {
+          const task = allTasks.find((t) => t.id === taskId);
+          if (!task) return;
+
+          await updateTask({
+            ...task,
+            position: newPosition,
+            dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+          } as unknown as Task);
+
+          toast.success("Task reordered successfully");
+        } catch (error) {
+          toast.error("Failed to reorder task");
+          console.error("Task reorder error:", error);
+        }
+      },
+      1000,
+      { leading: true, trailing: false },
+    ),
+    [allTasks, updateTask],
   );
 
   // 🔧 BULK OPERATIONS: Handlers for bulk actions
@@ -297,14 +324,14 @@ function ProjectListView() {
 
     try {
       const updatePromises = selectedTasks.map(async (taskId) => {
-        const task = allTasks.find(t => t.id === taskId);
+        const task = allTasks.find((t) => t.id === taskId);
         if (!task) return;
-        
+
         await updateTask({
           ...task,
           status,
-          dueDate: task.dueDate ? task.dueDate.toISOString() : null
-        });
+          dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+        } as unknown as Task);
       });
 
       await Promise.all(updatePromises);
@@ -324,18 +351,20 @@ function ProjectListView() {
 
     try {
       const updatePromises = selectedTasks.map(async (taskId) => {
-        const task = allTasks.find(t => t.id === taskId);
+        const task = allTasks.find((t) => t.id === taskId);
         if (!task) return;
-        
+
         await updateTask({
           ...task,
           priority,
-          dueDate: task.dueDate ? task.dueDate.toISOString() : null
-        });
+          dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+        } as unknown as Task);
       });
 
       await Promise.all(updatePromises);
-      toast.success(`Updated ${selectedTasks.length} task(s) priority to ${priority}`);
+      toast.success(
+        `Updated ${selectedTasks.length} task(s) priority to ${priority}`,
+      );
       setSelectedTasks([]);
     } catch (error) {
       toast.error("Failed to update task priorities");
@@ -349,14 +378,18 @@ function ProjectListView() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete ${selectedTasks.length} task(s)? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedTasks.length} task(s)? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
     try {
       const deletePromises = selectedTasks.map((taskId) => deleteTask(taskId));
       await Promise.all(deletePromises);
-      
+
       toast.success(`Deleted ${selectedTasks.length} task(s)`);
       setSelectedTasks([]);
     } catch (error) {
@@ -368,35 +401,35 @@ function ProjectListView() {
   // ⌨️ KEYBOARD SHORTCUTS: Global shortcuts for the page
   useKeyboardShortcuts([
     {
-      key: 'n',
+      key: "n",
       action: () => canCreateTasks && setIsTaskModalOpen(true),
-      description: 'Create new task',
+      description: "Create new task",
     },
     {
-      key: '/',
+      key: "/",
       action: () => searchInputRef.current?.focus(),
-      description: 'Focus search',
+      description: "Focus search",
     },
     {
-      key: 'k',
+      key: "k",
       meta: true,
       action: () => searchInputRef.current?.focus(),
-      description: 'Focus search (Cmd/Ctrl+K)',
+      description: "Focus search (Cmd/Ctrl+K)",
     },
     {
-      key: '?',
+      key: "?",
       shift: true,
       action: () => setIsShortcutsDialogOpen(true),
-      description: 'Show keyboard shortcuts',
+      description: "Show keyboard shortcuts",
     },
     {
-      key: 'Escape',
+      key: "Escape",
       action: () => {
         if (selectedTasks.length > 0) {
           setSelectedTasks([]);
         }
       },
-      description: 'Clear selection',
+      description: "Clear selection",
     },
   ]);
 
@@ -429,6 +462,7 @@ function ProjectListView() {
           {/* Task List Skeleton - Dynamic based on pageSize */}
           <div className="space-y-3">
             {Array.from({ length: pageSize }).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
               <ExperienceItemSkeleton key={i} />
             ))}
           </div>
@@ -443,30 +477,36 @@ function ProjectListView() {
         {/* Header - consistent with All Tasks */}
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Project Task List</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+              Project Task List
+            </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              {filteredAndSortedTasks.length} {filteredAndSortedTasks.length === 1 ? 'task' : 'tasks'} 
-              {selectedTasks.length > 0 && ` • ${selectedTasks.length} selected`}
+              {filteredAndSortedTasks.length}{" "}
+              {filteredAndSortedTasks.length === 1 ? "task" : "tasks"}
+              {selectedTasks.length > 0 &&
+                ` • ${selectedTasks.length} selected`}
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <MemoryStatusBadge className="mr-2 hidden sm:block" />
             {canManageProject && (
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsMilestoneModalOpen(true)}
                 aria-label="Create new milestone"
                 className="hidden sm:flex"
               >
-                <Target className="mr-2 h-4 w-4 text-orange-500" aria-hidden="true" />
+                <Target
+                  className="mr-2 h-4 w-4 text-orange-500"
+                  aria-hidden="true"
+                />
                 <span className="hidden md:inline">New Milestone</span>
                 <span className="md:hidden">Milestone</span>
               </Button>
             )}
             {canCreateTasks && (
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 onClick={() => setIsTaskModalOpen(true)}
                 aria-label="Create new task"
               >
@@ -496,7 +536,7 @@ function ProjectListView() {
               role="searchbox"
             />
           </div>
-          
+
           {/* 📱 MOBILE: Mobile Filter Sheet (< 768px) */}
           <div className="md:hidden">
             <MobileFilterSheet
@@ -511,13 +551,13 @@ function ProjectListView() {
               activeFiltersCount={activeFiltersCount}
             />
           </div>
-          
+
           {/* 🖥️ DESKTOP: Desktop Filters (>= 768px) */}
           <div className="hidden md:flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   aria-label="Filter tasks by status"
                   aria-haspopup="true"
@@ -527,21 +567,39 @@ function ProjectListView() {
                   <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent role="menu" aria-label="Status filter options">
-                <DropdownMenuItem onClick={() => setStatusFilter("")} role="menuitem">
+              <DropdownMenuContent
+                role="menu"
+                aria-label="Status filter options"
+              >
+                <DropdownMenuItem
+                  onClick={() => setStatusFilter("")}
+                  role="menuitem"
+                >
                   All Status
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setStatusFilter("todo")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setStatusFilter("todo")}
+                  role="menuitem"
+                >
                   To Do
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("in_progress")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setStatusFilter("in_progress")}
+                  role="menuitem"
+                >
                   In Progress
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("in_review")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setStatusFilter("in_review")}
+                  role="menuitem"
+                >
                   In Review
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("done")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setStatusFilter("done")}
+                  role="menuitem"
+                >
                   Done
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -549,8 +607,8 @@ function ProjectListView() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   aria-label="Filter tasks by priority"
                   aria-haspopup="true"
@@ -559,21 +617,39 @@ function ProjectListView() {
                   <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent role="menu" aria-label="Priority filter options">
-                <DropdownMenuItem onClick={() => setPriorityFilter("")} role="menuitem">
+              <DropdownMenuContent
+                role="menu"
+                aria-label="Priority filter options"
+              >
+                <DropdownMenuItem
+                  onClick={() => setPriorityFilter("")}
+                  role="menuitem"
+                >
                   All Priority
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setPriorityFilter("urgent")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setPriorityFilter("urgent")}
+                  role="menuitem"
+                >
                   Urgent
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPriorityFilter("high")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setPriorityFilter("high")}
+                  role="menuitem"
+                >
                   High
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPriorityFilter("medium")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setPriorityFilter("medium")}
+                  role="menuitem"
+                >
                   Medium
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPriorityFilter("low")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setPriorityFilter("low")}
+                  role="menuitem"
+                >
                   Low
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -581,8 +657,8 @@ function ProjectListView() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   aria-label="Sort tasks"
                   aria-haspopup="true"
@@ -596,16 +672,28 @@ function ProjectListView() {
                   Default Order
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setSortBy("title")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setSortBy("title")}
+                  role="menuitem"
+                >
                   Title A-Z
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("priority")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setSortBy("priority")}
+                  role="menuitem"
+                >
                   Priority (High to Low)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("dueDate")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setSortBy("dueDate")}
+                  role="menuitem"
+                >
                   Due Date (Earliest)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("created")} role="menuitem">
+                <DropdownMenuItem
+                  onClick={() => setSortBy("created")}
+                  role="menuitem"
+                >
                   Recently Created
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -617,49 +705,69 @@ function ProjectListView() {
         {!isLoading && filteredAndSortedTasks.length === 0 && (
           <EmptyState
             icon={CheckSquare}
-            title={searchTerm || statusFilter || priorityFilter ? "No tasks found" : "No tasks yet"}
+            title={
+              searchTerm || statusFilter || priorityFilter
+                ? "No tasks found"
+                : "No tasks yet"
+            }
             description={
               searchTerm || statusFilter || priorityFilter
                 ? "Try adjusting your search or filters to find what you're looking for."
                 : "Create your first task to get started with project management."
             }
             actionLabel={canCreateTasks ? "Create Task" : undefined}
-            onAction={canCreateTasks ? () => setIsTaskModalOpen(true) : undefined}
+            onAction={
+              canCreateTasks ? () => setIsTaskModalOpen(true) : undefined
+            }
           />
         )}
 
         {/* Virtualized Task List - SAME AS ALL TASKS PAGE */}
         {filteredAndSortedTasks.length > 0 && (
           <VirtualizedTaskList
-            tasks={paginatedTasks}
+            tasks={
+              paginatedTasks as unknown as ComponentProps<
+                typeof VirtualizedTaskList
+              >["tasks"]
+            }
             selectedTasks={selectedTasks}
             onTaskSelect={handleTaskSelect}
             onSelectAll={handleSelectAll}
-          onTaskUpdate={canEditTasks ? async (taskId: string, updates: any) => {
-            const task = allTasks.find(t => t.id === taskId);
-            if (!task) return;
-            
-            try {
-              await updateTask({
-                ...task,
-                ...updates,
-                dueDate: task.dueDate ? task.dueDate.toISOString() : null
-              });
-              toast.success("Task updated successfully");
-            } catch (error) {
-              toast.error("Failed to update task");
+            onTaskUpdate={
+              canEditTasks
+                ? async (taskId: string, updates) => {
+                    const task = allTasks.find((t) => t.id === taskId);
+                    if (!task) return;
+
+                    try {
+                      await updateTask({
+                        ...task,
+                        ...updates,
+                        dueDate: task.dueDate
+                          ? task.dueDate.toISOString()
+                          : null,
+                      } as unknown as Task);
+                      toast.success("Task updated successfully");
+                    } catch (error) {
+                      toast.error("Failed to update task");
+                    }
+                  }
+                : undefined
             }
-          } : undefined}
-          onTaskDelete={canDeleteTasks ? (taskId: string) => {
-            deleteWithUndo(taskId);
-          } : undefined}
-          onTaskReorder={handleTaskReorder}
-          isLoading={isLoading}
-          className="w-full"
-          pagination={pagination}
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
-          onPageChange={setCurrentPage}
+            onTaskDelete={
+              canDeleteTasks
+                ? async (taskId: string) => {
+                    deleteWithUndo({ id: taskId });
+                  }
+                : undefined
+            }
+            onTaskReorder={handleTaskReorder}
+            isLoading={isLoading}
+            className="w-full"
+            pagination={pagination}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
+            onPageChange={setCurrentPage}
           />
         )}
 
@@ -680,48 +788,52 @@ function ProjectListView() {
           onClose={() => setIsShortcutsDialogOpen(false)}
           shortcuts={[
             {
-              key: 'n',
+              key: "n",
               action: () => {},
-              description: 'Create new task',
+              description: "Create new task",
             },
             {
-              key: '/',
+              key: "/",
               action: () => {},
-              description: 'Focus search',
+              description: "Focus search",
             },
             {
-              key: 'k',
+              key: "k",
               meta: true,
               action: () => {},
-              description: 'Focus search (Cmd/Ctrl+K)',
+              description: "Focus search (Cmd/Ctrl+K)",
             },
             {
-              key: '?',
+              key: "?",
               shift: true,
               action: () => {},
-              description: 'Show keyboard shortcuts',
+              description: "Show keyboard shortcuts",
             },
             {
-              key: 'Escape',
+              key: "Escape",
               action: () => {},
-              description: 'Clear selection',
+              description: "Clear selection",
             },
           ]}
         />
 
         {/* Modals */}
-        <CreateTaskModal 
-          open={isTaskModalOpen} 
-          onClose={() => setIsTaskModalOpen(false)} 
+        <CreateTaskModal
+          open={isTaskModalOpen}
+          onClose={() => setIsTaskModalOpen(false)}
           status="todo"
           projectContext={{
             id: projectId,
-            name: projectData?.name || 'Project',
-            slug: projectData?.slug || 'project',
-            icon: projectData?.icon ? <Layout className="h-4 w-4 text-muted-foreground" /> : '📋'
+            name: projectData?.name || "Project",
+            slug: projectData?.slug || "project",
+            icon: projectData?.icon ? (
+              <Layout className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              "📋"
+            ),
           }}
         />
-        
+
         <CreateMilestoneModal
           open={isMilestoneModalOpen}
           onClose={() => setIsMilestoneModalOpen(false)}
@@ -738,4 +850,4 @@ function ProjectListView() {
       </div>
     </LazyDashboardLayout>
   );
-} 
+}

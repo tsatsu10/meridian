@@ -11,7 +11,10 @@ import updateProject from "./controllers/update-project";
 import createStatusColumn from "./controllers/create-status-column";
 import deleteStatusColumn from "./controllers/delete-status-column";
 import { archiveProject, restoreProject } from "./controllers/archive-project";
-import exportProject, { convertToCSV, convertToMarkdown } from "./controllers/export-project";
+import exportProject, {
+  convertToCSV,
+  convertToMarkdown,
+} from "./controllers/export-project";
 import getProjectOverview from "./controllers/get-project-overview";
 // Project member and settings controllers
 import addProjectMember from "./controllers/add-project-member";
@@ -40,23 +43,53 @@ import removeMember from "./controllers/teams/remove-member";
 import updateMemberRole from "./controllers/teams/update-member-role";
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
-import { statusColumnTable, projectTable, workspaceUserTable, userTable } from "../database/schema";
+import {
+  statusColumnTable,
+  projectTable,
+  workspaceUserTable,
+  userTable,
+} from "../database/schema";
 import rbacMiddleware from "../middlewares/rbac";
 import { requirePermission } from "../middlewares/rbac";
-import { CachePresets } from "../middlewares/cache-middleware";
+import { CachePresets, cacheMiddleware } from "../middlewares/cache-middleware";
 import { RateLimitPresets } from "../middlewares/rate-limit";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
+import { getErrorMessage } from "../utils/error-utils";
+import { errorMessage } from "../utils/errors";
 
 // Enhanced validation schemas
-const projectStatusSchema = z.enum(["planning", "active", "on-hold", "completed", "archived"]);
-const projectCategorySchema = z.enum(["development", "design", "marketing", "operations", "research", "other"]);
+const projectStatusSchema = z.enum([
+  "planning",
+  "active",
+  "on-hold",
+  "completed",
+  "archived",
+]);
+const projectCategorySchema = z.enum([
+  "development",
+  "design",
+  "marketing",
+  "operations",
+  "research",
+  "other",
+]);
 const projectPrioritySchema = z.enum(["low", "medium", "high", "urgent"]);
 const projectVisibilitySchema = z.enum(["private", "team", "workspace"]);
-const projectRoleSchema = z.enum(["owner", "admin", "team-lead", "senior", "member", "viewer"]);
+const projectRoleSchema = z.enum([
+  "owner",
+  "admin",
+  "team-lead",
+  "senior",
+  "member",
+  "viewer",
+]);
 
 function splitCsv(s: string | undefined): string[] | undefined {
   if (!s?.trim()) return undefined;
-  const parts = s.split(",").map((x) => x.trim()).filter(Boolean);
+  const parts = s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
   return parts.length ? parts : undefined;
 }
 
@@ -67,20 +100,25 @@ const project = new Hono<{
 }>()
   .get(
     "/",
-    zValidator("query", z.object({
-      workspaceId: z.string(),
-      limit: z.string().optional(),
-      offset: z.string().optional(),
-      includeArchived: z.string().optional(),
-      archivedOnly: z.string().optional(),
-      q: z.string().optional(),
-      status: z.string().optional(),
-      priority: z.string().optional(),
-      ownerIds: z.string().optional(),
-      teamMemberIds: z.string().optional(),
-      sortBy: z.enum(["name", "status", "priority", "dueDate", "progress"]).optional(),
-      sortOrder: z.enum(["asc", "desc"]).optional(),
-    })),
+    zValidator(
+      "query",
+      z.object({
+        workspaceId: z.string(),
+        limit: z.string().optional(),
+        offset: z.string().optional(),
+        includeArchived: z.string().optional(),
+        archivedOnly: z.string().optional(),
+        q: z.string().optional(),
+        status: z.string().optional(),
+        priority: z.string().optional(),
+        ownerIds: z.string().optional(),
+        teamMemberIds: z.string().optional(),
+        sortBy: z
+          .enum(["name", "status", "priority", "dueDate", "progress"])
+          .optional(),
+        sortOrder: z.enum(["asc", "desc"]).optional(),
+      }),
+    ),
     async (c) => {
       const q = c.req.valid("query");
       const {
@@ -94,8 +132,8 @@ const project = new Hono<{
       } = q;
 
       const projects = await getProjects(workspaceId, {
-        limit: limit ? parseInt(limit, 10) : undefined,
-        offset: offset ? parseInt(offset, 10) : undefined,
+        limit: limit ? Number.parseInt(limit, 10) : undefined,
+        offset: offset ? Number.parseInt(offset, 10) : undefined,
         includeArchived: includeArchived === "true",
         archivedOnly: archivedOnly === "true",
         q: q.q,
@@ -180,7 +218,10 @@ const project = new Hono<{
       try {
         await checkRateLimit(userId, RATE_LIMITS.CREATE_PROJECT);
       } catch (rateLimitError) {
-        return c.json({ error: 'Too many projects created. Please wait a moment.' }, 429);
+        return c.json(
+          { error: "Too many projects created. Please wait a moment." },
+          429,
+        );
       }
 
       const project = await createProject(projectData, userId);
@@ -203,7 +244,10 @@ const project = new Hono<{
       try {
         await checkRateLimit(userId, RATE_LIMITS.CREATE_PROJECT);
       } catch {
-        return c.json({ error: "Too many projects created. Please wait a moment." }, 429);
+        return c.json(
+          { error: "Too many projects created. Please wait a moment." },
+          429,
+        );
       }
       const created = await duplicateProject(projectId, workspaceId, userId);
       return c.json(created);
@@ -250,7 +294,10 @@ const project = new Hono<{
         try {
           await checkRateLimit(userId, RATE_LIMITS.UPDATE_PROJECT);
         } catch (rateLimitError) {
-          return c.json({ error: 'Too many project updates. Please slow down.' }, 429);
+          return c.json(
+            { error: "Too many project updates. Please slow down." },
+            429,
+          );
         }
       }
 
@@ -274,30 +321,29 @@ const project = new Hono<{
         try {
           await checkRateLimit(userId, RATE_LIMITS.DELETE_PROJECT);
         } catch (rateLimitError) {
-          return c.json({ error: 'Too many deletions. Please wait.' }, 429);
+          return c.json({ error: "Too many deletions. Please wait." }, 429);
         }
       }
 
-      const project = await deleteProject(projectId);
-
-      return c.json(project);
+      // deleteProject reads params from the context and builds the response
+      return await deleteProject(c);
     },
   )
-  
+
   // Archive/Restore endpoints
   .patch(
     "/:id/archive",
     RateLimitPresets.archive, // 🚦 Rate limit: 5 archive operations per 5 minutes
     rbacMiddleware.canEditProjects,
-    archiveProject
+    archiveProject,
   )
   .patch(
     "/:id/restore",
     RateLimitPresets.archive, // 🚦 Rate limit: 5 restore operations per 5 minutes
     rbacMiddleware.canEditProjects,
-    restoreProject
+    restoreProject,
   )
-  
+
   // @epic-1.1-subtasks: Enhanced team management endpoints for Sarah's PM workflow
   .get(
     "/:projectId/members",
@@ -325,7 +371,8 @@ const project = new Hono<{
     ),
     async (c) => {
       const { projectId } = c.req.valid("param");
-      const { userEmail, role, hoursPerWeek, notificationSettings } = c.req.valid("json");
+      const { userEmail, role, hoursPerWeek, notificationSettings } =
+        c.req.valid("json");
       const assignedBy = c.get("userEmail");
 
       const member = await addProjectMember({
@@ -342,10 +389,13 @@ const project = new Hono<{
   )
   .put(
     "/:projectId/members/:memberEmail",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      memberEmail: z.string() 
-    })),
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        memberEmail: z.string(),
+      }),
+    ),
     zValidator(
       "json",
       z.object({
@@ -359,17 +409,24 @@ const project = new Hono<{
       const { projectId, memberEmail } = c.req.valid("param");
       const updateData = c.req.valid("json");
 
-      const member = await updateProjectMember(projectId, memberEmail, updateData);
+      const member = await updateProjectMember(
+        projectId,
+        memberEmail,
+        updateData,
+      );
 
       return c.json(member);
     },
   )
   .delete(
     "/:projectId/members/:memberEmail",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      memberEmail: z.string() 
-    })),
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        memberEmail: z.string(),
+      }),
+    ),
     async (c) => {
       const { projectId, memberEmail } = c.req.valid("param");
 
@@ -382,10 +439,18 @@ const project = new Hono<{
   // @epic-3.1-dashboard: Project settings management for Jennifer's executive oversight
   .get(
     "/:projectId/settings/:category",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      category: z.enum(["integrations", "automation", "templates", "workflows"])
-    })),
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        category: z.enum([
+          "integrations",
+          "automation",
+          "templates",
+          "workflows",
+        ]),
+      }),
+    ),
     async (c) => {
       const { projectId, category } = c.req.valid("param");
 
@@ -396,10 +461,18 @@ const project = new Hono<{
   )
   .put(
     "/:projectId/settings/:category",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      category: z.enum(["integrations", "automation", "templates", "workflows"])
-    })),
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        category: z.enum([
+          "integrations",
+          "automation",
+          "templates",
+          "workflows",
+        ]),
+      }),
+    ),
     zValidator(
       "json",
       z.object({
@@ -411,7 +484,12 @@ const project = new Hono<{
       const { settings } = c.req.valid("json");
       const modifiedBy = c.get("userEmail");
 
-      const result = await updateProjectSettings(projectId, category, settings, modifiedBy);
+      const result = await updateProjectSettings(
+        projectId,
+        category,
+        settings,
+        modifiedBy,
+      );
 
       return c.json(result);
     },
@@ -425,7 +503,10 @@ const project = new Hono<{
       "json",
       z.object({
         name: z.string().min(1).max(50),
-        color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+        color: z
+          .string()
+          .regex(/^#[0-9A-Fa-f]{6}$/)
+          .optional(),
         position: z.number().int().min(0).optional(),
       }),
     ),
@@ -445,10 +526,13 @@ const project = new Hono<{
   )
   .delete(
     "/:projectId/status-columns/:columnId",
-    zValidator("param", z.object({ 
-      projectId: z.string(), 
-      columnId: z.string() 
-    })),
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        columnId: z.string(),
+      }),
+    ),
     async (c) => {
       const { projectId, columnId } = c.req.valid("param");
 
@@ -460,52 +544,55 @@ const project = new Hono<{
       return c.json(result);
     },
   )
-  
+
   // Fix position conflicts in project columns
-  .post(
-    "/:projectId/fix-positions",
-    async (c) => {
-      const { projectId } = c.req.param();
-      const db = getDatabase();
+  .post("/:projectId/fix-positions", async (c) => {
+    const { projectId } = c.req.param();
+    const db = getDatabase();
 
-      try {
-        logger.debug('🔧 Fixing position conflicts for project:', projectId);
+    try {
+      logger.debug("🔧 Fixing position conflicts for project:", projectId);
 
-        // Get all columns sorted by current position, then by creation date for tiebreaker
-        const columns = await db
-          .select()
-          .from(statusColumnTable)
-          .where(eq(statusColumnTable.projectId, projectId))
-          .orderBy(statusColumnTable.position, statusColumnTable.createdAt);
+      // Get all columns sorted by current position, then by creation date for tiebreaker
+      const columns = await db
+        .select()
+        .from(statusColumnTable)
+        .where(eq(statusColumnTable.projectId, projectId))
+        .orderBy(statusColumnTable.position, statusColumnTable.createdAt);
 
-        logger.debug('🔧 Current columns before fix:', columns.map(c => ({ 
-          id: c.id, 
-          name: c.name, 
-          position: c.position, 
-          isDefault: c.isDefault 
-        })));
+      logger.debug(
+        "🔧 Current columns before fix:",
+        columns.map((c) => ({
+          id: c.id,
+          name: c.name,
+          position: c.position,
+          isDefault: c.isDefault,
+        })),
+      );
 
-        // Renumber positions sequentially
-        for (let i = 0; i < columns.length; i++) {
-          const column = columns[i];
-          const newPosition = i; // 0, 1, 2, 3, 4...
-          
-          if (column.position !== newPosition) {
-            logger.debug(`🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`);
-            await db
-              .update(statusColumnTable)
-              .set({ position: newPosition })
-              .where(eq(statusColumnTable.id, column.id));
-          }
+      // Renumber positions sequentially
+      for (let i = 0; i < columns.length; i++) {
+        const column = columns[i];
+        if (!column) continue;
+        const newPosition = i; // 0, 1, 2, 3, 4...
+
+        if (column.position !== newPosition) {
+          logger.debug(
+            `🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`,
+          );
+          await db
+            .update(statusColumnTable)
+            .set({ position: newPosition })
+            .where(eq(statusColumnTable.id, column.id));
         }
-        
-        logger.debug('🔧 Position conflicts fixed');
-        return c.json({ success: true, message: 'Position conflicts fixed' });
-      } catch (error: any) {
-        return c.json({ error: error.message }, 500);
       }
-    },
-  )
+
+      logger.debug("🔧 Position conflicts fixed");
+      return c.json({ success: true, message: "Position conflicts fixed" });
+    } catch (error) {
+      return c.json({ error: getErrorMessage(error) }, 500);
+    }
+  })
 
   // @epic-1.1-subtasks: Analytics endpoint for project analytics
   .get(
@@ -513,97 +600,124 @@ const project = new Hono<{
     requirePermission("canViewAnalytics"),
     zValidator("param", z.object({ projectId: z.string() })),
     zValidator("query", z.object({ timeRange: z.string().optional() })),
-    getProjectAnalytics
+    getProjectAnalytics,
   )
 
   // ====================================
   // TEAMS API ENDPOINTS
   // ====================================
-  
+
   // Get all teams for a project
   .get(
     "/:projectId/teams",
     zValidator("param", z.object({ projectId: z.string() })),
-    getProjectTeams
+    getProjectTeams,
   )
-  
+
   // Create a new team
   .post(
     "/:projectId/teams",
     zValidator("param", z.object({ projectId: z.string() })),
-    zValidator("json", z.object({
-      name: z.string().min(1, "Team name is required"),
-      description: z.string().optional(),
-      color: z.string().optional(),
-      leadId: z.string().optional(),
-    })),
-    createTeam
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().min(1, "Team name is required"),
+        description: z.string().optional(),
+        color: z.string().optional(),
+        leadId: z.string().optional(),
+      }),
+    ),
+    createTeam,
   )
-  
+
   // Update team details
   .patch(
     "/:projectId/teams/:teamId",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      teamId: z.string() 
-    })),
-    zValidator("json", z.object({
-      name: z.string().optional(),
-      description: z.string().optional(),
-      color: z.string().optional(),
-      leadId: z.string().optional(),
-    })),
-    updateTeam
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        teamId: z.string(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        color: z.string().optional(),
+        leadId: z.string().optional(),
+      }),
+    ),
+    updateTeam,
   )
-  
+
   // Delete a team
   .delete(
     "/:projectId/teams/:teamId",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      teamId: z.string() 
-    })),
-    deleteTeam
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        teamId: z.string(),
+      }),
+    ),
+    deleteTeam,
   )
-  
+
   // Add member to team
   .post(
     "/:projectId/teams/:teamId/members",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      teamId: z.string() 
-    })),
-    zValidator("json", z.object({
-      userEmail: z.string().email("Valid email is required"),
-      userName: z.string(),
-      role: z.string().optional(),
-    })),
-    addMember
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        teamId: z.string(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.object({
+        userEmail: z.string().email("Valid email is required"),
+        userName: z.string(),
+        role: z.string().optional(),
+      }),
+    ),
+    addMember,
   )
-  
+
   // Remove member from team
   .delete(
     "/:projectId/teams/:teamId/members/:memberId",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      teamId: z.string(),
-      memberId: z.string() 
-    })),
-    removeMember
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        teamId: z.string(),
+        memberId: z.string(),
+      }),
+    ),
+    removeMember,
   )
-  
+
   // Update member role
   .patch(
     "/:projectId/teams/:teamId/members/:memberId/role",
-    zValidator("param", z.object({ 
-      projectId: z.string(),
-      teamId: z.string(),
-      memberId: z.string() 
-    })),
-    zValidator("json", z.object({
-      role: z.string().min(1, "Role is required"),
-    })),
-    updateMemberRole
+    zValidator(
+      "param",
+      z.object({
+        projectId: z.string(),
+        teamId: z.string(),
+        memberId: z.string(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.object({
+        role: z.string().min(1, "Role is required"),
+      }),
+    ),
+    updateMemberRole,
   )
   // Bulk Operations Endpoints
   .patch(
@@ -619,7 +733,7 @@ const project = new Hono<{
           dueDate: z.string().datetime().optional().nullable(),
           description: z.string().optional(),
         }),
-      })
+      }),
     ),
     async (c) => {
       try {
@@ -628,7 +742,9 @@ const project = new Hono<{
           projectIds: payload.projectIds,
           updates: {
             ...payload.updates,
-            dueDate: payload.updates.dueDate ? new Date(payload.updates.dueDate) : undefined,
+            dueDate: payload.updates.dueDate
+              ? new Date(payload.updates.dueDate)
+              : undefined,
           },
         });
         return c.json(result);
@@ -636,16 +752,25 @@ const project = new Hono<{
         logger.error("Bulk update error:", error);
         return c.json({ error: "Bulk update failed" }, 500);
       }
-    }
+    },
   )
-  .delete(
+  .post(
+    // POST, not DELETE: this Hono/Node stack doesn't reliably surface a
+    // JSON body on DELETE requests (confirmed empirically — the identical
+    // middleware chain on PATCH /bulk/update parses its body fine; on
+    // DELETE it doesn't). The single-project delete route sidesteps this
+    // by reading workspaceId from the query string instead of a body;
+    // bulk delete needs an array of ids, so POST is the simpler fix.
     "/bulk/delete",
+    RateLimitPresets.delete, // 🚦 Same rate limit as single-project delete
+    rbacMiddleware.canDeleteProjects,
     zValidator(
       "json",
       z.object({
         projectIds: z.array(z.string()).min(1),
+        workspaceId: z.string().min(1, "Workspace ID is required"),
         reason: z.string().optional(),
-      })
+      }),
     ),
     async (c) => {
       try {
@@ -656,7 +781,7 @@ const project = new Hono<{
         logger.error("Bulk delete error:", error);
         return c.json({ error: "Bulk delete failed" }, 500);
       }
-    }
+    },
   )
   .post(
     "/bulk/create",
@@ -670,11 +795,13 @@ const project = new Hono<{
             ownerId: z.string(),
             icon: z.string().optional(),
             slug: z.string().optional(),
-            status: z.enum(["planning", "active", "on-hold", "completed", "archived"]).optional(),
+            status: z
+              .enum(["planning", "active", "on-hold", "completed", "archived"])
+              .optional(),
             priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
-          })
+          }),
         ),
-      })
+      }),
     ),
     async (c) => {
       try {
@@ -685,21 +812,24 @@ const project = new Hono<{
         logger.error("Bulk create error:", error);
         return c.json({ error: "Bulk create failed" }, 500);
       }
-    }
+    },
   )
 
   // 🚀 PERFORMANCE: Unified Project Overview Endpoint (with Redis caching)
   .get(
     "/:id/overview",
     zValidator("param", z.object({ id: z.string() })),
-    zValidator("query", z.object({ 
-      workspaceId: z.string(),
-      includeActivity: z.string().optional(),
-      activityLimit: z.string().optional(),
-      includeTeam: z.string().optional(),
-    })),
-    CachePresets.projectOverview(), // 🔴 Cache for 5 minutes
-    getProjectOverview
+    zValidator(
+      "query",
+      z.object({
+        workspaceId: z.string(),
+        includeActivity: z.string().optional(),
+        activityLimit: z.string().optional(),
+        includeTeam: z.string().optional(),
+      }),
+    ),
+    cacheMiddleware(CachePresets.projectOverview()), // 🔴 Cache for 5 minutes
+    getProjectOverview,
   )
 
   // 🔒 SECURITY: Secure Project Export Endpoint with Audit Logging
@@ -717,7 +847,7 @@ const project = new Hono<{
         includeMilestones: z.boolean().optional().default(true),
         includeTeam: z.boolean().optional().default(true),
         includeActivity: z.boolean().optional().default(false),
-      })
+      }),
     ),
     async (c) => {
       try {
@@ -743,7 +873,8 @@ const project = new Hono<{
           userEmail,
           userId: user.id,
           userRole: user.role || "member",
-          ipAddress: c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
+          ipAddress:
+            c.req.header("x-forwarded-for") || c.req.header("x-real-ip"),
           userAgent: c.req.header("user-agent"),
         };
 
@@ -752,11 +883,11 @@ const project = new Hono<{
           projectId,
           workspaceId,
           context,
-          options
+          options,
         );
 
         // Convert to requested format
-        let responseData: any;
+        let responseData: unknown;
         let contentType: string;
         let filename: string;
 
@@ -764,20 +895,18 @@ const project = new Hono<{
           case "csv":
             responseData = convertToCSV(exportData);
             contentType = "text/csv";
-            filename = `${exportData.project.name.replace(/[^a-z0-9]/gi, '_')}_export.csv`;
+            filename = `${exportData.project.name.replace(/[^a-z0-9]/gi, "_")}_export.csv`;
             break;
 
           case "markdown":
             responseData = convertToMarkdown(exportData);
             contentType = "text/markdown";
-            filename = `${exportData.project.name.replace(/[^a-z0-9]/gi, '_')}_export.md`;
+            filename = `${exportData.project.name.replace(/[^a-z0-9]/gi, "_")}_export.md`;
             break;
-
-          case "json":
           default:
             responseData = JSON.stringify(exportData, null, 2);
             contentType = "application/json";
-            filename = `${exportData.project.name.replace(/[^a-z0-9]/gi, '_')}_export.json`;
+            filename = `${exportData.project.name.replace(/[^a-z0-9]/gi, "_")}_export.json`;
             break;
         }
 
@@ -788,16 +917,17 @@ const project = new Hono<{
         c.header("X-Export-Timestamp", new Date().toISOString());
 
         return c.body(responseData);
-
       } catch (error) {
         logger.error("Export error:", error);
-        return c.json({ 
-          error: "Export failed",
-          message: error.message 
-        }, 500);
+        return c.json(
+          {
+            error: "Export failed",
+            message: errorMessage(error),
+          },
+          500,
+        );
       }
-    }
+    },
   );
 
 export default project;
-

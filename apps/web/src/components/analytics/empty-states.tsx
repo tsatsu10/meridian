@@ -30,11 +30,15 @@ const emptyStateConfig = {
   analytics: {
     icon: BarChart3,
     title: "No Analytics Data Yet",
-    description: "Start tracking your team's progress to see powerful insights and trends.",
+    description:
+      "Start tracking your team's progress to see powerful insights and trends.",
     illustration: (
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
-        <BarChart3 className="h-24 w-24 text-primary/20 relative" strokeWidth={1.5} />
+        <BarChart3
+          className="h-24 w-24 text-primary/20 relative"
+          strokeWidth={1.5}
+        />
       </div>
     ),
     actions: [
@@ -61,11 +65,15 @@ const emptyStateConfig = {
   projects: {
     icon: Target,
     title: "No Projects to Analyze",
-    description: "Create projects and add tasks to see health metrics and performance insights.",
+    description:
+      "Create projects and add tasks to see health metrics and performance insights.",
     illustration: (
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-full blur-3xl" />
-        <Target className="h-24 w-24 text-green-500/20 relative" strokeWidth={1.5} />
+        <Target
+          className="h-24 w-24 text-green-500/20 relative"
+          strokeWidth={1.5}
+        />
       </div>
     ),
     actions: [
@@ -92,11 +100,15 @@ const emptyStateConfig = {
   teams: {
     icon: Users,
     title: "No Team Activity Data",
-    description: "Invite team members and assign them to tasks to see resource utilization insights.",
+    description:
+      "Invite team members and assign them to tasks to see resource utilization insights.",
     illustration: (
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-full blur-3xl" />
-        <Users className="h-24 w-24 text-orange-500/20 relative" strokeWidth={1.5} />
+        <Users
+          className="h-24 w-24 text-orange-500/20 relative"
+          strokeWidth={1.5}
+        />
       </div>
     ),
     actions: [
@@ -123,11 +135,15 @@ const emptyStateConfig = {
   "time-series": {
     icon: TrendingUp,
     title: "Not Enough Historical Data",
-    description: "Continue using Meridian to build up historical data for trend analysis.",
+    description:
+      "Continue using Meridian to build up historical data for trend analysis.",
     illustration: (
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl" />
-        <TrendingUp className="h-24 w-24 text-purple-500/20 relative" strokeWidth={1.5} />
+        <TrendingUp
+          className="h-24 w-24 text-purple-500/20 relative"
+          strokeWidth={1.5}
+        />
       </div>
     ),
     actions: [
@@ -148,11 +164,15 @@ const emptyStateConfig = {
   "no-workspace": {
     icon: BarChart3,
     title: "No Workspace Selected",
-    description: "Please select or create a workspace to view analytics and insights.",
+    description:
+      "Please select or create a workspace to view analytics and insights.",
     illustration: (
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-gray-500/10 to-slate-500/10 rounded-full blur-3xl" />
-        <BarChart3 className="h-24 w-24 text-muted-foreground/20 relative" strokeWidth={1.5} />
+        <BarChart3
+          className="h-24 w-24 text-muted-foreground/20 relative"
+          strokeWidth={1.5}
+        />
       </div>
     ),
     actions: [
@@ -167,16 +187,14 @@ const emptyStateConfig = {
   },
 };
 
-export function AnalyticsEmptyState({ 
-  type, 
-  title, 
-  description, 
-  className = "" 
+export function AnalyticsEmptyState({
+  type,
+  title,
+  description,
+  className = "",
 }: EmptyStateProps) {
   const navigate = useNavigate();
   const config = emptyStateConfig[type];
-  const Icon = config.icon;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -214,11 +232,14 @@ export function AnalyticsEmptyState({
                     const StepIcon = step.icon;
                     return (
                       <div
+                        // biome-ignore lint/suspicious/noArrayIndexKey: static onboarding steps, index shown as step number
                         key={index}
                         className="flex items-center gap-3 text-sm text-muted-foreground"
                       >
                         <div className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-xs font-medium">{index + 1}</span>
+                          <span className="text-xs font-medium">
+                            {index + 1}
+                          </span>
                         </div>
                         <StepIcon className="h-4 w-4 flex-shrink-0" />
                         <span>{step.text}</span>
@@ -231,11 +252,11 @@ export function AnalyticsEmptyState({
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 justify-center pt-4">
-              {config.actions.map((action, index) => {
+              {config.actions.map((action) => {
                 const ActionIcon = action.icon;
                 return (
                   <Button
-                    key={index}
+                    key={action.path}
                     variant={action.variant}
                     onClick={() => navigate({ to: action.path })}
                     className="gap-2"
@@ -273,4 +294,3 @@ export function NoTimeSeriesData(props: Omit<EmptyStateProps, "type">) {
 export function NoWorkspaceSelected(props: Omit<EmptyStateProps, "type">) {
   return <AnalyticsEmptyState type="no-workspace" {...props} />;
 }
-

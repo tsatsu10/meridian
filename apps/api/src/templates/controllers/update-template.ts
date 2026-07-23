@@ -6,9 +6,8 @@ import type { CreateTemplateInput } from "../../types/templates";
 export default async function updateTemplate(
   templateId: string,
   input: Partial<CreateTemplateInput>,
-  userId: string
+  userId: string,
 ) {
-
   // Get template to check ownership
   const template = await getDatabase().query.projectTemplates.findFirst({
     where: eq(projectTemplates.id, templateId),
@@ -47,5 +46,3 @@ export default async function updateTemplate(
 
   return updatedTemplate;
 }
-
-

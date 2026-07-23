@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 // @epic-1.3-milestones: Team Leads and Admins need milestone tracking
 // @epic-2.1-dashboard: Milestone persistence across browser sessions
@@ -22,7 +22,7 @@ interface MilestoneTask {
   updatedAt: string;
 }
 
-const STORAGE_KEY = 'meridian_milestones';
+const STORAGE_KEY = "meridian_milestones";
 
 export function useMilestones(projectId?: string) {
   const [milestones, setMilestones] = useState<MilestoneTask[]>([]);
@@ -37,8 +37,8 @@ export function useMilestones(projectId?: string) {
         setMilestones(allMilestones);
       }
     } catch (error) {
-      console.error('Failed to load milestones from storage:', error);
-      toast.error('Failed to load saved milestones');
+      console.error("Failed to load milestones from storage:", error);
+      toast.error("Failed to load saved milestones");
     } finally {
       setIsLoading(false);
     }
@@ -50,18 +50,22 @@ export function useMilestones(projectId?: string) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMilestones));
       setMilestones(updatedMilestones);
     } catch (error) {
-      console.error('Failed to save milestones to storage:', error);
-      toast.error('Failed to save milestone changes');
+      console.error("Failed to save milestones to storage:", error);
+      toast.error("Failed to save milestone changes");
     }
   };
 
   // Get milestones for a specific project
   const getProjectMilestones = (targetProjectId: string) => {
-    return milestones.filter(milestone => milestone.projectId === targetProjectId);
+    return milestones.filter(
+      (milestone) => milestone.projectId === targetProjectId,
+    );
   };
 
   // Create a new milestone
-  const createMilestone = (milestoneData: Omit<MilestoneTask, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createMilestone = (
+    milestoneData: Omit<MilestoneTask, "id" | "createdAt" | "updatedAt">,
+  ) => {
     const now = new Date().toISOString();
     const newMilestone: MilestoneTask = {
       ...milestoneData,
@@ -72,15 +76,18 @@ export function useMilestones(projectId?: string) {
 
     const updatedMilestones = [...milestones, newMilestone];
     saveMilestones(updatedMilestones);
-    
+
     return newMilestone;
   };
 
   // Update an existing milestone
-  const updateMilestone = (milestoneId: string, updates: Partial<MilestoneTask>) => {
-    const milestoneIndex = milestones.findIndex(m => m.id === milestoneId);
+  const updateMilestone = (
+    milestoneId: string,
+    updates: Partial<MilestoneTask>,
+  ) => {
+    const milestoneIndex = milestones.findIndex((m) => m.id === milestoneId);
     if (milestoneIndex === -1) {
-      toast.error('Milestone not found');
+      toast.error("Milestone not found");
       return null;
     }
 
@@ -99,27 +106,31 @@ export function useMilestones(projectId?: string) {
 
   // Delete a milestone
   const deleteMilestone = (milestoneId: string) => {
-    const updatedMilestones = milestones.filter(m => m.id !== milestoneId);
+    const updatedMilestones = milestones.filter((m) => m.id !== milestoneId);
     saveMilestones(updatedMilestones);
   };
 
   // Get filtered milestones based on projectId if provided
-  const filteredMilestones = projectId 
-    ? getProjectMilestones(projectId) 
+  const filteredMilestones = projectId
+    ? getProjectMilestones(projectId)
     : milestones;
 
   // Calculate milestone statistics
   const stats = {
     total: filteredMilestones.length,
-    upcoming: filteredMilestones.filter(m => m.status === 'upcoming').length,
-    achieved: filteredMilestones.filter(m => m.status === 'achieved').length,
-    missed: filteredMilestones.filter(m => m.status === 'missed').length,
-    highRisk: filteredMilestones.filter(m => m.riskLevel === 'high' || m.riskLevel === 'critical').length,
-    dueSoon: filteredMilestones.filter(m => {
+    upcoming: filteredMilestones.filter((m) => m.status === "upcoming").length,
+    achieved: filteredMilestones.filter((m) => m.status === "achieved").length,
+    missed: filteredMilestones.filter((m) => m.status === "missed").length,
+    highRisk: filteredMilestones.filter(
+      (m) => m.riskLevel === "high" || m.riskLevel === "critical",
+    ).length,
+    dueSoon: filteredMilestones.filter((m) => {
       const dueDate = new Date(m.date);
       const today = new Date();
-      const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntilDue <= 7 && daysUntilDue > 0 && m.status === 'upcoming';
+      const daysUntilDue = Math.ceil(
+        (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      return daysUntilDue <= 7 && daysUntilDue > 0 && m.status === "upcoming";
     }).length,
   };
 
@@ -133,4 +144,4 @@ export function useMilestones(projectId?: string) {
     deleteMilestone,
     getProjectMilestones,
   };
-} 
+}

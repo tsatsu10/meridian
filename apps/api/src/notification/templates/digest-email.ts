@@ -1,14 +1,15 @@
-import { DigestData } from "../services/digest-generator";
+import type { DigestData } from "../services/digest-generator";
 import { formatDistanceToNow } from "date-fns";
 
 export function generateDigestEmailHTML(digest: DigestData): string {
   const { user, period, metrics, content } = digest;
-  
-  const periodLabel = period.type === 'daily' ? 'Daily' : 'Weekly';
-  const dateRange = period.type === 'daily'
-    ? 'Yesterday'
-    : `${period.start.toLocaleDateString()} - ${period.end.toLocaleDateString()}`;
-  
+
+  const periodLabel = period.type === "daily" ? "Daily" : "Weekly";
+  const dateRange =
+    period.type === "daily"
+      ? "Yesterday"
+      : `${period.start.toLocaleDateString()} - ${period.end.toLocaleDateString()}`;
+
   return `
 <!DOCTYPE html>
 <html>
@@ -144,48 +145,72 @@ export function generateDigestEmailHTML(digest: DigestData): string {
       </div>
     </div>
     
-    ${content.recentTasks && content.recentTasks.length > 0 ? `
+    ${
+      content.recentTasks && content.recentTasks.length > 0
+        ? `
     <!-- Tasks Section -->
     <div class="section">
       <h2 class="section-title">✅ Completed Tasks</h2>
-      ${content.recentTasks.map(task => `
+      ${content.recentTasks
+        .map(
+          (task) => `
         <div class="item">
           <div class="item-title">${task.title}</div>
-          <div class="item-meta">${task.project || 'Personal'}</div>
+          <div class="item-meta">${task.project || "Personal"}</div>
         </div>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
     
-    ${content.recentKudos && content.recentKudos.length > 0 ? `
+    ${
+      content.recentKudos && content.recentKudos.length > 0
+        ? `
     <!-- Kudos Section -->
     <div class="section">
       <h2 class="section-title">🎉 Kudos Received</h2>
-      ${content.recentKudos.map(kudo => `
+      ${content.recentKudos
+        .map(
+          (kudo) => `
         <div class="item">
           <div class="item-title">${kudo.emoji} ${kudo.message}</div>
           <div class="item-meta">From: ${kudo.fromUserEmail}</div>
         </div>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
     
-    ${content.recentMentions && content.recentMentions.length > 0 ? `
+    ${
+      content.recentMentions && content.recentMentions.length > 0
+        ? `
     <!-- Mentions Section -->
     <div class="section">
       <h2 class="section-title">@ Mentions</h2>
-      ${content.recentMentions.map(mention => `
+      ${content.recentMentions
+        .map(
+          (mention) => `
         <div class="item">
           <div class="item-title">${mention.title}</div>
           <div class="item-meta">${mention.content || mention.message}</div>
         </div>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
     
     <!-- CTA -->
     <div class="section" style="text-align: center; border: none;">
-      <a href="${process.env.APP_URL || 'http://localhost:5173'}/dashboard" class="button">
+      <a href="${process.env.APP_URL || "http://localhost:5173"}/dashboard" class="button">
         View Full Dashboard
       </a>
     </div>
@@ -193,7 +218,7 @@ export function generateDigestEmailHTML(digest: DigestData): string {
     <!-- Footer -->
     <div class="footer">
       <p>You're receiving this because you subscribed to ${periodLabel.toLowerCase()} digests.</p>
-      <p><a href="${process.env.APP_URL || 'http://localhost:5173'}/settings/notifications" style="color: #667eea;">Manage preferences</a></p>
+      <p><a href="${process.env.APP_URL || "http://localhost:5173"}/settings/notifications" style="color: #667eea;">Manage preferences</a></p>
       <p>© ${new Date().getFullYear()} Meridian. All rights reserved.</p>
     </div>
   </div>
@@ -204,12 +229,13 @@ export function generateDigestEmailHTML(digest: DigestData): string {
 
 export function generateDigestEmailText(digest: DigestData): string {
   const { user, period, metrics, content } = digest;
-  
-  const periodLabel = period.type === 'daily' ? 'Daily' : 'Weekly';
-  const dateRange = period.type === 'daily'
-    ? 'Yesterday'
-    : `${period.start.toLocaleDateString()} - ${period.end.toLocaleDateString()}`;
-  
+
+  const periodLabel = period.type === "daily" ? "Daily" : "Weekly";
+  const dateRange =
+    period.type === "daily"
+      ? "Yesterday"
+      : `${period.start.toLocaleDateString()} - ${period.end.toLocaleDateString()}`;
+
   let text = `
 ${periodLabel} Digest - Meridian
 
@@ -223,43 +249,41 @@ Comments: ${metrics.commentsReceived}
 Kudos Received: ${metrics.kudosReceived}
 
 `;
-  
+
   if (content.recentTasks && content.recentTasks.length > 0) {
     text += `
 COMPLETED TASKS
 ---------------
-${content.recentTasks.map(task => `• ${task.title}`).join('\n')}
+${content.recentTasks.map((task) => `• ${task.title}`).join("\n")}
 
 `;
   }
-  
+
   if (content.recentKudos && content.recentKudos.length > 0) {
     text += `
 KUDOS RECEIVED
 --------------
-${content.recentKudos.map(kudo => `${kudo.emoji} ${kudo.message} (from ${kudo.fromUserEmail})`).join('\n')}
+${content.recentKudos.map((kudo) => `${kudo.emoji} ${kudo.message} (from ${kudo.fromUserEmail})`).join("\n")}
 
 `;
   }
-  
+
   if (content.recentMentions && content.recentMentions.length > 0) {
     text += `
 MENTIONS
 --------
-${content.recentMentions.map(mention => `• ${mention.title}`).join('\n')}
+${content.recentMentions.map((mention) => `• ${mention.title}`).join("\n")}
 
 `;
   }
-  
+
   text += `
-View full dashboard: ${process.env.APP_URL || 'http://localhost:5173'}/dashboard
+View full dashboard: ${process.env.APP_URL || "http://localhost:5173"}/dashboard
 
 ---
-Manage preferences: ${process.env.APP_URL || 'http://localhost:5173'}/settings/notifications
+Manage preferences: ${process.env.APP_URL || "http://localhost:5173"}/settings/notifications
 © ${new Date().getFullYear()} Meridian
   `;
-  
+
   return text;
 }
-
-

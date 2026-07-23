@@ -3,7 +3,11 @@ import { eq, and, ne } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { getDatabase } from "../database/connection";
-import { taskTable, workspaceUserTable, projectTable } from "../database/schema";
+import {
+  taskTable,
+  workspaceUserTable,
+  projectTable,
+} from "../database/schema";
 import { subscribeToEvent } from "../events";
 import clearNotifications from "./controllers/clear-notifications";
 import createNotification from "./controllers/create-notification";
@@ -19,9 +23,12 @@ import batchMarkAsRead from "./controllers/batch-mark-as-read";
 import batchArchive from "./controllers/batch-archive";
 import batchDelete from "./controllers/batch-delete";
 // Phase 2: Digest system
-import { getDigestSettings, updateDigestSettings } from "./controllers/digest-settings";
+import {
+  getDigestSettings,
+  updateDigestSettings,
+} from "./controllers/digest-settings";
 import { generateDigest } from "./services/digest-generator";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 // Phase 2: Alert rules
 import {
   createAlertRule,
@@ -46,23 +53,28 @@ const notification = new Hono<{
 }>()
   .get("/", async (c) => {
     const userEmail = c.get("userEmail");
-    
+
     // Get pagination parameters from query string
     const limit = Number(c.req.query("limit")) || 50;
     const offset = Number(c.req.query("offset")) || 0;
     const includeArchived = c.req.query("includeArchived") === "true";
-    
+
     // Phase 2: Get filtering parameters
     const type = c.req.query("type");
     const types = c.req.query("types")?.split(",");
     const isReadParam = c.req.query("isRead");
-    const isRead = isReadParam === "true" ? true : isReadParam === "false" ? false : undefined;
+    const isRead =
+      isReadParam === "true"
+        ? true
+        : isReadParam === "false"
+          ? false
+          : undefined;
     const priority = c.req.query("priority");
     const search = c.req.query("search");
-    
-    const result = await getNotifications(userEmail, { 
-      limit, 
-      offset, 
+
+    const result = await getNotifications(userEmail, {
+      limit,
+      offset,
       includeArchived,
       type,
       types,
@@ -176,7 +188,7 @@ const notification = new Hono<{
       const userEmail = c.get("userEmail");
       const result = await batchMarkAsRead(userEmail, ids);
       return c.json(result);
-    }
+    },
   )
   .post(
     "/batch/archive",
@@ -186,7 +198,7 @@ const notification = new Hono<{
       const userEmail = c.get("userEmail");
       const result = await batchArchive(userEmail, ids);
       return c.json(result);
-    }
+    },
   )
   .post(
     "/batch/delete",
@@ -196,7 +208,7 @@ const notification = new Hono<{
       const userEmail = c.get("userEmail");
       const result = await batchDelete(userEmail, ids);
       return c.json(result);
-    }
+    },
   );
 
 subscribeToEvent(
@@ -376,23 +388,23 @@ subscribeToEvent(
 
         if (task) {
           // For now, just create a simple notification
-          // TODO: Implement proper workspace member filtering
-          const title = isNewVersion 
-            ? `New File Version Uploaded`
-            : `New File Attached`;
-          
+          // See https://github.com/tsatsu10/meridian/issues/75
+          const title = isNewVersion
+            ? "New File Version Uploaded"
+            : "New File Attached";
+
           const content = isNewVersion
-            ? `${uploaderEmail.split('@')[0]} uploaded version ${version} of "${fileName}" to task "${task.title}"`
-            : `${uploaderEmail.split('@')[0]} attached "${fileName}" to task "${task.title}"`;
+            ? `${uploaderEmail.split("@")[0]} uploaded version ${version} of "${fileName}" to task "${task.title}"`
+            : `${uploaderEmail.split("@")[0]} attached "${fileName}" to task "${task.title}"`;
 
           logger.debug(`📎 File upload notification: ${title} - ${content}`);
-          
+
           // Note: In a real implementation, we would notify all workspace members
           // For now, we'll just log the notification
         }
       }
     } catch (error) {
-      logger.error('❌ File upload notification error:', error);
+      logger.error("❌ File upload notification error:", error);
     }
   },
 );
@@ -400,14 +412,17 @@ subscribeToEvent(
 // Phase 2: Digest Settings Routes
 notification.get("/digest/settings", async (c) => {
   const userEmail = c.get("userEmail");
-  
+
   try {
     const settings = await getDigestSettings(userEmail);
     return c.json({ success: true, data: settings });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -415,14 +430,17 @@ notification.get("/digest/settings", async (c) => {
 notification.patch("/digest/settings", async (c) => {
   const userEmail = c.get("userEmail");
   const body = await c.req.json();
-  
+
   try {
     const settings = await updateDigestSettings(userEmail, body);
     return c.json({ success: true, data: settings });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -431,15 +449,18 @@ notification.patch("/digest/settings", async (c) => {
 notification.post("/digest/generate", async (c) => {
   const userEmail = c.get("userEmail");
   const body = await c.req.json();
-  const type = body.type || 'daily';
-  
+  const type = body.type || "daily";
+
   try {
     const digest = await generateDigest(userEmail, type);
     return c.json({ success: true, data: digest });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -447,14 +468,17 @@ notification.post("/digest/generate", async (c) => {
 // Phase 2: Alert Rules Routes
 notification.get("/alert-rules", async (c) => {
   const userEmail = c.get("userEmail");
-  
+
   try {
     const rules = await getUserAlertRules(userEmail);
     return c.json({ success: true, data: rules });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -462,14 +486,17 @@ notification.get("/alert-rules", async (c) => {
 notification.get("/alert-rules/:id", async (c) => {
   const userEmail = c.get("userEmail");
   const ruleId = c.req.param("id");
-  
+
   try {
     const rule = await getAlertRule(ruleId, userEmail);
     return c.json({ success: true, data: rule });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      404
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      404,
     );
   }
 });
@@ -477,14 +504,17 @@ notification.get("/alert-rules/:id", async (c) => {
 notification.post("/alert-rules", async (c) => {
   const userEmail = c.get("userEmail");
   const body = await c.req.json();
-  
+
   try {
     const rule = await createAlertRule(userEmail, body);
     return c.json({ success: true, data: rule });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -493,14 +523,17 @@ notification.patch("/alert-rules/:id", async (c) => {
   const userEmail = c.get("userEmail");
   const ruleId = c.req.param("id");
   const body = await c.req.json();
-  
+
   try {
     const rule = await updateAlertRule(ruleId, userEmail, body);
     return c.json({ success: true, data: rule });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -508,14 +541,17 @@ notification.patch("/alert-rules/:id", async (c) => {
 notification.delete("/alert-rules/:id", async (c) => {
   const userEmail = c.get("userEmail");
   const ruleId = c.req.param("id");
-  
+
   try {
     const rule = await deleteAlertRule(ruleId, userEmail);
     return c.json({ success: true, data: rule });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -525,18 +561,21 @@ notification.post("/alert-rules/:id/test", async (c) => {
   const ruleId = c.req.param("id");
   const body = await c.req.json();
   const { workspaceId } = body;
-  
+
   if (!workspaceId) {
     return c.json({ success: false, error: "Workspace ID required" }, 400);
   }
-  
+
   try {
     const result = await testAlertRule(ruleId, userEmail, workspaceId);
     return c.json({ success: true, data: result });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -545,14 +584,17 @@ notification.post("/alert-rules/:id/test", async (c) => {
 notification.post("/groups/:groupId/mark-read", async (c) => {
   const userEmail = c.get("userEmail");
   const groupId = c.req.param("groupId");
-  
+
   try {
     await markGroupAsRead(userEmail, groupId);
     return c.json({ success: true });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -560,14 +602,17 @@ notification.post("/groups/:groupId/mark-read", async (c) => {
 notification.post("/groups/:groupId/archive", async (c) => {
   const userEmail = c.get("userEmail");
   const groupId = c.req.param("groupId");
-  
+
   try {
     await archiveGroup(userEmail, groupId);
     return c.json({ success: true });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
@@ -575,17 +620,19 @@ notification.post("/groups/:groupId/archive", async (c) => {
 notification.delete("/groups/:groupId", async (c) => {
   const userEmail = c.get("userEmail");
   const groupId = c.req.param("groupId");
-  
+
   try {
     await deleteGroup(userEmail, groupId);
     return c.json({ success: true });
   } catch (error) {
     return c.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
     );
   }
 });
 
 export default notification;
-

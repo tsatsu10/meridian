@@ -2,9 +2,9 @@
  * Template Types for Frontend
  */
 
-export type TemplateDifficulty = 'beginner' | 'intermediate' | 'advanced';
-export type TemplatePriority = 'low' | 'medium' | 'high' | 'urgent';
-export type DependencyType = 'blocks' | 'blocked_by';
+export type TemplateDifficulty = "beginner" | "intermediate" | "advanced";
+export type TemplatePriority = "low" | "medium" | "high" | "urgent";
+export type DependencyType = "blocks" | "blocked_by";
 
 export interface ProjectTemplate {
   id: string;
@@ -21,7 +21,7 @@ export interface ProjectTemplate {
   rating: number; // 0-5
   ratingCount: number;
   tags: string[];
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   isPublic: boolean;
   isOfficial: boolean;
   createdBy?: string;
@@ -42,7 +42,7 @@ export interface TemplateTask {
   relativeStartDay?: number;
   relativeDueDay?: number;
   tags: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   subtasks: TemplateSubtask[];
@@ -57,7 +57,7 @@ export interface TemplateSubtask {
   position: number;
   estimatedHours?: number;
   suggestedAssigneeRole?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,8 +83,8 @@ export interface TemplateFilterOptions {
   searchQuery?: string;
   isOfficial?: boolean;
   minRating?: number;
-  sortBy?: 'popular' | 'recent' | 'rating' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "popular" | "recent" | "rating" | "name";
+  sortOrder?: "asc" | "desc";
   limit?: number;
   offset?: number;
 }
@@ -128,4 +128,3 @@ export interface TemplatesByIndustry {
 export interface TemplatesByProfession {
   [profession: string]: ProjectTemplate[];
 }
-

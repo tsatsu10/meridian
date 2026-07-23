@@ -70,4 +70,3 @@ const timeEntry = new Hono<{
   );
 
 export default timeEntry;
-

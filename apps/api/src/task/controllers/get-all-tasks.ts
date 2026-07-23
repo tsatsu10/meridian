@@ -1,6 +1,11 @@
 import { and, eq, or, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { projectTable, taskTable, userTable, workspaceUserTable } from "../../database/schema";
+import {
+  projectTable,
+  taskTable,
+  userTable,
+  workspaceUserTable,
+} from "../../database/schema";
 
 interface GetAllTasksOptions {
   workspaceId: string;
@@ -49,21 +54,36 @@ async function getAllTasks({
   }
 
   if (status && status.length > 0) {
-    conditions.push(
-      or(...status.map((s) => eq(taskTable.status, s)))!
+    const statusCondition = or(
+      ...status.map((s) =>
+        eq(taskTable.status, s as "todo" | "in_progress" | "done"),
+      ),
     );
+    if (statusCondition) {
+      conditions.push(statusCondition);
+    }
   }
 
   if (priority && priority.length > 0) {
-    conditions.push(
-      or(...priority.map((p) => eq(taskTable.priority, p)))!
+    const priorityCondition = or(
+      ...priority.map((p) =>
+        eq(taskTable.priority, p as "low" | "medium" | "high" | "urgent"),
+      ),
     );
+    if (priorityCondition) {
+      conditions.push(priorityCondition);
+    }
   }
 
   if (projectIds && projectIds.length > 0) {
-    conditions.push(
-      or(...projectIds.map((id) => eq(taskTable.projectId, id)))!
+    const projectCondition = or(
+      ...projectIds.map((id) => eq(taskTable.projectId, id)),
     );
+    // or() only returns undefined when called with zero conditions;
+    // projectIds.length > 0 guarantees at least one above.
+    if (projectCondition) {
+      conditions.push(projectCondition);
+    }
   }
 
   if (dueAfter) {
@@ -75,12 +95,15 @@ async function getAllTasks({
   }
 
   if (search) {
-    conditions.push(
-      or(
-        sql`${taskTable.title} LIKE ${'%' + search + '%'}`,
-        sql`${taskTable.description} LIKE ${'%' + search + '%'}`
-      )!
+    const searchCondition = or(
+      sql`${taskTable.title} LIKE ${`%${search}%`}`,
+      sql`${taskTable.description} LIKE ${`%${search}%`}`,
     );
+    // or() only returns undefined when called with zero conditions; both
+    // are always passed above.
+    if (searchCondition) {
+      conditions.push(searchCondition);
+    }
   }
 
   // Get total count for pagination
@@ -107,7 +130,7 @@ async function getAllTasks({
     .offset(offset);
 
   // Transform to expected format with nested project object
-  const tasks = tasksRaw.map(row => ({
+  const tasks = tasksRaw.map((row) => ({
     id: row.task.id,
     title: row.task.title,
     number: row.task.number,
@@ -142,8 +165,8 @@ async function getAllTasks({
     .from(projectTable)
     .where(eq(projectTable.workspaceId, workspaceId));
 
-  // TODO: Add custom status columns when statusColumnTable schema is created
-  const projectsWithColumns = projects.map(project => ({
+  // See https://github.com/tsatsu10/meridian/issues/63
+  const projectsWithColumns = projects.map((project) => ({
     ...project,
     columns: [], // Empty array until statusColumnTable is implemented
   }));
@@ -155,7 +178,10 @@ async function getAllTasks({
       name: userTable.name,
     })
     .from(userTable)
-    .innerJoin(workspaceUserTable, eq(workspaceUserTable.userEmail, userTable.email))
+    .innerJoin(
+      workspaceUserTable,
+      eq(workspaceUserTable.userEmail, userTable.email),
+    )
     .where(eq(workspaceUserTable.workspaceId, workspaceId));
 
   return {
@@ -176,4 +202,4 @@ async function getAllTasks({
   };
 }
 
-export default getAllTasks; 
+export default getAllTasks;

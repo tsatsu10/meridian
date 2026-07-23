@@ -1,12 +1,10 @@
-import { client } from "@meridian/libs";
-import type { InferRequestType } from "hono/client";
+import { looseClient } from "@/lib/rpc-client";
 
-export type GetLabelsByTaskRequest = InferRequestType<
-  (typeof client)["label"][":taskId"]["$get"]
->["param"];
+// The generated AppType is missing label[":taskId"], so type the request locally
+export type GetLabelsByTaskRequest = { taskId: string };
 
 async function getLabelsByTask({ taskId }: GetLabelsByTaskRequest) {
-  const response = await client.label[":taskId"].$get({
+  const response = await looseClient.label[":taskId"].$get({
     param: {
       taskId,
     },

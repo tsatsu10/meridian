@@ -1,20 +1,20 @@
 /**
  * Create Project Team Controller
- * 
+ *
  * Creates a new team for a specific project
- * 
+ *
  * @epic-3.4-teams: Create team functionality
  */
 
-import { Context } from "hono";
+import type { Context } from "hono";
 import { eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { getDatabase } from "../../../database/connection";
-import logger from '../../../utils/logger';
-import { 
+import logger from "../../../utils/logger";
+import {
   projectTable as projects,
   teams,
-  userTable as users
+  userTable as users,
 } from "../../../database/schema";
 
 interface CreateTeamRequest {
@@ -28,6 +28,9 @@ async function createTeam(c: Context) {
   const db = getDatabase();
   const { projectId } = c.req.param();
   const userEmail = c.get("userEmail");
+  if (!userEmail) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
 
   if (!projectId) {
     return c.json({ error: "Project ID is required" }, 400);
@@ -76,10 +79,13 @@ async function createTeam(c: Context) {
       })
       .returning();
 
-    return c.json({
-      ...newTeam,
-      members: [], // New team starts with no members
-    }, 201);
+    return c.json(
+      {
+        ...newTeam,
+        members: [], // New team starts with no members
+      },
+      201,
+    );
   } catch (error) {
     logger.error("Error creating team:", error);
     return c.json({ error: "Failed to create team" }, 500);
@@ -87,5 +93,3 @@ async function createTeam(c: Context) {
 }
 
 export default createTeam;
-
-

@@ -20,13 +20,16 @@ export function useUpdateTeamNotifications() {
       });
       return response;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["team-notifications", variables.teamId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["team-notifications", variables.teamId],
+      });
       toast.success("Notification preferences updated");
     },
-    onError: (error: any) => {
-      toast.error(error?.message || "Failed to update notification preferences");
+    onError: (error: Error) => {
+      toast.error(
+        error?.message || "Failed to update notification preferences",
+      );
     },
   });
 }
-

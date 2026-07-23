@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "@meridian/libs";
+import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
 
 function useDeleteNotification() {
@@ -7,7 +7,7 @@ function useDeleteNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await client.notification[":id"].$delete({
+      const response = await looseClient.notification[":id"].$delete({
         param: { id: notificationId },
       });
       if (!response.ok) {
@@ -26,4 +26,3 @@ function useDeleteNotification() {
 }
 
 export default useDeleteNotification;
-

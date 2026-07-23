@@ -10,14 +10,12 @@ import { SystemAlert } from "@/components/system-alert";
 import PageTitle from "@/components/page-title";
 import EmptyWorkspaceState from "@/components/workspace/empty-state";
 import SelectWorkspaceState from "@/components/workspace/select-workspace-state";
-import { isProductionMode } from "@/constants/urls";
 import useGetWorkspaces from "@/hooks/queries/workspace/use-get-workspaces";
 import useWorkspaceStore from "@/store/workspace";
 import { DashboardErrorBoundary } from "@/components/error-boundary/error-boundary";
 import {
   Outlet,
   createFileRoute,
-  redirect,
   useRouterState,
 } from "@tanstack/react-router";
 
@@ -39,10 +37,10 @@ function DashboardIndexRouteComponent() {
     <DashboardErrorBoundary>
       <div className="flex h-screen overflow-hidden">
         <PageTitle title="Dashboard" hideAppName={!workspace?.name} />
-        
+
         {/* Sidebar - Collapsible for responsive design */}
         <Sidebar />
-        
+
         {/* Main Content Area - Optimized for Dock Navigation */}
         <main className="flex-1 overflow-auto scroll-smooth flex flex-col">
           {/* Show production welcome alert for new users */}
@@ -54,7 +52,7 @@ function DashboardIndexRouteComponent() {
               dismissible={true}
             />
           )}
-          
+
           {/* Conditional workspace states */}
           {isOnWorkspaceRoute && (
             <>
@@ -64,7 +62,7 @@ function DashboardIndexRouteComponent() {
               )}
             </>
           )}
-          
+
           {/* Dynamic content with dock navigation support */}
           <div className="flex-1">
             <Outlet />

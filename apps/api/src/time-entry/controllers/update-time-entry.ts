@@ -33,4 +33,3 @@ async function updateTimeEntry(
 }
 
 export default updateTimeEntry;
-

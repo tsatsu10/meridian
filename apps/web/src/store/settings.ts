@@ -1,8 +1,15 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { toast } from "sonner";
-import { SETTINGS_PRESETS, SettingsPreset, getPresetById } from "./settings-presets";
-import { SettingsAPI, SettingsValidationError } from "@/lib/api/settings-api";
+import {
+  SETTINGS_PRESETS,
+  type SettingsPreset,
+  getPresetById,
+} from "./settings-presets";
+import {
+  SettingsAPI,
+  type SettingsValidationError,
+} from "@/lib/api/settings-api";
 
 export interface ProfileSettings {
   name: string;
@@ -30,6 +37,10 @@ export interface AppearanceSettings {
   highContrast: boolean;
   reducedMotion: boolean;
   compactMode: boolean;
+  scheduledThemeEnabled: boolean;
+  lightThemeTime: string;
+  darkThemeTime: string;
+  locationBasedEnabled: boolean;
 }
 
 export interface NotificationSettings {
@@ -109,32 +120,32 @@ interface SettingsStore {
     pendingUpdates: number;
     lastSync?: string;
   };
-  
+
   // Actions
   updateSettings: <T extends keyof AllSettings>(
     section: T,
     updates: Partial<AllSettings[T]>,
-    options?: { validate?: boolean; sync?: boolean }
+    options?: { validate?: boolean; sync?: boolean },
   ) => Promise<void>;
   resetSection: (section: keyof AllSettings) => Promise<void>;
   resetAllSettings: () => Promise<void>;
   saveSettings: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   addRecentlyViewed: (section: string) => void;
-  
+
   // Preset actions
   applyPreset: (presetId: string) => Promise<void>;
   getAvailablePresets: () => SettingsPreset[];
   getAppliedPreset: () => SettingsPreset | null;
   clearAppliedPreset: () => void;
-  
+
   // Validation
   validateSettings: <T extends keyof AllSettings>(
     section: T,
-    settings: Partial<AllSettings[T]>
+    settings: Partial<AllSettings[T]>,
   ) => Promise<SettingsValidationError[]>;
   clearValidationErrors: (section?: keyof AllSettings) => void;
-  
+
   // Sync
   forceSyncSettings: () => Promise<void>;
   getSyncStatus: () => {
@@ -143,17 +154,19 @@ interface SettingsStore {
     lastSync?: string;
   };
   setOnlineStatus: (online: boolean) => void;
-  
+
   // Auto-save
   enableAutoSave: () => void;
   disableAutoSave: () => void;
-  
+
   // Performance
-  batchUpdate: (updates: Array<{
-    section: keyof AllSettings;
-    updates: Partial<AllSettings[keyof AllSettings]>;
-  }>) => Promise<void>;
-  
+  batchUpdate: (
+    updates: Array<{
+      section: keyof AllSettings;
+      updates: Partial<AllSettings[keyof AllSettings]>;
+    }>,
+  ) => Promise<void>;
+
   // Initialize with user data
   initialize: (userId: string, workspaceId?: string) => Promise<void>;
 }
@@ -174,7 +187,7 @@ const defaultSettings: AllSettings = {
   },
   appearance: {
     theme: "system",
-    fontSize: 14,
+    fontSize: 16,
     sidebarCollapsed: false,
     density: "comfortable",
     animations: true,
@@ -182,6 +195,10 @@ const defaultSettings: AllSettings = {
     highContrast: false,
     reducedMotion: false,
     compactMode: false,
+    scheduledThemeEnabled: false,
+    lightThemeTime: "06:00",
+    darkThemeTime: "18:00",
+    locationBasedEnabled: false,
   },
   notifications: {
     email: {
@@ -265,55 +282,50 @@ export const useSettingsStore = create<SettingsStore>()(
         pendingUpdates: 0,
       },
 
-      // Initialize with user data
-      initialize: async (userId: string, workspaceId?: string) => {
+      // Initialize with user data. _workspaceId is kept for interface
+      // compatibility; the realtime sync that consumed it was removed.
+      initialize: async (userId: string, _workspaceId?: string) => {
         // Prevent duplicate initialization
-        if (isInitialized && currentUserId === userId) {return;
-        }currentUserId = userId;
+        if (isInitialized && currentUserId === userId) {
+          return;
+        }
+        currentUserId = userId;
         isInitialized = true;
-        
+
         set({ isLoading: true });
 
         try {
           // Load user settings with timeout protection
           const loadPromise = Promise.race([
             SettingsAPI.getSettings(userId, true), // Use cache by default
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error("Settings load timeout")), 5000)
-            )
+            new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Settings load timeout")),
+                5000,
+              ),
+            ),
           ]);
 
-          const loadedSettings = await loadPromise as AllSettings;
+          const loadedSettings = (await loadPromise) as AllSettings;
 
           set({
             settings: loadedSettings || defaultSettings,
             isLoading: false,
             hasUnsavedChanges: false,
             lastSaved: new Date().toISOString(),
-          });// Initialize sync service for real-time updates (optional feature)
-          if (workspaceId) {
-            try {
-              // const syncService = getSyncService(); // Removed getSyncService
-              // if (syncService) { // Removed getSyncService
-              //// Removed getSyncService
-              //   // Sync service integration can be enhanced later // Removed getSyncService
-              //   // For now, just ensure the store works without it // Removed getSyncService
-              // } // Removed getSyncService
-            } catch (error) {
-              console.warn("Sync service unavailable:", error);
-              // Continue without real-time sync - this is optional
-            }
-          }
+          });
+          // Real-time sync-service integration was removed with the offline/
+          // realtime feature cleanup; settings persist via the API only.
         } catch (error) {
           console.error("Failed to initialize settings:", error);
           // Fall back to local defaults - don't show error toast to avoid console spam
-          set({ 
+          set({
             settings: defaultSettings, // Use default settings as fallback
             isLoading: false,
             lastSaved: null,
             hasUnsavedChanges: false, // Don't mark as changed since these are defaults
           });
-          
+
           // Only show toast in development mode to avoid spamming users
           if (import.meta.env.DEV) {
             console.warn("⚠️ Settings API unavailable, using defaults");
@@ -324,7 +336,10 @@ export const useSettingsStore = create<SettingsStore>()(
       updateSettings: async <T extends keyof AllSettings>(
         section: T,
         updates: Partial<AllSettings[T]>,
-        options: { validate?: boolean; sync?: boolean } = { validate: true, sync: true }
+        options: { validate?: boolean; sync?: boolean } = {
+          validate: true,
+          sync: true,
+        },
       ) => {
         // Performance throttling to prevent excessive updates
         const now = Date.now();
@@ -349,29 +364,33 @@ export const useSettingsStore = create<SettingsStore>()(
         // Validate if requested
         if (options.validate) {
           try {
-            const errors = await get().validateSettings(section, updatedSectionSettings);
+            const errors = await get().validateSettings(
+              section,
+              updatedSectionSettings,
+            );
             if (errors.length > 0) {
-              set(state => ({
+              set((state) => ({
                 validationErrors: {
                   ...state.validationErrors,
                   [section]: errors,
-                }
+                },
               }));
               toast.error(`Validation failed: ${errors[0].message}`);
               return;
-            } else {
-              // Clear validation errors for this section
-              set(state => ({
-                validationErrors: {
-                  ...state.validationErrors,
-                  [section]: [],
-                }
-              }));
             }
+            // Clear validation errors for this section
+            set((state) => ({
+              validationErrors: {
+                ...state.validationErrors,
+                [section]: [],
+              },
+            }));
           } catch (error) {
             console.error("Validation failed:", error);
             // Continue with update but show warning
-            toast.warning("Could not validate settings. Changes saved locally.");
+            toast.warning(
+              "Could not validate settings. Changes saved locally.",
+            );
           }
         }
 
@@ -398,7 +417,7 @@ export const useSettingsStore = create<SettingsStore>()(
         if (autoSaveTimeout) {
           clearTimeout(autoSaveTimeout);
         }
-        
+
         autoSaveTimeout = setTimeout(async () => {
           await get().saveSettings();
         }, AUTO_SAVE_DELAY);
@@ -413,11 +432,11 @@ export const useSettingsStore = create<SettingsStore>()(
         }
 
         set({ isLoading: true });
-        
+
         try {
           // Save all sections that have changed
           const { settings, hasUnsavedChanges } = get();
-          
+
           if (!hasUnsavedChanges) {
             set({ isLoading: false });
             return;
@@ -425,18 +444,38 @@ export const useSettingsStore = create<SettingsStore>()(
 
           // For now, save the entire settings object
           // In a real implementation, you'd track which sections changed
-          await SettingsAPI.updateSettings(currentUserId, "profile", settings.profile);
-          await SettingsAPI.updateSettings(currentUserId, "appearance", settings.appearance);
-          await SettingsAPI.updateSettings(currentUserId, "notifications", settings.notifications);
-          await SettingsAPI.updateSettings(currentUserId, "security", settings.security);
-          await SettingsAPI.updateSettings(currentUserId, "privacy", settings.privacy);
-          
+          await SettingsAPI.updateSettings(
+            currentUserId,
+            "profile",
+            settings.profile,
+          );
+          await SettingsAPI.updateSettings(
+            currentUserId,
+            "appearance",
+            settings.appearance,
+          );
+          await SettingsAPI.updateSettings(
+            currentUserId,
+            "notifications",
+            settings.notifications,
+          );
+          await SettingsAPI.updateSettings(
+            currentUserId,
+            "security",
+            settings.security,
+          );
+          await SettingsAPI.updateSettings(
+            currentUserId,
+            "privacy",
+            settings.privacy,
+          );
+
           set({
             hasUnsavedChanges: false,
             lastSaved: new Date().toISOString(),
             isLoading: false,
           });
-          
+
           // Update sync status
           // const syncService = getSyncService(); // Removed getSyncService
           // if (syncService) { // Removed getSyncService
@@ -449,22 +488,22 @@ export const useSettingsStore = create<SettingsStore>()(
           //     } // Removed getSyncService
           //   })); // Removed getSyncService
           // } // Removed getSyncService
-          
+
           toast.success("Settings saved successfully");
         } catch (error) {
-          set({ 
+          set({
             isLoading: false,
             // Don't clear hasUnsavedChanges so user can retry
           });
           console.error("Save failed:", error);
-          
+
           // Only show error toast in development mode or if explicitly user-triggered
           if (import.meta.env.DEV) {
             toast.error("Failed to save settings - API unavailable");
           } else {
             console.warn("⚠️ Settings save failed, changes preserved locally");
           }
-          
+
           // Don't throw error to prevent app crashes
         }
       },
@@ -473,17 +512,17 @@ export const useSettingsStore = create<SettingsStore>()(
         if (!currentUserId) return;
 
         set({ isLoading: true });
-        
+
         try {
           const { settings } = get();
-          let newSettings = { ...settings };
+          const newSettings = { ...settings };
 
           // Apply all updates
           for (const update of updates) {
-            newSettings[update.section] = {
+            (newSettings as Record<string, unknown>)[update.section] = {
               ...newSettings[update.section],
               ...update.updates,
-            } as any;
+            };
           }
 
           set({
@@ -515,7 +554,7 @@ export const useSettingsStore = create<SettingsStore>()(
 
       validateSettings: async <T extends keyof AllSettings>(
         section: T,
-        settings: Partial<AllSettings[T]>
+        settings: Partial<AllSettings[T]>,
       ): Promise<SettingsValidationError[]> => {
         try {
           return await SettingsAPI.validateSettings(section, settings);
@@ -526,17 +565,16 @@ export const useSettingsStore = create<SettingsStore>()(
       },
 
       clearValidationErrors: (section?: keyof AllSettings) => {
-        set(state => {
+        set((state) => {
           if (section) {
             return {
               validationErrors: {
                 ...state.validationErrors,
                 [section]: [],
-              }
+              },
             };
-          } else {
-            return { validationErrors: {} };
           }
+          return { validationErrors: {} };
         });
       },
 
@@ -544,8 +582,11 @@ export const useSettingsStore = create<SettingsStore>()(
         if (!currentUserId) return;
 
         try {
-          const newSettings = await SettingsAPI.resetSection(currentUserId, section);
-          
+          const newSettings = await SettingsAPI.resetSection(
+            currentUserId,
+            section,
+          );
+
           set({
             settings: newSettings,
             hasUnsavedChanges: false,
@@ -572,7 +613,9 @@ export const useSettingsStore = create<SettingsStore>()(
             hasUnsavedChanges: true,
             appliedPreset: null,
           });
-          toast.warning(`${section} settings reset locally. Will sync when connection is restored.`);
+          toast.warning(
+            `${section} settings reset locally. Will sync when connection is restored.`,
+          );
         }
       },
 
@@ -581,7 +624,9 @@ export const useSettingsStore = create<SettingsStore>()(
 
         try {
           // Reset all sections via API
-          for (const section of Object.keys(defaultSettings) as (keyof AllSettings)[]) {
+          for (const section of Object.keys(
+            defaultSettings,
+          ) as (keyof AllSettings)[]) {
             await SettingsAPI.resetSection(currentUserId, section);
           }
 
@@ -603,7 +648,9 @@ export const useSettingsStore = create<SettingsStore>()(
             appliedPreset: null,
             validationErrors: {},
           });
-          toast.warning("Settings reset locally. Will sync when connection is restored.");
+          toast.warning(
+            "Settings reset locally. Will sync when connection is restored.",
+          );
         }
       },
 
@@ -613,7 +660,10 @@ export const useSettingsStore = create<SettingsStore>()(
 
       addRecentlyViewed: (section: string) => {
         const { recentlyViewed } = get();
-        const updated = [section, ...recentlyViewed.filter(s => s !== section)].slice(0, 5);
+        const updated = [
+          section,
+          ...recentlyViewed.filter((s) => s !== section),
+        ].slice(0, 5);
         set({ recentlyViewed: updated });
       },
 
@@ -719,6 +769,6 @@ export const useSettingsStore = create<SettingsStore>()(
           state.isOnline = navigator.onLine;
         }
       },
-    }
-  )
-); 
+    },
+  ),
+);

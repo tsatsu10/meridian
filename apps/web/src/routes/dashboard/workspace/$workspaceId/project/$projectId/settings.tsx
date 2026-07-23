@@ -48,11 +48,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,6 +58,7 @@ import {
 import icons from "@/constants/project-icons";
 import useDeleteProject from "@/hooks/mutations/project/use-delete-project";
 import useUpdateProject from "@/hooks/mutations/project/use-update-project";
+import { useArchiveProject } from "@/hooks/mutations/project/use-archive-project";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
@@ -71,11 +68,11 @@ import useProjectStore from "@/store/project";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { 
-  AlertTriangle, 
-  ArrowLeft, 
-  Lock, 
-  Users, 
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Lock,
+  Users,
   Settings2,
   FileText,
   Zap,
@@ -94,7 +91,7 @@ import {
   Filter,
   Keyboard,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import React, { createElement, useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
@@ -107,9 +104,23 @@ const projectFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   slug: z.string().min(1, "Project slug is required"),
   icon: z.string().min(1, "Project icon is required"),
-  description: z.string().max(500, "Description must be less than 500 characters").optional(),
-  status: z.enum(["planning", "active", "on-hold", "completed", "archived"]).optional(),
-  category: z.enum(["development", "design", "marketing", "operations", "research", "other"]).optional(),
+  description: z
+    .string()
+    .max(500, "Description must be less than 500 characters")
+    .optional(),
+  status: z
+    .enum(["planning", "active", "on-hold", "completed", "archived"])
+    .optional(),
+  category: z
+    .enum([
+      "development",
+      "design",
+      "marketing",
+      "operations",
+      "research",
+      "other",
+    ])
+    .optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
   visibility: z.enum(["private", "team", "workspace"]).optional(),
   // Features
@@ -121,7 +132,10 @@ const projectFormSchema = z.object({
 
 const teamFormSchema = z.object({
   name: z.string().min(1, "Team name is required"),
-  description: z.string().max(200, "Description must be less than 200 characters").optional(),
+  description: z
+    .string()
+    .max(200, "Description must be less than 200 characters")
+    .optional(),
   color: z.string().default("#3B82F6"),
 });
 
@@ -130,15 +144,15 @@ type TeamFormValues = z.infer<typeof teamFormSchema>;
 
 // Production data structures - using real API calls
 // Use proper user roles from RBAC system
-type UserRole = 
-  | "workspace-manager" 
-  | "department-head" 
+type UserRole =
+  | "workspace-manager"
+  | "department-head"
   | "workspace-viewer"
-  | "project-manager" 
+  | "project-manager"
   | "project-viewer"
   | "team-lead"
   | "member"
-  | "client" 
+  | "client"
   | "contractor"
   | "stakeholder"
   | "guest";
@@ -164,13 +178,15 @@ interface ProjectTeam {
 
 // Teams API client
 // ✅ Teams API Client - Now using real backend endpoints
-class TeamsAPI {
-  private static baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3005";
-  
-  private static async request(endpoint: string, options: RequestInit = {}) {
-    const token = localStorage.getItem("auth-token") || sessionStorage.getItem("auth-token");
-    
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+const TeamsAPI = {
+  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:3005",
+
+  async request(endpoint: string, options: RequestInit = {}) {
+    const token =
+      localStorage.getItem("auth-token") ||
+      sessionStorage.getItem("auth-token");
+
+    const response = await fetch(`${TeamsAPI.baseUrl}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -180,69 +196,121 @@ class TeamsAPI {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: response.statusText }));
+      throw new Error(
+        errorData.error || `HTTP ${response.status}: ${response.statusText}`,
+      );
     }
 
     return response.json();
-  }
+  },
 
-  static async getProjectTeams(projectId: string): Promise<ProjectTeam[]> {
-      return await this.request(`/api/projects/${projectId}/teams`);
-  }
+  async getProjectTeams(projectId: string): Promise<ProjectTeam[]> {
+    return await TeamsAPI.request(`/api/projects/${projectId}/teams`);
+  },
 
-  static async createTeam(projectId: string, team: Omit<ProjectTeam, 'id' | 'createdAt'>): Promise<ProjectTeam> {
-      return await this.request(`/api/projects/${projectId}/teams`, {
-        method: "POST",
-        body: JSON.stringify(team),
-      });
-  }
+  async createTeam(
+    projectId: string,
+    team: Omit<ProjectTeam, "id" | "createdAt">,
+  ): Promise<ProjectTeam> {
+    return await TeamsAPI.request(`/api/projects/${projectId}/teams`, {
+      method: "POST",
+      body: JSON.stringify(team),
+    });
+  },
 
-  static async updateTeam(projectId: string, teamId: string, updates: Partial<ProjectTeam>): Promise<ProjectTeam> {
-      return await this.request(`/api/projects/${projectId}/teams/${teamId}`, {
+  async updateTeam(
+    projectId: string,
+    teamId: string,
+    updates: Partial<ProjectTeam>,
+  ): Promise<ProjectTeam> {
+    return await TeamsAPI.request(
+      `/api/projects/${projectId}/teams/${teamId}`,
+      {
         method: "PATCH",
         body: JSON.stringify(updates),
-      });
-  }
+      },
+    );
+  },
 
-  static async deleteTeam(projectId: string, teamId: string): Promise<void> {
-      await this.request(`/api/projects/${projectId}/teams/${teamId}`, {
-        method: "DELETE",
-      });
-  }
+  async deleteTeam(projectId: string, teamId: string): Promise<void> {
+    await TeamsAPI.request(`/api/projects/${projectId}/teams/${teamId}`, {
+      method: "DELETE",
+    });
+  },
 
-  static async addMember(projectId: string, teamId: string, member: Omit<TeamMember, 'id' | 'joinedAt'>): Promise<TeamMember> {
-      return await this.request(`/api/projects/${projectId}/teams/${teamId}/members`, {
+  async addMember(
+    projectId: string,
+    teamId: string,
+    member: Omit<TeamMember, "id" | "joinedAt">,
+  ): Promise<TeamMember> {
+    return await TeamsAPI.request(
+      `/api/projects/${projectId}/teams/${teamId}/members`,
+      {
         method: "POST",
         body: JSON.stringify(member),
-      });
-  }
+      },
+    );
+  },
 
-  static async removeMember(projectId: string, teamId: string, memberId: string): Promise<void> {
-      await this.request(`/api/projects/${projectId}/teams/${teamId}/members/${memberId}`, {
+  async removeMember(
+    projectId: string,
+    teamId: string,
+    memberId: string,
+  ): Promise<void> {
+    await TeamsAPI.request(
+      `/api/projects/${projectId}/teams/${teamId}/members/${memberId}`,
+      {
         method: "DELETE",
-      });
-  }
+      },
+    );
+  },
 
-  static async updateMemberRole(projectId: string, teamId: string, memberId: string, role: UserRole): Promise<TeamMember> {
-      return await this.request(`/api/projects/${projectId}/teams/${teamId}/members/${memberId}/role`, {
+  async updateMemberRole(
+    projectId: string,
+    teamId: string,
+    memberId: string,
+    role: UserRole,
+  ): Promise<TeamMember> {
+    return await TeamsAPI.request(
+      `/api/projects/${projectId}/teams/${teamId}/members/${memberId}/role`,
+      {
         method: "PATCH",
         body: JSON.stringify({ role }),
-      });
-  }
-}
+      },
+    );
+  },
+};
 
 const projectStatuses = [
   { value: "planning", label: "Planning", color: "bg-gray-100 text-gray-800" },
   { value: "active", label: "Active", color: "bg-green-100 text-green-800" },
-  { value: "on-hold", label: "On Hold", color: "bg-yellow-100 text-yellow-800" },
-  { value: "completed", label: "Completed", color: "bg-blue-100 text-blue-800" },
+  {
+    value: "on-hold",
+    label: "On Hold",
+    color: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    value: "completed",
+    label: "Completed",
+    color: "bg-blue-100 text-blue-800",
+  },
   { value: "archived", label: "Archived", color: "bg-gray-100 text-gray-800" },
 ];
 
 const teamColors = [
-  "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", 
-  "#06B6D4", "#84CC16", "#F97316", "#EC4899", "#6B7280"
+  "#3B82F6",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#8B5CF6",
+  "#06B6D4",
+  "#84CC16",
+  "#F97316",
+  "#EC4899",
+  "#6B7280",
 ];
 
 export const Route = createFileRoute(
@@ -253,7 +321,10 @@ export const Route = createFileRoute(
 
 function ProjectSettings() {
   const { projectId, workspaceId } = Route.useParams();
-  const { data: projectData, isLoading: projectLoading } = useGetProject({ id: projectId, workspaceId });
+  const { data: projectData, isLoading: projectLoading } = useGetProject({
+    id: projectId,
+    workspaceId,
+  });
   const { data, isLoading } = useGetTasks(projectId);
   const { data: workspaceUsers } = useGetWorkspaceUsers({ workspaceId });
   const { project, setProject } = useProjectStore();
@@ -267,7 +338,9 @@ function ProjectSettings() {
   }, [projectData, setProject]);
   const [confirmProjectName, setConfirmProjectName] = useState("");
   const { mutateAsync: updateProject, isPending } = useUpdateProject();
-  const { mutateAsync: deleteProject, isPending: isDeleting } = useDeleteProject();
+  const { mutateAsync: archiveProject } = useArchiveProject();
+  const { mutateAsync: deleteProject, isPending: isDeleting } =
+    useDeleteProject();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -280,7 +353,7 @@ function ProjectSettings() {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isChangeRoleOpen, setIsChangeRoleOpen] = useState(false);
-  
+
   // Loading states for team operations
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isUpdatingTeam, setIsUpdatingTeam] = useState(false);
@@ -290,7 +363,10 @@ function ProjectSettings() {
 
   // Confirmation dialog state
   const [teamToDelete, setTeamToDelete] = useState<ProjectTeam | null>(null);
-  const [memberToRemove, setMemberToRemove] = useState<{ teamId: string; member: TeamMember } | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<{
+    teamId: string;
+    member: TeamMember;
+  } | null>(null);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
   // Search & filter state
@@ -298,13 +374,15 @@ function ProjectSettings() {
   const [sortBy, setSortBy] = useState<"name" | "members" | "created">("name");
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
   // Active tab state
-  const [activeTab, setActiveTab] = useState<'general' | 'teams' | 'features' | 'data' | 'danger'>('general');
+  const [activeTab, setActiveTab] = useState<
+    "general" | "teams" | "features" | "data" | "danger"
+  >("general");
 
   // Load teams data when component mounts or project changes
   useEffect(() => {
@@ -333,13 +411,15 @@ function ProjectSettings() {
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(team =>
-        team.name.toLowerCase().includes(query) ||
-        team.description?.toLowerCase().includes(query) ||
-        team.members.some(member => 
-          member.userName.toLowerCase().includes(query) ||
-          member.userEmail.toLowerCase().includes(query)
-        )
+      result = result.filter(
+        (team) =>
+          team.name.toLowerCase().includes(query) ||
+          team.description?.toLowerCase().includes(query) ||
+          team.members.some(
+            (member) =>
+              member.userName.toLowerCase().includes(query) ||
+              member.userEmail.toLowerCase().includes(query),
+          ),
       );
     }
 
@@ -351,7 +431,9 @@ function ProjectSettings() {
         case "members":
           return b.members.length - a.members.length;
         case "created":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         default:
           return 0;
       }
@@ -365,11 +447,12 @@ function ProjectSettings() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredAndSortedTeams.slice(startIndex, endIndex);
-  }, [filteredAndSortedTeams, currentPage, itemsPerPage]);
+  }, [filteredAndSortedTeams, currentPage]);
 
   const totalPages = Math.ceil(filteredAndSortedTeams.length / itemsPerPage);
 
   // Reset to page 1 when search or sort changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset to page 1 when search/sort changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, sortBy]);
@@ -377,44 +460,44 @@ function ProjectSettings() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const modifier = isMac ? e.metaKey : e.ctrlKey;
 
       // Cmd/Ctrl + S - Save project settings
-      if (modifier && e.key === 's') {
+      if (modifier && e.key === "s") {
         e.preventDefault();
-        if (activeTab === 'general') {
+        if (activeTab === "general") {
           toast.info("Keyboard shortcut: Save (Cmd/Ctrl+S)");
         }
       }
 
       // Cmd/Ctrl + K - Focus search (only on teams tab)
-      if (modifier && e.key === 'k') {
+      if (modifier && e.key === "k") {
         e.preventDefault();
-        if (activeTab === 'teams') {
+        if (activeTab === "teams") {
           searchInputRef.current?.focus();
           toast.success("Keyboard shortcut: Search");
         }
       }
 
       // Cmd/Ctrl + N - New team (only on teams tab)
-      if (modifier && e.key === 'n') {
+      if (modifier && e.key === "n") {
         e.preventDefault();
-        if (activeTab === 'teams') {
+        if (activeTab === "teams") {
           setIsCreateTeamOpen(true);
           toast.success("Keyboard shortcut: New Team");
         }
       }
 
       // Cmd/Ctrl + / - Show keyboard help
-      if (modifier && e.key === '/') {
+      if (modifier && e.key === "/") {
         e.preventDefault();
         setShowKeyboardHelp(true);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeTab]);
 
   useEffect(() => {
@@ -483,10 +566,10 @@ function ProjectSettings() {
         description: data.description,
         color: data.color,
         leadId: "current-user", // Replace with actual current user ID from auth
-        members: []
+        members: [],
       });
 
-      setTeams(prev => [...prev, newTeam]);
+      setTeams((prev) => [...prev, newTeam]);
       setIsCreateTeamOpen(false);
       teamForm.reset();
       toast.success(`Team "${data.name}" created successfully`);
@@ -500,16 +583,22 @@ function ProjectSettings() {
 
   const handleEditTeam = async (data: TeamFormValues) => {
     if (!selectedTeam) return;
-    
+
     try {
       setIsUpdatingTeam(true);
-      const updatedTeam = await TeamsAPI.updateTeam(projectId, selectedTeam.id, {
-        name: data.name,
-        description: data.description,
-        color: data.color,
-      });
+      const updatedTeam = await TeamsAPI.updateTeam(
+        projectId,
+        selectedTeam.id,
+        {
+          name: data.name,
+          description: data.description,
+          color: data.color,
+        },
+      );
 
-      setTeams(prev => prev.map(t => t.id === selectedTeam.id ? updatedTeam : t));
+      setTeams((prev) =>
+        prev.map((t) => (t.id === selectedTeam.id ? updatedTeam : t)),
+      );
       setIsEditTeamOpen(false);
       setSelectedTeam(null);
       teamForm.reset();
@@ -523,7 +612,7 @@ function ProjectSettings() {
   };
 
   const handleDeleteTeam = async (teamId: string) => {
-    const team = teams.find(t => t.id === teamId);
+    const team = teams.find((t) => t.id === teamId);
     if (!team) return;
     setTeamToDelete(team);
   };
@@ -534,7 +623,7 @@ function ProjectSettings() {
     try {
       setIsDeletingTeam(teamToDelete.id);
       await TeamsAPI.deleteTeam(projectId, teamToDelete.id);
-      setTeams(prev => prev.filter(t => t.id !== teamToDelete.id));
+      setTeams((prev) => prev.filter((t) => t.id !== teamToDelete.id));
       toast.success(`Team "${teamToDelete.name}" deleted successfully`);
       setTeamToDelete(null);
     } catch (error) {
@@ -545,16 +634,21 @@ function ProjectSettings() {
     }
   };
 
-  const handleAddMember = async (teamId: string, memberData: { userEmail: string; userName: string; role: UserRole }) => {
+  const handleAddMember = async (
+    teamId: string,
+    memberData: { userEmail: string; userName: string; role: UserRole },
+  ) => {
     try {
       const newMember = await TeamsAPI.addMember(projectId, teamId, memberData);
-      
-      setTeams(prev => prev.map(team => 
-        team.id === teamId 
-          ? { ...team, members: [...team.members, newMember] }
-          : team
-      ));
-      
+
+      setTeams((prev) =>
+        prev.map((team) =>
+          team.id === teamId
+            ? { ...team, members: [...team.members, newMember] }
+            : team,
+        ),
+      );
+
       setIsAddMemberOpen(false);
       toast.success(`${memberData.userName} added to team successfully`);
     } catch (error) {
@@ -564,8 +658,8 @@ function ProjectSettings() {
   };
 
   const handleRemoveMember = async (teamId: string, memberId: string) => {
-    const team = teams.find(t => t.id === teamId);
-    const member = team?.members.find(m => m.id === memberId);
+    const team = teams.find((t) => t.id === teamId);
+    const member = team?.members.find((m) => m.id === memberId);
     if (!member) return;
     setMemberToRemove({ teamId, member });
   };
@@ -575,14 +669,25 @@ function ProjectSettings() {
 
     try {
       setIsRemovingMember(memberToRemove.member.id);
-      await TeamsAPI.removeMember(projectId, memberToRemove.teamId, memberToRemove.member.id);
-      
-      setTeams(prev => prev.map(team => 
-        team.id === memberToRemove.teamId 
-          ? { ...team, members: team.members.filter(m => m.id !== memberToRemove.member.id) }
-          : team
-      ));
-      
+      await TeamsAPI.removeMember(
+        projectId,
+        memberToRemove.teamId,
+        memberToRemove.member.id,
+      );
+
+      setTeams((prev) =>
+        prev.map((team) =>
+          team.id === memberToRemove.teamId
+            ? {
+                ...team,
+                members: team.members.filter(
+                  (m) => m.id !== memberToRemove.member.id,
+                ),
+              }
+            : team,
+        ),
+      );
+
       toast.success(`${memberToRemove.member.userName} removed from team`);
       setMemberToRemove(null);
     } catch (error) {
@@ -593,20 +698,33 @@ function ProjectSettings() {
     }
   };
 
-  const handleChangeRole = async (teamId: string, memberId: string, newRole: UserRole) => {
+  const handleChangeRole = async (
+    teamId: string,
+    memberId: string,
+    newRole: UserRole,
+  ) => {
     try {
       setIsChangingRole(true);
-      const updatedMember = await TeamsAPI.updateMemberRole(projectId, teamId, memberId, newRole);
-      
-      setTeams(prev => prev.map(team => 
-        team.id === teamId 
-          ? { 
-              ...team, 
-              members: team.members.map(m => m.id === memberId ? updatedMember : m) 
-            }
-          : team
-      ));
-      
+      const updatedMember = await TeamsAPI.updateMemberRole(
+        projectId,
+        teamId,
+        memberId,
+        newRole,
+      );
+
+      setTeams((prev) =>
+        prev.map((team) =>
+          team.id === teamId
+            ? {
+                ...team,
+                members: team.members.map((m) =>
+                  m.id === memberId ? updatedMember : m,
+                ),
+              }
+            : team,
+        ),
+      );
+
       setIsChangeRoleOpen(false);
       setSelectedMember(null);
       toast.success(`Role updated to ${newRole}`);
@@ -620,47 +738,48 @@ function ProjectSettings() {
 
   const handleExportProject = () => {
     if (!project) return;
-    
+
     try {
       const exportData = {
         project: {
           name: project.name,
           slug: project.slug,
           description: project.description,
-          status: project.status,
-          priority: project.priority,
-          visibility: project.visibility,
+          status: projectData?.status,
+          priority: projectData?.priority,
           icon: project.icon,
         },
-        teams: teams.map(team => ({
+        teams: teams.map((team) => ({
           name: team.name,
           description: team.description,
           color: team.color,
-          members: team.members.map(member => ({
+          members: team.members.map((member) => ({
             userEmail: member.userEmail,
             userName: member.userName,
             role: member.role,
-          }))
+          })),
         })),
         settings: {
-          subtasksEnabled: form.watch('enableSubtasks'),
-          dependenciesEnabled: form.watch('enableDependencies'),
-          timeTrackingEnabled: form.watch('enableTimeTracking'),
-          emailNotifications: form.watch('emailNotifications'),
+          subtasksEnabled: form.watch("enableSubtasks"),
+          dependenciesEnabled: form.watch("enableDependencies"),
+          timeTrackingEnabled: form.watch("enableTimeTracking"),
+          emailNotifications: form.watch("emailNotifications"),
         },
         exportedAt: new Date().toISOString(),
       };
 
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `${project.slug}-export-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `${project.slug}-export-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast.success("Project exported successfully");
     } catch (error) {
       console.error("Failed to export project:", error);
@@ -674,17 +793,10 @@ function ProjectSettings() {
 
   const confirmArchiveProject = async () => {
     if (!project) return;
-    
+
     try {
-      await updateProject({
-        workspaceId,
-        projectId,
-        data: {
-          ...project,
-          status: 'archived' as any,
-        },
-      });
-      
+      await archiveProject({ projectId, workspaceId });
+
       toast.success("Project archived successfully");
       setShowArchiveConfirm(false);
       // Navigate back to workspace using absolute URL
@@ -705,7 +817,7 @@ function ProjectSettings() {
     }
 
     try {
-      await deleteProject({ id: project.id });
+      await deleteProject({ id: project.id, workspaceId });
 
       queryClient.invalidateQueries({
         queryKey: ["project", project.id],
@@ -742,8 +854,8 @@ function ProjectSettings() {
                 Permission Required
               </h2>
               <p className="text-zinc-500 dark:text-zinc-400 mb-6 max-w-md mx-auto">
-                Only workspace owners can modify project settings. Please contact
-                the workspace owner if you need to make changes.
+                Only workspace owners can modify project settings. Please
+                contact the workspace owner if you need to make changes.
               </p>
               <Button
                 variant="outline"
@@ -772,7 +884,9 @@ function ProjectSettings() {
     return (
       <LazyDashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-zinc-500 dark:text-zinc-400">Loading settings...</div>
+          <div className="text-zinc-500 dark:text-zinc-400">
+            Loading settings...
+          </div>
         </div>
       </LazyDashboardLayout>
     );
@@ -790,13 +904,18 @@ function ProjectSettings() {
 
   return (
     <LazyDashboardLayout>
-      <UniversalHeader 
+      <UniversalHeader
         title="Project Settings"
         subtitle="Configure project preferences, teams, and integrations"
         variant="default"
         customActions={
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={() => setShowKeyboardHelp(true)} title="Keyboard Shortcuts (Cmd+/)">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowKeyboardHelp(true)}
+              title="Keyboard Shortcuts (Cmd+/)"
+            >
               <Keyboard className="h-4 w-4 mr-2" />
               Shortcuts
             </Button>
@@ -804,20 +923,31 @@ function ProjectSettings() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button variant="outline" size="sm" onClick={handleArchiveProject} disabled={isPending}>
-              {isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Archive className="h-4 w-4 mr-2" />}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleArchiveProject}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Archive className="h-4 w-4 mr-2" />
+              )}
               {isPending ? "Archiving..." : "Archive"}
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
-              onClick={() => navigate({
-                to: "/dashboard/workspace/$workspaceId/project/$projectId",
-                params: {
-                  workspaceId: workspaceId,
-                  projectId: projectId,
-                },
-              })}
+              onClick={() =>
+                navigate({
+                  to: "/dashboard/workspace/$workspaceId/project/$projectId",
+                  params: {
+                    workspaceId: workspaceId,
+                    projectId: projectId,
+                  },
+                })
+              }
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Project
@@ -825,28 +955,28 @@ function ProjectSettings() {
           </div>
         }
       />
-      
+
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
-            
             {/* Settings Navigation Tabs */}
             <div className="flex space-x-1 mb-8 bg-white dark:bg-zinc-900 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800">
               {[
-                { id: 'general', label: 'General', icon: Settings2 },
-                { id: 'teams', label: 'Teams', icon: Users },
-                { id: 'features', label: 'Features', icon: Zap },
-                { id: 'data', label: 'Data', icon: FileText },
-                { id: 'danger', label: 'Danger Zone', icon: AlertTriangle },
+                { id: "general", label: "General", icon: Settings2 },
+                { id: "teams", label: "Teams", icon: Users },
+                { id: "features", label: "Features", icon: Zap },
+                { id: "data", label: "Data", icon: FileText },
+                { id: "danger", label: "Danger Zone", icon: AlertTriangle },
               ].map((tab) => (
                 <button
+                  type="button"
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     activeTab === tab.id
                       ? "bg-blue-600 text-white"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800",
                   )}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -857,9 +987,8 @@ function ProjectSettings() {
 
             {/* Tab Content */}
             <div className="space-y-6">
-              
               {/* General Settings Tab */}
-              {activeTab === 'general' && project && (
+              {activeTab === "general" && project && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -872,7 +1001,10 @@ function ProjectSettings() {
                   </CardHeader>
                   <CardContent>
                     <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-6"
+                      >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField
                             control={form.control}
@@ -895,7 +1027,11 @@ function ProjectSettings() {
                               <FormItem>
                                 <FormLabel>Project Slug</FormLabel>
                                 <FormControl>
-                                  <Input {...field} className="font-mono" maxLength={10} />
+                                  <Input
+                                    {...field}
+                                    className="font-mono"
+                                    maxLength={10}
+                                  />
                                 </FormControl>
                                 <FormDescription>
                                   Short identifier used in URLs
@@ -913,8 +1049,8 @@ function ProjectSettings() {
                             <FormItem>
                               <FormLabel>Description</FormLabel>
                               <FormControl>
-                                <Textarea 
-                                  {...field} 
+                                <Textarea
+                                  {...field}
                                   placeholder="Describe your project's goals and objectives..."
                                   className="min-h-[100px]"
                                 />
@@ -934,7 +1070,10 @@ function ProjectSettings() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Status</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select status" />
@@ -942,7 +1081,10 @@ function ProjectSettings() {
                                   </FormControl>
                                   <SelectContent>
                                     {projectStatuses.map((status) => (
-                                      <SelectItem key={status.value} value={status.value}>
+                                      <SelectItem
+                                        key={status.value}
+                                        value={status.value}
+                                      >
                                         {status.label}
                                       </SelectItem>
                                     ))}
@@ -959,17 +1101,28 @@ function ProjectSettings() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Priority</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select priority" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem key="low" value="low">Low</SelectItem>
-                                    <SelectItem key="medium" value="medium">Medium</SelectItem>
-                                    <SelectItem key="high" value="high">High</SelectItem>
-                                    <SelectItem key="urgent" value="urgent">Urgent</SelectItem>
+                                    <SelectItem key="low" value="low">
+                                      Low
+                                    </SelectItem>
+                                    <SelectItem key="medium" value="medium">
+                                      Medium
+                                    </SelectItem>
+                                    <SelectItem key="high" value="high">
+                                      High
+                                    </SelectItem>
+                                    <SelectItem key="urgent" value="urgent">
+                                      Urgent
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -983,16 +1136,28 @@ function ProjectSettings() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Visibility</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select visibility" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem key="private" value="private">Private</SelectItem>
-                                    <SelectItem key="team" value="team">Team</SelectItem>
-                                    <SelectItem key="workspace" value="workspace">Workspace</SelectItem>
+                                    <SelectItem key="private" value="private">
+                                      Private
+                                    </SelectItem>
+                                    <SelectItem key="team" value="team">
+                                      Team
+                                    </SelectItem>
+                                    <SelectItem
+                                      key="workspace"
+                                      value="workspace"
+                                    >
+                                      Workspace
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -1018,7 +1183,7 @@ function ProjectSettings() {
                                         "p-2 rounded-lg transition-colors flex items-center justify-center",
                                         field.value === name
                                           ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10"
-                                          : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                          : "hover:bg-zinc-100 dark:hover:bg-zinc-800",
                                       )}
                                     >
                                       <Icon className="w-5 h-5" />
@@ -1027,8 +1192,13 @@ function ProjectSettings() {
                                 </div>
                               </FormControl>
                               <div className="flex items-center gap-2 mt-2">
-                                {createElement(icons[field.value as keyof typeof icons], { className: "w-4 h-4" })}
-                                <span className="text-sm text-zinc-500">{field.value}</span>
+                                {createElement(
+                                  icons[field.value as keyof typeof icons],
+                                  { className: "w-4 h-4" },
+                                )}
+                                <span className="text-sm text-zinc-500">
+                                  {field.value}
+                                </span>
                               </div>
                               <FormMessage />
                             </FormItem>
@@ -1045,7 +1215,7 @@ function ProjectSettings() {
               )}
 
               {/* Teams Management Tab */}
-              {activeTab === 'teams' && (
+              {activeTab === "teams" && (
                 <div className="space-y-6">
                   <Card>
                     <CardHeader>
@@ -1056,10 +1226,14 @@ function ProjectSettings() {
                             Project Teams
                           </CardTitle>
                           <CardDescription>
-                            Create and manage teams for this project. Team members can be assigned to tasks.
+                            Create and manage teams for this project. Team
+                            members can be assigned to tasks.
                           </CardDescription>
                         </div>
-                        <Button onClick={() => setIsCreateTeamOpen(true)} aria-label="Create new team">
+                        <Button
+                          onClick={() => setIsCreateTeamOpen(true)}
+                          aria-label="Create new team"
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Create Team
                         </Button>
@@ -1077,15 +1251,29 @@ function ProjectSettings() {
                             aria-label="Search teams and members"
                           />
                         </div>
-                        <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                          <SelectTrigger className="w-[180px]" aria-label="Sort teams by">
+                        <Select
+                          value={sortBy}
+                          onValueChange={(value) =>
+                            setSortBy(value as typeof sortBy)
+                          }
+                        >
+                          <SelectTrigger
+                            className="w-[180px]"
+                            aria-label="Sort teams by"
+                          >
                             <Filter className="w-4 h-4 mr-2" />
                             <SelectValue placeholder="Sort by" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem key="name" value="name">Name (A-Z)</SelectItem>
-                            <SelectItem key="members" value="members">Most Members</SelectItem>
-                            <SelectItem key="created" value="created">Recently Created</SelectItem>
+                            <SelectItem key="name" value="name">
+                              Name (A-Z)
+                            </SelectItem>
+                            <SelectItem key="members" value="members">
+                              Most Members
+                            </SelectItem>
+                            <SelectItem key="created" value="created">
+                              Recently Created
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1113,7 +1301,10 @@ function ProjectSettings() {
                                 <CardContent>
                                   <div className="space-y-3">
                                     {[1, 2, 3].map((j) => (
-                                      <div key={j} className="flex items-center justify-between p-3 border rounded-lg">
+                                      <div
+                                        key={j}
+                                        className="flex items-center justify-between p-3 border rounded-lg"
+                                      >
                                         <div className="flex items-center gap-3">
                                           <Skeleton className="w-10 h-10 rounded-full" />
                                           <div className="space-y-2">
@@ -1136,193 +1327,277 @@ function ProjectSettings() {
                               {searchQuery ? "No teams found" : "No teams yet"}
                             </h3>
                             <p className="text-zinc-500 dark:text-zinc-400 mb-4">
-                              {searchQuery 
+                              {searchQuery
                                 ? `No teams match "${searchQuery}". Try a different search term.`
-                                : "Create your first team to start organizing project members."
-                              }
+                                : "Create your first team to start organizing project members."}
                             </p>
                             {!searchQuery && (
-                            <Button onClick={() => setIsCreateTeamOpen(true)}>
-                              <Plus className="w-4 h-4 mr-2" />
-                              Create Team
-                            </Button>
+                              <Button onClick={() => setIsCreateTeamOpen(true)}>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Create Team
+                              </Button>
                             )}
                           </div>
                         ) : (
                           <>
-                          {paginatedTeams.map((team) => (
-                            <Card key={team.id} className="border-l-4" style={{ borderLeftColor: team.color }}>
-                              <CardHeader>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div 
-                                      className="w-3 h-3 rounded-full" 
-                                      style={{ backgroundColor: team.color }}
-                                    />
-                                    <div>
-                                      <CardTitle className="text-lg">{team.name}</CardTitle>
-                                      {team.description && (
-                                        <CardDescription>{team.description}</CardDescription>
-                                      )}
-                                    </div>
-                                    <Badge variant="outline">{team.members.length} members</Badge>
-                                  </div>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" aria-label={`Team actions for ${team.name}`}>
-                                        <MoreHorizontal className="w-4 h-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          setSelectedTeam(team);
-                                          setIsAddMemberOpen(true);
-                                        }}
-                                      >
-                                        <UserPlus className="w-4 h-4 mr-2" />
-                                        Add Member
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          setSelectedTeam(team);
-                                          teamForm.reset({
-                                            name: team.name,
-                                            description: team.description || "",
-                                            color: team.color,
-                                          });
-                                          setIsEditTeamOpen(true);
-                                        }}
-                                      >
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit Team
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => handleDeleteTeam(team.id)}
-                                        className="text-red-600"
-                                        disabled={isDeletingTeam === team.id}
-                                      >
-                                        {isDeletingTeam === team.id ? (
-                                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting...</>
-                                        ) : (
-                                          <><Trash2 className="w-4 h-4 mr-2" />Delete Team</>
+                            {paginatedTeams.map((team) => (
+                              <Card
+                                key={team.id}
+                                className="border-l-4"
+                                style={{ borderLeftColor: team.color }}
+                              >
+                                <CardHeader>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: team.color }}
+                                      />
+                                      <div>
+                                        <CardTitle className="text-lg">
+                                          {team.name}
+                                        </CardTitle>
+                                        {team.description && (
+                                          <CardDescription>
+                                            {team.description}
+                                          </CardDescription>
                                         )}
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-3">
-                                  {team.members.length === 0 ? (
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                      No members in this team yet.
-                                    </p>
-                                  ) : (
-                                    team.members.map((member) => (
-                                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                        <div className="flex items-center gap-3">
-                                          <Avatar className="w-8 h-8">
-                                            <AvatarImage src={member.avatar} />
-                                            <AvatarFallback>
-                                              {member.userName.slice(0, 2).toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div>
-                                            <div className="flex items-center gap-2">
-                                              <span className="font-medium">{member.userName}</span>
-                                              {(member.role === 'team-lead' || member.role === 'project-manager' || member.role === 'department-head' || member.role === 'workspace-manager') && (
-                                                <Crown className="w-4 h-4 text-yellow-500" />
-                                              )}
-                                            </div>
-                                            <div className="text-sm text-zinc-500">
-                                              {member.userEmail} • {member.role}
+                                      </div>
+                                      <Badge variant="outline">
+                                        {team.members.length} members
+                                      </Badge>
+                                    </div>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label={`Team actions for ${team.name}`}
+                                        >
+                                          <MoreHorizontal className="w-4 h-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedTeam(team);
+                                            setIsAddMemberOpen(true);
+                                          }}
+                                        >
+                                          <UserPlus className="w-4 h-4 mr-2" />
+                                          Add Member
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedTeam(team);
+                                            teamForm.reset({
+                                              name: team.name,
+                                              description:
+                                                team.description || "",
+                                              color: team.color,
+                                            });
+                                            setIsEditTeamOpen(true);
+                                          }}
+                                        >
+                                          <Edit className="w-4 h-4 mr-2" />
+                                          Edit Team
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleDeleteTeam(team.id)
+                                          }
+                                          className="text-red-600"
+                                          disabled={isDeletingTeam === team.id}
+                                        >
+                                          {isDeletingTeam === team.id ? (
+                                            <>
+                                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                              Deleting...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Trash2 className="w-4 h-4 mr-2" />
+                                              Delete Team
+                                            </>
+                                          )}
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-3">
+                                    {team.members.length === 0 ? (
+                                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                        No members in this team yet.
+                                      </p>
+                                    ) : (
+                                      team.members.map((member) => (
+                                        <div
+                                          key={member.id}
+                                          className="flex items-center justify-between p-3 border rounded-lg"
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <Avatar className="w-8 h-8">
+                                              <AvatarImage
+                                                src={member.avatar}
+                                              />
+                                              <AvatarFallback>
+                                                {member.userName
+                                                  .slice(0, 2)
+                                                  .toUpperCase()}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <div className="flex items-center gap-2">
+                                                <span className="font-medium">
+                                                  {member.userName}
+                                                </span>
+                                                {(member.role === "team-lead" ||
+                                                  member.role ===
+                                                    "project-manager" ||
+                                                  member.role ===
+                                                    "department-head" ||
+                                                  member.role ===
+                                                    "workspace-manager") && (
+                                                  <Crown className="w-4 h-4 text-yellow-500" />
+                                                )}
+                                              </div>
+                                              <div className="text-sm text-zinc-500">
+                                                {member.userEmail} •{" "}
+                                                {member.role}
+                                              </div>
                                             </div>
                                           </div>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                aria-label={`Member actions for ${member.userName}`}
+                                              >
+                                                <MoreHorizontal className="w-4 h-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  setSelectedMember(member);
+                                                  setSelectedTeam(team);
+                                                  setIsChangeRoleOpen(true);
+                                                }}
+                                              >
+                                                <Shield className="w-4 h-4 mr-2" />
+                                                Change Role
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  handleRemoveMember(
+                                                    team.id,
+                                                    member.id,
+                                                  )
+                                                }
+                                                className="text-red-600"
+                                                disabled={
+                                                  isRemovingMember === member.id
+                                                }
+                                              >
+                                                {isRemovingMember ===
+                                                member.id ? (
+                                                  <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    Removing...
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Remove from Team
+                                                  </>
+                                                )}
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
                                         </div>
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" aria-label={`Member actions for ${member.userName}`}>
-                                              <MoreHorizontal className="w-4 h-4" />
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end">
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                setSelectedMember(member);
-                                                setSelectedTeam(team);
-                                                setIsChangeRoleOpen(true);
-                                              }}
-                                            >
-                                              <Shield className="w-4 h-4 mr-2" />
-                                              Change Role
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                              onClick={() => handleRemoveMember(team.id, member.id)}
-                                              className="text-red-600"
-                                              disabled={isRemovingMember === member.id}
-                                            >
-                                              {isRemovingMember === member.id ? (
-                                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Removing...</>
-                                              ) : (
-                                                <><Trash2 className="w-4 h-4 mr-2" />Remove from Team</>
-                                              )}
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
-                                    ))
-                                  )}
+                                      ))
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                              <div
+                                className="flex items-center justify-between mt-4 px-2"
+                                // biome-ignore lint/a11y/useSemanticElements: intentional navigation landmark with aria-label
+                                role="navigation"
+                                aria-label="Team pagination"
+                              >
+                                <div className="text-sm text-zinc-500">
+                                  Showing {(currentPage - 1) * itemsPerPage + 1}{" "}
+                                  to{" "}
+                                  {Math.min(
+                                    currentPage * itemsPerPage,
+                                    filteredAndSortedTeams.length,
+                                  )}{" "}
+                                  of {filteredAndSortedTeams.length} teams
                                 </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                          
-                          {/* Pagination Controls */}
-                          {totalPages > 1 && (
-                            <div className="flex items-center justify-between mt-4 px-2" role="navigation" aria-label="Team pagination">
-                              <div className="text-sm text-zinc-500">
-                                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedTeams.length)} of {filteredAndSortedTeams.length} teams
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                  disabled={currentPage === 1}
-                                  aria-label="Go to previous page"
-                                >
-                                  <ChevronLeft className="w-4 h-4" />
-                                  Previous
-                                </Button>
-                                <div className="flex items-center gap-1">
-                                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                    <Button
-                                      key={page}
-                                      variant={currentPage === page ? "default" : "outline"}
-                                      size="sm"
-                                      onClick={() => setCurrentPage(page)}
-                                      className="w-10"
-                                      aria-label={`Go to page ${page}`}
-                                      aria-current={currentPage === page ? "page" : undefined}
-                                    >
-                                      {page}
-                                    </Button>
-                                  ))}
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      setCurrentPage((p) => Math.max(1, p - 1))
+                                    }
+                                    disabled={currentPage === 1}
+                                    aria-label="Go to previous page"
+                                  >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    Previous
+                                  </Button>
+                                  <div className="flex items-center gap-1">
+                                    {Array.from(
+                                      { length: totalPages },
+                                      (_, i) => i + 1,
+                                    ).map((page) => (
+                                      <Button
+                                        key={page}
+                                        variant={
+                                          currentPage === page
+                                            ? "default"
+                                            : "outline"
+                                        }
+                                        size="sm"
+                                        onClick={() => setCurrentPage(page)}
+                                        className="w-10"
+                                        aria-label={`Go to page ${page}`}
+                                        aria-current={
+                                          currentPage === page
+                                            ? "page"
+                                            : undefined
+                                        }
+                                      >
+                                        {page}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      setCurrentPage((p) =>
+                                        Math.min(totalPages, p + 1),
+                                      )
+                                    }
+                                    disabled={currentPage === totalPages}
+                                    aria-label="Go to next page"
+                                  >
+                                    Next
+                                    <ChevronRight className="w-4 h-4" />
+                                  </Button>
                                 </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                  disabled={currentPage === totalPages}
-                                  aria-label="Go to next page"
-                                >
-                                  Next
-                                  <ChevronRight className="w-4 h-4" />
-                                </Button>
                               </div>
-                            </div>
-                          )}
+                            )}
                           </>
                         )}
                       </div>
@@ -1332,7 +1607,7 @@ function ProjectSettings() {
               )}
 
               {/* Features Tab */}
-              {activeTab === 'features' && (
+              {activeTab === "features" && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1353,13 +1628,18 @@ function ProjectSettings() {
                             render={({ field }) => (
                               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">
-                                  <FormLabel className="text-base">Subtasks</FormLabel>
+                                  <FormLabel className="text-base">
+                                    Subtasks
+                                  </FormLabel>
                                   <FormDescription>
                                     Allow breaking down tasks into smaller items
                                   </FormDescription>
                                 </div>
                                 <FormControl>
-                                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -1371,13 +1651,18 @@ function ProjectSettings() {
                             render={({ field }) => (
                               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">
-                                  <FormLabel className="text-base">Task Dependencies</FormLabel>
+                                  <FormLabel className="text-base">
+                                    Task Dependencies
+                                  </FormLabel>
                                   <FormDescription>
                                     Set dependencies between tasks
                                   </FormDescription>
                                 </div>
                                 <FormControl>
-                                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -1389,13 +1674,18 @@ function ProjectSettings() {
                             render={({ field }) => (
                               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">
-                                  <FormLabel className="text-base">Time Tracking</FormLabel>
+                                  <FormLabel className="text-base">
+                                    Time Tracking
+                                  </FormLabel>
                                   <FormDescription>
                                     Track time spent on tasks
                                   </FormDescription>
                                 </div>
                                 <FormControl>
-                                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -1407,13 +1697,18 @@ function ProjectSettings() {
                             render={({ field }) => (
                               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">
-                                  <FormLabel className="text-base">Email Notifications</FormLabel>
+                                  <FormLabel className="text-base">
+                                    Email Notifications
+                                  </FormLabel>
                                   <FormDescription>
                                     Send updates via email
                                   </FormDescription>
                                 </div>
                                 <FormControl>
-                                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -1426,7 +1721,7 @@ function ProjectSettings() {
               )}
 
               {/* Data Management Tab */}
-              {activeTab === 'data' && project && (
+              {activeTab === "data" && project && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1444,7 +1739,7 @@ function ProjectSettings() {
               )}
 
               {/* Danger Zone Tab */}
-              {activeTab === 'danger' && project && (
+              {activeTab === "danger" && project && (
                 <Card className="border-red-200 dark:border-red-800">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
@@ -1452,7 +1747,8 @@ function ProjectSettings() {
                       Danger Zone
                     </CardTitle>
                     <CardDescription>
-                      Permanently delete your project. This action cannot be undone.
+                      Permanently delete your project. This action cannot be
+                      undone.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -1460,7 +1756,9 @@ function ProjectSettings() {
                       <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg">
                         <div className="flex items-center gap-3 text-red-600 dark:text-red-400 mb-3">
                           <AlertTriangle className="w-5 h-5" />
-                          <p className="font-medium">Warning: This action cannot be undone</p>
+                          <p className="font-medium">
+                            Warning: This action cannot be undone
+                          </p>
                         </div>
                         <ul className="list-disc list-inside space-y-1 text-sm text-red-600/90 dark:text-red-400/90">
                           <li>All tasks will be permanently deleted</li>
@@ -1471,18 +1769,26 @@ function ProjectSettings() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label
+                          htmlFor="confirm-delete-project-name"
+                          className="block text-sm font-medium mb-2"
+                        >
                           Type "{project.name}" to confirm deletion
                         </label>
                         <div className="flex gap-3">
                           <Input
+                            id="confirm-delete-project-name"
                             value={confirmProjectName}
-                            onChange={(e) => setConfirmProjectName(e.target.value)}
+                            onChange={(e) =>
+                              setConfirmProjectName(e.target.value)
+                            }
                             placeholder={project.name}
                           />
                           <Button
                             onClick={handleDeleteProject}
-                            disabled={confirmProjectName !== project.name || isDeleting}
+                            disabled={
+                              confirmProjectName !== project.name || isDeleting
+                            }
                             variant="destructive"
                           >
                             {isDeleting ? "Deleting..." : "Delete Project"}
@@ -1504,11 +1810,15 @@ function ProjectSettings() {
           <DialogHeader>
             <DialogTitle>Create New Team</DialogTitle>
             <DialogDescription>
-              Create a new team for this project. You can add members after creation.
+              Create a new team for this project. You can add members after
+              creation.
             </DialogDescription>
           </DialogHeader>
           <Form {...teamForm}>
-            <form onSubmit={teamForm.handleSubmit(handleCreateTeam)} className="space-y-4">
+            <form
+              onSubmit={teamForm.handleSubmit(handleCreateTeam)}
+              className="space-y-4"
+            >
               <FormField
                 control={teamForm.control}
                 name="name"
@@ -1530,7 +1840,10 @@ function ProjectSettings() {
                   <FormItem>
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Describe the team's responsibilities..." />
+                      <Textarea
+                        {...field}
+                        placeholder="Describe the team's responsibilities..."
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1552,9 +1865,9 @@ function ProjectSettings() {
                             onClick={() => field.onChange(color)}
                             className={cn(
                               "w-8 h-8 rounded-full border-2 transition-all",
-                              field.value === color 
-                                ? "border-zinc-400 scale-110" 
-                                : "border-zinc-200 hover:scale-105"
+                              field.value === color
+                                ? "border-zinc-400 scale-110"
+                                : "border-zinc-200 hover:scale-105",
                             )}
                             style={{ backgroundColor: color }}
                           />
@@ -1567,11 +1880,18 @@ function ProjectSettings() {
               />
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsCreateTeamOpen(false)} disabled={isCreatingTeam}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreateTeamOpen(false)}
+                  disabled={isCreatingTeam}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isCreatingTeam}>
-                  {isCreatingTeam && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isCreatingTeam && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {isCreatingTeam ? "Creating..." : "Create Team"}
                 </Button>
               </DialogFooter>
@@ -1590,7 +1910,10 @@ function ProjectSettings() {
             </DialogDescription>
           </DialogHeader>
           <Form {...teamForm}>
-            <form onSubmit={teamForm.handleSubmit(handleEditTeam)} className="space-y-4">
+            <form
+              onSubmit={teamForm.handleSubmit(handleEditTeam)}
+              className="space-y-4"
+            >
               <FormField
                 control={teamForm.control}
                 name="name"
@@ -1612,7 +1935,10 @@ function ProjectSettings() {
                   <FormItem>
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Describe the team's responsibilities..." />
+                      <Textarea
+                        {...field}
+                        placeholder="Describe the team's responsibilities..."
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1634,9 +1960,9 @@ function ProjectSettings() {
                             onClick={() => field.onChange(color)}
                             className={cn(
                               "w-8 h-8 rounded-full border-2 transition-all",
-                              field.value === color 
-                                ? "border-zinc-400 scale-110" 
-                                : "border-zinc-200 hover:scale-105"
+                              field.value === color
+                                ? "border-zinc-400 scale-110"
+                                : "border-zinc-200 hover:scale-105",
                             )}
                             style={{ backgroundColor: color }}
                             aria-label={`Select ${color} color`}
@@ -1650,11 +1976,18 @@ function ProjectSettings() {
               />
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditTeamOpen(false)} disabled={isUpdatingTeam}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditTeamOpen(false)}
+                  disabled={isUpdatingTeam}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isUpdatingTeam}>
-                  {isUpdatingTeam && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isUpdatingTeam && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {isUpdatingTeam ? "Updating..." : "Update Team"}
                 </Button>
               </DialogFooter>
@@ -1674,39 +2007,59 @@ function ProjectSettings() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select Member</label>
-              <Select onValueChange={(value) => {
-                const user = workspaceUsers?.find((u: any) => u.userEmail === value);
-                if (user && selectedTeam) {
-                  handleAddMember(selectedTeam.id, {
-                    userEmail: user.userEmail!,
-                    userName: user.userName!,
-                    role: 'member'
-                  });
-                }
-              }}>
+              <span className="text-sm font-medium">Select Member</span>
+              <Select
+                onValueChange={(value) => {
+                  const user = workspaceUsers?.find(
+                    (u: { userEmail: string }) => u.userEmail === value,
+                  );
+                  if (user?.userEmail && selectedTeam) {
+                    handleAddMember(selectedTeam.id, {
+                      userEmail: user.userEmail,
+                      userName: user.userName ?? user.userEmail,
+                      role: "member",
+                    });
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a team member" />
                 </SelectTrigger>
                 <SelectContent>
                   {(() => {
                     if (!workspaceUsers || workspaceUsers.length === 0) {
-                      return <div className="p-2 text-sm text-zinc-500">No users available</div>;
+                      return (
+                        <div className="p-2 text-sm text-zinc-500">
+                          No users available
+                        </div>
+                      );
                     }
-                    
-                    const availableUsers = workspaceUsers.filter((user: any) => 
-                      !selectedTeam?.members.some(member => member.userEmail === user.userEmail)
+
+                    const availableUsers = workspaceUsers.filter(
+                      (user: { userEmail: string }) =>
+                        !selectedTeam?.members.some(
+                          (member) => member.userEmail === user.userEmail,
+                        ),
                     );
-                    
+
                     if (availableUsers.length === 0) {
-                      return <div className="p-2 text-sm text-zinc-500">All users are already in this team</div>;
+                      return (
+                        <div className="p-2 text-sm text-zinc-500">
+                          All users are already in this team
+                        </div>
+                      );
                     }
-                    
-                    return availableUsers.map((user: any) => (
-                      <SelectItem key={user.userEmail} value={user.userEmail}>
-                        {user.userName} ({user.userEmail})
-                      </SelectItem>
-                    ));
+
+                    return availableUsers.map(
+                      (user: {
+                        userEmail: string;
+                        userName?: string | null;
+                      }) => (
+                        <SelectItem key={user.userEmail} value={user.userEmail}>
+                          {user.userName} ({user.userEmail})
+                        </SelectItem>
+                      ),
+                    );
                   })()}
                 </SelectContent>
               </Select>
@@ -1721,136 +2074,155 @@ function ProjectSettings() {
           <DialogHeader>
             <DialogTitle>Change Member Role</DialogTitle>
             <DialogDescription>
-              Change the role for {selectedMember?.userName} in "{selectedTeam?.name}" team.
+              Change the role for {selectedMember?.userName} in "
+              {selectedTeam?.name}" team.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select New Role</label>
+              <span className="text-sm font-medium">Select New Role</span>
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {[
-                  { 
-                    value: 'workspace-manager', 
-                    label: 'Workspace Manager', 
-                    description: 'Full workspace control with all permissions',
+                  {
+                    value: "workspace-manager",
+                    label: "Workspace Manager",
+                    description: "Full workspace control with all permissions",
                     icon: Crown,
                     level: 7,
-                    category: 'workspace'
+                    category: "workspace",
                   },
-                  { 
-                    value: 'department-head', 
-                    label: 'Department Head', 
-                    description: 'Manages department teams and projects',
+                  {
+                    value: "department-head",
+                    label: "Department Head",
+                    description: "Manages department teams and projects",
                     icon: Crown,
                     level: 6,
-                    category: 'workspace'
+                    category: "workspace",
                   },
-                  { 
-                    value: 'project-manager', 
-                    label: 'Project Manager', 
-                    description: 'Full control over assigned projects',
+                  {
+                    value: "project-manager",
+                    label: "Project Manager",
+                    description: "Full control over assigned projects",
                     icon: Crown,
                     level: 4,
-                    category: 'project'
+                    category: "project",
                   },
-                  { 
-                    value: 'team-lead', 
-                    label: 'Team Lead', 
-                    description: 'Leads and manages team members',
+                  {
+                    value: "team-lead",
+                    label: "Team Lead",
+                    description: "Leads and manages team members",
                     icon: Crown,
                     level: 2,
-                    category: 'team'
+                    category: "team",
                   },
-                  { 
-                    value: 'member', 
-                    label: 'Member', 
-                    description: 'Standard team member with task access',
+                  {
+                    value: "member",
+                    label: "Member",
+                    description: "Standard team member with task access",
                     icon: User,
                     level: 1,
-                    category: 'team'
+                    category: "team",
                   },
-                  { 
-                    value: 'project-viewer', 
-                    label: 'Project Viewer', 
-                    description: 'Read-only access to project information',
+                  {
+                    value: "project-viewer",
+                    label: "Project Viewer",
+                    description: "Read-only access to project information",
                     icon: User,
                     level: 3,
-                    category: 'project'
+                    category: "project",
                   },
-                  { 
-                    value: 'workspace-viewer', 
-                    label: 'Workspace Viewer', 
-                    description: 'Read-only access to workspace',
+                  {
+                    value: "workspace-viewer",
+                    label: "Workspace Viewer",
+                    description: "Read-only access to workspace",
                     icon: User,
                     level: 5,
-                    category: 'workspace'
+                    category: "workspace",
                   },
-                  { 
-                    value: 'client', 
-                    label: 'Client', 
-                    description: 'External client with limited access',
+                  {
+                    value: "client",
+                    label: "Client",
+                    description: "External client with limited access",
                     icon: User,
                     level: 1,
-                    category: 'external'
+                    category: "external",
                   },
-                  { 
-                    value: 'contractor', 
-                    label: 'Contractor', 
-                    description: 'External contractor with specific permissions',
+                  {
+                    value: "contractor",
+                    label: "Contractor",
+                    description:
+                      "External contractor with specific permissions",
                     icon: User,
                     level: 1,
-                    category: 'external'
+                    category: "external",
                   },
-                  { 
-                    value: 'stakeholder', 
-                    label: 'Stakeholder', 
-                    description: 'Project stakeholder with review access',
+                  {
+                    value: "stakeholder",
+                    label: "Stakeholder",
+                    description: "Project stakeholder with review access",
                     icon: User,
                     level: 1,
-                    category: 'external'
+                    category: "external",
                   },
-                  { 
-                    value: 'guest', 
-                    label: 'Guest', 
-                    description: 'Temporary access for specific tasks',
+                  {
+                    value: "guest",
+                    label: "Guest",
+                    description: "Temporary access for specific tasks",
                     icon: User,
                     level: 0,
-                    category: 'external'
-                  }
+                    category: "external",
+                  },
                 ].map((role) => (
                   <button
+                    type="button"
                     key={role.value}
                     onClick={() => {
                       if (selectedTeam && selectedMember) {
-                        handleChangeRole(selectedTeam.id, selectedMember.id, role.value as UserRole);
+                        handleChangeRole(
+                          selectedTeam.id,
+                          selectedMember.id,
+                          role.value as UserRole,
+                        );
                       }
                     }}
                     disabled={isChangingRole}
                     className={cn(
                       "w-full p-3 border rounded-lg text-left hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-                      selectedMember?.role === role.value && "border-blue-500 bg-blue-50 dark:bg-blue-500/10"
+                      selectedMember?.role === role.value &&
+                        "border-blue-500 bg-blue-50 dark:bg-blue-500/10",
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
-                        <role.icon className={cn(
-                          "w-5 h-5",
-                          role.level >= 6 ? "text-purple-500" :
-                          role.level >= 4 ? "text-blue-500" :
-                          role.level >= 2 ? "text-green-500" :
-                          "text-zinc-500"
-                        )} />
+                        <role.icon
+                          className={cn(
+                            "w-5 h-5",
+                            role.level >= 6
+                              ? "text-purple-500"
+                              : role.level >= 4
+                                ? "text-blue-500"
+                                : role.level >= 2
+                                  ? "text-green-500"
+                                  : "text-zinc-500",
+                          )}
+                        />
                         <Badge variant="outline" className="text-xs">
                           {role.category}
                         </Badge>
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{role.label}</div>
-                        <div className="text-sm text-zinc-500 dark:text-zinc-400">{role.description}</div>
-                        <div className="text-xs text-zinc-400 mt-1">Level {role.level}</div>
+                        <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                          {role.description}
+                        </div>
+                        <div className="text-xs text-zinc-400 mt-1">
+                          Level {role.level}
+                        </div>
                       </div>
                       {selectedMember?.role === role.value && (
-                        <Badge variant="default" className="ml-auto">Current</Badge>
+                        <Badge variant="default" className="ml-auto">
+                          Current
+                        </Badge>
                       )}
                     </div>
                   </button>
@@ -1859,7 +2231,10 @@ function ProjectSettings() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsChangeRoleOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsChangeRoleOpen(false)}
+            >
               Cancel
             </Button>
           </DialogFooter>
@@ -1867,12 +2242,17 @@ function ProjectSettings() {
       </Dialog>
 
       {/* Team Deletion Confirmation */}
-      <AlertDialog open={!!teamToDelete} onOpenChange={(open) => !open && setTeamToDelete(null)}>
+      <AlertDialog
+        open={!!teamToDelete}
+        onOpenChange={(open) => !open && setTeamToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Team</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{teamToDelete?.name}"? This action cannot be undone and will remove all team data including {teamToDelete?.members.length || 0} member(s).
+              Are you sure you want to delete "{teamToDelete?.name}"? This
+              action cannot be undone and will remove all team data including{" "}
+              {teamToDelete?.members.length || 0} member(s).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1884,24 +2264,34 @@ function ProjectSettings() {
               disabled={isDeletingTeam === teamToDelete?.id}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeletingTeam === teamToDelete?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isDeletingTeam === teamToDelete?.id ? "Deleting..." : "Delete Team"}
+              {isDeletingTeam === teamToDelete?.id && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isDeletingTeam === teamToDelete?.id
+                ? "Deleting..."
+                : "Delete Team"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Member Removal Confirmation */}
-      <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+      <AlertDialog
+        open={!!memberToRemove}
+        onOpenChange={(open) => !open && setMemberToRemove(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove {memberToRemove?.member.userName} from the team? This action cannot be undone.
+              Are you sure you want to remove {memberToRemove?.member.userName}{" "}
+              from the team? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRemovingMember === memberToRemove?.member.id}>
+            <AlertDialogCancel
+              disabled={isRemovingMember === memberToRemove?.member.id}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -1909,20 +2299,29 @@ function ProjectSettings() {
               disabled={isRemovingMember === memberToRemove?.member.id}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isRemovingMember === memberToRemove?.member.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isRemovingMember === memberToRemove?.member.id ? "Removing..." : "Remove Member"}
+              {isRemovingMember === memberToRemove?.member.id && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isRemovingMember === memberToRemove?.member.id
+                ? "Removing..."
+                : "Remove Member"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Project Archive Confirmation */}
-      <AlertDialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
+      <AlertDialog
+        open={showArchiveConfirm}
+        onOpenChange={setShowArchiveConfirm}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive "{project?.name}"? Archived projects can be restored later, but will be hidden from active project lists.
+              Are you sure you want to archive "{project?.name}"? Archived
+              projects can be restored later, but will be hidden from active
+              project lists.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1953,18 +2352,26 @@ function ProjectSettings() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-3">
-              <h3 className="font-medium text-sm text-zinc-900 dark:text-zinc-100">General</h3>
+              <h3 className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
+                General
+              </h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded hover:bg-zinc-50 dark:hover:bg-zinc-800">
                   <span className="text-sm">Save project settings</span>
                   <kbd className="px-2 py-1 text-xs font-semibold text-zinc-800 bg-zinc-100 border border-zinc-200 rounded dark:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-600">
-                    {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? '⌘' : 'Ctrl'} + S
+                    {navigator.platform.toUpperCase().indexOf("MAC") >= 0
+                      ? "⌘"
+                      : "Ctrl"}{" "}
+                    + S
                   </kbd>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded hover:bg-zinc-50 dark:hover:bg-zinc-800">
                   <span className="text-sm">Show shortcuts</span>
                   <kbd className="px-2 py-1 text-xs font-semibold text-zinc-800 bg-zinc-100 border border-zinc-200 rounded dark:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-600">
-                    {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? '⌘' : 'Ctrl'} + /
+                    {navigator.platform.toUpperCase().indexOf("MAC") >= 0
+                      ? "⌘"
+                      : "Ctrl"}{" "}
+                    + /
                   </kbd>
                 </div>
               </div>
@@ -1973,25 +2380,36 @@ function ProjectSettings() {
             <Separator />
 
             <div className="space-y-3">
-              <h3 className="font-medium text-sm text-zinc-900 dark:text-zinc-100">Teams Tab</h3>
+              <h3 className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
+                Teams Tab
+              </h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded hover:bg-zinc-50 dark:hover:bg-zinc-800">
                   <span className="text-sm">Focus search</span>
                   <kbd className="px-2 py-1 text-xs font-semibold text-zinc-800 bg-zinc-100 border border-zinc-200 rounded dark:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-600">
-                    {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? '⌘' : 'Ctrl'} + K
+                    {navigator.platform.toUpperCase().indexOf("MAC") >= 0
+                      ? "⌘"
+                      : "Ctrl"}{" "}
+                    + K
                   </kbd>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded hover:bg-zinc-50 dark:hover:bg-zinc-800">
                   <span className="text-sm">Create new team</span>
                   <kbd className="px-2 py-1 text-xs font-semibold text-zinc-800 bg-zinc-100 border border-zinc-200 rounded dark:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-600">
-                    {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? '⌘' : 'Ctrl'} + N
+                    {navigator.platform.toUpperCase().indexOf("MAC") >= 0
+                      ? "⌘"
+                      : "Ctrl"}{" "}
+                    + N
                   </kbd>
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowKeyboardHelp(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowKeyboardHelp(false)}
+            >
               Close
             </Button>
           </DialogFooter>
@@ -2001,4 +2419,4 @@ function ProjectSettings() {
   );
 }
 
-export default ProjectSettings; 
+export default ProjectSettings;

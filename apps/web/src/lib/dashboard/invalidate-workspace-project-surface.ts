@@ -3,7 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 /** Invalidate React Query cache for `useDashboardData` (`["dashboard", workspaceId, …]`). */
 export function invalidateDashboardQueriesForWorkspace(
   queryClient: QueryClient,
-  workspaceId: string
+  workspaceId: string,
 ): void {
   void queryClient.invalidateQueries({ queryKey: ["dashboard", workspaceId] });
 }
@@ -13,9 +13,11 @@ export function invalidateDashboardQueriesForWorkspace(
  */
 export function invalidateWorkspaceProjectSurface(
   queryClient: QueryClient,
-  workspaceId: string
+  workspaceId: string,
 ): void {
   invalidateDashboardQueriesForWorkspace(queryClient, workspaceId);
-  void queryClient.invalidateQueries({ queryKey: ["projects-stats", workspaceId] });
+  void queryClient.invalidateQueries({
+    queryKey: ["projects-stats", workspaceId],
+  });
   void queryClient.invalidateQueries({ queryKey: ["projects", workspaceId] });
 }

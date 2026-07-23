@@ -15,12 +15,12 @@ function useUpdateTask() {
       queryClient.invalidateQueries({
         queryKey: ["task", variables.id],
       });
-      
+
       // Invalidate project tasks
       queryClient.refetchQueries({
         queryKey: ["tasks", variables.projectId],
       });
-      
+
       // Invalidate notifications
       queryClient.refetchQueries({
         queryKey: ["notifications"],
@@ -29,28 +29,28 @@ function useUpdateTask() {
       // Invalidate all calendar-related queries for real-time synchronization
       if (workspace?.id) {
         // Invalidate all-tasks queries (includes calendar views)
-        queryClient.invalidateQueries({ 
-          queryKey: ["all-tasks", workspace.id] 
+        queryClient.invalidateQueries({
+          queryKey: ["all-tasks", workspace.id],
         });
         queryClient.invalidateQueries({
           queryKey: ["all-tasks-stats", workspace.id],
         });
-        
+
         // Invalidate project data that might contain task counts
-        queryClient.invalidateQueries({ 
-          queryKey: ["project"] 
+        queryClient.invalidateQueries({
+          queryKey: ["project"],
         });
-        
+
         // Invalidate workspace dashboard data
-        queryClient.invalidateQueries({ 
-          queryKey: ["workspace", workspace.id] 
+        queryClient.invalidateQueries({
+          queryKey: ["workspace", workspace.id],
         });
 
         invalidateDashboardQueriesForWorkspace(queryClient, workspace.id);
 
         // Invalidate any team calendar data
-        queryClient.invalidateQueries({ 
-          queryKey: ["team-calendar"] 
+        queryClient.invalidateQueries({
+          queryKey: ["team-calendar"],
         });
       }
     },

@@ -1,27 +1,39 @@
 import { Hono } from "hono";
 import { getDatabase } from "../database/connection";
-import { settingsAuditLogTable, userTable, securityAlerts, securityMetricsHistory } from "../database/schema";
+import {
+  settingsAuditLogTable,
+  userTable,
+  securityAlerts,
+  securityMetricsHistory,
+} from "../database/schema";
 import { eq, and, gte, desc, sql, count } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
 import twoFactorRoutes from "./two-factor";
 import gdprRoutes from "./gdpr";
 import sessionRoutes from "./sessions";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 const securityMetrics = new Hono();
 
 // Get overall security metrics
-securityMetrics.get("/metrics", authMiddleware, async (c) => {
+securityMetrics.get("/metrics", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
     const timeRange = c.req.query("timeRange") || "7d";
-    
+
     // Calculate date range
-    const days = timeRange === "24h" ? 1 : timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+    const days =
+      timeRange === "24h"
+        ? 1
+        : timeRange === "7d"
+          ? 7
+          : timeRange === "30d"
+            ? 30
+            : 90;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    
+
     // Get latest security metrics from history
     const latestMetrics = await db
       .select()
@@ -29,23 +41,23 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
       .where(gte(securityMetricsHistory.date, startDate))
       .orderBy(desc(securityMetricsHistory.date))
       .limit(1);
-    
+
     const metrics = latestMetrics[0] || {
       totalThreats: 0,
       resolvedThreats: 0,
       criticalAlerts: 0,
       failedLogins: 0,
     };
-    
+
     // Get active alerts count
     const activeAlertsCount = await db
       .select({ count: count() })
       .from(securityAlerts)
       .where(eq(securityAlerts.status, "active"));
-    
+
     // Calculate security score based on metrics
     const unresolvedThreats = metrics.totalThreats - metrics.resolvedThreats;
-    
+
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     // Get failed login attempts in last 24 hours
@@ -55,15 +67,15 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
       .where(
         and(
           eq(settingsAuditLogTable.action, "sign_in_failed"),
-          gte(settingsAuditLogTable.timestamp, yesterday)
-        )
+          gte(settingsAuditLogTable.createdAt, yesterday),
+        ),
       );
 
     // Get active sessions count
     const activeSessions = await db
       .select({ count: count() })
       .from(userTable)
-      .where(sql`${userTable.lastActiveAt} > NOW() - INTERVAL '15 minutes'`);
+      .where(sql`${userTable.lastSeen} > NOW() - INTERVAL '15 minutes'`);
 
     // Get 2FA adoption rate
     const totalUsers = await db.select({ count: count() }).from(userTable);
@@ -75,7 +87,7 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
     const twoFactorAdoption =
       totalUsers[0]?.count && totalUsers[0].count > 0
         ? Math.round(
-            ((usersWithTwoFactor[0]?.count ?? 0) / totalUsers[0].count) * 100
+            ((usersWithTwoFactor[0]?.count ?? 0) / totalUsers[0].count) * 100,
           )
         : 0;
 
@@ -85,21 +97,21 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
       .from(settingsAuditLogTable)
       .where(
         and(
-          gte(settingsAuditLogTable.timestamp, yesterday),
-          sql`${settingsAuditLogTable.details}->>'suspicious' = 'true'`
-        )
+          gte(settingsAuditLogTable.createdAt, yesterday),
+          sql`${settingsAuditLogTable.metadata}->>'suspicious' = 'true'`,
+        ),
       );
 
     // Calculate security score (0-100)
     let securityScore = 100;
-    
+
     // Deduct points for failed logins (max -20)
     const failedLoginCount = failedLogins[0]?.count ?? 0;
     securityScore -= Math.min((failedLoginCount / 50) * 20, 20);
-    
+
     // Deduct points for low 2FA adoption (max -30)
-    securityScore -= Math.max(0, (75 - twoFactorAdoption) / 75 * 30);
-    
+    securityScore -= Math.max(0, ((75 - twoFactorAdoption) / 75) * 30);
+
     // Deduct points for suspicious activities (max -20)
     const suspiciousCount = suspiciousActivities[0]?.count ?? 0;
     securityScore -= Math.min((suspiciousCount / 20) * 20, 20);
@@ -112,9 +124,9 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
       .from(settingsAuditLogTable)
       .where(
         and(
-          gte(settingsAuditLogTable.timestamp, yesterday),
-          sql`${settingsAuditLogTable.severity} IN ('critical', 'high')`
-        )
+          gte(settingsAuditLogTable.createdAt, yesterday),
+          sql`${settingsAuditLogTable.metadata}->>'severity' IN ('critical', 'high')`,
+        ),
       );
 
     return c.json({
@@ -131,43 +143,40 @@ securityMetrics.get("/metrics", authMiddleware, async (c) => {
     });
   } catch (error) {
     logger.error("Error fetching security metrics:", error);
-    return c.json(
-      { error: "Failed to fetch security metrics" },
-      500
-    );
+    return c.json({ error: "Failed to fetch security metrics" }, 500);
   }
 });
 
 // Get security alerts
-securityMetrics.get("/alerts", authMiddleware, async (c) => {
+securityMetrics.get("/alerts", authMiddleware(), async (c) => {
   try {
     const timeRange = c.req.query("timeRange") || "7d";
     const status = c.req.query("status") || "all";
     const db = getDatabase();
 
     // Calculate time range
-    const days = timeRange === "24h" ? 1 : timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+    const days =
+      timeRange === "24h"
+        ? 1
+        : timeRange === "7d"
+          ? 7
+          : timeRange === "30d"
+            ? 30
+            : 90;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Build query
-    let query = db
-      .select()
-      .from(securityAlerts)
-      .where(gte(securityAlerts.createdAt, startDate));
-
-    // Filter by status if specified
+    // Build conditions up front — drizzle builders can't be re-.where()d
+    const conditions = [gte(securityAlerts.createdAt, startDate)];
     if (status !== "all") {
-      query = query.where(
-        and(
-          gte(securityAlerts.createdAt, startDate),
-          eq(securityAlerts.status, status)
-        )
-      );
+      conditions.push(eq(securityAlerts.status, status));
     }
 
     // Fetch alerts
-    const alerts = await query
+    const alerts = await db
+      .select()
+      .from(securityAlerts)
+      .where(and(...conditions))
       .orderBy(desc(securityAlerts.createdAt))
       .limit(100);
 
@@ -192,16 +201,16 @@ securityMetrics.get("/alerts", authMiddleware, async (c) => {
 });
 
 // Get threat data for charts
-securityMetrics.get("/threats", authMiddleware, async (c) => {
+securityMetrics.get("/threats", authMiddleware(), async (c) => {
   try {
     const timeRange = c.req.query("timeRange") || "7d";
     const db = getDatabase();
 
     // Calculate time range
     const now = new Date();
-    let startDate = new Date(now);
+    const startDate = new Date(now);
     let days = 7;
-    
+
     switch (timeRange) {
       case "24h":
         days = 1;
@@ -219,7 +228,7 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
 
     // Generate data for each day
     const threatData = [];
-    
+
     for (let i = 0; i < days; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
@@ -233,9 +242,9 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
         .where(
           and(
             eq(settingsAuditLogTable.action, "sign_in_failed"),
-            gte(settingsAuditLogTable.timestamp, date),
-            sql`${settingsAuditLogTable.timestamp} < ${nextDate}`
-          )
+            gte(settingsAuditLogTable.createdAt, date),
+            sql`${settingsAuditLogTable.createdAt} < ${nextDate}`,
+          ),
         );
 
       // Count suspicious activities
@@ -244,10 +253,10 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
         .from(settingsAuditLogTable)
         .where(
           and(
-            sql`${settingsAuditLogTable.details}->>'suspicious' = 'true'`,
-            gte(settingsAuditLogTable.timestamp, date),
-            sql`${settingsAuditLogTable.timestamp} < ${nextDate}`
-          )
+            sql`${settingsAuditLogTable.metadata}->>'suspicious' = 'true'`,
+            gte(settingsAuditLogTable.createdAt, date),
+            sql`${settingsAuditLogTable.createdAt} < ${nextDate}`,
+          ),
         );
 
       // Count blocked IPs (from rate limiting)
@@ -257,13 +266,16 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
         .where(
           and(
             eq(settingsAuditLogTable.action, "ip_blocked"),
-            gte(settingsAuditLogTable.timestamp, date),
-            sql`${settingsAuditLogTable.timestamp} < ${nextDate}`
-          )
+            gte(settingsAuditLogTable.createdAt, date),
+            sql`${settingsAuditLogTable.createdAt} < ${nextDate}`,
+          ),
         );
 
       threatData.push({
-        date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        date: date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
         failedLogins: failedLogins[0]?.count ?? 0,
         suspiciousActivity: suspicious[0]?.count ?? 0,
         blockedIPs: blockedIPs[0]?.count ?? 0,
@@ -278,22 +290,27 @@ securityMetrics.get("/threats", authMiddleware, async (c) => {
 });
 
 // Resolve a security alert
-securityMetrics.post("/alerts/:id/resolve", authMiddleware, async (c) => {
+securityMetrics.post("/alerts/:id/resolve", authMiddleware(), async (c) => {
   try {
     const alertId = c.req.param("id");
     const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
     const db = getDatabase();
 
-    // TODO: Add resolved flag to audit log table
+    // See https://github.com/tsatsu10/meridian/issues/71
     // For now, we'll just log the resolution action
     await db.insert(settingsAuditLogTable).values({
       id: crypto.randomUUID(),
       userEmail,
+      section: "security",
       action: "alert_resolved",
-      details: JSON.stringify({ alertId }),
-      ipAddress: c.req.header("x-forwarded-for") || "unknown",
-      timestamp: new Date(),
-      severity: "info",
+      metadata: {
+        alertId,
+        ipAddress: c.req.header("x-forwarded-for") || "unknown",
+        severity: "info",
+      },
     });
 
     return c.json({ success: true, message: "Alert marked as resolved" });
@@ -304,11 +321,11 @@ securityMetrics.post("/alerts/:id/resolve", authMiddleware, async (c) => {
 });
 
 // Export security report
-securityMetrics.post("/export-report", authMiddleware, async (c) => {
+securityMetrics.post("/export-report", authMiddleware(), async (c) => {
   try {
     const { timeRange } = await c.req.json();
-    
-    // TODO: Generate PDF report
+
+    // See https://github.com/tsatsu10/meridian/issues/62
     // For now, return a JSON report
     const report = {
       generatedAt: new Date().toISOString(),
@@ -333,5 +350,3 @@ securityMetrics.route("/gdpr", gdprRoutes);
 securityMetrics.route("/sessions", sessionRoutes);
 
 export default securityMetrics;
-
-

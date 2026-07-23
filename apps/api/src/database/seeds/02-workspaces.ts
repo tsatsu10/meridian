@@ -1,6 +1,6 @@
 /**
  * 🏢 Phase 2: Workspaces, Teams & Departments Seed
- * 
+ *
  * Creates:
  * - Main workspace
  * - Workspace members (all users)
@@ -34,7 +34,8 @@ import { randomColor, randomElement } from "./seed-utils";
 
 const WORKSPACE_DATA = {
   name: "Meridian Demo Workspace",
-  description: "Full-featured demonstration workspace with all role types and features enabled",
+  description:
+    "Full-featured demonstration workspace with all role types and features enabled",
   slug: "meridian-demo",
   settings: {
     allowGuestInvites: true,
@@ -80,14 +81,22 @@ const TEAMS = [
     description: "API development and infrastructure",
     leadEmail: "team.lead@meridian.app",
     color: "#3b82f6",
-    members: ["team.lead@meridian.app", "member@meridian.app", "admin@meridian.app"],
+    members: [
+      "team.lead@meridian.app",
+      "member@meridian.app",
+      "admin@meridian.app",
+    ],
   },
   {
     name: "Frontend Team",
     description: "React and UI development",
     leadEmail: "team.lead@meridian.app",
     color: "#8b5cf6",
-    members: ["team.lead@meridian.app", "member@meridian.app", "workspace.manager@meridian.app"],
+    members: [
+      "team.lead@meridian.app",
+      "member@meridian.app",
+      "workspace.manager@meridian.app",
+    ],
   },
   {
     name: "Product Team",
@@ -135,17 +144,20 @@ export async function seedWorkspaces() {
   try {
     // Get all users
     const allUsers = await db.select().from(users);
-    
-    if (allUsers.length === 0) {
+
+    const [firstUser] = allUsers;
+    if (!firstUser) {
       throw new Error("No users found. Run Phase 1 (users) first.");
     }
 
-    const workspaceOwner = allUsers.find(u => u.email === "workspace.manager@meridian.app") || allUsers[0]!;
+    const workspaceOwner =
+      allUsers.find((u) => u.email === "workspace.manager@meridian.app") ??
+      firstUser;
 
     // 1. CREATE WORKSPACE
     logger.info("🏢 Creating workspace...");
-    
-    let workspace;
+
+    let workspace: typeof workspaces.$inferSelect;
     const existingWorkspace = await db
       .select()
       .from(workspaces)
@@ -174,7 +186,7 @@ export async function seedWorkspaces() {
 
     // 2. ADD ALL USERS TO WORKSPACE
     logger.info("\n👥 Adding users to workspace...");
-    
+
     for (const user of allUsers) {
       const existing = await db
         .select()
@@ -182,8 +194,8 @@ export async function seedWorkspaces() {
         .where(
           and(
             eq(workspaceMembers.workspaceId, workspace.id),
-            eq(workspaceMembers.userId, user.id)
-          )
+            eq(workspaceMembers.userId, user.id),
+          ),
         )
         .limit(1);
 
@@ -192,13 +204,14 @@ export async function seedWorkspaces() {
         continue;
       }
 
-      const userRole = WORKSPACE_ROLES[user.email as keyof typeof WORKSPACE_ROLES] || "member";
+      const userRole =
+        WORKSPACE_ROLES[user.email as keyof typeof WORKSPACE_ROLES] || "member";
 
       await db.insert(workspaceMembers).values({
         workspaceId: workspace.id,
         userId: user.id,
         userEmail: user.email,
-        role: userRole as any,
+        role: userRole as (typeof workspaceMembers.role.enumValues)[number],
         status: "active",
         permissions: [],
         joinedAt: new Date(),
@@ -210,10 +223,11 @@ export async function seedWorkspaces() {
 
     // 3. CREATE ROLE ASSIGNMENTS
     logger.info("\n🎭 Creating role assignments...");
-    
+
     for (const user of allUsers) {
-      const workspaceRole = WORKSPACE_ROLES[user.email as keyof typeof WORKSPACE_ROLES];
-      
+      const workspaceRole =
+        WORKSPACE_ROLES[user.email as keyof typeof WORKSPACE_ROLES];
+
       if (!workspaceRole) continue;
 
       const existing = await db
@@ -223,8 +237,8 @@ export async function seedWorkspaces() {
           and(
             eq(roleAssignment.userId, user.id),
             eq(roleAssignment.workspaceId, workspace.id),
-            eq(roleAssignment.isActive, true)
-          )
+            eq(roleAssignment.isActive, true),
+          ),
         )
         .limit(1);
 
@@ -246,8 +260,8 @@ export async function seedWorkspaces() {
 
     // 4. CREATE DEPARTMENTS
     logger.info("\n🏢 Creating departments...");
-    
-    const createdDepartments: any[] = [];
+
+    const createdDepartments: unknown[] = [];
 
     for (const deptData of DEPARTMENTS) {
       const existing = await db
@@ -256,8 +270,8 @@ export async function seedWorkspaces() {
         .where(
           and(
             eq(departments.name, deptData.name),
-            eq(departments.workspaceId, workspace.id)
-          )
+            eq(departments.workspaceId, workspace.id),
+          ),
         )
         .limit(1);
 
@@ -267,7 +281,7 @@ export async function seedWorkspaces() {
         continue;
       }
 
-      const headUser = allUsers.find(u => u.email === deptData.headEmail);
+      const headUser = allUsers.find((u) => u.email === deptData.headEmail);
 
       const [dept] = await db
         .insert(departments)
@@ -286,8 +300,8 @@ export async function seedWorkspaces() {
 
     // 5. CREATE TEAMS
     logger.info("\n👥 Creating teams...");
-    
-    const createdTeams: any[] = [];
+
+    const createdTeams: unknown[] = [];
 
     for (const teamData of TEAMS) {
       const existing = await db
@@ -296,8 +310,8 @@ export async function seedWorkspaces() {
         .where(
           and(
             eq(teams.name, teamData.name),
-            eq(teams.workspaceId, workspace.id)
-          )
+            eq(teams.workspaceId, workspace.id),
+          ),
         )
         .limit(1);
 
@@ -307,7 +321,7 @@ export async function seedWorkspaces() {
         continue;
       }
 
-      const leadUser = allUsers.find(u => u.email === teamData.leadEmail);
+      const leadUser = allUsers.find((u) => u.email === teamData.leadEmail);
 
       const [team] = await db
         .insert(teams)
@@ -331,8 +345,8 @@ export async function seedWorkspaces() {
 
       // Add team members
       for (const memberEmail of teamData.members) {
-        const memberUser = allUsers.find(u => u.email === memberEmail);
-        
+        const memberUser = allUsers.find((u) => u.email === memberEmail);
+
         if (!memberUser) continue;
 
         await db.insert(teamMembers).values({
@@ -344,23 +358,24 @@ export async function seedWorkspaces() {
         });
       }
 
-      logger.info(`   ✅ Added ${teamData.members.length} members to ${teamData.name}`);
+      logger.info(
+        `   ✅ Added ${teamData.members.length} members to ${teamData.name}`,
+      );
     }
 
     logger.info("\n✅ Phase 2 complete: Created workspace organization");
-    logger.info(`   🏢 Workspaces: 1`);
+    logger.info("   🏢 Workspaces: 1");
     logger.info(`   👥 Workspace Members: ${allUsers.length}`);
     logger.info(`   🏢 Departments: ${createdDepartments.length}`);
     logger.info(`   👥 Teams: ${createdTeams.length}`);
     logger.info(`   🎭 Role Assignments: ${allUsers.length}`);
 
-    return { 
+    return {
       workspace,
       users: allUsers,
       departments: createdDepartments,
       teams: createdTeams,
     };
-
   } catch (error) {
     logger.error("❌ Error seeding workspaces:", error);
     throw error;

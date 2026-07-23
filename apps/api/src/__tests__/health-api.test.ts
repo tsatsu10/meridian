@@ -11,11 +11,17 @@ import { DEFAULT_API_PORT } from "../config/default-api-port";
 const API_BASE = `http://localhost:${DEFAULT_API_PORT}`;
 const TEST_PROJECT_ID = "test-project-123";
 
-describe.skip("Health System API", () => {
+// This suite exercises a LIVE API server (npm run dev). Probe it once and
+// skip cleanly when nothing is listening, instead of failing every fetch.
+const apiUp = await fetch(`${API_BASE}/api/health`)
+  .then(() => true)
+  .catch(() => false);
+
+describe.skipIf(!apiUp)("Health System API", () => {
   describe("GET /api/health/projects/:projectId", () => {
     it("should return current health metrics for a valid project", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`,
       );
 
       if (response.status === 404) {
@@ -65,13 +71,13 @@ describe.skip("Health System API", () => {
 
       // First request
       const res1 = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`,
       );
       const data1 = await res1.json();
 
       // Second request should have same timestamp (from cache)
       const res2 = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`,
       );
       const data2 = await res2.json();
 
@@ -83,7 +89,7 @@ describe.skip("Health System API", () => {
   describe("GET /api/health/projects/:projectId/history", () => {
     it("should return health history for a project", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history`,
       );
 
       if (response.status === 404) {
@@ -119,7 +125,7 @@ describe.skip("Health System API", () => {
 
     it("should support custom day ranges", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=7`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=7`,
       );
 
       if (response.status === 404) {
@@ -135,24 +141,24 @@ describe.skip("Health System API", () => {
     it("should reject invalid day ranges", async () => {
       const responses = await Promise.all([
         fetch(
-          `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=0`
+          `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=0`,
         ),
         fetch(
-          `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=366`
+          `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=366`,
         ),
         fetch(
-          `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=invalid`
+          `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history?days=invalid`,
         ),
       ]);
 
-      responses.forEach((res) => {
+      for (const res of responses) {
         expect(res.status).toBeGreaterThanOrEqual(400);
-      });
+      }
     });
 
     it("should default to 30 days", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/history`,
       );
 
       if (response.status === 404) {
@@ -168,7 +174,7 @@ describe.skip("Health System API", () => {
   describe("GET /api/health/projects/:projectId/recommendations", () => {
     it("should return recommendations for a project", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/recommendations`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/recommendations`,
       );
 
       if (response.status === 404) {
@@ -213,7 +219,7 @@ describe.skip("Health System API", () => {
 
     it("should generate contextual recommendations based on health", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/recommendations`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/recommendations`,
       );
 
       if (response.status === 404) {
@@ -231,7 +237,7 @@ describe.skip("Health System API", () => {
         // First should have higher priority or equal impact
         const priorityOrder = { high: 0, medium: 1, low: 2 };
         expect(priorityOrder[first.priority]).toBeLessThanOrEqual(
-          priorityOrder[second.priority]
+          priorityOrder[second.priority],
         );
       }
     });
@@ -240,7 +246,7 @@ describe.skip("Health System API", () => {
   describe("GET /api/health/comparison", () => {
     it("should compare multiple projects", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/comparison?projectIds=${TEST_PROJECT_ID}`
+        `${API_BASE}/api/health/comparison?projectIds=${TEST_PROJECT_ID}`,
       );
 
       if (response.status === 404) {
@@ -282,14 +288,14 @@ describe.skip("Health System API", () => {
         .join(",");
 
       const response = await fetch(
-        `${API_BASE}/api/health/comparison?projectIds=${projectIds}`
+        `${API_BASE}/api/health/comparison?projectIds=${projectIds}`,
       );
       expect(response.status).toBeGreaterThanOrEqual(400);
     });
 
     it("should provide status distribution summary", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/comparison?projectIds=${TEST_PROJECT_ID}`
+        `${API_BASE}/api/health/comparison?projectIds=${TEST_PROJECT_ID}`,
       );
 
       if (response.status === 404) {
@@ -317,7 +323,7 @@ describe.skip("Health System API", () => {
         `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/refresh`,
         {
           method: "POST",
-        }
+        },
       );
 
       if (response.status === 404) {
@@ -338,7 +344,7 @@ describe.skip("Health System API", () => {
     it("should update cached metrics on refresh", async () => {
       // Skip if project doesn't exist
       const checkRes = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`,
       );
       if (checkRes.status === 404) {
         console.log("Test project not found - skipping");
@@ -346,7 +352,7 @@ describe.skip("Health System API", () => {
       }
 
       const beforeRes = await fetch(
-        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`
+        `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}`,
       );
       const beforeData = await beforeRes.json();
       const beforeTime = new Date(beforeData.cachedAt).getTime();
@@ -359,7 +365,7 @@ describe.skip("Health System API", () => {
         `${API_BASE}/api/health/projects/${TEST_PROJECT_ID}/refresh`,
         {
           method: "POST",
-        }
+        },
       );
       const refreshData = await refreshRes.json();
       const refreshTime = new Date(refreshData.refreshedAt).getTime();
@@ -372,7 +378,7 @@ describe.skip("Health System API", () => {
   describe("Error Handling", () => {
     it("should handle non-existent projects gracefully", async () => {
       const response = await fetch(
-        `${API_BASE}/api/health/projects/nonexistent-project-xyz`
+        `${API_BASE}/api/health/projects/nonexistent-project-xyz`,
       );
 
       // Should return 404
@@ -388,15 +394,13 @@ describe.skip("Health System API", () => {
         fetch(`${API_BASE}/api/health/projects//history`),
       ]);
 
-      responses.forEach((res) => {
+      for (const res of responses) {
         expect(res.status).toBeGreaterThanOrEqual(400);
-      });
+      }
     });
 
     it("should have consistent error response format", async () => {
-      const response = await fetch(
-        `${API_BASE}/api/health/projects/invalid`
-      );
+      const response = await fetch(`${API_BASE}/api/health/projects/invalid`);
 
       if (response.status >= 400) {
         const data = await response.json();
@@ -417,4 +421,3 @@ describe.skip("Health System API", () => {
  * - Range checking for scores
  * - Cache behavior testing
  */
-

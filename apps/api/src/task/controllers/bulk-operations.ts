@@ -1,19 +1,19 @@
 /**
  * ☑️ Bulk Task Operations Controller
- * 
+ *
  * Handles bulk operations on multiple tasks at once
  */
 
 import { eq, inArray } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { tasks, activityTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 // ⏩ Bulk Update Status
 export async function bulkUpdateStatus(
   taskIds: string[],
   status: string,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -26,7 +26,7 @@ export async function bulkUpdateStatus(
     const updatedTasks = await db
       .update(tasks)
       .set({
-        status: status as any,
+        status: status as (typeof tasks.status.enumValues)[number],
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))
@@ -46,7 +46,10 @@ export async function bulkUpdateStatus(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -64,7 +67,7 @@ export async function bulkUpdateStatus(
 export async function bulkUpdatePriority(
   taskIds: string[],
   priority: string,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -77,7 +80,7 @@ export async function bulkUpdatePriority(
     const updatedTasks = await db
       .update(tasks)
       .set({
-        priority: priority as any,
+        priority: priority as (typeof tasks.priority.enumValues)[number],
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))
@@ -97,7 +100,10 @@ export async function bulkUpdatePriority(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -116,7 +122,7 @@ export async function bulkAssignTasks(
   taskIds: string[],
   assigneeId: string,
   assigneeEmail: string,
-  userId: string
+  userId: string,
 ) {
   const db = getDatabase();
 
@@ -130,7 +136,8 @@ export async function bulkAssignTasks(
       .update(tasks)
       .set({
         assigneeId,
-        assigneeEmail,
+        // the tasks table stores the assignee email in userEmail
+        userEmail: assigneeEmail,
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))
@@ -151,7 +158,10 @@ export async function bulkAssignTasks(
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -197,7 +207,10 @@ export async function bulkDeleteTasks(taskIds: string[], userId: string) {
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -237,12 +250,15 @@ export async function bulkArchiveTasks(taskIds: string[], userId: string) {
           type: "task",
           userId,
           content: {
-            text: `Archived task (bulk operation)`,
+            text: "Archived task (bulk operation)",
             bulkOperation: true,
           },
         });
       } catch (logError) {
-        logger.error("Failed to log activity for task:", task.id, logError);
+        logger.error("Failed to log activity for task", {
+          taskId: task.id,
+          error: logError,
+        });
       }
     }
 
@@ -255,5 +271,3 @@ export async function bulkArchiveTasks(taskIds: string[], userId: string) {
     throw new Error("Failed to archive tasks");
   }
 }
-
-

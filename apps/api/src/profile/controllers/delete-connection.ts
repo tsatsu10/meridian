@@ -1,21 +1,23 @@
 import { eq, and, or } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userConnectionTable } from "../../database/schema";
-import logger from '../../utils/logger';
+import logger from "../../utils/logger";
 
 const deleteConnection = async (userId: string, connectionId: string) => {
   const db = getDatabase();
-  
+
   try {
     const result = await db
       .delete(userConnectionTable)
-      .where(and(
-        eq(userConnectionTable.id, connectionId),
-        or(
-          eq(userConnectionTable.followerId, userId),
-          eq(userConnectionTable.followingId, userId)
-        )
-      ));
+      .where(
+        and(
+          eq(userConnectionTable.id, connectionId),
+          or(
+            eq(userConnectionTable.followerId, userId),
+            eq(userConnectionTable.followingId, userId),
+          ),
+        ),
+      );
 
     return { success: true, message: "Connection deleted successfully" };
   } catch (error) {
@@ -24,4 +26,4 @@ const deleteConnection = async (userId: string, connectionId: string) => {
   }
 };
 
-export default deleteConnection; 
+export default deleteConnection;

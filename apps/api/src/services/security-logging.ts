@@ -1,6 +1,6 @@
 /**
  * Enhanced Security Logging Service
- * 
+ *
  * Comprehensive security event logging and monitoring:
  * - Authentication and authorization events
  * - Security violations and threats
@@ -9,7 +9,7 @@
  * - Automated security reporting
  */
 
-import logger from '../utils/logger';
+import logger from "../utils/logger";
 
 export interface SecurityEvent {
   id: string;
@@ -22,7 +22,7 @@ export interface SecurityEvent {
   userAgent?: string;
   resource?: string;
   action?: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   blocked: boolean;
   riskScore: number;
   geolocation?: {
@@ -32,24 +32,24 @@ export interface SecurityEvent {
   };
 }
 
-export type SecurityEventType = 
-  | 'authentication'
-  | 'authorization'
-  | 'csrf'
-  | 'rate_limit'
-  | 'injection_attempt'
-  | 'xss_attempt'
-  | 'suspicious_activity'
-  | 'data_access'
-  | 'privilege_escalation'
-  | 'account_lockout'
-  | 'password_change'
-  | 'session_hijack'
-  | 'brute_force'
-  | 'malicious_upload'
-  | 'api_abuse';
+export type SecurityEventType =
+  | "authentication"
+  | "authorization"
+  | "csrf"
+  | "rate_limit"
+  | "injection_attempt"
+  | "xss_attempt"
+  | "suspicious_activity"
+  | "data_access"
+  | "privilege_escalation"
+  | "account_lockout"
+  | "password_change"
+  | "session_hijack"
+  | "brute_force"
+  | "malicious_upload"
+  | "api_abuse";
 
-export type SecuritySeverity = 'info' | 'low' | 'medium' | 'high' | 'critical';
+export type SecuritySeverity = "info" | "low" | "medium" | "high" | "critical";
 
 export interface SecurityMetrics {
   totalEvents: number;
@@ -75,32 +75,37 @@ export interface ThreatDetectionRule {
   name: string;
   pattern: RegExp | ((event: SecurityEvent) => boolean);
   severity: SecuritySeverity;
-  action: 'log' | 'block' | 'alert';
+  action: "log" | "block" | "alert";
   threshold?: number;
   timeWindow?: number; // in milliseconds
 }
 
 class SecurityLoggingService {
   private events: SecurityEvent[] = [];
-  private ipAnalytics = new Map<string, {
-    eventCount: number;
-    riskScore: number;
-    lastSeen: Date;
-    events: SecurityEvent[];
-  }>();
+  private ipAnalytics = new Map<
+    string,
+    {
+      eventCount: number;
+      riskScore: number;
+      lastSeen: Date;
+      events: SecurityEvent[];
+    }
+  >();
   private threatRules: ThreatDetectionRule[] = [];
   private readonly MAX_EVENTS = 10000; // Keep last 10k events in memory
 
   constructor() {
     this.initializeDefaultRules();
     this.startPeriodicCleanup();
-    logger.info('🛡️ Security Logging Service initialized');
+    logger.info("🛡️ Security Logging Service initialized");
   }
 
   /**
    * Log a security event
    */
-  logEvent(event: Omit<SecurityEvent, 'id' | 'timestamp' | 'riskScore'>): SecurityEvent {
+  logEvent(
+    event: Omit<SecurityEvent, "id" | "timestamp" | "riskScore">,
+  ): SecurityEvent {
     const fullEvent: SecurityEvent = {
       ...event,
       id: this.generateEventId(),
@@ -132,17 +137,25 @@ class SecurityLoggingService {
    * Log authentication event
    */
   logAuthenticationEvent(
-    type: 'login_success' | 'login_failure' | 'logout' | 'password_reset' | 'account_locked',
+    type:
+      | "login_success"
+      | "login_failure"
+      | "logout"
+      | "password_reset"
+      | "account_locked",
     userId: string | undefined,
     ip: string,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
-      type: 'authentication',
-      severity: type.includes('failure') || type === 'account_locked' ? 'medium' : 'info',
+      type: "authentication",
+      severity:
+        type.includes("failure") || type === "account_locked"
+          ? "medium"
+          : "info",
       userId,
       ip,
-      userAgent: details.userAgent,
+      userAgent: details.userAgent as string | undefined,
       details: { ...details, authType: type },
       blocked: false,
     });
@@ -157,11 +170,11 @@ class SecurityLoggingService {
     resource: string,
     action: string,
     ip: string,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
-      type: 'authorization',
-      severity: success ? 'info' : 'medium',
+      type: "authorization",
+      severity: success ? "info" : "medium",
       userId,
       ip,
       resource,
@@ -175,18 +188,23 @@ class SecurityLoggingService {
    * Log CSRF event
    */
   logCSRFEvent(
-    type: 'token_missing' | 'token_invalid' | 'token_generated' | 'validation_success',
+    type:
+      | "token_missing"
+      | "token_invalid"
+      | "token_generated"
+      | "validation_success",
     userId: string | undefined,
     ip: string,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
-      type: 'csrf',
-      severity: type.includes('invalid') || type.includes('missing') ? 'high' : 'info',
+      type: "csrf",
+      severity:
+        type.includes("invalid") || type.includes("missing") ? "high" : "info",
       userId,
       ip,
       details: { ...details, csrfType: type },
-      blocked: type.includes('invalid') || type.includes('missing'),
+      blocked: type.includes("invalid") || type.includes("missing"),
     });
   }
 
@@ -198,11 +216,11 @@ class SecurityLoggingService {
     endpoint: string,
     attempts: number,
     limit: number,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
-      type: 'rate_limit',
-      severity: 'medium',
+      type: "rate_limit",
+      severity: "medium",
       ip,
       resource: endpoint,
       details: { ...details, attempts, limit },
@@ -214,16 +232,16 @@ class SecurityLoggingService {
    * Log injection attempt
    */
   logInjectionAttempt(
-    type: 'sql' | 'nosql' | 'ldap' | 'command',
+    type: "sql" | "nosql" | "ldap" | "command",
     userId: string | undefined,
     ip: string,
     payload: string,
     blocked: boolean,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
-      type: 'injection_attempt',
-      severity: 'high',
+      type: "injection_attempt",
+      severity: "high",
       userId,
       ip,
       details: {
@@ -243,11 +261,11 @@ class SecurityLoggingService {
     ip: string,
     payload: string,
     blocked: boolean,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
-      type: 'xss_attempt',
-      severity: 'high',
+      type: "xss_attempt",
+      severity: "high",
       userId,
       ip,
       details: {
@@ -265,11 +283,11 @@ class SecurityLoggingService {
     description: string,
     userId: string | undefined,
     ip: string,
-    severity: SecuritySeverity = 'medium',
-    details: Record<string, any> = {}
+    severity: SecuritySeverity = "medium",
+    details: Record<string, unknown> = {},
   ): SecurityEvent {
     return this.logEvent({
-      type: 'suspicious_activity',
+      type: "suspicious_activity",
       severity,
       userId,
       ip,
@@ -285,34 +303,48 @@ class SecurityLoggingService {
     let filteredEvents = this.events;
 
     if (timeRange) {
-      filteredEvents = this.events.filter(event => 
-        event.timestamp >= timeRange.start && event.timestamp <= timeRange.end
+      filteredEvents = this.events.filter(
+        (event) =>
+          event.timestamp >= timeRange.start &&
+          event.timestamp <= timeRange.end,
       );
     }
 
-    const eventsByType = filteredEvents.reduce((acc, event) => {
-      acc[event.type] = (acc[event.type] || 0) + 1;
-      return acc;
-    }, {} as Record<SecurityEventType, number>);
+    const eventsByType = filteredEvents.reduce(
+      (acc, event) => {
+        acc[event.type] = (acc[event.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<SecurityEventType, number>,
+    );
 
-    const eventsBySeverity = filteredEvents.reduce((acc, event) => {
-      acc[event.severity] = (acc[event.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<SecuritySeverity, number>);
+    const eventsBySeverity = filteredEvents.reduce(
+      (acc, event) => {
+        acc[event.severity] = (acc[event.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<SecuritySeverity, number>,
+    );
 
-    const blockedEvents = filteredEvents.filter(event => event.blocked).length;
+    const blockedEvents = filteredEvents.filter(
+      (event) => event.blocked,
+    ).length;
 
-    const averageRiskScore = filteredEvents.length > 0
-      ? filteredEvents.reduce((sum, event) => sum + event.riskScore, 0) / filteredEvents.length
-      : 0;
+    const averageRiskScore =
+      filteredEvents.length > 0
+        ? filteredEvents.reduce((sum, event) => sum + event.riskScore, 0) /
+          filteredEvents.length
+        : 0;
 
     const topThreats = Object.entries(eventsByType)
       .map(([type, count]) => ({
         type: type as SecurityEventType,
         count,
-        lastSeen: filteredEvents
-          .filter(e => e.type === type)
-          .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0]?.timestamp || new Date(0),
+        lastSeen:
+          filteredEvents
+            .filter((e) => e.type === type)
+            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0]
+            ?.timestamp || new Date(0),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
@@ -328,7 +360,7 @@ class SecurityLoggingService {
       .slice(0, 10);
 
     const recentHighRiskEvents = filteredEvents
-      .filter(event => event.riskScore >= 70)
+      .filter((event) => event.riskScore >= 70)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, 20);
 
@@ -356,15 +388,24 @@ class SecurityLoggingService {
     riskScoreMin?: number;
     blocked?: boolean;
   }): SecurityEvent[] {
-    return this.events.filter(event => {
+    return this.events.filter((event) => {
       if (criteria.type && event.type !== criteria.type) return false;
-      if (criteria.severity && event.severity !== criteria.severity) return false;
+      if (criteria.severity && event.severity !== criteria.severity)
+        return false;
       if (criteria.userId && event.userId !== criteria.userId) return false;
       if (criteria.ip && event.ip !== criteria.ip) return false;
-      if (criteria.blocked !== undefined && event.blocked !== criteria.blocked) return false;
-      if (criteria.riskScoreMin !== undefined && event.riskScore < criteria.riskScoreMin) return false;
+      if (criteria.blocked !== undefined && event.blocked !== criteria.blocked)
+        return false;
+      if (
+        criteria.riskScoreMin !== undefined &&
+        event.riskScore < criteria.riskScoreMin
+      )
+        return false;
       if (criteria.timeRange) {
-        if (event.timestamp < criteria.timeRange.start || event.timestamp > criteria.timeRange.end) {
+        if (
+          event.timestamp < criteria.timeRange.start ||
+          event.timestamp > criteria.timeRange.end
+        ) {
           return false;
         }
       }
@@ -377,7 +418,10 @@ class SecurityLoggingService {
    */
   addThreatRule(rule: ThreatDetectionRule): void {
     this.threatRules.push(rule);
-    logger.info('🔍 Threat detection rule added', { name: rule.name, severity: rule.severity });
+    logger.info("🔍 Threat detection rule added", {
+      name: rule.name,
+      severity: rule.severity,
+    });
   }
 
   /**
@@ -391,7 +435,9 @@ class SecurityLoggingService {
   /**
    * Calculate risk score for an event
    */
-  private calculateRiskScore(event: Omit<SecurityEvent, 'id' | 'timestamp' | 'riskScore'>): number {
+  private calculateRiskScore(
+    event: Omit<SecurityEvent, "id" | "timestamp" | "riskScore">,
+  ): number {
     let score = 0;
 
     // Base score by severity
@@ -443,7 +489,7 @@ class SecurityLoggingService {
       if (rule.pattern instanceof RegExp) {
         const searchText = JSON.stringify(event.details);
         matches = rule.pattern.test(searchText);
-      } else if (typeof rule.pattern === 'function') {
+      } else if (typeof rule.pattern === "function") {
         matches = rule.pattern(event);
       }
 
@@ -453,11 +499,11 @@ class SecurityLoggingService {
           ruleAction: rule.action,
         });
 
-        if (rule.action === 'block') {
+        if (rule.action === "block") {
           event.blocked = true;
         }
 
-        if (rule.action === 'alert') {
+        if (rule.action === "alert") {
           // In a real implementation, this would trigger alerts
           logger.error(`🚨 SECURITY ALERT: ${rule.name}`, event);
         }
@@ -486,13 +532,15 @@ class SecurityLoggingService {
     }
 
     // Calculate risk score based on recent events
-    const recentEvents = analytics.events.filter(e => 
-      e.timestamp.getTime() > Date.now() - 3600000 // Last hour
+    const recentEvents = analytics.events.filter(
+      (e) => e.timestamp.getTime() > Date.now() - 3600000, // Last hour
     );
 
-    analytics.riskScore = recentEvents.length > 0
-      ? recentEvents.reduce((sum, e) => sum + e.riskScore, 0) / recentEvents.length
-      : 0;
+    analytics.riskScore =
+      recentEvents.length > 0
+        ? recentEvents.reduce((sum, e) => sum + e.riskScore, 0) /
+          recentEvents.length
+        : 0;
 
     this.ipAnalytics.set(event.ip, analytics);
   }
@@ -512,20 +560,20 @@ class SecurityLoggingService {
     };
 
     switch (event.severity) {
-      case 'critical':
-        logger.error('🚨 CRITICAL SECURITY EVENT', logData);
+      case "critical":
+        logger.error("🚨 CRITICAL SECURITY EVENT", logData);
         break;
-      case 'high':
-        logger.error('⚠️ HIGH SEVERITY SECURITY EVENT', logData);
+      case "high":
+        logger.error("⚠️ HIGH SEVERITY SECURITY EVENT", logData);
         break;
-      case 'medium':
-        logger.warn('⚠️ SECURITY EVENT', logData);
+      case "medium":
+        logger.warn("⚠️ SECURITY EVENT", logData);
         break;
-      case 'low':
-        logger.info('🔍 Low severity security event', logData);
+      case "low":
+        logger.info("🔍 Low severity security event", logData);
         break;
-      case 'info':
-        logger.debug('🔍 Security event', logData);
+      case "info":
+        logger.debug("🔍 Security event", logData);
         break;
     }
   }
@@ -536,45 +584,52 @@ class SecurityLoggingService {
   private initializeDefaultRules(): void {
     // SQL Injection patterns
     this.addThreatRule({
-      name: 'SQL Injection Detection',
-      pattern: /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER)\b.*\b(FROM|WHERE|AND|OR)\b)/i,
-      severity: 'high',
-      action: 'block',
+      name: "SQL Injection Detection",
+      pattern:
+        /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER)\b.*\b(FROM|WHERE|AND|OR)\b)/i,
+      severity: "high",
+      action: "block",
     });
 
-    // XSS patterns
+    // XSS patterns. Detection keys on the opening tag alone — requiring a
+    // well-formed </script> close (the old pattern) let `</script >` and
+    // unterminated payloads through (CodeQL js/bad-tag-filter).
     this.addThreatRule({
-      name: 'XSS Script Injection',
-      pattern: /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      severity: 'high',
-      action: 'block',
+      name: "XSS Script Injection",
+      pattern: /<script\b/gi,
+      severity: "high",
+      action: "block",
     });
 
     // Brute force detection
     this.addThreatRule({
-      name: 'Brute Force Attack',
+      name: "Brute Force Attack",
       pattern: (event) => {
-        if (event.type !== 'authentication' || !event.details.authType?.includes('failure')) {
+        if (
+          event.type !== "authentication" ||
+          !(event.details.authType as string | undefined)?.includes("failure")
+        ) {
           return false;
         }
-        const recentFailures = this.events.filter(e => 
-          e.ip === event.ip &&
-          e.type === 'authentication' &&
-          e.details.authType?.includes('failure') &&
-          e.timestamp.getTime() > Date.now() - 300000 // Last 5 minutes
+        const recentFailures = this.events.filter(
+          (e) =>
+            e.ip === event.ip &&
+            e.type === "authentication" &&
+            (e.details.authType as string | undefined)?.includes("failure") &&
+            e.timestamp.getTime() > Date.now() - 300000, // Last 5 minutes
         );
         return recentFailures.length >= 5;
       },
-      severity: 'high',
-      action: 'alert',
+      severity: "high",
+      action: "alert",
     });
 
     // Privilege escalation
     this.addThreatRule({
-      name: 'Privilege Escalation Attempt',
+      name: "Privilege Escalation Attempt",
       pattern: /\b(admin|administrator|root|superuser|sudo)\b/i,
-      severity: 'high',
-      action: 'alert',
+      severity: "high",
+      action: "alert",
     });
   }
 
@@ -592,11 +647,13 @@ class SecurityLoggingService {
     setInterval(() => {
       // Remove events older than 30 days
       const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      this.events = this.events.filter(event => event.timestamp > cutoff);
+      this.events = this.events.filter((event) => event.timestamp > cutoff);
 
       // Cleanup IP analytics
       for (const [ip, analytics] of this.ipAnalytics.entries()) {
-        analytics.events = analytics.events.filter(event => event.timestamp > cutoff);
+        analytics.events = analytics.events.filter(
+          (event) => event.timestamp > cutoff,
+        );
         if (analytics.events.length === 0) {
           this.ipAnalytics.delete(ip);
         }
@@ -619,4 +676,3 @@ export function getSecurityLoggingService(): SecurityLoggingService {
 }
 
 export default SecurityLoggingService;
-

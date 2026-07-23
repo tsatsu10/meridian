@@ -18,7 +18,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         onClick={() => onViewChange("grid")}
         className={cn(
           "h-8",
-          view === "grid" && "bg-primary text-primary-foreground"
+          view === "grid" && "bg-primary text-primary-foreground",
         )}
       >
         <LayoutGrid className="h-4 w-4" />
@@ -30,7 +30,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         onClick={() => onViewChange("list")}
         className={cn(
           "h-8",
-          view === "list" && "bg-primary text-primary-foreground"
+          view === "list" && "bg-primary text-primary-foreground",
         )}
       >
         <List className="h-4 w-4" />
@@ -42,7 +42,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         onClick={() => onViewChange("board")}
         className={cn(
           "h-8",
-          view === "board" && "bg-primary text-primary-foreground"
+          view === "board" && "bg-primary text-primary-foreground",
         )}
       >
         <Columns3 className="h-4 w-4" />
@@ -51,4 +51,3 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
     </div>
   );
 }
-

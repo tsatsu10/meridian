@@ -24,16 +24,26 @@ interface ApplyTemplateInput {
 }
 
 export default async function applyTemplate(
-  input: ApplyTemplateInput
-): Promise<{ success: boolean; error?: string; result?: TemplateApplicationResult }> {
-
-  const { templateId, projectId, workspaceId, userId, startDate, assigneeMapping } = input;
+  input: ApplyTemplateInput,
+): Promise<{
+  success: boolean;
+  error?: string;
+  result?: TemplateApplicationResult;
+}> {
+  const {
+    templateId,
+    projectId,
+    workspaceId,
+    userId,
+    startDate,
+    assigneeMapping,
+  } = input;
 
   // Verify project exists and user has access
   const project = await getDatabase().query.projectTable.findFirst({
     where: and(
       eq(projectsTable.id, projectId),
-      eq(projectsTable.workspaceId, workspaceId)
+      eq(projectsTable.workspaceId, workspaceId),
     ),
   });
 
@@ -73,11 +83,17 @@ export default async function applyTemplate(
 
     // Calculate dates based on relative days
     const taskStartDate = templateTask.relativeStartDay
-      ? new Date(projectStartDate.getTime() + templateTask.relativeStartDay * 24 * 60 * 60 * 1000)
+      ? new Date(
+          projectStartDate.getTime() +
+            templateTask.relativeStartDay * 24 * 60 * 60 * 1000,
+        )
       : undefined;
 
     const taskDueDate = templateTask.relativeDueDay
-      ? new Date(projectStartDate.getTime() + templateTask.relativeDueDay * 24 * 60 * 60 * 1000)
+      ? new Date(
+          projectStartDate.getTime() +
+            templateTask.relativeDueDay * 24 * 60 * 60 * 1000,
+        )
       : undefined;
 
     // Determine assignee based on role mapping
@@ -112,6 +128,10 @@ export default async function applyTemplate(
         position: templateTask.position,
       })
       .returning();
+
+    if (!createdTask) {
+      throw new Error("Template task insert returned no row");
+    }
 
     createdTaskIds.push(createdTask.id);
 
@@ -160,6 +180,7 @@ export default async function applyTemplate(
 
   for (const templateTask of templateTasksList) {
     const realTaskId = templateTaskIdToRealTaskId[templateTask.id];
+    if (!realTaskId) continue;
 
     const templateDeps = await getDatabase()
       .select()
@@ -167,7 +188,8 @@ export default async function applyTemplate(
       .where(eq(templateDependencies.dependentTaskId, templateTask.id));
 
     for (const templateDep of templateDeps) {
-      const realRequiredTaskId = templateTaskIdToRealTaskId[templateDep.requiredTaskId];
+      const realRequiredTaskId =
+        templateTaskIdToRealTaskId[templateDep.requiredTaskId];
 
       if (realRequiredTaskId) {
         await getDatabase().insert(taskDependenciesTable).values({
@@ -186,7 +208,7 @@ export default async function applyTemplate(
   await getDatabase()
     .update(projectTemplates)
     .set({
-      usageCount: template.usageCount + 1,
+      usageCount: (template.usageCount ?? 0) + 1,
     })
     .where(eq(projectTemplates.id, templateId));
 
@@ -201,5 +223,3 @@ export default async function applyTemplate(
     },
   };
 }
-
-

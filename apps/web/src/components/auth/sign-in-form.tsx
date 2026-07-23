@@ -109,7 +109,11 @@ export function SignInForm() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </FormControl>
@@ -145,7 +149,9 @@ export function SignInForm() {
           <div className="w-full border-t border-gray-200" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-white text-gray-500 font-medium">Or with</span>
+          <span className="px-4 bg-white text-gray-500 font-medium">
+            Or with
+          </span>
         </div>
       </div>
 
@@ -173,7 +179,10 @@ export function SignInForm() {
       <div className="text-center">
         <span className="text-sm text-gray-600">
           Not a member yet?{" "}
-          <a href="/auth/sign-up" className="text-blue-600 hover:text-blue-700 font-medium">
+          <a
+            href="/auth/sign-up"
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
             Sign Up
           </a>
         </span>

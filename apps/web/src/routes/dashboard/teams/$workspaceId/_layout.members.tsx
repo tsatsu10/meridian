@@ -11,11 +11,5 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return (
-    <Navigate
-      to="/dashboard/teams"
-      search={{ tab: "members" }}
-      replace
-    />
-  );
+  return <Navigate to="/dashboard/teams" search={{ tab: "members" }} replace />;
 }

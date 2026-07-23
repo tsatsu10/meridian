@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { API_BASE_URL } from '@/constants/urls';
+import { API_BASE_URL } from "@/constants/urls";
 
 // 📧 Send workspace invitation
 interface SendInvitationData {
@@ -15,18 +15,21 @@ export function useSendInvitation() {
 
   return useMutation({
     mutationFn: async (data: SendInvitationData) => {
-      const response = await fetch(`${API_BASE_URL}/workspace/${data.workspaceId}/invite`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${API_BASE_URL}/workspace/${data.workspaceId}/invite`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            inviteeEmail: data.inviteeEmail,
+            roleToAssign: data.roleToAssign,
+            message: data.message,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          inviteeEmail: data.inviteeEmail,
-          roleToAssign: data.roleToAssign,
-          message: data.message,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -55,16 +58,19 @@ export function useAcceptInvitation() {
 
   return useMutation({
     mutationFn: async (data: AcceptInvitationData) => {
-      const response = await fetch(`${API_BASE_URL}/workspace/invitations/accept`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${API_BASE_URL}/workspace/invitations/accept`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            invitationToken: data.invitationToken,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          invitationToken: data.invitationToken,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -77,7 +83,7 @@ export function useAcceptInvitation() {
       toast.success(data.message || `Welcome to ${data.workspaceName}!`);
       queryClient.invalidateQueries({ queryKey: ["workspaces"] });
       queryClient.invalidateQueries({ queryKey: ["workspace-invitations"] });
-      
+
       // Redirect to the main dashboard after successful acceptance
       window.location.href = "/dashboard";
     },
@@ -98,4 +104,4 @@ export function usePendingInvitations() {
     },
     enabled: false, // Disabled for now
   });
-} 
+}

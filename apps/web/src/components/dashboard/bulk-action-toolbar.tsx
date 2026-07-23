@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { useBulkOperationsStore, useSelectedProjectIds, useBulkOperationsStats } from "@/store/use-bulk-operations";
+import type React from "react";
+import { useState } from "react";
+import {
+  useBulkOperationsStore,
+  useSelectedProjectIds,
+  useBulkOperationsStats,
+  type BulkOperationResult,
+} from "@/store/use-bulk-operations";
 import { Button } from "@/components/ui/button";
 import { X, Copy, Trash2, Edit, Undo2, Redo2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,9 +33,12 @@ import {
  */
 
 interface BulkActionToolbarProps {
-  onBulkUpdate?: (projectIds: string[], updates: any) => Promise<any>;
-  onBulkDelete?: (projectIds: string[]) => Promise<any>;
-  onBulkDuplicate?: (projectIds: string[]) => Promise<any>;
+  onBulkUpdate?: (
+    projectIds: string[],
+    updates: Record<string, unknown>,
+  ) => Promise<unknown>;
+  onBulkDelete?: (projectIds: string[]) => Promise<unknown>;
+  onBulkDuplicate?: (projectIds: string[]) => Promise<unknown>;
   onBulkExport?: (projectIds: string[]) => void;
   className?: string;
 }
@@ -42,11 +51,21 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
   className,
 }) => {
   const selectedProjectIds = useSelectedProjectIds();
-  const { clearSelection, startOperation, endOperation, undo, redo, canUndo, canRedo } = useBulkOperationsStore();
+  const {
+    clearSelection,
+    startOperation,
+    endOperation,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useBulkOperationsStore();
   const { operationInProgress } = useBulkOperationsStats();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
-  const [updateField, setUpdateField] = useState<"status" | "priority">("status");
+  const [updateField, setUpdateField] = useState<"status" | "priority">(
+    "status",
+  );
   const [updateValue, setUpdateValue] = useState("");
 
   const handleDelete = async () => {
@@ -54,7 +73,9 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
 
     startOperation();
     try {
-      const result = await onBulkDelete(selectedProjectIds);
+      const result = (await onBulkDelete(
+        selectedProjectIds,
+      )) as BulkOperationResult;
       endOperation(result);
 
       if (result.success) {
@@ -72,7 +93,10 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
     startOperation();
     try {
       const updates = { [updateField]: updateValue };
-      const result = await onBulkUpdate(selectedProjectIds, updates);
+      const result = (await onBulkUpdate(
+        selectedProjectIds,
+        updates,
+      )) as BulkOperationResult;
       endOperation(result);
 
       if (result.success) {
@@ -90,7 +114,9 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
 
     startOperation();
     try {
-      const result = await onBulkDuplicate(selectedProjectIds);
+      const result = (await onBulkDuplicate(
+        selectedProjectIds,
+      )) as BulkOperationResult;
       endOperation(result);
 
       if (result.success) {
@@ -130,7 +156,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
           "flex items-center gap-4",
           "max-w-[95vw] overflow-x-auto",
           "animate-in slide-in-from-bottom-4 duration-300",
-          className
+          className,
         )}
         role="toolbar"
         aria-label="Bulk operations"
@@ -143,7 +169,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200" role="none" />
+        <div className="w-px h-6 bg-gray-200" />
 
         {/* Bulk Actions */}
         <div className="flex items-center gap-2">
@@ -205,7 +231,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200" role="none" />
+        <div className="w-px h-6 bg-gray-200" />
 
         {/* Undo/Redo */}
         <div className="flex items-center gap-2">
@@ -233,7 +259,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200" role="none" />
+        <div className="w-px h-6 bg-gray-200" />
 
         {/* Clear Selection */}
         <Button
@@ -253,9 +279,12 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedProjectIds.length} projects?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete {selectedProjectIds.length} projects?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. All associated data will be permanently deleted.
+              This action cannot be undone. All associated data will be
+              permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -275,18 +304,26 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
       <AlertDialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Update {selectedProjectIds.length} projects</AlertDialogTitle>
+            <AlertDialogTitle>
+              Update {selectedProjectIds.length} projects
+            </AlertDialogTitle>
           </AlertDialogHeader>
 
           <div className="space-y-4">
             {/* Field selector */}
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label
+                htmlFor="bulk-update-field"
+                className="text-sm font-medium text-gray-700 block mb-2"
+              >
                 Update field
               </label>
               <select
+                id="bulk-update-field"
                 value={updateField}
-                onChange={(e) => setUpdateField(e.target.value as "status" | "priority")}
+                onChange={(e) =>
+                  setUpdateField(e.target.value as "status" | "priority")
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="status">Status</option>
@@ -296,10 +333,14 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
 
             {/* Value input */}
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label
+                htmlFor="bulk-new-value"
+                className="text-sm font-medium text-gray-700 block mb-2"
+              >
                 New value
               </label>
               <select
+                id="bulk-new-value"
                 value={updateValue}
                 onChange={(e) => setUpdateValue(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"

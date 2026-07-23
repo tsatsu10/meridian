@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
-import { z } from 'zod';
-import { zValidator } from '@hono/zod-validator';
+import { Hono } from "hono";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
 
 const app = new Hono();
 
@@ -8,7 +8,7 @@ const app = new Hono();
 // These return empty/default data to prevent frontend crashes
 
 // Get audit log filter options
-app.get('/:workspaceId/filters', async (c) => {
+app.get("/:workspaceId/filters", async (c) => {
   // Return empty filter options
   return c.json({
     success: true,
@@ -21,7 +21,7 @@ app.get('/:workspaceId/filters', async (c) => {
 });
 
 // Get audit logs with pagination
-app.get('/:workspaceId/logs', async (c) => {
+app.get("/:workspaceId/logs", async (c) => {
   // Return empty logs
   return c.json({
     success: true,
@@ -36,7 +36,7 @@ app.get('/:workspaceId/logs', async (c) => {
 });
 
 // Get audit log statistics
-app.get('/:workspaceId/stats', async (c) => {
+app.get("/:workspaceId/stats", async (c) => {
   // Return empty stats
   return c.json({
     success: true,
@@ -50,7 +50,7 @@ app.get('/:workspaceId/stats', async (c) => {
 });
 
 // Get audit log settings
-app.get('/:workspaceId/settings', async (c) => {
+app.get("/:workspaceId/settings", async (c) => {
   // Return default settings
   return c.json({
     success: true,
@@ -78,42 +78,40 @@ app.get('/:workspaceId/settings', async (c) => {
       notifyOnCriticalActions: true,
       criticalActions: [],
       allowLogExport: true,
-      exportFormat: 'json' as const,
+      exportFormat: "json" as const,
       includeMetadataInExport: true,
     },
   });
 });
 
 // Update audit log settings
-app.patch('/:workspaceId/settings', async (c) => {
+app.patch("/:workspaceId/settings", async (c) => {
   const updates = await c.req.json();
-  
+
   // Just acknowledge the update (not persisted yet)
   return c.json({
     success: true,
-    message: 'Audit log settings updated successfully',
+    message: "Audit log settings updated successfully",
     data: updates,
   });
 });
 
 // Export audit logs
-app.post('/:workspaceId/export', async (c) => {
+app.post("/:workspaceId/export", async (c) => {
   const { format } = await c.req.json();
-  
+
   // Return empty export
-  const data = format === 'csv' 
-    ? 'timestamp,user,action,entity\n'
-    : JSON.stringify([]);
-    
+  const data =
+    format === "csv" ? "timestamp,user,action,entity\n" : JSON.stringify([]);
+
   return c.json({
     success: true,
     data: {
       data,
       filename: `audit-logs-${Date.now()}.${format}`,
-      mimeType: format === 'csv' ? 'text/csv' : 'application/json',
+      mimeType: format === "csv" ? "text/csv" : "application/json",
     },
   });
 });
 
 export default app;
-

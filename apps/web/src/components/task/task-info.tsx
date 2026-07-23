@@ -1,11 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
 import useGetActiveWorkspaceUsers from "@/hooks/queries/workspace-users/use-active-workspace-users";
 import useProjectStore from "@/store/project";
-import type { ProjectWithTasks, ProjectState } from "@/types/project";
+import type { ProjectWithTasks } from "@/types/project";
 import type { Task } from "@/types/task";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -19,19 +25,6 @@ import TaskLabels from "./task-labels";
 import TaskDependencies from "./task-dependencies";
 import CreateTaskModal from "../shared/modals/create-task-modal";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-
-interface Column {
-  id: string;
-  name: string;
-}
-
-interface ProjectWithColumns extends ProjectWithTasks {
-  columns: Column[];
-  workspaceId: string;
-  id: string;
-  name: string;
-  slug: string;
-}
 
 export const taskInfoSchema = z.object({
   status: z.string(),
@@ -48,18 +41,21 @@ function TaskInfo({
   setIsSaving: (isSaving: boolean) => void;
 }) {
   const navigate = useNavigate();
-  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] = useState(false);
+  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] =
+    useState(false);
   const { project } = useProjectStore();
   const { mutateAsync: updateTask } = useUpdateTask();
-  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask();
+  const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask(
+    task.projectId,
+  );
   const queryClient = useQueryClient();
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
-    project ? { workspaceId: project.workspaceId } : { workspaceId: "" }
+    project ? { workspaceId: project.workspaceId } : { workspaceId: "" },
   );
   const { user } = useAuth();
 
   const isCreator = user?.email === task.userEmail;
-  const typedProject = project ? (project as unknown as ProjectWithColumns) : null;
+  const typedProject: ProjectWithTasks | null = project ?? null;
 
   const form = useForm<z.infer<typeof taskInfoSchema>>({
     defaultValues: {
@@ -173,11 +169,16 @@ function TaskInfo({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {workspaceUsers?.map((user) => (
-                    <SelectItem key={user.userEmail} value={user.userEmail ?? "unassigned"}>
-                      {user.userName ?? ""}
-                    </SelectItem>
-                  ))}
+                  {workspaceUsers?.map(
+                    (user: { userEmail: string; userName?: string }) => (
+                      <SelectItem
+                        key={user.userEmail}
+                        value={user.userEmail ?? "unassigned"}
+                      >
+                        {user.userName ?? ""}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </FormItem>
@@ -283,11 +284,15 @@ function TaskInfo({
         onOpenChange={setIsCreateSubtaskModalOpen}
         status={task.status}
         parentTaskId={task.id}
-        projectContext={typedProject ? {
-          id: typedProject.id,
-          name: typedProject.name,
-          slug: typedProject.slug
-        } as ProjectState : undefined}
+        projectContext={
+          typedProject
+            ? {
+                id: typedProject.id,
+                name: typedProject.name,
+                slug: typedProject.slug,
+              }
+            : undefined
+        }
       />
     </div>
   );

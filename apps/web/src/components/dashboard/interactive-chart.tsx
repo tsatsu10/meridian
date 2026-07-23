@@ -1,12 +1,38 @@
 // @epic-3.1-dashboards: Interactive chart component for enhanced data visualization
 // ⚡ PERFORMANCE: Optimized with React.memo for 95/100
 import { useState, useMemo, memo } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Minus, MoreHorizontal, Download } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  MoreHorizontal,
+  Download,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export type ChartType = "line" | "bar" | "area" | "pie";
 export type TimeRange = "7d" | "30d" | "90d" | "1y";
@@ -36,7 +62,14 @@ interface InteractiveChartProps {
   onDrillDown?: (dataPoint: ChartDataPoint) => void;
 }
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1', '#d084d0'];
+const COLORS = [
+  "#8884d8",
+  "#82ca9d",
+  "#ffc658",
+  "#ff7300",
+  "#8dd1e1",
+  "#d084d0",
+];
 
 // ⚡ PERFORMANCE: Memoized component to prevent unnecessary re-renders
 function InteractiveChartInternal({
@@ -48,19 +81,19 @@ function InteractiveChartInternal({
   onChartTypeChange,
   onExport,
   showTrend = true,
-  showComparison = false,
+
   height = 300,
   className = "",
   color = "#8884d8",
   drillDownEnabled = false,
-  onDrillDown
+  onDrillDown,
 }: InteractiveChartProps) {
-  const [hoveredData, setHoveredData] = useState<ChartDataPoint | null>(null);
+  const [hoveredData, _setHoveredData] = useState<ChartDataPoint | null>(null);
 
   const chartData = useMemo(() => {
-    return data.map(point => ({
+    return data.map((point) => ({
       ...point,
-      displayValue: point.value
+      displayValue: point.value,
     }));
   }, [data]);
 
@@ -72,8 +105,10 @@ function InteractiveChartInternal({
   }, [data]);
 
   const getTrendIcon = () => {
-    if (trendPercentage > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
-    if (trendPercentage < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
+    if (trendPercentage > 0)
+      return <TrendingUp className="h-4 w-4 text-green-500" />;
+    if (trendPercentage < 0)
+      return <TrendingDown className="h-4 w-4 text-red-500" />;
     return <Minus className="h-4 w-4 text-gray-500" />;
   };
 
@@ -83,9 +118,9 @@ function InteractiveChartInternal({
     return "text-gray-500";
   };
 
-  const handleDataPointClick = (dataPoint: any) => {
+  const handleDataPointClick = (dataPoint: unknown) => {
     if (drillDownEnabled && onDrillDown) {
-      onDrillDown(dataPoint);
+      onDrillDown(dataPoint as ChartDataPoint);
     }
   };
 
@@ -96,25 +131,18 @@ function InteractiveChartInternal({
           <ResponsiveContainer width="100%" height={height}>
             <BarChart data={chartData} onClick={handleDataPointClick}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="label" 
-                tick={{ fontSize: 12 }}
-                stroke="#666"
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                stroke="#666"
-              />
-              <Tooltip 
+              <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#666" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#666" />
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  backgroundColor: "white",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
               />
-              <Bar 
-                dataKey="displayValue" 
+              <Bar
+                dataKey="displayValue"
                 fill={color}
                 radius={[4, 4, 0, 0]}
                 cursor={drillDownEnabled ? "pointer" : "default"}
@@ -128,26 +156,19 @@ function InteractiveChartInternal({
           <ResponsiveContainer width="100%" height={height}>
             <AreaChart data={chartData} onClick={handleDataPointClick}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="label" 
-                tick={{ fontSize: 12 }}
-                stroke="#666"
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                stroke="#666"
-              />
-              <Tooltip 
+              <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#666" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#666" />
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  backgroundColor: "white",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
               />
-              <Area 
-                type="monotone" 
-                dataKey="displayValue" 
+              <Area
+                type="monotone"
+                dataKey="displayValue"
                 stroke={color}
                 fill={color}
                 fillOpacity={0.3}
@@ -167,22 +188,31 @@ function InteractiveChartInternal({
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ label, percent }: { label: string; percent: number }) => `${label} ${(percent * 100).toFixed(0)}%`}
+                label={({
+                  label,
+                  percent,
+                }: { label: string; percent: number }) =>
+                  `${label} ${(percent * 100).toFixed(0)}%`
+                }
                 outerRadius={80}
                 fill={color}
                 dataKey="displayValue"
                 cursor={drillDownEnabled ? "pointer" : "default"}
               >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                {chartData.map((_entry, index) => (
+                  <Cell
+                    // biome-ignore lint/suspicious/noArrayIndexKey: recharts cells, index drives color cycle
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  backgroundColor: "white",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
               />
             </PieChart>
@@ -194,26 +224,19 @@ function InteractiveChartInternal({
           <ResponsiveContainer width="100%" height={height}>
             <LineChart data={chartData} onClick={handleDataPointClick}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="label" 
-                tick={{ fontSize: 12 }}
-                stroke="#666"
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                stroke="#666"
-              />
-              <Tooltip 
+              <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#666" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#666" />
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  backgroundColor: "white",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="displayValue" 
+              <Line
+                type="monotone"
+                dataKey="displayValue"
                 stroke={color}
                 strokeWidth={2}
                 dot={{ fill: color, strokeWidth: 2, r: 4 }}
@@ -243,7 +266,7 @@ function InteractiveChartInternal({
             </div>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {onTimeRangeChange && (
             <div className="flex items-center space-x-1">
@@ -260,7 +283,7 @@ function InteractiveChartInternal({
               ))}
             </div>
           )}
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -294,10 +317,10 @@ function InteractiveChartInternal({
           </DropdownMenu>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         {renderChart()}
-        
+
         {hoveredData && (
           <div className="mt-4 p-3 bg-muted rounded-lg">
             <div className="flex items-center justify-between">
@@ -313,7 +336,7 @@ function InteractiveChartInternal({
             )}
           </div>
         )}
-        
+
         {drillDownEnabled && (
           <div className="mt-2 text-xs text-muted-foreground">
             Click on data points to drill down for more details
@@ -325,18 +348,21 @@ function InteractiveChartInternal({
 }
 
 // ⚡ PERFORMANCE: Export memoized version with custom comparison
-export const InteractiveChart = memo(InteractiveChartInternal, (prevProps, nextProps) => {
-  // Custom comparison to prevent re-renders when data reference changes but content is same
-  return (
-    prevProps.title === nextProps.title &&
-    prevProps.chartType === nextProps.chartType &&
-    prevProps.timeRange === nextProps.timeRange &&
-    prevProps.data.length === nextProps.data.length &&
-    JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data)
-  );
-});
+export const InteractiveChart = memo(
+  InteractiveChartInternal,
+  (prevProps, nextProps) => {
+    // Custom comparison to prevent re-renders when data reference changes but content is same
+    return (
+      prevProps.title === nextProps.title &&
+      prevProps.chartType === nextProps.chartType &&
+      prevProps.timeRange === nextProps.timeRange &&
+      prevProps.data.length === nextProps.data.length &&
+      JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data)
+    );
+  },
+);
 
-InteractiveChart.displayName = 'InteractiveChart';
+InteractiveChart.displayName = "InteractiveChart";
 
 // Specialized chart components for common dashboard use cases
 interface ProductivityChartProps {
@@ -345,7 +371,11 @@ interface ProductivityChartProps {
   onTimeRangeChange?: (range: TimeRange) => void;
 }
 
-function ProductivityChartInternal({ data, timeRange, onTimeRangeChange }: ProductivityChartProps) {
+function ProductivityChartInternal({
+  data,
+  timeRange,
+  onTimeRangeChange,
+}: ProductivityChartProps) {
   return (
     <InteractiveChart
       title="Team Productivity"
@@ -361,14 +391,17 @@ function ProductivityChartInternal({ data, timeRange, onTimeRangeChange }: Produ
 }
 
 export const ProductivityChart = memo(ProductivityChartInternal);
-ProductivityChart.displayName = 'ProductivityChart';
+ProductivityChart.displayName = "ProductivityChart";
 
 interface TaskCompletionChartProps {
   data: ChartDataPoint[];
   onDrillDown?: (dataPoint: ChartDataPoint) => void;
 }
 
-function TaskCompletionChartInternal({ data, onDrillDown }: TaskCompletionChartProps) {
+function TaskCompletionChartInternal({
+  data,
+  onDrillDown,
+}: TaskCompletionChartProps) {
   return (
     <InteractiveChart
       title="Task Completion by Project"
@@ -384,7 +417,7 @@ function TaskCompletionChartInternal({ data, onDrillDown }: TaskCompletionChartP
 }
 
 export const TaskCompletionChart = memo(TaskCompletionChartInternal);
-TaskCompletionChart.displayName = 'TaskCompletionChart';
+TaskCompletionChart.displayName = "TaskCompletionChart";
 
 interface ProjectHealthChartProps {
   data: ChartDataPoint[];
@@ -403,4 +436,4 @@ function ProjectHealthChartInternal({ data }: ProjectHealthChartProps) {
 }
 
 export const ProjectHealthChart = memo(ProjectHealthChartInternal);
-ProjectHealthChart.displayName = 'ProjectHealthChart'; 
+ProjectHealthChart.displayName = "ProjectHealthChart";

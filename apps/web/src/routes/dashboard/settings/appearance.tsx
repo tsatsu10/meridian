@@ -1,19 +1,31 @@
-import { useState, useEffect } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Palette, 
-  Monitor, 
-  Sun, 
-  Moon, 
+import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import {
+  Palette,
+  Monitor,
+  Sun,
+  Moon,
   Accessibility,
   RefreshCw,
   Eye,
@@ -26,17 +38,13 @@ import {
   Upload,
   X,
   Maximize,
-  Minimize,
   Type,
-  Sparkles,
-} from 'lucide-react';
+} from "lucide-react";
 import { useThemeSync } from "@/hooks/use-theme-sync";
-import { useSettingsStore } from "@/store/settings";
+import { useSettingsStore, type AllSettings } from "@/store/settings";
 import { useAuthStore } from "@/store/consolidated/auth";
-import { toast } from 'sonner';
-import { API_BASE_URL } from '@/constants/urls';
-import { UnsplashPhotoPicker } from '@/components/unsplash/unsplash-photo-picker';
-import type { UnsplashPhoto } from '@/types/unsplash';
+import { toast } from "sonner";
+import { API_BASE_URL } from "@/constants/urls";
 
 // Import Accessibility Components
 import { VoiceControl } from "@/components/accessibility/voice-control";
@@ -44,7 +52,7 @@ import { ColorBlindMode } from "@/components/accessibility/color-blind-mode";
 import { ReducedMotionMode } from "@/components/accessibility/reduced-motion-mode";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
-export const Route = createFileRoute('/dashboard/settings/appearance')({
+export const Route = createFileRoute("/dashboard/settings/appearance")({
   component: withErrorBoundary(AppearanceSettings, "Appearance Settings"),
 });
 
@@ -52,35 +60,35 @@ function AppearanceSettings() {
   const { theme, setTheme } = useThemeSync();
   const { settings, updateSettings } = useSettingsStore();
   const { user } = useAuthStore();
-  
-  // @epic-4.2-scheduled-theme: Scheduled theme switching
-  const [scheduledThemeEnabled, setScheduledThemeEnabled] = useState(false);
-  const [lightThemeTime, setLightThemeTime] = useState('06:00');
-  const [darkThemeTime, setDarkThemeTime] = useState('18:00');
-  
-  // @epic-4.2-location-theme: Location-based theme switching
-  const [locationBasedEnabled, setLocationBasedEnabled] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [sunTimes, setSunTimes] = useState<{ sunrise: string; sunset: string } | null>(null);
-  
+
+  // @epic-4.2-location-theme: Location-based theme switching.
+  // currentLocation/sunTimes stay local — they're derived from the browser's
+  // geolocation API and today's date, not configuration to persist.
+  const [currentLocation, setCurrentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [sunTimes, setSunTimes] = useState<{
+    sunrise: string;
+    sunset: string;
+  } | null>(null);
+
   // @epic-4.3-background-customization: Background image customization
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  const [backgroundPosition, setBackgroundPosition] = useState<'center' | 'top' | 'bottom' | 'left' | 'right'>('center');
+  const [backgroundPosition, setBackgroundPosition] = useState<
+    "center" | "top" | "bottom" | "left" | "right"
+  >("center");
   const [backgroundBlur, setBackgroundBlur] = useState(0);
   const [backgroundOpacity, setBackgroundOpacity] = useState(100);
   const [uploadingBackground, setUploadingBackground] = useState(false);
-  
-  // Unsplash photo picker
-  const [unsplashPickerOpen, setUnsplashPickerOpen] = useState(false);
-  const [selectedUnsplashPhoto, setSelectedUnsplashPhoto] = useState<UnsplashPhoto | null>(null);
-  
+
   // @epic-4.4-font-customization: Font customization
-  const [fontFamily, setFontFamily] = useState('Inter');
-  const [fontSize, setFontSize] = useState(14);
+  const [fontFamily, setFontFamily] = useState("Inter");
+  const [fontSize, setFontSize] = useState(16);
   const [fontWeight, setFontWeight] = useState(400);
   const [lineHeight, setLineHeight] = useState(1.5);
   const [letterSpacing, setLetterSpacing] = useState(0);
-  
+
   // @epic-4.5-accessibility: Accessibility enhancements
   const [largeText, setLargeText] = useState(false);
   const [enhancedFocus, setEnhancedFocus] = useState(false);
@@ -91,32 +99,49 @@ function AppearanceSettings() {
   useEffect(() => {
     const loadAccessibilitySettings = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/user-preferences/appearance/${user?.email}`);
+        const response = await fetch(
+          `${API_BASE_URL}/user-preferences/appearance/${user?.email}`,
+        );
         if (response.ok) {
           const data = await response.json();
           if (data.settings) {
-            const parsed = typeof data.settings === 'string' ? JSON.parse(data.settings) : data.settings;
-            
+            const parsed =
+              typeof data.settings === "string"
+                ? JSON.parse(data.settings)
+                : data.settings;
+
             if (parsed.largeText !== undefined) {
               setLargeText(parsed.largeText);
-              document.documentElement.classList.toggle('large-text', parsed.largeText);
+              document.documentElement.classList.toggle(
+                "large-text",
+                parsed.largeText,
+              );
             }
             if (parsed.enhancedFocus !== undefined) {
               setEnhancedFocus(parsed.enhancedFocus);
-              document.documentElement.classList.toggle('enhanced-focus', parsed.enhancedFocus);
+              document.documentElement.classList.toggle(
+                "enhanced-focus",
+                parsed.enhancedFocus,
+              );
             }
             if (parsed.screenReaderMode !== undefined) {
               setScreenReaderMode(parsed.screenReaderMode);
-              document.documentElement.classList.toggle('screen-reader-mode', parsed.screenReaderMode);
+              document.documentElement.classList.toggle(
+                "screen-reader-mode",
+                parsed.screenReaderMode,
+              );
             }
             if (parsed.keyboardNavigation !== undefined) {
               setKeyboardNavigation(parsed.keyboardNavigation);
-              document.documentElement.classList.toggle('keyboard-nav', parsed.keyboardNavigation);
+              document.documentElement.classList.toggle(
+                "keyboard-nav",
+                parsed.keyboardNavigation,
+              );
             }
           }
         }
       } catch (error) {
-        console.error('Failed to load accessibility settings:', error);
+        console.error("Failed to load accessibility settings:", error);
       }
     };
 
@@ -125,58 +150,91 @@ function AppearanceSettings() {
     }
   }, [user?.email]);
 
-  const handleSettingUpdate = async (section: string, key: string, value: any) => {
+  const handleSettingUpdate = async (
+    section: string,
+    key: string,
+    value: unknown,
+  ) => {
     try {
-      await updateSettings(section as any, { [key]: value });
-      toast.success('Setting updated successfully');
+      await updateSettings(
+        section as keyof AllSettings,
+        {
+          [key]: value,
+        } as Partial<AllSettings[keyof AllSettings]>,
+      );
+      toast.success("Setting updated successfully");
     } catch (error) {
-      toast.error('Failed to update setting');
+      toast.error("Failed to update setting");
     }
   };
 
+  // Scheduled/location theme config — persisted appearance settings, not
+  // local state, so they survive a reload like every other appearance field.
+  const scheduledThemeEnabled = settings.appearance.scheduledThemeEnabled;
+  const lightThemeTime = settings.appearance.lightThemeTime;
+  const darkThemeTime = settings.appearance.darkThemeTime;
+  const locationBasedEnabled = settings.appearance.locationBasedEnabled;
+
+  const setScheduledThemeEnabled = (value: boolean) =>
+    handleSettingUpdate("appearance", "scheduledThemeEnabled", value);
+  const setLightThemeTime = (value: string) =>
+    handleSettingUpdate("appearance", "lightThemeTime", value);
+  const setDarkThemeTime = (value: string) =>
+    handleSettingUpdate("appearance", "darkThemeTime", value);
+  const setLocationBasedEnabled = (value: boolean) =>
+    handleSettingUpdate("appearance", "locationBasedEnabled", value);
+
   const handleResetToDefaults = () => {
-    setTheme('system');
-    updateSettings('appearance', {
+    setTheme("system");
+    updateSettings("appearance", {
       highContrast: false,
       reducedMotion: false,
     });
     setScheduledThemeEnabled(false);
     setLocationBasedEnabled(false);
-    toast.success('Reset to default settings');
+    toast.success("Reset to default settings");
   };
 
   // Calculate sunrise/sunset times
-  const calculateSunTimes = (lat: number, lon: number) => {
+  const calculateSunTimes = (_lat: number, _lon: number) => {
     const date = new Date();
     // Simplified calculation - in production, use a proper sun calculation library
     const sunrise = new Date(date);
     sunrise.setHours(6, 0, 0);
     const sunset = new Date(date);
     sunset.setHours(18, 0, 0);
-    
+
     setSunTimes({
-      sunrise: sunrise.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      sunset: sunset.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      sunrise: sunrise.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      sunset: sunset.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     });
   };
 
   // Get user location
   const getLocation = () => {
-    if ('geolocation' in navigator) {
+    if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setCurrentLocation({ latitude, longitude });
           calculateSunTimes(latitude, longitude);
-          toast.success('Location detected successfully');
+          toast.success("Location detected successfully");
         },
-        (error) => {
-          toast.error('Could not detect location. Please enable location services.');
+        (_error) => {
+          toast.error(
+            "Could not detect location. Please enable location services.",
+          );
           setLocationBasedEnabled(false);
-        }
+        },
       );
     } else {
-      toast.error('Geolocation is not supported by your browser');
+      toast.error("Geolocation is not supported by your browser");
       setLocationBasedEnabled(false);
     }
   };
@@ -187,14 +245,14 @@ function AppearanceSettings() {
 
     const checkScheduledTheme = () => {
       const now = new Date();
-      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      
+      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
       if (currentTime === lightThemeTime) {
-        setTheme('light');
-        toast.success('Switched to light theme (scheduled)');
+        setTheme("light");
+        toast.success("Switched to light theme (scheduled)");
       } else if (currentTime === darkThemeTime) {
-        setTheme('dark');
-        toast.success('Switched to dark theme (scheduled)');
+        setTheme("dark");
+        toast.success("Switched to dark theme (scheduled)");
       }
     };
 
@@ -209,21 +267,21 @@ function AppearanceSettings() {
     const checkLocationTheme = () => {
       const now = new Date();
       const currentTime = now.getHours() * 60 + now.getMinutes();
-      
-      const [sunriseHour, sunriseMin] = sunTimes.sunrise.split(':').map(Number);
-      const [sunsetHour, sunsetMin] = sunTimes.sunset.split(':').map(Number);
+
+      const [sunriseHour, sunriseMin] = sunTimes.sunrise.split(":").map(Number);
+      const [sunsetHour, sunsetMin] = sunTimes.sunset.split(":").map(Number);
       const sunriseTime = sunriseHour * 60 + sunriseMin;
       const sunsetTime = sunsetHour * 60 + sunsetMin;
-      
+
       if (currentTime >= sunriseTime && currentTime < sunsetTime) {
-        if (theme !== 'light') {
-          setTheme('light');
-          toast.success('Switched to light theme (sunrise)');
+        if (theme !== "light") {
+          setTheme("light");
+          toast.success("Switched to light theme (sunrise)");
         }
       } else {
-        if (theme !== 'dark') {
-          setTheme('dark');
-          toast.success('Switched to dark theme (sunset)');
+        if (theme !== "dark") {
+          setTheme("dark");
+          toast.success("Switched to dark theme (sunset)");
         }
       }
     };
@@ -234,19 +292,25 @@ function AppearanceSettings() {
   }, [locationBasedEnabled, currentLocation, sunTimes, theme, setTheme]);
 
   // Background image handlers
-  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackgroundUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB');
+      toast.error("File size must be less than 10MB");
       return;
     }
 
     // Validate file type
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
-      toast.error('Only JPEG, PNG, WebP, and GIF images are allowed');
+    if (
+      !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
+        file.type,
+      )
+    ) {
+      toast.error("Only JPEG, PNG, WebP, and GIF images are allowed");
       return;
     }
 
@@ -254,22 +318,30 @@ function AppearanceSettings() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const response = await fetch(`${API_BASE_URL}/user-preferences/background/upload`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/user-preferences/background/upload`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        },
+      );
 
-      if (!response.ok) throw new Error('Upload failed');
+      if (!response.ok) throw new Error("Upload failed");
 
       const data = await response.json();
       setBackgroundImage(data.imageUrl);
-      await saveBackgroundPreferences(data.imageUrl, backgroundPosition, backgroundBlur, backgroundOpacity);
-      toast.success('Background image uploaded successfully');
+      await saveBackgroundPreferences(
+        data.imageUrl,
+        backgroundPosition,
+        backgroundBlur,
+        backgroundOpacity,
+      );
+      toast.success("Background image uploaded successfully");
     } catch (error) {
-      toast.error('Failed to upload background image');
+      toast.error("Failed to upload background image");
     } finally {
       setUploadingBackground(false);
     }
@@ -279,62 +351,42 @@ function AppearanceSettings() {
     image?: string | null,
     position?: string,
     blur?: number,
-    opacity?: number
+    opacity?: number,
   ) => {
     if (!user?.email) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/user-preferences/background/${user.email}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          backgroundImage: image !== undefined ? image : backgroundImage,
-          backgroundPosition: position || backgroundPosition,
-          backgroundBlur: blur !== undefined ? blur : backgroundBlur,
-          backgroundOpacity: opacity !== undefined ? opacity : backgroundOpacity,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to save preferences');
-    } catch (error) {
-      toast.error('Failed to save background preferences');
-    }
-  };
-
-  const handleUnsplashPhotoSelect = async (photo: UnsplashPhoto) => {
-    try {
-      setSelectedUnsplashPhoto(photo);
-      setBackgroundImage(photo.urls.regular);
-      
-      // Track download (required by Unsplash TOS)
-      await fetch(`${API_BASE_URL}/unsplash/download`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ downloadLocation: photo.links.download_location }),
-      });
-      
-      // Save preferences with Unsplash photo URL
-      await saveBackgroundPreferences(photo.urls.regular, backgroundPosition, backgroundBlur, backgroundOpacity);
-      
-      toast.success(
-        `Background set to photo by ${photo.user.name}`,
+      const response = await fetch(
+        `${API_BASE_URL}/user-preferences/background/${user.email}`,
         {
-          description: 'Photo from Unsplash',
-        }
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            backgroundImage: image !== undefined ? image : backgroundImage,
+            backgroundPosition: position || backgroundPosition,
+            backgroundBlur: blur !== undefined ? blur : backgroundBlur,
+            backgroundOpacity:
+              opacity !== undefined ? opacity : backgroundOpacity,
+          }),
+        },
       );
+
+      if (!response.ok) throw new Error("Failed to save preferences");
     } catch (error) {
-      console.error('Failed to set Unsplash background:', error);
-      toast.error('Failed to set background image');
+      toast.error("Failed to save background preferences");
     }
   };
 
   const handleRemoveBackground = async () => {
     setBackgroundImage(null);
-    setSelectedUnsplashPhoto(null);
-    await saveBackgroundPreferences(null, backgroundPosition, backgroundBlur, backgroundOpacity);
-    toast.success('Background image removed');
+    await saveBackgroundPreferences(
+      null,
+      backgroundPosition,
+      backgroundBlur,
+      backgroundOpacity,
+    );
+    toast.success("Background image removed");
   };
 
   // Font customization handlers
@@ -343,57 +395,60 @@ function AppearanceSettings() {
     size?: number,
     weight?: number,
     height?: number,
-    spacing?: number
+    spacing?: number,
   ) => {
     if (!user?.email) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/user-preferences/fonts/${user.email}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          fontFamily: family || fontFamily,
-          fontSize: size !== undefined ? size : fontSize,
-          fontWeight: weight !== undefined ? weight : fontWeight,
-          lineHeight: height !== undefined ? height : lineHeight,
-          letterSpacing: spacing !== undefined ? spacing : letterSpacing,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/user-preferences/fonts/${user.email}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            fontFamily: family || fontFamily,
+            fontSize: size !== undefined ? size : fontSize,
+            fontWeight: weight !== undefined ? weight : fontWeight,
+            lineHeight: height !== undefined ? height : lineHeight,
+            letterSpacing: spacing !== undefined ? spacing : letterSpacing,
+          }),
+        },
+      );
 
-      if (!response.ok) throw new Error('Failed to save preferences');
+      if (!response.ok) throw new Error("Failed to save preferences");
     } catch (error) {
-      toast.error('Failed to save font preferences');
+      toast.error("Failed to save font preferences");
     }
   };
 
   const handleResetFonts = () => {
-    setFontFamily('Inter');
-    setFontSize(14);
+    setFontFamily("Inter");
+    setFontSize(16);
     setFontWeight(400);
     setLineHeight(1.5);
     setLetterSpacing(0);
-    saveFontPreferences('Inter', 14, 400, 1.5, 0);
-    toast.success('Font settings reset to defaults');
+    saveFontPreferences("Inter", 16, 400, 1.5, 0);
+    toast.success("Font settings reset to defaults");
   };
 
   // Accessibility handlers
   const handleAccessibilityUpdate = async (key: string, value: boolean) => {
     try {
-      await handleSettingUpdate('appearance', key, value);
-      
+      await handleSettingUpdate("appearance", key, value);
+
       // Apply accessibility settings to document
-      if (key === 'largeText') {
-        document.documentElement.classList.toggle('large-text', value);
-      } else if (key === 'enhancedFocus') {
-        document.documentElement.classList.toggle('enhanced-focus', value);
-      } else if (key === 'screenReaderMode') {
-        document.documentElement.classList.toggle('screen-reader-mode', value);
-      } else if (key === 'keyboardNavigation') {
-        document.documentElement.classList.toggle('keyboard-nav', value);
+      if (key === "largeText") {
+        document.documentElement.classList.toggle("large-text", value);
+      } else if (key === "enhancedFocus") {
+        document.documentElement.classList.toggle("enhanced-focus", value);
+      } else if (key === "screenReaderMode") {
+        document.documentElement.classList.toggle("screen-reader-mode", value);
+      } else if (key === "keyboardNavigation") {
+        document.documentElement.classList.toggle("keyboard-nav", value);
       }
     } catch (error) {
-      toast.error('Failed to update accessibility setting');
+      toast.error("Failed to update accessibility setting");
     }
   };
 
@@ -401,18 +456,24 @@ function AppearanceSettings() {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-background">
         <h4 className="font-medium text-sm">Theme Preview</h4>
-        
+
         <div className="grid grid-cols-2 gap-3">
           <Button size="sm">Primary</Button>
-          <Button variant="outline" size="sm">Outline</Button>
-          <Button variant="secondary" size="sm">Secondary</Button>
-          <Button variant="ghost" size="sm">Ghost</Button>
+          <Button variant="outline" size="sm">
+            Outline
+          </Button>
+          <Button variant="secondary" size="sm">
+            Secondary
+          </Button>
+          <Button variant="ghost" size="sm">
+            Ghost
+          </Button>
         </div>
-        
+
         <div className="space-y-2">
-          <Input placeholder="Input field" size="sm" />
+          <Input placeholder="Input field" />
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <Badge>Default</Badge>
           <Badge variant="secondary">Secondary</Badge>
@@ -422,7 +483,8 @@ function AppearanceSettings() {
 
         <div className="p-3 bg-muted rounded-md text-sm">
           <p className="text-muted-foreground">
-            This is how text appears in your current theme. The preview updates in real-time as you change settings.
+            This is how text appears in your current theme. The preview updates
+            in real-time as you change settings.
           </p>
         </div>
       </div>
@@ -466,24 +528,24 @@ function AppearanceSettings() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
                   <Button
-                    variant={theme === 'light' ? 'default' : 'outline'}
-                    onClick={() => setTheme('light')}
+                    variant={theme === "light" ? "default" : "outline"}
+                    onClick={() => setTheme("light")}
                     className="flex flex-col items-center gap-2 h-auto py-4"
                   >
                     <Sun className="w-5 h-5" />
                     <span className="text-sm font-medium">Light</span>
                   </Button>
                   <Button
-                    variant={theme === 'dark' ? 'default' : 'outline'}
-                    onClick={() => setTheme('dark')}
+                    variant={theme === "dark" ? "default" : "outline"}
+                    onClick={() => setTheme("dark")}
                     className="flex flex-col items-center gap-2 h-auto py-4"
                   >
                     <Moon className="w-5 h-5" />
                     <span className="text-sm font-medium">Dark</span>
                   </Button>
                   <Button
-                    variant={theme === 'system' ? 'default' : 'outline'}
-                    onClick={() => setTheme('system')}
+                    variant={theme === "system" ? "default" : "outline"}
+                    onClick={() => setTheme("system")}
                     className="flex flex-col items-center gap-2 h-auto py-4"
                   >
                     <Monitor className="w-5 h-5" />
@@ -510,7 +572,9 @@ function AppearanceSettings() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="scheduled-theme">Enable Scheduled Switching</Label>
+                    <Label htmlFor="scheduled-theme">
+                      Enable Scheduled Switching
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Theme changes automatically at set times
                     </p>
@@ -525,7 +589,10 @@ function AppearanceSettings() {
                 {scheduledThemeEnabled && (
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div className="space-y-2">
-                      <Label htmlFor="light-time" className="flex items-center gap-2">
+                      <Label
+                        htmlFor="light-time"
+                        className="flex items-center gap-2"
+                      >
                         <Sun className="w-3 h-3" />
                         Light Theme Time
                       </Label>
@@ -537,7 +604,10 @@ function AppearanceSettings() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="dark-time" className="flex items-center gap-2">
+                      <Label
+                        htmlFor="dark-time"
+                        className="flex items-center gap-2"
+                      >
                         <Moon className="w-3 h-3" />
                         Dark Theme Time
                       </Label>
@@ -567,7 +637,9 @@ function AppearanceSettings() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="location-theme">Enable Location-Based</Label>
+                    <Label htmlFor="location-theme">
+                      Enable Location-Based
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Theme follows day/night cycle
                     </p>
@@ -601,7 +673,8 @@ function AppearanceSettings() {
                       <Badge variant="outline">{sunTimes.sunset}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground pt-2">
-                      Location: {currentLocation.latitude.toFixed(2)}°, {currentLocation.longitude.toFixed(2)}°
+                      Location: {currentLocation.latitude.toFixed(2)}°,{" "}
+                      {currentLocation.longitude.toFixed(2)}°
                     </p>
                   </div>
                 )}
@@ -642,7 +715,9 @@ function AppearanceSettings() {
                   <Switch
                     id="high-contrast"
                     checked={settings.appearance.highContrast}
-                    onCheckedChange={(checked) => handleSettingUpdate('appearance', 'highContrast', checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingUpdate("appearance", "highContrast", checked)
+                    }
                   />
                 </div>
 
@@ -659,7 +734,7 @@ function AppearanceSettings() {
                     checked={largeText}
                     onCheckedChange={(checked) => {
                       setLargeText(checked);
-                      handleAccessibilityUpdate('largeText', checked);
+                      handleAccessibilityUpdate("largeText", checked);
                     }}
                   />
                 </div>
@@ -667,7 +742,9 @@ function AppearanceSettings() {
                 {/* Enhanced Focus Indicators */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="enhanced-focus">Enhanced Focus Indicators</Label>
+                    <Label htmlFor="enhanced-focus">
+                      Enhanced Focus Indicators
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Show prominent visual indicators for keyboard focus
                     </p>
@@ -677,7 +754,7 @@ function AppearanceSettings() {
                     checked={enhancedFocus}
                     onCheckedChange={(checked) => {
                       setEnhancedFocus(checked);
-                      handleAccessibilityUpdate('enhancedFocus', checked);
+                      handleAccessibilityUpdate("enhancedFocus", checked);
                     }}
                   />
                 </div>
@@ -685,7 +762,9 @@ function AppearanceSettings() {
                 {/* Screen Reader Optimizations */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="screen-reader">Screen Reader Optimizations</Label>
+                    <Label htmlFor="screen-reader">
+                      Screen Reader Optimizations
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Enhanced ARIA labels and live regions
                     </p>
@@ -695,7 +774,7 @@ function AppearanceSettings() {
                     checked={screenReaderMode}
                     onCheckedChange={(checked) => {
                       setScreenReaderMode(checked);
-                      handleAccessibilityUpdate('screenReaderMode', checked);
+                      handleAccessibilityUpdate("screenReaderMode", checked);
                     }}
                   />
                 </div>
@@ -703,7 +782,9 @@ function AppearanceSettings() {
                 {/* Keyboard Navigation Helpers */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="keyboard-nav">Keyboard Navigation Helpers</Label>
+                    <Label htmlFor="keyboard-nav">
+                      Keyboard Navigation Helpers
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Show keyboard shortcuts and skip links
                     </p>
@@ -713,7 +794,7 @@ function AppearanceSettings() {
                     checked={keyboardNavigation}
                     onCheckedChange={(checked) => {
                       setKeyboardNavigation(checked);
-                      handleAccessibilityUpdate('keyboardNavigation', checked);
+                      handleAccessibilityUpdate("keyboardNavigation", checked);
                     }}
                   />
                 </div>
@@ -729,7 +810,13 @@ function AppearanceSettings() {
                   <Switch
                     id="reduced-motion"
                     checked={settings.appearance.reducedMotion}
-                    onCheckedChange={(checked) => handleSettingUpdate('appearance', 'reducedMotion', checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingUpdate(
+                        "appearance",
+                        "reducedMotion",
+                        checked,
+                      )
+                    }
                   />
                 </div>
 
@@ -738,11 +825,15 @@ function AppearanceSettings() {
                   <div className="flex items-start gap-2">
                     <Accessibility className="w-4 h-4 mt-0.5 text-primary" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium mb-1">Accessibility Status</p>
+                      <p className="text-sm font-medium mb-1">
+                        Accessibility Status
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {settings.appearance.highContrast && largeText && enhancedFocus
-                          ? '✓ Enhanced accessibility mode active'
-                          : 'Enable more options for better accessibility'}
+                        {settings.appearance.highContrast &&
+                        largeText &&
+                        enhancedFocus
+                          ? "✓ Enhanced accessibility mode active"
+                          : "Enable more options for better accessibility"}
                       </p>
                     </div>
                   </div>
@@ -764,23 +855,17 @@ function AppearanceSettings() {
               <CardContent className="space-y-4">
                 {!backgroundImage ? (
                   <Tabs defaultValue="upload" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="upload" className="gap-2">
-                        <Upload className="w-4 h-4" />
-                        Upload
-                      </TabsTrigger>
-                      <TabsTrigger value="unsplash" className="gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        Unsplash
-                      </TabsTrigger>
-                    </TabsList>
-                    
                     <TabsContent value="upload" className="mt-4">
                       <div>
-                        <Label htmlFor="background-upload" className="cursor-pointer">
+                        <Label
+                          htmlFor="background-upload"
+                          className="cursor-pointer"
+                        >
                           <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
                             <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm font-medium mb-1">Upload Background Image</p>
+                            <p className="text-sm font-medium mb-1">
+                              Upload Background Image
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               JPEG, PNG, WebP, or GIF (max 10MB)
                             </p>
@@ -799,24 +884,6 @@ function AppearanceSettings() {
                             Uploading...
                           </p>
                         )}
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="unsplash" className="mt-4">
-                      <div>
-                        <Button
-                          variant="outline"
-                          className="w-full h-auto py-8 border-2 border-dashed hover:border-primary hover:bg-muted/50 transition-colors"
-                          onClick={() => setUnsplashPickerOpen(true)}
-                        >
-                          <div className="text-center">
-                            <Sparkles className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm font-medium mb-1">Choose from Unsplash</p>
-                            <p className="text-xs text-muted-foreground">
-                              Millions of free professional photos
-                            </p>
-                          </div>
-                        </Button>
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -848,9 +915,16 @@ function AppearanceSettings() {
                       <Label>Position</Label>
                       <Select
                         value={backgroundPosition}
-                        onValueChange={(value: any) => {
-                          setBackgroundPosition(value);
-                          saveBackgroundPreferences(undefined, value, undefined, undefined);
+                        onValueChange={(value) => {
+                          setBackgroundPosition(
+                            value as typeof backgroundPosition,
+                          );
+                          saveBackgroundPreferences(
+                            undefined,
+                            value,
+                            undefined,
+                            undefined,
+                          );
                         }}
                       >
                         <SelectTrigger>
@@ -882,7 +956,12 @@ function AppearanceSettings() {
                           setBackgroundBlur(value);
                         }}
                         onValueCommit={([value]) => {
-                          saveBackgroundPreferences(undefined, undefined, value, undefined);
+                          saveBackgroundPreferences(
+                            undefined,
+                            undefined,
+                            value,
+                            undefined,
+                          );
                         }}
                         min={0}
                         max={20}
@@ -902,7 +981,12 @@ function AppearanceSettings() {
                           setBackgroundOpacity(value);
                         }}
                         onValueCommit={([value]) => {
-                          saveBackgroundPreferences(undefined, undefined, undefined, value);
+                          saveBackgroundPreferences(
+                            undefined,
+                            undefined,
+                            undefined,
+                            value,
+                          );
                         }}
                         min={0}
                         max={100}
@@ -928,7 +1012,11 @@ function AppearanceSettings() {
                       Customize typography for better readability
                     </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleResetFonts}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetFonts}
+                  >
                     <RefreshCw className="w-3 h-3 mr-1" />
                     Reset
                   </Button>
@@ -942,7 +1030,13 @@ function AppearanceSettings() {
                     value={fontFamily}
                     onValueChange={(value) => {
                       setFontFamily(value);
-                      saveFontPreferences(value, undefined, undefined, undefined, undefined);
+                      saveFontPreferences(
+                        value,
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                      );
                     }}
                   >
                     <SelectTrigger>
@@ -956,10 +1050,16 @@ function AppearanceSettings() {
                       <SelectItem value="Lato">Lato</SelectItem>
                       <SelectItem value="Montserrat">Montserrat</SelectItem>
                       <SelectItem value="Poppins">Poppins</SelectItem>
-                      <SelectItem value="Source Sans Pro">Source Sans Pro</SelectItem>
+                      <SelectItem value="Source Sans Pro">
+                        Source Sans Pro
+                      </SelectItem>
                       <SelectItem value="Georgia">Georgia (Serif)</SelectItem>
-                      <SelectItem value="Times New Roman">Times New Roman (Serif)</SelectItem>
-                      <SelectItem value="Courier New">Courier New (Monospace)</SelectItem>
+                      <SelectItem value="Times New Roman">
+                        Times New Roman (Serif)
+                      </SelectItem>
+                      <SelectItem value="Courier New">
+                        Courier New (Monospace)
+                      </SelectItem>
                       <SelectItem value="Monaco">Monaco (Monospace)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -976,7 +1076,13 @@ function AppearanceSettings() {
                       setFontSize(value);
                     }}
                     onValueCommit={([value]) => {
-                      saveFontPreferences(undefined, value, undefined, undefined, undefined);
+                      saveFontPreferences(
+                        undefined,
+                        value,
+                        undefined,
+                        undefined,
+                        undefined,
+                      );
                     }}
                     min={10}
                     max={24}
@@ -991,9 +1097,15 @@ function AppearanceSettings() {
                   <Select
                     value={fontWeight.toString()}
                     onValueChange={(value) => {
-                      const weight = parseInt(value);
+                      const weight = Number.parseInt(value);
                       setFontWeight(weight);
-                      saveFontPreferences(undefined, undefined, weight, undefined, undefined);
+                      saveFontPreferences(
+                        undefined,
+                        undefined,
+                        weight,
+                        undefined,
+                        undefined,
+                      );
                     }}
                   >
                     <SelectTrigger>
@@ -1024,7 +1136,13 @@ function AppearanceSettings() {
                       setLineHeight(value);
                     }}
                     onValueCommit={([value]) => {
-                      saveFontPreferences(undefined, undefined, undefined, value, undefined);
+                      saveFontPreferences(
+                        undefined,
+                        undefined,
+                        undefined,
+                        value,
+                        undefined,
+                      );
                     }}
                     min={1}
                     max={2.5}
@@ -1044,7 +1162,13 @@ function AppearanceSettings() {
                       setLetterSpacing(value);
                     }}
                     onValueCommit={([value]) => {
-                      saveFontPreferences(undefined, undefined, undefined, undefined, value);
+                      saveFontPreferences(
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                        value,
+                      );
                     }}
                     min={-2}
                     max={5}
@@ -1055,7 +1179,9 @@ function AppearanceSettings() {
 
                 {/* Live Preview */}
                 <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-                  <Label className="text-xs text-muted-foreground mb-2 block">Live Preview</Label>
+                  <Label className="text-xs text-muted-foreground mb-2 block">
+                    Live Preview
+                  </Label>
                   <div
                     style={{
                       fontFamily: fontFamily,
@@ -1069,7 +1195,8 @@ function AppearanceSettings() {
                       The quick brown fox jumps over the lazy dog.
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      This is how your text will appear with the current font settings across the application.
+                      This is how your text will appear with the current font
+                      settings across the application.
                     </p>
                   </div>
                 </div>
@@ -1135,18 +1262,30 @@ function AppearanceSettings() {
               <CardContent className="space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Mode</span>
-                  <Badge variant="outline" className="capitalize">{theme}</Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {theme}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">High Contrast</span>
-                  <Badge variant={settings.appearance.highContrast ? "default" : "secondary"}>
-                    {settings.appearance.highContrast ? 'On' : 'Off'}
+                  <Badge
+                    variant={
+                      settings.appearance.highContrast ? "default" : "secondary"
+                    }
+                  >
+                    {settings.appearance.highContrast ? "On" : "Off"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Reduced Motion</span>
-                  <Badge variant={settings.appearance.reducedMotion ? "default" : "secondary"}>
-                    {settings.appearance.reducedMotion ? 'On' : 'Off'}
+                  <Badge
+                    variant={
+                      settings.appearance.reducedMotion
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {settings.appearance.reducedMotion ? "On" : "Off"}
                   </Badge>
                 </div>
               </CardContent>
@@ -1154,14 +1293,6 @@ function AppearanceSettings() {
           </div>
         </div>
       </div>
-      
-      {/* Unsplash Photo Picker Modal */}
-      <UnsplashPhotoPicker
-        isOpen={unsplashPickerOpen}
-        onClose={() => setUnsplashPickerOpen(false)}
-        onSelect={handleUnsplashPhotoSelect}
-        initialQuery="workspace background"
-      />
     </div>
   );
 }

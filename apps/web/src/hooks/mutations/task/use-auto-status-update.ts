@@ -6,11 +6,11 @@ import { toast } from "sonner";
 // @role-team-lead: Project coordination needs automated workflow management
 
 // Utility function to generate unique IDs
-const generateUniqueId = (prefix: string = ''): string => {
+const generateUniqueId = (prefix = ""): string => {
   return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
-interface AutoStatusUpdateData {
+export interface AutoStatusUpdateData {
   taskId: string;
   newStatus: string;
   reason: string;
@@ -18,40 +18,48 @@ interface AutoStatusUpdateData {
   dependentTasks?: string[];
 }
 
-interface NotificationData {
+export interface DependencyAwareTask {
   id: string;
-  type: 'auto-status-update';
+  status: string;
+  dependencies?: string[];
+}
+
+export interface NotificationData {
+  id: string;
+  type: "auto-status-update";
   title: string;
   message: string;
   data: AutoStatusUpdateData;
   timestamp: string;
   isRead: boolean;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
 }
 
 // Mock API function - replace with actual API call
-const triggerAutoStatusUpdate = async (data: AutoStatusUpdateData): Promise<{ 
-  updatedTask: any; 
-  notification: NotificationData 
+const triggerAutoStatusUpdate = async (
+  data: AutoStatusUpdateData,
+): Promise<{
+  updatedTask: { id: string; status: string };
+  notification: NotificationData;
 }> => {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
   // Create notification for the auto-status update
   const notification: NotificationData = {
-    id: generateUniqueId('auto-'),
-    type: 'auto-status-update',
-    title: 'Task Status Auto-Updated',
+    id: generateUniqueId("auto-"),
+    type: "auto-status-update",
+    title: "Task Status Auto-Updated",
     message: `Task status changed to "${data.newStatus}" - ${data.reason}`,
     data,
     timestamp: new Date().toISOString(),
     isRead: false,
-    priority: 'medium',
+    priority: "medium",
   };
-  
+
   return {
     updatedTask: { id: data.taskId, status: data.newStatus },
-    notification
+    notification,
   };
 };
 
@@ -71,7 +79,7 @@ export const getNotificationsFromStore = (): NotificationData[] => {
 };
 
 export const markNotificationAsRead = (notificationId: string) => {
-  const notification = notificationStore.find(n => n.id === notificationId);
+  const notification = notificationStore.find((n) => n.id === notificationId);
   if (notification) {
     notification.isRead = true;
   }
@@ -89,12 +97,12 @@ export default function useAutoStatusUpdate() {
     onSuccess: (data, variables) => {
       // Add notification to store
       addNotificationToStore(data.notification);
-      
+
       // Invalidate and refetch relevant queries
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      
+
       // Show toast notification
       toast.success(data.notification.message, {
         description: `Task ${variables.taskId} updated automatically`,
@@ -109,7 +117,8 @@ export default function useAutoStatusUpdate() {
     onError: (error, variables) => {
       console.error("Auto-status update failed:", error);
       toast.error(`Failed to update task ${variables.taskId}`, {
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
       });
     },
   });
@@ -118,29 +127,30 @@ export default function useAutoStatusUpdate() {
 // Helper function to check and trigger auto-status updates
 export const checkDependenciesAndUpdate = async (
   completedTaskId: string,
-  allTasks: any[],
-  triggerUpdate: (data: AutoStatusUpdateData) => void
+  allTasks: DependencyAwareTask[],
+  triggerUpdate: (data: AutoStatusUpdateData) => void,
 ) => {
   // Find tasks that depend on the completed task
-  const dependentTasks = allTasks.filter(task => 
-    task.dependencies && 
-    task.dependencies.includes(completedTaskId) &&
-    task.status !== 'done'
+  const dependentTasks = allTasks.filter(
+    (task) =>
+      task.dependencies?.includes(completedTaskId) && task.status !== "done",
   );
 
   for (const dependentTask of dependentTasks) {
     // Check if all dependencies are completed
-    const allDependenciesCompleted = dependentTask.dependencies.every((depId: string) => {
-      const depTask = allTasks.find(t => t.id === depId);
-      return depTask && depTask.status === 'done';
-    });
+    const allDependenciesCompleted = dependentTask.dependencies?.every(
+      (depId: string) => {
+        const depTask = allTasks.find((t) => t.id === depId);
+        return depTask && depTask.status === "done";
+      },
+    );
 
-    if (allDependenciesCompleted && dependentTask.status === 'todo') {
+    if (allDependenciesCompleted && dependentTask.status === "todo") {
       // Auto-update to in-progress
       triggerUpdate({
         taskId: dependentTask.id,
-        newStatus: 'in_progress',
-        reason: 'All dependencies completed',
+        newStatus: "in_progress",
+        reason: "All dependencies completed",
         triggeredBy: completedTaskId,
         dependentTasks: dependentTask.dependencies,
       });
@@ -156,14 +166,12 @@ export const useTaskStatusMonitor = () => {
     taskId: string,
     newStatus: string,
     oldStatus: string,
-    allTasks: any[]
+    allTasks: DependencyAwareTask[],
   ) => {
     // If task is marked as done, check for dependent tasks
-    if (newStatus === 'done' && oldStatus !== 'done') {
-      checkDependenciesAndUpdate(
-        taskId,
-        allTasks,
-        (updateData) => autoStatusUpdate.mutate(updateData)
+    if (newStatus === "done" && oldStatus !== "done") {
+      checkDependenciesAndUpdate(taskId, allTasks, (updateData) =>
+        autoStatusUpdate.mutate(updateData),
       );
     }
   };
@@ -172,4 +180,4 @@ export const useTaskStatusMonitor = () => {
     handleTaskStatusChange,
     isUpdating: autoStatusUpdate.isPending,
   };
-}; 
+};

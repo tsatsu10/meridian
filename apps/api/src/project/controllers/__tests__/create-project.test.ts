@@ -3,103 +3,111 @@
  * Unit tests for project creation
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { HTTPException } from 'hono/http-exception';
-import { createMockDb, mockWorkspaces, resetMockDb } from '../../../tests/helpers/test-database';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { HTTPException } from "hono/http-exception";
+import {
+  createMockDb,
+  mockWorkspaces,
+  resetMockDb,
+} from "../../../tests/helpers/test-database";
 
 // Mock dependencies
-vi.mock('../../../database/connection', () => ({
+vi.mock("../../../database/connection", () => ({
   getDatabase: vi.fn(() => mockDb),
 }));
 
-vi.mock('../../../events', () => ({
+vi.mock("../../../events", () => ({
   publishEvent: vi.fn(),
 }));
 
 const mockDb = createMockDb();
 
-describe('CreateProject Controller', () => {
+describe("CreateProject Controller", () => {
   beforeEach(() => {
     resetMockDb(mockDb);
     vi.clearAllMocks();
   });
 
-  describe('Successful project creation', () => {
-    it('should create a project with minimal required fields', async () => {
+  describe("Successful project creation", () => {
+    it("should create a project with minimal required fields", async () => {
       // Arrange
       const projectData = {
-        workspaceId: 'workspace-1',
-        name: 'New Project',
-        description: 'Project description',
+        workspaceId: "workspace-1",
+        name: "New Project",
+        description: "Project description",
       };
 
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'project-1',
-        ...projectData,
-        status: 'active',
-        createdAt: new Date(),
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "project-1",
+          ...projectData,
+          status: "active",
+          createdAt: new Date(),
+        },
+      ]);
 
       // Act & Assert - Would need actual controller function
       expect(mockDb.insert).toBeDefined();
     });
 
-    it('should create a project with all optional fields', async () => {
+    it("should create a project with all optional fields", async () => {
       // Arrange
       const projectData = {
-        workspaceId: 'workspace-1',
-        name: 'Complex Project',
-        description: 'Detailed description',
-        startDate: new Date('2025-01-01'),
-        endDate: new Date('2025-12-31'),
-        status: 'active',
-        visibility: 'private',
+        workspaceId: "workspace-1",
+        name: "Complex Project",
+        description: "Detailed description",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-12-31"),
+        status: "active",
+        visibility: "private",
       };
 
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'project-1',
-        ...projectData,
-        createdAt: new Date(),
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "project-1",
+          ...projectData,
+          createdAt: new Date(),
+        },
+      ]);
 
       // Act & Assert
       expect(mockDb.insert).toBeDefined();
     });
   });
 
-  describe('Validation', () => {
-    it('should require workspace ID', async () => {
+  describe("Validation", () => {
+    it("should require workspace ID", async () => {
       // Arrange
       const projectData = {
-        name: 'Project without workspace',
-        description: 'Invalid project',
+        name: "Project without workspace",
+        description: "Invalid project",
       };
 
       // Act & Assert
       // Would validate that workspaceId is required
-      expect(projectData).not.toHaveProperty('workspaceId');
+      expect(projectData).not.toHaveProperty("workspaceId");
     });
 
-    it('should require project name', async () => {
+    it("should require project name", async () => {
       // Arrange
       const projectData = {
-        workspaceId: 'workspace-1',
-        description: 'Project without name',
+        workspaceId: "workspace-1",
+        description: "Project without name",
       };
 
       // Act & Assert
-      expect(projectData).not.toHaveProperty('name');
+      expect(projectData).not.toHaveProperty("name");
     });
 
-    it('should validate project name length', async () => {
+    it("should validate project name length", async () => {
       // Arrange
-      const shortName = 'A';
-      const validName = 'Valid Project Name';
-      const longName = 'A'.repeat(256);
+      const shortName = "A";
+      const validName = "Valid Project Name";
+      const longName = "A".repeat(256);
 
       // Act & Assert
       expect(shortName.length).toBeLessThan(2);
@@ -108,8 +116,8 @@ describe('CreateProject Controller', () => {
     });
   });
 
-  describe('Workspace validation', () => {
-    it('should verify workspace exists', async () => {
+  describe("Workspace validation", () => {
+    it("should verify workspace exists", async () => {
       // Arrange
       mockDb.query.workspaceTable.findFirst.mockResolvedValue(null);
 
@@ -119,35 +127,39 @@ describe('CreateProject Controller', () => {
       expect(workspace).toBeNull();
     });
 
-    it('should verify user has permission to create project in workspace', async () => {
+    it("should verify user has permission to create project in workspace", async () => {
       // Arrange
-      mockDb.query.workspaceTable.findFirst.mockResolvedValue(mockWorkspaces.defaultWorkspace);
+      mockDb.query.workspaceTable.findFirst.mockResolvedValue(
+        mockWorkspaces.defaultWorkspace,
+      );
 
       // Act & Assert
       const workspace = await mockDb.query.workspaceTable.findFirst();
       expect(workspace).toBeDefined();
-      expect(workspace?.id).toBe('workspace-1');
+      expect(workspace?.id).toBe("workspace-1");
     });
   });
 
-  describe('Event publishing', () => {
-    it('should publish project.created event', async () => {
+  describe("Event publishing", () => {
+    it("should publish project.created event", async () => {
       // Arrange
-      const { publishEvent } = await import('../../../events');
+      const { publishEvent } = await import("../../../events");
       const projectData = {
-        workspaceId: 'workspace-1',
-        name: 'Event Test Project',
-        description: 'Test project',
+        workspaceId: "workspace-1",
+        name: "Event Test Project",
+        description: "Test project",
       };
 
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'project-1',
-        ...projectData,
-        status: 'active',
-        createdAt: new Date(),
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "project-1",
+          ...projectData,
+          status: "active",
+          createdAt: new Date(),
+        },
+      ]);
 
       // Act - Would call controller
       // await createProject(projectData);
@@ -157,18 +169,18 @@ describe('CreateProject Controller', () => {
     });
   });
 
-  describe('Error handling', () => {
-    it('should handle database errors gracefully', async () => {
+  describe("Error handling", () => {
+    it("should handle database errors gracefully", async () => {
       // Arrange
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockRejectedValue(new Error('Database error'));
+      mockDb.returning.mockRejectedValue(new Error("Database error"));
 
       // Act & Assert
-      await expect(mockDb.returning()).rejects.toThrow('Database error');
+      await expect(mockDb.returning()).rejects.toThrow("Database error");
     });
 
-    it('should handle workspace not found', async () => {
+    it("should handle workspace not found", async () => {
       // Arrange
       mockDb.query.workspaceTable.findFirst.mockResolvedValue(null);
 
@@ -180,41 +192,45 @@ describe('CreateProject Controller', () => {
     });
   });
 
-  describe('Project defaults', () => {
-    it('should set default status to active', async () => {
+  describe("Project defaults", () => {
+    it("should set default status to active", async () => {
       // Arrange
       const projectData = {
-        workspaceId: 'workspace-1',
-        name: 'Default Status Project',
-        description: 'Test',
+        workspaceId: "workspace-1",
+        name: "Default Status Project",
+        description: "Test",
       };
 
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'project-1',
-        ...projectData,
-        status: 'active', // Default status
-        createdAt: new Date(),
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "project-1",
+          ...projectData,
+          status: "active", // Default status
+          createdAt: new Date(),
+        },
+      ]);
 
       // Act
       const result = await mockDb.returning();
 
       // Assert
-      expect(result[0].status).toBe('active');
+      expect(result[0].status).toBe("active");
     });
 
-    it('should set creation timestamp', async () => {
+    it("should set creation timestamp", async () => {
       // Arrange
       const now = new Date();
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'project-1',
-        name: 'Test Project',
-        createdAt: now,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "project-1",
+          name: "Test Project",
+          createdAt: now,
+        },
+      ]);
 
       // Act
       const result = await mockDb.returning();
@@ -224,50 +240,53 @@ describe('CreateProject Controller', () => {
     });
   });
 
-  describe('Project visibility', () => {
-    it('should support public visibility', async () => {
+  describe("Project visibility", () => {
+    it("should support public visibility", async () => {
       // Arrange
       const projectData = {
-        workspaceId: 'workspace-1',
-        name: 'Public Project',
-        visibility: 'public',
+        workspaceId: "workspace-1",
+        name: "Public Project",
+        visibility: "public",
       };
 
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'project-1',
-        ...projectData,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "project-1",
+          ...projectData,
+        },
+      ]);
 
       // Act
       const result = await mockDb.returning();
 
       // Assert
-      expect(result[0].visibility).toBe('public');
+      expect(result[0].visibility).toBe("public");
     });
 
-    it('should support private visibility', async () => {
+    it("should support private visibility", async () => {
       // Arrange
       const projectData = {
-        workspaceId: 'workspace-1',
-        name: 'Private Project',
-        visibility: 'private',
+        workspaceId: "workspace-1",
+        name: "Private Project",
+        visibility: "private",
       };
 
       mockDb.insert.mockReturnThis();
       mockDb.values.mockReturnThis();
-      mockDb.returning.mockResolvedValue([{
-        id: 'project-1',
-        ...projectData,
-      }]);
+      mockDb.returning.mockResolvedValue([
+        {
+          id: "project-1",
+          ...projectData,
+        },
+      ]);
 
       // Act
       const result = await mockDb.returning();
 
       // Assert
-      expect(result[0].visibility).toBe('private');
+      expect(result[0].visibility).toBe("private");
     });
   });
 });
-

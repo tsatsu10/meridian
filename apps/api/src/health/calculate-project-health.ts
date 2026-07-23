@@ -1,7 +1,10 @@
 import { getDatabase } from "../database/connection";
 import { projectTable, taskTable } from "../database/schema";
 import { eq } from "drizzle-orm";
-import logger from '../utils/logger';
+import logger from "../utils/logger";
+
+type TaskRow = typeof taskTable.$inferSelect;
+type ProjectRow = typeof projectTable.$inferSelect;
 
 export interface ProjectHealthMetrics {
   score: number;
@@ -22,7 +25,7 @@ export interface ProjectHealthMetrics {
  * Uses multiple factors to determine overall project health
  */
 export async function calculateProjectHealth(
-  projectId: string
+  projectId: string,
 ): Promise<ProjectHealthMetrics | null> {
   try {
     const db = getDatabase();
@@ -31,7 +34,7 @@ export async function calculateProjectHealth(
       .select()
       .from(projectTable)
       .where(eq(projectTable.id, projectId))
-      .then((rows: any[]) => rows[0]);
+      .then((rows) => rows[0]);
 
     if (!project) {
       return null;
@@ -73,7 +76,7 @@ export async function calculateProjectHealth(
         timelineHealth * 0.25 +
         taskHealth * 0.2 +
         resourceAllocation * 0.15 +
-        (100 - riskLevel) * 0.15
+        (100 - riskLevel) * 0.15,
     );
 
     // Determine status based on score
@@ -104,7 +107,7 @@ export async function calculateProjectHealth(
 /**
  * Calculate completion rate (0-100)
  */
-function calculateCompletionRate(tasks: any[]): number {
+function calculateCompletionRate(tasks: TaskRow[]): number {
   if (tasks.length === 0) return 0;
 
   const completedCount = tasks.filter((t) => t.status === "done").length;
@@ -114,7 +117,10 @@ function calculateCompletionRate(tasks: any[]): number {
 /**
  * Calculate timeline health (0-100)
  */
-function calculateTimelineHealth(project: any, tasks: any[]): number {
+function calculateTimelineHealth(
+  project: ProjectRow,
+  tasks: TaskRow[],
+): number {
   let score = 100;
 
   // Check if project has a due date
@@ -125,7 +131,7 @@ function calculateTimelineHealth(project: any, tasks: any[]): number {
   const now = new Date();
   const dueDate = new Date(project.dueDate);
   const daysRemaining = Math.ceil(
-    (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   // Check for overdue tasks
@@ -153,7 +159,7 @@ function calculateTimelineHealth(project: any, tasks: any[]): number {
 /**
  * Calculate task health (0-100)
  */
-function calculateTaskHealth(tasks: any[]): number {
+function calculateTaskHealth(tasks: TaskRow[]): number {
   if (tasks.length === 0) return 75;
 
   let score = 100;
@@ -177,7 +183,9 @@ function calculateTaskHealth(tasks: any[]): number {
   }
 
   // Prioritization quality
-  const unpriorityzedTasks = tasks.filter((t) => t.priority === "medium").length;
+  const unpriorityzedTasks = tasks.filter(
+    (t) => t.priority === "medium",
+  ).length;
   if (unpriorityzedTasks / tasks.length > 0.7) {
     score -= 10;
   }
@@ -188,7 +196,7 @@ function calculateTaskHealth(tasks: any[]): number {
 /**
  * Calculate resource allocation health (0-100)
  */
-function calculateResourceAllocation(tasks: any[]): number {
+function calculateResourceAllocation(tasks: TaskRow[]): number {
   if (tasks.length === 0) return 75;
 
   let score = 100;
@@ -203,10 +211,11 @@ function calculateResourceAllocation(tasks: any[]): number {
 
     // Look for workload imbalance
     const taskCountByAssignee: { [key: string]: number } = {};
-    assignedTasks.forEach((t) => {
+    for (const t of assignedTasks) {
+      if (!t.assigneeId) continue;
       taskCountByAssignee[t.assigneeId] =
         (taskCountByAssignee[t.assigneeId] || 0) + 1;
-    });
+    }
 
     const taskCounts = Object.values(taskCountByAssignee);
     const maxLoad = Math.max(...taskCounts);
@@ -219,7 +228,8 @@ function calculateResourceAllocation(tasks: any[]): number {
     }
 
     // Unassigned tasks impact
-    const unassignedRatio = (tasks.length - assignedTasks.length) / tasks.length;
+    const unassignedRatio =
+      (tasks.length - assignedTasks.length) / tasks.length;
     if (unassignedRatio > 0.3) {
       score -= Math.min(20, unassignedRatio * 30);
     }
@@ -234,19 +244,19 @@ function calculateResourceAllocation(tasks: any[]): number {
 /**
  * Calculate risk level (0-100, lower is better)
  */
-function calculateRiskLevel(tasks: any[], project: any): number {
+function calculateRiskLevel(tasks: TaskRow[], project: ProjectRow): number {
   let riskScore = 0;
 
   // High priority unstarted tasks = high risk
   const highPriorityTodo = tasks.filter(
-    (t) => t.priority === "high" && t.status === "todo"
+    (t) => t.priority === "high" && t.status === "todo",
   );
   riskScore += highPriorityTodo.length * 10;
 
   // Blocked/incomplete critical path = high risk
   const inProgressTasks = tasks.filter((t) => t.status === "in_progress");
   const blockingRisk = tasks.filter(
-    (t) => t.status === "todo" && inProgressTasks.length < 2
+    (t) => t.status === "todo" && inProgressTasks.length < 2,
   );
   riskScore += Math.min(15, blockingRisk.length * 3);
 
@@ -260,7 +270,8 @@ function calculateRiskLevel(tasks: any[], project: any): number {
   if (project.dueDate) {
     const now = new Date();
     const daysRemaining = Math.ceil(
-      (new Date(project.dueDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(project.dueDate).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     const remainingTasks = tasks.filter((t) => t.status !== "done").length;
 
@@ -283,7 +294,7 @@ function calculateRiskLevel(tasks: any[], project: any): number {
  * Map score to health status
  */
 function getHealthStatus(
-  score: number
+  score: number,
 ): "excellent" | "good" | "fair" | "critical" {
   if (score >= 80) return "excellent";
   if (score >= 60) return "good";
@@ -299,4 +310,3 @@ function determineTrend(score: number): "improving" | "stable" | "declining" {
   // For now, return stable
   return "stable";
 }
-

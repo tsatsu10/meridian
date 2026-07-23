@@ -74,28 +74,28 @@ export const updateProfile = async (profileData: ProfileData) => {
     credentials: "include",
     body: JSON.stringify(profileData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to update profile");
   }
-  
+
   return response.json();
 };
 
 export const uploadProfilePicture = async (file: File) => {
   const formData = new FormData();
   formData.append("picture", file);
-  
+
   const response = await fetch(`${API_BASE_URL}/profile/picture`, {
     method: "POST",
     credentials: "include",
     body: formData,
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to upload profile picture");
   }
-  
+
   return response.json();
 };
 
@@ -109,15 +109,18 @@ export const createExperience = async (experienceData: ExperienceData) => {
     credentials: "include",
     body: JSON.stringify(experienceData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to create experience");
   }
-  
+
   return response.json();
 };
 
-export const updateExperience = async (id: string, experienceData: ExperienceData) => {
+export const updateExperience = async (
+  id: string,
+  experienceData: ExperienceData,
+) => {
   const response = await fetch(`${API_BASE_URL}/profile/experience/${id}`, {
     method: "PUT",
     headers: {
@@ -126,11 +129,11 @@ export const updateExperience = async (id: string, experienceData: ExperienceDat
     credentials: "include",
     body: JSON.stringify(experienceData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to update experience");
   }
-  
+
   return response.json();
 };
 
@@ -139,11 +142,11 @@ export const deleteExperience = async (id: string) => {
     method: "DELETE",
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to delete experience");
   }
-  
+
   return response.json();
 };
 
@@ -157,15 +160,18 @@ export const createEducation = async (educationData: EducationData) => {
     credentials: "include",
     body: JSON.stringify(educationData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to create education");
   }
-  
+
   return response.json();
 };
 
-export const updateEducation = async (id: string, educationData: EducationData) => {
+export const updateEducation = async (
+  id: string,
+  educationData: EducationData,
+) => {
   const response = await fetch(`${API_BASE_URL}/profile/education/${id}`, {
     method: "PUT",
     headers: {
@@ -174,11 +180,11 @@ export const updateEducation = async (id: string, educationData: EducationData) 
     credentials: "include",
     body: JSON.stringify(educationData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to update education");
   }
-  
+
   return response.json();
 };
 
@@ -187,11 +193,11 @@ export const deleteEducation = async (id: string) => {
     method: "DELETE",
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to delete education");
   }
-  
+
   return response.json();
 };
 
@@ -205,11 +211,11 @@ export const createSkill = async (skillData: SkillData) => {
     credentials: "include",
     body: JSON.stringify(skillData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to create skill");
   }
-  
+
   return response.json();
 };
 
@@ -222,11 +228,11 @@ export const updateSkill = async (id: string, skillData: SkillData) => {
     credentials: "include",
     body: JSON.stringify(skillData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to update skill");
   }
-  
+
   return response.json();
 };
 
@@ -235,11 +241,11 @@ export const deleteSkill = async (id: string) => {
     method: "DELETE",
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to delete skill");
   }
-  
+
   return response.json();
 };
 
@@ -253,15 +259,18 @@ export const createConnection = async (connectionData: ConnectionData) => {
     credentials: "include",
     body: JSON.stringify(connectionData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to create connection");
   }
-  
+
   return response.json();
 };
 
-export const updateConnection = async (id: string, connectionData: { status: "pending" | "accepted" | "blocked"; note?: string }) => {
+export const updateConnection = async (
+  id: string,
+  connectionData: { status: "pending" | "accepted" | "blocked"; note?: string },
+) => {
   const response = await fetch(`${API_BASE_URL}/profile/connections/${id}`, {
     method: "PUT",
     headers: {
@@ -270,11 +279,11 @@ export const updateConnection = async (id: string, connectionData: { status: "pe
     credentials: "include",
     body: JSON.stringify(connectionData),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to update connection");
   }
-  
+
   return response.json();
 };
 
@@ -283,10 +292,10 @@ export const deleteConnection = async (id: string) => {
     method: "DELETE",
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to delete connection");
   }
-  
+
   return response.json();
-}; 
+};

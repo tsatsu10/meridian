@@ -22,9 +22,9 @@ interface Task {
   description: string;
   status: string;
   priority: string;
-  dueDate: Date | null;
+  dueDate: string | null;
   position: number;
-  createdAt: Date;
+  createdAt: string;
   userEmail: string | null;
   assigneeName: string | null;
   assigneeEmail: string | null;
@@ -74,14 +74,19 @@ export function useAllTasks(filters: AllTasksFilters = {}) {
   const { workspace } = useWorkspaceStore();
 
   const queryParams = new URLSearchParams();
-  
+
   if (filters.userEmail) queryParams.append("userEmail", filters.userEmail);
-  if (filters.status?.length) queryParams.append("status", filters.status.join(","));
-  if (filters.priority?.length) queryParams.append("priority", filters.priority.join(","));
+  if (filters.status?.length)
+    queryParams.append("status", filters.status.join(","));
+  if (filters.priority?.length)
+    queryParams.append("priority", filters.priority.join(","));
   if (filters.assignedToMe) queryParams.append("assignedToMe", "true");
-  if (filters.projectIds?.length) queryParams.append("projectIds", filters.projectIds.join(","));
-  if (filters.dueAfter) queryParams.append("dueAfter", filters.dueAfter.toISOString());
-  if (filters.dueBefore) queryParams.append("dueBefore", filters.dueBefore.toISOString());
+  if (filters.projectIds?.length)
+    queryParams.append("projectIds", filters.projectIds.join(","));
+  if (filters.dueAfter)
+    queryParams.append("dueAfter", filters.dueAfter.toISOString());
+  if (filters.dueBefore)
+    queryParams.append("dueBefore", filters.dueBefore.toISOString());
   if (filters.search) queryParams.append("search", filters.search);
   if (filters.limit) queryParams.append("limit", filters.limit.toString());
   if (filters.offset) queryParams.append("offset", filters.offset.toString());
@@ -102,4 +107,4 @@ export function useAllTasks(filters: AllTasksFilters = {}) {
   });
 }
 
-export default useAllTasks; 
+export default useAllTasks;
