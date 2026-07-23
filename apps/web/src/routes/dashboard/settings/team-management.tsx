@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -181,7 +180,7 @@ const removeMember = async (userId: string): Promise<void> => {
   return response.json();
 };
 
-function TeamManagementSettings() {
+export function TeamManagementSettings() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -234,33 +233,6 @@ function TeamManagementSettings() {
       });
     },
   });
-
-  // Team settings - default secure configuration with persistence
-  const [teamSettings, setTeamSettings] = useState({
-    allowMemberInvites: false,
-    requireAdminApproval: true,
-    enableGuestAccess: false,
-    autoRemoveInactive: false,
-    inactivityDays: 90,
-  });
-
-  // Load settings from localStorage on mount
-  useEffect(() => {
-    const savedSettings = localStorage.getItem("teamSettings");
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setTeamSettings(parsedSettings);
-      } catch (error) {
-        console.error("Failed to parse saved team settings:", error);
-      }
-    }
-  }, []);
-
-  // Save settings to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("teamSettings", JSON.stringify(teamSettings));
-  }, [teamSettings]);
 
   const rolePermissions = {
     "workspace-manager": [
@@ -335,39 +307,6 @@ function TeamManagementSettings() {
     } catch (error) {
       console.error("Failed to generate invite link:", error);
       toast.error("Failed to generate invite link");
-    }
-  };
-
-  const handleSettingChange = async (
-    setting: keyof typeof teamSettings,
-    value: boolean,
-  ) => {
-    try {
-      setTeamSettings((prev) => ({ ...prev, [setting]: value }));
-
-      // Call the real API endpoint
-      const response = await fetch(`${API_BASE_URL}/workspace/settings`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ [setting]: value }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update setting: ${response.status}`);
-      }
-
-      // Show success toast asynchronously to prevent setState during render
-      Promise.resolve().then(() => {
-        toast.success("Setting updated successfully");
-      });
-    } catch (error) {
-      console.error("Failed to update setting:", error);
-      // Revert the change on error
-      setTeamSettings((prev) => ({ ...prev, [setting]: !value }));
-      Promise.resolve().then(() => {
-        toast.error("Failed to update setting");
-      });
     }
   };
 
@@ -732,6 +671,17 @@ function TeamManagementSettings() {
                 <Shield className="h-4 w-4 mr-2" />
                 Manage Role Permissions
               </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  navigate({ to: "/dashboard/settings/workspace" })
+                }
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Workspace Settings
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -768,79 +718,6 @@ function TeamManagementSettings() {
                   </ul>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Team Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Team Settings
-            </CardTitle>
-            <CardDescription>Configure how your team operates</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div>
-                <p className="font-medium">Allow Member Invites</p>
-                <p className="text-sm text-muted-foreground">
-                  Let team members invite new people
-                </p>
-              </div>
-              <Switch
-                checked={teamSettings.allowMemberInvites}
-                onCheckedChange={(checked) =>
-                  handleSettingChange("allowMemberInvites", checked)
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div>
-                <p className="font-medium">Require Admin Approval</p>
-                <p className="text-sm text-muted-foreground">
-                  New members need admin approval to join
-                </p>
-              </div>
-              <Switch
-                checked={teamSettings.requireAdminApproval}
-                onCheckedChange={(checked) =>
-                  handleSettingChange("requireAdminApproval", checked)
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div>
-                <p className="font-medium">Enable Guest Access</p>
-                <p className="text-sm text-muted-foreground">
-                  Allow temporary guest access to projects
-                </p>
-              </div>
-              <Switch
-                checked={teamSettings.enableGuestAccess}
-                onCheckedChange={(checked) =>
-                  handleSettingChange("enableGuestAccess", checked)
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div>
-                <p className="font-medium">Auto-Remove Inactive Members</p>
-                <p className="text-sm text-muted-foreground">
-                  Automatically remove members inactive for{" "}
-                  {teamSettings.inactivityDays} days
-                </p>
-              </div>
-              <Switch
-                checked={teamSettings.autoRemoveInactive}
-                onCheckedChange={(checked) =>
-                  handleSettingChange("autoRemoveInactive", checked)
-                }
-              />
             </div>
           </CardContent>
         </Card>
