@@ -4,7 +4,12 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 const COLS_LG = 3;
-const ROW_ESTIMATE_PX = 340;
+// Measured rendered row height (card + grid gap/padding) is ~151px. This
+// estimate has no dynamic re-measurement (no measureElement ref), so it's
+// the final height every row is positioned at — it previously inherited
+// 340px from the taller project cards in projects-virtual-grid.tsx,
+// leaving a ~190px empty gap after every row of these much shorter cards.
+const ROW_ESTIMATE_PX = 160;
 
 type VirtualRow<T> = {
   items: T[];
