@@ -644,9 +644,7 @@ export default function AllTasksPage() {
           return;
         }
         try {
-          await createTask(
-            buildDuplicateTaskPayload(task, task.project.id),
-          );
+          await createTask(buildDuplicateTaskPayload(task, task.project.id));
 
           toast.success(`Task "${task.title}" duplicated successfully!`);
           refetch(); // Refresh the task list
