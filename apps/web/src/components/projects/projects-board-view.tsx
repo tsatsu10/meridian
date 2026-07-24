@@ -83,8 +83,8 @@ export function ProjectsBoardView({
                       type="button"
                       onClick={() => onProjectClick(p)}
                       className={cn(
-                        "w-full text-left rounded-lg border border-border/60 bg-background/50 p-3",
-                        "hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "w-full text-left rounded-lg border border-border/60 bg-transparent p-3",
+                        "hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       )}
                     >
                       <p className="font-medium text-sm truncate">{p.name}</p>
