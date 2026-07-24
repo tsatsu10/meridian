@@ -4,7 +4,12 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const COLS_LG = 3;
-const ROW_ESTIMATE_PX = 360;
+// Measured rendered row height (card + grid gap/padding) is ~207px. This
+// estimate has no dynamic re-measurement (no measureElement ref), so it's
+// the final height every row is positioned at — 360px left a ~150px empty
+// gap after every row (same root cause as the All Tasks grid's version of
+// this bug).
+const ROW_ESTIMATE_PX = 220;
 
 type VirtualRow<T> = { items: T[] };
 

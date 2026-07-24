@@ -171,7 +171,11 @@ function ProjectsPage() {
     workspaceId: workspace?.id || "",
     limit: pageSize,
     offset: (currentPage - 1) * pageSize,
-    archivedOnly: showArchived,
+    // "Show Archived" should add archived projects to the view, not hide
+    // every active one — archivedOnly means "archived projects ONLY" on
+    // the backend, which made the toggle wipe out the whole list for any
+    // workspace that wasn't 100% archived.
+    includeArchived: showArchived,
     q: searchQuery.trim() || undefined,
     status: status.length ? status : undefined,
     priority: priority.length ? priority : undefined,
