@@ -52,12 +52,16 @@ export function NoteEditor({
   const [tagInput, setTagInput] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
-    null,
-  );
+  const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  void useRef<NodeJS.Timeout | null>(null);
 
+  // Keyed on note?.id, not the note object itself: onSave() (including the
+  // silent autosave below) replaces `note` with a fresh object from the API
+  // response on every save, so keying on the object reference re-ran this
+  // effect after every autosave — needlessly resetting `tags` to a new array
+  // reference each time and fighting any edit made in the same tick as a
+  // save completing. Only actually switching to a different note should
+  // reset the local draft.
   useEffect(() => {
     if (note) {
       setTitle(note.title);
@@ -65,28 +69,28 @@ export function NoteEditor({
       setTags(note.tags || []);
       setIsPinned(note.isPinned);
     }
-  }, [note]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [note?.id]);
 
   // Auto-save functionality
-  // biome-ignore lint/correctness/useExhaustiveDependencies: debounced autosave keyed on title/content; autoSaveTimeout is written here and note fields are read for change detection — adding them would reset/loop the timer
+  // biome-ignore lint/correctness/useExhaustiveDependencies: debounced autosave keyed on title/content; note is read for change detection — adding it would reset/loop the timer
   useEffect(() => {
     if (note && (title !== note.title || content !== note.content)) {
       // Clear existing timeout
-      if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
+      if (autoSaveTimeout.current) {
+        clearTimeout(autoSaveTimeout.current);
       }
 
-      // Set new timeout for auto-save
-      const timeout = setTimeout(() => {
+      // Set new timeout for auto-save. A ref (not state) so scheduling it
+      // doesn't itself trigger a re-render on every keystroke.
+      autoSaveTimeout.current = setTimeout(() => {
         handleSave(true); // Silent save
       }, 2000); // Auto-save after 2 seconds of inactivity
-
-      setAutoSaveTimeout(timeout);
     }
 
     return () => {
-      if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
+      if (autoSaveTimeout.current) {
+        clearTimeout(autoSaveTimeout.current);
       }
     };
   }, [title, content]);
