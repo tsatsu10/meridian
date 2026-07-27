@@ -252,8 +252,34 @@ export function RBACProvider({ children }: RBACProviderProps) {
       setIsRoleLoading(true);
 
       try {
-        // TODO: Make API call to assign role
-        // For now, simulate the operation
+        // This used to be a client-side simulation: it never called the API,
+        // and only mutated local state when you assigned a role to *yourself*
+        // — so assigning a role to anyone else silently did nothing at all,
+        // while the UI reported success. POST /rbac/assign has existed all
+        // along (it enforces canManageRoles server-side).
+        const response = await fetch(`${API_BASE_URL}/rbac/assign`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            role,
+            workspaceId: context?.workspaceId,
+            projectIds: context?.projectId ? [context.projectId] : undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          const body = await response
+            .json()
+            .catch(() => ({ error: "Failed to assign role" }));
+          throw new Error(
+            body.error ||
+              (response.status === 403
+                ? "You do not have permission to assign roles"
+                : `Failed to assign role (HTTP ${response.status})`),
+          );
+        }
 
         if (rbacUser && rbacUser.id === userId) {
           const newPermissions = getRolePermissions(role);
@@ -277,8 +303,11 @@ export function RBACProvider({ children }: RBACProviderProps) {
           };
 
           setRBACUser(updatedUser);
-          toast.success(`Role updated to ${ROLE_METADATA[role].displayName}`);
         }
+
+        // Outside the self-assignment branch: the toast used to live inside
+        // it, so assigning a role to another user gave no feedback at all.
+        toast.success(`Role updated to ${ROLE_METADATA[role].displayName}`);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to assign role";
@@ -292,9 +321,39 @@ export function RBACProvider({ children }: RBACProviderProps) {
   );
 
   const removeRole = useCallback(
-    async (_userId: string, _context?: PermissionContext): Promise<void> => {
-      // TODO: Implement role removal
-      toast.info("Role removal not yet implemented");
+    async (userId: string, _context?: PermissionContext): Promise<void> => {
+      // Was a stub that only toasted "not yet implemented". The endpoint has
+      // existed all along (it deactivates the active assignment and records
+      // the change in role history, gated on canManageRoles server-side).
+      setIsRoleLoading(true);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/rbac/remove/${userId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          const body = await response
+            .json()
+            .catch(() => ({ error: "Failed to remove role" }));
+          throw new Error(
+            body.error ||
+              (response.status === 403
+                ? "You do not have permission to remove roles"
+                : `Failed to remove role (HTTP ${response.status})`),
+          );
+        }
+
+        toast.success("Role removed");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to remove role";
+        setError(message);
+        toast.error(message);
+      } finally {
+        setIsRoleLoading(false);
+      }
     },
     [],
   );

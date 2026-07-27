@@ -99,6 +99,12 @@ import { toast } from "sonner";
 import { z } from "zod";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import UniversalHeader from "@/components/dashboard/universal-header";
+import {
+  TeamsAPI,
+  type ProjectTeam,
+  type TeamMember,
+  type UserRole,
+} from "@/lib/api/project-teams-server";
 
 const projectFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -141,148 +147,6 @@ const teamFormSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 type TeamFormValues = z.infer<typeof teamFormSchema>;
-
-// Production data structures - using real API calls
-// Use proper user roles from RBAC system
-type UserRole =
-  | "workspace-manager"
-  | "department-head"
-  | "workspace-viewer"
-  | "project-manager"
-  | "project-viewer"
-  | "team-lead"
-  | "member"
-  | "client"
-  | "contractor"
-  | "stakeholder"
-  | "guest";
-
-interface TeamMember {
-  id: string;
-  userEmail: string;
-  userName: string;
-  role: UserRole;
-  avatar?: string;
-  joinedAt: string;
-}
-
-interface ProjectTeam {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-  members: TeamMember[];
-  createdAt: string;
-  leadId: string;
-}
-
-// Teams API client
-// ✅ Teams API Client - Now using real backend endpoints
-const TeamsAPI = {
-  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:3005",
-
-  async request(endpoint: string, options: RequestInit = {}) {
-    const token =
-      localStorage.getItem("auth-token") ||
-      sessionStorage.getItem("auth-token");
-
-    const response = await fetch(`${TeamsAPI.baseUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: response.statusText }));
-      throw new Error(
-        errorData.error || `HTTP ${response.status}: ${response.statusText}`,
-      );
-    }
-
-    return response.json();
-  },
-
-  async getProjectTeams(projectId: string): Promise<ProjectTeam[]> {
-    return await TeamsAPI.request(`/api/projects/${projectId}/teams`);
-  },
-
-  async createTeam(
-    projectId: string,
-    team: Omit<ProjectTeam, "id" | "createdAt">,
-  ): Promise<ProjectTeam> {
-    return await TeamsAPI.request(`/api/projects/${projectId}/teams`, {
-      method: "POST",
-      body: JSON.stringify(team),
-    });
-  },
-
-  async updateTeam(
-    projectId: string,
-    teamId: string,
-    updates: Partial<ProjectTeam>,
-  ): Promise<ProjectTeam> {
-    return await TeamsAPI.request(
-      `/api/projects/${projectId}/teams/${teamId}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-      },
-    );
-  },
-
-  async deleteTeam(projectId: string, teamId: string): Promise<void> {
-    await TeamsAPI.request(`/api/projects/${projectId}/teams/${teamId}`, {
-      method: "DELETE",
-    });
-  },
-
-  async addMember(
-    projectId: string,
-    teamId: string,
-    member: Omit<TeamMember, "id" | "joinedAt">,
-  ): Promise<TeamMember> {
-    return await TeamsAPI.request(
-      `/api/projects/${projectId}/teams/${teamId}/members`,
-      {
-        method: "POST",
-        body: JSON.stringify(member),
-      },
-    );
-  },
-
-  async removeMember(
-    projectId: string,
-    teamId: string,
-    memberId: string,
-  ): Promise<void> {
-    await TeamsAPI.request(
-      `/api/projects/${projectId}/teams/${teamId}/members/${memberId}`,
-      {
-        method: "DELETE",
-      },
-    );
-  },
-
-  async updateMemberRole(
-    projectId: string,
-    teamId: string,
-    memberId: string,
-    role: UserRole,
-  ): Promise<TeamMember> {
-    return await TeamsAPI.request(
-      `/api/projects/${projectId}/teams/${teamId}/members/${memberId}/role`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ role }),
-      },
-    );
-  },
-};
 
 const projectStatuses = [
   { value: "planning", label: "Planning", color: "bg-gray-100 text-gray-800" },

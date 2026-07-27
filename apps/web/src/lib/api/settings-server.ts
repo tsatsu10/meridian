@@ -1,4 +1,5 @@
 import type { AllSettings } from "@/store/settings";
+import { isValidPhone } from "@/lib/validation/phone";
 import type { SettingsValidationError } from "./settings-api";
 
 /**
@@ -334,10 +335,12 @@ export const SettingsAPI = {
         });
       }
 
+      // Shared with the profile page so the same number can't pass here and
+      // fail there (or vice versa) — these were two different regexes.
       if (
         profile.phone &&
         profile.phone.length > 0 &&
-        !/^\+?[\d\s\-\(\)]+$/.test(profile.phone)
+        !isValidPhone(profile.phone)
       ) {
         errors.push({
           field: "phone",

@@ -1,9 +1,12 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userProfileTable, userTable } from "../../database/schema";
+import { sanitizeText } from "../../lib/universal-sanitization";
 import logger from "../../utils/logger";
 
 interface ProfileUpdateData {
+  /** Lives on `users`, not `user_profiles` — written separately below. */
+  name?: string;
   jobTitle?: string;
   company?: string;
   industry?: string;
@@ -51,13 +54,28 @@ const updateProfile = async (
 
     const now = new Date();
 
+    // `name` is a column on `users`; everything else belongs to
+    // `user_profiles`. Splitting them keeps the profile payload valid — the
+    // page previously offered an editable name field that nothing persisted.
+    const { name, ...profileFields } = profileData;
+
+    if (name !== undefined) {
+      await db
+        .update(userTable)
+        .set({
+          name: sanitizeText(name, { maxLength: 100, stripHtmlTags: true }),
+          updatedAt: now,
+        })
+        .where(eq(userTable.id, userId));
+    }
+
     if (existingProfile.length === 0) {
       // Create new profile
       const result = await db
         .insert(userProfileTable)
         .values({
           userId,
-          ...profileData,
+          ...profileFields,
           lastProfileUpdate: now,
           createdAt: now,
           updatedAt: now,
@@ -70,7 +88,7 @@ const updateProfile = async (
     const result = await db
       .update(userProfileTable)
       .set({
-        ...profileData,
+        ...profileFields,
         lastProfileUpdate: now,
         updatedAt: now,
       })

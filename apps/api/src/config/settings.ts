@@ -13,6 +13,16 @@ export interface AppSettings {
   // Environment
   nodeEnv: "development" | "production" | "test";
   isDemoMode: boolean;
+  /**
+   * Whether authentication may be bypassed for demo purposes.
+   *
+   * Deliberately stricter than `isDemoMode` alone, and centralised here so
+   * that routers can't invent their own weaker version: the profile router
+   * used to drop its auth middleware on `isDemoMode` by itself, which was a
+   * looser condition than the app-wide gate (that one also requires an
+   * explicit opt-in env var *and* a non-production NODE_ENV).
+   */
+  enableDemoAuthBypass: boolean;
   apiPort: number;
   host: string;
 
@@ -36,10 +46,18 @@ export interface AppSettings {
  * Load and validate settings from environment
  */
 function loadSettings(): AppSettings {
+  const nodeEnv =
+    (process.env.NODE_ENV as AppSettings["nodeEnv"]) || "development";
+  const isDemoMode = process.env.DEMO_MODE === "true";
+
   const settings: AppSettings = {
     // Environment
-    nodeEnv: (process.env.NODE_ENV as AppSettings["nodeEnv"]) || "development",
-    isDemoMode: process.env.DEMO_MODE === "true",
+    nodeEnv,
+    isDemoMode,
+    enableDemoAuthBypass:
+      isDemoMode &&
+      process.env.ALLOW_DEMO_AUTH_BYPASS === "true" &&
+      (nodeEnv === "development" || nodeEnv === "test"),
     apiPort: Number.parseInt(
       process.env.API_PORT || String(DEFAULT_API_PORT),
       10,
