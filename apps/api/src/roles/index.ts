@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
@@ -47,8 +47,21 @@ async function memberWorkspaceIds(userEmail: string): Promise<string[]> {
   return rows.map((row) => row.workspaceId);
 }
 
-/** The actor's own effective permissions — the ceiling for any role they create. */
-async function actorContext(userEmail: string) {
+/**
+ * The actor's own effective permissions — the ceiling for any role they
+ * create.
+ *
+ * The assignment lookup is filtered to `workspaceId` (the workspace the role
+ * is being created in), not just `userId`. Without that filter, a caller
+ * with a low-privilege assignment in the target workspace but an
+ * admin-level assignment elsewhere could mint an admin-level role there:
+ * `.limit(1)` with no `orderBy` returns whichever assignment the database
+ * happens to return first, so the ceiling must be pinned to the workspace in
+ * play, not "any assignment this user holds." No matching assignment for
+ * that workspace resolves to `{}` (fails closed), so any requested
+ * permission trips the escalation guard in `createRole`.
+ */
+async function actorContext(userEmail: string, workspaceId: string) {
   const db = getDatabase();
   const [user] = await db
     .select({ id: userTable.id })
@@ -63,7 +76,12 @@ async function actorContext(userEmail: string) {
   const [assignment] = await db
     .select()
     .from(roleAssignmentTable)
-    .where(eq(roleAssignmentTable.userId, user.id))
+    .where(
+      and(
+        eq(roleAssignmentTable.userId, user.id),
+        eq(roleAssignmentTable.workspaceId, workspaceId),
+      ),
+    )
     .limit(1);
 
   const permissions = await resolveRolePermissions(
@@ -103,7 +121,20 @@ rolesRouter
     ),
     async (c) => {
       const body = c.req.valid("json");
-      const actor = await actorContext(c.get("userEmail"));
+
+      // Tenant boundary: a custom role can only be created in a workspace
+      // the caller is a member of. Without this, requirePermission's
+      // unscoped assignment lookup ("do they hold canManageRoles
+      // *anywhere*?") would let a manager in workspace A mint roles inside
+      // workspace B despite having no membership there. 404, not 403 —
+      // consistent with the read routes, and it doesn't confirm the
+      // workspace exists to someone outside it.
+      const memberIds = await memberWorkspaceIds(c.get("userEmail"));
+      if (!memberIds.includes(body.workspaceId)) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
+      const actor = await actorContext(c.get("userEmail"), body.workspaceId);
       const role = await createRole({
         name: body.name,
         description: body.description ?? null,

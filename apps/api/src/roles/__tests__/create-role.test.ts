@@ -73,4 +73,25 @@ describe("createRole", () => {
       }),
     ).rejects.toBeInstanceOf(HTTPException);
   });
+
+  // Pins the fail-closed ceiling: an actor with no resolved permissions for
+  // the target workspace (e.g. no matching role assignment there) must not
+  // be able to grant ANY permission. This is what makes scoping
+  // actorContext's lookup to the target workspace safe — if the lookup ever
+  // finds nothing, the ceiling must be empty, not "no restriction."
+  it("rejects every requested permission when the actor's resolved permissions are empty", async () => {
+    const { createRole } = await import("../controllers/create-role");
+
+    await expect(
+      createRole({
+        name: "Anything",
+        description: null,
+        color: "#3B82F6",
+        permissions: ["canViewTasks"],
+        workspaceId: "ws-1",
+        actorUserId: "user-1",
+        actorPermissions: {},
+      }),
+    ).rejects.toThrow(/canViewTasks/);
+  });
 });
