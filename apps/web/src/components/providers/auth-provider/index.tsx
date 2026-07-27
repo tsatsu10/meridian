@@ -1,7 +1,7 @@
 import useGetMe from "@/hooks/queries/use-get-me";
 import { useInitializeUserSettings } from "@/hooks/use-initialize-user-settings";
 import type { LoggedInUser } from "@/types/user";
-import { MeridianMark } from "@/components/branding/meridian-mark";
+import { AppLoadingScreen } from "@/components/branding/app-loading-screen";
 import {
   type Dispatch,
   type PropsWithChildren,
@@ -60,13 +60,7 @@ function AuthProvider({ children }: PropsWithChildren) {
   // Only show loading screen on initial load, not on refetches
   // This prevents the router from unmounting during background refetches
   if (isLoading || user === undefined) {
-    return (
-      <div className="flex w-full items-center justify-center h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
-        <div className="rounded-2xl bg-white p-4 shadow-md ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800 animate-pulse">
-          <MeridianMark className="h-12 w-12" />
-        </div>
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   return (

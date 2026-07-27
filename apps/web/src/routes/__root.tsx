@@ -7,7 +7,13 @@ import {
   Outlet,
   createRootRouteWithContext,
   redirect,
+  useRouterState,
 } from "@tanstack/react-router";
+import { useLayoutEffect, useRef } from "react";
+import {
+  claimBootSplash,
+  releaseBootSplashWhenSettled,
+} from "@/lib/boot-splash";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -52,6 +58,25 @@ export const Route = createRootRouteWithContext<{
 });
 
 function RootComponent() {
+  // Boot splash handoff lives here, not in <App/>: routes are code-split, so
+  // <App/> mounts before the route component and would lift the splash before
+  // any screen could claim it. RootComponent renders inside the router for
+  // every route, so it can hold the splash until the screen has settled.
+  const routerStatus = useRouterState({ select: (s) => s.status });
+  const settleStarted = useRef(false);
+
+  useLayoutEffect(() => {
+    claimBootSplash();
+  }, []);
+
+  useLayoutEffect(() => {
+    // Wait for the route to actually be resolved and rendered before judging
+    // whether the screen has stopped showing placeholders.
+    if (routerStatus !== "idle" || settleStarted.current) return;
+    settleStarted.current = true;
+    releaseBootSplashWhenSettled();
+  }, [routerStatus]);
+
   return (
     <ErrorBoundary>
       <SkipLink />

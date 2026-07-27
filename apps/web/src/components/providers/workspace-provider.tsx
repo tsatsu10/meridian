@@ -3,7 +3,8 @@
 // @persona-david: Team lead needs reliable workspace access across sessions
 
 import type React from "react";
-import { useEffect } from "react";
+import { useLayoutEffect, useState } from "react";
+import { AppLoadingScreen } from "@/components/branding/app-loading-screen";
 import useWorkspaceStore from "@/store/workspace";
 import useAuth from "./auth-provider/hooks/use-auth";
 import useGetWorkspaces from "@/hooks/queries/workspace/use-get-workspaces";
@@ -18,12 +19,21 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const { user } = useAuth();
   const { data: workspaces, isLoading } = useGetWorkspaces();
   const { activeWorkspaceId, setActiveWorkspaceId } = useUserPreferencesStore();
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the selection lands before the browser
+  // paints. With useEffect, the render where workspaces have loaded but no
+  // workspace is selected yet was painted first, flashing "Select Workspace"
+  // for a frame before the real dashboard appeared.
+  useLayoutEffect(() => {
     // Exit early if we don't have the required data
     if (!user || isLoading || !workspaces) {
       return;
     }
+
+    // Data is ready — every branch below settles the selection, so the boot
+    // gate can lift. Batched with the setWorkspace calls into one re-render.
+    setHasInitialized(true);
 
     // If we have an active workspace ID, try to find and set that workspace
     if (activeWorkspaceId) {
@@ -59,6 +69,15 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     setWorkspace,
     setActiveWorkspaceId,
   ]);
+
+  // Hold the boot screen until the FIRST workspace selection has landed.
+  // Without this, the dashboard chrome renders for a frame with no workspace
+  // chosen and flashes "Select Workspace" before the real one appears.
+  // Only gates the initial boot — once initialized, later deselections (e.g.
+  // clicking the logo) render normally.
+  if (user && !hasInitialized) {
+    return <AppLoadingScreen />;
+  }
 
   return <>{children}</>;
 }
