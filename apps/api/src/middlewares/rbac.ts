@@ -23,6 +23,7 @@ import type { UserRole, PermissionAction } from "../types/rbac";
 import { getHighestRole } from "../constants/rbac";
 import { appSettings } from "../config/settings";
 import logger from "../utils/logger";
+import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
 
 /**
  * RBAC middleware factory - creates middleware that checks specific permissions
@@ -80,11 +81,17 @@ export function requirePermission(permission: PermissionAction) {
         )
         .limit(1);
 
-      const userRole: UserRole =
-        (roleAssignment[0]?.role as UserRole | undefined) ?? "guest";
+      const assignedRole = roleAssignment[0]?.role ?? "guest";
+      const userRole = assignedRole as UserRole;
 
-      // Get base permissions for the role
-      const rolePermissions = getRolePermissions(userRole);
+      // Built-in role names resolve from the ROLE_PERMISSIONS constant exactly
+      // as before; anything else is looked up as a custom role id. Unknown or
+      // revoked roles resolve to {}, i.e. denied — the same fail-closed
+      // behaviour ROLE_PERMISSIONS[role] || {} already had.
+      const rolePermissions = await resolveRolePermissions(
+        assignedRole,
+        roleAssignment[0]?.workspaceId ?? null,
+      );
 
       // Check if role has the required permission
       const hasBasePermission = rolePermissions[permission] || false;
@@ -358,7 +365,10 @@ export function requireWorkspacePermission(
       );
 
       if (!result.allowed) {
-        return c.json(result.body ?? { error: "Forbidden" }, result.status ?? 403);
+        return c.json(
+          result.body ?? { error: "Forbidden" },
+          result.status ?? 403,
+        );
       }
 
       // Add context to request
@@ -403,7 +413,10 @@ export function requireProjectPermission(
       );
 
       if (!result.allowed) {
-        return c.json(result.body ?? { error: "Forbidden" }, result.status ?? 403);
+        return c.json(
+          result.body ?? { error: "Forbidden" },
+          result.status ?? 403,
+        );
       }
 
       // Add context to request
@@ -476,7 +489,11 @@ export async function checkProjectPermission(
     .limit(1);
 
   if (!project) {
-    return { allowed: false, status: 404, body: { error: "Project not found" } };
+    return {
+      allowed: false,
+      status: 404,
+      body: { error: "Project not found" },
+    };
   }
 
   const [assignment] = await db
