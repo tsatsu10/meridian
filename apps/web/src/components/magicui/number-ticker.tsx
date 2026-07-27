@@ -33,6 +33,21 @@ export default function NumberTicker({
       }, delay * 1000);
   }, [motionValue, isInView, delay, value, direction]);
 
+  // Paint the starting value immediately on mount. The spring's "change"
+  // listener below only fires when the value actually moves — if the target
+  // equals the starting value (e.g. value=0, which starts the motion value
+  // at 0 too), no change event ever fires and the span was left permanently
+  // blank instead of showing "0".
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one-time initial paint; motionValue identity is stable across renders, and re-running on `value` would fight the spring's own animation
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.textContent = Intl.NumberFormat("en-US", {
+        minimumFractionDigits: decimalPlaces,
+        maximumFractionDigits: decimalPlaces,
+      }).format(Number(motionValue.get().toFixed(decimalPlaces)));
+    }
+  }, [decimalPlaces]);
+
   useEffect(
     () =>
       springValue.on("change", (latest) => {

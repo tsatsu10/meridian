@@ -27,6 +27,7 @@ import {
 } from "@/components/dashboard/dashboard-recent-activity";
 import UniversalHeader from "@/components/dashboard/universal-header";
 import { StaleDataIndicator } from "@/components/dashboard/loading-states";
+import { useDashboardStatsTrend } from "@/hooks/dashboard/use-dashboard-stats-trend";
 import type { useRiskMonitor } from "@/hooks/queries/risk/use-risk-detection";
 import type { ValidatedDashboardData } from "@/schemas/dashboard";
 import {
@@ -75,6 +76,35 @@ export function DashboardOverviewLoaded({
   refreshCooldownSeconds,
 }: DashboardOverviewLoadedProps) {
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+
+  const totalTasks = dashboardData?.stats?.totalTasks || 0;
+  const completedTasks = dashboardData?.stats?.completedTasks || 0;
+  const activeProjects = dashboardData?.projects?.length || 0;
+  const teamMembers = dashboardData?.stats?.teamMembers || 0;
+
+  // "Progress" card shows this as its headline value, so it must actually be
+  // a percentage — it previously showed the raw completed-task count under a
+  // title that promised a percentage.
+  const progressPercentage =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // "Change since you last looked at this workspace" — tracked client-side
+  // (localStorage), since the overview computes stats from a live snapshot
+  // with no time dimension, and there is no lightweight history endpoint for
+  // this. See use-dashboard-stats-trend.ts for the full rationale.
+  const previousStats = useDashboardStatsTrend(
+    workspaceId,
+    totalTasks,
+    activeProjects,
+    completedTasks,
+    teamMembers,
+  );
+  const previousProgressPercentage =
+    previousStats && previousStats.totalTasks > 0
+      ? Math.round(
+          (previousStats.completedTasks / previousStats.totalTasks) * 100,
+        )
+      : undefined;
 
   const refreshDisabled = isRefreshing || refreshCooldownSeconds > 0;
   const refreshLabel =
@@ -152,16 +182,18 @@ export function DashboardOverviewLoaded({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <AnimatedStatsCard
               title="Total Tasks"
-              value={dashboardData?.stats?.totalTasks || 0}
+              value={totalTasks}
+              previousValue={previousStats?.totalTasks}
               icon={CheckCircle}
-              description={`${dashboardData?.stats?.completedTasks || 0} completed`}
+              description={`${completedTasks} completed`}
               delay={0.1}
               colorScheme="success"
             />
 
             <AnimatedStatsCard
               title="Active Projects"
-              value={dashboardData?.projects?.length || 0}
+              value={activeProjects}
+              previousValue={previousStats?.activeProjects}
               icon={FolderOpen}
               description={`${dashboardData?.projects?.filter((p) => p.status !== "completed").length || 0} in progress`}
               delay={0.2}
@@ -170,21 +202,23 @@ export function DashboardOverviewLoaded({
 
             <AnimatedStatsCard
               title="Progress"
-              value={dashboardData?.stats?.completedTasks || 0}
+              value={progressPercentage}
+              previousValue={previousProgressPercentage}
+              suffix="%"
               icon={Target}
-              description={`${Math.round(((dashboardData?.stats?.completedTasks || 0) / (dashboardData?.stats?.totalTasks || 1)) * 100)}% complete`}
+              description={`${completedTasks} of ${totalTasks} tasks completed`}
               delay={0.3}
               colorScheme="primary"
             />
 
             <AnimatedStatsCard
               title="Team Members"
-              value={dashboardData?.stats?.teamMembers || 0}
+              value={teamMembers}
+              previousValue={previousStats?.teamMembers}
               icon={Users}
               description="Active collaborators"
               delay={0.4}
               colorScheme="info"
-              trend="neutral"
             />
           </div>
         </Suspense>
@@ -238,127 +272,126 @@ export function DashboardOverviewLoaded({
           </Suspense>
         )}
 
-        <div className="space-y-6 max-w-5xl">
-          <div className="space-y-6">
-            <Card className="glass-card">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5 text-primary" />
-                    Projects
-                  </CardTitle>
-                  {hasPermission("canCreateProjects", {}) && (
-                    <Button
-                      size="sm"
-                      onClick={() => setIsCreateProjectOpen(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Project
-                    </Button>
-                  )}
+        <div className="space-y-6">
+          <Card className="glass-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <FolderOpen className="h-5 w-5 text-primary" />
+                  Projects
+                </CardTitle>
+                {hasPermission("canCreateProjects", {}) && (
+                  <Button
+                    size="sm"
+                    onClick={() => setIsCreateProjectOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Project
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!dashboardData?.projects ||
+              dashboardData.projects.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm font-medium">No projects yet</p>
+                  <p className="text-xs mt-1">
+                    Create your first project to get started
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => setIsCreateProjectOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Project
+                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {!dashboardData?.projects ||
-                dashboardData.projects.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm font-medium">No projects yet</p>
-                    <p className="text-xs mt-1">
-                      Create your first project to get started
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4"
-                      onClick={() => setIsCreateProjectOpen(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Project
-                    </Button>
-                  </div>
-                ) : (
-                  dashboardData.projects
-                    .slice(0, 6)
-                    .map((project: ProjectRow) => {
-                      const allProjectTasks = project.tasks || [];
-                      const completedTasks = allProjectTasks.filter(
-                        (task: { status?: string }) =>
-                          task.status === "done" || task.status === "completed",
-                      ).length;
-                      const progressPercentage =
-                        allProjectTasks.length > 0
-                          ? Math.round(
-                              (completedTasks / allProjectTasks.length) * 100,
-                            )
-                          : 0;
+              ) : (
+                dashboardData.projects
+                  .slice(0, 6)
+                  .map((project: ProjectRow) => {
+                    const allProjectTasks = project.tasks || [];
+                    const projectCompletedTasks = allProjectTasks.filter(
+                      (task: { status?: string }) =>
+                        task.status === "done" || task.status === "completed",
+                    ).length;
+                    const projectProgressPercentage =
+                      allProjectTasks.length > 0
+                        ? Math.round(
+                            (projectCompletedTasks / allProjectTasks.length) *
+                              100,
+                          )
+                        : 0;
 
-                      // project.icon stores a Lucide icon name, not a
-                      // renderable character — resolve it via the shared
-                      // icon map, falling back to the name's initial.
-                      const ProjectIcon = project.icon
-                        ? projectIcons[
-                            project.icon as keyof typeof projectIcons
-                          ]
-                        : undefined;
+                    // project.icon stores a Lucide icon name, not a
+                    // renderable character — resolve it via the shared
+                    // icon map, falling back to the name's initial.
+                    const ProjectIcon = project.icon
+                      ? projectIcons[project.icon as keyof typeof projectIcons]
+                      : undefined;
 
-                      return (
-                        <Link
-                          key={project.id}
-                          to="/dashboard/workspace/$workspaceId/project/$projectId"
-                          params={{ workspaceId, projectId: project.id }}
-                          className="block group"
-                        >
-                          <div className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer">
-                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                              <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                {ProjectIcon ? (
-                                  <ProjectIcon className="h-5 w-5 text-primary" />
-                                ) : (
-                                  <span className="text-primary font-semibold text-sm">
-                                    {project.name?.charAt(0)?.toUpperCase() ||
-                                      "P"}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-                                  {project.name}
-                                </h3>
-                                <p className="text-xs text-muted-foreground">
-                                  {allProjectTasks.length} tasks •{" "}
-                                  {completedTasks} completed
-                                </p>
-                              </div>
+                    return (
+                      <Link
+                        key={project.id}
+                        to="/dashboard/workspace/$workspaceId/project/$projectId"
+                        params={{ workspaceId, projectId: project.id }}
+                        className="block group"
+                      >
+                        <div className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                              {ProjectIcon ? (
+                                <ProjectIcon className="h-5 w-5 text-primary" />
+                              ) : (
+                                <span className="text-primary font-semibold text-sm">
+                                  {project.name?.charAt(0)?.toUpperCase() ||
+                                    "P"}
+                                </span>
+                              )}
                             </div>
-                            <div className="flex items-center space-x-3 flex-shrink-0">
-                              <div className="text-right">
-                                <div className="text-sm font-semibold mb-1">
-                                  {progressPercentage}%
-                                </div>
-                                <div className="w-20 bg-secondary dark:bg-secondary-hover rounded-full h-1.5">
-                                  <div
-                                    className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                                    style={{ width: `${progressPercentage}%` }}
-                                  />
-                                </div>
-                              </div>
-                              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                                {project.name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {allProjectTasks.length} tasks •{" "}
+                                {projectCompletedTasks} completed
+                              </p>
                             </div>
                           </div>
-                        </Link>
-                      );
-                    })
-                )}
-              </CardContent>
-            </Card>
+                          <div className="flex items-center space-x-3 flex-shrink-0">
+                            <div className="text-right">
+                              <div className="text-sm font-semibold mb-1">
+                                {projectProgressPercentage}%
+                              </div>
+                              <div className="w-20 bg-secondary dark:bg-secondary-hover rounded-full h-1.5">
+                                <div
+                                  className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                                  style={{
+                                    width: `${projectProgressPercentage}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })
+              )}
+            </CardContent>
+          </Card>
 
-            <DashboardRecentActivity
-              feedWindow={activityFeedWindow}
-              currentTime={currentTime}
-              workspaceId={workspaceId}
-            />
-          </div>
+          <DashboardRecentActivity
+            feedWindow={activityFeedWindow}
+            currentTime={currentTime}
+            workspaceId={workspaceId}
+          />
         </div>
 
         <Suspense fallback={<ModalChunkFallback />}>

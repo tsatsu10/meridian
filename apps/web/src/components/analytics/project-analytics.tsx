@@ -91,10 +91,6 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [chartType, setChartType] = useState<ChartType>("line");
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [_comparisonMode, _setComparisonMode] = useState(false);
-  const [_selectedDrillDown, setSelectedDrillDown] = useState<
-    "overdue" | "high-priority" | "in-progress" | null
-  >(null);
 
   const {
     data: response,
@@ -197,7 +193,6 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
   const handleDrillDown = (
     type: "overdue" | "high-priority" | "in-progress",
   ) => {
-    setSelectedDrillDown(type);
     // TODO: Fetch specific task list and show in modal/side panel
     toast.info(`Drill-down for ${type} tasks - Feature coming soon`);
   };
