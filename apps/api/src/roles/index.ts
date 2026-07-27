@@ -51,7 +51,13 @@ rolesRouter
   // Registered before "/:id" so the literal path is not captured as an id.
   // RoleModal already queries this to populate its permission picker.
   .get("/permissions/all", (c) => c.json({ permissions: ALL_PERMISSION_KEYS }))
-  .get("/:id/usage", async (c) => c.json(await getRoleUsage(c.req.param("id"))))
-  .get("/:id", async (c) => c.json({ role: await getRole(c.req.param("id")) }));
+  .get("/:id/usage", async (c) => {
+    const memberIds = await memberWorkspaceIds(c.get("userEmail"));
+    return c.json(await getRoleUsage(c.req.param("id"), memberIds));
+  })
+  .get("/:id", async (c) => {
+    const memberIds = await memberWorkspaceIds(c.get("userEmail"));
+    return c.json({ role: await getRole(c.req.param("id"), memberIds) });
+  });
 
 export default rolesRouter;
