@@ -21,15 +21,23 @@ export interface InvitationEmailData {
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
-  private isConfigured = false;
+  private attemptedInit = false;
 
-  constructor() {
-    this.initializeTransporter();
-  }
+  // Lazily builds (and caches) the transporter on first actual send instead
+  // of in the constructor. This module is imported deep in the dependency
+  // graph reached from index.ts's top-level imports; under tsx's module
+  // evaluation order those imports resolve before index.ts's own
+  // `dotenv.config()` call runs, so reading process.env.EMAIL_* eagerly at
+  // construction time always saw them as unset. Deferring the read until a
+  // method is actually called (well after startup) sidesteps that ordering
+  // entirely.
+  private getTransporter(): nodemailer.Transporter | null {
+    if (this.attemptedInit) {
+      return this.transporter;
+    }
+    this.attemptedInit = true;
 
-  private initializeTransporter() {
     try {
-      // Check for email configuration in environment variables
       const emailHost = process.env.EMAIL_HOST;
       const emailPort = process.env.EMAIL_PORT;
       const emailUser = process.env.EMAIL_USER;
@@ -43,7 +51,7 @@ class EmailService {
         logger.debug(
           "📧 Required: EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS",
         );
-        return;
+        return null;
       }
 
       const config: EmailConfig = {
@@ -57,15 +65,17 @@ class EmailService {
       };
 
       this.transporter = nodemailer.createTransport(config);
-      this.isConfigured = true;
       logger.debug("📧 Email service configured successfully");
+      return this.transporter;
     } catch (error) {
       logger.error("❌ Failed to configure email service:", error);
+      return null;
     }
   }
 
   async sendInvitationEmail(data: InvitationEmailData): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    const transporter = this.getTransporter();
+    if (!transporter) {
       logger.debug(
         "📧 Email service not configured - invitation email not sent",
       );
@@ -84,7 +94,7 @@ class EmailService {
         text: this.generateInvitationEmailText(data),
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await transporter.sendMail(mailOptions);
       logger.debug(
         `📧 Invitation email sent to ${data.inviteeEmail}:`,
         result.messageId,
@@ -170,7 +180,8 @@ The Meridian Team
     subject: string,
     text: string,
   ): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    const transporter = this.getTransporter();
+    if (!transporter) {
       logger.debug(
         `📧 Email service not configured - notification email to ${to} not sent`,
       );
@@ -178,7 +189,7 @@ The Meridian Team
     }
 
     try {
-      const result = await this.transporter.sendMail({
+      const result = await transporter.sendMail({
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
         to,
         subject,
@@ -192,13 +203,44 @@ The Meridian Team
     }
   }
 
-  async testConnection(): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+  async sendHtmlEmail(
+    to: string[],
+    subject: string,
+    html: string,
+    text: string,
+  ): Promise<boolean> {
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      logger.debug(
+        `📧 Email service not configured - html email to ${to.join(", ")} not sent`,
+      );
       return false;
     }
 
     try {
-      await this.transporter.verify();
+      const result = await transporter.sendMail({
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: to.join(", "),
+        subject,
+        html,
+        text,
+      });
+      logger.debug(`📧 Email sent to ${to.join(", ")}:`, result.messageId);
+      return true;
+    } catch (error) {
+      logger.error(`❌ Failed to send email to ${to.join(", ")}:`, error);
+      return false;
+    }
+  }
+
+  async testConnection(): Promise<boolean> {
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      return false;
+    }
+
+    try {
+      await transporter.verify();
       logger.debug("📧 Email service connection test successful");
       return true;
     } catch (error) {
