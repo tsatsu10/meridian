@@ -73,7 +73,7 @@ export async function updateRole(
       ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
       updatedAt: new Date(),
     })
-    .where(eq(roles.id, id))
+    .where(and(eq(roles.id, id), isNull(roles.deletedAt)))
     .returning();
 
   // Holders must pick the change up immediately, not after the TTL.

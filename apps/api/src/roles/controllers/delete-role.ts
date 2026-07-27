@@ -10,6 +10,13 @@ import { getRoleUsage } from "./get-role-usage";
 export async function deleteRole(
   id: string,
   actorUserId: string,
+  // The caller's REAL workspace memberships, forwarded to getRoleUsage so
+  // its tenant check (the same primitive getRole uses) is answered
+  // honestly. Defaults to [] only so the built-in-role short-circuit above
+  // can be exercised without a caller having to supply it — every real
+  // (router) call site must pass the actual list; deriving it from the role
+  // being deleted would make the check a tautology.
+  memberWorkspaceIds: string[] = [],
   meta: { ipAddress?: string; userAgent?: string } = {},
 ): Promise<{ success: true }> {
   if (isSystemRoleId(id)) {
@@ -33,18 +40,8 @@ export async function deleteRole(
     throw new HTTPException(404, { message: "Role not found" });
   }
 
-  // getRoleUsage re-applies the same tenant boundary getRole does (404 if the
-  // role's workspace isn't in the caller's membership list). The caller's
-  // actual membership was already verified by the router before it reached
-  // this function, and this select just re-confirmed the role's own
-  // workspace, so satisfy getRoleUsage's check with that same workspace
-  // rather than threading a second membership list all the way through.
-  const usage = await getRoleUsage(
-    id,
-    existing.workspaceId ? [existing.workspaceId] : [],
-  );
-
   // Deleting an assigned role would silently strip its holders of all access.
+  const usage = await getRoleUsage(id, memberWorkspaceIds);
   if (usage.usersCount > 0) {
     throw new HTTPException(400, {
       message: `Cannot delete: ${usage.usersCount} user(s) still have this role. Reassign them first.`,
@@ -54,7 +51,7 @@ export async function deleteRole(
   await db
     .update(roles)
     .set({ deletedAt: new Date(), deletedBy: actorUserId, isActive: false })
-    .where(eq(roles.id, id));
+    .where(and(eq(roles.id, id), isNull(roles.deletedAt)));
 
   invalidateRoleCache(id);
 
