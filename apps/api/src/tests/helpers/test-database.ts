@@ -122,6 +122,7 @@ export function createMockDb() {
     leftJoin: vi.fn().mockReturnThis(), // Add at top level too
     values: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
+    onConflictDoNothing: vi.fn().mockReturnThis(),
     returning: vi.fn().mockResolvedValue([]),
     execute: vi.fn().mockResolvedValue([]),
 

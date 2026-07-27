@@ -1,4 +1,3 @@
-import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 // NOTE: imported from the subfile, not "../../database/schema". The barrel's
 // `export * from "./schema/rbac-unified"` is circular (rbac-unified imports
@@ -30,33 +29,32 @@ function toDisplayName(id: string): string {
 }
 
 /**
- * Idempotent. `permissions` is deliberately left NULL for system roles: their
- * permissions continue to come from the ROLE_PERMISSIONS constant, so there is
- * exactly one source of truth.
+ * Idempotent (upsert by id). `permissions` is deliberately left NULL for
+ * system roles: their permissions continue to come from the ROLE_PERMISSIONS
+ * constant, so there is exactly one source of truth.
+ *
+ * Uses a single atomic insert with `onConflictDoNothing()` per role rather
+ * than select-then-insert: two processes booting concurrently could both
+ * pass a preliminary existence check, and the second insert would then throw
+ * a primary-key violation, which — inside the startup try/catch — takes the
+ * process down.
  */
 export async function seedSystemRoles(): Promise<void> {
   const db = getDatabase();
 
   for (const id of SYSTEM_ROLE_IDS) {
-    const existing = await db
-      .select({ id: roles.id })
-      .from(roles)
-      .where(eq(roles.id, id))
-      .limit(1);
-
-    if (existing.length > 0) {
-      continue;
-    }
-
-    await db.insert(roles).values({
-      id,
-      name: toDisplayName(id),
-      description: `Built-in ${toDisplayName(id)} role`,
-      type: "system",
-      permissions: null,
-      workspaceId: null,
-      isActive: true,
-    });
+    await db
+      .insert(roles)
+      .values({
+        id,
+        name: toDisplayName(id),
+        description: `Built-in ${toDisplayName(id)} role`,
+        type: "system",
+        permissions: null,
+        workspaceId: null,
+        isActive: true,
+      })
+      .onConflictDoNothing();
   }
 
   logger.debug(`🛡️ Seeded ${SYSTEM_ROLE_IDS.length} system roles`);
