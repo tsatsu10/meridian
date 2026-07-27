@@ -1,13 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { type ComponentProps, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import MilestoneList from "@/components/milestones/milestone-list";
 import type { DisplayMilestone } from "@/components/milestones/milestone-list";
 import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
-import DashboardPopup from "@/components/dashboard/dashboard-popup";
 import { useMilestones } from "@/hooks/use-milestones";
-import { toast } from "sonner";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { AlertCircle } from "lucide-react";
@@ -33,10 +31,6 @@ function ProjectMilestones() {
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] =
     useState<DisplayMilestone | null>(null);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  void useNavigate();
-  const [_showFilters, _setShowFilters] = useState(false);
-  const [_isCreateModalOpen, _setIsCreateModalOpen] = useState(false);
 
   if (isProjectLoading) {
     return (
@@ -71,16 +65,14 @@ function ProjectMilestones() {
         subtitle="Track and manage project milestones and key deliverables"
         variant="default"
         customActions={
-          <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              onClick={() => setIsMilestoneModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Milestone
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            onClick={() => setIsMilestoneModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Milestone
+          </Button>
         }
       />
       <div className="space-y-6 p-6">
@@ -109,31 +101,19 @@ function ProjectMilestones() {
             >["editingMilestone"]
           }
           onMilestoneCreated={(milestone) => {
+            // Success/failure toasts are shown by useMilestones once the
+            // create/update request actually resolves.
             if (editingMilestone) {
-              // Update existing milestone
               updateMilestone(editingMilestone.id, milestone);
-              toast.success("Milestone updated successfully");
             } else {
-              // Create new milestone
               createMilestone({
                 ...milestone,
                 projectId: projectId,
               });
-              toast.success("Milestone created successfully");
             }
             setIsMilestoneModalOpen(false);
             setEditingMilestone(null);
           }}
-        />
-
-        {/* Analytics Dashboard Popup */}
-        <DashboardPopup
-          open={isDashboardOpen}
-          onClose={() => setIsDashboardOpen(false)}
-          projectId={projectId}
-          projectName={projectData?.name}
-          title="Milestone Analytics"
-          variant="milestones"
         />
       </div>
     </LazyDashboardLayout>

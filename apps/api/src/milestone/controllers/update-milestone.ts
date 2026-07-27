@@ -24,9 +24,9 @@ export async function updateMilestone(c: Context) {
       dueDate,
       riskLevel,
       riskDescription,
+      successCriteria,
       dependencyTaskIds,
       stakeholderIds,
-      progress,
     } = body;
 
     // Prepare update data
@@ -40,20 +40,25 @@ export async function updateMilestone(c: Context) {
     if (type) updateData.type = type;
     if (status) {
       updateData.status = status;
+      // Note: no "progress" column exists on the milestone table - a
+      // previous version of this handler wrote to "progress" and
+      // "completedDate" (the real column is "completedAt"), which would
+      // have thrown on every "achieved" transition once this endpoint was
+      // actually reachable.
       if (status === "achieved") {
-        updateData.completedDate = new Date();
-        updateData.progress = 100;
+        updateData.completedAt = new Date();
       }
     }
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (riskLevel) updateData.riskLevel = riskLevel;
     if (riskDescription !== undefined)
       updateData.riskDescription = riskDescription;
+    if (successCriteria !== undefined)
+      updateData.successCriteria = successCriteria;
     if (dependencyTaskIds)
       updateData.dependencyTaskIds = JSON.stringify(dependencyTaskIds);
     if (stakeholderIds)
       updateData.stakeholderIds = JSON.stringify(stakeholderIds);
-    if (progress !== undefined) updateData.progress = progress;
 
     // Update milestone
     const [milestone] = await db

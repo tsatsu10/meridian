@@ -44,6 +44,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canUpdateOwnTasks: true,
     canCreateComments: true,
     canViewTeam: true,
+    canViewProjectMilestones: true,
   },
   "team-lead": {
     canViewProjects: true,
@@ -58,11 +59,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageSubtaskHierarchy: true,
     canViewTeam: true,
     canManageTeamMembers: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
   },
   "project-viewer": {
     canViewProjects: true,
     canViewTasks: true,
     canViewReports: true,
+    canViewProjectMilestones: true,
   },
   "project-manager": {
     canViewProjects: true,
@@ -79,6 +83,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canDeleteSubtasks: true,
     canAssignSubtasks: true,
     canManageSubtaskHierarchy: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
   },
   "workspace-viewer": {
     canViewWorkspace: true,
@@ -86,6 +92,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canViewTasks: true,
     canViewReports: true,
     canViewTeam: true,
+    canViewProjectMilestones: true,
   },
   "department-head": {
     canViewWorkspace: true,
@@ -105,6 +112,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageSubtaskHierarchy: true,
     canViewTeam: true,
     canManageTeamMembers: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
   },
   "workspace-manager": {
     // 🏆 === WORKSPACE OWNER POWERS === 🏆
@@ -162,6 +171,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canViewProjectBudget: true,
     canManageProjectBudget: true,
     canCreateProjectAnnouncements: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
 
     // Task Management
     canCreateTasks: true,

@@ -12,7 +12,6 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
-  Info,
   Filter,
   X,
   Layers,
@@ -30,14 +29,12 @@ import MilestoneDetailModal from "./milestone-detail-modal";
 import MilestoneToolbar from "./milestone-toolbar";
 import MilestoneProgressCard from "./milestone-progress-card";
 import { useNavigate } from "@tanstack/react-router";
-import { useDashboardData } from "@/hooks/queries/dashboard/use-dashboard-data";
 
 // @epic-1.3-milestones: Sarah (PM) needs milestone tracking and management
 // @persona-sarah: PM needs to view and manage project milestones
 
-// Common shape for milestones rendered by this list, whether they come
-// from useMilestones' localStorage-backed MilestoneTask or are derived
-// on the fly from dashboard task data below.
+// Common shape for milestones rendered by this list (from useMilestones'
+// real /api/milestone-backed data).
 export interface DisplayMilestone {
   id: string;
   title: string;
@@ -49,31 +46,8 @@ export interface DisplayMilestone {
   successCriteria: string;
   riskLevel: "low" | "medium" | "high" | "critical";
   projectId: string;
-  isDerived?: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-// useDashboardData()'s RecentProject/ApiTask types are internal to that
-// hook (not exported) and don't model the extra task fields read below
-// (description/userEmail/createdAt/updatedAt) -- those are real API
-// response fields the hook's own minimal ApiTask just doesn't declare.
-interface DashboardMilestoneTask {
-  id: string;
-  title?: string;
-  description?: string;
-  dueDate?: string;
-  status?: string;
-  priority?: string;
-  userEmail?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface DashboardMilestoneProject {
-  id: string;
-  columns?: Array<{ tasks?: DashboardMilestoneTask[] }>;
-  tasks?: DashboardMilestoneTask[];
 }
 
 interface MilestoneListProps {
@@ -139,12 +113,8 @@ export default function MilestoneList({
   className,
   onEditMilestone,
 }: MilestoneListProps) {
-  const {
-    milestones: localStorageMilestones,
-    deleteMilestone,
-    updateMilestone,
-  } = useMilestones(projectId);
-  const { data: dashboardData } = useDashboardData();
+  const { milestones, deleteMilestone, updateMilestone } =
+    useMilestones(projectId);
   const [selectedMilestone, setSelectedMilestone] =
     useState<DisplayMilestone | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -157,7 +127,6 @@ export default function MilestoneList({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [riskFilter, setRiskFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("date-asc");
   const [groupBy, setGroupBy] = useState<string>("none");
 
@@ -167,90 +136,7 @@ export default function MilestoneList({
   );
   const [selectMode, setSelectMode] = useState(false);
 
-  // 🔧 Merge localStorage milestones with derived milestones from tasks
-  const allMilestones = useMemo<DisplayMilestone[]>(() => {
-    const derived: DisplayMilestone[] = [];
-
-    // Derive milestones from tasks (optimized to only process current project)
-    // ✅ PERFORMANCE: Early return if no data to prevent unnecessary processing
-    if (
-      !dashboardData?.projects ||
-      !projectId ||
-      !Array.isArray(dashboardData.projects)
-    ) {
-      return [...localStorageMilestones];
-    }
-
-    // useDashboardData's RecentProject/ApiTask types don't declare every
-    // field the API actually returns (see DashboardMilestoneTask above).
-    const projects =
-      dashboardData.projects as unknown as DashboardMilestoneProject[];
-
-    // 🚀 PERFORMANCE: Only find and process the current project
-    const currentProject = projects.find((p) => p.id === projectId);
-
-    if (currentProject) {
-      const columnTasks =
-        currentProject.columns?.flatMap((col) => col.tasks || []) || [];
-      const directTasks = currentProject.tasks || [];
-      const allTasks = [...columnTasks, ...directTasks];
-
-      // Find milestone tasks (critical/urgent priority OR milestone keywords)
-      const milestoneTasks = allTasks.filter((task) => {
-        const titleLower = task.title?.toLowerCase() || "";
-        const milestoneKeywords = [
-          "milestone",
-          "launch",
-          "release",
-          "delivery",
-          "completion",
-          "phase",
-          "sprint",
-          "version",
-        ];
-        const hasMilestoneKeyword = milestoneKeywords.some((keyword) =>
-          titleLower.includes(keyword),
-        );
-        const isCritical =
-          task.priority === "critical" || task.priority === "urgent";
-        return isCritical || hasMilestoneKeyword;
-      });
-
-      // Convert tasks to milestone format
-      for (const task of milestoneTasks) {
-        const title = task.title || "Untitled";
-        derived.push({
-          id: `derived_${task.id}`,
-          title,
-          description: task.description || "Auto-detected milestone from task",
-          date:
-            task.dueDate ||
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          status:
-            task.status === "done"
-              ? "achieved"
-              : task.dueDate && new Date(task.dueDate) < new Date()
-                ? "missed"
-                : "upcoming",
-          milestoneType: "deliverable",
-          stakeholders: task.userEmail ? [task.userEmail] : [],
-          successCriteria: `Complete task: ${title}`,
-          riskLevel:
-            task.priority === "critical" || task.priority === "urgent"
-              ? "high"
-              : "medium",
-          projectId: currentProject.id,
-          isDerived: true, // Mark as derived so we know it can't be edited
-          createdAt: task.createdAt || new Date().toISOString(),
-          updatedAt: task.updatedAt || new Date().toISOString(),
-        });
-      }
-    }
-
-    // Combine localStorage milestones with derived ones
-    // localStorage milestones come first (they're manually created, more important)
-    return [...localStorageMilestones, ...derived];
-  }, [localStorageMilestones, dashboardData, projectId]);
+  const allMilestones = milestones;
 
   // Filter milestones
   const filteredMilestones = useMemo(() => {
@@ -273,13 +159,9 @@ export default function MilestoneList({
       if (riskFilter !== "all" && milestone.riskLevel !== riskFilter)
         return false;
 
-      // Type filter
-      if (typeFilter === "manual" && milestone.isDerived) return false;
-      if (typeFilter === "auto" && !milestone.isDerived) return false;
-
       return true;
     });
-  }, [allMilestones, searchQuery, statusFilter, riskFilter, typeFilter]);
+  }, [allMilestones, searchQuery, statusFilter, riskFilter]);
 
   // Sort milestones
   const sortedMilestones = useMemo(() => {
@@ -364,9 +246,6 @@ export default function MilestoneList({
             milestone.riskLevel.slice(1)
           } Risk`;
           break;
-        case "type":
-          groupKey = milestone.isDerived ? "Auto-detected" : "Manual";
-          break;
         case "month": {
           const date = new Date(milestone.date);
           groupKey = date.toLocaleDateString("en-US", {
@@ -388,17 +267,13 @@ export default function MilestoneList({
 
   // Check if any filters are active
   const hasActiveFilters =
-    !!searchQuery ||
-    statusFilter !== "all" ||
-    riskFilter !== "all" ||
-    typeFilter !== "all";
+    !!searchQuery || statusFilter !== "all" || riskFilter !== "all";
 
   // Clear all filters
   const clearAllFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
     setRiskFilter("all");
-    setTypeFilter("all");
   };
 
   // Keyboard shortcuts
@@ -418,7 +293,6 @@ export default function MilestoneList({
   const handleDeleteMilestone = (milestoneId: string) => {
     if (confirm("Are you sure you want to delete this milestone?")) {
       deleteMilestone(milestoneId);
-      toast.success("Milestone deleted successfully");
     }
   };
 
@@ -427,10 +301,12 @@ export default function MilestoneList({
     newStatus: "upcoming" | "achieved" | "missed",
   ) => {
     updateMilestone(milestoneId, { status: newStatus });
-    toast.success(`Milestone marked as ${newStatus}`);
   };
 
   // Bulk actions
+  // Success/failure toasts are shown by useMilestones per-item once each
+  // request actually resolves, rather than an aggregate count here that
+  // could be wrong if any individual request fails.
   const handleBulkDelete = () => {
     if (
       confirm(
@@ -438,13 +314,10 @@ export default function MilestoneList({
       )
     ) {
       for (const id of selectedMilestones) {
-        if (!allMilestones.find((m) => m.id === id)?.isDerived) {
-          deleteMilestone(id);
-        }
+        deleteMilestone(id);
       }
       setSelectedMilestones(new Set());
       setSelectMode(false);
-      toast.success(`${selectedMilestones.size} milestones deleted`);
     }
   };
 
@@ -452,14 +325,10 @@ export default function MilestoneList({
     status: "upcoming" | "achieved" | "missed",
   ) => {
     for (const id of selectedMilestones) {
-      const milestone = allMilestones.find((m) => m.id === id);
-      if (milestone && !milestone.isDerived) {
-        updateMilestone(id, { status });
-      }
+      updateMilestone(id, { status });
     }
     setSelectedMilestones(new Set());
     setSelectMode(false);
-    toast.success(`${selectedMilestones.size} milestones updated`);
   };
 
   const handleToggleSelection = (milestoneId: string) => {
@@ -473,9 +342,7 @@ export default function MilestoneList({
   };
 
   const handleSelectAll = () => {
-    setSelectedMilestones(
-      new Set(sortedMilestones.filter((m) => !m.isDerived).map((m) => m.id)),
-    );
+    setSelectedMilestones(new Set(sortedMilestones.map((m) => m.id)));
   };
 
   const handleDeselectAll = () => {
@@ -489,7 +356,6 @@ export default function MilestoneList({
       Status: m.status,
       "Due Date": new Date(m.date).toLocaleDateString(),
       "Risk Level": m.riskLevel,
-      Type: m.isDerived ? "Auto-detected" : "Manual",
       "Success Criteria": m.successCriteria,
       Stakeholders: m.stakeholders?.join(", ") || "",
     }));
@@ -574,8 +440,6 @@ export default function MilestoneList({
       highRisk: allMilestones.filter(
         (m) => m.riskLevel === "high" || m.riskLevel === "critical",
       ).length,
-      derived: allMilestones.filter((m) => m.isDerived).length,
-      manual: allMilestones.filter((m) => !m.isDerived).length,
     };
   }, [allMilestones]);
 
@@ -588,8 +452,7 @@ export default function MilestoneList({
           <h3 className="text-lg font-semibold mb-2">No milestones yet</h3>
           <p className="text-muted-foreground text-center max-w-sm">
             Create your first milestone to track important project goals and
-            deadlines. Milestones are also auto-detected from critical/urgent
-            tasks.
+            deadlines.
           </p>
         </CardContent>
       </Card>
@@ -608,8 +471,6 @@ export default function MilestoneList({
         onStatusFilterChange={setStatusFilter}
         riskFilter={riskFilter}
         onRiskFilterChange={setRiskFilter}
-        typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
         sortBy={sortBy}
         onSortChange={setSortBy}
         groupBy={groupBy}
@@ -637,9 +498,6 @@ export default function MilestoneList({
               <div>
                 <p className="text-sm text-muted-foreground">Total</p>
                 <p className="text-2xl font-bold">{combinedStats.total}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {combinedStats.manual} manual • {combinedStats.derived} auto
-                </p>
               </div>
               <Target className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -745,7 +603,7 @@ export default function MilestoneList({
                     >
                       <div className="flex items-start gap-3">
                         {/* Selection Checkbox */}
-                        {selectMode && !milestone.isDerived && (
+                        {selectMode && (
                           <input
                             type="checkbox"
                             checked={selectedMilestones.has(milestone.id)}
@@ -782,15 +640,6 @@ export default function MilestoneList({
                               {getStatusIcon(milestone.status)}
                               <span className="ml-1">{milestone.status}</span>
                             </Badge>
-                            {milestone.isDerived && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                              >
-                                <Info className="h-3 w-3 mr-1" />
-                                Auto-detected
-                              </Badge>
-                            )}
                           </div>
 
                           {milestone.description && (
@@ -872,77 +721,66 @@ export default function MilestoneList({
                           onKeyDown={(e) => e.stopPropagation()}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {!milestone.isDerived &&
-                            milestone.status === "upcoming" && (
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange(
-                                      milestone.id,
-                                      "achieved",
-                                    );
-                                  }}
-                                  className="text-green-600 hover:text-green-700"
-                                >
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange(milestone.id, "missed");
-                                  }}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <AlertTriangle className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-
-                          {milestone.isDerived ? (
-                            <Badge variant="secondary" className="text-xs">
-                              <Info className="h-3 w-3 mr-1" />
-                              Read-only (from task)
-                            </Badge>
-                          ) : (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onKeyDown={(e) => e.stopPropagation()}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEditMilestone?.(milestone);
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteMilestone(milestone.id);
-                                  }}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                          {milestone.status === "upcoming" && (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(milestone.id, "achieved");
+                                }}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(milestone.id, "missed");
+                                }}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <AlertTriangle className="h-4 w-4" />
+                              </Button>
+                            </div>
                           )}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onKeyDown={(e) => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditMilestone?.(milestone);
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMilestone(milestone.id);
+                                }}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     </CardContent>

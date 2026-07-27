@@ -41,8 +41,6 @@ interface MilestoneToolbarProps {
   onStatusFilterChange: (status: string) => void;
   riskFilter: string;
   onRiskFilterChange: (risk: string) => void;
-  typeFilter: string;
-  onTypeFilterChange: (type: string) => void;
 
   // Sort
   sortBy: string;
@@ -78,8 +76,6 @@ export default function MilestoneToolbar({
   onStatusFilterChange,
   riskFilter,
   onRiskFilterChange,
-  typeFilter,
-  onTypeFilterChange,
   sortBy,
   onSortChange,
   groupBy,
@@ -210,18 +206,6 @@ export default function MilestoneToolbar({
           </SelectContent>
         </Select>
 
-        {/* Type Filter */}
-        <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-          <SelectTrigger className="w-[160px] h-9">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="manual">Manual Only</SelectItem>
-            <SelectItem value="auto">Auto-detected</SelectItem>
-          </SelectContent>
-        </Select>
-
         {/* Sort */}
         <Select value={sortBy} onValueChange={onSortChange}>
           <SelectTrigger className="w-[180px] h-9">
@@ -249,7 +233,6 @@ export default function MilestoneToolbar({
             <SelectItem value="none">No Grouping</SelectItem>
             <SelectItem value="status">By Status</SelectItem>
             <SelectItem value="risk">By Risk</SelectItem>
-            <SelectItem value="type">By Type</SelectItem>
             <SelectItem value="month">By Month</SelectItem>
           </SelectContent>
         </Select>

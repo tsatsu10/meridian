@@ -73,30 +73,6 @@ interface CreateMilestoneModalProps {
   editingMilestone?: MilestoneTask | null;
 }
 
-void {
-  upcoming: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  achieved: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  missed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
-
-void {
-  phase_completion:
-    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-  deliverable:
-    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  approval:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-  deadline: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
-
-void {
-  low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  medium:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-  high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-  critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
-
 export default function CreateMilestoneModal({
   open,
   onClose,
@@ -184,14 +160,11 @@ export default function CreateMilestoneModal({
             ...formData,
           };
 
-      // Call the callback to handle milestone creation/update
+      // Call the callback to handle milestone creation/update. The actual
+      // create/update request is async (see useMilestones) - success and
+      // failure toasts are shown there once the request really resolves,
+      // not optimistically here.
       onMilestoneCreated?.(milestone);
-
-      toast.success(
-        editingMilestone
-          ? "Milestone updated successfully"
-          : "Milestone created successfully",
-      );
       onClose();
     } catch (error) {
       toast.error("Failed to save milestone");

@@ -22,15 +22,12 @@ import {
   FileText,
   Link2,
   ArrowLeft,
-  Mail,
-  Send,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Card, CardContent } from "@/components/ui/card";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import { flattenTasks } from "@/utils/task-hierarchy";
 import type { TaskWithSubtasks } from "@/types/task";
-import { toast } from "sonner";
 
 // @epic-1.3-milestones: Sarah (PM) needs detailed milestone viewing
 // @persona-sarah: PM needs comprehensive milestone information display
@@ -48,7 +45,6 @@ interface MilestoneDetail {
   successCriteria: string;
   riskLevel: "low" | "medium" | "high" | "critical";
   projectId: string;
-  isDerived?: boolean;
   createdAt: string;
   updatedAt: string;
   dependencies?: string[];
@@ -147,9 +143,10 @@ export default function MilestoneDetailModal({
   showBackButton = false,
   onBackToOverview,
 }: MilestoneDetailModalProps) {
-  if (!milestone) return null;
-
-  // Fetch tasks to resolve dependency IDs to titles
+  // This modal is kept permanently mounted by its parent, with `milestone`
+  // toggling between null and a real value as selection changes - hooks
+  // must run on every render regardless, so nothing can early-return above
+  // this point (Rules of Hooks).
   const { data: tasksData } = useGetTasks(projectId || "");
 
   // Get all tasks for dependency resolution
@@ -161,24 +158,12 @@ export default function MilestoneDetailModal({
       : [];
   const allTasks = flattenTasks(columnArray.flatMap((col) => col.tasks || []));
 
+  if (!milestone) return null;
+
   // Get task title by ID
   const getTaskTitle = (taskId: string) => {
     const task = allTasks.find((t) => t.id === taskId);
     return task ? task.title : `Task ID: ${taskId}`;
-  };
-
-  // Stakeholder notification functionality
-  const handleNotifyStakeholders = () => {
-    if (!milestone.stakeholders || milestone.stakeholders.length === 0) {
-      toast.error("No stakeholders to notify");
-      return;
-    }
-
-    // Simulate sending notifications
-    const stakeholderCount = milestone.stakeholders.length;
-    toast.success(
-      `Notification sent to ${stakeholderCount} stakeholder${stakeholderCount !== 1 ? "s" : ""}`,
-    );
   };
 
   const formatDate = (dateString: string) => {
@@ -204,16 +189,21 @@ export default function MilestoneDetailModal({
     return formattedDate + status;
   };
 
-  const getProgressPercentage = (status: string) => {
-    switch (status) {
-      case "achieved":
-        return 100;
-      case "missed":
-        return 0;
-      default:
-        return 50; // Default for upcoming milestones
+  // Achieved/missed milestones are unambiguously done/not-done. For an
+  // "upcoming" milestone with real dependency tasks, use their actual
+  // completion rate instead of a flat guess - a milestone with 1 of 4
+  // dependency tasks done should not show the same 50% as one with none.
+  const progress = (() => {
+    if (milestone.status === "achieved") return 100;
+    if (milestone.status === "missed") return 0;
+    if (milestone.dependencies && milestone.dependencies.length > 0) {
+      const completed = milestone.dependencies.filter(
+        (depId) => allTasks.find((t) => t.id === depId)?.status === "done",
+      ).length;
+      return Math.round((completed / milestone.dependencies.length) * 100);
     }
-  };
+    return 50; // No dependency tasks to measure against
+  })();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -345,13 +335,8 @@ export default function MilestoneDetailModal({
                   <span className="font-medium">Progress</span>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">
-                    {getProgressPercentage(milestone.status)}%
-                  </div>
-                  <Progress
-                    value={getProgressPercentage(milestone.status)}
-                    className="h-2"
-                  />
+                  <div className="text-sm font-medium">{progress}%</div>
+                  <Progress value={progress} className="h-2" />
                 </div>
               </CardContent>
             </Card>
@@ -389,22 +374,11 @@ export default function MilestoneDetailModal({
             {milestone.stakeholders && milestone.stakeholders.length > 0 && (
               <Card>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-muted-foreground" />
-                      <span className="font-medium">
-                        Stakeholders ({milestone.stakeholders.length})
-                      </span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleNotifyStakeholders}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Send className="h-4 w-4 mr-1" />
-                      Notify All
-                    </Button>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">
+                      Stakeholders ({milestone.stakeholders.length})
+                    </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {milestone.stakeholders.map((email: string) => (
@@ -415,18 +389,6 @@ export default function MilestoneDetailModal({
                       >
                         <User className="h-3 w-3" />
                         {email.split("@")[0]}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            toast.success(
-                              `Notification sent to ${email.split("@")[0]}`,
-                            );
-                          }}
-                          className="p-0 h-auto ml-1 hover:bg-transparent"
-                        >
-                          <Mail className="h-3 w-3 text-blue-500 hover:text-blue-700" />
-                        </Button>
                       </Badge>
                     ))}
                   </div>
