@@ -77,4 +77,55 @@ describe("resolveRolePermissions", () => {
 
     expect(await resolveRolePermissions("role-1", "ws-1")).toEqual({});
   });
+
+  // Pins the tenant boundary: `row.workspaceId === null || row.workspaceId
+  // === workspaceId` is the only thing stopping a custom role owned by
+  // workspace A from resolving for a caller in workspace B. Without it, a
+  // custom role from another workspace would silently grant its permissions
+  // to an unrelated caller. Uses a role id ("role-2") not used by any other
+  // test in this file, and relies on `vi.resetModules()` in `beforeEach` to
+  // give this test a fresh module instance — and therefore a fresh in-memory
+  // cache — so the result below cannot be a stale cache hit left over from
+  // another test.
+  it("denies when the custom role belongs to a different workspace", async () => {
+    mockDb.__setSelectResults([
+      {
+        id: "role-2",
+        permissions: ["canViewTasks"],
+        isActive: true,
+        deletedAt: null,
+        workspaceId: "ws-A",
+      },
+    ]);
+
+    const { resolveRolePermissions } = await import(
+      "../resolve-role-permissions"
+    );
+
+    expect(await resolveRolePermissions("role-2", "ws-B")).toEqual({});
+  });
+
+  // Control for the test above: the identical stored row resolves correctly
+  // when the caller's workspace matches. This proves the denial above comes
+  // specifically from the workspace mismatch, not from some other reason the
+  // row failed to resolve.
+  it("resolves the same role when the workspace matches", async () => {
+    mockDb.__setSelectResults([
+      {
+        id: "role-2",
+        permissions: ["canViewTasks"],
+        isActive: true,
+        deletedAt: null,
+        workspaceId: "ws-A",
+      },
+    ]);
+
+    const { resolveRolePermissions } = await import(
+      "../resolve-role-permissions"
+    );
+
+    expect(await resolveRolePermissions("role-2", "ws-A")).toEqual({
+      canViewTasks: true,
+    });
+  });
 });
