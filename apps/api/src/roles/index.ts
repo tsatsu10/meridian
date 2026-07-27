@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
@@ -9,13 +9,18 @@ import {
   userTable,
   roleAssignmentTable,
 } from "../database/schema";
+import { roles } from "../database/schema/rbac-unified";
 import { ROLE_PERMISSIONS } from "../constants/rbac";
 import { requirePermission } from "../middlewares/rbac";
 import { listRoles } from "./controllers/list-roles";
 import { getRole } from "./controllers/get-role";
 import { getRoleUsage } from "./controllers/get-role-usage";
 import { resolveRolePermissions } from "./lib/resolve-role-permissions";
+import { isSystemRoleId } from "./lib/system-roles";
 import { createRole } from "./controllers/create-role";
+import { updateRole } from "./controllers/update-role";
+import { deleteRole } from "./controllers/delete-role";
+import { cloneRole } from "./controllers/clone-role";
 
 /**
  * Every permission key the system knows about.
@@ -92,6 +97,43 @@ async function actorContext(userEmail: string, workspaceId: string) {
   return { userId: user.id, permissions };
 }
 
+/**
+ * Loads just enough of a role to authorize a mutation against it: whether it
+ * exists (and isn't already soft-deleted) and, if so, which workspace it
+ * belongs to. update/delete/clone all need the workspace *before* they can
+ * call actorContext (the actor's permission ceiling is workspace-scoped), so
+ * this runs ahead of that — a second, lighter read than the one
+ * updateRole/deleteRole perform themselves, but the tenant check can't be
+ * skipped just because it's redundant.
+ */
+async function loadRoleForMutation(
+  id: string,
+): Promise<{ id: string; workspaceId: string | null } | null> {
+  const [row] = await getDatabase()
+    .select({ id: roles.id, workspaceId: roles.workspaceId })
+    .from(roles)
+    .where(and(eq(roles.id, id), isNull(roles.deletedAt)))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Same tenant boundary the POST route enforces, applied to a role that
+ * already exists: the caller must belong to the workspace the role lives in
+ * before they can update, delete, or clone-from-into it. Without this, the
+ * cross-workspace escalation POST was just fixed for would simply reopen
+ * through PUT/DELETE/clone. System roles have no workspace to check — they
+ * are rejected on their own terms (400, "built-in") inside the controllers.
+ */
+async function assertMemberOfRoleWorkspace(
+  userEmail: string,
+  workspaceId: string | null,
+): Promise<boolean> {
+  if (!workspaceId) return false;
+  const memberIds = await memberWorkspaceIds(userEmail);
+  return memberIds.includes(workspaceId);
+}
+
 rolesRouter
   .get("/", async (c) => {
     const type = c.req.query("type") as "all" | "system" | "custom" | undefined;
@@ -159,6 +201,118 @@ rolesRouter
   .get("/:id", async (c) => {
     const memberIds = await memberWorkspaceIds(c.get("userEmail"));
     return c.json({ role: await getRole(c.req.param("id"), memberIds) });
-  });
+  })
+  .put(
+    "/:id",
+    requirePermission("canManageRoles"),
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().min(1).max(100).optional(),
+        description: z.string().max(500).nullable().optional(),
+        color: z
+          .string()
+          .regex(/^#[0-9A-Fa-f]{6}$/)
+          .optional(),
+        permissions: z.array(z.string()).optional(),
+        isActive: z.boolean().optional(),
+      }),
+    ),
+    async (c) => {
+      const id = c.req.param("id");
+      const target = await loadRoleForMutation(id);
+      if (!target) {
+        return c.json({ error: "Role not found" }, 404);
+      }
+
+      // Tenant boundary: see assertMemberOfRoleWorkspace. System roles have
+      // no workspace and are rejected below by updateRole itself.
+      if (
+        !isSystemRoleId(target.id) &&
+        !(await assertMemberOfRoleWorkspace(
+          c.get("userEmail"),
+          target.workspaceId,
+        ))
+      ) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
+      const actor = await actorContext(
+        c.get("userEmail"),
+        target.workspaceId ?? "",
+      );
+      const role = await updateRole(id, {
+        ...c.req.valid("json"),
+        actorUserId: actor.userId,
+        actorPermissions: actor.permissions,
+        ipAddress: c.req.header("x-forwarded-for"),
+        userAgent: c.req.header("user-agent"),
+      });
+      return c.json({ role });
+    },
+  )
+  .delete("/:id", requirePermission("canManageRoles"), async (c) => {
+    const id = c.req.param("id");
+    const target = await loadRoleForMutation(id);
+    if (!target) {
+      return c.json({ error: "Role not found" }, 404);
+    }
+
+    if (
+      !isSystemRoleId(target.id) &&
+      !(await assertMemberOfRoleWorkspace(
+        c.get("userEmail"),
+        target.workspaceId,
+      ))
+    ) {
+      return c.json({ error: "Workspace not found" }, 404);
+    }
+
+    const actor = await actorContext(
+      c.get("userEmail"),
+      target.workspaceId ?? "",
+    );
+    return c.json(
+      await deleteRole(id, actor.userId, {
+        ipAddress: c.req.header("x-forwarded-for"),
+        userAgent: c.req.header("user-agent"),
+      }),
+    );
+  })
+  .post(
+    "/:id/clone",
+    requirePermission("canManageRoles"),
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().min(1).max(100).optional(),
+        workspaceId: z.string().min(1),
+      }),
+    ),
+    async (c) => {
+      const body = c.req.valid("json");
+
+      // Same tenant boundary as POST /: the clone's destination workspace
+      // must be one the caller belongs to. The source role's own visibility
+      // (system, or a custom role in a workspace the caller can see) is
+      // enforced separately inside cloneRole via getRole.
+      const memberIds = await memberWorkspaceIds(c.get("userEmail"));
+      if (!memberIds.includes(body.workspaceId)) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
+      const actor = await actorContext(c.get("userEmail"), body.workspaceId);
+      const role = await cloneRole(c.req.param("id"), {
+        name: body.name,
+        workspaceId: body.workspaceId,
+        actorUserId: actor.userId,
+        actorPermissions: actor.permissions,
+        memberWorkspaceIds: memberIds,
+        ipAddress: c.req.header("x-forwarded-for"),
+        userAgent: c.req.header("user-agent"),
+      });
+      return c.json({ role }, 201);
+    },
+  );
 
 export default rolesRouter;
