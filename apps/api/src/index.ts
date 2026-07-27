@@ -576,6 +576,10 @@ app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls
     await initializeDatabase();
     logger.debug("✅ Database initialized");
 
+    const { seedSystemRoles } = await import("./roles/lib/system-roles");
+    await seedSystemRoles();
+    logger.debug("✅ System roles seeded");
+
     await startServer();
     logger.debug("✅ Server started successfully");
   } catch (error) {
