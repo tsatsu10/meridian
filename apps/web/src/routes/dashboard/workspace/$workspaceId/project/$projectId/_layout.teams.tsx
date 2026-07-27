@@ -334,7 +334,10 @@ function ProjectTeams() {
     // different id space than project_members.id), so each member needs
     // its matching workspace_user.id resolved by email up front.
     const workspaceUserIdByEmail = new Map(
-      (workspaceUsers ?? []).map((u) => [u.email.toLowerCase(), u.id]),
+      (workspaceUsers ?? []).map((u) => [
+        u.email.toLowerCase(),
+        u.workspaceUserId,
+      ]),
     );
 
     return realProjectMembers.map((member) => {

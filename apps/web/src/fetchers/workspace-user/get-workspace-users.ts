@@ -11,6 +11,8 @@ function normalizeWorkspaceMember(
   const email = String(emailRaw).trim().toLowerCase();
   const name = (raw.name ?? raw.userName ?? null) as string | null;
   const id = typeof raw.id === "string" ? raw.id : null;
+  const workspaceUserId =
+    typeof raw.workspaceUserId === "string" ? raw.workspaceUserId : null;
   const avatar = typeof raw.avatar === "string" ? raw.avatar : null;
   const joinedAt =
     typeof raw.joinedAt === "string"
@@ -23,6 +25,7 @@ function normalizeWorkspaceMember(
 
   return {
     id,
+    workspaceUserId,
     email,
     name,
     avatar,
