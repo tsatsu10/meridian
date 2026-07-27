@@ -20,6 +20,7 @@ import { getHighestRole } from "../constants/rbac";
 import { appSettings } from "../config/settings";
 import logger from "../utils/logger";
 import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
+import { isSystemRoleId } from "../roles/lib/system-roles";
 
 /**
  * RBAC middleware factory - creates middleware that checks specific permissions
@@ -335,7 +336,15 @@ export async function checkWorkspacePermission(
   }
 
   let restrictedToProjectIds: string[] | null = null;
-  if (userRole === "project-manager" || userRole === "project-viewer") {
+  // Built-in project roles keep their existing behaviour exactly. Custom
+  // roles are additionally restricted whenever the assignment carries
+  // projectIds — without this, a project-scoped custom role would silently
+  // grant workspace-wide access.
+  if (
+    userRole === "project-manager" ||
+    userRole === "project-viewer" ||
+    !isSystemRoleId(userRole)
+  ) {
     const projectIds: string[] = Array.isArray(workspaceAssignment.projectIds)
       ? (workspaceAssignment.projectIds as string[])
       : [];
@@ -546,8 +555,15 @@ export async function checkProjectPermission(
     };
   }
 
-  // Project-scoped roles may only act on their assigned projects
-  if (userRole === "project-manager" || userRole === "project-viewer") {
+  // Project-scoped roles may only act on their assigned projects. Built-in
+  // project roles keep their existing behaviour exactly; custom roles are
+  // additionally restricted whenever the assignment carries projectIds — see
+  // the matching comment in checkWorkspacePermission above.
+  if (
+    userRole === "project-manager" ||
+    userRole === "project-viewer" ||
+    !isSystemRoleId(userRole)
+  ) {
     const projectIds: string[] = Array.isArray(assignment.projectIds)
       ? (assignment.projectIds as string[])
       : [];

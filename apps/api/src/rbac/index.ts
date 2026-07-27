@@ -13,7 +13,7 @@ import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import rbacStats from "./stats";
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
 import {
   roleAssignmentTable,
@@ -23,9 +23,14 @@ import {
   userTable,
   workspaceTable,
 } from "../database/schema";
+// Imported from the subfile, not "../database/schema": the barrel's
+// `export * from "./schema/rbac-unified"` is circular, so `roles` is absent
+// from the barrel at runtime.
+import { roles } from "../database/schema/rbac-unified";
 import { createId } from "@paralleldrive/cuid2";
 import { getRolePermissions } from "../constants/rbac";
 import { requirePermission } from "../middlewares/rbac";
+import { isSystemRoleId } from "../roles/lib/system-roles";
 import type { UserRole } from "../types/rbac";
 import logger from "../utils/logger";
 
@@ -37,21 +42,13 @@ const rbac = new Hono<{
 
 // ===== VALIDATION SCHEMAS =====
 
-const assignRoleSchema = z.object({
+export const assignRoleSchema = z.object({
   userId: z.string(),
-  role: z.enum([
-    "workspace-manager",
-    "department-head",
-    "workspace-viewer",
-    "project-manager",
-    "project-viewer",
-    "team-lead",
-    "member",
-    "client",
-    "contractor",
-    "stakeholder",
-    "guest",
-  ]),
+  // Accepts a built-in slug or a custom role id. The enum here previously made
+  // custom roles unassignable, which left the custom-role resolution path
+  // unreachable. The value is validated against the roles table in the handler
+  // below — the schema cannot do it, because it needs a database lookup.
+  role: z.string().min(1),
   workspaceId: z.string().optional(),
   projectIds: z.array(z.string()).optional(),
   departmentIds: z.array(z.string()).optional(),
@@ -206,6 +203,38 @@ rbac.post(
       const db = getDatabase();
       const data = c.req.valid("json");
       const assignerEmail = c.get("userEmail");
+
+      // A non-built-in role must be a real, active, non-deleted custom role.
+      // Without this any string could be written to role_assignment.role,
+      // which would resolve to {} and silently strip the user of all access.
+      if (!isSystemRoleId(data.role)) {
+        const [customRole] = await db
+          .select({ id: roles.id, workspaceId: roles.workspaceId })
+          .from(roles)
+          .where(
+            and(
+              eq(roles.id, data.role),
+              eq(roles.isActive, true),
+              isNull(roles.deletedAt),
+            ),
+          )
+          .limit(1);
+
+        if (!customRole) {
+          return c.json({ error: "Role not found" }, 404);
+        }
+
+        if (
+          customRole.workspaceId &&
+          data.workspaceId &&
+          customRole.workspaceId !== data.workspaceId
+        ) {
+          return c.json(
+            { error: "Role belongs to a different workspace" },
+            400,
+          );
+        }
+      }
 
       // Get assigner user ID
       const assignerUser = await db
