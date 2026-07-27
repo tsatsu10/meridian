@@ -2178,3 +2178,404 @@ git status --short   # confirm nothing unrelated is staged
 git commit -m "test(roles): fix regressions found in full-suite run"
 ```
 (Skip if nothing changed.)
+
+---
+
+## Tasks 11-12: added after the Task 4 review
+
+The Task 4 review found two gaps that no original task covered, and that
+together make the feature unusable end-to-end:
+
+- `checkWorkspacePermission` and `checkProjectPermission` still resolve via
+  `getRolePermissions`, so custom roles deny on every workspace- and
+  project-scoped route — the bulk of the API.
+- `assignRoleSchema.role` is a `z.enum` of the 11 built-in slugs, so no custom
+  role id can ever be assigned. The DB branch built in Tasks 3-4 is
+  unreachable in production, and the spec's success criterion "created,
+  edited, cloned, assigned, and enforced" cannot be met.
+
+**Execution order:** run Task 11 immediately after Task 4. Run Task 12 after
+Task 8, because it validates against the roles CRUD that Task 8 completes.
+Task 10 stays last.
+
+---
+
+### Task 11: Extend custom role resolution to workspace and project checks
+
+**Files:**
+- Modify: `apps/api/src/middlewares/rbac.ts` (the `getRolePermissions` call sites near lines 313 and 520)
+- Test: `apps/api/src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts`
+
+**Interfaces:**
+- Consumes: `resolveRolePermissions` (Task 3), already imported into this file by Task 4.
+- Produces: no new exports.
+
+Both call sites already select a workspace-scoped assignment
+(`eq(roleAssignmentTable.workspaceId, ...)`), so unlike `requirePermission`
+they already hold the correct workspace and need no new query.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `apps/api/src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts`:
+
+```typescript
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const resolveRolePermissions = vi.fn();
+
+vi.mock("../../roles/lib/resolve-role-permissions", () => ({
+  resolveRolePermissions: (role: string, workspaceId: string | null) =>
+    resolveRolePermissions(role, workspaceId),
+  invalidateRoleCache: vi.fn(),
+}));
+
+const mockDb = { select: vi.fn() };
+
+vi.mock("../../database/connection", () => ({
+  getDatabase: vi.fn(() => mockDb),
+}));
+
+function selectReturning(rows: unknown[]) {
+  const chain: Record<string, unknown> = {};
+  chain.from = vi.fn().mockReturnValue(chain);
+  chain.where = vi.fn().mockReturnValue(chain);
+  chain.limit = vi.fn().mockReturnValue(chain);
+  chain.innerJoin = vi.fn().mockReturnValue(chain);
+  chain.leftJoin = vi.fn().mockReturnValue(chain);
+  // biome-ignore lint/suspicious/noThenProperty: mock must be awaitable like drizzle's builder
+  chain.then = (resolve: (value: unknown) => unknown) =>
+    Promise.resolve(rows).then(resolve);
+  return chain;
+}
+
+describe("checkWorkspacePermission with custom roles", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.DEMO_MODE = "false";
+  });
+
+  // Before this task these functions called getRolePermissions directly, so a
+  // custom role id resolved to {} and denied on every workspace-scoped route.
+  it("grants when the workspace assignment carries a custom role with the permission", async () => {
+    mockDb.select
+      .mockReturnValueOnce(
+        selectReturning([{ id: "user-1", email: "u@example.com" }]),
+      )
+      .mockReturnValueOnce(
+        selectReturning([
+          {
+            role: "custom-role-1",
+            workspaceId: "ws-1",
+            isActive: true,
+            projectIds: null,
+          },
+        ]),
+      );
+
+    resolveRolePermissions.mockResolvedValue({ canViewTasks: true });
+
+    const { checkWorkspacePermission } = await import("../rbac");
+    const result = await checkWorkspacePermission(
+      "u@example.com",
+      "ws-1",
+      "canViewTasks",
+    );
+
+    expect(result.allowed).toBe(true);
+    // The workspace-scoped assignment already carries the right workspace.
+    expect(resolveRolePermissions).toHaveBeenCalledWith("custom-role-1", "ws-1");
+  });
+
+  it("denies when the custom role resolves to no permissions", async () => {
+    mockDb.select
+      .mockReturnValueOnce(
+        selectReturning([{ id: "user-1", email: "u@example.com" }]),
+      )
+      .mockReturnValueOnce(
+        selectReturning([
+          {
+            role: "revoked-role",
+            workspaceId: "ws-1",
+            isActive: true,
+            projectIds: null,
+          },
+        ]),
+      );
+
+    resolveRolePermissions.mockResolvedValue({});
+
+    const { checkWorkspacePermission } = await import("../rbac");
+    const result = await checkWorkspacePermission(
+      "u@example.com",
+      "ws-1",
+      "canViewTasks",
+    );
+
+    expect(result.allowed).toBe(false);
+    expect(result.status).toBe(403);
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `cd apps/api && npx vitest run src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts`
+
+Expected: FAIL — `resolveRolePermissions` is never called, because
+`checkWorkspacePermission` still calls `getRolePermissions`.
+
+- [ ] **Step 3: Change the checkWorkspacePermission call site**
+
+In `apps/api/src/middlewares/rbac.ts`, find this pair of lines inside
+`checkWorkspacePermission` (near line 313):
+
+```typescript
+  const userRole = workspaceAssignment.role as UserRole;
+  const rolePermissions = getRolePermissions(userRole);
+```
+
+Replace with:
+
+```typescript
+  const userRole = workspaceAssignment.role as UserRole;
+  // Same name-first resolution requirePermission uses. This assignment was
+  // selected with eq(roleAssignmentTable.workspaceId, workspaceId), so the
+  // workspace passed here is the one actually being authorised against.
+  const rolePermissions = await resolveRolePermissions(
+    workspaceAssignment.role,
+    workspaceId,
+  );
+```
+
+- [ ] **Step 4: Change the checkProjectPermission call site**
+
+Find this pair inside `checkProjectPermission` (near line 520):
+
+```typescript
+  const userRole = assignment.role as UserRole;
+  const rolePermissions = getRolePermissions(userRole);
+```
+
+Replace with:
+
+```typescript
+  const userRole = assignment.role as UserRole;
+  // The assignment was selected with
+  // eq(roleAssignmentTable.workspaceId, project.workspaceId), so this is the
+  // workspace that owns the project being authorised against.
+  const rolePermissions = await resolveRolePermissions(
+    assignment.role,
+    project.workspaceId,
+  );
+```
+
+Both functions are already `async`, so no signature changes are needed.
+
+- [ ] **Step 5: Correct the misleading comment in requirePermission**
+
+The Task 4 review noted that `requirePermission` passes
+`roleAssignment[0]?.workspaceId ?? null` from an assignment picked with
+`.limit(1)` and no `orderBy`. That is a consistency check, not request
+scoping, but the comment reads as though it enforced scoping. Replace that
+comment block (directly above the `resolveRolePermissions` call inside
+`requirePermission`) with:
+
+```typescript
+      // Built-in role names resolve from the ROLE_PERMISSIONS constant exactly
+      // as before; anything else is looked up as a custom role id. Unknown or
+      // revoked roles resolve to {}, i.e. denied.
+      //
+      // NOTE: the workspace passed here comes from an arbitrarily chosen
+      // active assignment (.limit(1), no orderBy) and is NOT the workspace of
+      // the request. It only asserts the custom role belongs to the same
+      // workspace as that assignment. Route-level scoping is the job of
+      // checkWorkspacePermission / checkProjectPermission, which select the
+      // assignment for the workspace actually being accessed.
+```
+
+- [ ] **Step 6: Run the test to verify it passes**
+
+Run: `cd apps/api && npx vitest run src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts`
+
+Expected: PASS (2 tests).
+
+- [ ] **Step 7: Confirm no built-in behaviour changed**
+
+Run: `cd apps/api && npx vitest run src/rbac src/middlewares`
+
+Expected: no new failures against the Task 4 baseline of 254 passed,
+24 skipped, 0 failed.
+
+- [ ] **Step 8: Check whether the getRolePermissions import is now unused**
+
+Run: `cd apps/api && grep -n "getRolePermissions" src/middlewares/rbac.ts`
+
+If the only remaining hit is the import statement, delete it from the import
+block — an unused import fails biome's lint. If other call sites remain,
+leave the import in place and report which ones.
+
+- [ ] **Step 9: Typecheck, format and commit**
+
+```bash
+cd apps/api && npx tsc --noEmit -p tsconfig.json
+cd ../.. && npx biome check --write apps/api/src/middlewares/rbac.ts apps/api/src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts
+git add apps/api/src/middlewares/rbac.ts apps/api/src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts
+git status --short
+git commit -m "feat(roles): honour custom roles in workspace and project checks"
+```
+
+---
+
+### Task 12: Allow custom role ids to be assigned
+
+**Files:**
+- Modify: `apps/api/src/rbac/index.ts` (`assignRoleSchema` and the `/assign` handler)
+- Test: `apps/api/src/rbac/__tests__/assign-custom-role.test.ts`
+
+**Interfaces:**
+- Consumes: `isSystemRoleId` (Task 2), the `roles` table.
+- Produces: `assignRoleSchema` becomes an exported symbol.
+
+**Run this task after Task 8**, because it validates against the roles CRUD
+those tasks establish.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `apps/api/src/rbac/__tests__/assign-custom-role.test.ts`:
+
+```typescript
+import { describe, expect, it } from "vitest";
+import { assignRoleSchema } from "../index";
+
+/**
+ * Regression: `role` was a z.enum of the 11 built-in slugs, so a custom role
+ * id could never be assigned, which left the custom-role resolution path
+ * unreachable in production.
+ */
+describe("assignRoleSchema", () => {
+  it("accepts a built-in role slug", () => {
+    const result = assignRoleSchema.safeParse({
+      userId: "user-1",
+      role: "workspace-manager",
+      workspaceId: "ws-1",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a custom role id", () => {
+    const result = assignRoleSchema.safeParse({
+      userId: "user-1",
+      role: "hbtbd8gzkhu8skpwy4229nsh",
+      workspaceId: "ws-1",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an empty role", () => {
+    const result = assignRoleSchema.safeParse({
+      userId: "user-1",
+      role: "",
+      workspaceId: "ws-1",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `cd apps/api && npx vitest run src/rbac/__tests__/assign-custom-role.test.ts`
+
+Expected: FAIL — either `assignRoleSchema` is not exported, or the
+custom-id case is rejected by the enum.
+
+- [ ] **Step 3: Widen the schema**
+
+In `apps/api/src/rbac/index.ts`, export `assignRoleSchema` and replace the
+`role` enum with a non-empty string. Keep every other field exactly as it is
+— only `role` changes, and the const becomes exported:
+
+```typescript
+export const assignRoleSchema = z.object({
+  userId: z.string(),
+  // Accepts a built-in slug or a custom role id. The enum here previously made
+  // custom roles unassignable, which left the custom-role resolution path
+  // unreachable. The value is validated against the roles table in the handler
+  // below — the schema cannot do it, because it needs a database lookup.
+  role: z.string().min(1),
+  // ...preserve all remaining fields from the existing schema unchanged
+});
+```
+
+- [ ] **Step 4: Validate the role in the handler**
+
+In the `/assign` handler, immediately after
+`const data = c.req.valid("json");` and before any write, add:
+
+```typescript
+      // A non-built-in role must be a real, active, non-deleted custom role.
+      // Without this any string could be written to role_assignment.role,
+      // which would resolve to {} and silently strip the user of all access.
+      if (!isSystemRoleId(data.role)) {
+        const [customRole] = await db
+          .select({ id: roles.id, workspaceId: roles.workspaceId })
+          .from(roles)
+          .where(
+            and(
+              eq(roles.id, data.role),
+              eq(roles.isActive, true),
+              isNull(roles.deletedAt),
+            ),
+          )
+          .limit(1);
+
+        if (!customRole) {
+          return c.json({ error: "Role not found" }, 404);
+        }
+
+        if (
+          customRole.workspaceId &&
+          data.workspaceId &&
+          customRole.workspaceId !== data.workspaceId
+        ) {
+          return c.json(
+            { error: "Role belongs to a different workspace" },
+            400,
+          );
+        }
+      }
+```
+
+Add the imports this needs at the top of the file:
+
+```typescript
+import { isNull } from "drizzle-orm";
+import { roles } from "../database/schema/rbac-unified";
+import { isSystemRoleId } from "../roles/lib/system-roles";
+```
+
+`and` and `eq` are already imported here. The schema barrel does not
+re-export `roles`, so the subfile path above is required.
+
+- [ ] **Step 5: Run the test to verify it passes**
+
+Run: `cd apps/api && npx vitest run src/rbac/__tests__/assign-custom-role.test.ts`
+
+Expected: PASS (3 tests).
+
+- [ ] **Step 6: Confirm existing rbac tests still pass**
+
+Run: `cd apps/api && npx vitest run src/rbac`
+
+Expected: no new failures. The existing authorization tests for `/assign`
+must still pass — the `canManageRoles` guard is untouched.
+
+- [ ] **Step 7: Typecheck, format and commit**
+
+```bash
+cd apps/api && npx tsc --noEmit -p tsconfig.json
+cd ../.. && npx biome check --write apps/api/src/rbac/index.ts apps/api/src/rbac/__tests__/assign-custom-role.test.ts
+git add apps/api/src/rbac/index.ts apps/api/src/rbac/__tests__/assign-custom-role.test.ts
+git status --short
+git commit -m "feat(roles): allow custom role ids to be assigned, validated against the roles table"
+```
