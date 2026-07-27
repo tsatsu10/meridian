@@ -22,6 +22,7 @@ import {
   departmentTable,
   userTable,
   workspaceTable,
+  workspaceUserTable,
 } from "../database/schema";
 // Imported from the subfile, not "../database/schema": the barrel's
 // `export * from "./schema/rbac-unified"` is circular, so `roles` is absent
@@ -29,8 +30,16 @@ import {
 import { roles } from "../database/schema/rbac-unified";
 import { createId } from "@paralleldrive/cuid2";
 import { getRolePermissions } from "../constants/rbac";
-import { requirePermission } from "../middlewares/rbac";
+import {
+  requirePermission,
+  checkWorkspacePermission,
+} from "../middlewares/rbac";
 import { isSystemRoleId } from "../roles/lib/system-roles";
+import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
+import {
+  findExcessPermissions,
+  recordToPermissions,
+} from "../roles/lib/permission-set";
 import type { UserRole } from "../types/rbac";
 import logger from "../utils/logger";
 
@@ -49,7 +58,13 @@ export const assignRoleSchema = z.object({
   // unreachable. The value is validated against the roles table in the handler
   // below — the schema cannot do it, because it needs a database lookup.
   role: z.string().min(1),
-  workspaceId: z.string().optional(),
+  // Required: assignments are workspace-scoped throughout the resolution
+  // path (checkWorkspacePermission, checkProjectPermission, the custom-role
+  // lookup below). Omitting it previously let the cross-workspace check
+  // silently no-op and the deactivate-existing UPDATE wipe the user's
+  // assignment in every workspace they held one in — see task-12-report.md,
+  // Critical 2.
+  workspaceId: z.string().min(1),
   projectIds: z.array(z.string()).optional(),
   departmentIds: z.array(z.string()).optional(),
   reason: z.string().optional(),
@@ -204,6 +219,29 @@ rbac.post(
       const data = c.req.valid("json");
       const assignerEmail = c.get("userEmail");
 
+      // CRITICAL: gate on the TARGET workspace, not "does this caller hold
+      // canManageRoles anywhere" — requirePermission's own check is
+      // workspace-unscoped (`.limit(1)`, no `orderBy`, no workspace filter on
+      // whichever active assignment the query happens to return first).
+      // Without this, any authenticated user who creates their own workspace
+      // (self-assigned workspace-manager there, per
+      // workspace/controllers/create-workspace.ts) could call this route with
+      // an arbitrary victim workspaceId and grant themselves workspace-manager
+      // there too: requirePermission only asks "canManageRoles somewhere?",
+      // and checkWorkspacePermission — which DOES scope by workspace — would
+      // then report full admin in the victim workspace on the very next
+      // request. 404, uniform, never checkWorkspacePermission's own 403 body:
+      // consistent with the sibling /api/roles routes, and it doesn't confirm
+      // the workspace exists to someone with no legitimate access to it.
+      const scoped = await checkWorkspacePermission(
+        assignerEmail,
+        data.workspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
       // A non-built-in role must be a real, active, non-deleted custom role.
       // Without this any string could be written to role_assignment.role,
       // which would resolve to {} and silently strip the user of all access.
@@ -226,7 +264,6 @@ rbac.post(
 
         if (
           customRole.workspaceId &&
-          data.workspaceId &&
           customRole.workspaceId !== data.workspaceId
         ) {
           return c.json(
@@ -234,6 +271,45 @@ rbac.post(
             400,
           );
         }
+      }
+
+      // Escalation guard: the same "you cannot grant permissions you do not
+      // hold" ceiling createRole/updateRole enforce (findExcessPermissions),
+      // applied here too. Without it, an assigner could bypass that ceiling
+      // entirely by assigning an EXISTING powerful role instead of minting a
+      // new one — built-in or custom.
+      const [actorPermissions, assignedPermissions] = await Promise.all([
+        resolveRolePermissions(scoped.userRole ?? "guest", data.workspaceId),
+        resolveRolePermissions(data.role, data.workspaceId),
+      ]);
+      const excess = findExcessPermissions(
+        recordToPermissions(assignedPermissions),
+        actorPermissions,
+      );
+      if (excess.length > 0) {
+        return c.json(
+          {
+            error: `You cannot assign permissions you do not hold: ${excess.join(", ")}`,
+          },
+          403,
+        );
+      }
+
+      // The assignee must actually belong to the target workspace — without
+      // this a complete outsider could be granted access to it.
+      const [membership] = await db
+        .select({ id: workspaceUserTable.id })
+        .from(workspaceUserTable)
+        .where(
+          and(
+            eq(workspaceUserTable.userId, data.userId),
+            eq(workspaceUserTable.workspaceId, data.workspaceId),
+          ),
+        )
+        .limit(1);
+
+      if (!membership) {
+        return c.json({ error: "User is not a member of this workspace" }, 400);
       }
 
       // Get assigner user ID
@@ -248,7 +324,11 @@ rbac.post(
         return c.json({ error: "Assigner not found" }, 400);
       }
 
-      // Deactivate existing role assignments for this user
+      // Deactivate existing role assignments for this user IN THIS WORKSPACE
+      // ONLY. Previously this had no workspace predicate at all: assigning a
+      // role in workspace B deactivated the user's assignment in EVERY OTHER
+      // workspace they held one in too, then inserted the new row scoped to
+      // B alone — leaving the user with zero access anywhere else.
       await db
         .update(roleAssignmentTable)
         .set({
@@ -258,6 +338,7 @@ rbac.post(
           and(
             eq(roleAssignmentTable.userId, data.userId),
             eq(roleAssignmentTable.isActive, true),
+            eq(roleAssignmentTable.workspaceId, data.workspaceId),
           ),
         );
 
@@ -269,7 +350,7 @@ rbac.post(
         role: data.role,
         assignedAt: new Date(),
         isActive: true,
-        workspaceId: data.workspaceId || null,
+        workspaceId: data.workspaceId,
         projectIds: data.projectIds ?? null,
       };
 
@@ -283,7 +364,7 @@ rbac.post(
         action: "assigned",
         performedBy: assigner.id,
         reason: data.reason || "Role assigned",
-        workspaceId: data.workspaceId || null,
+        workspaceId: data.workspaceId,
         projectIds: data.projectIds ?? null,
         departmentIds: data.departmentIds ?? null,
         notes: data.notes || null,
