@@ -33,7 +33,7 @@ interface ExportMember {
   tasksCompleted?: number;
   currentTasks?: number;
   joinedAt?: string;
-  lastActive?: string;
+  lastActive?: string | null;
 }
 
 interface ExportUser {
@@ -50,12 +50,12 @@ interface ExportUser {
 interface ExportProjectHealth {
   name?: string;
   healthScore?: number;
-  completionRate?: number;
+  completion?: number;
   velocity?: number;
-  completedTasks?: number;
+  tasksCompleted?: number;
   totalTasks?: number;
-  riskLevel?: string;
-  status?: string;
+  riskFactors?: string[];
+  health?: string;
 }
 
 interface ExportResource {
@@ -74,13 +74,13 @@ interface ExportTimePoint {
   productivity?: number;
   tasksCompleted?: number;
   hoursLogged?: number;
-  activeMembers?: number;
+  activeUsers?: number;
 }
 
 // Analytics metric leaves are ComparativeData-shaped; the exporter only reads
-// an optional numeric `value`. `change` overlaps the real shape so responses
+// the current numeric value. `change` overlaps the real shape so responses
 // stay assignable (an all-optional target would trip the weak-type check).
-type MetricLeaf = { value?: number; change?: unknown };
+type MetricLeaf = { current?: number; change?: unknown };
 
 interface AnalyticsExportData {
   summary?: unknown;
@@ -346,19 +346,22 @@ export async function exportToExcel(
       ["Time Range", data.timeRange || "Last 30 days"],
       [""],
       ["Metric", "Value"],
-      ["Total Projects", data.projectMetrics?.totalProjects?.value || 0],
-      ["Completed Tasks", data.taskMetrics?.completedTasks?.value || 0],
+      ["Total Projects", data.projectMetrics?.totalProjects?.current || 0],
+      ["Completed Tasks", data.taskMetrics?.completedTasks?.current || 0],
       [
         "Team Productivity",
-        `${data.teamMetrics?.avgProductivity?.value || 0}%`,
+        `${data.teamMetrics?.avgProductivity?.current || 0}%`,
       ],
-      ["Active Members", data.teamMetrics?.activeMembers?.value || 0],
-      ["Total Hours", data.timeMetrics?.totalHours?.value || 0],
-      ["Time Utilization", `${data.timeMetrics?.timeUtilization?.value || 0}%`],
-      ["Projects At Risk", data.projectMetrics?.projectsAtRisk?.value || 0],
+      ["Active Members", data.teamMetrics?.activeMembers?.current || 0],
+      ["Total Hours", data.timeMetrics?.totalHours?.current || 0],
+      [
+        "Time Utilization",
+        `${data.timeMetrics?.timeUtilization?.current || 0}%`,
+      ],
+      ["Projects At Risk", data.projectMetrics?.projectsAtRisk?.current || 0],
       [
         "Avg Health Score",
-        `${data.projectMetrics?.avgHealthScore?.value || 0}%`,
+        `${data.projectMetrics?.avgHealthScore?.current || 0}%`,
       ],
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
@@ -370,12 +373,12 @@ export async function exportToExcel(
     const projectData = data.projectHealth.map((project) => ({
       "Project Name": project.name,
       "Health Score": project.healthScore,
-      Completion: `${project.completionRate}%`,
+      Completion: `${project.completion}%`,
       Velocity: project.velocity,
-      "Tasks Completed": project.completedTasks,
+      "Tasks Completed": project.tasksCompleted,
       "Tasks Total": project.totalTasks,
-      "Risk Level": project.riskLevel,
-      Status: project.status,
+      "Risk Factors": project.riskFactors?.join("; ") || "None",
+      Status: project.health,
     }));
     const projectSheet = XLSX.utils.json_to_sheet(projectData);
     XLSX.utils.book_append_sheet(workbook, projectSheet, "Projects");
@@ -404,7 +407,7 @@ export async function exportToExcel(
       Productivity: point.productivity,
       "Tasks Completed": point.tasksCompleted,
       "Hours Logged": point.hoursLogged,
-      "Active Members": point.activeMembers,
+      "Active Members": point.activeUsers,
     }));
     const timeSeriesSheet = XLSX.utils.json_to_sheet(timeSeriesData);
     XLSX.utils.book_append_sheet(workbook, timeSeriesSheet, "Trends");
@@ -412,4 +415,110 @@ export async function exportToExcel(
 
   // Write the file
   XLSX.writeFile(workbook, `${filename}-${timestamp}.xlsx`);
+}
+
+/**
+ * Export analytics data to a PDF report using jsPDF + jspdf-autotable
+ */
+export async function exportToPDF(
+  data: AnalyticsExportData,
+  filename = "export",
+) {
+  // Dynamic import for better code splitting
+  const { default: jsPDF } = await import("jspdf");
+  const autoTable = (await import("jspdf-autotable")).default;
+
+  const timestamp = new Date().toISOString().split("T")[0];
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text("Analytics Report", 14, 20);
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Generated ${new Date().toLocaleString()}`, 14, 27);
+  doc.text(`Time range: ${data.timeRange || "Last 30 days"}`, 14, 32);
+
+  let cursorY = 40;
+
+  autoTable(doc, {
+    startY: cursorY,
+    head: [["Metric", "Value"]],
+    body: [
+      [
+        "Total Projects",
+        String(data.projectMetrics?.totalProjects?.current ?? 0),
+      ],
+      [
+        "Completed Tasks",
+        String(data.taskMetrics?.completedTasks?.current ?? 0),
+      ],
+      [
+        "Team Productivity",
+        `${data.teamMetrics?.avgProductivity?.current ?? 0}%`,
+      ],
+      ["Active Members", String(data.teamMetrics?.activeMembers?.current ?? 0)],
+      ["Total Hours", String(data.timeMetrics?.totalHours?.current ?? 0)],
+      [
+        "Time Utilization",
+        `${data.timeMetrics?.timeUtilization?.current ?? 0}%`,
+      ],
+      [
+        "Projects At Risk",
+        String(data.projectMetrics?.projectsAtRisk?.current ?? 0),
+      ],
+      [
+        "Avg Health Score",
+        `${data.projectMetrics?.avgHealthScore?.current ?? 0}%`,
+      ],
+    ],
+    theme: "striped",
+    headStyles: { fillColor: [45, 212, 191] },
+  });
+  // biome-ignore lint/suspicious/noExplicitAny: jspdf-autotable augments jsPDF's prototype at runtime with lastAutoTable, which isn't reflected in its own type defs
+  cursorY = ((doc as any).lastAutoTable?.finalY ?? cursorY) + 12;
+
+  if (data.projectHealth && data.projectHealth.length > 0) {
+    doc.setFontSize(13);
+    doc.setTextColor(0);
+    doc.text("Project Health", 14, cursorY);
+    autoTable(doc, {
+      startY: cursorY + 4,
+      head: [["Project", "Health Score", "Completion", "Tasks", "Risk"]],
+      body: data.projectHealth.map((p) => [
+        p.name ?? "",
+        String(p.healthScore ?? 0),
+        `${p.completion ?? 0}%`,
+        `${p.tasksCompleted ?? 0}/${p.totalTasks ?? 0}`,
+        p.riskFactors?.join(", ") || p.health || "",
+      ]),
+      theme: "striped",
+      headStyles: { fillColor: [45, 212, 191] },
+    });
+    // biome-ignore lint/suspicious/noExplicitAny: see note above on lastAutoTable
+    cursorY = ((doc as any).lastAutoTable?.finalY ?? cursorY) + 12;
+  }
+
+  if (data.resourceUtilization && data.resourceUtilization.length > 0) {
+    if (cursorY > 250) {
+      doc.addPage();
+      cursorY = 20;
+    }
+    doc.setFontSize(13);
+    doc.text("Team Resources", 14, cursorY);
+    autoTable(doc, {
+      startY: cursorY + 4,
+      head: [["Name", "Role", "Utilization", "Workload", "Hours"]],
+      body: data.resourceUtilization.map((r) => [
+        r.userName ?? "",
+        r.role ?? "",
+        `${r.utilization ?? 0}%`,
+        String(r.workloadBalance ?? ""),
+        String(r.totalHours ?? 0),
+      ]),
+      theme: "striped",
+      headStyles: { fillColor: [45, 212, 191] },
+    });
+  }
+
+  doc.save(`${filename}-${timestamp}.pdf`);
 }

@@ -10,6 +10,7 @@
 
 import React, { useState, useMemo, lazy, Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -56,8 +57,6 @@ import {
   LayoutGrid,
   List,
   Download,
-  Briefcase,
-  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { toast } from "sonner";
@@ -183,10 +182,12 @@ export const Route = createFileRoute("/dashboard/teams")({
   component: TeamsPageWithErrorBoundary,
   validateSearch: (search: Record<string, unknown>) => {
     const t = search.tab;
+    // "directory" was a separate tab backed by the same workspace-user data
+    // as "users" - folded in as a view style there, so old links still land
+    // somewhere sensible instead of falling back to the default tab.
+    if (t === "directory") return { tab: "users" as const };
     const tab =
-      t === "teams" || t === "members" || t === "users" || t === "directory"
-        ? t
-        : undefined;
+      t === "teams" || t === "members" || t === "users" ? t : undefined;
     return { tab } as { tab?: typeof tab };
   },
 });
@@ -224,7 +225,7 @@ interface EnhancedTeamMember extends WorkspaceUser {
   performance: number;
   tasksCompleted: number;
   currentTasks: number;
-  lastActive: string;
+  lastActive: string | null;
   teamName?: string;
   teamColor?: string;
   projectId?: string;
@@ -258,16 +259,6 @@ interface EnhancedTeam {
   isActive?: boolean;
   unreadCount?: number;
 }
-
-// People Directory view renders a few aspirational profile fields that
-// don't exist on the workspace-user API response yet (always undefined at
-// runtime today) -- kept as optional so this pre-existing gap stays
-// visible instead of being hidden behind `any`.
-type DirectoryUser = WorkspaceUser & {
-  jobTitle?: string;
-  company?: string;
-  location?: string;
-};
 
 type MemberWithTeams = EnhancedTeamMember & {
   teams: Array<{ id: string; name: string; color?: string }>;
@@ -331,13 +322,11 @@ function TeamsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [workloadFilter, setWorkloadFilter] = useState<string>("");
   const [healthFilter, setHealthFilter] = useState<string>("");
-  const [viewMode, setViewMode] = useState<
-    "teams" | "members" | "users" | "directory"
-  >("teams");
-  const [teamsViewType, setTeamsViewType] = useState<"grid" | "list">("grid");
-  const [directoryViewType, setDirectoryViewType] = useState<"grid" | "list">(
-    "grid",
+  const [viewMode, setViewMode] = useState<"teams" | "members" | "users">(
+    "teams",
   );
+  const [teamsViewType, setTeamsViewType] = useState<"grid" | "list">("grid");
+  const [usersViewType, setUsersViewType] = useState<"grid" | "list">("list");
   const [sortBy, setSortBy] = useState<
     "name" | "members" | "recent" | "performance"
   >("name");
@@ -563,10 +552,13 @@ function TeamsPage() {
           status: onlineStatus,
           availability: onlineStatus === "online" ? "available" : "unavailable",
           workload: memberMetric?.workload || 0,
-          performance: memberMetric?.performance || 100,
+          // `??` not `||`: a real 0% completion rate must not be coerced back to 100.
+          performance: memberMetric?.performance ?? 100,
           tasksCompleted: memberMetric?.tasksCompleted || 0,
           currentTasks: memberMetric?.currentTasks || 0,
-          lastActive: member.joinedAt || new Date().toISOString(),
+          // No fallback to "now": that would show someone as active this instant
+          // when there's actually no data at all.
+          lastActive: member.joinedAt || null,
           teamName: team.name,
           teamColor: teamColor,
           projectId: team.projectId,
@@ -882,27 +874,6 @@ function TeamsPage() {
 
   const usersPagination = usePagination(filteredUsers, { pageSize: 20 });
 
-  // Filter and pagination for directory view (simplified people browsing)
-  const filteredDirectoryUsers = useMemo(() => {
-    return (workspaceUsers || []).filter((user) => {
-      const matchesSearch =
-        (user.userName || user.name || "")
-          .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase()) ||
-        (user.userEmail || user.email || "")
-          .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase());
-
-      const matchesRole = !roleFilter || user.role === roleFilter;
-
-      return matchesSearch && matchesRole;
-    });
-  }, [workspaceUsers, debouncedSearchTerm, roleFilter]);
-
-  const directoryPagination = usePagination(filteredDirectoryUsers, {
-    pageSize: 12,
-  });
-
   // Team statistics (using unique members for accurate counts)
   const teamStats = useMemo(() => {
     const totalTeams = enhancedTeams.length;
@@ -1066,12 +1037,6 @@ function TeamsPage() {
         action: () => setViewMode("members"),
       },
       {
-        key: "d",
-        ctrl: true,
-        description: "Switch to People Directory view",
-        action: () => setViewMode("directory"),
-      },
-      {
         key: "u",
         ctrl: true,
         description: "Switch to Users view",
@@ -1096,8 +1061,8 @@ function TeamsPage() {
         action: () => {
           if (viewMode === "teams") {
             setTeamsViewType((prev) => (prev === "grid" ? "list" : "grid"));
-          } else if (viewMode === "directory") {
-            setDirectoryViewType((prev) => (prev === "grid" ? "list" : "grid"));
+          } else if (viewMode === "users") {
+            setUsersViewType((prev) => (prev === "grid" ? "list" : "grid"));
           }
         },
       },
@@ -1389,6 +1354,28 @@ function TeamsPage() {
               </div>
             )}
 
+            {/* View Type Toggle (only for users view) */}
+            {viewMode === "users" && (
+              <div className="flex items-center border border-input rounded-md">
+                <Button
+                  variant={usersViewType === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setUsersViewType("grid")}
+                  className="rounded-r-none"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={usersViewType === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setUsersViewType("list")}
+                  className="rounded-l-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
             {/* Team Type Filter (teams view) */}
             {viewMode === "teams" && (
               <select
@@ -1597,17 +1584,6 @@ function TeamsPage() {
           </button>
           <button
             type="button"
-            onClick={() => setViewMode("directory")}
-            className={cn(
-              "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",
-              viewMode === "directory" ? "bg-muted" : "hover:bg-muted/50",
-            )}
-          >
-            <Users className="h-4 w-4" />
-            <span>People Directory ({filteredDirectoryUsers.length})</span>
-          </button>
-          <button
-            type="button"
             onClick={() => setViewMode("users")}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors border-l border-input flex items-center space-x-2",
@@ -1615,7 +1591,7 @@ function TeamsPage() {
             )}
           >
             <Settings className="h-4 w-4" />
-            <span>Users ({workspaceUsers?.length || 0})</span>
+            <span>Users ({filteredUsers.length})</span>
           </button>
         </div>
 
@@ -1632,14 +1608,30 @@ function TeamsPage() {
             <>
               {teamsViewType === "grid" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {teamsPagination.paginatedData.map((team) => (
-                    <TeamCard
-                      key={team.id}
-                      team={team}
-                      onAction={handleTeamAction}
-                      userPermissions={globalPermissions}
-                    />
-                  ))}
+                  {teamsPagination.paginatedData.map((team, index) => {
+                    const total = teamsPagination.paginatedData.length;
+                    // A single card left dangling alone in the final row reads as
+                    // broken (two-thirds of the row is empty) — stretch it full
+                    // width instead of leaving it stranded on the left.
+                    const isLoneLastRowCard =
+                      total > 3 && total % 3 === 1 && index === total - 1;
+                    return (
+                      <div
+                        key={team.id}
+                        className={
+                          isLoneLastRowCard
+                            ? "md:col-span-2 lg:col-span-3"
+                            : undefined
+                        }
+                      >
+                        <TeamCard
+                          team={team}
+                          onAction={handleTeamAction}
+                          userPermissions={globalPermissions}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1705,270 +1697,6 @@ function TeamsPage() {
               )}
             </>
           )
-        ) : viewMode === "directory" ? (
-          /* People Directory View - Simplified browsing interface */
-          <>
-            {/* View Type Toggle for Directory */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="text-sm text-muted-foreground">
-                Showing {directoryPagination.pageInfo} team members
-              </div>
-              <div className="flex items-center border border-input rounded-md">
-                <Button
-                  variant={directoryViewType === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setDirectoryViewType("grid")}
-                  className="rounded-r-none"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={directoryViewType === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setDirectoryViewType("list")}
-                  className="rounded-l-none"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {filteredDirectoryUsers.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center space-y-4">
-                  <Users className="h-16 w-16 mx-auto text-muted-foreground" />
-                  <h3 className="text-xl font-semibold">
-                    No team members found
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {searchTerm || roleFilter
-                      ? "Try adjusting your filters"
-                      : "No team members in this workspace yet"}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : directoryViewType === "grid" ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {directoryPagination.paginatedData.map(
-                    (user: DirectoryUser, index) => (
-                      <BlurFade
-                        key={user.id || user.userEmail}
-                        delay={0.05 + index * 0.02}
-                      >
-                        <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
-                          <CardContent className="p-6 space-y-4">
-                            {/* Avatar and Basic Info */}
-                            <div
-                              className="text-center space-y-3"
-                              // biome-ignore lint/a11y/useSemanticElements: styled clickable card region, keep as div
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={activateOnKey(() =>
-                                handleViewProfile(user.id || user.userEmail),
-                              )}
-                              onClick={() =>
-                                handleViewProfile(user.id || user.userEmail)
-                              }
-                            >
-                              <Avatar className="h-20 w-20 mx-auto border-4 border-primary/10 group-hover:border-primary/30 transition-colors">
-                                <AvatarImage
-                                  src={user.avatar ?? undefined}
-                                  alt={user.userName || user.name || undefined}
-                                />
-                                <AvatarFallback className="text-xl">
-                                  {(user.userName || user.name || "U")
-                                    .charAt(0)
-                                    .toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-
-                              <div>
-                                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
-                                  {user.userName || user.name || "Unnamed User"}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {user.jobTitle || user.role || "Team Member"}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Meta Info */}
-                            <div className="space-y-2 text-sm text-muted-foreground">
-                              {user.company && (
-                                <div className="flex items-center gap-2">
-                                  <Briefcase className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">
-                                    {user.company}
-                                  </span>
-                                </div>
-                              )}
-                              {user.location && (
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">
-                                    {user.location}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Role Badge */}
-                            <div className="flex justify-center">
-                              <Badge variant="outline" className="text-xs">
-                                {ROLE_LABELS[
-                                  user.role as keyof typeof ROLE_LABELS
-                                ]?.label || user.role}
-                              </Badge>
-                            </div>
-
-                            {/* Action Button */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewProfile(user.id || user.userEmail);
-                              }}
-                            >
-                              <Eye className="h-3 w-3 mr-2" />
-                              View Profile
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </BlurFade>
-                    ),
-                  )}
-                </div>
-
-                {filteredDirectoryUsers.length > 12 && (
-                  <MeridianPagination
-                    currentPage={directoryPagination.currentPage}
-                    totalPages={directoryPagination.totalPages}
-                    pageSize={directoryPagination.pageSize}
-                    totalItems={directoryPagination.totalItems}
-                    onPageChange={directoryPagination.goToPage}
-                    onPageSizeChange={directoryPagination.setPageSize}
-                    canGoNext={directoryPagination.canGoNext}
-                    canGoPrev={directoryPagination.canGoPrev}
-                    pageInfo={directoryPagination.pageInfo}
-                    pageSizeOptions={[12, 24, 48]}
-                  />
-                )}
-              </>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  {directoryPagination.paginatedData.map(
-                    (user: DirectoryUser, index) => (
-                      <BlurFade
-                        key={user.id || user.userEmail}
-                        delay={0.05 + index * 0.02}
-                      >
-                        <Card className="hover:shadow-md transition-all cursor-pointer group">
-                          <CardContent className="p-6">
-                            <div
-                              className="flex items-center justify-between gap-6"
-                              // biome-ignore lint/a11y/useSemanticElements: styled clickable card region, keep as div
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={activateOnKey(() =>
-                                handleViewProfile(user.id || user.userEmail),
-                              )}
-                              onClick={() =>
-                                handleViewProfile(user.id || user.userEmail)
-                              }
-                            >
-                              {/* User Info */}
-                              <div className="flex items-center gap-4 flex-1 min-w-0">
-                                <Avatar className="h-16 w-16 border-2 border-primary/10 group-hover:border-primary/30 transition-colors flex-shrink-0">
-                                  <AvatarImage
-                                    src={user.avatar ?? undefined}
-                                    alt={
-                                      user.userName || user.name || undefined
-                                    }
-                                  />
-                                  <AvatarFallback className="text-lg">
-                                    {(user.userName || user.name || "U")
-                                      .charAt(0)
-                                      .toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-
-                                <div className="flex-1 min-w-0 space-y-1">
-                                  <h3 className="font-bold text-lg group-hover:text-primary transition-colors truncate">
-                                    {user.userName ||
-                                      user.name ||
-                                      "Unnamed User"}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {user.userEmail || user.email}
-                                  </p>
-                                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                    {user.jobTitle && (
-                                      <span className="flex items-center gap-1">
-                                        <Briefcase className="h-3 w-3" />
-                                        {user.jobTitle}
-                                      </span>
-                                    )}
-                                    {user.location && (
-                                      <span className="flex items-center gap-1">
-                                        <MapPin className="h-3 w-3" />
-                                        {user.location}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Role and Action */}
-                              <div className="flex items-center gap-4 flex-shrink-0">
-                                <Badge variant="outline">
-                                  {ROLE_LABELS[
-                                    user.role as keyof typeof ROLE_LABELS
-                                  ]?.label || user.role}
-                                </Badge>
-
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewProfile(
-                                      user.id || user.userEmail,
-                                    );
-                                  }}
-                                >
-                                  <Eye className="h-3 w-3 mr-2" />
-                                  View Profile
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </BlurFade>
-                    ),
-                  )}
-                </div>
-
-                {filteredDirectoryUsers.length > 12 && (
-                  <MeridianPagination
-                    currentPage={directoryPagination.currentPage}
-                    totalPages={directoryPagination.totalPages}
-                    pageSize={directoryPagination.pageSize}
-                    totalItems={directoryPagination.totalItems}
-                    onPageChange={directoryPagination.goToPage}
-                    onPageSizeChange={directoryPagination.setPageSize}
-                    canGoNext={directoryPagination.canGoNext}
-                    canGoPrev={directoryPagination.canGoPrev}
-                    pageInfo={directoryPagination.pageInfo}
-                    pageSizeOptions={[12, 24, 48]}
-                  />
-                )}
-              </>
-            )}
-          </>
         ) : /* Users View */
         (workspaceUsers || []).length === 0 ? (
           <NoUsersEmpty onCreate={() => setIsCreateUserOpen(true)} />
@@ -1978,6 +1706,8 @@ function TeamsPage() {
           <>
             <UsersManagementView
               users={usersPagination.paginatedData}
+              viewType={usersViewType}
+              onViewProfile={handleViewProfile}
               onUserAction={(action, user) => {
                 if (action === "edit") {
                   setSelectedUserForEdit(user);
@@ -2001,6 +1731,7 @@ function TeamsPage() {
                     confirm(`Reset password for ${user.userName || user.name}?`)
                   ) {
                     resetPasswordMutation.mutate({
+                      workspaceId: workspace?.id || "",
                       userEmail: user.userEmail || user.email,
                     });
                   }
@@ -2059,14 +1790,6 @@ function TeamsPage() {
                       </span>
                       <kbd className="px-2 py-1 bg-muted rounded text-xs">
                         Ctrl+M
-                      </kbd>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        People Directory
-                      </span>
-                      <kbd className="px-2 py-1 bg-muted rounded text-xs">
-                        Ctrl+D
                       </kbd>
                     </div>
                     <div className="flex justify-between">
@@ -2237,10 +1960,14 @@ function TeamsPage() {
 // Users Management View Component
 function UsersManagementView({
   users,
+  viewType,
+  onViewProfile,
   onUserAction,
   searchTerm,
 }: {
   users: WorkspaceUser[];
+  viewType: "grid" | "list";
+  onViewProfile: (userId: string) => void;
   onUserAction: (action: string, user: WorkspaceUser) => void;
   searchTerm: string;
 }) {
@@ -2254,6 +1981,75 @@ function UsersManagementView({
         .includes(searchTerm.toLowerCase()) ||
       user.role?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  if (viewType === "grid") {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredUsers.map((user, index) => {
+          const userId = user.id || user.userEmail || user.email || "";
+          return (
+            <BlurFade
+              key={`${user.id ?? ""}|${(user.userEmail || user.email || "").toLowerCase()}`}
+              delay={0.05 + index * 0.02}
+            >
+              <Card className="hover:shadow-lg transition-all group">
+                <CardContent className="p-6 space-y-4">
+                  <div className="text-center space-y-3">
+                    <Avatar className="h-20 w-20 mx-auto border-4 border-primary/10 group-hover:border-primary/30 transition-colors">
+                      <AvatarImage
+                        src={user.avatar ?? undefined}
+                        alt={user.userName || user.name || undefined}
+                      />
+                      <AvatarFallback className="text-xl">
+                        {(user.userName || user.name || "U")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
+                        {user.userName || user.name || "Unnamed User"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {user.userEmail || user.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {AVAILABLE_ROLES.find((r) => r.value === user.role)
+                        ?.label ||
+                        user.role ||
+                        "No Role"}
+                    </Badge>
+                    <Badge
+                      variant={
+                        user.status === "active" ? "default" : "secondary"
+                      }
+                      className="text-xs"
+                    >
+                      {user.status === "active" ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => onViewProfile(userId)}
+                  >
+                    <Eye className="h-3 w-3 mr-2" />
+                    View Profile
+                  </Button>
+                </CardContent>
+              </Card>
+            </BlurFade>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -2572,7 +2368,8 @@ function TeamCard({
           </div>
 
           {/* Team Health Score */}
-          {team.healthScore && team.healthStatus && (
+          {/* A team in the worst possible shape legitimately scores 0 — must still render, not disappear. */}
+          {team.healthScore != null && team.healthStatus && (
             <div className={cn("p-4 rounded-lg border", team.healthStatus.bg)}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
@@ -3003,7 +2800,11 @@ function MembersList({
                   {/* Last Active */}
                   <td className="p-4">
                     <span className="text-xs text-muted-foreground">
-                      {member.lastActive}
+                      {member.lastActive
+                        ? formatDistanceToNow(new Date(member.lastActive), {
+                            addSuffix: true,
+                          })
+                        : "Never"}
                     </span>
                   </td>
 
