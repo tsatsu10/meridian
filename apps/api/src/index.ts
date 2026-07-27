@@ -39,6 +39,7 @@ import dashboard from "./dashboard";
 import team from "./team";
 import calendar from "./calendar"; // @epic-3.4-teams: Calendar and scheduling
 import rbac from "./rbac";
+import rolesRouter from "./roles";
 import milestone from "./milestone";
 import backlogCategory from "./backlog-category"; // Backlog categories for organizing backlog items
 import profile from "./profile"; // Profile management
@@ -304,6 +305,7 @@ const teamRoute = app.route("/api/team", team);
 const favoritesRoute = app.route("/api/favorites", favorites);
 const calendarRoute = app.route("/api/calendar", calendar); // @epic-3.4-teams: Calendar and scheduling
 const rbacRoute = app.route("/api/rbac", rbac);
+const rolesRoute = app.route("/api/roles", rolesRouter);
 const milestoneRoute = app.route("/api/milestone", milestone);
 const reportsRoute = app.route("/api/reports", reports);
 // Removed old integrations route (duplicate) - using newer simple version above
