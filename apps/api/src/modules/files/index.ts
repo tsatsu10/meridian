@@ -16,6 +16,23 @@ import logger from "../../utils/logger";
 const files = new Hono();
 
 /**
+ * SECURITY: `filename` was passed straight into path.join(uploadDir, subdir,
+ * filename) with no sanitization. Hono decodes route params with
+ * decodeURIComponent, so a URL-encoded "..%2f..%2f...%2fetc%2fpasswd"
+ * arrives here as a literal "../../.../etc/passwd" and escapes uploadDir —
+ * arbitrary file read. A legitimate stored filename never contains a path
+ * separator or "..", so reject outright rather than trying to strip.
+ */
+function isSafeStoredFilename(filename: string): boolean {
+  return (
+    !!filename &&
+    !filename.includes("/") &&
+    !filename.includes("\\") &&
+    !filename.includes("..")
+  );
+}
+
+/**
  * GET /api/files/:subdir/:filename
  * Serve file from local storage
  */
@@ -28,6 +45,9 @@ files.get("/:subdir/:filename", async (c) => {
     const allowedSubdirs = ["images", "videos", "documents", "others"];
     if (!allowedSubdirs.includes(subdir)) {
       return c.json({ error: "Invalid directory" }, 400);
+    }
+    if (!isSafeStoredFilename(filename)) {
+      return c.json({ error: "Invalid filename" }, 400);
     }
 
     // Get file path
@@ -72,6 +92,13 @@ files.get("/:subdir/:filename", async (c) => {
     c.header("Content-Length", fileBuffer.length.toString());
     c.header("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
 
+    // SECURITY: uploads made before the svg-upload block was added may
+    // still have a stored .svg containing a <script> tag — force download
+    // instead of inline rendering so it can't execute in this origin.
+    if (contentType === "image/svg+xml") {
+      c.header("Content-Disposition", `attachment; filename="${filename}"`);
+    }
+
     // Support range requests for video/audio
     const range = c.req.header("range");
     if (
@@ -113,6 +140,9 @@ files.get("/download/:subdir/:filename", async (c) => {
     const allowedSubdirs = ["images", "videos", "documents", "others"];
     if (!allowedSubdirs.includes(subdir)) {
       return c.json({ error: "Invalid directory" }, 400);
+    }
+    if (!isSafeStoredFilename(filename)) {
+      return c.json({ error: "Invalid filename" }, 400);
     }
 
     const filePath = fileStorageService.getFilePath(filename, subdir);

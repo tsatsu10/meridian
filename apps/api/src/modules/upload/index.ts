@@ -53,6 +53,15 @@ const multerUpload = multer({
       "text/plain",
     ];
 
+    // SECURITY: image/svg+xml matches the "image/*" wildcard above, but an
+    // SVG can embed a <script> tag — served back inline at GET
+    // /api/files/images/:filename, it executes in the API's origin
+    // (stored XSS). Every other image/* type is safe to serve inline.
+    if (file.mimetype === "image/svg+xml") {
+      cb(new Error("SVG uploads are not allowed"));
+      return;
+    }
+
     const isAllowed = fileStorageService.validateFileType(
       file.mimetype,
       allowedMimeTypes,

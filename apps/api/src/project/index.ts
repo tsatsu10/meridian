@@ -50,7 +50,10 @@ import {
   userTable,
 } from "../database/schema";
 import rbacMiddleware from "../middlewares/rbac";
-import { requirePermission } from "../middlewares/rbac";
+import {
+  requirePermission,
+  checkWorkspacePermission,
+} from "../middlewares/rbac";
 import { CachePresets, cacheMiddleware } from "../middlewares/cache-middleware";
 import { RateLimitPresets } from "../middlewares/rate-limit";
 import logger from "../utils/logger";
@@ -373,7 +376,19 @@ const project = new Hono<{
       const { projectId } = c.req.valid("param");
       const { userEmail, role, hoursPerWeek, notificationSettings } =
         c.req.valid("json");
-      const assignedBy = c.get("userEmail");
+
+      // assigned_by is a FK to users.id, not users.email - c.get("userId")
+      // is only set by the RBAC middleware on its non-bypassed path, so
+      // resolve it directly here to also cover the demo-mode bypass.
+      let assignedBy = c.get("userId");
+      if (!assignedBy) {
+        const db = getDatabase();
+        const [assigner] = await db
+          .select({ id: userTable.id })
+          .from(userTable)
+          .where(eq(userTable.email, c.get("userEmail")));
+        assignedBy = assigner?.id;
+      }
 
       const member = await addProjectMember({
         projectId,
@@ -389,6 +404,7 @@ const project = new Hono<{
   )
   .put(
     "/:projectId/members/:memberEmail",
+    rbacMiddleware.canManageProjectTeam,
     zValidator(
       "param",
       z.object({
@@ -420,6 +436,7 @@ const project = new Hono<{
   )
   .delete(
     "/:projectId/members/:memberEmail",
+    rbacMiddleware.canManageProjectTeam,
     zValidator(
       "param",
       z.object({
@@ -726,6 +743,7 @@ const project = new Hono<{
       "json",
       z.object({
         projectIds: z.array(z.string()).min(1),
+        workspaceId: z.string().min(1, "Workspace ID is required"),
         updates: z.object({
           status: z.string().optional(),
           priority: z.string().optional(),
@@ -738,8 +756,26 @@ const project = new Hono<{
     async (c) => {
       try {
         const payload = c.req.valid("json");
+
+        // SECURITY: workspaceId is in the body here, not a route param, so
+        // requireWorkspacePermission's route-param middleware doesn't apply
+        // — check it directly instead. Previously this route had no RBAC
+        // check at all.
+        const permission = await checkWorkspacePermission(
+          c.get("userEmail"),
+          payload.workspaceId,
+          "canUpdateProjects",
+        );
+        if (!permission.allowed) {
+          return c.json(
+            permission.body ?? { error: "Forbidden" },
+            permission.status ?? 403,
+          );
+        }
+
         const result = await bulkUpdateProjects({
           projectIds: payload.projectIds,
+          workspaceId: payload.workspaceId,
           updates: {
             ...payload.updates,
             dueDate: payload.updates.dueDate
@@ -775,6 +811,23 @@ const project = new Hono<{
     async (c) => {
       try {
         const payload = c.req.valid("json");
+
+        // SECURITY: canDeleteProjects above only checks the caller has that
+        // permission SOMEWHERE, not specifically in payload.workspaceId —
+        // check that explicitly too, so a role earned in one workspace
+        // can't authorize deleting projects in a different one.
+        const permission = await checkWorkspacePermission(
+          c.get("userEmail"),
+          payload.workspaceId,
+          "canDeleteProjects",
+        );
+        if (!permission.allowed) {
+          return c.json(
+            permission.body ?? { error: "Forbidden" },
+            permission.status ?? 403,
+          );
+        }
+
         const result = await bulkDeleteProjects(payload);
         return c.json(result);
       } catch (error) {

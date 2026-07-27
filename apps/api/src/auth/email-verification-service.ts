@@ -18,6 +18,7 @@ import { eq, and, lt, gt } from "drizzle-orm";
 import { emailService } from "../services/email/email-service";
 import crypto from "node:crypto";
 import logger from "../utils/logger";
+import { appSettings } from "../config/settings";
 
 export class EmailVerificationService {
   private getDb() {
@@ -47,8 +48,13 @@ export class EmailVerificationService {
       exp: Date.now() + expiryHours * 60 * 60 * 1000,
     };
     const token = Buffer.from(JSON.stringify(payload)).toString("base64");
+    // SECURITY: use the centrally-validated secret (config/settings.ts
+    // refuses to boot in production with the default value) rather than
+    // reading process.env directly with our own silent fallback string —
+    // anyone who knew "fallback-secret" could forge a verification/reset
+    // token for any user if this ever read an unset env var.
     const signature = crypto
-      .createHmac("sha256", process.env.JWT_SECRET || "fallback-secret")
+      .createHmac("sha256", appSettings.jwtSecret)
       .update(token)
       .digest("hex");
     return `${token}.${signature}`;
@@ -66,7 +72,7 @@ export class EmailVerificationService {
         return null;
       }
 
-      const secret = process.env.JWT_SECRET ?? "fallback-secret";
+      const secret = appSettings.jwtSecret;
 
       // Verify signature
       const expectedSignature = crypto

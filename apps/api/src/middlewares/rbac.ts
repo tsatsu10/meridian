@@ -12,6 +12,7 @@ import {
   userTable,
   roleAssignmentTable,
   customPermissionTable,
+  projectTable,
 } from "../database/schema";
 import {
   ROLE_PERMISSIONS,
@@ -219,101 +220,150 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
 /**
  * Workspace-scoped permission middleware
  */
+export interface WorkspacePermissionResult {
+  allowed: boolean;
+  status?: 401 | 403 | 404;
+  body?: Record<string, unknown>;
+  userId?: string;
+  userRole?: UserRole;
+  // Non-null only for project-scoped roles (project-manager/project-viewer)
+  // that were assigned with a projectIds restriction: null/undefined means
+  // "no restriction beyond workspace membership." Callers that operate on
+  // MULTIPLE resources at once (bulk operations, search) — where per-resource
+  // checkProjectPermission isn't practical — must apply this list themselves;
+  // checkWorkspacePermission alone does not enforce it.
+  restrictedToProjectIds?: string[] | null;
+}
+
+/**
+ * Reusable workspace-permission check (the logic behind
+ * requireWorkspacePermission), callable outside a route that carries
+ * :workspaceId — e.g. after resolving a child resource (team, milestone,
+ * note) to its workspace.
+ */
+export async function checkWorkspacePermission(
+  userEmail: string | undefined,
+  workspaceId: string,
+  permission: PermissionAction,
+): Promise<WorkspacePermissionResult> {
+  const isDemoMode = process.env.DEMO_MODE === "true";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@meridian.app";
+  if (isDemoMode && userEmail === adminEmail) {
+    return { allowed: true };
+  }
+
+  if (!userEmail) {
+    return {
+      allowed: false,
+      status: 401,
+      body: { error: "Authentication and workspace context required" },
+    };
+  }
+
+  const db = getDatabase();
+  const [currentUser] = await db
+    .select({ id: userTable.id })
+    .from(userTable)
+    .where(eq(userTable.email, userEmail))
+    .limit(1);
+
+  if (!currentUser) {
+    return { allowed: false, status: 404, body: { error: "User not found" } };
+  }
+
+  // Get user's role assignment for this workspace
+  const [workspaceAssignment] = await db
+    .select()
+    .from(roleAssignmentTable)
+    .where(
+      and(
+        eq(roleAssignmentTable.userId, currentUser.id),
+        eq(roleAssignmentTable.isActive, true),
+        eq(roleAssignmentTable.workspaceId, workspaceId),
+      ),
+    )
+    .limit(1);
+
+  // 🚨 SECURITY: If no workspace assignment exists, DENY ACCESS
+  // Users can only access workspaces they own or were explicitly invited to
+  if (!workspaceAssignment) {
+    logger.debug(
+      `🚨 SECURITY: User ${userEmail} has no authorized access to workspace ${workspaceId}`,
+    );
+    return {
+      allowed: false,
+      status: 403,
+      body: {
+        error: "Access denied - No workspace membership",
+        workspaceId,
+        message:
+          "You do not have access to this workspace. Contact the workspace owner for an invitation.",
+      },
+    };
+  }
+
+  const userRole = workspaceAssignment.role as UserRole;
+  const rolePermissions = getRolePermissions(userRole);
+
+  if (!rolePermissions[permission]) {
+    return {
+      allowed: false,
+      status: 403,
+      body: {
+        error: "Insufficient permissions for this workspace",
+        required: permission,
+        role: userRole,
+        workspaceId,
+        message: `This action requires the '${permission}' permission in workspace '${workspaceId}'`,
+      },
+    };
+  }
+
+  let restrictedToProjectIds: string[] | null = null;
+  if (userRole === "project-manager" || userRole === "project-viewer") {
+    const projectIds: string[] = Array.isArray(workspaceAssignment.projectIds)
+      ? (workspaceAssignment.projectIds as string[])
+      : [];
+    if (projectIds.length > 0) restrictedToProjectIds = projectIds;
+  }
+
+  return {
+    allowed: true,
+    userId: currentUser.id,
+    userRole,
+    restrictedToProjectIds,
+  };
+}
+
 export function requireWorkspacePermission(
   permission: PermissionAction,
   workspaceIdParam = "workspaceId",
 ) {
   return createMiddleware(async (c, next) => {
     try {
-      const db = getDatabase();
-
-      const isDemoMode = process.env.DEMO_MODE === "true";
-      const adminEmail = process.env.ADMIN_EMAIL || "admin@meridian.app";
       const workspaceId = c.req.param(workspaceIdParam);
       const userEmail = c.get("userEmail");
 
-      // In demo mode, bypass workspace permission checks for admin user
-      if (isDemoMode && userEmail === adminEmail) {
-        logger.debug(
-          `🔧 Demo mode: Bypassing workspace permission check for ${permission}`,
-        );
-        await next();
-        return;
-      }
-
-      if (!userEmail || !workspaceId) {
+      if (!workspaceId) {
         return c.json(
           { error: "Authentication and workspace context required" },
           401,
         );
       }
 
-      // Get user ID and role assignment
-      const user = await db
-        .select({ id: userTable.id })
-        .from(userTable)
-        .where(eq(userTable.email, userEmail))
-        .limit(1);
+      const result = await checkWorkspacePermission(
+        userEmail,
+        workspaceId,
+        permission,
+      );
 
-      const [currentUser] = user;
-      if (!currentUser) {
-        return c.json({ error: "User not found" }, 404);
-      }
-
-      // Get user's role assignment for this workspace
-      const roleAssignment = await db
-        .select()
-        .from(roleAssignmentTable)
-        .where(
-          and(
-            eq(roleAssignmentTable.userId, currentUser.id),
-            eq(roleAssignmentTable.isActive, true),
-            eq(roleAssignmentTable.workspaceId, workspaceId),
-          ),
-        )
-        .limit(1);
-
-      // 🚨 SECURITY: If no workspace assignment exists, DENY ACCESS
-      // Users can only access workspaces they own or were explicitly invited to
-      const [workspaceAssignment] = roleAssignment;
-      if (!workspaceAssignment) {
-        logger.debug(
-          `🚨 SECURITY: User ${userEmail} has no authorized access to workspace ${workspaceId}`,
-        );
-        return c.json(
-          {
-            error: "Access denied - No workspace membership",
-            workspaceId: workspaceId,
-            message:
-              "You do not have access to this workspace. Contact the workspace owner for an invitation.",
-          },
-          403,
-        );
-      }
-
-      const userRole: UserRole = workspaceAssignment.role as UserRole;
-
-      // Check if user has the required permission
-      const rolePermissions = getRolePermissions(userRole);
-      const hasPermission = rolePermissions[permission] || false;
-
-      if (!hasPermission) {
-        return c.json(
-          {
-            error: "Insufficient permissions for this workspace",
-            required: permission,
-            role: userRole,
-            workspaceId: workspaceId,
-            message: `This action requires the '${permission}' permission in workspace '${workspaceId}'`,
-          },
-          403,
-        );
+      if (!result.allowed) {
+        return c.json(result.body ?? { error: "Forbidden" }, result.status ?? 403);
       }
 
       // Add context to request
-      c.set("userRole", userRole);
-      c.set("userId", currentUser.id);
-      c.set("roleAssignment", workspaceAssignment);
+      if (result.userRole) c.set("userRole", result.userRole);
+      if (result.userId) c.set("userId", result.userId);
       c.set("workspaceId", workspaceId);
 
       await next();
@@ -333,95 +383,32 @@ export function requireProjectPermission(
 ) {
   return createMiddleware(async (c, next) => {
     try {
-      const db = getDatabase();
-
       const projectId = c.req.param(projectIdParam);
       const userEmail = c.get("userEmail");
 
-      if (!userEmail || !projectId) {
+      if (!projectId) {
         return c.json(
           { error: "Authentication and project context required" },
           401,
         );
       }
 
-      // Get user ID
-      const user = await db
-        .select({ id: userTable.id })
-        .from(userTable)
-        .where(eq(userTable.email, userEmail))
-        .limit(1);
+      // Delegate to checkProjectPermission so both the middleware and the
+      // "resolve a child resource, then check" call sites share one
+      // workspace-scoped implementation instead of two that can drift apart.
+      const result = await checkProjectPermission(
+        userEmail,
+        projectId,
+        permission,
+      );
 
-      const [currentUser] = user;
-      if (!currentUser) {
-        return c.json({ error: "User not found" }, 404);
-      }
-
-      // Get user's role assignment
-      const roleAssignment = await db
-        .select()
-        .from(roleAssignmentTable)
-        .where(
-          and(
-            eq(roleAssignmentTable.userId, currentUser.id),
-            eq(roleAssignmentTable.isActive, true),
-          ),
-        )
-        .limit(1);
-
-      const [projectAssignment] = roleAssignment;
-      if (!projectAssignment) {
-        return c.json(
-          {
-            error: "No active role assignment found",
-          },
-          403,
-        );
-      }
-
-      const userRole: UserRole = projectAssignment.role as UserRole;
-
-      // Check if user has the required permission
-      const rolePermissions = getRolePermissions(userRole);
-      const hasPermission = rolePermissions[permission] || false;
-
-      if (!hasPermission) {
-        return c.json(
-          {
-            error: "Insufficient permissions",
-            required: permission,
-            role: userRole,
-            message: `This action requires the '${permission}' permission`,
-          },
-          403,
-        );
-      }
-
-      // For project-scoped roles, check if they have access to this specific project
-      if (userRole === "project-manager" || userRole === "project-viewer") {
-        // projectIds is a jsonb column — drizzle already returns the parsed value
-        const projectIds: string[] = Array.isArray(projectAssignment.projectIds)
-          ? (projectAssignment.projectIds as string[])
-          : [];
-
-        if (projectIds.length > 0 && !projectIds.includes(projectId)) {
-          return c.json(
-            {
-              error: "No access to this project",
-              role: userRole,
-              projectId: projectId,
-              assignedProjects: projectIds,
-              message: `${userRole} can only access assigned projects`,
-            },
-            403,
-          );
-        }
+      if (!result.allowed) {
+        return c.json(result.body ?? { error: "Forbidden" }, result.status ?? 403);
       }
 
       // Add context to request
-      c.set("userRole", userRole);
-      c.set("userId", currentUser.id);
-      c.set("roleAssignment", projectAssignment);
+      if (result.userRole) c.set("userRole", result.userRole);
+      if (result.userId) c.set("userId", result.userId);
       c.set("projectId", projectId);
 
       await next();
@@ -477,6 +464,21 @@ export async function checkProjectPermission(
     return { allowed: false, status: 404, body: { error: "User not found" } };
   }
 
+  // SECURITY: resolve the project's owning workspace and require the role
+  // assignment to be scoped to THAT workspace. Without this, "does the caller
+  // have any active role assignment anywhere with this permission" would let
+  // a role earned in one workspace authorize actions against a project in a
+  // completely different workspace.
+  const [project] = await db
+    .select({ workspaceId: projectTable.workspaceId })
+    .from(projectTable)
+    .where(eq(projectTable.id, projectId))
+    .limit(1);
+
+  if (!project) {
+    return { allowed: false, status: 404, body: { error: "Project not found" } };
+  }
+
   const [assignment] = await db
     .select()
     .from(roleAssignmentTable)
@@ -484,6 +486,7 @@ export async function checkProjectPermission(
       and(
         eq(roleAssignmentTable.userId, currentUser.id),
         eq(roleAssignmentTable.isActive, true),
+        eq(roleAssignmentTable.workspaceId, project.workspaceId),
       ),
     )
     .limit(1);
@@ -492,7 +495,7 @@ export async function checkProjectPermission(
     return {
       allowed: false,
       status: 403,
-      body: { error: "No active role assignment found" },
+      body: { error: "No active role assignment found in this workspace" },
     };
   }
 

@@ -12,6 +12,10 @@ import logger from "../../utils/logger";
 
 export interface BulkUpdatePayload {
   projectIds: string[];
+  // Required: every project must belong to this workspace or nothing is
+  // updated. Without this, any authenticated user with canUpdateProjects
+  // anywhere could bulk-edit any project in any workspace given only its id.
+  workspaceId: string;
   updates: {
     status?: string;
     priority?: string;
@@ -122,14 +126,59 @@ export async function bulkUpdateProjects(
       };
     }
 
+    if (!payload.workspaceId) {
+      return {
+        success: false,
+        operationId,
+        timestamp: new Date(),
+        type: "update",
+        count: 0,
+        items: [{ id: "", status: "failed", error: "Workspace ID is required" }],
+        duration: Date.now() - startTime,
+      };
+    }
+
+    // 🔒 SECURITY: every requested project must exist and belong to the
+    // given workspace — fail closed on the whole batch, same pattern as
+    // bulkDeleteProjects, so a single id from another workspace can't leak
+    // a cross-tenant update through.
+    const projectsToUpdate = await db.query.projectTable.findMany({
+      where: inArray(projectTable.id, payload.projectIds),
+    });
+    const belongsToWorkspace = (project: { workspaceId: string }) =>
+      project.workspaceId === payload.workspaceId;
+    if (
+      projectsToUpdate.length !== payload.projectIds.length ||
+      !projectsToUpdate.every(belongsToWorkspace)
+    ) {
+      return {
+        success: false,
+        operationId,
+        timestamp: new Date(),
+        type: "update",
+        count: 0,
+        items: payload.projectIds.map((id) => ({
+          id,
+          status: "failed" as const,
+          error: "Project not found or does not belong to workspace",
+        })),
+        duration: Date.now() - startTime,
+      };
+    }
+
     // Add updatedAt timestamp
     updateData.updatedAt = new Date();
 
-    // Execute bulk update
+    // Execute bulk update, scoped to the workspace as defense in depth.
     const updated = await db
       .update(projectTable)
       .set(updateData)
-      .where(inArray(projectTable.id, payload.projectIds))
+      .where(
+        and(
+          inArray(projectTable.id, payload.projectIds),
+          eq(projectTable.workspaceId, payload.workspaceId),
+        ),
+      )
       .returning();
 
     // Build result items

@@ -4,16 +4,70 @@
  * Handles bulk operations on multiple tasks at once
  */
 
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
-import { tasks, activityTable } from "../../database/schema";
+import { tasks, activityTable, projectTable } from "../../database/schema";
 import logger from "../../utils/logger";
+
+export interface WorkspaceScopeError {
+  error: "workspace_mismatch";
+  message: string;
+}
+
+/**
+ * SECURITY: every task ID in a bulk batch must resolve to a project that
+ * belongs to the caller's stated workspace — fail closed on the whole
+ * batch rather than silently applying the operation to a subset, so a
+ * single ID from another workspace (typo, stale cache, tampered request)
+ * can't leak a cross-tenant mutation through.
+ *
+ * `restrictedToProjectIds` (from checkWorkspacePermission) additionally
+ * enforces the project-scoped role boundary: a project-manager/-viewer
+ * assigned to specific projects only must not be able to reach tasks in
+ * OTHER projects within the same workspace via these batch routes, even
+ * though workspace-level permission alone would allow it.
+ */
+async function verifyTasksBelongToWorkspace(
+  taskIds: string[],
+  workspaceId: string,
+  restrictedToProjectIds?: string[] | null,
+): Promise<WorkspaceScopeError | null> {
+  const db = getDatabase();
+  const rows = await db
+    .select({
+      id: tasks.id,
+      projectId: tasks.projectId,
+      workspaceId: projectTable.workspaceId,
+    })
+    .from(tasks)
+    .innerJoin(projectTable, eq(tasks.projectId, projectTable.id))
+    .where(inArray(tasks.id, taskIds));
+
+  const foundIds = new Set(rows.map((r) => r.id));
+  const allFound = taskIds.every((id) => foundIds.has(id));
+  const allInWorkspace = rows.every((r) => r.workspaceId === workspaceId);
+  const allInAllowedProjects =
+    !restrictedToProjectIds ||
+    rows.every((r) => restrictedToProjectIds.includes(r.projectId));
+
+  if (!allFound || !allInWorkspace || !allInAllowedProjects) {
+    return {
+      error: "workspace_mismatch",
+      message:
+        "One or more tasks were not found or are outside your assigned projects",
+    };
+  }
+
+  return null;
+}
 
 // ⏩ Bulk Update Status
 export async function bulkUpdateStatus(
   taskIds: string[],
   status: string,
   userId: string,
+  workspaceId: string,
+  restrictedToProjectIds: string[] | null = null,
 ) {
   const db = getDatabase();
 
@@ -22,11 +76,28 @@ export async function bulkUpdateStatus(
       return { updated: 0 };
     }
 
+    const scopeError = await verifyTasksBelongToWorkspace(
+      taskIds,
+      workspaceId,
+      restrictedToProjectIds,
+    );
+    if (scopeError) return scopeError;
+
     // Update all tasks
     const updatedTasks = await db
       .update(tasks)
       .set({
-        status: status as (typeof tasks.status.enumValues)[number],
+        status,
+        // Real completion timestamp for cycle-time analytics. The CASE
+        // references each row's *pre-update* status/completedAt (SQL
+        // evaluates SET expressions against the old row), so a task that's
+        // already done keeps its real original completion time instead of
+        // getting bumped to "now" just because it was swept up in a bulk
+        // selection that also included not-yet-done tasks.
+        completedAt:
+          status === "done"
+            ? sql`CASE WHEN ${tasks.status} = 'done' THEN ${tasks.completedAt} ELSE NOW() END`
+            : null,
         updatedAt: new Date(),
       })
       .where(inArray(tasks.id, taskIds))
@@ -68,6 +139,8 @@ export async function bulkUpdatePriority(
   taskIds: string[],
   priority: string,
   userId: string,
+  workspaceId: string,
+  restrictedToProjectIds: string[] | null = null,
 ) {
   const db = getDatabase();
 
@@ -75,6 +148,13 @@ export async function bulkUpdatePriority(
     if (taskIds.length === 0) {
       return { updated: 0 };
     }
+
+    const scopeError = await verifyTasksBelongToWorkspace(
+      taskIds,
+      workspaceId,
+      restrictedToProjectIds,
+    );
+    if (scopeError) return scopeError;
 
     // Update all tasks
     const updatedTasks = await db
@@ -123,6 +203,8 @@ export async function bulkAssignTasks(
   assigneeId: string,
   assigneeEmail: string,
   userId: string,
+  workspaceId: string,
+  restrictedToProjectIds: string[] | null = null,
 ) {
   const db = getDatabase();
 
@@ -130,6 +212,13 @@ export async function bulkAssignTasks(
     if (taskIds.length === 0) {
       return { updated: 0 };
     }
+
+    const scopeError = await verifyTasksBelongToWorkspace(
+      taskIds,
+      workspaceId,
+      restrictedToProjectIds,
+    );
+    if (scopeError) return scopeError;
 
     // Update all tasks
     const updatedTasks = await db
@@ -176,13 +265,25 @@ export async function bulkAssignTasks(
 }
 
 // 🗑️ Bulk Delete Tasks
-export async function bulkDeleteTasks(taskIds: string[], userId: string) {
+export async function bulkDeleteTasks(
+  taskIds: string[],
+  userId: string,
+  workspaceId: string,
+  restrictedToProjectIds: string[] | null = null,
+) {
   const db = getDatabase();
 
   try {
     if (taskIds.length === 0) {
       return { deleted: 0 };
     }
+
+    const scopeError = await verifyTasksBelongToWorkspace(
+      taskIds,
+      workspaceId,
+      restrictedToProjectIds,
+    );
+    if (scopeError) return scopeError;
 
     // Get tasks for logging before deletion
     const tasksToDelete = await db
@@ -224,13 +325,25 @@ export async function bulkDeleteTasks(taskIds: string[], userId: string) {
 }
 
 // 📦 Bulk Archive Tasks (move to archived state)
-export async function bulkArchiveTasks(taskIds: string[], userId: string) {
+export async function bulkArchiveTasks(
+  taskIds: string[],
+  userId: string,
+  workspaceId: string,
+  restrictedToProjectIds: string[] | null = null,
+) {
   const db = getDatabase();
 
   try {
     if (taskIds.length === 0) {
       return { archived: 0 };
     }
+
+    const scopeError = await verifyTasksBelongToWorkspace(
+      taskIds,
+      workspaceId,
+      restrictedToProjectIds,
+    );
+    if (scopeError) return scopeError;
 
     // Update all tasks to done status (or add archived field if it exists)
     const updatedTasks = await db

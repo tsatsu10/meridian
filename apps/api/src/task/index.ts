@@ -20,8 +20,14 @@ import {
   bulkDeleteTasks,
   bulkArchiveTasks,
 } from "./controllers/bulk-operations";
-import rbacMiddleware from "../middlewares/rbac";
+import rbacMiddleware, {
+  checkProjectPermission,
+  checkWorkspacePermission,
+} from "../middlewares/rbac";
 import { checkRateLimit, RATE_LIMITS } from "../middlewares/chat-rate-limiter";
+import { getDatabase } from "../database/connection";
+import { taskDependencyTable } from "../database/schema";
+import { eq } from "drizzle-orm";
 
 // Define response schemas for proper TypeScript inference
 const TaskSchema = z.object({
@@ -164,7 +170,7 @@ const task = new Hono<{
   )
   .post(
     "/:projectId",
-    rbacMiddleware.canCreateTasks,
+    rbacMiddleware.requireProjectPermission("canCreateTasks"),
     zValidator(
       "json",
       z.object({
@@ -221,6 +227,17 @@ const task = new Hono<{
 
     const task = await getTask(id);
 
+    // SECURITY: task lookup was previously unscoped — any authenticated
+    // user could read any task in any workspace by ID.
+    const permission = await checkProjectPermission(
+      c.get("userEmail"),
+      task.projectId,
+      "canViewTasks",
+    );
+    if (!permission.allowed) {
+      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    }
+
     return c.json(task);
   })
   .put(
@@ -254,6 +271,38 @@ const task = new Hono<{
         parentId,
       } = c.req.valid("json");
 
+      // SECURITY: authorize against the task's REAL current project, not the
+      // client-supplied one — otherwise a caller could edit a task they have
+      // no access to just by asserting a projectId they do have access to.
+      const existingTask = await getTask(id);
+      const userEmailCtx = c.get("userEmail");
+      const currentProjectPermission = await checkProjectPermission(
+        userEmailCtx,
+        existingTask.projectId,
+        "canUpdateTasks",
+      );
+      if (!currentProjectPermission.allowed) {
+        return c.json(
+          currentProjectPermission.body ?? { error: "Forbidden" },
+          currentProjectPermission.status ?? 403,
+        );
+      }
+      // If this update also tries to move the task into a different
+      // project, the caller must have edit access there too.
+      if (projectId !== existingTask.projectId) {
+        const targetProjectPermission = await checkProjectPermission(
+          userEmailCtx,
+          projectId,
+          "canUpdateTasks",
+        );
+        if (!targetProjectPermission.allowed) {
+          return c.json(
+            targetProjectPermission.body ?? { error: "Forbidden" },
+            targetProjectPermission.status ?? 403,
+          );
+        }
+      }
+
       // 🔒 SECURITY: Rate limit task updates (50 per minute)
       const userId = c.get("userId");
       if (userId) {
@@ -285,6 +334,7 @@ const task = new Hono<{
   )
   .get(
     "/export/:projectId",
+    rbacMiddleware.requireProjectPermission("canViewTasks"),
     zValidator("param", z.object({ projectId: z.string() })),
     async (c) => {
       const { projectId } = c.req.valid("param");
@@ -296,6 +346,7 @@ const task = new Hono<{
   )
   .post(
     "/import/:projectId",
+    rbacMiddleware.requireProjectPermission("canCreateTasks"),
     zValidator("param", z.object({ projectId: z.string() })),
     zValidator(
       "json",
@@ -325,6 +376,19 @@ const task = new Hono<{
     "/:id",
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
+      const { id } = c.req.valid("param");
+
+      // SECURITY: was previously deletable by ID with no ownership check.
+      const existingTask = await getTask(id);
+      const permission = await checkProjectPermission(
+        c.get("userEmail"),
+        existingTask.projectId,
+        "canDeleteTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
+
       // 🔒 SECURITY: Rate limit task deletion (20 per minute)
       const userId = c.get("userId");
       if (userId) {
@@ -338,8 +402,6 @@ const task = new Hono<{
         }
       }
 
-      const { id } = c.req.valid("param");
-
       const task = await deleteTask(id);
 
       return c.json(task);
@@ -351,6 +413,16 @@ const task = new Hono<{
     zValidator("param", z.object({ taskId: z.string() })),
     async (c) => {
       const { taskId } = c.req.valid("param");
+
+      const task = await getTask(taskId);
+      const permission = await checkProjectPermission(
+        c.get("userEmail"),
+        task.projectId,
+        "canViewTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
 
       const dependencies = await getTaskDependencies(taskId);
 
@@ -371,6 +443,16 @@ const task = new Hono<{
       const { taskId } = c.req.valid("param");
       const { requiredTaskId, type } = c.req.valid("json");
 
+      const task = await getTask(taskId);
+      const permission = await checkProjectPermission(
+        c.get("userEmail"),
+        task.projectId,
+        "canUpdateTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
+
       const dependency = await createTaskDependency({
         dependentTaskId: taskId,
         requiredTaskId,
@@ -386,12 +468,40 @@ const task = new Hono<{
     async (c) => {
       const { dependencyId } = c.req.valid("param");
 
+      const db = getDatabase();
+      const [existingDependency] = await db
+        .select({ dependentTaskId: taskDependencyTable.dependentTaskId })
+        .from(taskDependencyTable)
+        .where(eq(taskDependencyTable.id, dependencyId))
+        .limit(1);
+
+      if (!existingDependency) {
+        return c.json({ error: "Dependency not found" }, 404);
+      }
+
+      const task = await getTask(existingDependency.dependentTaskId);
+      const permission = await checkProjectPermission(
+        c.get("userEmail"),
+        task.projectId,
+        "canUpdateTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
+
       const dependency = await deleteTaskDependency(dependencyId);
 
       return c.json(dependency);
     },
   )
   // ☑️ BULK OPERATIONS: Manage multiple tasks at once
+  // SECURITY: workspaceId is now required and checked — both for
+  // authorization (checkWorkspacePermission below; it's read from the JSON
+  // body here, not a route param, so the requireWorkspacePermission
+  // middleware doesn't apply) and for scoping (every task ID in the batch
+  // must belong to it, see verifyTasksBelongToWorkspace). Previously these
+  // routes had no workspace check at all: any authenticated user could
+  // bulk-update/assign/archive/delete any task in any workspace by ID.
   .post(
     "/bulk/status",
     zValidator(
@@ -400,12 +510,29 @@ const task = new Hono<{
         taskIds: z.array(z.string()).min(1, "At least one task ID required"),
         status: z.enum(["todo", "in_progress", "done"]),
         userId: z.string(),
+        workspaceId: z.string(),
       }),
     ),
     async (c) => {
-      const { taskIds, status, userId } = c.req.valid("json");
+      const { taskIds, status, userId, workspaceId } = c.req.valid("json");
 
-      const result = await bulkUpdateStatus(taskIds, status, userId);
+      const permission = await checkWorkspacePermission(
+        c.get("userEmail"),
+        workspaceId,
+        "canUpdateTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
+
+      const result = await bulkUpdateStatus(
+        taskIds,
+        status,
+        userId,
+        workspaceId,
+        permission.restrictedToProjectIds,
+      );
+      if ("error" in result) return c.json(result, 403);
 
       return c.json({
         success: true,
@@ -422,12 +549,29 @@ const task = new Hono<{
         taskIds: z.array(z.string()).min(1, "At least one task ID required"),
         priority: z.enum(["low", "medium", "high", "urgent"]),
         userId: z.string(),
+        workspaceId: z.string(),
       }),
     ),
     async (c) => {
-      const { taskIds, priority, userId } = c.req.valid("json");
+      const { taskIds, priority, userId, workspaceId } = c.req.valid("json");
 
-      const result = await bulkUpdatePriority(taskIds, priority, userId);
+      const permission = await checkWorkspacePermission(
+        c.get("userEmail"),
+        workspaceId,
+        "canUpdateTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
+
+      const result = await bulkUpdatePriority(
+        taskIds,
+        priority,
+        userId,
+        workspaceId,
+        permission.restrictedToProjectIds,
+      );
+      if ("error" in result) return c.json(result, 403);
 
       return c.json({
         success: true,
@@ -445,18 +589,31 @@ const task = new Hono<{
         assigneeId: z.string(),
         assigneeEmail: z.string().email(),
         userId: z.string(),
+        workspaceId: z.string(),
       }),
     ),
     async (c) => {
-      const { taskIds, assigneeId, assigneeEmail, userId } =
+      const { taskIds, assigneeId, assigneeEmail, userId, workspaceId } =
         c.req.valid("json");
+
+      const permission = await checkWorkspacePermission(
+        c.get("userEmail"),
+        workspaceId,
+        "canAssignTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
 
       const result = await bulkAssignTasks(
         taskIds,
         assigneeId,
         assigneeEmail,
         userId,
+        workspaceId,
+        permission.restrictedToProjectIds,
       );
+      if ("error" in result) return c.json(result, 403);
 
       return c.json({
         success: true,
@@ -472,12 +629,28 @@ const task = new Hono<{
       z.object({
         taskIds: z.array(z.string()).min(1, "At least one task ID required"),
         userId: z.string(),
+        workspaceId: z.string(),
       }),
     ),
     async (c) => {
-      const { taskIds, userId } = c.req.valid("json");
+      const { taskIds, userId, workspaceId } = c.req.valid("json");
 
-      const result = await bulkArchiveTasks(taskIds, userId);
+      const permission = await checkWorkspacePermission(
+        c.get("userEmail"),
+        workspaceId,
+        "canUpdateTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
+
+      const result = await bulkArchiveTasks(
+        taskIds,
+        userId,
+        workspaceId,
+        permission.restrictedToProjectIds,
+      );
+      if ("error" in result) return c.json(result, 403);
 
       return c.json({
         success: true,
@@ -493,12 +666,28 @@ const task = new Hono<{
       z.object({
         taskIds: z.array(z.string()).min(1, "At least one task ID required"),
         userId: z.string(),
+        workspaceId: z.string(),
       }),
     ),
     async (c) => {
-      const { taskIds, userId } = c.req.valid("json");
+      const { taskIds, userId, workspaceId } = c.req.valid("json");
 
-      const result = await bulkDeleteTasks(taskIds, userId);
+      const permission = await checkWorkspacePermission(
+        c.get("userEmail"),
+        workspaceId,
+        "canDeleteTasks",
+      );
+      if (!permission.allowed) {
+        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      }
+
+      const result = await bulkDeleteTasks(
+        taskIds,
+        userId,
+        workspaceId,
+        permission.restrictedToProjectIds,
+      );
+      if ("error" in result) return c.json(result, 403);
 
       return c.json({
         success: true,

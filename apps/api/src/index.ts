@@ -17,6 +17,7 @@ import reports from "./reports";
 import { getDatabase } from "./database/connection";
 import label from "./label";
 import { auth } from "./middlewares/auth";
+import cacheHeaders from "./middlewares/cache-headers";
 import notification from "./notification";
 import project from "./project";
 import task from "./task";
@@ -133,37 +134,7 @@ app.use("*", requestLogger);
 app.use("*", compress());
 
 // ⚡ Add caching headers for better performance
-app.use("*", async (c, next) => {
-  await next();
-
-  // Only add caching to successful GET requests
-  if (c.req.method === "GET" && c.res.status === 200) {
-    const path = c.req.path;
-
-    // Static assets - aggressive caching
-    if (path.includes("/uploads/") || path.includes("/assets/")) {
-      c.header("Cache-Control", "public, max-age=31536000, immutable");
-    }
-    // API responses - short-term caching with revalidation
-    else if (path.startsWith("/api/")) {
-      c.header("Cache-Control", "private, max-age=60, must-revalidate");
-
-      // Add ETag for conditional requests and return 304 when matched
-      const body = await c.res.clone().text();
-      if (body) {
-        const hash = Buffer.from(body).toString("base64").substring(0, 27);
-        const etag = `"${hash}"`;
-        c.header("ETag", etag);
-
-        const ifNoneMatch = c.req.header("if-none-match");
-        if (ifNoneMatch && ifNoneMatch === etag) {
-          // Short-circuit with 304 Not Modified
-          c.res = new Response(null, { status: 304, headers: c.res.headers });
-        }
-      }
-    }
-  }
-});
+app.use("*", cacheHeaders());
 
 app.use(
   "*",
@@ -183,12 +154,21 @@ app.use(
         return origin;
       }
 
-      // For development, allow localhost origins
-      if (origin?.startsWith("http://localhost:")) {
+      // SECURITY: this reflected ANY http://localhost:<port> origin, with
+      // no environment check, combined with credentials:true below — live
+      // in production too. A request whose Origin header claimed to be
+      // localhost would be trusted with cookies. Dev convenience only.
+      if (
+        process.env.NODE_ENV !== "production" &&
+        origin?.startsWith("http://localhost:")
+      ) {
         return origin;
       }
 
-      return "http://localhost:5174"; // Default for development
+      // No match: deny (return undefined) rather than defaulting to a
+      // fixed dev origin, which would do the same credentialed-reflection
+      // for every unmatched request in production.
+      return undefined;
     },
     credentials: true,
     allowHeaders: [
@@ -213,7 +193,15 @@ if (!enableDemoAuthBypass) {
       path === "/api/users/sign-up" ||
       path === "/api/users/me" ||
       // Liveness probe only — /api/health subpaths expose project data and stay gated.
-      path === "/api/health";
+      path === "/api/health" ||
+      // Completes login for 2FA-enabled accounts, reached right after
+      // /sign-in withholds the session cookie — the browser has no session
+      // yet at this point, so this route can't sit behind the auth gate.
+      // Safe to expose: it authenticates the caller itself via the signed
+      // pendingToken minted by /sign-in (see auth/utils/pending-2fa-token.ts),
+      // not via a pre-existing session.
+      path === "/api/auth/two-factor/verify-login" ||
+      path === "/api/2fa/verify-login";
 
     // Allow unauthenticated access to auth bootstrap endpoints.
     if (isPublicUserRoute) {
@@ -538,6 +526,15 @@ async function startServer() {
         logger.debug("🔔 Alert rule scheduler initialized");
       } catch (error) {
         logger.error("⚠️ Failed to start alert rule scheduler:", error);
+      }
+
+      // @epic-4.1-analytics: Start scheduled analytics reports scheduler
+      try {
+        const { scheduledReportsScheduler } = require("./reports/scheduler");
+        scheduledReportsScheduler.start();
+        logger.debug("📊 Scheduled reports scheduler initialized");
+      } catch (error) {
+        logger.error("⚠️ Failed to start scheduled reports scheduler:", error);
       }
     });
   } catch (error) {

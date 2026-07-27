@@ -47,6 +47,18 @@ export function SignInForm() {
         email: data.email,
         password: data.password,
       });
+
+      // Password was correct, but the account has 2FA enabled — the API
+      // withholds the session until the second factor is verified.
+      // pendingToken is a short-lived bearer credential for that one
+      // verification step — kept out of the URL (query strings end up in
+      // browser history and server access logs) via sessionStorage instead.
+      if (user.twoFactorRequired) {
+        sessionStorage.setItem("pending2FAToken", user.pendingToken);
+        history.push(`/auth/verify-2fa?email=${encodeURIComponent(user.email)}`);
+        return;
+      }
+
       setUser(user);
       toast.success("Signed in successfully");
 

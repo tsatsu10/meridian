@@ -27,7 +27,12 @@ export const useBulkUpdateStatus = () => {
       const response = await fetch(`${API_URL}/task/bulk/status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskIds, status, userId }),
+        body: JSON.stringify({
+          taskIds,
+          status,
+          userId,
+          workspaceId: workspace?.id,
+        }),
         credentials: "include",
       });
 
@@ -74,7 +79,12 @@ export const useBulkUpdatePriority = () => {
       const response = await fetch(`${API_URL}/task/bulk/priority`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskIds, priority, userId }),
+        body: JSON.stringify({
+          taskIds,
+          priority,
+          userId,
+          workspaceId: workspace?.id,
+        }),
         credentials: "include",
       });
 
@@ -125,7 +135,13 @@ export const useBulkAssignTasks = () => {
       const response = await fetch(`${API_URL}/task/bulk/assign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskIds, assigneeId, assigneeEmail, userId }),
+        body: JSON.stringify({
+          taskIds,
+          assigneeId,
+          assigneeEmail,
+          userId,
+          workspaceId: workspace?.id,
+        }),
         credentials: "include",
       });
 
@@ -167,7 +183,7 @@ export const useBulkArchiveTasks = () => {
       const response = await fetch(`${API_URL}/task/bulk/archive`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskIds, userId }),
+        body: JSON.stringify({ taskIds, userId, workspaceId: workspace?.id }),
         credentials: "include",
       });
 
@@ -209,7 +225,7 @@ export const useBulkDeleteTasks = () => {
       const response = await fetch(`${API_URL}/task/bulk/delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskIds, userId }),
+        body: JSON.stringify({ taskIds, userId, workspaceId: workspace?.id }),
         credentials: "include",
       });
 

@@ -21,6 +21,7 @@ export function useBulkUpdateTaskStatus() {
           taskIds: params.taskIds,
           status: params.status,
           userId: params.userId,
+          workspaceId: workspace?.id,
         }),
       });
     },

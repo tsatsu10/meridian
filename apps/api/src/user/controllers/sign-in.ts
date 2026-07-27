@@ -30,6 +30,7 @@ async function signIn(email: string, password: string) {
     id: user.id,
     email: user.email,
     name: user.name,
+    twoFactorEnabled: user.twoFactorEnabled ?? false,
   };
 }
 

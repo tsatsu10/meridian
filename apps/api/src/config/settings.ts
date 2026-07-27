@@ -19,6 +19,7 @@ export interface AppSettings {
   // Authentication
   adminEmail: string;
   jwtSecret: string;
+  encryptionKey: string;
 
   // Database
   databaseType: "sqlite" | "postgresql";
@@ -48,6 +49,7 @@ function loadSettings(): AppSettings {
     // Authentication - SINGLE SOURCE OF TRUTH
     adminEmail: process.env.ADMIN_EMAIL || "admin@meridian.app",
     jwtSecret: process.env.JWT_SECRET || "meridian-dev-secret",
+    encryptionKey: process.env.ENCRYPTION_KEY || "meridian-dev-encryption-key",
 
     // Database
     databaseType:
@@ -74,6 +76,18 @@ function loadSettings(): AppSettings {
       );
     }
     logger.warn("⚠️  Using default JWT_SECRET - not secure for production!");
+  }
+
+  if (
+    !settings.encryptionKey ||
+    settings.encryptionKey === "meridian-dev-encryption-key"
+  ) {
+    if (settings.nodeEnv === "production") {
+      throw new Error(
+        "ENCRYPTION_KEY must be set to a strong value in production - refusing to start with the default key",
+      );
+    }
+    logger.warn("⚠️  Using default ENCRYPTION_KEY - not secure for production!");
   }
 
   return settings;

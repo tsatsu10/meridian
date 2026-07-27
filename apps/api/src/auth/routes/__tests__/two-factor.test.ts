@@ -8,6 +8,7 @@ import { authenticator } from "otplib";
 import { Hono } from "hono";
 import twoFactorRoutes from "../two-factor";
 import { hashPassword } from "../../password";
+import { generatePending2FAToken } from "../../utils/pending-2fa-token";
 
 // Mock database
 const mockUsers = new Map();
@@ -18,19 +19,24 @@ const mockDb = {
   limit: vi.fn().mockResolvedValue([]),
   update: vi.fn().mockReturnThis(),
   set: vi.fn().mockReturnThis(),
+  // POST /verify-login now creates a real session (createSession) once the
+  // second factor checks out — needed by the same mock the rest of the
+  // suite already uses.
+  insert: vi.fn().mockReturnThis(),
+  values: vi.fn().mockResolvedValue(undefined),
 };
 
 vi.mock("../../../database/connection", () => ({
   getDatabase: () => mockDb,
 }));
 
-vi.mock("../../../utils/logger", () => ({
-  default: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+vi.mock("../../../utils/logger", () => {
+  // pending-2fa-token.ts (via config/settings) and middlewares/security.ts
+  // (via audit-logger.ts) each pull this module in via a different import
+  // style — provide both a default export and a named one so either works.
+  const mockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+  return { default: mockLogger, logger: mockLogger };
+});
 
 describe("Two-Factor Authentication Routes", () => {
   let app: Hono;
@@ -204,7 +210,10 @@ describe("Two-Factor Authentication Routes", () => {
       const req = new Request("http://localhost/auth/two-factor/verify-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: "user-123", token: validToken }),
+        body: JSON.stringify({
+          pendingToken: generatePending2FAToken("user-123"),
+          token: validToken,
+        }),
       });
 
       const response = await app.fetch(req);
@@ -222,7 +231,10 @@ describe("Two-Factor Authentication Routes", () => {
       const req = new Request("http://localhost/auth/two-factor/verify-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: "user-123", backupCode: "AAAA-BBBB" }),
+        body: JSON.stringify({
+          pendingToken: generatePending2FAToken("user-123"),
+          backupCode: "AAAA-BBBB",
+        }),
       });
 
       const response = await app.fetch(req);
@@ -245,7 +257,7 @@ describe("Two-Factor Authentication Routes", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: "user-123",
+          pendingToken: generatePending2FAToken("user-123"),
           backupCode: "INVALID-CODE",
         }),
       });
@@ -255,6 +267,42 @@ describe("Two-Factor Authentication Routes", () => {
       expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.error).toContain("Invalid backup code");
+    });
+
+    it("rejects a bare userId with no pendingToken (regression: userId used to be trusted directly from the body)", async () => {
+      const secret = "TESTSECRET123456";
+      const validToken = authenticator.generate(secret);
+
+      const req = new Request("http://localhost/auth/two-factor/verify-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: "user-123", token: validToken }),
+      });
+
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toContain("Invalid request");
+    });
+
+    it("rejects a forged/tampered pendingToken even with a valid TOTP code", async () => {
+      const secret = "TESTSECRET123456";
+      const validToken = authenticator.generate(secret);
+      const realToken = generatePending2FAToken("user-123");
+      const forgedToken = `${realToken.split(".")[0]}.0000000000000000000000000000000000000000000000000000000000000000`;
+
+      const req = new Request("http://localhost/auth/two-factor/verify-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pendingToken: forgedToken, token: validToken }),
+      });
+
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.error).toContain("Invalid or expired");
     });
 
     it("should reject login if 2FA not enabled", async () => {
@@ -272,7 +320,10 @@ describe("Two-Factor Authentication Routes", () => {
       const req = new Request("http://localhost/auth/two-factor/verify-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: "user-123", token: "123456" }),
+        body: JSON.stringify({
+          pendingToken: generatePending2FAToken("user-123"),
+          token: "123456",
+        }),
       });
 
       const response = await app.fetch(req);

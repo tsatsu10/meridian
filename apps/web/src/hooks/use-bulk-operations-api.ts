@@ -16,6 +16,7 @@ export function useBulkUpdateProjects() {
   return useMutation({
     mutationFn: async (payload: {
       projectIds: string[];
+      workspaceId: string;
       updates: {
         status?: string;
         priority?: string;
@@ -32,6 +33,7 @@ export function useBulkUpdateProjects() {
         credentials: "include",
         body: JSON.stringify({
           projectIds: payload.projectIds,
+          workspaceId: payload.workspaceId,
           updates: {
             status: payload.updates.status,
             priority: payload.updates.priority,

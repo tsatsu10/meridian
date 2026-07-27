@@ -13,6 +13,7 @@ import { validateSessionToken } from "./utils/validate-session-token";
 import statusRouter from "./status";
 // 🔒 Import auth rate limiter for sign-in/sign-up protection
 import { authRateLimiter } from "../middlewares/security";
+import { generatePending2FAToken } from "../auth/utils/pending-2fa-token";
 
 const user = new Hono<{
   Variables: {
@@ -28,31 +29,19 @@ const user = new Hono<{
       const authHeader = c.req.header("Authorization");
       if (authHeader?.startsWith("Bearer ")) {
         session = authHeader.substring(7);
-        console.log("🔍 [/me] Using session from Authorization header");
       }
     }
 
-    console.log(
-      `🔍 [/me] Session: ${session ? `${session.substring(0, 20)}...` : "MISSING"}`,
-    );
-
     if (!session) {
-      console.log("❌ [/me] No session token found (cookie or header)");
       return c.json({ user: null });
     }
 
     const { user } = await validateSessionToken(session);
 
-    console.log(
-      `🔍 [/me] Validation result: ${user ? `User ${user.email}` : "NULL"}`,
-    );
-
     if (user === null) {
-      console.log("❌ [/me] Session validation returned null user");
       return c.json({ user: null });
     }
 
-    console.log(`✅ [/me] Returning user: ${user.email}`);
     return c.json({ user });
   })
   .post(
@@ -64,28 +53,39 @@ const user = new Hono<{
 
       const user = await signIn(email, password);
 
-      console.log(`🔐 [sign-in] User authenticated: ${user.email}`);
+      // SECURITY: 2FA must gate session issuance, not just exist as a
+      // separate opt-in check nothing ever calls. If the user has 2FA
+      // enabled, stop here — no cookie, no session — and tell the client
+      // to complete verification first. /auth/two-factor/verify-login is
+      // the only place a session gets created for this account from here.
+      //
+      // The client gets a short-lived signed pendingToken, not the raw
+      // userId: verify-login derives the target user FROM this token, so
+      // presenting a valid 2FA code for an arbitrary userId (leaked via any
+      // channel that never involved that account's password) isn't enough
+      // by itself — the token only exists because this password check just
+      // passed for this specific user.
+      if (user.twoFactorEnabled) {
+        return c.json({
+          twoFactorRequired: true,
+          pendingToken: generatePending2FAToken(user.id),
+          email: user.email,
+        });
+      }
 
       const token = generateSessionToken();
-      console.log(`🔑 [sign-in] Generated token: ${token.substring(0, 20)}...`);
-
       const session = await createSession(token, user.id);
-      console.log("💾 [sign-in] Session created with hashed ID");
 
-      // For development, set domain to localhost (without port) to share across ports
-      // For production, use SameSite=Lax for same-site requests
       const isProduction = process.env.NODE_ENV === "production";
       setCookie(c, "session", token, {
         path: "/",
-        domain: "localhost", // Share cookie across all localhost ports
-        secure: false, // False in dev (http://localhost), true in production (https)
-        sameSite: "lax", // Lax works for same-domain requests
+        // Share cookie across all localhost ports in dev; real host in prod.
+        domain: isProduction ? undefined : "localhost",
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
         expires: session.expiresAt,
       });
-
-      console.log(
-        `🍪 [sign-in] Cookie set: session=${token.substring(0, 20)}... (Domain=localhost, SameSite=lax)`,
-      );
 
       return c.json({
         ...user,
@@ -110,14 +110,13 @@ const user = new Hono<{
       const token = generateSessionToken();
       const session = await createSession(token, user.id);
 
-      // For development, set domain to localhost (without port) to share across ports
-      // For production, use SameSite=Lax for same-site requests
       const isProduction = process.env.NODE_ENV === "production";
       setCookie(c, "session", token, {
         path: "/",
-        domain: "localhost", // Share cookie across all localhost ports
-        secure: false, // False in dev (http://localhost), true in production (https)
-        sameSite: "lax", // Lax works for same-domain requests
+        domain: isProduction ? undefined : "localhost",
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
         expires: session.expiresAt,
       });
 

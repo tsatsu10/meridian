@@ -19,12 +19,12 @@ import { toast } from "sonner";
 import { Shield, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import { MeridianMark } from "@/components/branding/meridian-mark";
 import { Label } from "@/components/ui/label";
+import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 
 export const Route = createFileRoute("/auth/verify-2fa")({
   component: Verify2FA,
   validateSearch: (search: Record<string, unknown>) => {
     return {
-      userId: search.userId as string,
       email: search.email as string,
     };
   },
@@ -39,12 +39,13 @@ function Verify2FA() {
 
   const navigate = useNavigate();
   void useRouter();
-  const search = Route.useSearch();
+  const { setUser } = useAuth();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!search.userId) {
+    const pendingToken = sessionStorage.getItem("pending2FAToken");
+    if (!pendingToken) {
       setError("Invalid session. Please sign in again.");
       return;
     }
@@ -63,12 +64,15 @@ function Verify2FA() {
     setError("");
 
     try {
-      await apiClient.auth.twoFactor.verifyLogin({
-        userId: search.userId,
+      const user = await apiClient.auth.twoFactor.verifyLogin({
+        pendingToken,
         token: useBackupCode ? undefined : code,
         backupCode: useBackupCode ? backupCode : undefined,
       });
 
+      sessionStorage.removeItem("pending2FAToken");
+
+      setUser(user);
       toast.success("Verification successful!");
       navigate({ to: "/dashboard" });
     } catch (error) {

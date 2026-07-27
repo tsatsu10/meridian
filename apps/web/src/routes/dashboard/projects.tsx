@@ -854,6 +854,7 @@ function ProjectsPage() {
           try {
             await bulkUpdate.mutateAsync({
               projectIds: ids,
+              workspaceId: workspace?.id || "",
               updates,
             });
           } catch (error) {

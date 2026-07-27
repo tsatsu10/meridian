@@ -8,9 +8,12 @@ import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
 import type { EmailSettings } from "./get-email-settings";
 import crypto from "node:crypto";
+import { appSettings } from "../../config/settings";
 
-const ENCRYPTION_KEY =
-  process.env.ENCRYPTION_KEY || "default-encryption-key-change-in-production";
+// SECURITY: read from the centrally-validated setting (config/settings.ts
+// refuses to boot in production with the default value) instead of a
+// locally-defined fallback string that was reachable unconditionally.
+const ENCRYPTION_KEY = appSettings.encryptionKey;
 
 // Simple encryption for SMTP password (use a managed secret store in production).
 // NOTE: crypto.createCipher was removed from Node — this now uses

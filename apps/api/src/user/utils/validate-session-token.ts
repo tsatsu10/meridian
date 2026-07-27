@@ -5,17 +5,31 @@ import { getDatabase } from "../../database/connection";
 import { sessionTable, userTable } from "../../database/schema";
 
 export async function validateSessionToken(token: string) {
-  console.log(`🔍 [validate] Validating token: ${token.substring(0, 20)}...`);
-
   const db = getDatabase();
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
-  console.log(
-    `🔍 [validate] Hashed session ID: ${sessionId.substring(0, 20)}...`,
-  );
-
   const sessions = await db
-    .select({ user: userTable, session: sessionTable })
+    .select({
+      // SECURITY: never select password/twoFactorSecret/twoFactorBackupCodes —
+      // this result is returned as-is by GET /api/users/me, so any column
+      // selected here is exposed to the browser on every session check.
+      user: {
+        id: userTable.id,
+        email: userTable.email,
+        name: userTable.name,
+        avatar: userTable.avatar,
+        timezone: userTable.timezone,
+        language: userTable.language,
+        role: userTable.role,
+        isEmailVerified: userTable.isEmailVerified,
+        lastLoginAt: userTable.lastLoginAt,
+        lastSeen: userTable.lastSeen,
+        twoFactorEnabled: userTable.twoFactorEnabled,
+        createdAt: userTable.createdAt,
+        updatedAt: userTable.updatedAt,
+      },
+      session: sessionTable,
+    })
     .from(sessionTable)
     .innerJoin(userTable, eq(sessionTable.userId, userTable.id))
     .where(eq(sessionTable.id, sessionId));

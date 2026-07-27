@@ -4,6 +4,7 @@
  */
 
 import { Hono } from "hono";
+import { setCookie } from "hono/cookie";
 import { authenticator } from "otplib";
 import { randomBytes } from "node:crypto";
 import { getDatabase } from "../../database/connection";
@@ -11,6 +12,10 @@ import { users as userTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
 import logger from "../../utils/logger";
 import { verifyPassword } from "../password";
+import createSession from "../../user/utils/create-session";
+import generateSessionToken from "../../user/utils/generate-session-token";
+import { authRateLimiter } from "../../middlewares/security";
+import { verifyPending2FAToken } from "../utils/pending-2fa-token";
 
 const app = new Hono();
 
@@ -200,12 +205,23 @@ app.post("/disable", async (c) => {
  * POST /verify-login
  * Verify 2FA code during login
  */
-app.post("/verify-login", async (c) => {
+app.post("/verify-login", authRateLimiter, async (c) => {
   try {
-    const { userId, token, backupCode } = await c.req.json();
+    const { pendingToken, token, backupCode } = await c.req.json();
 
-    if (!userId || (!token && !backupCode)) {
+    if (!pendingToken || (!token && !backupCode)) {
       return c.json({ error: "Invalid request" }, 400);
+    }
+
+    // SECURITY: userId must come from the signed pendingToken minted by
+    // /sign-in right after that specific account's password was verified —
+    // never from a client-supplied field. Trusting a bare body.userId here
+    // meant a valid 2FA code for ANY account (leaked via a channel that
+    // never involved the password — compromised authenticator app/backup
+    // codes) was sufficient on its own for a full account takeover.
+    const userId = verifyPending2FAToken(pendingToken);
+    if (!userId) {
+      return c.json({ error: "Invalid or expired login attempt" }, 401);
     }
 
     logger.info("Verifying 2FA login", { userId }, "AUTH");
@@ -268,7 +284,29 @@ app.post("/verify-login", async (c) => {
 
     logger.info("2FA login verified successfully", { userId }, "AUTH");
 
-    return c.json({ success: true });
+    // This is the actual completion of login: /sign-in withheld the session
+    // specifically because 2FA was enabled, so it's issued here instead,
+    // once the second factor has actually been checked.
+    const sessionToken = generateSessionToken();
+    const session = await createSession(sessionToken, user.id);
+
+    const isProduction = process.env.NODE_ENV === "production";
+    setCookie(c, "session", sessionToken, {
+      path: "/",
+      domain: isProduction ? undefined : "localhost",
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      expires: session.expiresAt,
+    });
+
+    return c.json({
+      success: true,
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      sessionToken: process.env.NODE_ENV === "development" ? sessionToken : undefined,
+    });
   } catch (error) {
     logger.error("Failed to verify 2FA login", { error }, "AUTH");
     return c.json({ error: "Failed to verify 2FA login" }, 500);
