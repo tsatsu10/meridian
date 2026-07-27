@@ -307,15 +307,6 @@ export const useProjectNavigation = (
       category: "project",
       color: "bg-gradient-to-br from-purple-500 to-purple-600",
     },
-    // Backlog navigation item
-    {
-      id: "project-backlog",
-      label: "Backlog",
-      icon: FolderOpen,
-      href: `/dashboard/workspace/${workspaceId}/project/${projectId}/backlog`,
-      category: "project",
-      color: "bg-gradient-to-br from-yellow-500 to-yellow-600",
-    },
     {
       id: "project-list",
       label: "List",
