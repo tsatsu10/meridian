@@ -57,11 +57,10 @@ interface ProjectMember {
   avatar?: string;
   role: string;
   workspaceRole?: string;
-  status: "online" | "away" | "offline";
+  status: "active" | "inactive";
   activeTasks: number;
   completedTasks: number;
   productivity: number;
-  lastActive?: string;
   joinedProject: string;
 }
 
