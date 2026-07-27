@@ -14,11 +14,7 @@ import {
   customPermissionTable,
   projectTable,
 } from "../database/schema";
-import {
-  ROLE_PERMISSIONS,
-  getRolePermissions,
-  ROLE_HIERARCHY,
-} from "../constants/rbac";
+import { ROLE_PERMISSIONS, ROLE_HIERARCHY } from "../constants/rbac";
 import type { UserRole, PermissionAction } from "../types/rbac";
 import { getHighestRole } from "../constants/rbac";
 import { appSettings } from "../config/settings";
@@ -86,8 +82,14 @@ export function requirePermission(permission: PermissionAction) {
 
       // Built-in role names resolve from the ROLE_PERMISSIONS constant exactly
       // as before; anything else is looked up as a custom role id. Unknown or
-      // revoked roles resolve to {}, i.e. denied — the same fail-closed
-      // behaviour ROLE_PERMISSIONS[role] || {} already had.
+      // revoked roles resolve to {}, i.e. denied.
+      //
+      // NOTE: the workspace passed here comes from an arbitrarily chosen
+      // active assignment (.limit(1), no orderBy) and is NOT the workspace of
+      // the request. It only asserts the custom role belongs to the same
+      // workspace as that assignment. Route-level scoping is the job of
+      // checkWorkspacePermission / checkProjectPermission, which select the
+      // assignment for the workspace actually being accessed.
       const rolePermissions = await resolveRolePermissions(
         assignedRole,
         roleAssignment[0]?.workspaceId ?? null,
@@ -310,7 +312,13 @@ export async function checkWorkspacePermission(
   }
 
   const userRole = workspaceAssignment.role as UserRole;
-  const rolePermissions = getRolePermissions(userRole);
+  // Same name-first resolution requirePermission uses. This assignment was
+  // selected with eq(roleAssignmentTable.workspaceId, workspaceId), so the
+  // workspace passed here is the one actually being authorised against.
+  const rolePermissions = await resolveRolePermissions(
+    workspaceAssignment.role,
+    workspaceId,
+  );
 
   if (!rolePermissions[permission]) {
     return {
@@ -517,7 +525,13 @@ export async function checkProjectPermission(
   }
 
   const userRole = assignment.role as UserRole;
-  const rolePermissions = getRolePermissions(userRole);
+  // The assignment was selected with
+  // eq(roleAssignmentTable.workspaceId, project.workspaceId), so this is the
+  // workspace that owns the project being authorised against.
+  const rolePermissions = await resolveRolePermissions(
+    assignment.role,
+    project.workspaceId,
+  );
 
   if (!rolePermissions[permission]) {
     return {
