@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useProjectStore from "@/store/project";
 import type Task from "@/types/task";
+import type { ProjectColumn } from "@/types/project";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { addWeeks, endOfWeek, isWithinInterval, startOfWeek } from "date-fns";
 import { ChevronLeft } from "lucide-react";
@@ -286,14 +287,14 @@ function RouteComponent() {
 
     return {
       ...project,
+      // Spread the whole column: rebuilding it field-by-field dropped
+      // `position` and `isDefault`, which left the board's own sort a no-op
+      // and made every column look non-default to ColumnHeader.
       columns:
-        project.columns?.map(
-          (column: { id: string; name: string; tasks: Task[] }) => ({
-            id: column.id,
-            name: column.name,
-            tasks: filterTasks(column.tasks),
-          }),
-        ) ?? [],
+        project.columns?.map((column: ProjectColumn) => ({
+          ...column,
+          tasks: filterTasks(column.tasks),
+        })) ?? [],
     };
   }, [project, filters]); // Only recompute when project or filters change
 

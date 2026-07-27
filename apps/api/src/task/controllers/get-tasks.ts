@@ -1,4 +1,4 @@
-import { and, eq, or, SQL } from "drizzle-orm";
+import { eq, or, SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
 import {
@@ -17,12 +17,13 @@ interface StatusColumn {
   isDefault: boolean;
 }
 
-// These 3 stay virtual (never rows in status_columns) so every existing
-// task's status ("todo"/"in_progress"/"done", no longer enum-constrained
-// as of the tasks.status text migration) keeps matching a column with zero
-// data migration. Custom columns are real status_columns rows, merged in
-// below - a task's status can be either one of these 3 ids or a custom
-// column's row id.
+// Fallback for projects whose default columns haven't been materialised as
+// status_columns rows yet (they're backfilled by ensureDefaultColumns the
+// first time a column is added). Kept so reads stay side-effect free.
+//
+// A task's status is matched against the column's *public* id, which is the
+// slug for default columns and the row id for custom ones - see
+// project/utils/default-columns.ts.
 const DEFAULT_COLUMNS: StatusColumn[] = [
   { id: "todo", name: "To Do", color: "#6b7280", position: 0, isDefault: true },
   {
@@ -185,27 +186,39 @@ async function getTasks(projectId: string) {
   // subtask would render as a disconnected root card in the wrong column.
   const fullHierarchy = buildTaskHierarchy(tasks);
 
-  const customColumnRows = await db
+  const columnRows = await db
     .select()
     .from(statusColumnTable)
-    .where(
-      and(
-        eq(statusColumnTable.projectId, projectId),
-        eq(statusColumnTable.isDefault, false),
-      ),
-    );
+    .where(eq(statusColumnTable.projectId, projectId))
+    .orderBy(statusColumnTable.position, statusColumnTable.createdAt);
 
-  const allColumns: StatusColumn[] = [...DEFAULT_COLUMNS];
-  for (const col of customColumnRows) {
-    allColumns.push({
-      id: col.id,
-      dbId: col.id,
-      name: col.name,
-      color: col.color ?? "#6b7280",
-      position: col.position,
-      isDefault: false,
-    });
-  }
+  const hasMaterialisedDefaults = columnRows.some((col) => col.isDefault);
+
+  // Default columns are exposed under their slug ("todo"/"in_progress"/
+  // "done") because that's what tasks store in `status` and what the board's
+  // drag handler sends back. Their real row id travels as dbId.
+  const allColumns: StatusColumn[] = hasMaterialisedDefaults
+    ? columnRows.map((col) => ({
+        id: col.isDefault ? col.slug : col.id,
+        dbId: col.id,
+        name: col.name,
+        color: col.color ?? "#6b7280",
+        position: col.position,
+        isDefault: Boolean(col.isDefault),
+      }))
+    : [
+        ...DEFAULT_COLUMNS,
+        ...columnRows
+          .filter((col) => !col.isDefault)
+          .map((col) => ({
+            id: col.id,
+            dbId: col.id,
+            name: col.name,
+            color: col.color ?? "#6b7280",
+            position: col.position,
+            isDefault: false,
+          })),
+      ];
   allColumns.sort((a, b) => a.position - b.position);
 
   const columns = allColumns.map((column) => ({

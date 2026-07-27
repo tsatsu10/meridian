@@ -153,6 +153,10 @@ export function createMockDb() {
         findFirst: vi.fn(),
         findMany: vi.fn(),
       },
+      statusColumnTable: {
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+      },
     },
   };
 

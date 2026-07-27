@@ -49,6 +49,7 @@ import {
   workspaceUserTable,
   userTable,
 } from "../database/schema";
+import { ensureDefaultColumns } from "./utils/default-columns";
 import rbacMiddleware from "../middlewares/rbac";
 import {
   requirePermission,
@@ -525,17 +526,20 @@ const project = new Hono<{
           .regex(/^#[0-9A-Fa-f]{6}$/)
           .optional(),
         position: z.number().int().min(0).optional(),
+        insertAfterColumnId: z.string().optional(),
       }),
     ),
     async (c) => {
       const { projectId } = c.req.valid("param");
-      const { name, color, position } = c.req.valid("json");
+      const { name, color, position, insertAfterColumnId } =
+        c.req.valid("json");
 
       const statusColumn = await createStatusColumn({
         projectId,
         name,
         color,
         position,
+        insertAfterColumnId,
       });
 
       return c.json(statusColumn);
@@ -570,39 +574,10 @@ const project = new Hono<{
     try {
       logger.debug("🔧 Fixing position conflicts for project:", projectId);
 
-      // Get all columns sorted by current position, then by creation date for tiebreaker
-      const columns = await db
-        .select()
-        .from(statusColumnTable)
-        .where(eq(statusColumnTable.projectId, projectId))
-        .orderBy(statusColumnTable.position, statusColumnTable.createdAt);
-
-      logger.debug(
-        "🔧 Current columns before fix:",
-        columns.map((c) => ({
-          id: c.id,
-          name: c.name,
-          position: c.position,
-          isDefault: c.isDefault,
-        })),
-      );
-
-      // Renumber positions sequentially
-      for (let i = 0; i < columns.length; i++) {
-        const column = columns[i];
-        if (!column) continue;
-        const newPosition = i; // 0, 1, 2, 3, 4...
-
-        if (column.position !== newPosition) {
-          logger.debug(
-            `🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`,
-          );
-          await db
-            .update(statusColumnTable)
-            .set({ position: newPosition })
-            .where(eq(statusColumnTable.id, column.id));
-        }
-      }
+      // Shares one implementation with column creation so the two can't
+      // drift apart — it backfills any missing default columns and renumbers
+      // every column contiguously.
+      await ensureDefaultColumns(projectId);
 
       logger.debug("🔧 Position conflicts fixed");
       return c.json({ success: true, message: "Position conflicts fixed" });

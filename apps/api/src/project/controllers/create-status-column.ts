@@ -1,50 +1,9 @@
-import { eq, gte, and } from "drizzle-orm";
+import { eq, gte, and, or } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
 import { projectTable, statusColumnTable } from "../../database/schema";
+import { ensureDefaultColumns } from "../utils/default-columns";
 import logger from "../../utils/logger";
-
-// Fix position conflicts by renumbering all columns sequentially
-async function fixPositionConflicts(projectId: string) {
-  const db = getDatabase();
-  logger.debug("🔧 Fixing position conflicts for project:", projectId);
-
-  // Get all columns sorted by current position, then by creation date for tiebreaker
-  const columns = await db
-    .select()
-    .from(statusColumnTable)
-    .where(eq(statusColumnTable.projectId, projectId))
-    .orderBy(statusColumnTable.position, statusColumnTable.createdAt);
-
-  logger.debug(
-    "🔧 Current columns before fix:",
-    columns.map((c) => ({
-      id: c.id,
-      name: c.name,
-      position: c.position,
-      isDefault: c.isDefault,
-    })),
-  );
-
-  // Renumber positions sequentially
-  for (let i = 0; i < columns.length; i++) {
-    const column = columns[i];
-    if (!column) continue;
-    const newPosition = i; // 0, 1, 2, 3, 4...
-
-    if (column.position !== newPosition) {
-      logger.debug(
-        `🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`,
-      );
-      await db
-        .update(statusColumnTable)
-        .set({ position: newPosition })
-        .where(eq(statusColumnTable.id, column.id));
-    }
-  }
-
-  logger.debug("🔧 Position conflicts fixed");
-}
 
 // @epic-1.1-subtasks: Create custom status columns for Sarah's PM workflow
 async function createStatusColumn({
@@ -52,11 +11,21 @@ async function createStatusColumn({
   name,
   color = "#6b7280",
   position,
+  insertAfterColumnId,
 }: {
   projectId: string;
   name: string;
   color?: string;
   position?: number;
+  /**
+   * Public id of the column the new one should sit directly after — the row
+   * id for custom columns, the slug for defaults.
+   *
+   * Preferred over a raw `position`: normalising a project's columns can
+   * renumber them, so any position the client computed from the board it was
+   * looking at may be stale by the time it gets here. An id survives that.
+   */
+  insertAfterColumnId?: string;
 }) {
   const db = getDatabase();
   // Verify project exists
@@ -70,8 +39,35 @@ async function createStatusColumn({
     });
   }
 
-  // Fix any existing position conflicts first
-  await fixPositionConflicts(projectId);
+  // Materialise the default columns and renumber everything contiguously, so
+  // that the position the client asked for means the same thing here as the
+  // slot it clicked on the board. Also self-heals projects created before
+  // defaults became real rows.
+  await ensureDefaultColumns(projectId);
+
+  // Resolve "insert after this column" now that positions are settled.
+  if (insertAfterColumnId !== undefined) {
+    const anchor = await db.query.statusColumnTable.findFirst({
+      where: and(
+        eq(statusColumnTable.projectId, projectId),
+        or(
+          eq(statusColumnTable.id, insertAfterColumnId),
+          and(
+            eq(statusColumnTable.isDefault, true),
+            eq(statusColumnTable.slug, insertAfterColumnId),
+          ),
+        ),
+      ),
+    });
+
+    if (!anchor) {
+      throw new HTTPException(404, {
+        message: "Column to insert after not found",
+      });
+    }
+
+    position = anchor.position + 1;
+  }
 
   // Generate slug from name
   const slug = name
@@ -130,12 +126,11 @@ async function createStatusColumn({
       .orderBy(statusColumnTable.position);
 
     position =
-      columns.length > 0 ? Math.max(...columns.map((c) => c.position)) + 1 : 4; // Start after default columns
+      columns.length > 0 ? Math.max(...columns.map((c) => c.position)) + 1 : 0;
   }
 
   logger.debug("🔧 Creating new column at position:", position);
 
-  logger.debug("Inserting new column at position:", position);
   // Create the status column
   const [createdColumn] = await db
     .insert(statusColumnTable)

@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
 import {
@@ -29,11 +29,19 @@ async function deleteStatusColumn({
 
   // Tasks are bucketed by `task.status === column.id` (get-tasks.ts,
   // kanban-board's drag handler), and that's what the frontend sends here
-  // as columnId - so the column must be looked up by id, not slug.
+  // as columnId. For custom columns that public id is the row id; for the
+  // default columns it's the slug, so both have to be tried or a delete
+  // aimed at a default would 404 instead of hitting the guard below.
   const statusColumn = await db.query.statusColumnTable.findFirst({
     where: and(
-      eq(statusColumnTable.id, columnId),
       eq(statusColumnTable.projectId, projectId),
+      or(
+        eq(statusColumnTable.id, columnId),
+        and(
+          eq(statusColumnTable.isDefault, true),
+          eq(statusColumnTable.slug, columnId),
+        ),
+      ),
     ),
   });
 
