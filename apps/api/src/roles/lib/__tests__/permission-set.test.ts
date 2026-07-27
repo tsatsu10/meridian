@@ -58,4 +58,28 @@ describe("findExcessPermissions", () => {
       findExcessPermissions(["canManageRoles", "canAccessAuditLogs"], actor),
     ).toEqual(["canManageRoles", "canAccessAuditLogs"]);
   });
+
+  it("treats truthy-but-not-true values as not held (number)", () => {
+    // Cast simulates untrusted runtime data reaching the guard. The guard must
+    // require the exact value `true`, not just any truthy value, to prevent
+    // a future refactoring to falsy-based checks from becoming an escalation
+    // vector if the permission storage layer ever returns non-boolean truthy values.
+    const actorWithNumberPermission = {
+      canDeleteTasks: 1,
+    } as unknown as Record<string, boolean>;
+    expect(
+      findExcessPermissions(["canDeleteTasks"], actorWithNumberPermission),
+    ).toEqual(["canDeleteTasks"]);
+  });
+
+  it("treats truthy-but-not-true values as not held (string)", () => {
+    // Cast simulates untrusted runtime data reaching the guard. Same defensive
+    // guarantee as the number case: only exact `true` counts.
+    const actorWithStringPermission = {
+      canDeleteTasks: "yes",
+    } as unknown as Record<string, boolean>;
+    expect(
+      findExcessPermissions(["canDeleteTasks"], actorWithStringPermission),
+    ).toEqual(["canDeleteTasks"]);
+  });
 });
