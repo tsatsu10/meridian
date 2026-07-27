@@ -1,7 +1,12 @@
-import { eq, or, SQL } from "drizzle-orm";
+import { and, eq, or, SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { getDatabase } from "../../database/connection";
-import { projectTable, taskTable, userTable } from "../../database/schema";
+import {
+  projectTable,
+  statusColumnTable,
+  taskTable,
+  userTable,
+} from "../../database/schema";
 
 interface StatusColumn {
   id: string;
@@ -12,10 +17,12 @@ interface StatusColumn {
   isDefault: boolean;
 }
 
-// Column ids MUST equal the task_status enum values (todo|in_progress|done) —
-// tasks are bucketed by `task.status === column.id`. The previous hyphenated
-// ids ("to-do"/"in-progress") never matched, so boards rendered empty columns;
-// "in-review" was dropped because the enum has no such status.
+// These 3 stay virtual (never rows in status_columns) so every existing
+// task's status ("todo"/"in_progress"/"done", no longer enum-constrained
+// as of the tasks.status text migration) keeps matching a column with zero
+// data migration. Custom columns are real status_columns rows, merged in
+// below - a task's status can be either one of these 3 ids or a custom
+// column's row id.
 const DEFAULT_COLUMNS: StatusColumn[] = [
   { id: "todo", name: "To Do", color: "#6b7280", position: 0, isDefault: true },
   {
@@ -39,29 +46,6 @@ async function getTasks(projectId: string) {
       message: "Project not found",
     });
   }
-
-  // See https://github.com/tsatsu10/meridian/issues/63
-  const customColumns: StatusColumn[] = []; // Empty until schema exists
-
-  // Use default columns until custom columns are implemented
-  const allColumns: StatusColumn[] = [...DEFAULT_COLUMNS];
-
-  // Add custom columns that aren't defaults
-  for (const customCol of customColumns) {
-    if (!customCol.isDefault) {
-      allColumns.push({
-        id: customCol.id,
-        dbId: customCol.dbId,
-        name: customCol.name,
-        color: customCol.color,
-        position: customCol.position,
-        isDefault: false,
-      });
-    }
-  }
-
-  // Sort by position
-  allColumns.sort((a, b) => a.position - b.position);
 
   // Fetch tasks using simple query without joins to avoid Drizzle ORM issues
   const tasksFromDb = await db
@@ -194,6 +178,36 @@ async function getTasks(projectId: string) {
     return rootTasks.map(calculateProgress);
   };
 
+  // Build the hierarchy once across ALL tasks (not per-column) so a subtask
+  // always finds its parent even if its own status differs from the
+  // parent's - filtering by status first, then bucketing by column, would
+  // leave that subtask's parent out of its column's task map and the
+  // subtask would render as a disconnected root card in the wrong column.
+  const fullHierarchy = buildTaskHierarchy(tasks);
+
+  const customColumnRows = await db
+    .select()
+    .from(statusColumnTable)
+    .where(
+      and(
+        eq(statusColumnTable.projectId, projectId),
+        eq(statusColumnTable.isDefault, false),
+      ),
+    );
+
+  const allColumns: StatusColumn[] = [...DEFAULT_COLUMNS];
+  for (const col of customColumnRows) {
+    allColumns.push({
+      id: col.id,
+      dbId: col.id,
+      name: col.name,
+      color: col.color ?? "#6b7280",
+      position: col.position,
+      isDefault: false,
+    });
+  }
+  allColumns.sort((a, b) => a.position - b.position);
+
   const columns = allColumns.map((column) => ({
     id: column.id,
     dbId: column.dbId,
@@ -201,9 +215,7 @@ async function getTasks(projectId: string) {
     color: column.color,
     position: column.position,
     isDefault: column.isDefault,
-    tasks: buildTaskHierarchy(
-      tasks.filter((task) => task.status === column.id),
-    ),
+    tasks: fullHierarchy.filter((task) => task.status === column.id),
   }));
 
   // The task_status enum is todo|in_progress|done — "archived"/"planned"

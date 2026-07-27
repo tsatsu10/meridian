@@ -304,13 +304,15 @@ function ProjectOverview() {
       return task.status !== "done" && new Date(task.dueDate) < now;
     }).length;
 
-    // Calculate velocity (tasks completed per week)
-    const projectAge = Math.max(
-      1,
-      (now.getTime() - new Date(allTasks[0]?.createdAt || now).getTime()) /
-        (1000 * 60 * 60 * 24 * 7),
-    );
-    const velocity = Math.round((completedTasks / projectAge) * 10) / 10;
+    // Tasks completed per week, over a fixed 30-day/4-week window — matches
+    // the Analytics tab's own velocity calculation (get-project-analytics.ts,
+    // which defaults to the same "last 30 days" range) instead of a
+    // project-age-based one, which used to disagree with the Analytics tab's
+    // number for the same project (e.g. 1/week here vs 0.3/week there for
+    // brand-new projects, since "weeks since first task" and "weeks in a
+    // fixed 30-day window" are different denominators).
+    const weeksInRange = Math.floor(30 / 7);
+    const velocity = Math.round((completedTasks / weeksInRange) * 10) / 10;
 
     // Calculate health score
     const progressRatio = completedTasks / allTasks.length;
@@ -343,9 +345,15 @@ function ProjectOverview() {
     else if (overdueRatio > 0.15 || healthScore < 60) riskLevel = "high";
     else if (overdueRatio > 0.05 || healthScore < 80) riskLevel = "medium";
 
-    // Calculate efficiency
+    // Matches the Analytics tab's own "efficiency" (get-project-analytics.ts
+    // timeMetrics.efficiency = completed/total), not the arbitrary
+    // `velocity * 20` this used to be — which didn't correspond to anything
+    // shown elsewhere and could disagree with the Analytics tab for the same
+    // project.
     const efficiency =
-      velocity > 0 ? Math.min(100, Math.round(velocity * 20)) : 0;
+      allTasks.length > 0
+        ? Math.round((completedTasks / allTasks.length) * 100)
+        : 0;
 
     // Add risk integration
     const riskScore = riskData.data?.overallRiskScore || 0;
@@ -408,6 +416,18 @@ function ProjectOverview() {
         };
       });
   }, [allTasks, users]);
+
+  // Workspace users who actually appear as an assignee on one of this
+  // project's tasks — the "Team Activity" panel below used to list the
+  // first 5 workspace users regardless of any connection to this project,
+  // showing "0 tasks, 0% complete" rows for people with none, even when the
+  // project's own Teams tab correctly reported 0 assigned team members.
+  const projectTeamActivity = useMemo(() => {
+    if (!users?.length || !allTasks.length) return [];
+    return users.filter((user) =>
+      allTasks.some((task) => task.userEmail === user.userEmail),
+    );
+  }, [users, allTasks]);
 
   // Enhanced team members with productivity metrics
   const teamMembers: TeamMember[] = useMemo(() => {
@@ -931,17 +951,11 @@ function ProjectOverview() {
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-3">
-              {/* 🔒 Analytics button - visible to all who can view */}
-              {projectPermissions.canViewAnalytics && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsDashboardOpen(true)}
-                >
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Analytics
-                </Button>
-              )}
+              {/* The Analytics nav tab right above this header goes to the
+                  same real (backend-driven) Analytics page — this button
+                  used to open a second, separate modal with its own,
+                  differently-computed stats instead. One destination,
+                  one entry point. */}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1095,7 +1109,7 @@ function ProjectOverview() {
                     {projectStats.teamMembers}
                   </p>
                   <p className="text-xs text-orange-600 dark:text-orange-400">
-                    {users?.length || 0} active users
+                    assigned across this project's tasks
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
@@ -1272,8 +1286,8 @@ function ProjectOverview() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {users && users.length > 0 ? (
-                  users.slice(0, 5).map((user) => {
+                {projectTeamActivity.length > 0 ? (
+                  projectTeamActivity.slice(0, 5).map((user) => {
                     const userTasks = allTasks.filter(
                       (task) => task.userEmail === user.userEmail,
                     );

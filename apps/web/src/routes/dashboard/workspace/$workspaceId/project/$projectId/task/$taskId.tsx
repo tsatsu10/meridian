@@ -45,6 +45,9 @@ import useGetTask from "@/hooks/queries/task/use-get-task";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import { cn } from "@/lib/utils";
+import EditTaskModal from "@/components/shared/modals/edit-task-modal";
+import CreateTaskModal from "@/components/shared/modals/create-task-modal";
+import type { TaskWithSubtasks } from "@/types/task";
 
 export const Route = createFileRoute(
   "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
@@ -62,6 +65,9 @@ function TaskDetailsPage() {
 
   const [isWatching, setIsWatching] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
+  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] =
+    useState(false);
   const [expandedSections, setExpandedSections] = useState({
     description: true,
     subtasks: true,
@@ -248,6 +254,12 @@ function TaskDetailsPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    onClick={() => setIsEditTaskModalOpen(true)}
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit Task
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopyLink}>
                     <Copy className="w-4 h-4 mr-2" />
                     Copy Link
@@ -283,7 +295,11 @@ function TaskDetailsPage() {
                   isExpanded={expandedSections.description}
                   onToggle={() => toggleSection("description")}
                   actions={
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsEditTaskModalOpen(true)}
+                    >
                       <Edit2 className="w-3.5 h-3.5" />
                     </Button>
                   }
@@ -305,7 +321,11 @@ function TaskDetailsPage() {
                   onToggle={() => toggleSection("subtasks")}
                   badge={<Badge variant="secondary">0</Badge>}
                   actions={
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsCreateSubtaskModalOpen(true)}
+                    >
                       <Plus className="w-3.5 h-3.5" />
                     </Button>
                   }
@@ -469,6 +489,22 @@ function TaskDetailsPage() {
           </div>
         </div>
       </div>
+
+      <EditTaskModal
+        open={isEditTaskModalOpen}
+        onClose={() => setIsEditTaskModalOpen(false)}
+        task={task as TaskWithSubtasks}
+        workspaceId={workspaceId}
+      />
+
+      <CreateTaskModal
+        open={isCreateSubtaskModalOpen}
+        onOpenChange={setIsCreateSubtaskModalOpen}
+        status={task.status}
+        parentTaskId={task.id}
+        projectContext={project ?? undefined}
+        hideProjectSelection={true}
+      />
     </>
   );
 }
@@ -507,6 +543,7 @@ function Section({
           className="flex-1 flex items-center gap-3 text-left"
           aria-expanded={isExpanded}
           aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title} section`}
+          style={{ background: "transparent" }}
         >
           {icon && <div className="text-muted-foreground">{icon}</div>}
           <h2 className="font-semibold text-base">{title}</h2>
@@ -519,6 +556,7 @@ function Section({
             onClick={onToggle}
             className="p-1 hover:bg-muted rounded transition-colors"
             aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title} section`}
+            style={{ background: "transparent" }}
           >
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}

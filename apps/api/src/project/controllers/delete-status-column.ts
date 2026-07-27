@@ -13,7 +13,7 @@ async function deleteStatusColumn({
   columnId,
 }: {
   projectId: string;
-  columnId: string; // This is actually the slug, not the database ID
+  columnId: string;
 }) {
   const db = getDatabase();
   // Verify project exists
@@ -27,10 +27,12 @@ async function deleteStatusColumn({
     });
   }
 
-  // Find the status column by slug (not ID)
+  // Tasks are bucketed by `task.status === column.id` (get-tasks.ts,
+  // kanban-board's drag handler), and that's what the frontend sends here
+  // as columnId - so the column must be looked up by id, not slug.
   const statusColumn = await db.query.statusColumnTable.findFirst({
     where: and(
-      eq(statusColumnTable.slug, columnId), // Look up by slug instead of ID
+      eq(statusColumnTable.id, columnId),
       eq(statusColumnTable.projectId, projectId),
     ),
   });
@@ -55,11 +57,7 @@ async function deleteStatusColumn({
     .where(
       and(
         eq(taskTable.projectId, projectId),
-        // slug is a free string; the status column is a pg enum
-        eq(
-          taskTable.status,
-          statusColumn.slug as "todo" | "in_progress" | "done",
-        ),
+        eq(taskTable.status, statusColumn.id),
       ),
     );
 

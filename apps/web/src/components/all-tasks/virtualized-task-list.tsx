@@ -1,5 +1,6 @@
 import type React from "react";
 import { useMemo, useCallback, useState, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   DndContext,
@@ -298,6 +299,18 @@ const TaskRow: React.FC<TaskRowProps> = ({
   const { tasks, selectedTasks, onTaskSelect, onTaskUpdate, onTaskDelete } =
     data;
   const task = tasks[index];
+  const navigate = useNavigate();
+
+  const handleViewTask = useCallback(() => {
+    navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
+      params: {
+        workspaceId: task.project.workspaceId,
+        projectId: task.projectId,
+        taskId: task.id,
+      },
+    });
+  }, [navigate, task]);
 
   const isOverdue = (dueDate: Date | null) => {
     if (!dueDate) return false;
@@ -377,7 +390,11 @@ const TaskRow: React.FC<TaskRowProps> = ({
 
       {/* Title */}
       <div className="min-w-0">
-        <div className="block group/link cursor-pointer">
+        <button
+          type="button"
+          onClick={handleViewTask}
+          className="block w-full text-left group/link cursor-pointer"
+        >
           <div className="font-medium text-sm group-hover/link:text-primary transition-colors line-clamp-1">
             {task.title}
           </div>
@@ -391,7 +408,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
               </span>
             )}
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Project */}
@@ -435,15 +452,6 @@ const TaskRow: React.FC<TaskRowProps> = ({
               }}
             >
               In Progress
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleQuickStatusUpdate("done");
-              }}
-            >
-              In Review
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={(e) => {
@@ -538,7 +546,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // TODO: Navigate to task details when route is available
+                handleViewTask();
               }}
               className="flex items-center gap-2"
             >

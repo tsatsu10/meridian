@@ -69,8 +69,7 @@ async function importTasks(projectId: string, tasksToImport: ImportTask[]) {
           userEmail: taskData.userEmail || null,
           // tasks has no assignedTeamId column; team assignment is not imported
           title: taskData.title,
-          // request-boundary narrowing onto the enum columns
-          status: taskData.status as "todo" | "in_progress" | "done",
+          status: taskData.status,
           dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
           description: taskData.description || "",
           priority:

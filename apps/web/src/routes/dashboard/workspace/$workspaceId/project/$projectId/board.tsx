@@ -185,7 +185,14 @@ function RouteComponent() {
             return false;
           }
 
-          if (filters.dueDate && task.dueDate) {
+          if (filters.dueDate === "No due date") {
+            if (task.dueDate) return false;
+          } else if (filters.dueDate) {
+            // "Due this week"/"Due next week" only make sense for tasks that
+            // actually have a due date - without this, undated tasks fell
+            // through as an unfiltered match for every dueDate filter.
+            if (!task.dueDate) return false;
+
             const today = new Date();
             const taskDate = new Date(task.dueDate);
 
@@ -215,9 +222,6 @@ function RouteComponent() {
                   return false;
                 }
                 break;
-              }
-              case "No due date": {
-                return false;
               }
             }
           }
@@ -285,8 +289,8 @@ function RouteComponent() {
       columns:
         project.columns?.map(
           (column: { id: string; name: string; tasks: Task[] }) => ({
-            id: column.id as "todo" | "in_progress" | "done" | "done",
-            name: column.name as "To Do" | "In Progress" | "In Review" | "Done",
+            id: column.id,
+            name: column.name,
             tasks: filterTasks(column.tasks),
           }),
         ) ?? [],

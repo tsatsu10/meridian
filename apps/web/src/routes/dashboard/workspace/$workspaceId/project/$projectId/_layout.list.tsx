@@ -47,7 +47,7 @@ import { useMemoryCleanup } from "@/components/performance/memory-cleanup-provid
 // 🔒 SECURITY: XSS protection for user inputs
 import { sanitizeString } from "@/utils/xss-protection";
 // 🔒 SECURITY: Role-based access control
-import { useProjectPermissions } from "@/hooks/use-project-permissions";
+import { useRBACAuth } from "@/lib/permissions";
 // ♻️ UX: Undo delete functionality
 import { useUndo } from "@/hooks/use-undo";
 // ✨ CONSISTENT: Use the same VirtualizedTaskList as All Tasks page
@@ -90,8 +90,11 @@ function ProjectListView() {
   useMemoryCleanup();
 
   // 🔒 SECURITY: Check user permissions for this project
-  const { canCreateTasks, canEditTasks, canDeleteTasks, canManageProject } =
-    useProjectPermissions(projectId, workspaceId);
+  const { hasPermission } = useRBACAuth();
+  const canCreateTasks = hasPermission("canCreateTasks");
+  const canEditTasks = hasPermission("canEditTasks");
+  const canDeleteTasks = hasPermission("canDeleteTasks");
+  const canManageProject = hasPermission("canManageProjectSettings");
 
   // Task management mutations
   const { mutateAsync: updateTask } = useUpdateTask();
@@ -589,12 +592,6 @@ function ProjectListView() {
                   role="menuitem"
                 >
                   In Progress
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setStatusFilter("in_review")}
-                  role="menuitem"
-                >
-                  In Review
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setStatusFilter("done")}
