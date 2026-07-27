@@ -2557,25 +2557,68 @@ import { isSystemRoleId } from "../roles/lib/system-roles";
 `and` and `eq` are already imported here. The schema barrel does not
 re-export `roles`, so the subfile path above is required.
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [ ] **Step 5: Enforce projectIds restrictions for custom roles**
 
-Run: `cd apps/api && npx vitest run src/rbac/__tests__/assign-custom-role.test.ts`
+Added after the Task 11 review. `checkWorkspacePermission` and
+`checkProjectPermission` both compute `restrictedToProjectIds` like this:
 
-Expected: PASS (3 tests).
+```typescript
+  let restrictedToProjectIds: string[] | null = null;
+  if (userRole === "project-manager" || userRole === "project-viewer") {
+```
 
-- [ ] **Step 6: Confirm existing rbac tests still pass**
+Those two string literals are the only roles that ever get project-scoped.
+A custom role id never equals either, so a `projectIds` restriction stored on
+a custom-role assignment is silently ignored and the holder gets
+workspace-wide access. That is unreachable until this task lands — and this
+task is what makes it reachable.
+
+Fix it in **both** functions in `apps/api/src/middlewares/rbac.ts` by also
+restricting any non-built-in role that carries projectIds. Built-in
+behaviour is deliberately left byte-identical:
+
+```typescript
+  let restrictedToProjectIds: string[] | null = null;
+  // Built-in project roles keep their existing behaviour exactly. Custom
+  // roles are additionally restricted whenever the assignment carries
+  // projectIds — without this, a project-scoped custom role would silently
+  // grant workspace-wide access.
+  if (
+    userRole === "project-manager" ||
+    userRole === "project-viewer" ||
+    !isSystemRoleId(userRole)
+  ) {
+```
+
+Leave the body of each `if` unchanged. `isSystemRoleId` is already imported
+by Step 4.
+
+Add a test to `apps/api/src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts`
+asserting that a custom-role assignment carrying
+`projectIds: ["proj-1"]` yields `restrictedToProjectIds: ["proj-1"]`, and a
+control asserting a built-in `member` assignment with the same projectIds
+still yields `null` — proving built-in behaviour did not change.
+
+- [ ] **Step 6: Run the test to verify it passes**
+
+Run: `cd apps/api && npx vitest run src/rbac/__tests__/assign-custom-role.test.ts src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts`
+
+Expected: PASS — 3 schema tests plus the scoped-role tests including the two
+new projectIds cases.
+
+- [ ] **Step 7: Confirm existing rbac tests still pass**
 
 Run: `cd apps/api && npx vitest run src/rbac`
 
 Expected: no new failures. The existing authorization tests for `/assign`
 must still pass — the `canManageRoles` guard is untouched.
 
-- [ ] **Step 7: Typecheck, format and commit**
+- [ ] **Step 8: Typecheck, format and commit**
 
 ```bash
 cd apps/api && npx tsc --noEmit -p tsconfig.json
-cd ../.. && npx biome check --write apps/api/src/rbac/index.ts apps/api/src/rbac/__tests__/assign-custom-role.test.ts
-git add apps/api/src/rbac/index.ts apps/api/src/rbac/__tests__/assign-custom-role.test.ts
+cd ../.. && npx biome check --write apps/api/src/rbac/index.ts apps/api/src/rbac/__tests__/assign-custom-role.test.ts apps/api/src/middlewares/rbac.ts apps/api/src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts
+git add apps/api/src/rbac/index.ts apps/api/src/rbac/__tests__/assign-custom-role.test.ts apps/api/src/middlewares/rbac.ts apps/api/src/middlewares/__tests__/rbac-scoped-custom-roles.test.ts
 git status --short
 git commit -m "feat(roles): allow custom role ids to be assigned, validated against the roles table"
 ```
