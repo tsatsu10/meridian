@@ -1182,12 +1182,21 @@ the router file:
 import { ROLE_PERMISSIONS } from "../constants/rbac";
 
 /**
- * Every permission key the system knows about (157 of them), taken from the
- * most privileged built-in role so the list is exhaustive.
+ * Every permission key the system knows about.
+ *
+ * Deliberately the union across all roles, not the keys of the most
+ * privileged one: workspace-manager is missing canViewAssignedTasks,
+ * canUpdateAssignedTasks and canManageDepartment, which other roles define.
+ * Taking any single role's keys would silently omit permissions from the
+ * editor.
  */
-const ALL_PERMISSION_KEYS = Object.keys(
-  ROLE_PERMISSIONS["workspace-manager"],
-).sort();
+const ALL_PERMISSION_KEYS = [
+  ...new Set(
+    Object.values(ROLE_PERMISSIONS).flatMap((permissions) =>
+      Object.keys(permissions as Record<string, boolean>),
+    ),
+  ),
+].sort();
 ```
 
 In `apps/api/src/index.ts`, add the import alongside the other routers:
@@ -2158,8 +2167,14 @@ Re-run the script from Task 4 Step 6. Expected: `mismatches: 0`.
 
 - [ ] **Step 5: Commit any fixes**
 
+Stage by explicit path — **never `git add -A`**. This working tree carries
+unrelated in-flight work from another session
+(`apps/api/src/user-preferences/`, `apps/web/src/lib/dev/`) which must not be
+swept into a roles commit.
+
 ```bash
-git add -A
+git add apps/api/src/roles apps/web/src/lib/permissions
+git status --short   # confirm nothing unrelated is staged
 git commit -m "test(roles): fix regressions found in full-suite run"
 ```
 (Skip if nothing changed.)
