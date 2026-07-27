@@ -102,6 +102,29 @@ interface TimeSeriesDataPoint {
   };
 }
 
+interface SkillGapEntry {
+  skill: string;
+  category: string;
+  avgLevel: number;
+  membersWithSkill: number;
+  coverage: number;
+  isGap: boolean;
+}
+
+interface CapacityPlanningSummary {
+  totalMembers: number;
+  avgUtilization: number;
+  overloadedCount: number;
+  underutilizedCount: number;
+  recommendation: string;
+}
+
+interface RiskAssessmentSummary {
+  atRiskProjectCount: number;
+  atRiskProjects: Array<{ id: string; name: string; healthScore: number }>;
+  topRiskFactors: Array<{ factor: string; count: number }>;
+}
+
 interface ForecastingData {
   projectCompletionDate: string;
   confidenceInterval: {
@@ -159,10 +182,9 @@ interface EnhancedAnalyticsResponse {
   performanceBenchmarks: AdvancedPerformanceBenchmarks;
   timeSeriesData: TimeSeriesDataPoint[];
 
-  departmentBreakdown?: unknown[];
-  skillGapAnalysis?: unknown[];
-  capacityPlanning?: unknown[];
-  riskAssessment?: unknown[];
+  skillGapAnalysis: SkillGapEntry[];
+  capacityPlanning: CapacityPlanningSummary;
+  riskAssessment: RiskAssessmentSummary;
 
   forecasting?: ForecastingData;
   industryBenchmarks?: unknown;
@@ -332,18 +354,21 @@ export function useEnhancedAnalytics(options: EnhancedAnalyticsOptions = {}) {
           ? data.timeSeriesData
           : [],
         performanceBenchmarks: data?.performanceBenchmarks || {},
-        departmentBreakdown: Array.isArray(data?.departmentBreakdown)
-          ? data.departmentBreakdown
-          : [],
         skillGapAnalysis: Array.isArray(data?.skillGapAnalysis)
           ? data.skillGapAnalysis
           : [],
-        capacityPlanning: Array.isArray(data?.capacityPlanning)
-          ? data.capacityPlanning
-          : [],
-        riskAssessment: Array.isArray(data?.riskAssessment)
-          ? data.riskAssessment
-          : [],
+        capacityPlanning: data?.capacityPlanning || {
+          totalMembers: 0,
+          avgUtilization: 0,
+          overloadedCount: 0,
+          underutilizedCount: 0,
+          recommendation: "",
+        },
+        riskAssessment: data?.riskAssessment || {
+          atRiskProjectCount: 0,
+          atRiskProjects: [],
+          topRiskFactors: [],
+        },
         forecasting: data?.forecasting ?? undefined,
         industryBenchmarks: data?.industryBenchmarks || null,
         summary: {
@@ -372,4 +397,7 @@ export type {
   AdvancedPerformanceBenchmarks,
   TimeSeriesDataPoint,
   ForecastingData,
+  SkillGapEntry,
+  CapacityPlanningSummary,
+  RiskAssessmentSummary,
 };

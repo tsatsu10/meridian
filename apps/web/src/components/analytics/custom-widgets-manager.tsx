@@ -37,6 +37,7 @@ import {
   CheckCircle2,
   Sparkles,
   RotateCcw,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { toast } from "sonner";
@@ -330,12 +331,20 @@ export function CustomWidgetsManager({
               Customize Dashboard
             </DialogTitle>
             <DialogDescription>
-              Add, remove, and arrange widgets to personalize your analytics
-              dashboard
+              Add, remove, and arrange widgets to personalize the "Your
+              Dashboard" section on the Overview tab.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 min-h-0 flex flex-col gap-4">
+            <div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/40 border border-border/50 rounded-lg p-3">
+              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>
+                Changes here appear in the "Your Dashboard" section on the
+                Overview tab, saved to this browser.
+              </span>
+            </div>
+
             {/* Header Actions */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

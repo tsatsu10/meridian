@@ -22,6 +22,7 @@ import {
   activityTable,
   timeEntryTable,
   roleAssignmentTable,
+  userSkillTable,
 } from "../../database/schema";
 
 // @epic-3.1-analytics: Enhanced analytics with advanced filtering and comparative analytics
@@ -144,6 +145,29 @@ interface TimeSeriesDataPoint {
   };
 }
 
+interface SkillGapEntry {
+  skill: string;
+  category: string;
+  avgLevel: number; // 1-5
+  membersWithSkill: number;
+  coverage: number; // % of workspace members who have this skill logged
+  isGap: boolean; // low average level or low coverage
+}
+
+interface CapacityPlanningSummary {
+  totalMembers: number;
+  avgUtilization: number;
+  overloadedCount: number;
+  underutilizedCount: number;
+  recommendation: string;
+}
+
+interface RiskAssessmentSummary {
+  atRiskProjectCount: number;
+  atRiskProjects: Array<{ id: string; name: string; healthScore: number }>;
+  topRiskFactors: Array<{ factor: string; count: number }>;
+}
+
 interface ForecastingData {
   projectCompletionDate: string;
   confidenceInterval: {
@@ -205,11 +229,16 @@ interface AdvancedAnalyticsResponse {
   // Time series with advanced granularity
   timeSeriesData: TimeSeriesDataPoint[];
 
-  // Advanced features
-  departmentBreakdown?: unknown[];
-  skillGapAnalysis?: unknown[];
-  capacityPlanning?: unknown[];
-  riskAssessment?: unknown[];
+  // Advanced features - real, derived from data that actually exists.
+  // (There was previously a department breakdown placeholder too. A
+  // `departments` table and a `userProfile.department` column do exist in
+  // the schema, but nothing in the live app ever writes or reads either one
+  // - no project/task/workspace-member is actually assigned to a
+  // department anywhere - so there was nothing real to compute; it always
+  // returned [].)
+  skillGapAnalysis: SkillGapEntry[];
+  capacityPlanning: CapacityPlanningSummary;
+  riskAssessment: RiskAssessmentSummary;
 
   // Forecasting (if enabled)
   forecasting?: ForecastingData;
@@ -295,15 +324,19 @@ async function getEnhancedAnalytics(
       currentMetrics,
       comparisonMetrics,
       projectHealthData,
+      comparisonProjectHealthData,
       resourceData,
       timeSeriesData,
-      departmentData,
+      skillGapAnalysis,
     ] = await Promise.all([
       getMetricsForPeriod(conditions, baseWorkspaceId, currentPeriod),
       compareWith !== "baseline"
         ? getMetricsForPeriod(conditions, baseWorkspaceId, comparisonPeriod)
         : null,
       getAdvancedProjectHealth(conditions, currentPeriod),
+      compareWith !== "baseline"
+        ? getAdvancedProjectHealth(conditions, comparisonPeriod)
+        : null,
       getEnhancedResourceUtilization(
         conditions,
         baseWorkspaceId,
@@ -311,7 +344,7 @@ async function getEnhancedAnalytics(
         comparisonPeriod,
       ),
       getTimeSeriesData(conditions, currentPeriod, granularity),
-      getDepartmentBreakdown(conditions, currentPeriod),
+      getSkillGapAnalysis(baseWorkspaceId),
     ]);
     logger.debug("📊 Parallel queries completed");
 
@@ -327,9 +360,14 @@ async function getEnhancedAnalytics(
       ),
       completedProjects: calculateComparativeData(0, 0), // Will be calculated from projectHealth
       projectsAtRisk: calculateComparativeData(0, 0), // Will be calculated from projectHealth
+      // Averaged from the same per-project healthScore shown on the Projects
+      // tab (completion % and overdue ratio), not a separate crude metric -
+      // otherwise this card can silently disagree with Projects tab numbers.
       avgHealthScore: calculateComparativeData(
-        currentMetrics.projects.avgHealthScore,
-        comparisonMetrics?.projects?.avgHealthScore,
+        averageProjectHealthScore(projectHealthData),
+        comparisonProjectHealthData
+          ? averageProjectHealthScore(comparisonProjectHealthData)
+          : null,
       ),
     };
 
@@ -439,6 +477,9 @@ async function getEnhancedAnalytics(
       timeSeriesData,
     );
 
+    const capacityPlanning = calculateCapacityPlanning(resourceData);
+    const riskAssessment = calculateRiskAssessment(projectHealthData);
+
     return {
       projectMetrics,
       taskMetrics,
@@ -448,7 +489,9 @@ async function getEnhancedAnalytics(
       resourceUtilization: resourceData,
       performanceBenchmarks,
       timeSeriesData,
-      departmentBreakdown: departmentData,
+      skillGapAnalysis,
+      capacityPlanning,
+      riskAssessment,
       forecasting,
       summary: {
         timeRange: `${currentPeriod.start} to ${currentPeriod.end}`,
@@ -583,6 +626,14 @@ async function getMetricsForPeriod(
   const db = getDatabase();
 
   // Project metrics
+  // Snapshot conditions: only count projects that existed by the end of this
+  // period, so "current" vs "comparison" period actually differ when new
+  // projects were created in between (previously this ignored `period`
+  // entirely, making the comparison always identical/flat).
+  const projectSnapshotConditions = [
+    ...baseConditions,
+    lte(projectTable.createdAt, new Date(period.end)),
+  ];
   const [projectMetrics] = await db
     .select({
       totalProjects: sql<number>`COUNT(DISTINCT ${projectTable.id})`,
@@ -598,12 +649,12 @@ async function getMetricsForPeriod(
           END
         )
       `,
-      avgHealthScore: sql<number>`AVG(CASE WHEN ${taskTable.status} = 'done' THEN 100 ELSE 50 END)`,
     })
     .from(projectTable)
-    .leftJoin(taskTable, eq(taskTable.projectId, projectTable.id))
     .where(
-      baseConditions.length === 1 ? baseConditions[0] : and(...baseConditions),
+      projectSnapshotConditions.length === 1
+        ? projectSnapshotConditions[0]
+        : and(...projectSnapshotConditions),
     );
 
   // Task metrics - combine baseConditions with period filter
@@ -618,7 +669,28 @@ async function getMetricsForPeriod(
       completedTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'done' THEN 1 END)`,
       inProgressTasks: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'in_progress' THEN 1 END)`,
       overdueTasks: sql<number>`COUNT(CASE WHEN ${taskTable.dueDate} < CURRENT_TIMESTAMP AND ${taskTable.status} != 'done' THEN 1 END)`,
-      avgCycleTime: sql<number>`0`, // Removed AVG(timestamp) - PostgreSQL doesn't support it
+      // Hours from creation to completion, for tasks with a real completedAt
+      // (set going forward by update-task's single-task completion and
+      // bulk-operations' bulkUpdateStatus - bulkArchiveTasks intentionally
+      // does not, since forcing an arbitrary task to "done" for archival
+      // isn't the same as it having been genuinely worked to completion,
+      // and would otherwise hand this average a fake near-zero cycle time).
+      // You can't AVG() timestamps directly in Postgres, but you can AVG()
+      // the extracted epoch seconds of their difference.
+      avgCycleTime: sql<number>`
+        ROUND(
+          COALESCE(
+            AVG(
+              CASE
+                WHEN ${taskTable.completedAt} IS NOT NULL
+                THEN EXTRACT(EPOCH FROM (${taskTable.completedAt} - ${taskTable.createdAt})) / 3600
+              END
+            ),
+            0
+          )::numeric,
+          1
+        )
+      `,
       throughput: sql<number>`COUNT(CASE WHEN ${taskTable.status} = 'done' THEN 1 END)`,
     })
     .from(taskTable)
@@ -627,7 +699,10 @@ async function getMetricsForPeriod(
       taskConditions.length === 1 ? taskConditions[0] : and(...taskConditions),
     );
 
-  // Team metrics
+  // Team metrics - activity columns (activeMembers/avgProductivity/
+  // collaborationIndex) are scoped to this period via the join predicate so
+  // current vs. comparison periods actually differ; totalMembers stays a
+  // point-in-time headcount.
   const [teamMetrics] = await db
     .select({
       totalMembers: sql<number>`COUNT(DISTINCT ${workspaceUserTable.userEmail})`,
@@ -636,7 +711,14 @@ async function getMetricsForPeriod(
       collaborationIndex: sql<number>`COUNT(DISTINCT ${taskTable.userEmail}) / NULLIF(COUNT(DISTINCT ${projectTable.id}), 0)`,
     })
     .from(workspaceUserTable)
-    .leftJoin(taskTable, eq(taskTable.userEmail, workspaceUserTable.userEmail))
+    .leftJoin(
+      taskTable,
+      and(
+        eq(taskTable.userEmail, workspaceUserTable.userEmail),
+        gte(taskTable.createdAt, new Date(period.start)),
+        lte(taskTable.createdAt, new Date(period.end)),
+      ),
+    )
     .leftJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .where(eq(workspaceUserTable.workspaceId, workspaceId));
 
@@ -664,7 +746,6 @@ async function getMetricsForPeriod(
     projects: projectMetrics || {
       totalProjects: 0,
       activeProjects: 0,
-      avgHealthScore: 0,
     },
     tasks: taskMetrics || {
       totalTasks: 0,
@@ -697,6 +778,22 @@ async function getAdvancedProjectHealth(
 ): Promise<AdvancedProjectHealth[]> {
   const db = getDatabase();
 
+  // Snapshot as of period.end: for the current period this is a no-op (end
+  // is "now"), but for a comparison period it excludes projects/tasks that
+  // didn't exist yet, so a comparison period's project/task *population*
+  // isn't just silently reusing today's numbers.
+  // Known limitation: completedTasks/overdueTasks below still read each
+  // task's *current* status and CURRENT_TIMESTAMP, not its state as of
+  // period.end - a task created before a historical comparison period
+  // ended but completed since then still counts as completed in that
+  // comparison snapshot. A fully accurate historical reconstruction would
+  // need each task's status-change history (e.g. via the activity log),
+  // which this doesn't attempt.
+  const projectSnapshotConditions = [
+    ...baseConditions,
+    lte(projectTable.createdAt, new Date(period.end)),
+  ];
+
   const projectHealthData = await db
     .select({
       id: projectTable.id,
@@ -710,10 +807,18 @@ async function getAdvancedProjectHealth(
       avgTimePerTask: sql<number>`AVG(CASE WHEN ${timeEntryTable.duration} > 0 THEN ${timeEntryTable.duration} END) / 3600`,
     })
     .from(projectTable)
-    .leftJoin(taskTable, eq(taskTable.projectId, projectTable.id))
+    .leftJoin(
+      taskTable,
+      and(
+        eq(taskTable.projectId, projectTable.id),
+        lte(taskTable.createdAt, new Date(period.end)),
+      ),
+    )
     .leftJoin(timeEntryTable, eq(timeEntryTable.taskId, taskTable.id))
     .where(
-      baseConditions.length === 1 ? baseConditions[0] : and(...baseConditions),
+      projectSnapshotConditions.length === 1
+        ? projectSnapshotConditions[0]
+        : and(...projectSnapshotConditions),
     )
     .groupBy(
       projectTable.id,
@@ -980,13 +1085,127 @@ async function getTimeSeriesData(
   return timeSeriesData;
 }
 
-async function getDepartmentBreakdown(
-  baseConditions: SQL<unknown>[],
-  period: Period,
-) {
-  // This would require department information in the schema
-  // For now, return empty array
-  return [];
+async function getSkillGapAnalysis(
+  workspaceId: string,
+): Promise<SkillGapEntry[]> {
+  const db = getDatabase();
+
+  const [memberCountRow] = await db
+    .select({
+      totalMembers: sql<number>`COUNT(DISTINCT ${workspaceUserTable.userId})`,
+    })
+    .from(workspaceUserTable)
+    .where(eq(workspaceUserTable.workspaceId, workspaceId));
+
+  const totalMembers = memberCountRow?.totalMembers ?? 0;
+  if (totalMembers === 0) return [];
+
+  const skills = await db
+    .select({
+      name: userSkillTable.name,
+      category: userSkillTable.category,
+      avgLevel: sql<number>`ROUND(AVG(${userSkillTable.level})::numeric, 1)`,
+      membersWithSkill: sql<number>`COUNT(DISTINCT ${userSkillTable.userId})`,
+    })
+    .from(userSkillTable)
+    .innerJoin(
+      workspaceUserTable,
+      eq(workspaceUserTable.userId, userSkillTable.userId),
+    )
+    .where(eq(workspaceUserTable.workspaceId, workspaceId))
+    .groupBy(userSkillTable.name, userSkillTable.category);
+
+  return skills
+    .map((s) => {
+      const coverage = Math.round((s.membersWithSkill / totalMembers) * 100);
+      return {
+        skill: s.name,
+        category: s.category,
+        avgLevel: Number(s.avgLevel),
+        membersWithSkill: s.membersWithSkill,
+        coverage,
+        isGap: Number(s.avgLevel) < 3 || coverage < 30,
+      };
+    })
+    .sort(
+      (a, b) => Number(b.isGap) - Number(a.isGap) || a.avgLevel - b.avgLevel,
+    );
+}
+
+function calculateCapacityPlanning(
+  resourceData: EnhancedResourceUtilization[],
+): CapacityPlanningSummary {
+  const overloaded = resourceData.filter(
+    (r) =>
+      r.workloadBalance === "overloaded" || r.workloadBalance === "critical",
+  );
+  const underutilized = resourceData.filter(
+    (r) => r.workloadBalance === "underutilized",
+  );
+  const avgUtilization =
+    resourceData.length > 0
+      ? Math.round(
+          resourceData.reduce((sum, r) => sum + r.utilization, 0) /
+            resourceData.length,
+        )
+      : 0;
+
+  let recommendation: string;
+  if (resourceData.length === 0) {
+    recommendation = "No team activity yet to plan capacity from.";
+  } else if (overloaded.length > underutilized.length) {
+    recommendation = `${overloaded.length} member(s) are overloaded vs ${underutilized.length} with spare capacity - redistribute work or add headcount.`;
+  } else if (underutilized.length > 0) {
+    recommendation = `${underutilized.length} member(s) have spare capacity - reallocate before adding headcount.`;
+  } else {
+    recommendation = "Team capacity is balanced.";
+  }
+
+  return {
+    totalMembers: resourceData.length,
+    avgUtilization,
+    overloadedCount: overloaded.length,
+    underutilizedCount: underutilized.length,
+    recommendation,
+  };
+}
+
+function calculateRiskAssessment(
+  projectHealth: AdvancedProjectHealth[],
+): RiskAssessmentSummary {
+  const atRisk = projectHealth.filter(
+    (p) => p.health === "critical" || p.health === "at_risk",
+  );
+
+  const riskFactorCounts = new Map<string, number>();
+  for (const project of projectHealth) {
+    for (const factor of project.riskFactors) {
+      riskFactorCounts.set(factor, (riskFactorCounts.get(factor) ?? 0) + 1);
+    }
+  }
+  const topRiskFactors = [...riskFactorCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([factor, count]) => ({ factor, count }));
+
+  return {
+    atRiskProjectCount: atRisk.length,
+    atRiskProjects: atRisk.map((p) => ({
+      id: p.id,
+      name: p.name,
+      healthScore: p.healthScore,
+    })),
+    topRiskFactors,
+  };
+}
+
+function averageProjectHealthScore(
+  projects: AdvancedProjectHealth[],
+): number | null {
+  if (projects.length === 0) return null;
+  const avg =
+    projects.reduce((sum, p) => sum + p.healthScore, 0) / projects.length;
+  return Math.round(avg * 10) / 10;
 }
 
 function extractComparativeNumber(value: unknown): number {
