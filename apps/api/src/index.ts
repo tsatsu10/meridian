@@ -1,7 +1,6 @@
 import { config } from "dotenv";
 config({ path: "./.env" });
-import { serve } from "@hono/node-server";
-// import { serveStatic } from "@hono/node-server/serve-static";
+import { serveStatic } from "@hono/node-server/serve-static";
 // import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { Hono, type Context, type Next } from "hono";
 // import { getCookie } from "hono/cookie";
@@ -60,11 +59,7 @@ import metricsRoutes from "./modules/metrics"; // Monitoring & metrics endpoint
 import fileVersionsRoutes from "./modules/file-versions"; // File versioning API
 // Removed old complex api-keys module - using simplified version
 import goalsRoutes from "./goals/routes"; // @epic-goal-setting: Goals & OKRs management
-import {
-  createServer,
-  type IncomingMessage,
-  type ServerResponse,
-} from "node:http";
+import { startHttpServer } from "./server/serve-app";
 import { userTable } from "./database/schema";
 import { eq } from "drizzle-orm";
 import favorites from "./favorites";
@@ -93,13 +88,9 @@ const app = new Hono<{
     user?: { email: string; id: string; name?: string };
   };
 }>();
-const { isDemoMode, adminEmail } = appSettings;
-const isDevelopmentEnv =
-  (process.env.NODE_ENV || "development") === "development";
-const isTestEnv = process.env.NODE_ENV === "test";
-const allowDemoBypass = process.env.ALLOW_DEMO_AUTH_BYPASS === "true";
-const enableDemoAuthBypass =
-  isDemoMode && allowDemoBypass && (isDevelopmentEnv || isTestEnv);
+// Computed centrally in config/settings.ts so that no individual router can
+// define a looser "are we in demo mode" check than the app-wide auth gate.
+const { isDemoMode, adminEmail, enableDemoAuthBypass } = appSettings;
 // 🛡️ Register global error handler
 app.onError(errorHandler);
 
@@ -356,19 +347,24 @@ const fileVersionsRoute = app.route("/api/file-versions", fileVersionsRoutes); /
 const goalsRoute = app.route("/api/goals", goalsRoutes); // @epic-goal-setting: Goals & OKRs management
 // Favorites: use `/api/favorites` only (web uses API_BASE_URL `/api/...`). Legacy `/favorites` mount removed.
 
-// @epic-2.1-files: Serve uploaded files statically with proper CORS (temporarily commented out)
-// app.use("/uploads/*", async (c, next) => {
-//   logger.debug(`📁 Serving static file: ${c.req.url}`);
-//   await next();
-//   // Add CORS headers for file serving
-//   c.header('Access-Control-Allow-Origin', '*');
-//   c.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-//   c.header('Access-Control-Allow-Headers', 'Content-Type');
-// });
+// @epic-2.1-files: Serve uploaded files (e.g. profile pictures).
+//
+// This was commented out, which meant an upload's returned
+// /uploads/profile-pictures/... URL always 404'd and the image never rendered.
+//
+// These are user-supplied files, so they are served defensively: nosniff stops
+// the browser inferring an active content type, and the CSP sandbox neutralises
+// anything that does get interpreted as a document (e.g. SVG or HTML). Requests
+// still pass through the global auth middleware above, so uploads are not
+// publicly enumerable.
+app.use("/uploads/*", async (c, next) => {
+  await next();
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("Content-Security-Policy", "default-src 'none'; sandbox");
+  c.header("Cross-Origin-Resource-Policy", "same-site");
+});
 
-// app.use("/uploads/*", serveStatic({
-//   root: "./"
-// }));
+app.use("/uploads/*", serveStatic({ root: "./" }));
 
 // Database ready flag
 let databaseReady = false;
@@ -430,80 +426,13 @@ async function startServer() {
 
     logger.debug(`🚀 Starting HTTP server on port ${port}...`);
 
-    // Create HTTP server for both Hono and WebSocket
-    const httpServer = createServer((req, res) => {
-      // Buffer request body for POST/PUT/PATCH
-      if (
-        (req.method === "POST" ||
-          req.method === "PUT" ||
-          req.method === "PATCH") &&
-        req.headers["content-type"]?.includes("application/json")
-      ) {
-        let bodyData = "";
-        req.on("data", (chunk) => {
-          bodyData += chunk.toString();
-        });
-
-        req.on("end", () => {
-          logger.debug(
-            `[HTTP Server] Body received for ${req.method} ${req.url ?? ""}`,
-          );
-          logger.debug("[HTTP Server] Body length:", {
-            length: bodyData.length,
-          });
-          logger.debug("[HTTP Server] Body preview:", {
-            preview: bodyData.substring(0, 100),
-          });
-
-          if (!bodyData || bodyData.trim() === "") {
-            logger.warn(
-              `[HTTP Server] ⚠️ WARNING: Empty body received for ${req.method} ${req.url ?? ""}`,
-            );
-          }
-
-          // Now handle with Hono, passing the buffered body
-          handleHonoRequest(req, res, bodyData);
-        });
-      } else {
-        // No body buffering needed
-        handleHonoRequest(req, res);
-      }
-
-      function handleHonoRequest(
-        req: IncomingMessage,
-        res: ServerResponse,
-        body?: string,
-      ) {
-        void Promise.resolve(
-          app.fetch(
-            new Request(`http://localhost:${port}${req.url}`, {
-              method: req.method,
-              headers: req.headers as HeadersInit,
-              body: body,
-            }),
-          ),
-        )
-          .then((response: Response) => {
-            res.statusCode = response.status;
-            // biome-ignore lint/complexity/noForEach: Headers is not an Array and this TS lib has no Headers iterator
-            response.headers.forEach((value, key) => {
-              res.setHeader(key, value);
-            });
-            return response.arrayBuffer();
-          })
-          .then((responseBody: ArrayBuffer) => {
-            res.end(Buffer.from(responseBody));
-          })
-          .catch((error: unknown) => {
-            logger.error("❌ Request handling error:", error);
-            res.statusCode = 500;
-            res.end("Internal Server Error");
-          });
-      }
-    });
-
-    // Start listening
-    httpServer.listen(port, () => {
+    // Serve the Hono app. Body handling is deliberately left to
+    // @hono/node-server — the previous hand-rolled createServer buffered
+    // bodies itself and only did so for "application/json", which meant every
+    // multipart upload reached Hono with no body at all (500 "Failed to parse
+    // body as FormData") and any binary payload was corrupted by being
+    // buffered as a UTF-8 string. See server/serve-app.ts.
+    startHttpServer(app, port, () => {
       logger.debug(`🏃 Server is running at http://localhost:${port}`);
 
       // Phase 2: Start digest schedulers
@@ -634,7 +563,10 @@ app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls
       );
       process.exit(1);
     }
-    if (process.env.NODE_ENV === "production" && allowDemoBypass) {
+    if (
+      process.env.NODE_ENV === "production" &&
+      process.env.ALLOW_DEMO_AUTH_BYPASS === "true"
+    ) {
       logger.error(
         "❌ FATAL SECURITY ERROR: ALLOW_DEMO_AUTH_BYPASS cannot be enabled in production",
       );

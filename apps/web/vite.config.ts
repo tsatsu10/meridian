@@ -1,8 +1,34 @@
 import path from "node:path";
 import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { type ProxyOptions, defineConfig } from "vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { writeProxyErrorResponse } from "./src/lib/dev/proxy-error";
+
+const apiTarget = `http://localhost:${process.env.API_PORT || "3005"}`;
+
+// /api, /workspace and /uploads all proxy to the same API, so they share one
+// set of options — including the error handler. Without that handler Vite
+// answers an unreachable upstream with a bare `500 Internal Server Error`,
+// which reads in the browser console exactly like a fault inside the API. It
+// isn't one: apps/api runs under `tsx watch` and doesn't bind its port until
+// initializeDatabase() resolves, so every save to the API opens a window where
+// this fires. See src/lib/dev/proxy-error.ts.
+const apiProxy: ProxyOptions = {
+  target: apiTarget,
+  changeOrigin: true,
+  secure: false,
+  configure: (proxy) => {
+    proxy.on("error", (error, req, res) => {
+      writeProxyErrorResponse({
+        error,
+        requestUrl: req.url,
+        target: apiTarget,
+        res,
+      });
+    });
+  },
+};
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -30,16 +56,12 @@ export default defineConfig({
     hmr: true,
     port: 5174,
     proxy: {
-      "/api": {
-        target: `http://localhost:${process.env.API_PORT || "3005"}`,
-        changeOrigin: true,
-        secure: false,
-      },
-      "/workspace": {
-        target: `http://localhost:${process.env.API_PORT || "3005"}`,
-        changeOrigin: true,
-        secure: false,
-      },
+      "/api": apiProxy,
+      "/workspace": apiProxy,
+      // Uploaded files (profile pictures, attachments) are stored and served
+      // by the API, but referenced by relative URL, so they have to be
+      // proxied like /api or every uploaded image 404s against the dev server.
+      "/uploads": apiProxy,
     },
   },
   resolve: {
