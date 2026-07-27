@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/index.css";
 import "@/styles/scrollbars.css";
 import AuthProvider from "./components/providers/auth-provider";
+import { AppLoadingScreen } from "./components/branding/app-loading-screen";
 import useAuth from "./components/providers/auth-provider/hooks/use-auth";
 import { ThemeProvider } from "./components/providers/theme-provider";
 import { RBACProvider } from "./lib/permissions";
@@ -145,13 +146,7 @@ if (!rootElement.innerHTML) {
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          }
-        >
+        <Suspense fallback={<AppLoadingScreen />}>
           <ThemeProvider>
             <TooltipProvider>
               <AuthProvider>

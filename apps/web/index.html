@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  
+
   <!-- Security Headers (Meta Tag Compatible Only) -->
   <!-- Note: Some headers like X-Frame-Options and frame-ancestors must be set via HTTP headers -->
   <!-- Note: In development, we allow localhost API connections on different ports -->
@@ -22,9 +22,95 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  
+
+  <style>
+    html { background-color: #fafafa; color-scheme: light; }
+    html.dark { background-color: #09090b; color-scheme: dark; }
+
+    /* Boot splash: lives in the HTML so it paints immediately, with no JS.
+       React removes it (via lib/boot-splash.ts) once the first real screen is
+       ready, handing off to the identical look. */
+    .boot-screen {
+      position: fixed; inset: 0; z-index: 9999; display: flex;
+      align-items: center; justify-content: center;
+      background-color: #fafafa;
+      opacity: 1; visibility: visible;
+      transition: opacity 320ms ease, visibility 0s linear 320ms;
+    }
+    html.dark .boot-screen { background-color: #09090b; }
+    /* Crossfade out once the first screen is ready. `visibility` flips to
+       hidden only once the opacity transition finishes (the delay), so it
+       still fades visually — but nothing ever removes this node from the DOM.
+       Structurally removing a huge fixed, page-covering element is itself a
+       layout-affecting change, and this app has a blanket
+       `* { transition-duration }` rule, so that removal was rippling into a
+       brief burst of spurious transitions on unrelated elements right at the
+       reveal moment. Leaving an inert, unpainted node costs nothing. */
+    .boot-screen--hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    /* While booting, lock page overflow. Without this the app briefly renders
+       taller than the viewport, a scrollbar flashes in, and because the splash
+       is position:fixed it shrinks by the scrollbar width and snaps back — the
+       background visibly jumps right as it fades out. */
+    html.booting, html.booting body { overflow: hidden; }
+
+    /* Animated mark. Defined ONCE here and shared by the HTML splash and the
+       React <MeridianMarkLoading/>. Size comes from the caller (inline style
+       or utility class). */
+    .meridian-mark {
+      display: flex; line-height: 0;
+      perspective: 460px; perspective-origin: 50% 34%;
+    }
+    /* No preserve-3d (the svg has no 3D children — it only promotes a layer and
+       causes rasterisation flicker) and no SVG filter on the animated subtree,
+       which Chrome re-rasterises every frame under a 3D transform. */
+    .meridian-mark > svg {
+      width: 100%; height: 100%; display: block;
+      transform-origin: 50% 86%;
+      animation: meridian-topple 2.2s linear infinite;
+      backface-visibility: hidden;
+    }
+    /* The ring must read against the plate in BOTH themes: navy on the light
+       plate, white on the dark one (navy-on-near-black is invisible). */
+    .meridian-ring { stroke: #1B2559; }
+    html.dark .meridian-ring { stroke: #FFFFFF; }
+    .meridian-flash { opacity: 0; animation: meridian-flash-orbit 2.2s linear infinite; }
+
+    /* Tilt stops at 64deg, not 82deg: past ~70deg the mark is edge-on and
+       collapses to a few pixels, which reads as a flicker rather than a fall.
+       The settle is shallow for the same reason. */
+    @keyframes meridian-topple {
+      0%, 42%  { transform: rotateX(0deg);  animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.35); }
+      64%      { transform: rotateX(64deg); animation-timing-function: ease-out; }
+      71%      { transform: rotateX(56deg); animation-timing-function: ease-in; }
+      78%      { transform: rotateX(64deg); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+      100%     { transform: rotateX(0deg); }
+    }
+    /* One lit arc chasing around the ring (normalized pathLength = 100). */
+    @keyframes meridian-flash-orbit {
+      0%   { stroke-dashoffset: 0;    opacity: 0; }
+      5%   { opacity: 1; }
+      37%  { opacity: 1; }
+      42%  { stroke-dashoffset: -100; opacity: 0; }
+      100% { stroke-dashoffset: -100; opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .meridian-mark > svg, .meridian-flash { animation: none; }
+      .meridian-flash { opacity: 0; }
+      .boot-screen { transition: none; }
+    }
+  </style>
+
+  <link rel="icon" type="image/svg+xml" href="/meridian-logomark.svg" />
   <link rel="icon" type="image/png" href="/meridian-logomark.png" />
-  <link rel="apple-touch-icon" href="/meridian-logomark.png" sizes="180x180" />
+  <link rel="apple-touch-icon" href="/apple-icon-180x180.png" sizes="180x180" />
+
+  <!-- Marketing/landing-page typefaces (scoped via className, not the app's default font) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet" />
   <title>Meridian - Open Source Project Management</title>
   <meta name="title" content="Meridian - Open Source Project Management">
   <meta name="description"
@@ -47,15 +133,40 @@
 
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#4F46E5">
+  <meta name="theme-color" content="#1B2559">
   <meta name="msapplication-config" content="/browserconfig.xml" />
-  <meta name="msapplication-TileColor" content="#4F46E5">
-  <meta name="msapplication-TileImage" content="/meridian-logomark.png">
+  <meta name="msapplication-TileColor" content="#1B2559">
+  <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
   <meta name="application-name" content="Meridian">
   <meta name="apple-mobile-web-app-title" content="Meridian">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="canonical" href="https://meridian.app">
+
+  <script>
+    (function () {
+      try {
+        var theme = "dark"; // matches the store's default theme
+        var raw = localStorage.getItem("theme-storage");
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && parsed.state && parsed.state.theme) {
+            theme = parsed.state.theme;
+          }
+        }
+        if (theme === "system") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.classList.add(theme);
+      } catch (e) {
+        document.documentElement.classList.add("dark");
+      }
+      // Held until the boot splash is removed (see lib/boot-splash.ts).
+      document.documentElement.classList.add("booting");
+    })();
+  </script>
 
   <script>
     if (window.location.hostname === 'demo.meridian.app') {
@@ -69,8 +180,30 @@
 </head>
 
 <body>
+  <!-- Boot splash: a SIBLING of #root (never inside it — main.tsx only mounts
+       React when #root is empty). Overlays the app until React is ready, then
+       lib/boot-splash.ts fades and inerts it (never removed from the DOM). -->
+  <div id="boot-splash" class="boot-screen">
+    <span class="meridian-mark" style="width:120px;height:120px" role="img" aria-label="Loading">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle class="meridian-ring" cx="50" cy="50" r="31" stroke-width="8.5" />
+        <line x1="50" y1="7" x2="50" y2="93" stroke="#2DD4BF" stroke-width="8.5" stroke-linecap="round" />
+        <circle class="meridian-flash" cx="50" cy="50" r="31" stroke="#EAFEFF" stroke-width="8.5"
+          stroke-linecap="round" pathLength="100" stroke-dasharray="16 100" />
+      </svg>
+    </span>
+  </div>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
+  <script>
+    // Failsafe: if the app never boots (bundle error, crash), don't let the
+    // fixed splash hide the page forever.
+    setTimeout(function () {
+      var el = document.getElementById("boot-splash");
+      if (el) el.remove();
+      document.documentElement.classList.remove("booting");
+    }, 15000);
+  </script>
 </body>
 
 </html>
