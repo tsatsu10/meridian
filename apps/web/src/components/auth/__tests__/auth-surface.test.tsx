@@ -35,38 +35,27 @@ describe("AuthSurface", () => {
   it("starts on the identity step", () => {
     render(<AuthSurface intent="sign-in" renderCredentialStep={credential} />);
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    // The credential step's DOM node may already be mounted (it is — see
-    // "mounts both steps from first paint" below, which keeps the panel
-    // from resizing on the first transition), but it must not be
-    // *presented*: not reachable by role/keyboard, not announced.
-    // queryByText doesn't check any of that (it would find the node
-    // whether or not it's aria-hidden), so this asserts via role instead.
-    expect(
-      screen.queryByRole("button", { name: /change email/i }),
-    ).not.toBeInTheDocument();
+    // Only one step is ever mounted at a time (AnimatePresence
+    // mode="wait"), so the credential step's node is genuinely absent here,
+    // not merely hidden — a plain DOM-presence check is the honest one.
+    expect(screen.queryByText(/credential step/i)).not.toBeInTheDocument();
   });
 
-  it("mounts both steps from first paint so the panel never resizes, including on the first transition", () => {
+  it("mounts only the active step, never both, so the panel is never sized to fit a step the user isn't on", () => {
+    // This is the regression the "dead space" bug was: an earlier version
+    // mounted both steps permanently (to avoid a layout jump on the first
+    // transition) which left the panel sized to fit whichever step was
+    // taller, all the time — a visible gap under step 01 on every load.
     const { container } = render(
       <AuthSurface intent="sign-in" renderCredentialStep={credential} />,
     );
 
-    // Both grid cells must exist before the user ever advances — that's
-    // what keeps the panel's height stable through the very first
-    // transition (the one nearly every real user hits), not just
-    // subsequent back/forward toggles.
-    const identityStep = container.querySelector('[data-auth-step="identity"]');
-    const credentialStep = container.querySelector(
-      '[data-auth-step="credential"]',
-    );
-    expect(identityStep).toBeInTheDocument();
-    expect(credentialStep).toBeInTheDocument();
-
-    // But on first paint the credential step must not be presented: hidden
-    // from assistive tech and not reachable by keyboard/role queries.
-    expect(credentialStep).toHaveAttribute("aria-hidden", "true");
+    expect(container.querySelectorAll("[data-auth-step]").length).toBe(1);
     expect(
-      screen.queryByRole("button", { name: /change email/i }),
+      container.querySelector('[data-auth-step="identity"]'),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('[data-auth-step="credential"]'),
     ).not.toBeInTheDocument();
   });
 
@@ -77,21 +66,18 @@ describe("AuthSurface", () => {
     await user.type(screen.getByLabelText(/email/i), "person@example.com");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
-    // getByRole excludes aria-hidden subtrees, so this only resolves once
-    // the credential step is actually the active, presented step — not
-    // merely mounted (it's mounted from first paint; see the "mounts both
-    // steps" test above).
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: /change email/i }),
+        screen.getByText(/credential step for person@example.com/i),
       ).toBeInTheDocument(),
     );
-    expect(
-      screen.getByText(/credential step for person@example.com/i),
-    ).toBeInTheDocument();
   });
 
   it("returns to identity with the email preserved", async () => {
+    // Under mode="wait" the identity step fully unmounts on advance and
+    // remounts fresh on return (rather than merely toggling visibility),
+    // so restoring it isn't synchronous — this awaits the credential
+    // step's exit and the identity step's fresh mount.
     const user = userEvent.setup();
     render(<AuthSurface intent="sign-in" renderCredentialStep={credential} />);
 
@@ -101,7 +87,9 @@ describe("AuthSurface", () => {
       await screen.findByRole("button", { name: /change email/i }),
     );
 
-    expect(screen.getByLabelText(/email/i)).toHaveValue("person@example.com");
+    expect(await screen.findByLabelText(/email/i)).toHaveValue(
+      "person@example.com",
+    );
   });
 
   it("refuses to advance on an invalid email", async () => {
@@ -111,11 +99,7 @@ describe("AuthSurface", () => {
     await user.type(screen.getByLabelText(/email/i), "not-an-email");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
-    // The credential step's node is always mounted (see "mounts both
-    // steps"), so this asserts via role — it must still not be presented.
-    expect(
-      screen.queryByRole("button", { name: /change email/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/credential step/i)).not.toBeInTheDocument();
   });
 
   it("never contacts the server on the identity step", async () => {
@@ -147,12 +131,15 @@ describe("AuthSurface", () => {
     );
   });
 
-  it("hides the identity step's control from the accessibility tree once the credential step is active", async () => {
-    // The reflow/orphan-control bug: without an explicit gate, the outgoing
-    // step could stay mounted, focusable and reachable via getByRole while
-    // visually fading out underneath the incoming step.
+  it("does not leave the identity step's control reachable once the credential step is active", async () => {
+    // The orphan-control bug this guards against: a hidden-but-still-mounted
+    // outgoing step remaining focusable/announced while a different step is
+    // already showing. Under mode="wait" the identity step fully unmounts
+    // (asserted directly), which is a stronger guarantee than "hidden."
     const user = userEvent.setup();
-    render(<AuthSurface intent="sign-in" renderCredentialStep={credential} />);
+    const { container } = render(
+      <AuthSurface intent="sign-in" renderCredentialStep={credential} />,
+    );
 
     await user.type(screen.getByLabelText(/email/i), "person@example.com");
     await user.click(screen.getByRole("button", { name: /continue/i }));
@@ -163,22 +150,19 @@ describe("AuthSurface", () => {
       ).toBeInTheDocument(),
     );
 
-    // getByRole excludes anything aria-hidden (or otherwise inaccessible),
-    // so this only passes if the identity step's email input is no longer
-    // reachable — even though the node itself is still in the DOM so
-    // "change email" can restore it instantly.
+    expect(
+      container.querySelector('[data-auth-step="identity"]'),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: /email/i }),
     ).not.toBeInTheDocument();
-    // Only the credential step's own control should be reachable now.
-    expect(
-      screen.getByRole("button", { name: /change email/i }),
-    ).toBeInTheDocument();
   });
 
-  it("hides the credential step's control from the accessibility tree while back on identity", async () => {
+  it("does not leave the credential step's control reachable while back on identity", async () => {
     const user = userEvent.setup();
-    render(<AuthSurface intent="sign-in" renderCredentialStep={credential} />);
+    const { container } = render(
+      <AuthSurface intent="sign-in" renderCredentialStep={credential} />,
+    );
 
     await user.type(screen.getByLabelText(/email/i), "person@example.com");
     await user.click(screen.getByRole("button", { name: /continue/i }));
@@ -186,8 +170,11 @@ describe("AuthSurface", () => {
       await screen.findByRole("button", { name: /change email/i }),
     );
 
-    // Back on identity: the credential step's "change email" control must
-    // not be reachable even though it stayed mounted for a fast return trip.
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-auth-step="credential"]'),
+      ).not.toBeInTheDocument(),
+    );
     expect(
       screen.queryByRole("button", { name: /change email/i }),
     ).not.toBeInTheDocument();
@@ -214,8 +201,8 @@ describe("AuthSurface", () => {
     );
 
     // Reads the literal value passed to the motion elements' `transition`
-    // prop (see data-step-transition-duration in auth-surface.tsx), not an
-    // independently-computed marker, so this fails if the reduced-motion
+    // prop (shared with the panel's height-animating layout wrapper), not
+    // an independently-computed marker, so this fails if the reduced-motion
     // check is ever wired up but the duration itself isn't gated by it.
     expect(
       container.querySelector("[data-step-transition-duration]"),

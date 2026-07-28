@@ -255,4 +255,38 @@ describe("SignInForm", () => {
     expect(passwordInput).toHaveAttribute("type", "password");
     expect(passwordInput).toHaveAttribute("autocomplete", "current-password");
   });
+
+  // Regression coverage for removing SignInForm's old
+  // `useEffect(() => form.setValue("email", email), [email, form])`. That
+  // effect existed because an earlier version of AuthSurface mounted this
+  // form once, hidden, with an empty email, and never remounted it — so
+  // useForm's defaultValues.email would otherwise have been permanently
+  // stale. AuthSurface now fully unmounts/remounts the credential step on
+  // every trip back to step 01 (AnimatePresence mode="wait"), so a fresh
+  // SignInForm instance — and fresh defaultValues — is created each time.
+  // This asserts that a corrected email actually reaches the submit call
+  // without the effect.
+  it("submits with the newly edited email after returning to step 01 and changing it", async () => {
+    const user = userEvent.setup();
+    renderSignInRoute();
+
+    await advanceToPassword(user);
+
+    await user.click(screen.getByRole("button", { name: /change/i }));
+    const emailInput = await screen.findByLabelText(/email/i);
+    await user.clear(emailInput);
+    await user.type(emailInput, "changed@example.com");
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+
+    const newPassword = await screen.findByLabelText(/password/i);
+    await user.type(newPassword, "Passw0rd!");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() =>
+      expect(mockSignIn).toHaveBeenCalledWith({
+        email: "changed@example.com",
+        password: "Passw0rd!",
+      }),
+    );
+  });
 });

@@ -13,7 +13,7 @@ import { userMessage } from "@/lib/user-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "@tanstack/react-router";
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { type ZodType, z } from "zod";
@@ -51,16 +51,18 @@ export function SignInForm({ email, onEditEmail }: SignInFormProps) {
 
   // The email address is owned by the surface's identity step, not by this
   // form — here it's read-only (the chip below) and only ever changes via
-  // onEditEmail. The zod resolver still validates the full SignInFormValues
-  // shape though, so the form's own copy of `email` has to track the prop or
-  // a stale/empty value would fail validation and silently block submission.
-  // This is a plain in-memory state sync — no network call, timer, or
-  // analytics — so it's safe to run on every render of this step, including
-  // while it's mounted hidden before the user has advanced past step 01.
-  useEffect(() => {
-    form.setValue("email", email);
-  }, [email, form]);
-
+  // onEditEmail, which the surface implements by unmounting this component
+  // and returning to step 01 (AnimatePresence mode="wait": only one step is
+  // ever mounted at a time). That means every mount of SignInForm is a
+  // fresh instance created with whatever `email` the surface most recently
+  // validated — useForm's defaultValues are read once per mount, and here
+  // "once" already means "with the current value," so there is no stale
+  // copy for an effect to correct. (An earlier version of the surface kept
+  // this component mounted-but-hidden permanently behind step 01, so
+  // defaultValues.email could only ever be the empty string from that one
+  // original mount; a `useEffect(() => form.setValue("email", email), ...)`
+  // was needed there to keep it in sync. That architecture is gone, so the
+  // effect was removed as dead code rather than left in place.)
   const onSubmit = async (data: SignInFormValues) => {
     try {
       const user = await mutateAsync({
