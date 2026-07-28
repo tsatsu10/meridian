@@ -11,6 +11,7 @@ import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { Logger } from "../logging/logger";
 import { CacheService, CacheTTL } from "../cache/cache-service";
 import { createId } from "@paralleldrive/cuid2";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export type KudosType =
   | "great-work"
@@ -284,7 +285,7 @@ export const KudosService = {
         .limit(1);
 
       if (!existingKudos) {
-        throw new Error("Kudos not found");
+        throw new NotFoundError("Kudos");
       }
 
       const reactions =
@@ -381,7 +382,7 @@ export const KudosService = {
         .limit(1);
 
       if (!existingKudos) {
-        throw new Error("Kudos not found");
+        throw new NotFoundError("Kudos");
       }
 
       // Only giver can delete

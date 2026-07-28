@@ -8,6 +8,7 @@ import { ErrorCodes } from "../../core/APIResponse";
 import { CustomError } from "../../core/ErrorHandler";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export interface BackupSettings {
   // Automated Backups
@@ -99,7 +100,7 @@ export async function getBackupSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const storedSettings = (workspace.settings as Record<string, unknown>) || {};
@@ -121,7 +122,7 @@ export async function updateBackupSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const currentSettings = (workspace.settings as Record<string, unknown>) || {};

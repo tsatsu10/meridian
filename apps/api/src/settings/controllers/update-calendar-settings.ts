@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
 import type { CalendarSettings } from "./get-calendar-settings";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export default async function updateCalendarSettings(
   workspaceId: string,
@@ -22,7 +23,7 @@ export default async function updateCalendarSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   // Get current settings

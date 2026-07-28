@@ -34,6 +34,7 @@ import workspace from "./workspace";
 import workspaceUser from "./workspace-user";
 import settings from "./settings";
 import auditSettings from "./settings/audit";
+import auditTrail from "./audit";
 import projectNotes from "./project-notes"; // @epic-5.1-project-notes: Project Notes System
 import dashboard from "./dashboard";
 import team from "./team";
@@ -308,6 +309,9 @@ const labelRoute = app.route("/api/label", label);
 const notificationRoute = app.route("/api/notification", notification);
 const settingsRoute = app.route("/api/settings", settings);
 const auditSettingsRoute = app.route("/api/settings/audit", auditSettings);
+// Workspace audit trail read from audit_log. Distinct from the line above,
+// which serves task activity out of a different table.
+app.route("/api/audit", auditTrail);
 const projectNotesRoute = app.route("/api/project-notes", projectNotes); // @epic-5.1-project-notes: Project Notes API
 const dashboardRoute = app.route("/api/dashboard", dashboard);
 const teamRoute = app.route("/api/team", team);

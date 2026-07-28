@@ -12,6 +12,7 @@ import {
   userTable,
 } from "../../database/schema";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 interface UpdateThemeInput {
   name?: string;
@@ -35,7 +36,7 @@ export async function updateTheme(
       .limit(1);
 
     if (existing.length === 0) {
-      throw new Error("Theme not found");
+      throw new NotFoundError("Theme");
     }
 
     // Authorization (project-scoped canManageProjectSettings) is enforced by

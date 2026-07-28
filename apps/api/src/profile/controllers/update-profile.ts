@@ -3,6 +3,7 @@ import { getDatabase } from "../../database/connection";
 import { userProfileTable, userTable } from "../../database/schema";
 import { sanitizeText } from "../../lib/universal-sanitization";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 interface ProfileUpdateData {
   /** Lives on `users`, not `user_profiles` — written separately below. */
@@ -42,7 +43,7 @@ const updateProfile = async (
       .limit(1);
 
     if (userExists.length === 0) {
-      throw new Error("User not found");
+      throw new NotFoundError("User");
     }
 
     // Check if profile exists

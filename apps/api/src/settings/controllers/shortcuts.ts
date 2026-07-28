@@ -3,6 +3,7 @@ import { workspaces } from "../../database/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "../../utils/logger";
 import { createId } from "@paralleldrive/cuid2";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 // ===================================
 // TYPE DEFINITIONS
@@ -324,7 +325,7 @@ export async function getShortcuts(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const shortcuts =
@@ -379,7 +380,7 @@ export async function updateShortcuts(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const existingShortcuts = await getShortcuts(workspaceId, userId);
@@ -436,7 +437,7 @@ export async function updateShortcut(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const allShortcuts =
@@ -449,7 +450,7 @@ export async function updateShortcut(
   );
   const current = userShortcuts[shortcutIndex];
   if (shortcutIndex === -1 || !current) {
-    throw new Error("Shortcut not found");
+    throw new NotFoundError("Shortcut");
   }
 
   const updated: KeyboardShortcut = {
@@ -507,7 +508,7 @@ export async function resetShortcuts(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const allShortcuts =
@@ -550,7 +551,7 @@ export async function applyPreset(
 
   const preset = SHORTCUT_PRESETS.find((p) => p.id === presetId);
   if (!preset) {
-    throw new Error("Preset not found");
+    throw new NotFoundError("Preset");
   }
 
   const shortcuts = preset.shortcuts.map((s) => ({
@@ -570,7 +571,7 @@ export async function applyPreset(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const allShortcuts =

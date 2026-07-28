@@ -3,6 +3,7 @@ import { workspaces } from "../../database/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "../../utils/logger";
 import { createId } from "@paralleldrive/cuid2";
+import { ForbiddenError, NotFoundError } from "../../core/ErrorHandler";
 
 // ===================================
 // TYPE DEFINITIONS
@@ -246,7 +247,7 @@ export async function getSavedFilters(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   let filters = getSavedFiltersArray(workspace.settings);
@@ -290,7 +291,7 @@ export async function getSavedFilter(
 
   // Check access
   if (filter.userId !== userId && !filter.isPublic) {
-    throw new Error("Access denied");
+    throw new ForbiddenError("Access denied");
   }
 
   return filter;
@@ -322,7 +323,7 @@ export async function createSavedFilter(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const newFilter: SavedFilter = {
@@ -380,7 +381,7 @@ export async function updateSavedFilter(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const existingFilters = getSavedFiltersArray(workspace.settings);
@@ -388,12 +389,12 @@ export async function updateSavedFilter(
 
   const existingFilter = existingFilters[filterIndex];
   if (filterIndex === -1 || !existingFilter) {
-    throw new Error("Filter not found");
+    throw new NotFoundError("Filter");
   }
 
   // Check ownership
   if (existingFilter.userId !== userId) {
-    throw new Error("Access denied");
+    throw new ForbiddenError("Access denied");
   }
 
   const updatedFilter = {
@@ -435,19 +436,19 @@ export async function deleteSavedFilter(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const existingFilters = getSavedFiltersArray(workspace.settings);
   const filter = existingFilters.find((f) => f.id === filterId);
 
   if (!filter) {
-    throw new Error("Filter not found");
+    throw new NotFoundError("Filter");
   }
 
   // Check ownership
   if (filter.userId !== userId) {
-    throw new Error("Access denied");
+    throw new ForbiddenError("Access denied");
   }
 
   const updatedFilters = existingFilters.filter((f) => f.id !== filterId);
@@ -477,7 +478,7 @@ export async function cloneSavedFilter(
   const originalFilter = await getSavedFilter(workspaceId, userId, filterId);
 
   if (!originalFilter) {
-    throw new Error("Filter not found");
+    throw new NotFoundError("Filter");
   }
 
   return createSavedFilter(workspaceId, userId, {
@@ -507,7 +508,7 @@ export async function recordFilterUsage(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const existingFilters = getSavedFiltersArray(workspace.settings);

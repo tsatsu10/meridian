@@ -219,54 +219,25 @@ export function createInputValidationMiddleware() {
 }
 
 // Authentication middleware
-export function createAuthMiddleware() {
-  return async (c: Context, next: Next) => {
-    const authHeader = c.req.header("authorization");
-
-    if (!authHeader) {
-      throw createError.unauthorized("Authorization header required");
-    }
-
-    if (!authHeader.startsWith("Bearer ")) {
-      throw createError.unauthorized("Invalid authorization format");
-    }
-
-    const token = authHeader.substring(7);
-
-    try {
-      // Verify JWT token
-      const payload = await verifyJWT(token);
-      c.set("userId", payload.userId);
-      c.set("workspaceId", payload.workspaceId);
-      c.set("userRole", payload.role);
-    } catch (error) {
-      throw createError.unauthorized("Invalid or expired token");
-    }
-
-    await next();
-  };
-}
-
-// JWT verification function (mock implementation)
-async function verifyJWT(token: string) {
-  // In a real implementation, you would verify the JWT signature
-  // This is a simplified version for demonstration
-  try {
-    const segment = token.split(".")[1];
-    if (!segment) {
-      throw new Error("Invalid token");
-    }
-    const payload = JSON.parse(atob(segment));
-
-    if (payload.exp && payload.exp < Date.now() / 1000) {
-      throw new Error("Token expired");
-    }
-
-    return payload;
-  } catch (error) {
-    throw new Error("Invalid token");
-  }
-}
+/**
+ * ⚠️ Removed: createAuthMiddleware() and its verifyJWT() helper.
+ *
+ * verifyJWT never verified anything. It base64-decoded the token payload,
+ * checked only `exp`, and then trusted whatever it found — so the middleware
+ * set userId, workspaceId and userRole straight from an attacker-supplied
+ * string. Forging workspace-manager was a matter of editing JSON.
+ *
+ * It was never mounted, but it was exported as `authMiddleware`: the exact
+ * name of the real guard in middlewares/secure-auth.ts, and the wrong shape in
+ * the most dangerous direction — the real one is a factory you must invoke
+ * (`authMiddleware()`), this was already invoked, so importing it by mistake
+ * would have looked correct AND silently disabled signature checking. This
+ * repo has already had one incident from `authMiddleware` being wired up
+ * wrongly across 43 routes; a decoy with the same name is not worth keeping
+ * for code nobody calls.
+ *
+ * Use `authMiddleware` from ../middlewares/secure-auth instead.
+ */
 
 // API key validation middleware
 export function createApiKeyMiddleware() {
@@ -369,7 +340,6 @@ export const apiRateLimitMiddleware = createRateLimitMiddleware(
   securityConfig.apiRateLimit,
 );
 export const inputValidationMiddleware = createInputValidationMiddleware();
-export const authMiddleware = createAuthMiddleware();
 export const apiKeyMiddleware = createApiKeyMiddleware();
 export const cspMiddleware = createCSPMiddleware();
 export const securityAuditMiddleware = createSecurityAuditMiddleware();

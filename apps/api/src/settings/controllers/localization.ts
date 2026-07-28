@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { logger } from "../../utils/logger";
 import { getErrorMessage } from "../../utils/error-utils";
 import { createId } from "@paralleldrive/cuid2";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 // ===================================
 // TYPE DEFINITIONS
@@ -149,7 +150,7 @@ export async function getLanguages(workspaceId: string): Promise<Language[]> {
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const languages = getLanguagesArray(workspace.settings);
@@ -204,7 +205,7 @@ export async function addLanguage(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const existingLanguages = getLanguagesArray(workspace.settings);
@@ -264,7 +265,7 @@ export async function updateLanguage(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const existingLanguages = getLanguagesArray(workspace.settings);
@@ -274,7 +275,7 @@ export async function updateLanguage(
 
   const existingLanguage = existingLanguages[langIndex];
   if (langIndex === -1 || !existingLanguage) {
-    throw new Error("Language not found");
+    throw new NotFoundError("Language");
   }
 
   const updatedLanguage = {
@@ -321,7 +322,7 @@ export async function deleteLanguage(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const existingLanguages = getLanguagesArray(workspace.settings);
@@ -365,7 +366,7 @@ export async function getTranslations(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const translations =
@@ -398,7 +399,7 @@ export async function updateTranslations(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const currentTranslations = getTranslationsMap(workspace.settings);
@@ -544,7 +545,7 @@ export async function getLocalizationSettings(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const settings = getRawLocalizationSettings(workspace.settings);
@@ -590,7 +591,7 @@ export async function updateLocalizationSettings(
     .where(eq(workspaces.id, workspaceId));
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const currentSettings = getRawLocalizationSettings(workspace.settings);

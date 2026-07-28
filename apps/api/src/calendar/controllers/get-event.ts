@@ -6,6 +6,7 @@ import {
   recurringPatterns,
 } from "../../database/schema";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 // @epic-3.4-teams: Get single calendar event with attendees and recurring pattern
 export async function getEvent(eventId: string) {
@@ -19,7 +20,7 @@ export async function getEvent(eventId: string) {
     });
 
     if (!event) {
-      throw new Error("Event not found");
+      throw new NotFoundError("Event");
     }
 
     // Get attendees

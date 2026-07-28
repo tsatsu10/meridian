@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { notifications as notificationTable } from "../../database/schema";
+import { ForbiddenError, NotFoundError } from "../../core/ErrorHandler";
 
 async function unarchiveNotification(
   userEmail: string,
@@ -16,17 +17,17 @@ async function unarchiveNotification(
     .returning();
 
   if (result.length === 0) {
-    throw new Error("Notification not found");
+    throw new NotFoundError("Notification");
   }
 
   const [notification] = result;
   if (!notification) {
-    throw new Error("Notification not found");
+    throw new NotFoundError("Notification");
   }
 
   // Verify the notification belongs to the user
   if (notification.userEmail !== userEmail) {
-    throw new Error("Unauthorized");
+    throw new ForbiddenError("Unauthorized");
   }
 
   return notification;

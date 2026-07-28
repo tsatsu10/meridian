@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable, userTable } from "../../database/schema";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 interface UpdateAttachmentData {
   name?: string;
@@ -30,7 +31,7 @@ async function updateAttachment(id: string, data: UpdateAttachmentData) {
     });
 
     if (!existingAttachment) {
-      throw new Error("Attachment not found");
+      throw new NotFoundError("Attachment");
     }
 
     if (existingAttachment.uploadedBy !== user.id) {

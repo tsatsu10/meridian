@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { calendarEvents } from "../../database/schema";
 import logger from "../../utils/logger";
+import { ForbiddenError, NotFoundError } from "../../core/ErrorHandler";
 
 // @epic-3.4-teams: Get event team ID (for WebSocket broadcasting)
 export async function getEventTeamId(eventId: string): Promise<string | null> {
@@ -37,12 +38,12 @@ export async function updateEvent(
     });
 
     if (!existingEvent) {
-      throw new Error("Event not found");
+      throw new NotFoundError("Event");
     }
 
     // Only creator can update
     if (existingEvent.createdBy !== userId) {
-      throw new Error("Unauthorized to update this event");
+      throw new ForbiddenError("Unauthorized to update this event");
     }
 
     // Update the event

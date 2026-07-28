@@ -9,6 +9,7 @@ import { workspaceTable } from "../../database/schema";
 import type { EmailSettings } from "./get-email-settings";
 import crypto from "node:crypto";
 import { appSettings } from "../../config/settings";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 // SECURITY: read from the centrally-validated setting (config/settings.ts
 // refuses to boot in production with the default value) instead of a
@@ -41,7 +42,7 @@ export default async function updateEmailSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   // Encrypt SMTP password if provided

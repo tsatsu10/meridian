@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { userTable, userProfileTable } from "../../database/schema";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 /**
  * Fetches complete user profile data including basic info and extended profile
@@ -63,7 +64,7 @@ const getProfile = async (userId: string) => {
 
     const user = result[0];
     if (!user) {
-      throw new Error("User not found");
+      throw new NotFoundError("User");
     }
 
     // Calculate completeness score if not set

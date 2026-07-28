@@ -175,7 +175,7 @@ export default async function updateWorkspaceSettings(
     .limit(1);
 
   if (!currentWorkspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const currentSettings =

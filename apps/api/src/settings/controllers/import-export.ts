@@ -14,6 +14,7 @@ import {
 } from "../../database/schema";
 import { createId } from "@paralleldrive/cuid2";
 import { getErrorMessage } from "../../utils/error-utils";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export interface ExportOptions {
   format: "json" | "csv";
@@ -93,7 +94,7 @@ export async function exportWorkspaceData(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   exportData.workspace = {

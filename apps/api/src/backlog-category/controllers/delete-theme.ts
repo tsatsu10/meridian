@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { backlogThemesTable, activityTable } from "../../database/schema";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export async function deleteTheme(themeId: string, userId: string) {
   const db = getDatabase();
@@ -22,7 +23,7 @@ export async function deleteTheme(themeId: string, userId: string) {
 
     const [theme] = existing;
     if (!theme) {
-      throw new Error("Theme not found");
+      throw new NotFoundError("Theme");
     }
 
     // Authorization (project-scoped canManageProjectSettings) is enforced by
