@@ -43,10 +43,19 @@ interface RoleFilters {
 // MAIN COMPONENT
 // ==========================================
 
-function UnifiedRolesPage() {
+// Exported (not just used via `Route`) so it can be rendered directly in
+// tests — matches the pattern already used by team-management.tsx.
+export function UnifiedRolesPage() {
   const queryClient = useQueryClient();
   const { workspace } = useWorkspaceStore();
   const workspaceId = workspace?.id || "";
+  // Cloning writes a new role into `workspaceId`, which POST /roles/:id/clone
+  // requires (z.string().min(1)). Same reasoning as the create-role guard in
+  // role-modal.tsx and the assignRole/removeRole guards in
+  // lib/permissions/provider.tsx: a role write with a missing/wrong
+  // workspace is security-relevant, so fail visibly before ever calling the
+  // API rather than let it 400.
+  const hasWorkspace = Boolean(workspaceId);
 
   // State
   const [filters, setFilters] = useState<RoleFilters>({
@@ -123,6 +132,13 @@ function UnifiedRolesPage() {
       roleId,
       newName,
     }: { roleId: string; newName: string }) => {
+      // Defense in depth: handleCloneRole already blocks this case, and the
+      // Clone menu item is disabled for it, but this guards any other path
+      // that might call cloneRoleMutation.mutate() directly.
+      if (!hasWorkspace) {
+        throw new Error("Select a workspace before cloning a role");
+      }
+
       const response = await fetch(`${API_BASE_URL}/roles/${roleId}/clone`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,6 +185,11 @@ function UnifiedRolesPage() {
   };
 
   const handleCloneRole = (role: Role) => {
+    if (!hasWorkspace) {
+      toast.error("Select a workspace before cloning a role");
+      return;
+    }
+
     const newName = prompt(`Clone "${role.name}" as:`, `${role.name} (Copy)`);
     if (newName) {
       cloneRoleMutation.mutate({ roleId: role.id, newName });
@@ -323,6 +344,8 @@ function UnifiedRolesPage() {
                 onEdit={handleEditRole}
                 onDelete={handleDeleteRole}
                 onClone={handleCloneRole}
+                cloneDisabled={!hasWorkspace}
+                cloneDisabledReason="Select a workspace before cloning a role"
                 onViewDetails={handleViewDetails}
               />
             ))}
@@ -349,6 +372,8 @@ function UnifiedRolesPage() {
                 onEdit={handleEditRole}
                 onDelete={handleDeleteRole}
                 onClone={handleCloneRole}
+                cloneDisabled={!hasWorkspace}
+                cloneDisabledReason="Select a workspace before cloning a role"
                 onViewDetails={handleViewDetails}
               />
             ))}

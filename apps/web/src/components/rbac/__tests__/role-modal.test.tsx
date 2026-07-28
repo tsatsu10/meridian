@@ -32,12 +32,7 @@ vi.mock("@/store/workspace", () => ({
 
 vi.mock("@/lib/permissions", () => ({
   useRBACAuth: () => ({
-    user: {
-      permissions: {
-        canViewTasks: true,
-        canManageRoles: true,
-      },
-    },
+    user: { role: "workspace-manager" },
   }),
 }));
 
@@ -88,6 +83,19 @@ describe("RoleModal workspace guard", () => {
           ok: true,
           json: async () => ({
             permissions: ["canViewTasks", "canManageRoles"],
+          }),
+        };
+      }
+      // Must be checked before the generic "/roles" branch below, which
+      // would otherwise swallow this URL too (it also contains "/roles").
+      if (url.includes("/rbac/roles")) {
+        return {
+          ok: true,
+          json: async () => ({
+            "workspace-manager": {
+              canViewTasks: true,
+              canManageRoles: true,
+            },
           }),
         };
       }

@@ -98,15 +98,55 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
   // fails visibly instead of letting the request 400.
   const needsWorkspaceToCreate = !isEditing && !workspaceId;
 
+  const { user: rbacUser } = useRBACAuth();
+
   // The actor's own effective permissions — used to disable checkboxes for
   // permissions the actor does not hold, so the server-side "can't grant
   // more than you have" rule is visible in the UI instead of surprising the
   // user with a 403 on save.
-  const { user: rbacUser } = useRBACAuth();
-  const actorPermissions = (rbacUser?.permissions ?? {}) as unknown as Record<
-    string,
-    boolean
-  >;
+  //
+  // Source of truth is the BACKEND's role -> permission matrix
+  // (GET /api/rbac/roles), not rbacUser.permissions. rbacUser.permissions is
+  // built from this frontend's own copy of the matrix
+  // (lib/permissions/definitions.ts), which is missing 20 of the backend's
+  // 157 permission keys (canViewProjects, canViewReports, canViewTeam,
+  // canViewProjectMilestones, canViewAssignedTasks, canUpdateAssignedTasks,
+  // canUpdateOwnTasks, canCreateComments, canCreateFeedback,
+  // canViewPublicProjects, and ten more) — those rendered permanently
+  // dimmed and ungrantable for every user, including workspace-manager,
+  // because the frontend list never had them at all. Reading the backend's
+  // own matrix instead avoids the two lists drifting apart again; do not
+  // "fix" this by hand-adding the missing keys to definitions.ts.
+  const { data: roleMatrix } = useQuery({
+    queryKey: ["rbac-role-matrix"],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/rbac/roles`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch role permission matrix");
+      }
+      return (await response.json()) as Record<string, Record<string, boolean>>;
+    },
+  });
+
+  // This disabling is a UX affordance, NOT a security control — the
+  // server's own subset guard in createRole/updateRole is the real
+  // enforcement and is completely unaffected by any of this. So if the
+  // matrix hasn't loaded yet, failed to load, or the actor's role isn't a
+  // key in it (e.g. the actor holds a custom role, which this built-in-role
+  // matrix has no entry for), FAIL OPEN: treat every permission as held
+  // rather than disabling all of them. A user who then hits a genuine
+  // server-side 403 is far better off than one staring at an editor where
+  // nothing can be checked. Do not "harden" this into failing closed later
+  // — that would brick the editor for exactly the cases (matrix still
+  // loading, custom-role actor) where disabling everything is worse than
+  // occasionally showing a checkbox as available when the server will
+  // reject it.
+  const actorPermissionsFromMatrix = rbacUser?.role
+    ? roleMatrix?.[rbacUser.role]
+    : undefined;
+  const actorPermissionsKnown = actorPermissionsFromMatrix !== undefined;
 
   // Reset form when role changes
   useEffect(() => {
@@ -357,7 +397,8 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
                       <div className="grid grid-cols-2 gap-2">
                         {permissions.map((permission) => {
                           const actorHasIt =
-                            actorPermissions[permission] === true;
+                            !actorPermissionsKnown ||
+                            actorPermissionsFromMatrix?.[permission] === true;
                           return (
                             <label
                               key={permission}
