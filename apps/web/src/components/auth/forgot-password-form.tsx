@@ -100,7 +100,7 @@ export function ForgotPasswordForm() {
                     <Input
                       autoComplete="email"
                       autoFocus
-                      className="h-12 border-white/15 bg-white/5 pl-10 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
+                      className="h-12 border-white/15 bg-white/5 px-0 pl-10 pr-3 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
                       placeholder="Enter your email address"
                       {...field}
                     />
@@ -126,14 +126,20 @@ export function ForgotPasswordForm() {
         </form>
       </Form>
 
-      {/* Cancel Button */}
-      <Button
-        variant="outline"
-        className="h-12 w-full border-white/15 bg-white/5 text-white/80 hover:border-white/25 hover:bg-white/10 hover:text-white"
-        asChild
+      {/* Cancel Button. A plain anchor rather than <Button asChild> — the
+       * Button component's asChild path wraps its content in an inner
+       * `inline-flex ... w-full h-full` span whose own `h-full` collides
+       * with the `h-12` we pass in (Radix Slot merges classNames by
+       * concatenation, not tailwind-merge, so both stay in the class list
+       * and the Tailwind cascade doesn't reliably pick `h-12`), collapsing
+       * the button to a content-sized strip. A direct anchor styled to the
+       * same footprint sidesteps that entirely. */}
+      <a
+        href="/auth/sign-in"
+        className="flex h-12 w-full items-center justify-center rounded-lg border border-white/15 bg-white/5 text-sm font-medium text-white/80 transition-colors hover:border-white/25 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2DD4BF]"
       >
-        <a href="/auth/sign-in">Cancel</a>
-      </Button>
+        Cancel
+      </a>
     </div>
   );
 }
