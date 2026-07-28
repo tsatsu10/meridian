@@ -291,9 +291,16 @@ app.get("/:workspaceId/export", async (c) => {
         "description",
       ] as const;
       const toCsvCell = (v: unknown) => {
-        const s = v === null || v === undefined ? "" : String(v);
-        // Quote always: audit descriptions routinely contain commas, and a
-        // leading =/+/-/@ would otherwise be run as a formula by Excel.
+        let s = v === null || v === undefined ? "" : String(v);
+        // Neutralise formula injection BEFORE quoting. Quoting alone does not
+        // help: the quotes are CSV delimiters and the spreadsheet strips them
+        // on parse, so `"=cmd|'/c calc'!A1"` is still evaluated on open. These
+        // fields carry attacker-influenceable text — description and
+        // actorEmail among them — and the export is opened in Excel by the
+        // people investigating an incident, which is precisely the wrong
+        // audience to hand a live formula to.
+        if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+        // Quote always: audit descriptions routinely contain commas.
         return `"${s.replace(/"/g, '""')}"`;
       };
       const body = [
