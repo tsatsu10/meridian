@@ -54,6 +54,7 @@ import {
 import { cn } from "@/lib/cn";
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { flattenTasks } from "@/utils/task-hierarchy";
 import { useMilestones } from "@/hooks/use-milestones";
 import DashboardPopup from "@/components/dashboard/dashboard-popup";
@@ -357,7 +358,7 @@ function ProjectTimeline() {
       );
     } catch (error) {
       console.error("Export error:", error);
-      toast.error("Failed to export timeline");
+      toast.error(userMessage(error, "export the timeline"));
     }
   };
 
@@ -468,7 +469,7 @@ function ProjectTimeline() {
       setEditingMilestone(null);
       setFormErrors({});
     } catch (error) {
-      toast.error("Failed to save milestone");
+      toast.error(userMessage(error, "save the milestone"));
     }
   };
 
@@ -489,7 +490,7 @@ function ProjectTimeline() {
       }
       toast.success("Milestone deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete milestone");
+      toast.error(userMessage(error, "delete the milestone"));
     }
   };
 

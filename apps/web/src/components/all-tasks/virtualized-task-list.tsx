@@ -60,6 +60,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 // @epic-3.2-time: Mike needs efficient task browsing with large datasets
 // @persona-mike: Developer needs fast, responsive task management interface
@@ -798,7 +799,7 @@ export const VirtualizedTaskList: React.FC<VirtualizedTaskListProps> = ({
         await onTaskReorder(activeTask.id, newPosition);
         toast.success("Task reordered successfully");
       } catch (error) {
-        toast.error("Failed to reorder task");
+        toast.error(userMessage(error, "reorder the task"));
         console.error("Task reorder error:", error);
       }
     }

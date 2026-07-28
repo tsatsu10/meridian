@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import {
   Database,
   Download,
@@ -291,8 +292,8 @@ function DataManagementSettings() {
       setHasChanges(false);
       toast.success("Backup settings saved successfully");
     },
-    onError: () => {
-      toast.error("Failed to save backup settings");
+    onError: (error) => {
+      toast.error(userMessage(error, "save your backup settings"));
     },
   });
 
@@ -319,8 +320,8 @@ function DataManagementSettings() {
       });
       toast.success("Backup created successfully");
     },
-    onError: () => {
-      toast.error("Failed to create backup");
+    onError: (error) => {
+      toast.error(userMessage(error, "create the backup"));
     },
   });
 
@@ -365,8 +366,8 @@ function DataManagementSettings() {
       document.body.removeChild(a);
       toast.success("Export completed successfully");
     },
-    onError: () => {
-      toast.error("Export failed");
+    onError: (error) => {
+      toast.error(userMessage(error, "export your data"));
     },
   });
 
@@ -409,8 +410,8 @@ function DataManagementSettings() {
         toast.info(`Validation completed: ${data.totalRecords} records valid`);
       }
     },
-    onError: () => {
-      toast.error("Import failed");
+    onError: (error) => {
+      toast.error(userMessage(error, "import that file"));
     },
   });
 

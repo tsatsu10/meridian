@@ -56,18 +56,37 @@ async function memberWorkspaceIds(userEmail: string): Promise<string[]> {
 }
 
 /**
- * The actor's own effective permissions — the ceiling for any role they
- * create.
+ * The actor's own effective role and permissions — the ceiling for any role
+ * they create.
  *
- * The assignment lookup is filtered to `workspaceId` (the workspace the role
- * is being created in), not just `userId`. Without that filter, a caller
- * with a low-privilege assignment in the target workspace but an
- * admin-level assignment elsewhere could mint an admin-level role there:
- * `.limit(1)` with no `orderBy` returns whichever assignment the database
- * happens to return first, so the ceiling must be pinned to the workspace in
- * play, not "any assignment this user holds." No matching assignment for
- * that workspace resolves to `{}` (fails closed), so any requested
- * permission trips the escalation guard in `createRole`.
+ * The assignment lookup is filtered on three things, all load-bearing:
+ *
+ * - `userId`, obviously.
+ * - `workspaceId` (the workspace the role is being created in). Without it, a
+ *   caller with a low-privilege assignment in the target workspace but an
+ *   admin-level assignment elsewhere could mint an admin-level role there:
+ *   `.limit(1)` with no `orderBy` returns whichever assignment the database
+ *   happens to return first, so the ceiling must be pinned to the workspace
+ *   in play, not "any assignment this user holds."
+ * - `isActive`. /api/rbac/assign does not delete the old assignment when a
+ *   user's role changes — it flips the old row to isActive:false and inserts
+ *   a new one — so a demoted user has BOTH rows for the same workspace, and
+ *   `.limit(1)` with no `orderBy` may return either. Every other assignment
+ *   lookup in the RBAC surface (checkWorkspacePermission,
+ *   checkProjectPermission, requirePermission, requireRole) filters on
+ *   isActive, so without it here the gate in front of this function would
+ *   read the caller's CURRENT role while the ceiling behind it read a
+ *   revoked one: a user demoted from workspace-manager to a narrow custom
+ *   role could pass the gate on the narrow role and still mint a role
+ *   carrying their old workspace-manager permission set.
+ *
+ * With no matching ACTIVE assignment for that workspace the role falls back
+ * to "guest" — NOT to `{}`. Guest is not empty: it grants
+ * canViewPublicProjects (see ROLE_PERMISSIONS), so a caller in that state
+ * can still mint a role granting exactly that one permission and nothing
+ * else. Every other requested permission trips the escalation guard in
+ * `createRole`. In practice the routes gate on canManageRolesInWorkspace
+ * first, so a caller with no active assignment never reaches here.
  */
 async function actorContext(userEmail: string, workspaceId: string) {
   const db = getDatabase();
@@ -88,16 +107,18 @@ async function actorContext(userEmail: string, workspaceId: string) {
       and(
         eq(roleAssignmentTable.userId, user.id),
         eq(roleAssignmentTable.workspaceId, workspaceId),
+        eq(roleAssignmentTable.isActive, true),
       ),
     )
     .limit(1);
 
+  const role = assignment?.role ?? "guest";
   const permissions = await resolveRolePermissions(
-    assignment?.role ?? "guest",
+    role,
     assignment?.workspaceId ?? null,
   );
 
-  return { userId: user.id, permissions };
+  return { userId: user.id, role, permissions };
 }
 
 /**
@@ -204,6 +225,7 @@ rolesRouter
         permissions: body.permissions,
         workspaceId: body.workspaceId,
         actorUserId: actor.userId,
+        actorRole: actor.role,
         actorPermissions: actor.permissions,
         ipAddress: c.req.header("x-forwarded-for"),
         userAgent: c.req.header("user-agent"),
@@ -335,6 +357,7 @@ rolesRouter
         name: body.name,
         workspaceId: body.workspaceId,
         actorUserId: actor.userId,
+        actorRole: actor.role,
         actorPermissions: actor.permissions,
         memberWorkspaceIds: memberIds,
         ipAddress: c.req.header("x-forwarded-for"),

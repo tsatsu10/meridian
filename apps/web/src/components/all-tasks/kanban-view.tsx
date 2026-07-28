@@ -14,6 +14,7 @@ import {
   PointerSensor,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { logger } from "@/lib/logger";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -445,7 +446,7 @@ export function AllTasksKanbanView({
         `Task moved to ${statusColumns.find((col) => col.id === newStatus)?.name}`,
       );
     } catch (error) {
-      toast.error("Failed to update task status");
+      toast.error(userMessage(error, "update the task status"));
       logger.error(
         "Kanban drag update failed",
         error instanceof Error ? error : new Error(String(error)),

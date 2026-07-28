@@ -93,6 +93,7 @@ import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
 import { EnhancedMemberDetailsModal } from "@/components/team/enhanced-member-details-modal";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import type { ProjectColumn, ProjectWithTasks } from "@/types/project";
 import type Task from "@/types/task";
 
@@ -843,7 +844,7 @@ function ProjectTeams() {
       toast.success(`Exported ${selectedData.length} selected members to CSV`);
     } catch (error) {
       console.error("Error exporting selected members:", error);
-      toast.error("Failed to export selected members");
+      toast.error(userMessage(error, "export the selected members"));
     }
   };
 
@@ -917,7 +918,7 @@ function ProjectTeams() {
       toast.success(`Exported ${projectMembers.length} team members to CSV`);
     } catch (error) {
       console.error("Error exporting team data:", error);
-      toast.error("Failed to export team data");
+      toast.error(userMessage(error, "export the team data"));
     }
   };
 

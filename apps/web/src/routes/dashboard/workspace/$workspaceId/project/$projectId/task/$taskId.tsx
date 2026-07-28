@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 // Components
 import PageTitle from "@/components/page-title";
@@ -118,7 +119,7 @@ function TaskDetailsPage() {
         toast.success("Task deleted");
         handleBack();
       } catch (error) {
-        toast.error("Failed to delete task");
+        toast.error(userMessage(error, "delete the task"));
       }
     }
   }, [deleteTask, taskId, handleBack]);

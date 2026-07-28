@@ -62,6 +62,7 @@ const InteractiveChart = lazy(() =>
 );
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import {
   NoAnalyticsData,
   NoProjectsData,
@@ -645,7 +646,7 @@ const exportToCSV = (data: object | null | undefined, filename: string) => {
     toast.success("Data exported successfully");
   } catch (error) {
     console.error("Export error:", error);
-    toast.error("Failed to export data");
+    toast.error(userMessage(error, "export your data"));
   }
 };
 
@@ -866,7 +867,7 @@ function AnalyticsPage() {
       await refetch();
       toast.success("Analytics data refreshed successfully");
     } catch (error) {
-      toast.error("Failed to refresh analytics data");
+      toast.error(userMessage(error, "refresh your analytics"));
     } finally {
       dispatch({ type: "SET_REFRESHING", payload: false });
     }
@@ -892,7 +893,7 @@ function AnalyticsPage() {
             toast.success("Analytics exported as PDF");
           } catch (error) {
             console.error("PDF export error:", error);
-            toast.error("Failed to export as PDF");
+            toast.error(userMessage(error, "export to PDF"));
           }
           break;
         case "excel":
@@ -902,7 +903,7 @@ function AnalyticsPage() {
             toast.success("Analytics exported as Excel");
           } catch (error) {
             console.error("Excel export error:", error);
-            toast.error("Failed to export as Excel");
+            toast.error(userMessage(error, "export to Excel"));
           }
           break;
       }
@@ -942,7 +943,7 @@ function AnalyticsPage() {
   useEffect(() => {
     if (error) {
       console.error("Analytics error:", error);
-      toast.error("Failed to load analytics data");
+      toast.error(userMessage(error, "load your analytics"));
     }
   }, [error]);
 

@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 import {
   Card,
@@ -161,8 +162,8 @@ function FiltersSettingsPage() {
       setIsCreateDialogOpen(false);
       resetForm();
     },
-    onError: () => {
-      toast.error("Failed to create filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "create the filter"));
     },
   });
 
@@ -191,8 +192,8 @@ function FiltersSettingsPage() {
         queryKey: ["saved-filters", currentWorkspace?.id],
       });
     },
-    onError: () => {
-      toast.error("Failed to update filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "update the filter"));
     },
   });
 
@@ -217,8 +218,8 @@ function FiltersSettingsPage() {
       });
       setIsDeleteDialogOpen(false);
     },
-    onError: () => {
-      toast.error("Failed to delete filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "delete the filter"));
     },
   });
 
@@ -247,8 +248,8 @@ function FiltersSettingsPage() {
         queryKey: ["saved-filters", currentWorkspace?.id],
       });
     },
-    onError: () => {
-      toast.error("Failed to clone filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "duplicate the filter"));
     },
   });
 

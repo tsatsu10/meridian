@@ -12,6 +12,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 import {
   Card,
@@ -157,8 +158,8 @@ function LocalizationSettingsPage() {
       setIsAddLanguageDialogOpen(false);
       setSelectedLangCode("");
     },
-    onError: () => {
-      toast.error("Failed to add language");
+    onError: (error) => {
+      toast.error(userMessage(error, "add the language"));
     },
   });
 
@@ -183,8 +184,8 @@ function LocalizationSettingsPage() {
       });
       setIsDeleteDialogOpen(false);
     },
-    onError: () => {
-      toast.error("Failed to delete language");
+    onError: (error) => {
+      toast.error(userMessage(error, "delete the language"));
     },
   });
 
@@ -213,8 +214,8 @@ function LocalizationSettingsPage() {
         queryKey: ["languages", currentWorkspace?.id],
       });
     },
-    onError: () => {
-      toast.error("Failed to update language");
+    onError: (error) => {
+      toast.error(userMessage(error, "update the language"));
     },
   });
 
@@ -240,8 +241,8 @@ function LocalizationSettingsPage() {
         queryKey: ["localization-settings", currentWorkspace?.id],
       });
     },
-    onError: () => {
-      toast.error("Failed to update settings");
+    onError: (error) => {
+      toast.error(userMessage(error, "save your settings"));
     },
   });
 

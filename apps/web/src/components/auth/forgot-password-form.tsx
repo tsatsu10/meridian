@@ -13,6 +13,7 @@ import { Mail, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { type ZodType, z } from "zod";
 
 export type ForgotPasswordFormValues = {
@@ -43,7 +44,7 @@ export function ForgotPasswordForm() {
       setIsSubmitted(true);
       toast.success("Password reset email sent!");
     } catch (error) {
-      toast.error("Failed to send reset email. Please try again.");
+      toast.error(userMessage(error, "send the reset email"));
     } finally {
       setIsPending(false);
     }

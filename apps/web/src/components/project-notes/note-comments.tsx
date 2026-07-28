@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { MessageSquare, Send, Edit, Trash2, Clock } from "lucide-react";
 import { API_BASE_URL } from "@/constants/urls";
 import { formatDistanceToNow } from "date-fns";
@@ -63,7 +64,7 @@ export function NoteComments({
       setComments(data.data || []);
     } catch (error) {
       console.error("Failed to fetch comments:", error);
-      toast.error("Failed to load comments");
+      toast.error(userMessage(error, "load the comments"));
     } finally {
       setLoading(false);
     }
@@ -91,7 +92,7 @@ export function NoteComments({
       fetchComments();
     } catch (error) {
       console.error("Failed to add comment:", error);
-      toast.error("Failed to add comment");
+      toast.error(userMessage(error, "add your comment"));
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +120,7 @@ export function NoteComments({
       fetchComments();
     } catch (error) {
       console.error("Failed to update comment:", error);
-      toast.error("Failed to update comment");
+      toast.error(userMessage(error, "update the comment"));
     }
   };
 
@@ -141,7 +142,7 @@ export function NoteComments({
       fetchComments();
     } catch (error) {
       console.error("Failed to delete comment:", error);
-      toast.error("Failed to delete comment");
+      toast.error(userMessage(error, "delete the comment"));
     }
   };
 

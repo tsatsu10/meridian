@@ -30,6 +30,7 @@ import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import NotificationCenter from "@/components/shared/notifications/notification-center";
 import useWorkspaceStore from "@/store/workspace";
 import useProjectStore from "@/store/project";
@@ -102,7 +103,7 @@ export default function PageHeaderActions(_props: PageHeaderActionsProps = {}) {
       // For now, just navigate to sign-in page
       navigate({ to: "/auth/sign-in" });
     } catch (error) {
-      toast.error("Failed to sign out");
+      toast.error(userMessage(error, "sign you out"));
     }
   };
 

@@ -27,6 +27,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/constants/urls";
@@ -108,8 +109,8 @@ function ApiAccessSettings() {
       queryClient.invalidateQueries({ queryKey: ["api-keys"] });
       toast.success("API key created successfully");
     },
-    onError: () => {
-      toast.error("Failed to create API key");
+    onError: (error) => {
+      toast.error(userMessage(error, "create the API key"));
       setIsCreating(false);
     },
   });
@@ -128,8 +129,8 @@ function ApiAccessSettings() {
       queryClient.invalidateQueries({ queryKey: ["api-keys"] });
       toast.success("API key deleted successfully");
     },
-    onError: () => {
-      toast.error("Failed to delete API key");
+    onError: (error) => {
+      toast.error(userMessage(error, "delete the API key"));
     },
   });
 
@@ -152,8 +153,8 @@ function ApiAccessSettings() {
       queryClient.invalidateQueries({ queryKey: ["api-keys"] });
       toast.success("API key updated successfully");
     },
-    onError: () => {
-      toast.error("Failed to update API key");
+    onError: (error) => {
+      toast.error(userMessage(error, "update the API key"));
     },
   });
 

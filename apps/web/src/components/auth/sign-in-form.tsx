@@ -55,7 +55,9 @@ export function SignInForm() {
       // browser history and server access logs) via sessionStorage instead.
       if (user.twoFactorRequired) {
         sessionStorage.setItem("pending2FAToken", user.pendingToken);
-        history.push(`/auth/verify-2fa?email=${encodeURIComponent(user.email)}`);
+        history.push(
+          `/auth/verify-2fa?email=${encodeURIComponent(user.email)}`,
+        );
         return;
       }
 

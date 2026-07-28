@@ -8,6 +8,13 @@ export type CloneRoleInput = {
   actorUserId: string;
   actorPermissions: Record<string, boolean>;
   /**
+   * The actor's own role slug (or custom role id). Forwarded to createRole,
+   * which uses it together with `baseRoleId` to decide whether the
+   * hierarchy or the permission-subset ceiling applies — see
+   * ../lib/role-ceiling.ts.
+   */
+  actorRole?: string | null;
+  /**
    * Workspaces the caller belongs to. Forwarded to getRole so the same
    * tenant boundary applies to the clone source as to a direct read: a
    * custom role in a workspace the caller isn't a member of reads as 404,
@@ -36,6 +43,7 @@ export async function cloneRole(
     workspaceId: input.workspaceId,
     actorUserId: input.actorUserId,
     actorPermissions: input.actorPermissions,
+    actorRole: input.actorRole ?? null,
     baseRoleId: source.id,
     ipAddress: input.ipAddress,
     userAgent: input.userAgent,

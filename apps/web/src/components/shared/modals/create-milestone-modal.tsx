@@ -28,6 +28,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import { flattenTasks } from "@/utils/task-hierarchy";
 import type { TaskWithSubtasks } from "@/types/task";
@@ -167,7 +168,7 @@ export default function CreateMilestoneModal({
       onMilestoneCreated?.(milestone);
       onClose();
     } catch (error) {
-      toast.error("Failed to save milestone");
+      toast.error(userMessage(error, "save the milestone"));
     }
   };
 

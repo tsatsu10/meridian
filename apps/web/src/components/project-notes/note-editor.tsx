@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { Save, X, Pin, History, MessageSquare, Tag, Clock } from "lucide-react";
 import { API_BASE_URL } from "@/constants/urls";
 import { formatDistanceToNow } from "date-fns";
@@ -155,7 +156,7 @@ export function NoteEditor({
     } catch (error) {
       console.error("Failed to save note:", error);
       if (!silent) {
-        toast.error("Failed to save note");
+        toast.error(userMessage(error, "save the note"));
       }
     } finally {
       setSaving(false);

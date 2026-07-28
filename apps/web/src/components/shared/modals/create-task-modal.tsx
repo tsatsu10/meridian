@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { X, UserIcon, Users, Layout } from "lucide-react";
 import { addWeeks, startOfTomorrow } from "date-fns";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import useCreateTask from "@/hooks/mutations/task/use-create-task";
 import useGetActiveWorkspaceUsers from "@/hooks/queries/workspace-users/use-active-workspace-users";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
@@ -319,7 +320,7 @@ export default function CreateTaskModal({
       handleClose();
     } catch (error) {
       console.error("Error creating task:", error);
-      toast.error("Failed to create task");
+      toast.error(userMessage(error, "create the task"));
     }
   };
 

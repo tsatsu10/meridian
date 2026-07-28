@@ -37,6 +37,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
@@ -73,7 +74,7 @@ function NotificationSettings() {
       await saveSettings();
       toast.success("Notification settings saved successfully!");
     } catch (error) {
-      toast.error("Failed to save notification settings");
+      toast.error(userMessage(error, "save your notification settings"));
     } finally {
       setIsSaving(false);
     }
@@ -116,7 +117,7 @@ function NotificationSettings() {
       });
       toast.success("Settings reset to defaults");
     } catch (error) {
-      toast.error("Failed to reset settings");
+      toast.error(userMessage(error, "reset your settings"));
     }
   };
 
@@ -152,7 +153,7 @@ function NotificationSettings() {
           );
         }
       } catch (error) {
-        toast.error("Failed to request notification permission");
+        toast.error(userMessage(error, "turn on browser notifications"));
       }
     } else {
       toast.error("Browser notifications are not supported");
@@ -183,7 +184,7 @@ function NotificationSettings() {
         );
       }, 0);
     } catch (error) {
-      toast.error("Failed to update setting");
+      toast.error(userMessage(error, "save that setting"));
     }
   };
 
@@ -212,7 +213,7 @@ function NotificationSettings() {
         );
       }, 0);
     } catch (error) {
-      toast.error("Failed to update settings");
+      toast.error(userMessage(error, "save your settings"));
     }
   };
 
@@ -717,7 +718,9 @@ function NotificationSettings() {
                           `Notification sounds ${checked ? "enabled" : "disabled"}`,
                         );
                       } catch (error) {
-                        toast.error("Failed to update sound settings");
+                        toast.error(
+                          userMessage(error, "save your sound settings"),
+                        );
                       }
                     }}
                   />

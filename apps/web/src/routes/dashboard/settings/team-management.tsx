@@ -36,6 +36,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { InviteUserModal } from "@/components/shared/modals/invite-user-modal";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
@@ -281,7 +282,7 @@ export function TeamManagementSettings() {
       toast.success(data.message);
     } catch (error) {
       console.error("Failed to resend invitation:", error);
-      toast.error("Failed to resend invitation");
+      toast.error(userMessage(error, "resend the invitation"));
     }
   };
 
@@ -306,7 +307,7 @@ export function TeamManagementSettings() {
       toast.success("Invite link copied to clipboard");
     } catch (error) {
       console.error("Failed to generate invite link:", error);
-      toast.error("Failed to generate invite link");
+      toast.error(userMessage(error, "generate an invite link"));
     }
   };
 

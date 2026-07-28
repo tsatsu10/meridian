@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import {
   LayoutGrid,
   Plus,
@@ -135,7 +136,7 @@ export function TemplateGallery({
       setTemplates(data.data || []);
     } catch (error) {
       console.error("Failed to fetch templates:", error);
-      toast.error("Failed to load dashboard templates");
+      toast.error(userMessage(error, "load the dashboard templates"));
     } finally {
       setLoading(false);
     }
@@ -176,7 +177,7 @@ export function TemplateGallery({
       resetForm();
     } catch (error) {
       console.error("Failed to create template:", error);
-      toast.error("Failed to create dashboard template");
+      toast.error(userMessage(error, "create the dashboard template"));
     }
   };
 
@@ -197,7 +198,7 @@ export function TemplateGallery({
       setTemplates([...templates, data.data]);
     } catch (error) {
       console.error("Failed to clone template:", error);
-      toast.error("Failed to clone template");
+      toast.error(userMessage(error, "duplicate the template"));
     }
   };
 
@@ -219,7 +220,7 @@ export function TemplateGallery({
       setTemplates(templates.filter((t) => t.id !== templateId));
     } catch (error) {
       console.error("Failed to delete template:", error);
-      toast.error("Failed to delete template");
+      toast.error(userMessage(error, "delete the template"));
     }
   };
 

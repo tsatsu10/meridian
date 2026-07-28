@@ -164,7 +164,9 @@ const NotificationItem = memo(
                 });
                 onClose?.();
               } else {
-                toast.error("Cannot navigate: Missing workspace information");
+                toast.error(
+                  "Couldn't open that — this notification isn't linked to a workspace.",
+                );
               }
             }
             break;
@@ -186,7 +188,9 @@ const NotificationItem = memo(
                 });
                 onClose?.();
               } else {
-                toast.error("Cannot navigate: Missing task information");
+                toast.error(
+                  "Couldn't open that — this notification isn't linked to a task.",
+                );
               }
             }
             break;
@@ -208,7 +212,9 @@ const NotificationItem = memo(
                 });
                 onClose?.();
               } else {
-                toast.error("Cannot navigate: Missing task information");
+                toast.error(
+                  "Couldn't open that — this notification isn't linked to a task.",
+                );
               }
             }
             break;

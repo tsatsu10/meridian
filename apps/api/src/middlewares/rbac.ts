@@ -14,10 +14,8 @@ import {
   customPermissionTable,
   projectTable,
 } from "../database/schema";
-import { ROLE_PERMISSIONS, ROLE_HIERARCHY } from "../constants/rbac";
+import { ROLE_HIERARCHY } from "../constants/rbac";
 import type { UserRole, PermissionAction } from "../types/rbac";
-import { getHighestRole } from "../constants/rbac";
-import { appSettings } from "../config/settings";
 import logger from "../utils/logger";
 import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
 import { isSystemRoleId } from "../roles/lib/system-roles";

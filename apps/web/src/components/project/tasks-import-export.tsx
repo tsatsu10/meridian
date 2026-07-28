@@ -9,6 +9,7 @@ import { saveAs } from "file-saver";
 import { Download, Loader2, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 interface TasksImportExportProps {
   project: ProjectWithTasks;
@@ -39,7 +40,7 @@ export function TasksImportExport({ project }: TasksImportExportProps) {
       toast.success("Tasks exported successfully");
     } catch (error) {
       toast.dismiss();
-      toast.error("Failed to export tasks");
+      toast.error(userMessage(error, "export your tasks"));
       console.error(error);
     }
   };
@@ -90,7 +91,7 @@ export function TasksImportExport({ project }: TasksImportExportProps) {
       }
     } catch (error) {
       toast.dismiss();
-      toast.error("Failed to import tasks");
+      toast.error(userMessage(error, "import those tasks"));
       console.error(error);
     }
   };

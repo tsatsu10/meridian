@@ -575,7 +575,7 @@ function ProjectOverview() {
         user: user?.email,
       });
 
-      toast.error("Security Error: Invalid project access");
+      toast.error("You don't have access to this project.");
       navigate({ to: "/dashboard" });
     }
   }, [projectData, workspaceId, projectId, navigate, user]);
@@ -589,7 +589,7 @@ function ProjectOverview() {
         user: user?.email,
       });
 
-      toast.error("Access Denied: Invalid workspace");
+      toast.error("You don't have access to this workspace.");
       navigate({ to: "/dashboard" });
     }
   }, [workspace, workspaceId, navigate, user]);

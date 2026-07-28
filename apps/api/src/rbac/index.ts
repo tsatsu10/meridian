@@ -40,6 +40,10 @@ import {
   findExcessPermissions,
   recordToPermissions,
 } from "../roles/lib/permission-set";
+import {
+  hierarchyCeilingAllows,
+  usesHierarchyCeiling,
+} from "../roles/lib/role-ceiling";
 import type { UserRole } from "../types/rbac";
 import logger from "../utils/logger";
 
@@ -110,6 +114,43 @@ const requireCanManageRolesUnlessSelf = createMiddleware(async (c, next) => {
   return requirePermission("canManageRoles")(c, next);
 });
 
+/**
+ * The escalation ceiling for POST /assign: returns an error message when the
+ * actor may not hand out `assignedRole`, or `null` when they may.
+ *
+ * Which ceiling applies (hierarchy vs. permission subset) is decided by
+ * roles/lib/role-ceiling.ts — read the module comment there for why the two
+ * cases are measured differently. The short version: the built-in roles are
+ * an ordered ladder rather than a permission lattice, so a subset check makes
+ * `contractor` and `department-head` unassignable by anybody; custom roles
+ * have no level and attacker-chosen permission lists, so they must keep the
+ * subset check or a custom role granting canManageRoles could hand out
+ * workspace-manager.
+ */
+async function assignRoleCeilingError(
+  actorRole: string,
+  assignedRole: string,
+  workspaceId: string,
+): Promise<string | null> {
+  if (usesHierarchyCeiling(actorRole, assignedRole)) {
+    return hierarchyCeilingAllows(actorRole, assignedRole)
+      ? null
+      : `You cannot assign a role above your own: ${assignedRole}`;
+  }
+
+  const [actorPermissions, assignedPermissions] = await Promise.all([
+    resolveRolePermissions(actorRole, workspaceId),
+    resolveRolePermissions(assignedRole, workspaceId),
+  ]);
+  const excess = findExcessPermissions(
+    recordToPermissions(assignedPermissions),
+    actorPermissions,
+  );
+  return excess.length > 0
+    ? `You cannot assign permissions you do not hold: ${excess.join(", ")}`
+    : null;
+}
+
 // ===== ROLE ASSIGNMENT ENDPOINTS =====
 
 /**
@@ -149,7 +190,19 @@ rbac.get("/assignments", requirePermission("canManageRoles"), async (c) => {
     const assignments = await db
       .select({
         assignment: roleAssignmentTable,
-        user: userTable,
+        // Explicit columns, NOT the whole `userTable`. Projecting the table
+        // ships every column it has — including `password` (an argon2 hash),
+        // `twoFactorSecret` and `twoFactorBackupCodes` — to any caller of
+        // this route. Same class of leak as the one already fixed on
+        // GET /api/users/me. The consumer (settings/team-management.tsx)
+        // renders only name/email; id and avatar are here because any
+        // reasonable member list needs them.
+        user: {
+          id: userTable.id,
+          name: userTable.name,
+          email: userTable.email,
+          avatar: userTable.avatar,
+        },
       })
       .from(roleAssignmentTable)
       .leftJoin(userTable, eq(roleAssignmentTable.userId, userTable.id))
@@ -273,11 +326,10 @@ rbac.post(
         }
       }
 
-      // Escalation guard: the same "you cannot grant permissions you do not
-      // hold" ceiling createRole/updateRole enforce (findExcessPermissions),
-      // applied here too. Without it, an assigner could bypass that ceiling
-      // entirely by assigning an EXISTING powerful role instead of minting a
-      // new one — built-in or custom.
+      // Escalation guard: the counterpart to the ceiling
+      // createRole/updateRole enforce, applied here too. Without it, an
+      // assigner could bypass that ceiling entirely by assigning an EXISTING
+      // powerful role instead of minting a new one — built-in or custom.
       //
       // scoped.userRole is undefined exactly when checkWorkspacePermission's
       // demo-mode admin bypass fired (it returns a bare `{ allowed: true }`
@@ -290,22 +342,17 @@ rbac.post(
       // authorized," so the ceiling check is skipped entirely in that case —
       // the normal (non-demo) path is unaffected and still enforces the
       // ceiling exactly as before.
+      //
+      // The ceiling is measured two different ways, and the split is
+      // deliberate — see assignRoleCeilingError for the full reasoning.
       if (scoped.userRole !== undefined) {
-        const [actorPermissions, assignedPermissions] = await Promise.all([
-          resolveRolePermissions(scoped.userRole, data.workspaceId),
-          resolveRolePermissions(data.role, data.workspaceId),
-        ]);
-        const excess = findExcessPermissions(
-          recordToPermissions(assignedPermissions),
-          actorPermissions,
+        const ceilingError = await assignRoleCeilingError(
+          scoped.userRole,
+          data.role,
+          data.workspaceId,
         );
-        if (excess.length > 0) {
-          return c.json(
-            {
-              error: `You cannot assign permissions you do not hold: ${excess.join(", ")}`,
-            },
-            403,
-          );
+        if (ceilingError) {
+          return c.json({ error: ceilingError }, 403);
         }
       }
 
@@ -915,7 +962,16 @@ rbac.get("/history/:userId", async (c) => {
     const history = await db
       .select({
         history: roleHistoryTable,
-        changedByUser: userTable,
+        // Explicit columns — projecting `userTable` wholesale would ship
+        // `password`, `twoFactorSecret` and `twoFactorBackupCodes` for the
+        // user who performed each change. An audit trail only needs to
+        // identify them.
+        changedByUser: {
+          id: userTable.id,
+          name: userTable.name,
+          email: userTable.email,
+          avatar: userTable.avatar,
+        },
       })
       .from(roleHistoryTable)
       .leftJoin(userTable, eq(roleHistoryTable.performedBy, userTable.id))
@@ -1004,7 +1060,16 @@ rbac.get("/departments", async (c) => {
     const departments = await db
       .select({
         department: departmentTable,
-        headUser: userTable,
+        // Explicit columns — projecting `userTable` wholesale would ship the
+        // department head's `password`, `twoFactorSecret` and
+        // `twoFactorBackupCodes` to every caller. A department list only
+        // needs to name its head.
+        headUser: {
+          id: userTable.id,
+          name: userTable.name,
+          email: userTable.email,
+          avatar: userTable.avatar,
+        },
       })
       .from(departmentTable)
       .leftJoin(userTable, eq(departmentTable.headId, userTable.id))

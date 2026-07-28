@@ -33,6 +33,7 @@ import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useMilestones } from "@/hooks/use-milestones";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
@@ -160,7 +161,7 @@ function ProjectListView() {
             });
             toast.success("Task updated successfully");
           } catch (error) {
-            toast.error("Failed to update task");
+            toast.error(userMessage(error, "update the task"));
           }
         },
         1000,
@@ -308,7 +309,7 @@ function ProjectListView() {
 
           toast.success("Task reordered successfully");
         } catch (error) {
-          toast.error("Failed to reorder task");
+          toast.error(userMessage(error, "reorder the task"));
           console.error("Task reorder error:", error);
         }
       },
@@ -341,7 +342,7 @@ function ProjectListView() {
       toast.success(`Updated ${selectedTasks.length} task(s) to ${status}`);
       setSelectedTasks([]);
     } catch (error) {
-      toast.error("Failed to update tasks");
+      toast.error(userMessage(error, "update those tasks"));
       console.error("Bulk status update error:", error);
     }
   };
@@ -370,7 +371,7 @@ function ProjectListView() {
       );
       setSelectedTasks([]);
     } catch (error) {
-      toast.error("Failed to update task priorities");
+      toast.error(userMessage(error, "update the task priorities"));
       console.error("Bulk priority update error:", error);
     }
   };
@@ -396,7 +397,7 @@ function ProjectListView() {
       toast.success(`Deleted ${selectedTasks.length} task(s)`);
       setSelectedTasks([]);
     } catch (error) {
-      toast.error("Failed to delete tasks");
+      toast.error(userMessage(error, "delete those tasks"));
       console.error("Bulk delete error:", error);
     }
   };
@@ -746,7 +747,7 @@ function ProjectListView() {
                       } as unknown as Task);
                       toast.success("Task updated successfully");
                     } catch (error) {
-                      toast.error("Failed to update task");
+                      toast.error(userMessage(error, "update the task"));
                     }
                   }
                 : undefined

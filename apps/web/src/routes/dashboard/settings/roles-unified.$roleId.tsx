@@ -1,13 +1,39 @@
 /**
  * 📄 Role Details Page
  *
- * Detailed view of a role with assigned users and permissions.
- * Supports user assignment and history viewing.
+ * Detailed view of a role: its permissions, usage stats, and the clone/delete
+ * actions the API actually supports.
+ *
+ * ⚠️ DELIBERATELY MISSING — three sections were removed from this page because
+ * the endpoints they call have never existed on the server. Each one 404'd
+ * silently behind a react-query error state, so the page looked functional
+ * and did nothing. They are listed here (rather than left rendering) so that
+ * whoever builds the backend knows exactly what to restore and from where:
+ *
+ *  1. Assigned-users tab — `@/components/rbac/assigned-users-list`
+ *     needs:   GET    /api/roles/:id/assignments   (list users holding a role)
+ *              DELETE /api/roles/assignments/:id   (revoke one assignment)
+ *     note:    the component's old URL, GET /api/roles/assignments?roleId=,
+ *              matched the `GET /:id` route with id "assignments" and 404'd.
+ *              A restored route must not collide with `/:id` — register it as
+ *              `/:id/assignments`, or before `/:id` as `/permissions/all` is.
+ *  2. Assign-users modal — `@/components/rbac/assign-users-modal`
+ *     needs:   POST   /api/roles/assign/bulk       (assign N users to a role)
+ *     note:    single assignment already exists as POST /api/rbac/assign; a
+ *              bulk route must apply that route's full guard set per user
+ *              (workspace-scoped canManageRoles, the escalation ceiling, and
+ *              the assignee-membership check).
+ *  3. History tab — `@/components/rbac/role-history`
+ *     needs:   GET    /api/roles/:id/history       (audit trail for a role)
+ *     note:    rows are already written by roles/lib/audit.ts; only the read
+ *              route is missing.
+ *
+ * The three component files are intentionally left in the tree: they are the
+ * ready-made UI for those endpoints, and nothing else imports them.
  *
  * @phase Phase-3-Week-9
  */
 
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createFileRoute,
@@ -17,7 +43,6 @@ import {
 import { API_BASE_URL } from "@/constants/urls";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ArrowLeft,
@@ -26,15 +51,12 @@ import {
   Edit,
   Copy,
   Trash2,
-  UserPlus,
   Crown,
   Clock,
   Activity,
 } from "lucide-react";
-import { AssignUsersModal } from "@/components/rbac/assign-users-modal";
-import { AssignedUsersList } from "@/components/rbac/assigned-users-list";
 import { PermissionsList } from "@/components/rbac/permissions-list";
-import { RoleHistory } from "@/components/rbac/role-history";
+import useWorkspaceStore from "@/store/workspace";
 import { toast } from "sonner";
 
 // ==========================================
@@ -54,6 +76,12 @@ interface Role {
   createdAt: Date;
 }
 
+/** Body of GET /api/roles/:id/usage — returned unwrapped, not under `usage`. */
+interface RoleUsage {
+  usersCount: number;
+  lastUsedAt: string | null;
+}
+
 // ==========================================
 // MAIN COMPONENT
 // ==========================================
@@ -64,9 +92,14 @@ function RoleDetailsPage() {
   });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("users");
+  const { workspace } = useWorkspaceStore();
+  const workspaceId = workspace?.id || "";
+  // Cloning writes a new role into `workspaceId`, which POST /roles/:id/clone
+  // requires (z.string().min(1)). Same guard the list page (roles-unified.tsx)
+  // and role-modal.tsx already apply: a role write with a missing workspace is
+  // security-relevant, so fail visibly before calling the API rather than let
+  // it 400 with a raw server message.
+  const hasWorkspace = Boolean(workspaceId);
 
   // Fetch role details
   const { data: role, isLoading } = useQuery({
@@ -81,16 +114,20 @@ function RoleDetailsPage() {
     },
   });
 
-  // Fetch role usage stats
-  const { data: _usageStats } = useQuery({
+  // Fetch role usage stats. These are the DERIVED counts (computed from live
+  // role_assignment rows by getRoleUsage) — GET /roles/:id returns the
+  // denormalised roles.users_count / roles.last_used_at columns instead,
+  // which drift and are never written; list-roles.ts avoids them for the same
+  // reason. The response body is the usage object itself, so unwrapping a
+  // `.usage` property (as this did) yielded undefined every time.
+  const { data: usage } = useQuery({
     queryKey: ["role-usage", roleId],
     queryFn: async () => {
       const response = await fetch(`${API_BASE_URL}/roles/${roleId}/usage`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch usage");
-      const data = await response.json();
-      return data.usage;
+      return (await response.json()) as RoleUsage;
     },
   });
 
@@ -119,11 +156,23 @@ function RoleDetailsPage() {
   // Clone role mutation
   const cloneRoleMutation = useMutation({
     mutationFn: async (newName: string) => {
+      // Defense in depth: handleClone already blocks this case and the Clone
+      // button is disabled for it, but this guards any other call path.
+      if (!hasWorkspace) {
+        throw new Error("Select a workspace before cloning a role");
+      }
+
       const response = await fetch(`${API_BASE_URL}/roles/${roleId}/clone`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ newName }),
+        // The API's clone body is { name?, workspaceId } — workspaceId is
+        // required (role mutations are workspace-scoped server-side) and the
+        // field is `name`, not `newName`. Sending `{ newName }` alone failed
+        // the zod validator outright (400) and, had it not, would have
+        // dropped the name the user typed. Same fix already applied on the
+        // list page in roles-unified.tsx.
+        body: JSON.stringify({ name: newName, workspaceId }),
       });
       if (!response.ok) {
         const error = await response.json();
@@ -156,14 +205,15 @@ function RoleDetailsPage() {
   };
 
   const handleClone = () => {
+    if (!hasWorkspace) {
+      toast.error("Select a workspace before cloning a role");
+      return;
+    }
+
     const newName = prompt(`Clone "${role?.name}" as:`, `${role?.name} (Copy)`);
     if (newName) {
       cloneRoleMutation.mutate(newName);
     }
-  };
-
-  const handleAssignUsers = () => {
-    setIsAssignModalOpen(true);
   };
 
   if (isLoading) {
@@ -241,11 +291,6 @@ function RoleDetailsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleAssignUsers}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Assign Users
-            </Button>
-
             {!isSystem && (
               <Button variant="outline" onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
@@ -253,7 +298,16 @@ function RoleDetailsPage() {
               </Button>
             )}
 
-            <Button variant="outline" onClick={handleClone}>
+            <Button
+              variant="outline"
+              onClick={handleClone}
+              disabled={!hasWorkspace}
+              title={
+                hasWorkspace
+                  ? undefined
+                  : "Select a workspace before cloning a role"
+              }
+            >
               <Copy className="h-4 w-4 mr-2" />
               Clone
             </Button>
@@ -283,7 +337,9 @@ function RoleDetailsPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-2xl font-bold">{role.usersCount}</span>
+              <span className="text-2xl font-bold">
+                {usage?.usersCount ?? role.usersCount}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -314,8 +370,10 @@ function RoleDetailsPage() {
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
-                {role.lastUsedAt
-                  ? new Date(role.lastUsedAt).toLocaleDateString()
+                {usage?.lastUsedAt ?? role.lastUsedAt
+                  ? new Date(
+                      (usage?.lastUsedAt ?? role.lastUsedAt) as string | Date,
+                    ).toLocaleDateString()
                   : "Never"}
               </span>
             </div>

@@ -62,10 +62,21 @@ export async function resolveRolePermissions(
     workspaceId: string | null;
   }[];
 
+  // Tenant boundary. Note the `!== null` half: a custom role row whose
+  // workspaceId is NULL must NOT resolve anywhere. Accepting NULL as
+  // "matches every workspace" (the previous behaviour) made such a row a
+  // global grant in EVERY workspace — the one non-fail-closed path in this
+  // function, and a direct contradiction of the rule that a custom role
+  // always belongs to exactly one workspace (createRole rejects a missing
+  // workspaceId, and the column is only ever NULL for seeded system roles,
+  // which never reach this branch because isSystemRoleId returned early
+  // above). Unreachable through the API as written, but the whole point of
+  // this function is that it fails closed on anything unexpected.
   let permissions: Record<string, boolean> = {};
   if (
     row?.permissions &&
-    (row.workspaceId === null || row.workspaceId === workspaceId)
+    row.workspaceId !== null &&
+    row.workspaceId === workspaceId
   ) {
     permissions = permissionsToRecord(row.permissions);
   }

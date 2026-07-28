@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Check, PlusIcon, Search, Tag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 const labelColors = [
   { value: "gray", label: "Grey", color: "#94a3b8" },
@@ -134,7 +135,7 @@ function TaskLabels({
 
       await queryClient.invalidateQueries({ queryKey: ["labels", taskId] });
     } catch (error) {
-      toast.error("Failed to update labels");
+      toast.error(userMessage(error, "update the labels"));
       console.error(error);
 
       if (labels?.length) {
@@ -170,7 +171,7 @@ function TaskLabels({
       searchInputRef.current?.focus();
     } catch (error) {
       console.error("Failed to create label:", error);
-      toast.error("Failed to create label");
+      toast.error(userMessage(error, "create the label"));
     } finally {
       setIsSaving(false);
     }
