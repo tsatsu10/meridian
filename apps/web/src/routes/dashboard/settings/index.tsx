@@ -257,21 +257,27 @@ function SettingsIndex() {
             transition={{ delay: 1 }}
             className="text-center mt-16 p-6 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-700/20"
           >
+            {/* This read "check out our documentation or contact support",
+             * with both phrases as <button>s that had no onClick and no
+             * destination — there is no docs site and no support route. Two
+             * controls that look like links and do nothing are worse than no
+             * offer at all, so the copy now points at something that exists.
+             * Restore a documentation/support link here once either does. */}
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Need help configuring something? Check out our{" "}
-              <button
-                type="button"
-                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              Looking for something else? Workspace-wide options live under{" "}
+              <Link
+                to="/dashboard/settings/workspace"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
               >
-                documentation
-              </button>{" "}
-              or{" "}
-              <button
-                type="button"
-                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                Workspace
+              </Link>
+              , and per-account options under{" "}
+              <Link
+                to="/dashboard/settings/profile"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
               >
-                contact support
-              </button>
+                Profile
+              </Link>
               .
             </p>
           </motion.div>

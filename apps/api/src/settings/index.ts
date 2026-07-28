@@ -22,6 +22,8 @@ import { createId } from "@paralleldrive/cuid2";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { authMiddleware } from "../middlewares/secure-auth";
+import { requireWorkspacePermission } from "../middlewares/rbac";
+import type { PermissionAction } from "../types/rbac";
 
 // Import email settings controllers
 import getEmailSettings from "./controllers/get-email-settings";
@@ -51,7 +53,7 @@ import {
   exportAuditLogs,
 } from "./controllers/audit-log-settings";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 
 // Import backup controllers
 import {
@@ -138,6 +140,52 @@ import {
 } from "./controllers/filters";
 
 const app = new Hono<{ Variables: { userEmail: string } }>();
+
+/**
+ * 🚨 SECURITY: every workspace-scoped settings route below took a
+ * :workspaceId straight from the path and performed NO authorization on it.
+ * Verified live — a guest who belonged to a different workspace entirely could
+ * read another workspace's SMTP configuration (including the smtpPassword
+ * field), its calendar integration config, and its audit log complete with
+ * other users' email addresses and actions. Backups could be listed,
+ * downloaded, restored and deleted the same way.
+ *
+ * These guards are declared as middleware over the path prefix rather than
+ * repeated on ~36 individual routes, so a newly added route under one of these
+ * prefixes is protected by default instead of only when someone remembers.
+ * Each prefix needs BOTH patterns: the bare form matches the collection route,
+ * the wildcard matches everything beneath it.
+ *
+ * They also give three previously-dead permissions something to gate:
+ * canViewAuditLogs, canManageBackups and canManageIntegrations were defined in
+ * the role matrix but checked nowhere.
+ *
+ * Chosen deliberately strict, because each prefix is administrative data:
+ * mutations and reads share one permission so that "can read the audit log"
+ * cannot drift into "can rewrite its retention settings".
+ */
+const WORKSPACE_SETTINGS_GUARDS: [string, PermissionAction][] = [
+  // SMTP credentials live here.
+  ["/email/:workspaceId", "canManageWorkspaceSettings"],
+  // Third-party calendar integration config.
+  ["/calendar/:workspaceId", "canManageIntegrations"],
+  // Other users' actions and email addresses.
+  ["/audit/:workspaceId", "canViewAuditLogs"],
+  // Download and restore of full workspace backups.
+  ["/backup/:workspaceId", "canManageBackups"],
+  // Workspace role configuration.
+  ["/roles/:workspaceId", "canManageRoles"],
+  ["/localization/:workspaceId", "canManageWorkspaceSettings"],
+  ["/shortcuts/:workspaceId", "canManageWorkspaceSettings"],
+  ["/filters/:workspaceId", "canManageWorkspaceSettings"],
+  ["/search/:workspaceId", "canViewWorkspace"],
+];
+
+for (const [prefix, permission] of WORKSPACE_SETTINGS_GUARDS) {
+  const guard = requireWorkspacePermission(permission, "workspaceId");
+  app.use(prefix, guard);
+  app.use(`${prefix}/*`, guard);
+}
 
 // Root endpoint - Get current user's settings
 app.get("/", async (c) => {
@@ -1643,7 +1691,7 @@ app.get("/backup/:workspaceId/history", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get backup history:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1670,7 +1718,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create backup:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1690,7 +1738,7 @@ app.post("/backup/:workspaceId/:backupId/restore", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to restore backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1709,7 +1757,7 @@ app.get("/backup/:workspaceId/:backupId/download", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to download backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1728,7 +1776,7 @@ app.delete("/backup/:workspaceId/:backupId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1747,7 +1795,7 @@ app.post("/backup/:workspaceId/:backupId/verify", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to verify backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1767,7 +1815,7 @@ app.get("/roles/permissions", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get permissions:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1783,7 +1831,7 @@ app.get("/roles/templates", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get templates:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1801,7 +1849,7 @@ app.get("/roles/:workspaceId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get roles:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1824,7 +1872,7 @@ app.get("/roles/:workspaceId/:roleId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get role:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1859,7 +1907,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create role:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1895,7 +1943,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update role:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1915,7 +1963,7 @@ app.delete("/roles/:workspaceId/:roleId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete role:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1944,7 +1992,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to clone role:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1985,7 +2033,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to perform search:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2006,7 +2054,7 @@ app.get("/search/:workspaceId/suggestions", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get suggestions:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2025,7 +2073,7 @@ app.get("/search/:workspaceId/saved", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get saved searches:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2072,7 +2120,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to save search:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2122,7 +2170,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update saved search:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2143,7 +2191,7 @@ app.delete("/search/:workspaceId/saved/:searchId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete saved search:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2162,7 +2210,7 @@ app.post("/search/:workspaceId/saved/:searchId/use", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to record search usage:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -3440,6 +3488,24 @@ app.patch("/:userId/:section", async (c) => {
   try {
     const { updates: rawUpdates, version } = await c.req.json();
     const metadata = getClientMetadata(c);
+
+    // A body without an `updates` object left rawUpdates undefined, made the
+    // merge below a no-op, and still answered 200 with the full settings
+    // payload — so a caller with the wrong body shape saw a successful save
+    // that changed nothing. Reject it instead of reporting a phantom success.
+    if (
+      typeof rawUpdates !== "object" ||
+      rawUpdates === null ||
+      Array.isArray(rawUpdates)
+    ) {
+      return c.json(
+        {
+          error:
+            "Request body must be an object of the form { updates: { ... } }",
+        },
+        400,
+      );
+    }
 
     // Drop keys the server owns before storing anything. The GET above merges
     // the authoritative values over whatever is stored, so a forged

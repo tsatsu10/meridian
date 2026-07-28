@@ -4,6 +4,8 @@
  */
 
 import { eq } from "drizzle-orm";
+import { ErrorCodes } from "../../core/APIResponse";
+import { CustomError } from "../../core/ErrorHandler";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
 
@@ -156,86 +158,72 @@ export interface BackupRecord {
   storagePath: string;
 }
 
-// Mock function - would integrate with actual backup system
+/**
+ * ⚠️ The backup *operations* below are not implemented.
+ *
+ * Backup *settings* (everything above) are real and persist. The operations
+ * were stubs that returned confident success: createManualBackup invented a
+ * `backup_<timestamp>` id and answered "Backup initiated successfully",
+ * restoreFromBackup answered "Your workspace will be restored shortly",
+ * verifyBackup reported a checksum for a file that does not exist, and
+ * getBackupHistory returned [] so nothing ever contradicted them. No backup
+ * was ever written, and the Data Management page could not reach these routes
+ * anyway because it called them at the wrong URL.
+ *
+ * Now that the page's URLs are fixed, silent stubs would be actively
+ * dangerous: the UI would confirm backups and restores that never happened,
+ * on the one feature people rely on precisely when data is at stake. So they
+ * fail loudly with 501 until a real backup system exists. Replace the throw,
+ * not the signature, when implementing.
+ */
+export class BackupNotImplementedError extends CustomError {
+  constructor(operation: string) {
+    super(
+      `Backup ${operation} is not available: this deployment has no backup system configured.`,
+      ErrorCodes.INTERNAL_ERROR,
+      501,
+    );
+  }
+}
+
 export async function getBackupHistory(
-  workspaceId: string,
-  limit = 50,
+  _workspaceId: string,
+  _limit = 50,
 ): Promise<BackupRecord[]> {
-  // This would query actual backup records from database
-  // For now, return mock data
-  return [];
+  throw new BackupNotImplementedError("history");
 }
 
-// Trigger manual backup
 export async function createManualBackup(
-  workspaceId: string,
-  includeFiles = false,
+  _workspaceId: string,
+  _includeFiles = false,
 ): Promise<{ backupId: string; message: string }> {
-  // This would trigger actual backup process
-  // For now, return mock response
-  const backupId = `backup_${Date.now()}`;
-
-  return {
-    backupId,
-    message:
-      "Backup initiated successfully. This may take several minutes to complete.",
-  };
+  throw new BackupNotImplementedError("creation");
 }
 
-// Restore from backup
 export async function restoreFromBackup(
-  workspaceId: string,
-  backupId: string,
+  _workspaceId: string,
+  _backupId: string,
 ): Promise<{ message: string }> {
-  // This would trigger actual restore process
-  // For now, return mock response
-  return {
-    message:
-      "Restore process initiated. Your workspace will be restored shortly.",
-  };
+  throw new BackupNotImplementedError("restore");
 }
 
-// Download backup
 export async function downloadBackup(
-  workspaceId: string,
-  backupId: string,
+  _workspaceId: string,
+  _backupId: string,
 ): Promise<{ downloadUrl: string; expiresAt: Date }> {
-  // This would generate signed URL for backup download
-  // For now, return mock response
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + 1);
-
-  return {
-    downloadUrl: `/api/backups/${workspaceId}/${backupId}/download`,
-    expiresAt,
-  };
+  throw new BackupNotImplementedError("download");
 }
 
-// Delete backup
 export async function deleteBackup(
-  workspaceId: string,
-  backupId: string,
+  _workspaceId: string,
+  _backupId: string,
 ): Promise<{ message: string }> {
-  // This would delete actual backup file
-  // For now, return mock response
-  return {
-    message: "Backup deleted successfully",
-  };
+  throw new BackupNotImplementedError("deletion");
 }
 
-// Verify backup integrity
 export async function verifyBackup(
-  workspaceId: string,
-  backupId: string,
+  _workspaceId: string,
+  _backupId: string,
 ): Promise<{ valid: boolean; message: string; details?: unknown }> {
-  // This would verify backup file integrity
-  // For now, return mock response
-  return {
-    valid: true,
-    message: "Backup integrity verified successfully",
-    details: {
-      checksum: "abc123",
-      itemsVerified: 1000,
-    },
-  };
+  throw new BackupNotImplementedError("verification");
 }

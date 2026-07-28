@@ -41,6 +41,27 @@ import useWorkspaceStore from "@/store/workspace";
 import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
 import type { Notification } from "@/types/notification";
 
+/**
+ * Section headings for the settings sidebar.
+ *
+ * Deliberately separate from `category` below: that union is shared by every
+ * navigation surface and drives `getNavigationItemStyle`, so it only ever
+ * emits "utility"/"workspace" for settings items — which is why the old
+ * settings layout, whose heading map knew only personal/security/workspace,
+ * would have rendered a section literally titled "utility" had it ever been
+ * reachable. Grouping is a settings concern, so it gets its own field.
+ *
+ * Key order here is the render order of the sidebar sections.
+ */
+export const SETTINGS_GROUP_TITLES = {
+  personal: "Personal",
+  security: "Security & Privacy",
+  workspace: "Workspace",
+  data: "Data & Integrations",
+} as const;
+
+export type SettingsGroup = keyof typeof SETTINGS_GROUP_TITLES;
+
 // Navigation item interface with enhanced properties
 export interface NavigationItem {
   id: string;
@@ -49,6 +70,8 @@ export interface NavigationItem {
   icon: LucideIcon;
   href: string;
   category: "main" | "project" | "workspace" | "utility" | "development";
+  /** Settings-sidebar section. Ignored by every other navigation surface. */
+  group?: SettingsGroup;
   badge?: number;
   shortcut?: string;
   color?: string;
@@ -156,6 +179,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "profile",
         label: "Profile",
+        group: "personal" as const,
         icon: Layers,
         href: "/dashboard/settings/profile",
         category: "utility" as const,
@@ -163,6 +187,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "appearance",
         label: "Appearance",
+        group: "personal" as const,
         icon: Layers,
         href: "/dashboard/settings/appearance",
         category: "utility" as const,
@@ -170,6 +195,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "notifications-settings",
         label: "Notifications",
+        group: "personal" as const,
         icon: Bell,
         href: "/dashboard/settings/notifications",
         category: "utility" as const,
@@ -177,6 +203,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "shortcuts",
         label: "Keyboard Shortcuts",
+        group: "personal" as const,
         icon: Terminal,
         href: "/dashboard/settings/shortcuts",
         category: "utility" as const,
@@ -185,6 +212,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "security",
         label: "Security",
+        group: "security" as const,
         icon: Shield,
         href: "/dashboard/settings/security",
         category: "utility" as const,
@@ -192,6 +220,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "api-settings",
         label: "API & Webhooks",
+        group: "security" as const,
         icon: FileCode,
         href: "/dashboard/settings/api",
         category: "utility" as const,
@@ -200,6 +229,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "audit-logs",
         label: "Audit Logs",
+        group: "security" as const,
         icon: FileText,
         href: "/dashboard/settings/audit-logs",
         category: "utility" as const,
@@ -210,6 +240,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "workspace-settings",
         label: "Workspace",
+        group: "workspace" as const,
         icon: Layout,
         href: "/dashboard/settings/workspace",
         category: "workspace" as const,
@@ -217,6 +248,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "team-management",
         label: "Team Management",
+        group: "workspace" as const,
         icon: Users,
         href: "/dashboard/settings/team-management",
         category: "workspace" as const,
@@ -224,6 +256,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "roles-unified",
         label: "Roles & Permissions",
+        group: "workspace" as const,
         icon: Shield,
         href: "/dashboard/settings/roles-unified",
         category: "workspace" as const,
@@ -233,6 +266,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "data-management",
         label: "Data Management",
+        group: "data" as const,
         icon: Database,
         href: "/dashboard/settings/data-management",
         category: "utility" as const,
@@ -240,6 +274,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "calendar",
         label: "Calendar",
+        group: "data" as const,
         icon: Calendar,
         href: "/dashboard/settings/calendar",
         category: "utility" as const,
@@ -247,6 +282,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "filters",
         label: "Advanced Filters",
+        group: "data" as const,
         icon: Search,
         href: "/dashboard/settings/filters",
         category: "utility" as const,
@@ -256,6 +292,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "email-settings",
         label: "Email & SMTP",
+        group: "data" as const,
         icon: MessageSquare,
         href: "/dashboard/settings/email",
         category: "utility" as const,
@@ -263,6 +300,7 @@ export const useSettingsNavigation = (): NavigationItem[] => {
       {
         id: "localization",
         label: "Localization",
+        group: "data" as const,
         icon: Globe,
         href: "/dashboard/settings/localization",
         category: "utility" as const,

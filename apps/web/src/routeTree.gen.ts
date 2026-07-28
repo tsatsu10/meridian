@@ -45,7 +45,6 @@ import { Route as DashboardSettingsCalendarRouteImport } from './routes/dashboar
 import { Route as DashboardSettingsAuditLogsRouteImport } from './routes/dashboard/settings/audit-logs'
 import { Route as DashboardSettingsAppearanceRouteImport } from './routes/dashboard/settings/appearance'
 import { Route as DashboardSettingsApiRouteImport } from './routes/dashboard/settings/api'
-import { Route as DashboardSettingsLayoutRouteImport } from './routes/dashboard/settings/_layout'
 import { Route as DashboardProfileUserIdRouteImport } from './routes/dashboard/profile/$userId'
 import { Route as DashboardAdminRolesRouteImport } from './routes/dashboard/admin/roles'
 import { Route as DashboardWorkspaceSettingsWorkspaceIdIndexRouteImport } from './routes/dashboard/workspace-settings/$workspaceId/index'
@@ -263,10 +262,6 @@ const DashboardSettingsApiRoute = DashboardSettingsApiRouteImport.update({
   path: '/api',
   getParentRoute: () => DashboardSettingsRoute,
 } as any)
-const DashboardSettingsLayoutRoute = DashboardSettingsLayoutRouteImport.update({
-  id: '/_layout',
-  getParentRoute: () => DashboardSettingsRoute,
-} as any)
 const DashboardProfileUserIdRoute = DashboardProfileUserIdRouteImport.update({
   id: '/profile/$userId',
   path: '/profile/$userId',
@@ -478,7 +473,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
-  '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
@@ -495,6 +489,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/notifications': typeof DashboardNotificationsIndexRoute
+  '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
   '/dashboard/teams/$workspaceId': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
   '/dashboard/workspace/$workspaceId/templates': typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
@@ -536,7 +531,6 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
-  '/dashboard/settings/_layout': typeof DashboardSettingsLayoutRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
@@ -654,7 +648,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/admin/roles'
     | '/dashboard/profile/$userId'
-    | '/dashboard/settings'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
     | '/dashboard/settings/audit-logs'
@@ -671,6 +664,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/team-management'
     | '/dashboard/settings/workspace'
     | '/dashboard/notifications'
+    | '/dashboard/settings'
     | '/dashboard/settings/roles-unified/$roleId'
     | '/dashboard/teams/$workspaceId'
     | '/dashboard/workspace/$workspaceId/templates'
@@ -711,7 +705,6 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/admin/roles'
     | '/dashboard/profile/$userId'
-    | '/dashboard/settings/_layout'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
     | '/dashboard/settings/audit-logs'
@@ -1015,13 +1008,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsApiRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
-    '/dashboard/settings/_layout': {
-      id: '/dashboard/settings/_layout'
-      path: ''
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsLayoutRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
     '/dashboard/profile/$userId': {
       id: '/dashboard/profile/$userId'
       path: '/profile/$userId'
@@ -1188,7 +1174,6 @@ const DashboardSettingsRolesUnifiedRouteWithChildren =
   )
 
 interface DashboardSettingsRouteChildren {
-  DashboardSettingsLayoutRoute: typeof DashboardSettingsLayoutRoute
   DashboardSettingsApiRoute: typeof DashboardSettingsApiRoute
   DashboardSettingsAppearanceRoute: typeof DashboardSettingsAppearanceRoute
   DashboardSettingsAuditLogsRoute: typeof DashboardSettingsAuditLogsRoute
@@ -1208,7 +1193,6 @@ interface DashboardSettingsRouteChildren {
 }
 
 const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
-  DashboardSettingsLayoutRoute: DashboardSettingsLayoutRoute,
   DashboardSettingsApiRoute: DashboardSettingsApiRoute,
   DashboardSettingsAppearanceRoute: DashboardSettingsAppearanceRoute,
   DashboardSettingsAuditLogsRoute: DashboardSettingsAuditLogsRoute,

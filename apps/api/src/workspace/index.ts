@@ -25,7 +25,7 @@ import {
   validateRBACCompliance,
 } from "../middlewares/security-audit";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 
 const workspace = new Hono<{
   Variables: {
@@ -339,13 +339,21 @@ workspace.patch(
         workspace: updatedWorkspace,
       });
     } catch (error) {
-      logger.error("Failed to update workspace settings:", error);
+      // Authorization failures and missing workspaces used to come back as
+      // 500, indistinguishable from a genuine crash to both the client and to
+      // monitoring — a workspace-manager denied by the role check saw "server
+      // error". CustomError carries the status the controller intended, so
+      // honour it and reserve 500 for the unexpected.
+      const status = statusCodeOf(error);
+      if (status >= 500) {
+        logger.error("Failed to update workspace settings:", error);
+      }
       return c.json(
         {
           error:
             getErrorMessage(error) || "Failed to update workspace settings",
         },
-        500,
+        status,
       );
     }
   },

@@ -66,6 +66,7 @@ import {
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { useWorkspaceStore } from "@/store/workspace";
 import { API_BASE_URL } from "@/constants/urls";
+import { apiErrorFrom } from "@/lib/api/api-error";
 import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
@@ -200,14 +201,14 @@ function DataManagementSettings() {
     queryKey: ["backup-settings", currentWorkspace?.id],
     queryFn: async () => {
       const response = await fetch(
-        `${API_BASE_URL}/settings/backup?workspaceId=${currentWorkspace?.id}`,
+        `${API_BASE_URL}/settings/backup/${currentWorkspace?.id}/settings`,
         {
           credentials: "include",
         },
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch backup settings");
+        throw await apiErrorFrom(response, "Failed to fetch backup settings");
       }
 
       const result = await response.json();
@@ -221,14 +222,14 @@ function DataManagementSettings() {
     queryKey: ["backup-history", currentWorkspace?.id],
     queryFn: async () => {
       const response = await fetch(
-        `${API_BASE_URL}/settings/backup/history?workspaceId=${currentWorkspace?.id}&limit=10`,
+        `${API_BASE_URL}/settings/backup/${currentWorkspace?.id}/history?limit=10`,
         {
           credentials: "include",
         },
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch backup history");
+        throw await apiErrorFrom(response, "Failed to fetch backup history");
       }
 
       const result = await response.json();
@@ -249,7 +250,7 @@ function DataManagementSettings() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch templates");
+        throw await apiErrorFrom(response, "Failed to fetch templates");
       }
 
       const result = await response.json();
@@ -268,9 +269,11 @@ function DataManagementSettings() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${API_BASE_URL}/settings/backup?workspaceId=${currentWorkspace?.id}`,
+        `${API_BASE_URL}/settings/backup/${currentWorkspace?.id}/settings`,
         {
-          method: "PUT",
+          // PATCH, not PUT — the API registers this route as app.patch, so a
+          // PUT never matched it at all.
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
@@ -280,7 +283,7 @@ function DataManagementSettings() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to save backup settings");
+        throw await apiErrorFrom(response, "Failed to save backup settings");
       }
 
       return response.json();
@@ -301,7 +304,7 @@ function DataManagementSettings() {
   const manualBackupMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${API_BASE_URL}/settings/backup/create?workspaceId=${currentWorkspace?.id}`,
+        `${API_BASE_URL}/settings/backup/${currentWorkspace?.id}/create`,
         {
           method: "POST",
           credentials: "include",
@@ -309,7 +312,7 @@ function DataManagementSettings() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to create backup");
+        throw await apiErrorFrom(response, "Failed to create backup");
       }
 
       return response.json();
@@ -335,7 +338,7 @@ function DataManagementSettings() {
       includeRoles: boolean;
     }) => {
       const response = await fetch(
-        `${API_BASE_URL}/settings/import-export/export?workspaceId=${currentWorkspace?.id}`,
+        `${API_BASE_URL}/settings/import-export/${currentWorkspace?.id}/export`,
         {
           method: "POST",
           headers: {
@@ -347,7 +350,7 @@ function DataManagementSettings() {
       );
 
       if (!response.ok) {
-        throw new Error("Export failed");
+        throw await apiErrorFrom(response, "Export failed");
       }
 
       return response.blob();
@@ -380,7 +383,7 @@ function DataManagementSettings() {
       skipDuplicates: boolean;
     }) => {
       const response = await fetch(
-        `${API_BASE_URL}/settings/import-export/import?workspaceId=${currentWorkspace?.id}`,
+        `${API_BASE_URL}/settings/import-export/${currentWorkspace?.id}/import`,
         {
           method: "POST",
           headers: {
@@ -392,7 +395,7 @@ function DataManagementSettings() {
       );
 
       if (!response.ok) {
-        throw new Error("Import failed");
+        throw await apiErrorFrom(response, "Import failed");
       }
 
       const result = await response.json();
