@@ -7,7 +7,7 @@
 import type React from "react";
 import { getErrorMessage } from "@/lib/error-utils";
 import { useState, useRef, useEffect } from "react";
-import { Shield, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Shield, ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import {
@@ -17,7 +17,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Alert, AlertDescription } from "../ui/alert";
 
 interface TwoFactorVerifyProps {
   userId: string;
@@ -143,13 +142,15 @@ export function TwoFactorVerify({
   };
 
   return (
-    <Card className="max-w-md mx-auto">
-      <CardHeader>
+    <Card className="mx-auto max-w-md border-white/15 bg-white/5">
+      <CardHeader className="border-white/10">
         <div className="flex items-center gap-3">
-          <Shield className="h-8 w-8 text-primary" />
+          <Shield className="h-8 w-8 text-[#2DD4BF]" />
           <div>
-            <CardTitle>Two-Factor Authentication</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">
+              Two-Factor Authentication
+            </CardTitle>
+            <CardDescription className="text-white/60">
               {showBackupCode
                 ? "Enter a backup code"
                 : "Enter the code from your authenticator app"}
@@ -175,13 +176,15 @@ export function TwoFactorVerify({
                   value={digit}
                   onChange={(e) => handleCodeChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
+                  aria-describedby={error ? "tfa-verify-error" : undefined}
+                  aria-invalid={error ? true : undefined}
                   disabled={loading}
-                  className="w-12 h-14 text-center text-2xl font-mono"
+                  className="h-14 w-12 border-white/15 bg-white/5 text-center font-mono text-2xl text-white focus-visible:ring-[#2DD4BF]"
                 />
               ))}
             </div>
 
-            <p className="text-xs text-center text-muted-foreground">
+            <p className="text-xs text-center text-white/50">
               Open your authenticator app and enter the 6-digit code
             </p>
           </>
@@ -189,7 +192,10 @@ export function TwoFactorVerify({
           <>
             {/* Backup code input */}
             <div className="space-y-3">
-              <label htmlFor="tfa-backup-code" className="text-sm font-medium">
+              <label
+                htmlFor="tfa-backup-code"
+                className="text-sm font-medium text-white/80"
+              >
                 Backup Code
               </label>
               <Input
@@ -201,10 +207,12 @@ export function TwoFactorVerify({
                   setBackupCode(e.target.value.toUpperCase());
                   setError(null);
                 }}
+                aria-describedby={error ? "tfa-verify-error" : undefined}
+                aria-invalid={error ? true : undefined}
                 maxLength={8}
-                className="text-center font-mono text-lg tracking-wider"
+                className="border-white/15 bg-white/5 text-center font-mono text-lg tracking-wider text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-white/50">
                 Use one of the backup codes you saved during setup
               </p>
             </div>
@@ -212,7 +220,7 @@ export function TwoFactorVerify({
             <Button
               onClick={handleVerifyBackupCode}
               disabled={loading || backupCode.length < 6}
-              className="w-full"
+              className="h-12 w-full bg-[#2DD4BF] font-semibold text-[#06121A] hover:bg-[#5FE3D3]"
             >
               {loading ? "Verifying..." : "Verify Backup Code"}
             </Button>
@@ -220,10 +228,13 @@ export function TwoFactorVerify({
         )}
 
         {error && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <p
+            id="tfa-verify-error"
+            aria-live="polite"
+            className="text-sm text-red-300"
+          >
+            {error}
+          </p>
         )}
 
         {/* Toggle backup code */}
@@ -236,7 +247,7 @@ export function TwoFactorVerify({
               setCode(["", "", "", "", "", ""]);
               setBackupCode("");
             }}
-            className="text-sm"
+            className="text-sm text-white/70 hover:bg-white/10 hover:text-white"
           >
             {showBackupCode ? (
               <>
@@ -249,16 +260,20 @@ export function TwoFactorVerify({
           </Button>
 
           {onCancel && (
-            <Button variant="ghost" onClick={onCancel} className="text-sm">
+            <Button
+              variant="ghost"
+              onClick={onCancel}
+              className="text-sm text-white/70 hover:bg-white/10 hover:text-white"
+            >
               Cancel & sign out
             </Button>
           )}
         </div>
 
         {/* Help text */}
-        <div className="pt-4 border-t space-y-2">
-          <h4 className="text-sm font-medium">Having trouble?</h4>
-          <ul className="text-xs text-muted-foreground space-y-1">
+        <div className="space-y-2 border-t border-white/10 pt-4">
+          <h4 className="text-sm font-medium text-white/80">Having trouble?</h4>
+          <ul className="space-y-1 text-xs text-white/50">
             <li>• Make sure your device's time is correct</li>
             <li>• Try refreshing the code in your authenticator app</li>
             <li>• Use a backup code if you don't have access to your phone</li>

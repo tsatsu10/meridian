@@ -1,5 +1,7 @@
-import { AuthLayout } from "@/components/auth/layout";
+import { AuroraBackdrop } from "@/components/auth/aurora-backdrop";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { GlassPanel } from "@/components/auth/glass-panel";
+import { MeridianMark } from "@/components/branding/meridian-mark";
 import PageTitle from "@/components/page-title";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -11,14 +13,23 @@ function ForgotPassword() {
   return (
     <>
       <PageTitle title="Forgot Password" />
-      <AuthLayout
-        title="Forgot Password?"
-        subtitle="Enter your email to reset your password"
-        gradientFrom="from-green-400 via-blue-400 to-purple-400"
-        gradientTo="to-indigo-600"
-      >
-        <ForgotPasswordForm />
-      </AuthLayout>
+      <div className="relative flex min-h-svh items-center justify-center p-4">
+        <AuroraBackdrop />
+        <div className="relative z-10 w-full max-w-md">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <MeridianMark className="mb-4 h-12 w-12" />
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-white">
+              Forgot password?
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
+              Enter your email to reset your password
+            </p>
+          </div>
+          <GlassPanel>
+            <ForgotPasswordForm />
+          </GlassPanel>
+        </div>
+      </div>
     </>
   );
 }

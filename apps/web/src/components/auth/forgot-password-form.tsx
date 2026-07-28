@@ -52,27 +52,27 @@ export function ForgotPasswordForm() {
 
   if (isSubmitted) {
     return (
-      <div className="text-center space-y-6">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-          <Mail className="w-8 h-8 text-green-600" />
+      <div className="space-y-6 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#2DD4BF]/10">
+          <Mail className="h-8 w-8 text-[#2DD4BF]" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="mb-2 text-lg font-semibold text-white">
             Check your email
           </h3>
-          <p className="text-gray-600 text-sm leading-relaxed">
+          <p className="text-sm leading-relaxed text-white/60">
             We've sent a password reset link to{" "}
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-white">
               {form.getValues("email")}
             </span>
           </p>
         </div>
         <Button
           variant="outline"
-          className="w-full h-12 rounded-xl"
+          className="h-12 w-full border-white/15 bg-white/5 text-white/80 hover:border-white/25 hover:bg-white/10 hover:text-white"
           onClick={() => setIsSubmitted(false)}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to form
         </Button>
       </div>
@@ -89,19 +89,27 @@ export function ForgotPasswordForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium text-gray-700 mb-2 block">
-                  Email
-                </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <FormLabel className="text-white/80">Email</FormLabel>
+                <div className="relative">
+                  {/* FormControl's Slot forwards id/aria-describedby/aria-invalid
+                   * onto its single direct child, so the Input has to be that
+                   * child directly — wrapping it in this positioning div here
+                   * (instead of inside FormControl) is what keeps the label's
+                   * htmlFor pointing at the actual input. */}
+                  <FormControl>
                     <Input
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      autoComplete="email"
+                      autoFocus
+                      className="h-12 border-white/15 bg-white/5 pl-10 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
                       placeholder="Enter your email address"
                       {...field}
                     />
-                  </div>
-                </FormControl>
+                  </FormControl>
+                  <Mail
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40"
+                  />
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -111,7 +119,7 @@ export function ForgotPasswordForm() {
           <Button
             type="submit"
             disabled={isPending}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="h-12 w-full bg-[#2DD4BF] font-semibold text-[#06121A] hover:bg-[#5FE3D3]"
           >
             {isPending ? "Sending..." : "Submit"}
           </Button>
@@ -121,7 +129,7 @@ export function ForgotPasswordForm() {
       {/* Cancel Button */}
       <Button
         variant="outline"
-        className="w-full h-12 border-gray-200 hover:bg-gray-50 rounded-xl transition-all duration-200"
+        className="h-12 w-full border-white/15 bg-white/5 text-white/80 hover:border-white/25 hover:bg-white/10 hover:text-white"
         asChild
       >
         <a href="/auth/sign-in">Cancel</a>
