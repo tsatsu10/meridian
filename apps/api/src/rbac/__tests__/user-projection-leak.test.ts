@@ -18,9 +18,14 @@
  * it is what regressed.
  *
  * NOTE: this file deliberately does NOT assert anything about authorization
- * on these routes. GET /history/:userId and GET /departments have no
- * permission middleware at all, which is a separate (larger) change; the fix
- * under test here is only the credential projection.
+ * on these routes. That scoping now exists (rbac/lib/workspace-scope.ts) and
+ * is covered by lib/__tests__/workspace-scope.integration.test.ts against a
+ * real database; the fix under test HERE is only the credential projection.
+ *
+ * The scoping module is stubbed below so each route runs past its tenant
+ * filter and reaches the projection. Without the stub the helpers return an
+ * empty list from the mock db, every route short-circuits to an empty
+ * response, and these assertions would silently test nothing.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -57,6 +62,14 @@ vi.mock("../../roles/lib/resolve-role-permissions", () => ({
   invalidateRoleCache: vi.fn(),
 }));
 
+// Stubbed so the routes get past their tenant filter — see the header note.
+vi.mock("../lib/workspace-scope", () => ({
+  memberWorkspaceIds: vi.fn(async () => ["ws-1"]),
+  workspaceIdsGranting: vi.fn(async () => ["ws-1"]),
+  userIdForEmail: vi.fn(async () => "caller-1"),
+  visibleWorkspaceIdsOrNone: (visible: string[]) => visible,
+}));
+
 const mockDb = createMockDb();
 
 /** Columns that must never leave the database on any of these routes. */
@@ -74,10 +87,25 @@ function buildApp() {
   });
 }
 
-/** The projection object handed to the first db.select() of the request. */
-function firstProjection(): Record<string, unknown> {
-  return (mockDb.select as unknown as { mock: { calls: unknown[][] } }).mock
-    .calls[0]?.[0] as Record<string, unknown>;
+/**
+ * The projection handed to the db.select() that actually joins the user table
+ * — located by the key the route projects it under, NOT by call index. A
+ * request now issues several selects (tenant scoping runs first), and indexing
+ * into the first one silently inspected the wrong query.
+ */
+function projectionContaining(key: string): Record<string, unknown> {
+  const calls = (mockDb.select as unknown as { mock: { calls: unknown[][] } })
+    .mock.calls;
+  const match = calls
+    .map((call) => call[0] as Record<string, unknown> | undefined)
+    .find((projection) => projection && key in projection);
+
+  if (!match) {
+    throw new Error(
+      `no db.select() projected a "${key}" key — the route did not reach its user join (${calls.length} select call(s) made)`,
+    );
+  }
+  return match;
 }
 
 describe("RBAC read routes must not project user credentials", () => {
@@ -108,7 +136,7 @@ describe("RBAC read routes must not project user credentials", () => {
 
     expect(res.status).toBe(200);
 
-    const projected = firstProjection()[key] as Record<string, unknown>;
+    const projected = projectionContaining(key)[key] as Record<string, unknown>;
     const columns = Object.keys(projected);
 
     expect(columns.sort()).toEqual(["avatar", "email", "id", "name"]);

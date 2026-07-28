@@ -1,32 +1,87 @@
 import { Hono } from "hono";
 import { getDatabase } from "../database/connection";
-import { userTable, settingsAuditLogTable } from "../database/schema";
-import { eq, and, gte, desc, sql, count } from "drizzle-orm";
+import {
+  userTable,
+  settingsAuditLogTable,
+  workspaceUserTable,
+} from "../database/schema";
+import { and, gte, desc, sql, count, inArray } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
+import { memberWorkspaceIds } from "./lib/workspace-scope";
 import logger from "../utils/logger";
 
-const rbacStats = new Hono();
+/**
+ * 🚨 SECURITY: every route here used to answer instance-wide.
+ *
+ * `/stats` counted every user in the deployment, `/distribution` broke every
+ * user down by role, and `/recent-changes` returned the last 20 role and
+ * permission changes *including the email address of each user involved* — all
+ * to any authenticated caller, in a multi-tenant product. A member of one
+ * workspace could size up the whole instance and harvest addresses.
+ *
+ * They are now scoped to the people the caller actually shares a workspace
+ * with. That set is computed once per request by `visibleUserEmails` below.
+ */
 
-// Get overall access control stats
+const rbacStats = new Hono<{ Variables: { userEmail: string } }>();
+
+/**
+ * Emails of every user who shares at least one workspace with the caller
+ * (including the caller). Returns an empty array when the caller belongs to no
+ * workspace — callers MUST treat that as "nothing visible" and return an empty
+ * result, never an unfiltered query: `inArray(column, [])` is not reliably a
+ * false predicate across query builders.
+ */
+async function visibleUserEmails(userEmail: string | undefined) {
+  const workspaces = await memberWorkspaceIds(userEmail);
+  if (workspaces.length === 0) return [];
+
+  const rows = await getDatabase()
+    .select({ userEmail: workspaceUserTable.userEmail })
+    .from(workspaceUserTable)
+    .where(inArray(workspaceUserTable.workspaceId, workspaces));
+
+  return [...new Set(rows.map((row) => row.userEmail))];
+}
+
+// Get access control stats, scoped to the caller's workspaces
 rbacStats.get("/stats", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const now = new Date();
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Total users
-    const totalUsers = await db.select({ count: count() }).from(userTable);
+    const emails = await visibleUserEmails(c.get("userEmail"));
+    if (emails.length === 0) {
+      return c.json({
+        totalUsers: 0,
+        activeUsers: 0,
+        rolesCount: 0,
+        recentChanges: 0,
+      });
+    }
+
+    const totalUsers = await db
+      .select({ count: count() })
+      .from(userTable)
+      .where(inArray(userTable.email, emails));
 
     // Active users (logged in within last 7 days)
     const activeUsers = await db
       .select({ count: count() })
       .from(userTable)
-      .where(gte(userTable.lastSeen, last7Days));
+      .where(
+        and(
+          gte(userTable.lastSeen, last7Days),
+          inArray(userTable.email, emails),
+        ),
+      );
 
     // Count unique roles
     const uniqueRoles = await db
       .select({ role: userTable.role })
       .from(userTable)
+      .where(inArray(userTable.email, emails))
       .groupBy(userTable.role);
 
     // Recent role changes
@@ -37,6 +92,7 @@ rbacStats.get("/stats", authMiddleware(), async (c) => {
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%'`,
           gte(settingsAuditLogTable.createdAt, last7Days),
+          inArray(settingsAuditLogTable.userEmail, emails),
         ),
       );
 
@@ -52,10 +108,15 @@ rbacStats.get("/stats", authMiddleware(), async (c) => {
   }
 });
 
-// Get role distribution
+// Get role distribution, scoped to the caller's workspaces
 rbacStats.get("/distribution", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
+
+    const emails = await visibleUserEmails(c.get("userEmail"));
+    if (emails.length === 0) {
+      return c.json([]);
+    }
 
     // Get user count per role
     const roleDistribution = await db
@@ -64,6 +125,7 @@ rbacStats.get("/distribution", authMiddleware(), async (c) => {
         count: count(),
       })
       .from(userTable)
+      .where(inArray(userTable.email, emails))
       .groupBy(userTable.role);
 
     // Get total users for percentage calculation
@@ -100,11 +162,16 @@ rbacStats.get("/distribution", authMiddleware(), async (c) => {
   }
 });
 
-// Get recent permission changes
+// Get recent permission changes, scoped to the caller's workspaces
 rbacStats.get("/recent-changes", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
     const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const emails = await visibleUserEmails(c.get("userEmail"));
+    if (emails.length === 0) {
+      return c.json([]);
+    }
 
     // Fetch role change audit logs
     const changes = await db
@@ -114,6 +181,7 @@ rbacStats.get("/recent-changes", authMiddleware(), async (c) => {
         and(
           sql`${settingsAuditLogTable.action} LIKE '%role%' OR ${settingsAuditLogTable.action} LIKE '%permission%'`,
           gte(settingsAuditLogTable.createdAt, last30Days),
+          inArray(settingsAuditLogTable.userEmail, emails),
         ),
       )
       .orderBy(desc(settingsAuditLogTable.createdAt))

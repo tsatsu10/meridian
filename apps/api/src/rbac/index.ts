@@ -13,7 +13,7 @@ import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import rbacStats from "./stats";
 import { z } from "zod";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, inArray } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
 import {
   roleAssignmentTable,
@@ -35,6 +35,11 @@ import {
   checkWorkspacePermission,
 } from "../middlewares/rbac";
 import { isSystemRoleId } from "../roles/lib/system-roles";
+import {
+  memberWorkspaceIds,
+  userIdForEmail,
+  workspaceIdsGranting,
+} from "./lib/workspace-scope";
 import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
 import {
   findExcessPermissions,
@@ -187,6 +192,16 @@ rbac.get("/assignments", requirePermission("canManageRoles"), async (c) => {
   try {
     const db = getDatabase();
 
+    // Empty means the caller administers no workspace: return nothing rather
+    // than an unfiltered list. `inArray(col, [])` must never be reached.
+    const manageableWorkspaces = await workspaceIdsGranting(
+      c.get("userEmail"),
+      "canManageRoles",
+    );
+    if (manageableWorkspaces.length === 0) {
+      return c.json({ assignments: [] });
+    }
+
     const assignments = await db
       .select({
         assignment: roleAssignmentTable,
@@ -206,7 +221,17 @@ rbac.get("/assignments", requirePermission("canManageRoles"), async (c) => {
       })
       .from(roleAssignmentTable)
       .leftJoin(userTable, eq(roleAssignmentTable.userId, userTable.id))
-      .where(eq(roleAssignmentTable.isActive, true))
+      // 🚨 SECURITY: scoped to the workspaces the caller can actually
+      // administer. This previously filtered on isActive alone, so it returned
+      // EVERY active assignment in the entire instance — joined to each user's
+      // name and email — to anyone who cleared the coarse permission gate. A
+      // cross-tenant directory leak.
+      .where(
+        and(
+          eq(roleAssignmentTable.isActive, true),
+          inArray(roleAssignmentTable.workspaceId, manageableWorkspaces),
+        ),
+      )
       .orderBy(desc(roleAssignmentTable.assignedAt));
 
     return c.json({ assignments });
@@ -963,6 +988,24 @@ rbac.get("/history/:userId", async (c) => {
     const db = getDatabase();
     const userId = c.req.param("userId");
 
+    // 🚨 SECURITY: this route had NO authorization at all — any authenticated
+    // user could read any other user's complete role history. Callers may read
+    // their own history; otherwise they see only the entries belonging to
+    // workspaces they administer. Rows with a null workspaceId cannot be
+    // attributed to a tenant, so they are visible only on the self path.
+    const isSelf = (await userIdForEmail(c.get("userEmail"))) === userId;
+
+    let workspaceFilter: string[] = [];
+    if (!isSelf) {
+      workspaceFilter = await workspaceIdsGranting(
+        c.get("userEmail"),
+        "canManageRoles",
+      );
+      if (workspaceFilter.length === 0) {
+        return c.json({ history: [] });
+      }
+    }
+
     const history = await db
       .select({
         history: roleHistoryTable,
@@ -979,13 +1022,58 @@ rbac.get("/history/:userId", async (c) => {
       })
       .from(roleHistoryTable)
       .leftJoin(userTable, eq(roleHistoryTable.performedBy, userTable.id))
-      .where(eq(roleHistoryTable.userId, userId))
+      .where(
+        isSelf
+          ? eq(roleHistoryTable.userId, userId)
+          : and(
+              eq(roleHistoryTable.userId, userId),
+              inArray(roleHistoryTable.workspaceId, workspaceFilter),
+            ),
+      )
       .orderBy(desc(roleHistoryTable.createdAt));
 
     return c.json({ history });
   } catch (error) {
     logger.error("Failed to get role history:", error);
     return c.json({ error: "Failed to get role history" }, 500);
+  }
+});
+
+// NOTE: this static route MUST stay registered before `/audit/:userId`.
+// Hono matches in registration order, so with `:userId` first this handler
+// was unreachable — GET /audit/stats matched `:userId` with userId="stats"
+// and its authorization check never ran.
+/**
+ * GET /roles/audit/stats - Get audit statistics
+ */
+rbac.get("/audit/stats", async (c) => {
+  try {
+    const workspaceId = c.req.query("workspaceId");
+
+    // 🚨 SECURITY: this route had NO authorization, and omitting workspaceId
+    // made the service aggregate across every workspace in the instance. A
+    // workspace must be named, and the caller must administer it.
+    if (!workspaceId) {
+      return c.json({ error: "workspaceId is required" }, 400);
+    }
+    const scoped = await checkWorkspacePermission(
+      c.get("userEmail"),
+      workspaceId,
+      "canManageRoles",
+    );
+    if (!scoped.allowed) {
+      return c.json({ error: "Workspace not found" }, 404);
+    }
+
+    const { RoleAuditService } = await import(
+      "../services/rbac/role-audit-service"
+    );
+    const stats = await RoleAuditService.getAuditStats(workspaceId);
+
+    return c.json(stats);
+  } catch (error) {
+    logger.error("Failed to get audit stats:", error);
+    return c.json({ error: "Failed to get audit stats" }, 500);
   }
 });
 
@@ -997,12 +1085,39 @@ rbac.get("/audit/:userId", async (c) => {
     const userId = c.req.param("userId");
     const limit = Number.parseInt(c.req.query("limit") || "100");
 
+    // 🚨 SECURITY: this route had NO authorization — any authenticated user
+    // could read any other user's audit trail. The service takes an optional
+    // workspaceId filter, and passing `undefined` (as it did) means "every
+    // workspace". A non-self caller must name a workspace they administer.
+    const isSelf = (await userIdForEmail(c.get("userEmail"))) === userId;
+    const requestedWorkspaceId = c.req.query("workspaceId");
+
+    if (!isSelf) {
+      if (!requestedWorkspaceId) {
+        return c.json(
+          {
+            error: "workspaceId is required to read another user's audit trail",
+          },
+          400,
+        );
+      }
+      const scoped = await checkWorkspacePermission(
+        c.get("userEmail"),
+        requestedWorkspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        // Uniform 404 — never confirm the workspace exists to an outsider.
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+    }
+
     const { RoleAuditService } = await import(
       "../services/rbac/role-audit-service"
     );
     const trail = await RoleAuditService.getUserAuditTrail(
       userId,
-      undefined,
+      requestedWorkspaceId,
       limit,
     );
 
@@ -1021,6 +1136,17 @@ rbac.get("/audit/workspace/:workspaceId", async (c) => {
     const workspaceId = c.req.param("workspaceId");
     const limit = Number.parseInt(c.req.query("limit") || "100");
 
+    // 🚨 SECURITY: this route had NO authorization — any authenticated user
+    // could read the role audit trail of an arbitrary workspace by id.
+    const scoped = await checkWorkspacePermission(
+      c.get("userEmail"),
+      workspaceId,
+      "canManageRoles",
+    );
+    if (!scoped.allowed) {
+      return c.json({ error: "Workspace not found" }, 404);
+    }
+
     const { RoleAuditService } = await import(
       "../services/rbac/role-audit-service"
     );
@@ -1037,30 +1163,22 @@ rbac.get("/audit/workspace/:workspaceId", async (c) => {
 });
 
 /**
- * GET /roles/audit/stats - Get audit statistics
- */
-rbac.get("/audit/stats", async (c) => {
-  try {
-    const workspaceId = c.req.query("workspaceId");
-
-    const { RoleAuditService } = await import(
-      "../services/rbac/role-audit-service"
-    );
-    const stats = await RoleAuditService.getAuditStats(workspaceId);
-
-    return c.json(stats);
-  } catch (error) {
-    logger.error("Failed to get audit stats:", error);
-    return c.json({ error: "Failed to get audit stats" }, 500);
-  }
-});
-
-/**
  * GET /departments - Get all departments
  */
 rbac.get("/departments", async (c) => {
   try {
     const db = getDatabase();
+
+    // 🚨 SECURITY: this route had NO authorization and no workspace filter, so
+    // it returned every department in the instance. Confirmed cross-tenant
+    // during the audit: a guest belonging to one workspace saw departments
+    // from another. Membership is the right scope here — a department list is
+    // ordinary workspace content, not an administrative view.
+    const visibleWorkspaces = await memberWorkspaceIds(c.get("userEmail"));
+    if (visibleWorkspaces.length === 0) {
+      return c.json({ departments: [] });
+    }
+
     const departments = await db
       .select({
         department: departmentTable,
@@ -1077,7 +1195,12 @@ rbac.get("/departments", async (c) => {
       })
       .from(departmentTable)
       .leftJoin(userTable, eq(departmentTable.headId, userTable.id))
-      .where(eq(departmentTable.isActive, true));
+      .where(
+        and(
+          eq(departmentTable.isActive, true),
+          inArray(departmentTable.workspaceId, visibleWorkspaces),
+        ),
+      );
 
     return c.json({ departments });
   } catch (error) {
