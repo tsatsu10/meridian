@@ -1692,3 +1692,27 @@
     display: none !important;
   }
 }
+
+/* Aurora auth surface — transform-only drift so the compositor handles it and
+   no layout or paint is triggered. Paired with prefers-reduced-motion in
+   components/auth/aurora-backdrop.tsx, which drops the animation entirely
+   rather than merely slowing it. */
+@keyframes aurora-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.08);
+  }
+}
+
+@keyframes aurora-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-5%, -6%, 0) scale(1);
+  }
+}
