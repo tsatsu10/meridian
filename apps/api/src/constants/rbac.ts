@@ -58,6 +58,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canCreateFeedback: true,
   },
   member: {
+    // Verified live: without this, GET /api/workspaces/:id returns 403 to a
+    // member of that very workspace — they could not load the workspace they
+    // belong to. Every role that can see projects needs it, because projects
+    // are reached through the workspace.
+    canViewWorkspace: true,
     canViewProjects: true,
     canViewTasks: true,
     canUpdateOwnTasks: true,
@@ -66,7 +71,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canViewProjectMilestones: true,
   },
   "team-lead": {
+    canViewWorkspace: true,
     canViewProjects: true,
+    // Verified live: without this, GET /api/task/:id returned 403 to a role
+    // that can create, update, delete and assign that same task. Modifying a
+    // resource you cannot read is not a coherent authority level.
+    canViewTasks: true,
     canCreateTasks: true,
     canUpdateTasks: true,
     canDeleteTasks: true,
@@ -82,13 +92,21 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageProjectMilestones: true,
   },
   "project-viewer": {
+    canViewWorkspace: true,
     canViewProjects: true,
     canViewTasks: true,
     canViewReports: true,
     canViewProjectMilestones: true,
   },
   "project-manager": {
+    canViewWorkspace: true,
     canViewProjects: true,
+    canViewTasks: true,
+    // Scoped by requireProjectPermission to the project being requested, so
+    // this grants a project manager analytics for THEIR projects, not the
+    // workspace at large. Previously workspace-manager was the only holder, so
+    // a project manager could not see analytics for a project they own.
+    canViewAnalytics: true,
     canCreateProjects: true,
     canUpdateProjects: true,
     canDeleteProjects: true,
@@ -117,6 +135,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canViewWorkspace: true,
     canManageDepartment: true,
     canViewProjects: true,
+    canViewTasks: true,
+    // Same reasoning as project-manager: the analytics routes are scoped by
+    // requireWorkspacePermission / requireProjectPermission, so this is
+    // analytics for what they already administer.
+    canViewAnalytics: true,
     canCreateProjects: true,
     canUpdateProjects: true,
     canManageProjectMembers: true,

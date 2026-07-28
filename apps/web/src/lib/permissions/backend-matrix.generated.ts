@@ -1,5 +1,6 @@
 /**
  * GENERATED FILE — DO NOT EDIT BY HAND.
+ * Regenerate with: apps/api > npx tsx scripts/generate-permission-mirror.mts
  *
  * `BACKEND_ROLE_PERMISSIONS` mirrors apps/api/src/constants/rbac.ts, which is
  * the authority: it is what the server actually enforces. The web app used to
@@ -10,10 +11,10 @@
  *
  * `FRONTEND_ONLY_ROLE_PERMISSIONS` holds the 23 keys the web app defines
  * that the backend has no concept of (chat, video, billing, dashboards). They
- * are preserved exactly as they were, and gate UI-only affordances; nothing on
+ * are preserved across regeneration and gate UI-only affordances; nothing on
  * the server reads them.
  *
- * Regenerate after changing the backend matrix. A drift test in
+ * A drift test in
  * apps/api/src/constants/__tests__/frontend-permission-parity.test.ts fails if
  * this file falls out of sync.
  */
@@ -24,7 +25,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
   UserRole,
   Record<string, boolean>
 > = {
-  guest: {
+  "guest": {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -183,7 +184,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  stakeholder: {
+  "stakeholder": {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -342,7 +343,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  contractor: {
+  "contractor": {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -501,7 +502,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  client: {
+  "client": {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -660,7 +661,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  member: {
+  "member": {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -816,7 +817,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewTeamProgress: false,
     canViewTimeReports: false,
     canViewTimeTracking: false,
-    canViewWorkspace: false,
+    canViewWorkspace: true,
     canViewWorkspaceAnalytics: false,
   },
   "team-lead": {
@@ -967,7 +968,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewReports: false,
     canViewSecurityLogs: false,
     canViewSystemHealth: false,
-    canViewTasks: false,
+    canViewTasks: true,
     canViewTeam: true,
     canViewTeamAnalytics: false,
     canViewTeamMembers: false,
@@ -975,7 +976,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewTeamProgress: false,
     canViewTimeReports: false,
     canViewTimeTracking: false,
-    canViewWorkspace: false,
+    canViewWorkspace: true,
     canViewWorkspaceAnalytics: false,
   },
   "project-viewer": {
@@ -1134,7 +1135,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewTeamProgress: false,
     canViewTimeReports: false,
     canViewTimeTracking: false,
-    canViewWorkspace: false,
+    canViewWorkspace: true,
     canViewWorkspaceAnalytics: false,
   },
   "project-manager": {
@@ -1266,7 +1267,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewAllProjects: false,
     canViewAllTasks: false,
     canViewAllUsers: false,
-    canViewAnalytics: false,
+    canViewAnalytics: true,
     canViewAssignedProjects: false,
     canViewAssignedTasks: false,
     canViewAuditLogs: false,
@@ -1285,7 +1286,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewReports: false,
     canViewSecurityLogs: false,
     canViewSystemHealth: false,
-    canViewTasks: false,
+    canViewTasks: true,
     canViewTeam: false,
     canViewTeamAnalytics: false,
     canViewTeamMembers: false,
@@ -1293,7 +1294,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewTeamProgress: false,
     canViewTimeReports: false,
     canViewTimeTracking: false,
-    canViewWorkspace: false,
+    canViewWorkspace: true,
     canViewWorkspaceAnalytics: false,
   },
   "workspace-viewer": {
@@ -1584,7 +1585,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewAllProjects: false,
     canViewAllTasks: false,
     canViewAllUsers: false,
-    canViewAnalytics: false,
+    canViewAnalytics: true,
     canViewAssignedProjects: false,
     canViewAssignedTasks: false,
     canViewAuditLogs: false,
@@ -1603,7 +1604,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewReports: false,
     canViewSecurityLogs: false,
     canViewSystemHealth: false,
-    canViewTasks: false,
+    canViewTasks: true,
     canViewTeam: true,
     canViewTeamAnalytics: false,
     canViewTeamMembers: false,
@@ -1779,7 +1780,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
   UserRole,
   Record<string, boolean>
 > = {
-  guest: {
+  "guest": {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1804,7 +1805,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  stakeholder: {
+  "stakeholder": {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1829,7 +1830,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  contractor: {
+  "contractor": {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1854,7 +1855,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  client: {
+  "client": {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1879,7 +1880,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  member: {
+  "member": {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
