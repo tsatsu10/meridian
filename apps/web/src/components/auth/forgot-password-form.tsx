@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { API_BASE_URL } from "@/constants/urls";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, ArrowLeft } from "lucide-react";
 import { useState } from "react";
@@ -35,14 +36,34 @@ export function ForgotPasswordForm() {
     },
   });
 
-  const onSubmit = async (_data: ForgotPasswordFormValues) => {
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsPending(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // This used to be `await new Promise(r => setTimeout(r, 2000))` followed
+      // by a success toast — the form never contacted the server, so the
+      // screen claimed an email had been sent that was never requested. The
+      // endpoint existed the whole time.
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: data.email }),
+      });
 
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: { message?: string } | string;
+        } | null;
+        const reason =
+          typeof body?.error === "string" ? body.error : body?.error?.message;
+        throw new Error(
+          reason || `Request failed with status ${response.status}`,
+        );
+      }
+
+      // The API deliberately answers success whether or not the address is
+      // registered, so this confirmation must not imply the account exists.
       setIsSubmitted(true);
-      toast.success("Password reset email sent!");
     } catch (error) {
       toast.error(userMessage(error, "send the reset email"));
     } finally {
@@ -60,11 +81,16 @@ export function ForgotPasswordForm() {
           <h3 className="mb-2 text-lg font-semibold text-white">
             Check your email
           </h3>
+          {/* Deliberately conditional: the API answers success whether or not
+           * the address is registered, so asserting "we sent you a link" would
+           * both mislead and confirm the account exists. */}
           <p className="text-sm leading-relaxed text-white/60">
-            We've sent a password reset link to{" "}
+            If an account exists for{" "}
             <span className="font-medium text-white">
               {form.getValues("email")}
             </span>
+            , a reset link is on its way. It expires in one hour. Check your
+            spam folder if it hasn't arrived in a few minutes.
           </p>
         </div>
         <Button

@@ -230,7 +230,7 @@ export class EmailService {
     token: string,
     name: string,
   ): Promise<boolean> {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
 
     const html = `
       <!DOCTYPE html>
@@ -299,7 +299,7 @@ export class EmailService {
    * Send welcome email after verification
    */
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
-    const loginUrl = `${process.env.FRONTEND_URL}/login`;
+    const loginUrl = `${process.env.FRONTEND_URL}/auth/sign-in`;
     const dashboardUrl = `${process.env.FRONTEND_URL}/dashboard`;
 
     const html = `

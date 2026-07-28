@@ -193,7 +193,16 @@ if (!enableDemoAuthBypass) {
       // pendingToken minted by /sign-in (see auth/utils/pending-2fa-token.ts),
       // not via a pre-existing session.
       path === "/api/auth/two-factor/verify-login" ||
-      path === "/api/2fa/verify-login";
+      path === "/api/2fa/verify-login" ||
+      // Password recovery. These sat behind the auth gate, which made them
+      // unusable by the only people who need them: you cannot be signed in to
+      // ask for a reset when you have lost the password. Both are safe to
+      // expose — /forgot-password always answers success whether or not the
+      // address exists (so it leaks nothing), and /reset-password
+      // authenticates the caller with the emailed single-use token rather
+      // than a session.
+      path === "/api/auth/forgot-password" ||
+      path === "/api/auth/reset-password";
 
     // Allow unauthenticated access to auth bootstrap endpoints.
     if (isPublicUserRoute) {

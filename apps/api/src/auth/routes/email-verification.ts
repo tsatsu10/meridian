@@ -172,6 +172,22 @@ app.post(
         userAgent,
       );
 
+      // The service already answers success:true for both "no such user" and
+      // "rate limited", so success:false here means the send genuinely failed
+      // (SMTP down, DB error). Reporting that as 200 sent the user off to check
+      // an inbox nothing had been delivered to. Surfacing it leaks nothing
+      // about whether the account exists — the failure is on our side either
+      // way. `result` was previously assigned and never read.
+      if (!result.success) {
+        return c.json(
+          {
+            success: false,
+            error: "Failed to send password reset email",
+          },
+          500,
+        );
+      }
+
       // Always return success for security (don't reveal if email exists)
       return c.json(
         {
