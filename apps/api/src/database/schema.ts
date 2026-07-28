@@ -96,6 +96,10 @@ export const users = pgTable(
     language: text("language").default("en"),
     role: userRole().default("member"),
     isEmailVerified: boolean("is_email_verified").default(false),
+    // When the password was last changed. The Security page's "Strong
+    // Password" score component had no server-side signal to work from, so it
+    // scored whatever was typed into the (unsubmitted) change-password form.
+    passwordUpdatedAt: timestamp("password_updated_at", { withTimezone: true }),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     lastSeen: timestamp("last_seen", { withTimezone: true }), // For presence tracking
     // Two-Factor Authentication fields
@@ -119,6 +123,15 @@ export const sessions = pgTable("sessions", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  // Session provenance. Without these the Security settings page had nothing
+  // real to show: the table held only id/userId/expiresAt, so the UI invented
+  // a single fake "current device" row from navigator.userAgent and the
+  // sessions API returned device/IP/activity as nulls. Nullable because
+  // sessions predating this migration have no history to backfill.
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  lastActivity: timestamp("last_activity", { withTimezone: true }).defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
 });
 
 export const workspaces = pgTable("workspaces", {

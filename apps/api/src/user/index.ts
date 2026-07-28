@@ -14,6 +14,8 @@ import statusRouter from "./status";
 // 🔒 Import auth rate limiter for sign-in/sign-up protection
 import { authRateLimiter } from "../middlewares/security";
 import { generatePending2FAToken } from "../auth/utils/pending-2fa-token";
+import { getRequestProvenance } from "./utils/session-provenance";
+import { sendLoginAlert } from "./utils/login-alert";
 
 const user = new Hono<{
   Variables: {
@@ -74,7 +76,19 @@ const user = new Hono<{
       }
 
       const token = generateSessionToken();
-      const session = await createSession(token, user.id);
+      const provenance = getRequestProvenance(c);
+      const session = await createSession(token, user.id, provenance);
+
+      // Best-effort courtesy notice; never awaited into the response path so a
+      // slow or unconfigured mail server cannot delay a sign-in.
+      void sendLoginAlert({
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        ipAddress: provenance.ipAddress,
+        userAgent: provenance.userAgent,
+        currentSessionId: session.id,
+      });
 
       const isProduction = process.env.NODE_ENV === "production";
       setCookie(c, "session", token, {
@@ -108,7 +122,11 @@ const user = new Hono<{
       const user = await signUp(email, password, name);
 
       const token = generateSessionToken();
-      const session = await createSession(token, user.id);
+      const session = await createSession(
+        token,
+        user.id,
+        getRequestProvenance(c),
+      );
 
       const isProduction = process.env.NODE_ENV === "production";
       setCookie(c, "session", token, {
@@ -139,9 +157,17 @@ const user = new Hono<{
       }
 
       const { currentPassword, newPassword } = c.req.valid("json");
-      await changePassword(userEmail, currentPassword, newPassword);
+      // Hand over the caller's own token so every *other* session is evicted
+      // while this one survives. A password change is the standard response to
+      // a suspected compromise and it used to revoke nothing at all.
+      const { revokedSessions } = await changePassword(
+        userEmail,
+        currentPassword,
+        newPassword,
+        getCookie(c, "session"),
+      );
 
-      return c.json({ message: "Password updated" });
+      return c.json({ message: "Password updated", revokedSessions });
     },
   )
   .post("/sign-out", async (c) => {

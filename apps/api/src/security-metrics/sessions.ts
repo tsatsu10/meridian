@@ -1,9 +1,13 @@
 import { Hono } from "hono";
 import { getDatabase } from "../database/connection";
 import { userTable, sessions as sessionsTable } from "../database/schema";
-import { eq, and, gte, desc, count, sql } from "drizzle-orm";
+import { eq, and, gte, lt, desc, count, sql } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/secure-auth";
+import { describeUserAgent } from "../user/utils/session-provenance";
 import logger from "../utils/logger";
+
+/** A session with no activity for this long counts as idle, not active. */
+const IDLE_AFTER_MS = 30 * 60 * 1000;
 
 const sessionRoutes = new Hono();
 
@@ -15,45 +19,71 @@ sessionRoutes.get("/active", authMiddleware(), async (c) => {
     if (!userEmail) {
       return c.json({ error: "Authentication required" }, 401);
     }
-    const currentSessionId = c.get("sessionId"); // Assuming session ID is available in context
+    const currentSessionId = c.get("sessionId");
 
-    // Fetch active sessions (in real app, filter by last activity timestamp)
+    const [currentUser] = await db
+      .select({ id: userTable.id })
+      .from(userTable)
+      .where(eq(userTable.email, userEmail))
+      .limit(1);
+
+    if (!currentUser) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
     const now = new Date();
 
-    // sessions only stores id/userId/expiresAt — device, location and activity
-    // data is not captured. A previous revision FABRICATED those fields
-    // (deterministic fake IPs/cities and index-based "suspicious" flags),
-    // which is unacceptable on a security dashboard; unknowns are now unknowns.
+    // SECURITY: scoped to the caller. This filtered on expiry alone, with no
+    // user predicate, while still selecting userEmail — so any authenticated
+    // user got back up to 50 sessions belonging to *everyone*, complete with
+    // their email addresses and session IDs. (Verified against the dev
+    // database: one ordinary account could enumerate 21 other accounts.)
     const activeSessions = await db
       .select({
         id: sessionsTable.id,
         userId: sessionsTable.userId,
         userEmail: userTable.email,
         expiresAt: sessionsTable.expiresAt,
+        createdAt: sessionsTable.createdAt,
+        lastActivity: sessionsTable.lastActivity,
+        ipAddress: sessionsTable.ipAddress,
+        userAgent: sessionsTable.userAgent,
       })
       .from(sessionsTable)
       .innerJoin(userTable, eq(sessionsTable.userId, userTable.id))
-      .where(gte(sessionsTable.expiresAt, now))
+      .where(
+        and(
+          eq(sessionsTable.userId, currentUser.id),
+          gte(sessionsTable.expiresAt, now),
+        ),
+      )
       .orderBy(desc(sessionsTable.expiresAt))
       .limit(50);
 
-    const formattedSessions = activeSessions.map((session) => ({
-      id: session.id,
-      userId: session.userId,
-      userEmail: session.userEmail,
-      deviceType: "unknown" as const,
-      deviceName: "Unknown device",
-      browser: null,
-      os: null,
-      ipAddress: null,
-      location: null,
-      isCurrentSession: session.id === currentSessionId,
-      createdAt: null,
-      lastActivity: null,
-      expiresAt: session.expiresAt,
-      isSuspicious: false,
-      status: "active" as const,
-    }));
+    const formattedSessions = activeSessions.map((session) => {
+      const device = describeUserAgent(session.userAgent);
+      return {
+        id: session.id,
+        userId: session.userId,
+        userEmail: session.userEmail,
+        deviceType: device.deviceType,
+        deviceName: device.deviceName,
+        browser: device.browser,
+        os: device.os,
+        ipAddress: session.ipAddress,
+        // Still null: mapping an IP to a place needs a geolocation database
+        // this app doesn't ship. Left explicitly unknown rather than guessed —
+        // the UI used to derive a "location" from the browser's timezone and
+        // present it as the session's origin.
+        location: null,
+        isCurrentSession: session.id === currentSessionId,
+        createdAt: session.createdAt,
+        lastActivity: session.lastActivity,
+        expiresAt: session.expiresAt,
+        isSuspicious: false,
+        status: "active" as const,
+      };
+    });
 
     return c.json({ data: formattedSessions });
   } catch (error) {
@@ -66,24 +96,56 @@ sessionRoutes.get("/active", authMiddleware(), async (c) => {
 sessionRoutes.get("/stats", authMiddleware(), async (c) => {
   try {
     const db = getDatabase();
-    const now = new Date();
+    const userEmail = c.get("userEmail");
+    if (!userEmail) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
 
-    // Count active (unexpired) sessions — that's the only signal the schema has
+    const [currentUser] = await db
+      .select({ id: userTable.id })
+      .from(userTable)
+      .where(eq(userTable.email, userEmail))
+      .limit(1);
+
+    if (!currentUser) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    const now = new Date();
+    const idleCutoff = new Date(now.getTime() - IDLE_AFTER_MS);
+
+    // SECURITY: scoped to the caller. This counted every user's sessions and
+    // presented the total as if it were the caller's own.
     const activeSessions = await db
       .select({ count: count() })
       .from(sessionsTable)
-      .where(gte(sessionsTable.expiresAt, now));
+      .where(
+        and(
+          eq(sessionsTable.userId, currentUser.id),
+          gte(sessionsTable.expiresAt, now),
+        ),
+      );
+
+    const idle = await db
+      .select({ count: count() })
+      .from(sessionsTable)
+      .where(
+        and(
+          eq(sessionsTable.userId, currentUser.id),
+          gte(sessionsTable.expiresAt, now),
+          lt(sessionsTable.lastActivity, idleCutoff),
+        ),
+      );
 
     const totalActiveSessions = activeSessions[0]?.count ?? 0;
+    const idleSessions = idle[0]?.count ?? 0;
 
-    // Only real numbers: activity/location/duration are not tracked in the
-    // sessions schema, so no invented breakdowns (previous revision faked
-    // idle/suspicious percentages).
     const stats = {
       totalActiveSessions,
-      activeNow: totalActiveSessions,
-      idleSessions: 0,
+      activeNow: totalActiveSessions - idleSessions,
+      idleSessions,
       suspiciousSessions: 0,
+      // Needs a geolocation database the app doesn't ship; never guessed.
       uniqueLocations: 0,
       averageSessionDuration: null,
     };

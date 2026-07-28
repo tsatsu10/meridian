@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 import logger from "../../utils/logger";
 import { verifyPassword } from "../password";
 import createSession from "../../user/utils/create-session";
+import { getRequestProvenance } from "../../user/utils/session-provenance";
 import generateSessionToken from "../../user/utils/generate-session-token";
 import { authRateLimiter } from "../../middlewares/security";
 import { verifyPending2FAToken } from "../utils/pending-2fa-token";
@@ -288,7 +289,11 @@ app.post("/verify-login", authRateLimiter, async (c) => {
     // specifically because 2FA was enabled, so it's issued here instead,
     // once the second factor has actually been checked.
     const sessionToken = generateSessionToken();
-    const session = await createSession(sessionToken, user.id);
+    const session = await createSession(
+      sessionToken,
+      user.id,
+      getRequestProvenance(c),
+    );
 
     const isProduction = process.env.NODE_ENV === "production";
     setCookie(c, "session", sessionToken, {
