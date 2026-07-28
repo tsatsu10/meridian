@@ -14,6 +14,24 @@ vi.mock("../../database/connection", () => ({
   getDatabase: vi.fn(() => mockDb),
 }));
 
+/**
+ * These tests are about how a CUSTOM ROLE resolves, not about custom
+ * permission overrides. The real override resolver issues its own db.select(),
+ * which would consume one of the `mockReturnValueOnce` values queued below and
+ * silently shift every subsequent row onto the wrong query. Stub it to pass
+ * the role's decision straight through; its own behaviour is covered against a
+ * real database in custom-permission-override.integration.test.ts.
+ */
+vi.mock("../custom-permission-override", () => ({
+  applyCustomPermissionOverride: vi.fn(
+    async (
+      _userId: string,
+      _permission: string,
+      roleGrants: boolean,
+    ): Promise<boolean> => roleGrants,
+  ),
+}));
+
 function selectReturning(rows: unknown[]) {
   const chain: Record<string, unknown> = {};
   chain.from = vi.fn().mockReturnValue(chain);

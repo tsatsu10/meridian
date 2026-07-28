@@ -42,6 +42,7 @@ import {
 } from "./lib/workspace-scope";
 import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
 import {
+  ALL_PERMISSION_KEYS,
   findExcessPermissions,
   recordToPermissions,
 } from "../roles/lib/permission-set";
@@ -83,9 +84,15 @@ export const assignRoleSchema = z.object({
 
 const customPermissionSchema = z.object({
   userId: z.string(),
-  permission: z.string(),
+  // Must be a real permission key. `z.string()` accepted anything, so a typo
+  // (or an attacker) could write rows that no check will ever read — silent
+  // no-ops that look like successful grants in the UI.
+  permission: z.enum(ALL_PERMISSION_KEYS as [string, ...string[]]),
   granted: z.boolean(),
-  workspaceId: z.string().optional(),
+  // 🚨 Required. When this was optional the override defaulted to workspaceId
+  // null, i.e. it applied in EVERY workspace, forever. An override must name
+  // the tenant it belongs to.
+  workspaceId: z.string().min(1),
   projectId: z.string().optional(),
   resourceType: z.string().optional(),
   resourceId: z.string().optional(),
@@ -947,13 +954,74 @@ rbac.post(
         return c.json({ error: "Granter not found" }, 400);
       }
 
+      // 🚨 SECURITY: this route was an unbounded permission grant. Its only
+      // actor gate was the workspace-UNSCOPED requirePermission, `workspaceId`
+      // was optional (so overrides defaulted to applying everywhere, forever),
+      // and there was no ceiling — any workspace-manager of any workspace could
+      // hand any of the 157 permissions to any user, globally and permanently.
+      //
+      // Now: the workspace is required (enforced by customPermissionSchema),
+      // the granter must hold canManageRoles IN THAT WORKSPACE, and they cannot
+      // grant a permission they do not themselves hold there.
+      const scoped = await checkWorkspacePermission(
+        granterEmail,
+        data.workspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        // Uniform 404 — never confirm the workspace exists to an outsider.
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
+      // The ceiling applies to grants only. Revoking a permission is not an
+      // escalation, and requiring the revoker to hold what they are taking away
+      // would stop an admin from removing a permission they lack themselves.
+      if (data.granted) {
+        const granterPermissions = await resolveRolePermissions(
+          scoped.userRole ?? "guest",
+          data.workspaceId,
+        );
+        const excess = findExcessPermissions(
+          [data.permission],
+          granterPermissions,
+        );
+        if (excess.length > 0) {
+          return c.json(
+            {
+              error: `You cannot grant permissions you do not hold: ${excess.join(", ")}`,
+            },
+            403,
+          );
+        }
+      }
+
+      // The target must be a member of the workspace the override is scoped to,
+      // so an override cannot be planted on an outsider.
+      const [targetMembership] = await db
+        .select({ id: roleAssignmentTable.id })
+        .from(roleAssignmentTable)
+        .where(
+          and(
+            eq(roleAssignmentTable.userId, data.userId),
+            eq(roleAssignmentTable.workspaceId, data.workspaceId),
+            eq(roleAssignmentTable.isActive, true),
+          ),
+        )
+        .limit(1);
+      if (!targetMembership) {
+        return c.json(
+          { error: "User has no active role assignment in this workspace" },
+          400,
+        );
+      }
+
       // Create custom permission record
       const customPermission = {
         id: createId(),
         userId: data.userId,
         permission: data.permission,
         granted: data.granted,
-        workspaceId: data.workspaceId || null,
+        workspaceId: data.workspaceId,
         projectId: data.projectId || null,
         resourceType: data.resourceType || null,
         resourceId: data.resourceId || null,

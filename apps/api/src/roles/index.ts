@@ -10,7 +10,6 @@ import {
   roleAssignmentTable,
 } from "../database/schema";
 import { roles } from "../database/schema/rbac-unified";
-import { ROLE_PERMISSIONS } from "../constants/rbac";
 import {
   requirePermission,
   checkWorkspacePermission,
@@ -20,27 +19,13 @@ import { getRole } from "./controllers/get-role";
 import { getRoleUsage } from "./controllers/get-role-usage";
 import { resolveRolePermissions } from "./lib/resolve-role-permissions";
 import { isSystemRoleId } from "./lib/system-roles";
+// Shared with the custom-permission write route in rbac/index.ts, which
+// validates its `permission` field against the same list.
+import { ALL_PERMISSION_KEYS } from "./lib/permission-set";
 import { createRole } from "./controllers/create-role";
 import { updateRole } from "./controllers/update-role";
 import { deleteRole } from "./controllers/delete-role";
 import { cloneRole } from "./controllers/clone-role";
-
-/**
- * Every permission key the system knows about.
- *
- * Deliberately the union across all roles, not the keys of the most
- * privileged one: workspace-manager is missing canViewAssignedTasks,
- * canUpdateAssignedTasks and canManageDepartment, which other roles define.
- * Taking any single role's keys would silently omit permissions from the
- * editor.
- */
-const ALL_PERMISSION_KEYS = [
-  ...new Set(
-    Object.values(ROLE_PERMISSIONS).flatMap((permissions) =>
-      Object.keys(permissions as Record<string, boolean>),
-    ),
-  ),
-].sort();
 
 const rolesRouter = new Hono<{
   Variables: { userEmail: string; userId?: string };

@@ -11,7 +11,6 @@ import { getDatabase } from "../database/connection";
 import {
   userTable,
   roleAssignmentTable,
-  customPermissionTable,
   projectTable,
 } from "../database/schema";
 import { ROLE_HIERARCHY } from "../constants/rbac";
@@ -19,6 +18,7 @@ import type { UserRole, PermissionAction } from "../types/rbac";
 import logger from "../utils/logger";
 import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
 import { isSystemRoleId } from "../roles/lib/system-roles";
+import { applyCustomPermissionOverride } from "./custom-permission-override";
 
 /**
  * How the coarse (workspace-unscoped) permission gate combines a caller's
@@ -169,26 +169,15 @@ export function requirePermission(
         assignments[bindingIndex === -1 ? 0 : bindingIndex] ?? null;
       const userRole = (bindingAssignment?.role ?? "guest") as UserRole;
 
-      // Check for custom permission overrides
-      const customPermissions = await db
-        .select()
-        .from(customPermissionTable)
-        .where(
-          and(
-            eq(customPermissionTable.userId, userId),
-            eq(customPermissionTable.permission, permission),
-          ),
-        );
-
-      // Apply custom permission overrides (most recent takes precedence)
-      let finalPermission = hasBasePermission;
-      const latestCustom = customPermissions.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )[0];
-      if (latestCustom) {
-        finalPermission = latestCustom.granted;
-      }
+      // Custom per-user overrides. This gate has no workspace context, so it
+      // sees UNSCOPED overrides only — passing no workspace here is what stops
+      // an override created for one workspace from applying everywhere. See
+      // custom-permission-override.ts.
+      const finalPermission = await applyCustomPermissionOverride(
+        userId,
+        permission,
+        hasBasePermission,
+      );
 
       if (!finalPermission) {
         return c.json(
@@ -411,7 +400,17 @@ export async function checkWorkspacePermission(
     workspaceId,
   );
 
-  if (!rolePermissions[permission]) {
+  // Custom overrides scoped to THIS workspace (plus unscoped ones). This check
+  // previously ignored the table entirely, so an override could never do the
+  // job it exists for while the unscoped coarse gate honoured it everywhere.
+  const allowed = await applyCustomPermissionOverride(
+    currentUser.id,
+    permission,
+    rolePermissions[permission] === true,
+    { workspaceId },
+  );
+
+  if (!allowed) {
     return {
       allowed: false,
       status: 403,
@@ -632,7 +631,15 @@ export async function checkProjectPermission(
     project.workspaceId,
   );
 
-  if (!rolePermissions[permission]) {
+  // Custom overrides scoped to this project, its workspace, or unscoped.
+  const allowed = await applyCustomPermissionOverride(
+    currentUser.id,
+    permission,
+    rolePermissions[permission] === true,
+    { workspaceId: project.workspaceId, projectId },
+  );
+
+  if (!allowed) {
     return {
       allowed: false,
       status: 403,
