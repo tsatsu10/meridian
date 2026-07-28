@@ -33,7 +33,11 @@ app.use("*", auth);
 // the workspace being requested and denies when there is none.
 app.get(
   "/workspaces/:workspaceId/analytics",
-  requireWorkspacePermission("canViewAnalytics"),
+  // Workspace-WIDE analytics use canViewWorkspaceAnalytics, not the generic
+  // canViewAnalytics. Overloading one key for both scopes meant granting a
+  // project manager analytics for their own project also handed them the
+  // whole workspace's aggregate.
+  requireWorkspacePermission("canViewWorkspaceAnalytics"),
   getWorkspaceAnalytics,
 );
 
@@ -41,7 +45,7 @@ app.get(
 // owning workspace.
 app.get(
   "/projects/:projectId/analytics",
-  requireProjectPermission("canViewAnalytics"),
+  requireProjectPermission("canViewProjectAnalytics"),
   getProjectAnalytics,
 );
 

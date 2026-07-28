@@ -65,10 +65,17 @@ describe("cloning a built-in role", () => {
   // The bug, stated as a fact about the data rather than about the code:
   // these permissions exist on other built-ins and not on workspace-manager,
   // so a subset ceiling can never be satisfied for them.
-  it("premise: department-head and contractor grant permissions workspace-manager lacks", () => {
-    expect(managerPermissions.canManageDepartment).toBeUndefined();
-    expect(managerPermissions.canViewAssignedTasks).toBeUndefined();
-    expect(managerPermissions.canUpdateAssignedTasks).toBeUndefined();
+  // Premise, updated: workspace-manager is now a TRUE SUPERSET of every other
+  // built-in. It used to lack exactly canManageDepartment (department-head)
+  // and canViewAssignedTasks / canUpdateAssignedTasks (contractor), which is
+  // what made a pure subset ceiling reject those two roles for every possible
+  // actor and left them permanently unclonable. That trap is gone; the
+  // hierarchy branch below remains because ordering is still the right
+  // yardstick for an ordered ladder.
+  it("premise: workspace-manager grants everything the other built-ins do", () => {
+    expect(managerPermissions.canManageDepartment).toBe(true);
+    expect(managerPermissions.canViewAssignedTasks).toBe(true);
+    expect(managerPermissions.canUpdateAssignedTasks).toBe(true);
   });
 
   it("lets a workspace-manager clone department-head", async () => {
@@ -200,6 +207,13 @@ describe("createRole without a clone source", () => {
   // the hierarchy branch no matter what the actor's role is. Without this,
   // being a workspace-manager would be a blank cheque to mint any permission
   // string at all.
+  //
+  // The probe is a permission the actor genuinely does not hold. It used to be
+  // `canManageDepartment`, but workspace-manager is now a true superset of the
+  // built-ins, so no real permission key can exceed it — an invented key is
+  // what still tests the ceiling rather than the matrix. This matters: role
+  // permissions are stored as free-form strings, so a made-up one must not be
+  // mintable and then silently satisfied by some future guard.
   it("applies the subset ceiling to a hand-authored role even for a workspace-manager", async () => {
     const { createRole } = await import("../controllers/create-role");
 
@@ -208,13 +222,13 @@ describe("createRole without a clone source", () => {
         name: "Superuser",
         description: null,
         color: "#3B82F6",
-        permissions: ["canManageDepartment"],
+        permissions: ["canDoAbsolutelyAnything"],
         workspaceId: "ws-1",
         actorUserId: "user-1",
         actorRole: "workspace-manager",
         actorPermissions: managerPermissions,
       }),
-    ).rejects.toThrow(/canManageDepartment/);
+    ).rejects.toThrow(/canDoAbsolutelyAnything/);
   });
 
   it("still creates a hand-authored role within the actor's permissions", async () => {

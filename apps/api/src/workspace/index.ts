@@ -385,7 +385,7 @@ workspace.post(
 // @epic-3.1-analytics: Workspace analytics endpoint
 workspace.get(
   "/:id/analytics",
-  requireWorkspacePermission("canViewAnalytics", "id"),
+  requireWorkspacePermission("canViewWorkspaceAnalytics", "id"),
   zValidator("param", z.object({ id: z.string() })),
   zValidator("query", z.object({ timeRange: z.string().optional() })),
   getWorkspaceAnalytics,

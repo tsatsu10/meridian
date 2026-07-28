@@ -15,7 +15,15 @@ import logger from "../../utils/logger";
 // @permission-canViewWorkspaceAnalytics
 
 export async function getWorkspaceAnalytics(c: Context) {
-  const workspaceId = c.req.param("id");
+  // Two routes share this controller and name the parameter differently:
+  // workspace/index.ts mounts `/:id/analytics`, analytics/index.ts mounts
+  // `/workspaces/:workspaceId/analytics`. Reading only "id" meant the second
+  // route could never resolve a workspace and returned 400 on every request —
+  // it was dead for as long as it has existed, which is why its authorization
+  // gap went unnoticed. Both guards are workspace-scoped now
+  // (canViewWorkspaceAnalytics), so accepting either name simply lets the
+  // duplicate route reach the same code the first one already serves.
+  const workspaceId = c.req.param("id") ?? c.req.param("workspaceId");
   const timeRange = c.req.query("timeRange") || "30d";
 
   if (!workspaceId) {

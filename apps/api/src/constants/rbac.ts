@@ -102,11 +102,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canViewWorkspace: true,
     canViewProjects: true,
     canViewTasks: true,
-    // Scoped by requireProjectPermission to the project being requested, so
-    // this grants a project manager analytics for THEIR projects, not the
-    // workspace at large. Previously workspace-manager was the only holder, so
-    // a project manager could not see analytics for a project they own.
-    canViewAnalytics: true,
+    // Project analytics only. canViewAnalytics would ALSO have unlocked the
+    // workspace-wide analytics routes, which is broader than a project role
+    // should reach; canViewProjectAnalytics is scoped by
+    // requireProjectPermission to the project being requested.
+    canViewProjectAnalytics: true,
     canCreateProjects: true,
     canUpdateProjects: true,
     canDeleteProjects: true,
@@ -136,10 +136,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageDepartment: true,
     canViewProjects: true,
     canViewTasks: true,
-    // Same reasoning as project-manager: the analytics routes are scoped by
-    // requireWorkspacePermission / requireProjectPermission, so this is
-    // analytics for what they already administer.
-    canViewAnalytics: true,
+    // Both scopes: a department head administers work across projects, and
+    // both routes are still scoped by requireWorkspacePermission /
+    // requireProjectPermission to the workspace or project being requested.
+    canViewProjectAnalytics: true,
+    canViewWorkspaceAnalytics: true,
     canCreateProjects: true,
     canUpdateProjects: true,
     canManageProjectMembers: true,
@@ -161,6 +162,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     // 🏆 === WORKSPACE OWNER POWERS === 🏆
     // This role has ALL permissions - equivalent to workspace owner
     // Can perform any action within the workspace without restrictions
+    //
+    // It is a TRUE SUPERSET of every other role: role-coherence.test.ts
+    // asserts it holds every permission any other role holds. It previously
+    // fell three short — canManageDepartment (department-head) and
+    // canViewAssignedTasks / canUpdateAssignedTasks (contractor) — so the
+    // "all powers" comment was not actually true, and a workspace owner could
+    // not do things a contractor could.
+    canManageDepartment: true,
+    canViewAssignedTasks: true,
+    canUpdateAssignedTasks: true,
+
     // Workspace Management
     canViewWorkspace: true,
     canEditWorkspace: true,

@@ -597,7 +597,7 @@ const project = new Hono<{
   // holding canViewAnalytics in any workspace read any project's analytics.
   .get(
     "/:projectId/analytics",
-    requireProjectPermission("canViewAnalytics"),
+    requireProjectPermission("canViewProjectAnalytics"),
     zValidator("param", z.object({ projectId: z.string() })),
     zValidator("query", z.object({ timeRange: z.string().optional() })),
     getProjectAnalytics,

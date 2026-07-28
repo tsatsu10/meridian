@@ -7,16 +7,19 @@
  *
  * BOTH SIDES BUILT-IN → compare ROLE_HIERARCHY levels.
  *   The eleven built-in roles are an intentionally ordered ladder, NOT a
- *   permission lattice. `workspace-manager` (level 10) is the only role that
- *   grants canManageRoles, so it is the only role that can reach an assign
- *   or clone route at all — yet it is not a superset of every other role:
- *   `contractor` grants canViewAssignedTasks and canUpdateAssignedTasks and
- *   `department-head` grants canManageDepartment, none of which
- *   workspace-manager holds (see ROLE_PERMISSIONS). A pure subset ceiling
- *   therefore rejects those two roles for EVERY possible actor, making them
- *   permanently unassignable and unclonable. Ordering is the comparison the
- *   built-ins were actually designed around, so "at or below my own level"
- *   is the rule that matches them.
+ *   permission lattice, and ordering is the comparison they were designed
+ *   around — so "at or below my own level" is the rule that matches them.
+ *
+ *   HISTORY, because this branch used to be load-bearing for a second reason:
+ *   `workspace-manager` was NOT a superset of the other built-ins. It lacked
+ *   `canManageDepartment` (department-head) and `canViewAssignedTasks` /
+ *   `canUpdateAssignedTasks` (contractor), so a pure subset ceiling rejected
+ *   those two roles for EVERY possible actor and made them permanently
+ *   unassignable and unclonable. `workspace-manager` is now a true superset
+ *   (pinned by constants/__tests__/role-coherence.test.ts), so that specific
+ *   trap is gone — but the hierarchy comparison stays, because it is still
+ *   the right yardstick for an ordered ladder and it keeps this branch
+ *   independent of how the matrix happens to be filled in.
  *
  * EITHER SIDE CUSTOM → compare permission sets (findExcessPermissions).
  *   A custom role has no hierarchy level, and — crucially — its permission

@@ -118,6 +118,32 @@ describe("role matrix coherence", () => {
     },
   );
 
+  // workspace-manager is the owner role: it must be able to do anything any
+  // other role can. It used to fall three permissions short —
+  // canManageDepartment (department-head only) and canViewAssignedTasks /
+  // canUpdateAssignedTasks (contractor only) — so a workspace owner could not
+  // do things a contractor could, while the matrix comment claimed
+  // "ALL permissions".
+  //
+  // This is also what lets roles/lib/role-ceiling.ts reason about assignment:
+  // the only role holding canManageRoles can now hand out any built-in role
+  // without a subset check rejecting it.
+  it("workspace-manager holds every permission any other role holds", () => {
+    const missing = ROLES.filter((role) => role !== "workspace-manager")
+      .flatMap((role) =>
+        Object.keys(ROLE_PERMISSIONS[role] as Record<string, boolean>)
+          .filter((permission) => holds(role, permission))
+          .map((permission) => ({ role, permission })),
+      )
+      .filter(({ permission }) => !holds("workspace-manager", permission))
+      .map(({ role, permission }) => `${permission} (held by ${role})`);
+
+    expect(
+      [...new Set(missing)],
+      `workspace-manager is missing: ${[...new Set(missing)].join(", ")}`,
+    ).toEqual([]);
+  });
+
   // A guard nobody can satisfy is a permanently dead feature. This catches a
   // permission being renamed in the matrix but not at its call site.
   it("every load-bearing permission is held by at least one role", () => {
