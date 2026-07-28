@@ -65,6 +65,17 @@
  * value means "the demo bypass fired, treat as fully authorized," not "the
  * actor is a guest." Covered below ("demo-mode ceiling skip").
  *
+ * FIX ROUND 3 (final pre-merge review): the Important-4 ceiling compared
+ * permission SETS in every case, which made `contractor` and
+ * `department-head` unassignable by anyone — workspace-manager is the only
+ * role that can reach this route and it is not a superset of either. The
+ * ceiling now compares ROLE_HIERARCHY when BOTH sides are built-in and keeps
+ * the subset check whenever either side is custom (roles/lib/role-ceiling.ts).
+ * The Important-4 tests below were re-pointed at a CUSTOM actor role so they
+ * keep exercising the subset branch they were written for; the hierarchy
+ * branch, and the proof that it did not reopen the escalation hole, live in
+ * assign-role-hierarchy-ceiling.test.ts.
+ *
  * IMPORTANT (membership status) — the Important-5 membership check did not
  * filter `workspaceUserTable.status`, so a user who was invited but never
  * accepted (status:"pending", per
@@ -148,6 +159,13 @@ describe("POST /assign security fixes", () => {
   beforeEach(() => {
     resetMockDb(mockDb);
     vi.clearAllMocks();
+    // mockReset, not just clearAllMocks: several tests below queue
+    // mockResolvedValueOnce values, and vi.clearAllMocks() clears recorded
+    // calls but NOT a pending once-queue. Since the hierarchy branch (Fix
+    // Round 3) skips resolveRolePermissions entirely for built-in→built-in
+    // assignments, an unconsumed once-value would otherwise survive into a
+    // later test and answer ITS ceiling check with another test's data.
+    resolveRolePermissionsMock.mockReset();
     // Default: ceiling check passes (actor and assigned role both resolve to
     // the same trivial permission set) unless a test overrides it.
     resolveRolePermissionsMock.mockResolvedValue({ canViewTasks: true });
@@ -240,11 +258,20 @@ describe("POST /assign security fixes", () => {
   });
 
   describe("Important 4: permission ceiling", () => {
+    // NOTE (Fix Round 3): the actor here holds a CUSTOM role, which is what
+    // keeps this test on the permission-SUBSET branch of the ceiling. It used
+    // to use the built-in "member", but built-in→built-in pairs are now
+    // compared by ROLE_HIERARCHY instead (see roles/lib/role-ceiling.ts), so
+    // that variant no longer produces an excess-permission message — it is
+    // still rejected, just with a hierarchy message, and is covered in
+    // assign-role-hierarchy-ceiling.test.ts. The subset branch is the one
+    // this Important-4 case was written for and is where the real escalation
+    // risk lives, so it is preserved here rather than deleted.
     it("rejects with 403 naming the excess permissions when the assigned role grants more than the assigner holds", async () => {
       checkWorkspacePermissionMock.mockResolvedValue({
         allowed: true,
         userId: "assigner-id",
-        userRole: "member",
+        userRole: "custom-role-1",
       });
       // First resolveRolePermissions call is the actor's own ceiling; the
       // second is the role being assigned (built-in "workspace-manager" here,
@@ -266,10 +293,12 @@ describe("POST /assign security fixes", () => {
     });
 
     it("proceeds when the assigned role's permissions are a subset of the assigner's", async () => {
+      // Custom actor role again, for the same reason as the test above: this
+      // asserts the SUBSET branch admits a legitimate assignment.
       checkWorkspacePermissionMock.mockResolvedValue({
         allowed: true,
         userId: "assigner-id",
-        userRole: "workspace-manager",
+        userRole: "custom-role-1",
       });
       resolveRolePermissionsMock
         .mockResolvedValueOnce({ canViewTasks: true, canManageRoles: true })

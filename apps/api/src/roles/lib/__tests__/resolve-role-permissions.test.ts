@@ -105,6 +105,54 @@ describe("resolveRolePermissions", () => {
     expect(await resolveRolePermissions("role-2", "ws-B")).toEqual({});
   });
 
+  // The only branch in this function that was not fail-closed: the workspace
+  // check used to read `row.workspaceId === null || row.workspaceId ===
+  // workspaceId`, so a custom role row with a NULL workspace granted its
+  // permissions in EVERY workspace — a global custom role, which the design
+  // says cannot exist (createRole rejects a missing workspaceId, and NULL is
+  // reserved for seeded system roles, which return from the isSystemRoleId
+  // branch long before this code runs). Unreachable through the API as
+  // written, but "unreachable today" is not a security property. Uses a role
+  // id unique to this test, plus the file's vi.resetModules(), so the result
+  // cannot be a stale cache hit.
+  it("denies a custom role whose stored workspace is NULL", async () => {
+    mockDb.__setSelectResults([
+      {
+        id: "role-3",
+        permissions: ["canManageRoles"],
+        isActive: true,
+        deletedAt: null,
+        workspaceId: null,
+      },
+    ]);
+
+    const { resolveRolePermissions } = await import(
+      "../resolve-role-permissions"
+    );
+
+    expect(await resolveRolePermissions("role-3", "ws-A")).toEqual({});
+  });
+
+  // ...including when the caller has no workspace context either. "NULL
+  // matches NULL" would be the other way this could accidentally resolve.
+  it("denies a NULL-workspace custom role even for a NULL caller workspace", async () => {
+    mockDb.__setSelectResults([
+      {
+        id: "role-4",
+        permissions: ["canManageRoles"],
+        isActive: true,
+        deletedAt: null,
+        workspaceId: null,
+      },
+    ]);
+
+    const { resolveRolePermissions } = await import(
+      "../resolve-role-permissions"
+    );
+
+    expect(await resolveRolePermissions("role-4", null)).toEqual({});
+  });
+
   // Control for the test above: the identical stored row resolves correctly
   // when the caller's workspace matches. This proves the denial above comes
   // specifically from the workspace mismatch, not from some other reason the
