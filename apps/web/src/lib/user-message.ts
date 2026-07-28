@@ -46,6 +46,7 @@ const OPAQUE_SIGNATURES = [
   "gateway timeout",
   "aborterror",
   "the operation was aborted",
+  "[object object]",
 ];
 
 function rawMessageOf(error: unknown): string {

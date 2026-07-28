@@ -118,4 +118,16 @@ describe("userMessage", () => {
       "Your session has expired.",
     );
   });
+
+  it("treats an Error whose message is a stringified object as opaque", () => {
+    // A caller upstream can accidentally do `String(someObject)` or template-
+    // literal an object into an Error message, producing the literal text
+    // "[object Object]" — no less a leaked blob than passing the object
+    // itself, and just as unfit to show a user.
+    const message = userMessage(new Error("[object Object]"), "sign you in");
+
+    expect(message).toBe(
+      "Couldn't sign you in. Something went wrong on our end — please try again.",
+    );
+  });
 });

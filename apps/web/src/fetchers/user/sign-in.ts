@@ -27,7 +27,18 @@ const signIn = async ({ email, password }: SignInFormValues) => {
       let errorMessage = "Sign-in failed";
       try {
         const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
+        // The API's error envelope is `{ error: { message, code, ... } }` —
+        // errorData.error is an object there, not a string. Unwrap in order
+        // of preference and only ever assign a string, so a shape we don't
+        // recognize falls through to the existing default instead of
+        // stringifying to "[object Object]".
+        if (typeof errorData?.error?.message === "string") {
+          errorMessage = errorData.error.message;
+        } else if (typeof errorData?.error === "string") {
+          errorMessage = errorData.error;
+        } else if (typeof errorData?.message === "string") {
+          errorMessage = errorData.message;
+        }
       } catch {
         // If response is not JSON, try to get text
         try {
