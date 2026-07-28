@@ -1,16 +1,23 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { z } from "zod";
 import { MeridianMark } from "@/components/branding/meridian-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AuroraBackdrop } from "./aurora-backdrop";
 import { GlassPanel } from "./glass-panel";
 
 export type AuthIntent = "sign-in" | "sign-up";
 
 const emailSchema = z.string().email();
+
+// Space Grotesk for headings, matching the idiom already used in
+// LandingPage.tsx — an arbitrary-value Tailwind class rather than a
+// `fontFamily` theme key, since tailwind.config.js has none and both fonts
+// are already loaded via the Google Fonts link in index.html.
+const displayFont = "[font-family:'Space_Grotesk',sans-serif]";
 
 export type AuthSurfaceProps = {
   intent: AuthIntent;
@@ -19,20 +26,6 @@ export type AuthSurfaceProps = {
     onEditEmail: () => void;
   }) => React.ReactNode;
 };
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(query.matches);
-    const onChange = (event: MediaQueryListEvent) => setReduced(event.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
-
-  return reduced;
-}
 
 export function AuthSurface({
   intent,
@@ -54,11 +47,15 @@ export function AuthSurface({
     event.preventDefault();
     // Validated entirely on the client. Contacting the server here is what
     // would leak whether the address is registered — see task-3-brief.md.
-    if (!emailSchema.safeParse(email).success) {
+    // Trimmed first: a pasted " a@b.com " has no whitespace visible to the
+    // user, but z.string().email() rejects it outright.
+    const trimmedEmail = email.trim();
+    if (!emailSchema.safeParse(trimmedEmail).success) {
       setError("Enter a valid email address.");
       return;
     }
     setError(null);
+    setEmail(trimmedEmail);
     setStep("credential");
   };
 
@@ -71,7 +68,9 @@ export function AuthSurface({
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           <MeridianMark className="mb-4 h-12 w-12" />
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-white">
+          <h1
+            className={`text-3xl font-semibold tracking-tight text-white ${displayFont}`}
+          >
             {intent === "sign-up" ? "Create your account" : "Welcome back"}
           </h1>
         </div>
@@ -137,15 +136,17 @@ export function AuthSurface({
                       className="h-12 border-white/15 bg-white/5 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
                       placeholder="you@work.com"
                     />
-                    {error && (
-                      <p
-                        id="auth-email-error"
-                        aria-live="polite"
-                        className="text-sm text-red-300"
-                      >
-                        {error}
-                      </p>
-                    )}
+                    {/* Rendered unconditionally, not `{error && ...}` — a
+                     * live region has to already exist in the DOM before its
+                     * content changes, or screen readers never announce the
+                     * update. Only the text content toggles. */}
+                    <p
+                      id="auth-email-error"
+                      aria-live="polite"
+                      className="text-sm text-red-300"
+                    >
+                      {error}
+                    </p>
                   </div>
 
                   <Button

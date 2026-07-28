@@ -96,6 +96,19 @@ export function ForgotPasswordForm() {
                    * child directly — wrapping it in this positioning div here
                    * (instead of inside FormControl) is what keeps the label's
                    * htmlFor pointing at the actual input. */}
+                  {/* px-0 is load-bearing, not decorative: Input's base
+                   * classes include `px-3`, and index.css's density system
+                   * redeclares `.px-3` with `!important` on both padding
+                   * sides. `pl-10`/`pr-3` alone can't override that — but
+                   * tailwind-merge only evicts an earlier class when the
+                   * later one is in the exact same class group, and `px-0`
+                   * is in the same group as `px-3` (unlike `pl-10`/`pr-3`,
+                   * which belong to separate `pl`/`pr` groups). So `px-0`
+                   * drops `px-3` from the rendered class list entirely, and
+                   * only then do `pl-10`/`pr-3` take effect. Removing
+                   * `px-0` reintroduces the bug: the Mail icon overlaps the
+                   * placeholder text because the input keeps px-3's forced
+                   * padding underneath it. */}
                   <FormControl>
                     <Input
                       autoComplete="email"
@@ -110,7 +123,7 @@ export function ForgotPasswordForm() {
                     className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40"
                   />
                 </div>
-                <FormMessage />
+                <FormMessage className="text-red-300" />
               </FormItem>
             )}
           />

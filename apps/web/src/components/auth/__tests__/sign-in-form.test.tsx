@@ -136,11 +136,23 @@ describe("SignInForm", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("validates password length", async () => {
-    // Skip this test - sign-in schema doesn't validate password length
-    // Password validation happens on the server side for sign-in
-    // Only sign-up has client-side password validation
-    expect(true).toBe(true);
+  it("does not block submission for a short password (sign-in has no client-side length rule)", async () => {
+    // Password validation happens server-side for sign-in — only sign-up
+    // validates length client-side — so even a one-character password must
+    // reach the submit call rather than being rejected locally.
+    const user = userEvent.setup();
+    renderSignInRoute();
+
+    const password = await advanceToPassword(user);
+    await user.type(password, "a");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() =>
+      expect(mockSignIn).toHaveBeenCalledWith({
+        email: "person@example.com",
+        password: "a",
+      }),
+    );
   });
 
   it("toggles password visibility", async () => {
@@ -198,12 +210,6 @@ describe("SignInForm", () => {
     expect(mockHistory.push).toHaveBeenCalledWith(
       "/auth/verify-2fa?email=person%40example.com",
     );
-  });
-
-  it("shows loading state when submitting", async () => {
-    // Skip this test for now - focus on validation
-    // TODO: Fix loading state test
-    expect(true).toBe(true);
   });
 
   it("handles form submission with Enter key", async () => {

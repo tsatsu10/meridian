@@ -25,6 +25,12 @@ export const Route = createFileRoute("/auth/verify-2fa")({
   },
 });
 
+// Space Grotesk for headings, matching the idiom already used in
+// LandingPage.tsx — an arbitrary-value Tailwind class rather than a
+// `fontFamily` theme key, since tailwind.config.js has none and both fonts
+// are already loaded via the Google Fonts link in index.html.
+const displayFont = "[font-family:'Space_Grotesk',sans-serif]";
+
 function Verify2FA() {
   const [code, setCode] = useState("");
   const [backupCode, setBackupCode] = useState("");
@@ -93,7 +99,9 @@ function Verify2FA() {
         <div className="relative z-10 w-full max-w-md">
           <div className="mb-8 flex flex-col items-center text-center">
             <MeridianMark className="mb-4 h-12 w-12" />
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-white">
+            <h1
+              className={`text-3xl font-semibold tracking-tight text-white ${displayFont}`}
+            >
               Two-factor authentication
             </h1>
             <p className="mt-2 text-sm text-white/60">
@@ -157,15 +165,17 @@ function Verify2FA() {
                 </div>
               )}
 
-              {error && (
-                <p
-                  id="verify-2fa-error"
-                  aria-live="polite"
-                  className="text-sm text-red-300"
-                >
-                  {error}
-                </p>
-              )}
+              {/* Rendered unconditionally, not `{error && ...}` — a live
+               * region has to already exist in the DOM before its content
+               * changes, or screen readers never announce the update. Only
+               * the text content toggles. */}
+              <p
+                id="verify-2fa-error"
+                aria-live="polite"
+                className="text-sm text-red-300"
+              >
+                {error}
+              </p>
 
               <Button
                 type="submit"

@@ -113,6 +113,12 @@ describe("AuthSurface", () => {
     await user.type(screen.getByLabelText(/email/i), "person@example.com");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
+    // Flush ~400ms before asserting: a debounced email-existence probe (say
+    // 300ms) would not have fired yet immediately after the click, so this
+    // guards against a debounced enumeration leak that an immediate
+    // assertion would miss entirely.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

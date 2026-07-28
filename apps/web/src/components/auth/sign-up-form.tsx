@@ -121,7 +121,7 @@ export function SignUpForm({ email, onEditEmail }: SignUpFormProps) {
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-red-300" />
             </FormItem>
           )}
         />
@@ -160,7 +160,7 @@ export function SignUpForm({ email, onEditEmail }: SignUpFormProps) {
                 </button>
               </div>
               <PasswordStrengthIndicator password={password} />
-              <FormMessage />
+              <FormMessage className="text-red-300" />
             </FormItem>
           )}
         />
@@ -193,7 +193,7 @@ export function SignUpForm({ email, onEditEmail }: SignUpFormProps) {
                   )}
                 </button>
               </div>
-              <FormMessage />
+              <FormMessage className="text-red-300" />
             </FormItem>
           )}
         />
