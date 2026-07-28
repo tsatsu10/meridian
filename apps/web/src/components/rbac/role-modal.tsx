@@ -33,7 +33,7 @@ import { API_BASE_URL } from "@/constants/urls";
 import { toast } from "sonner";
 import { RolePreview } from "./role-preview";
 import { Loader2 } from "lucide-react";
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import useWorkspaceStore from "@/store/workspace";
 import { groupPermissions } from "@/lib/permissions/permission-groups";
 import { useRBACAuth } from "@/lib/permissions";
 
@@ -90,6 +90,13 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
   // Get workspace ID from context ✅
   const { workspace } = useWorkspaceStore();
   const workspaceId = workspace?.id || "";
+  // Creating a role is workspace-scoped server-side (POST /roles requires
+  // workspaceId: z.string().min(1)); editing an existing role is not (the
+  // workspace is derived from the target role on the server). A missing
+  // workspace on a role write is security-relevant — same reasoning as the
+  // assignRole/removeRole guards in lib/permissions/provider.tsx — so this
+  // fails visibly instead of letting the request 400.
+  const needsWorkspaceToCreate = !isEditing && !workspaceId;
 
   // The actor's own effective permissions — used to disable checkboxes for
   // permissions the actor does not hold, so the server-side "can't grant
@@ -138,6 +145,13 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Defense in depth: handleSubmit already blocks this case, and the
+      // submit button is disabled for it, but this guards any other path
+      // that might call saveMutation.mutate() directly.
+      if (needsWorkspaceToCreate) {
+        throw new Error("Select a workspace before creating a role");
+      }
+
       const url = isEditing
         ? `${API_BASE_URL}/roles/${role.id}`
         : `${API_BASE_URL}/roles`;
@@ -195,6 +209,11 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
 
     if (formData.permissions.length === 0) {
       toast.error("At least one permission is required");
+      return;
+    }
+
+    if (needsWorkspaceToCreate) {
+      toast.error("Select a workspace before creating a role");
       return;
     }
 
@@ -392,11 +411,24 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
           </Tabs>
 
           <DialogFooter className="mt-6">
+            {needsWorkspaceToCreate && (
+              <p className="text-sm text-destructive mr-auto self-center">
+                Select a workspace before creating a role
+              </p>
+            )}
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             {!isSystemRole && (
-              <Button type="submit" disabled={saveMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={saveMutation.isPending || needsWorkspaceToCreate}
+                title={
+                  needsWorkspaceToCreate
+                    ? "Select a workspace before creating a role"
+                    : undefined
+                }
+              >
                 {saveMutation.isPending && (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 )}
