@@ -139,10 +139,18 @@ export function SignUpForm({ email, onEditEmail }: SignUpFormProps) {
                  * (instead of inside FormControl) is what keeps the label's
                  * htmlFor pointing at the actual input. */}
                 <FormControl>
+                  {/* px-0 evicts Input's base `px-3` (redeclared
+                   * `!important` by the density system in index.css) via
+                   * tailwind-merge's same-group resolution — see the fuller
+                   * explanation on the email field in
+                   * forgot-password-form.tsx. `pr-10` alone can't win that
+                   * fight (`pr`/`pl` are separate tailwind-merge groups from
+                   * `px`), so without `px-0` here the eye toggle button
+                   * overlaps a long password. */}
                   <Input
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className="h-12 border-white/15 bg-white/5 pr-10 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
+                    className="h-12 border-white/15 bg-white/5 px-0 pl-3 pr-10 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
                     placeholder="••••••••"
                     {...field}
                   />
@@ -173,10 +181,18 @@ export function SignUpForm({ email, onEditEmail }: SignUpFormProps) {
               <FormLabel className="text-white/80">Confirm password</FormLabel>
               <div className="relative">
                 <FormControl>
+                  {/* px-0 evicts Input's base `px-3` (redeclared
+                   * `!important` by the density system in index.css) via
+                   * tailwind-merge's same-group resolution — see the fuller
+                   * explanation on the email field in
+                   * forgot-password-form.tsx. `pr-10` alone can't win that
+                   * fight (`pr`/`pl` are separate tailwind-merge groups from
+                   * `px`), so without `px-0` here the eye toggle button
+                   * overlaps a long password. */}
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className="h-12 border-white/15 bg-white/5 pr-10 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
+                    className="h-12 border-white/15 bg-white/5 px-0 pl-3 pr-10 text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
                     placeholder="••••••••"
                     {...field}
                   />
