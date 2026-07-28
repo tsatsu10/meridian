@@ -103,4 +103,89 @@ describe("AuthSurface", () => {
       "/auth/sign-in",
     );
   });
+
+  it("hides the identity step's control from the accessibility tree once the credential step is active", async () => {
+    // The reflow/orphan-control bug: without an explicit gate, the outgoing
+    // step could stay mounted, focusable and reachable via getByRole while
+    // visually fading out underneath the incoming step.
+    const user = userEvent.setup();
+    render(<AuthSurface intent="sign-in" renderCredentialStep={credential} />);
+
+    await user.type(screen.getByLabelText(/email/i), "person@example.com");
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/credential step for person@example.com/i),
+      ).toBeInTheDocument(),
+    );
+
+    // getByRole excludes anything aria-hidden (or otherwise inaccessible),
+    // so this only passes if the identity step's email input is no longer
+    // reachable — even though the node itself is still in the DOM so
+    // "change email" can restore it instantly.
+    expect(
+      screen.queryByRole("textbox", { name: /email/i }),
+    ).not.toBeInTheDocument();
+    // Only the credential step's own control should be reachable now.
+    expect(
+      screen.getByRole("button", { name: /change email/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the credential step's control from the accessibility tree while back on identity", async () => {
+    const user = userEvent.setup();
+    render(<AuthSurface intent="sign-in" renderCredentialStep={credential} />);
+
+    await user.type(screen.getByLabelText(/email/i), "person@example.com");
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    await user.click(
+      await screen.findByRole("button", { name: /change email/i }),
+    );
+
+    // Back on identity: the credential step's "change email" control must
+    // not be reachable even though it stayed mounted for a fast return trip.
+    expect(
+      screen.queryByRole("button", { name: /change email/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /email/i })).toBeInTheDocument();
+  });
+
+  it("makes the step transition instant when the user prefers reduced motion", () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        onchange: null,
+      })),
+    );
+
+    const { container } = render(
+      <AuthSurface intent="sign-in" renderCredentialStep={credential} />,
+    );
+
+    // Reads the literal value passed to the motion elements' `transition`
+    // prop (see data-step-transition-duration in auth-surface.tsx), not an
+    // independently-computed marker, so this fails if the reduced-motion
+    // check is ever wired up but the duration itself isn't gated by it.
+    expect(
+      container.querySelector("[data-step-transition-duration]"),
+    ).toHaveAttribute("data-step-transition-duration", "0");
+  });
+
+  it("animates the step transition over 240ms by default", () => {
+    const { container } = render(
+      <AuthSurface intent="sign-in" renderCredentialStep={credential} />,
+    );
+
+    expect(
+      container.querySelector("[data-step-transition-duration]"),
+    ).toHaveAttribute("data-step-transition-duration", "0.24");
+  });
 });
