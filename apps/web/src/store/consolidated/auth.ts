@@ -210,6 +210,7 @@ export const useAuthStore = create<AuthStore>()(
         try {
           // Call logout endpoint
           await fetch(`${API_BASE_URL}/users/sign-out`, {
+            credentials: "include",
             method: "POST",
           });
         } catch (error) {
@@ -238,6 +239,7 @@ export const useAuthStore = create<AuthStore>()(
 
         try {
           const response = await fetch(`${API_BASE_URL}/users/refresh`, {
+            credentials: "include",
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refreshToken }),
@@ -266,7 +268,9 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/me`, {});
+          const response = await fetch(`${API_BASE_URL}/me`, {
+            credentials: "include",
+          });
 
           if (response.ok) {
             const data = await response.json();
@@ -327,6 +331,7 @@ export const useAuthStore = create<AuthStore>()(
 
         try {
           const response = await fetch(`${API_BASE_URL}/users/profile`, {
+            credentials: "include",
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(profile),

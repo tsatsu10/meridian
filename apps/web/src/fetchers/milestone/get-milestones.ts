@@ -34,6 +34,7 @@ async function getMilestones(
 ): Promise<GetMilestonesResponse> {
   const response = await fetch(
     `${API_BASE_URL}/milestone/projects/${projectId}/milestones`,
+    { credentials: "include" },
   );
 
   if (!response.ok) {

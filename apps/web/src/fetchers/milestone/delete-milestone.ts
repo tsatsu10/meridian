@@ -3,7 +3,10 @@ import { API_BASE_URL } from "@/constants/urls";
 async function deleteMilestone(milestoneId: string): Promise<void> {
   const response = await fetch(
     `${API_BASE_URL}/milestone/milestones/${milestoneId}`,
-    { method: "DELETE" },
+    {
+      credentials: "include",
+      method: "DELETE",
+    },
   );
 
   if (!response.ok) {

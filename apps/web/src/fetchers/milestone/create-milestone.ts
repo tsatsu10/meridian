@@ -21,6 +21,7 @@ async function createMilestone(
   const response = await fetch(
     `${API_BASE_URL}/milestone/projects/${projectId}/milestones`,
     {
+      credentials: "include",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

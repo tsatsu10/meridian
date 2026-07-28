@@ -47,6 +47,7 @@ export function useScheduledReports(workspaceId: string | undefined) {
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE_URL}/reports/scheduled/${workspaceId}`,
+        { credentials: "include" },
       );
       const body = await parseOrThrow(response);
       return body.data as ScheduledReport[];
@@ -62,6 +63,7 @@ export function useCreateScheduledReport(workspaceId: string | undefined) {
       const response = await fetch(
         `${API_BASE_URL}/reports/scheduled/${workspaceId}`,
         {
+          credentials: "include",
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(input),
@@ -88,6 +90,7 @@ export function useUpdateScheduledReport(workspaceId: string | undefined) {
       const response = await fetch(
         `${API_BASE_URL}/reports/scheduled/${workspaceId}/${reportId}`,
         {
+          credentials: "include",
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(input),
@@ -110,7 +113,10 @@ export function useDeleteScheduledReport(workspaceId: string | undefined) {
     mutationFn: async (reportId: string) => {
       const response = await fetch(
         `${API_BASE_URL}/reports/scheduled/${workspaceId}/${reportId}`,
-        { method: "DELETE" },
+        {
+          credentials: "include",
+          method: "DELETE",
+        },
       );
       return parseOrThrow(response);
     },
@@ -128,7 +134,10 @@ export function useRunScheduledReportNow(workspaceId: string | undefined) {
     mutationFn: async (reportId: string) => {
       const response = await fetch(
         `${API_BASE_URL}/reports/scheduled/${workspaceId}/${reportId}/run`,
-        { method: "POST" },
+        {
+          credentials: "include",
+          method: "POST",
+        },
       );
       const body = await parseOrThrow(response);
       return body.data as {

@@ -21,6 +21,7 @@ async function updateMilestone(
   const response = await fetch(
     `${API_BASE_URL}/milestone/milestones/${milestoneId}`,
     {
+      credentials: "include",
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
