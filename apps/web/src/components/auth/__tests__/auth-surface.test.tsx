@@ -35,7 +35,39 @@ describe("AuthSurface", () => {
   it("starts on the identity step", () => {
     render(<AuthSurface intent="sign-in" renderCredentialStep={credential} />);
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.queryByText(/credential step/i)).not.toBeInTheDocument();
+    // The credential step's DOM node may already be mounted (it is — see
+    // "mounts both steps from first paint" below, which keeps the panel
+    // from resizing on the first transition), but it must not be
+    // *presented*: not reachable by role/keyboard, not announced.
+    // queryByText doesn't check any of that (it would find the node
+    // whether or not it's aria-hidden), so this asserts via role instead.
+    expect(
+      screen.queryByRole("button", { name: /change email/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("mounts both steps from first paint so the panel never resizes, including on the first transition", () => {
+    const { container } = render(
+      <AuthSurface intent="sign-in" renderCredentialStep={credential} />,
+    );
+
+    // Both grid cells must exist before the user ever advances — that's
+    // what keeps the panel's height stable through the very first
+    // transition (the one nearly every real user hits), not just
+    // subsequent back/forward toggles.
+    const identityStep = container.querySelector('[data-auth-step="identity"]');
+    const credentialStep = container.querySelector(
+      '[data-auth-step="credential"]',
+    );
+    expect(identityStep).toBeInTheDocument();
+    expect(credentialStep).toBeInTheDocument();
+
+    // But on first paint the credential step must not be presented: hidden
+    // from assistive tech and not reachable by keyboard/role queries.
+    expect(credentialStep).toHaveAttribute("aria-hidden", "true");
+    expect(
+      screen.queryByRole("button", { name: /change email/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("advances to the credential step with the email", async () => {
@@ -45,11 +77,18 @@ describe("AuthSurface", () => {
     await user.type(screen.getByLabelText(/email/i), "person@example.com");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
+    // getByRole excludes aria-hidden subtrees, so this only resolves once
+    // the credential step is actually the active, presented step — not
+    // merely mounted (it's mounted from first paint; see the "mounts both
+    // steps" test above).
     await waitFor(() =>
       expect(
-        screen.getByText(/credential step for person@example.com/i),
+        screen.getByRole("button", { name: /change email/i }),
       ).toBeInTheDocument(),
     );
+    expect(
+      screen.getByText(/credential step for person@example.com/i),
+    ).toBeInTheDocument();
   });
 
   it("returns to identity with the email preserved", async () => {
@@ -72,7 +111,11 @@ describe("AuthSurface", () => {
     await user.type(screen.getByLabelText(/email/i), "not-an-email");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
-    expect(screen.queryByText(/credential step/i)).not.toBeInTheDocument();
+    // The credential step's node is always mounted (see "mounts both
+    // steps"), so this asserts via role — it must still not be presented.
+    expect(
+      screen.queryByRole("button", { name: /change email/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("never contacts the server on the identity step", async () => {

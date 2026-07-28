@@ -48,12 +48,6 @@ export function AuthSurface({
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"identity" | "credential">("identity");
   const [error, setError] = useState<string | null>(null);
-  // The credential step is only ever mounted once the user has actually
-  // advanced past identity (renderCredentialStep must not run — and its
-  // content must not exist in the DOM — before that; see task-3 tests). Once
-  // mounted, it stays mounted so going back to "edit email" and forward
-  // again is a pure opacity/visibility toggle, not a re-mount.
-  const [hasAdvancedOnce, setHasAdvancedOnce] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
 
   const identityActive = step === "identity";
@@ -74,7 +68,6 @@ export function AuthSurface({
       return;
     }
     setError(null);
-    setHasAdvancedOnce(true);
     setStep("credential");
     // The focused Continue button is about to become inert/invisible; move
     // focus off it first so it's never left inside a hidden subtree.
@@ -100,19 +93,29 @@ export function AuthSurface({
 
         <GlassPanel>
           {/*
-           * Both steps live in the same grid cell (col-start-1 row-start-1)
-           * instead of one being conditionally unmounted while the other
-           * mounts. That makes step changes a true cross-fade: the panel's
-           * height is always sized to fit whichever step is tallest, so
-           * there's no reflow when switching, and the entering step never
-           * has to wait for the outgoing step's exit animation to finish
-           * before it appears. The inactive step stays in the DOM (so
-           * "change email" can restore it instantly with the typed value
-           * intact) but is aria-hidden and visually hidden
+           * Both steps are mounted from the very first render, stacked into
+           * the same grid cell (col-start-1 row-start-1), instead of the
+           * credential step being conditionally mounted on first advance.
+           * That's deliberate: if the credential cell didn't exist until
+           * the user first advances, the panel's height would jump at
+           * exactly that transition — the one nearly every real user hits,
+           * since the surface remounts fresh on every page load. Mounting
+           * both up front means the grid row is sized to fit whichever
+           * step is tallest from the very first paint, so *no* transition
+           * ever resizes the panel, first included.
+           *
+           * The step that isn't current is aria-hidden and visually hidden
            * (visibility: hidden, which — unlike display: none — still
-           * reserves its layout space and also removes it and all its
-           * descendants from the tab order), so it can never be a
-           * focusable/clickable orphan while the other step is showing.
+           * reserves its layout space for grid sizing, and also removes it
+           * and all its descendants from the tab order and from
+           * .focus()/pointer input), so it's never presented, announced,
+           * or focusable/clickable while the other step is showing —
+           * including the credential step on first paint, before the user
+           * has advanced even once.
+           *
+           * data-auth-step is a plain marker for tests (which grid cell is
+           * which) that doesn't depend on Tailwind's CSS having been
+           * loaded into jsdom.
            *
            * data-step-transition-duration mirrors stepTransition.duration —
            * the exact value handed to both motion elements' `transition`
@@ -127,6 +130,7 @@ export function AuthSurface({
             data-step-transition-duration={stepTransition.duration}
           >
             <motion.form
+              data-auth-step="identity"
               onSubmit={onContinue}
               noValidate
               aria-hidden={!identityActive}
@@ -175,23 +179,22 @@ export function AuthSurface({
               </Button>
             </motion.form>
 
-            {hasAdvancedOnce && (
-              <motion.div
-                aria-hidden={!credentialActive}
-                initial={{ opacity: 0, y: riseOffset }}
-                animate={{
-                  opacity: credentialActive ? 1 : 0,
-                  y: credentialActive ? 0 : riseOffset,
-                }}
-                transition={stepTransition}
-                className={cn(
-                  "col-start-1 row-start-1 space-y-5",
-                  !credentialActive && INACTIVE_STEP_CLASSES,
-                )}
-              >
-                {renderCredentialStep({ email, onEditEmail })}
-              </motion.div>
-            )}
+            <motion.div
+              data-auth-step="credential"
+              aria-hidden={!credentialActive}
+              initial={{ opacity: 0, y: riseOffset }}
+              animate={{
+                opacity: credentialActive ? 1 : 0,
+                y: credentialActive ? 0 : riseOffset,
+              }}
+              transition={stepTransition}
+              className={cn(
+                "col-start-1 row-start-1 space-y-5",
+                !credentialActive && INACTIVE_STEP_CLASSES,
+              )}
+            >
+              {renderCredentialStep({ email, onEditEmail })}
+            </motion.div>
           </div>
         </GlassPanel>
 
