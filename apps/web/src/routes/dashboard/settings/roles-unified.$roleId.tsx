@@ -86,7 +86,9 @@ interface RoleUsage {
 // MAIN COMPONENT
 // ==========================================
 
-function RoleDetailsPage() {
+// Exported (not just used via `Route`) so it can be rendered directly in
+// tests — same pattern as UnifiedRolesPage in roles-unified.tsx.
+export function RoleDetailsPage() {
   const { roleId } = useParams({
     from: "/dashboard/settings/roles-unified/$roleId",
   });
@@ -245,6 +247,9 @@ function RoleDetailsPage() {
   }
 
   const isSystem = role.type === "system";
+  // Prefer the derived usage stats over the drifting denormalised columns on
+  // the role row itself (see the usage query above).
+  const lastUsedAt = usage?.lastUsedAt ?? role.lastUsedAt;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -370,10 +375,8 @@ function RoleDetailsPage() {
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
-                {usage?.lastUsedAt ?? role.lastUsedAt
-                  ? new Date(
-                      (usage?.lastUsedAt ?? role.lastUsedAt) as string | Date,
-                    ).toLocaleDateString()
+                {lastUsedAt
+                  ? new Date(lastUsedAt).toLocaleDateString()
                   : "Never"}
               </span>
             </div>
@@ -397,51 +400,29 @@ function RoleDetailsPage() {
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Assigned Users ({role.usersCount})
-          </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
+      {/*
+        Permissions is the only section on this page backed by a real
+        endpoint (GET /api/roles/:id). The "Assigned Users" and "History"
+        tabs that used to sit alongside it, and the "Assign Users" button in
+        the header, all called routes that do not exist — see the
+        DELIBERATELY MISSING block at the top of this file for the exact
+        endpoints and components needed to bring each one back. With one
+        section left there is nothing to tab between, so the Tabs wrapper is
+        gone too.
+      */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Shield className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-semibold">
             Permissions ({role.permissions?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            History
-          </TabsTrigger>
-        </TabsList>
+          </h2>
+        </div>
 
-        <TabsContent value="users" className="mt-6">
-          <AssignedUsersList roleId={roleId} onAssignMore={handleAssignUsers} />
-        </TabsContent>
-
-        <TabsContent value="permissions" className="mt-6">
-          <PermissionsList
-            permissions={role.permissions || []}
-            isSystem={isSystem}
-          />
-        </TabsContent>
-
-        <TabsContent value="history" className="mt-6">
-          <RoleHistory roleId={roleId} />
-        </TabsContent>
-      </Tabs>
-
-      {/* Assign Users Modal */}
-      <AssignUsersModal
-        open={isAssignModalOpen}
-        onClose={() => setIsAssignModalOpen(false)}
-        roleId={roleId}
-        roleName={role.name}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["role", roleId] });
-          queryClient.invalidateQueries({ queryKey: ["role-users", roleId] });
-          setIsAssignModalOpen(false);
-        }}
-      />
+        <PermissionsList
+          permissions={role.permissions || []}
+          isSystem={isSystem}
+        />
+      </div>
     </div>
   );
 }

@@ -197,7 +197,11 @@ export function UnifiedRolesPage() {
   };
 
   const handleViewDetails = (roleId: string) => {
-    window.location.href = `/dashboard/settings/roles/${roleId}`;
+    // The detail route is /dashboard/settings/roles-unified/$roleId (see
+    // roles-unified.$roleId.tsx and routeTree.gen.ts). This pointed at
+    // /dashboard/settings/roles/:id, which is not a registered route at all,
+    // so "View Details" landed on the router's not-found page every time.
+    window.location.href = `/dashboard/settings/roles-unified/${roleId}`;
   };
 
   // Stats
