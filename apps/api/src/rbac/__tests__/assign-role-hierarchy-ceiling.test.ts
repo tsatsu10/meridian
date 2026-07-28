@@ -116,14 +116,18 @@ describe("POST /assign escalation ceiling", () => {
       });
     });
 
-    // Sanity-check the premise this whole branch exists for, straight from
-    // the constant: if these ever became subsets of workspace-manager, the
-    // hierarchy branch would no longer be load-bearing.
-    it("premise: workspace-manager is not a permission superset of contractor or department-head", () => {
+    // Premise, updated: workspace-manager is now a TRUE SUPERSET of every
+    // other built-in, so the subset ceiling would no longer reject contractor
+    // or department-head and this branch is no longer load-bearing for THAT
+    // reason. It stays because ordering is the right comparison for an ordered
+    // ladder, and because keeping it makes the outcome independent of how the
+    // matrix happens to be filled in — the assignments below must keep working
+    // either way, which is what the rest of this describe block pins.
+    it("premise: workspace-manager is a permission superset of contractor and department-head", () => {
       const manager = ROLE_PERMISSIONS["workspace-manager"];
-      expect(manager.canViewAssignedTasks).toBeUndefined();
-      expect(manager.canUpdateAssignedTasks).toBeUndefined();
-      expect(manager.canManageDepartment).toBeUndefined();
+      expect(manager.canViewAssignedTasks).toBe(true);
+      expect(manager.canUpdateAssignedTasks).toBe(true);
+      expect(manager.canManageDepartment).toBe(true);
       expect(ROLE_PERMISSIONS.contractor.canViewAssignedTasks).toBe(true);
       expect(ROLE_PERMISSIONS["department-head"].canManageDepartment).toBe(
         true,

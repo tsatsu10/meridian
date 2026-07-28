@@ -19,7 +19,11 @@ import {
   createSlidingWindowRateLimiter,
   RateLimitPresets,
 } from "../middlewares/sliding-window-rate-limiter";
-import { requirePermission, checkWorkspacePermission } from "../middlewares/rbac";
+import {
+  requirePermission,
+  requireWorkspacePermission,
+  checkWorkspacePermission,
+} from "../middlewares/rbac";
 import type { PermissionAction } from "../types/rbac";
 
 const app = new Hono<{ Variables: { userEmail: string } }>();
@@ -54,7 +58,10 @@ function requireTeamWorkspacePermission(permission: PermissionAction) {
         permission,
       );
       if (!result.allowed) {
-        return c.json(result.body ?? { error: "Forbidden" }, result.status ?? 403);
+        return c.json(
+          result.body ?? { error: "Forbidden" },
+          result.status ?? 403,
+        );
       }
       await next();
     },
@@ -77,6 +84,17 @@ const teamUpdateLimiter = createSlidingWindowRateLimiter({
 });
 
 // @epic-3.4-teams: Get teams for a workspace
+// 🚨 The workspace team roster and its metrics were readable for any
+// workspace id by any authenticated user.
+app.use(
+  "/:workspaceId",
+  requireWorkspacePermission("canViewTeam", "workspaceId"),
+);
+app.use(
+  "/:workspaceId/metrics",
+  requireWorkspacePermission("canViewTeam", "workspaceId"),
+);
+
 app.get("/:workspaceId", async (c) => {
   const workspaceId = c.req.param("workspaceId");
   const userEmail = c.get("userEmail");
@@ -282,7 +300,10 @@ app.post(
       "canCreateTeams",
     );
     if (!result.allowed) {
-      return c.json(result.body ?? { error: "Forbidden" }, result.status ?? 403);
+      return c.json(
+        result.body ?? { error: "Forbidden" },
+        result.status ?? 403,
+      );
     }
     await next();
   }),
@@ -305,174 +326,194 @@ app.delete(
 );
 
 // @epic-3.4-teams: Add member to team
-app.post("/:teamId/members", requireTeamWorkspacePermission("canManageTeamMembers"), async (c) => {
-  const teamId = c.req.param("teamId");
+app.post(
+  "/:teamId/members",
+  requireTeamWorkspacePermission("canManageTeamMembers"),
+  async (c) => {
+    const teamId = c.req.param("teamId");
 
-  try {
-    const body = await c.req.json();
-    const { userId, role = "member" } = body;
+    try {
+      const body = await c.req.json();
+      const { userId, role = "member" } = body;
 
-    if (!userId) {
-      return c.json({ error: "Missing userId" }, 400);
+      if (!userId) {
+        return c.json({ error: "Missing userId" }, 400);
+      }
+
+      const { initializeDatabase, getDatabase } = await import(
+        "../database/connection"
+      );
+      await initializeDatabase();
+      const db = getDatabase();
+
+      const [newMember] = await db
+        .insert(teamMemberTable)
+        .values({
+          teamId,
+          userId,
+          role,
+        })
+        .returning();
+
+      return c.json({ member: newMember }, 201);
+    } catch (error) {
+      logger.error("Error adding team member:", error);
+      return c.json({ error: "Failed to add team member" }, 500);
     }
-
-    const { initializeDatabase, getDatabase } = await import(
-      "../database/connection"
-    );
-    await initializeDatabase();
-    const db = getDatabase();
-
-    const [newMember] = await db
-      .insert(teamMemberTable)
-      .values({
-        teamId,
-        userId,
-        role,
-      })
-      .returning();
-
-    return c.json({ member: newMember }, 201);
-  } catch (error) {
-    logger.error("Error adding team member:", error);
-    return c.json({ error: "Failed to add team member" }, 500);
-  }
-});
+  },
+);
 
 // @epic-3.4-teams: Remove member from team
-app.delete("/:teamId/members/:userId", requireTeamWorkspacePermission("canManageTeamMembers"), async (c) => {
-  const teamId = c.req.param("teamId");
-  const userId = c.req.param("userId");
+app.delete(
+  "/:teamId/members/:userId",
+  requireTeamWorkspacePermission("canManageTeamMembers"),
+  async (c) => {
+    const teamId = c.req.param("teamId");
+    const userId = c.req.param("userId");
 
-  try {
-    const { initializeDatabase, getDatabase } = await import(
-      "../database/connection"
-    );
-    await initializeDatabase();
-    const db = getDatabase();
+    try {
+      const { initializeDatabase, getDatabase } = await import(
+        "../database/connection"
+      );
+      await initializeDatabase();
+      const db = getDatabase();
 
-    const [deletedMember] = await db
-      .delete(teamMemberTable)
-      .where(
-        and(
-          eq(teamMemberTable.teamId, teamId),
-          eq(teamMemberTable.userId, userId),
-        ),
-      )
-      .returning();
+      const [deletedMember] = await db
+        .delete(teamMemberTable)
+        .where(
+          and(
+            eq(teamMemberTable.teamId, teamId),
+            eq(teamMemberTable.userId, userId),
+          ),
+        )
+        .returning();
 
-    if (!deletedMember) {
-      return c.json({ error: "Team member not found" }, 404);
+      if (!deletedMember) {
+        return c.json({ error: "Team member not found" }, 404);
+      }
+
+      return c.json({ success: true, member: deletedMember });
+    } catch (error) {
+      logger.error("Error removing team member:", error);
+      return c.json({ error: "Failed to remove team member" }, 500);
     }
-
-    return c.json({ success: true, member: deletedMember });
-  } catch (error) {
-    logger.error("Error removing team member:", error);
-    return c.json({ error: "Failed to remove team member" }, 500);
-  }
-});
+  },
+);
 
 // @epic-3.4-teams: Update member role
-app.patch("/:teamId/members/:userId", requireTeamWorkspacePermission("canManageTeamMembers"), async (c) => {
-  const teamId = c.req.param("teamId");
-  const userId = c.req.param("userId");
+app.patch(
+  "/:teamId/members/:userId",
+  requireTeamWorkspacePermission("canManageTeamMembers"),
+  async (c) => {
+    const teamId = c.req.param("teamId");
+    const userId = c.req.param("userId");
 
-  try {
-    const body = await c.req.json();
-    const { role } = body;
+    try {
+      const body = await c.req.json();
+      const { role } = body;
 
-    if (!role) {
-      return c.json({ error: "Missing role" }, 400);
+      if (!role) {
+        return c.json({ error: "Missing role" }, 400);
+      }
+
+      const { initializeDatabase, getDatabase } = await import(
+        "../database/connection"
+      );
+      await initializeDatabase();
+      const db = getDatabase();
+
+      const [updatedMember] = await db
+        .update(teamMemberTable)
+        .set({ role })
+        .where(
+          and(
+            eq(teamMemberTable.teamId, teamId),
+            eq(teamMemberTable.userId, userId),
+          ),
+        )
+        .returning();
+
+      if (!updatedMember) {
+        return c.json({ error: "Team member not found" }, 404);
+      }
+
+      return c.json({ member: updatedMember });
+    } catch (error) {
+      logger.error("Error updating team member role:", error);
+      return c.json({ error: "Failed to update team member role" }, 500);
     }
-
-    const { initializeDatabase, getDatabase } = await import(
-      "../database/connection"
-    );
-    await initializeDatabase();
-    const db = getDatabase();
-
-    const [updatedMember] = await db
-      .update(teamMemberTable)
-      .set({ role })
-      .where(
-        and(
-          eq(teamMemberTable.teamId, teamId),
-          eq(teamMemberTable.userId, userId),
-        ),
-      )
-      .returning();
-
-    if (!updatedMember) {
-      return c.json({ error: "Team member not found" }, 404);
-    }
-
-    return c.json({ member: updatedMember });
-  } catch (error) {
-    logger.error("Error updating team member role:", error);
-    return c.json({ error: "Failed to update team member role" }, 500);
-  }
-});
+  },
+);
 
 // @epic-3.4-teams: Archive team (soft delete)
-app.post("/:teamId/archive", requireTeamWorkspacePermission("canManageTeamMembers"), async (c) => {
-  const teamId = c.req.param("teamId");
+app.post(
+  "/:teamId/archive",
+  requireTeamWorkspacePermission("canManageTeamMembers"),
+  async (c) => {
+    const teamId = c.req.param("teamId");
 
-  try {
-    const { initializeDatabase, getDatabase } = await import(
-      "../database/connection"
-    );
-    await initializeDatabase();
-    const db = getDatabase();
+    try {
+      const { initializeDatabase, getDatabase } = await import(
+        "../database/connection"
+      );
+      await initializeDatabase();
+      const db = getDatabase();
 
-    const [archivedTeam] = await db
-      .update(teamTable)
-      .set({
-        isActive: false,
-        updatedAt: new Date(),
-      })
-      .where(eq(teamTable.id, teamId))
-      .returning();
+      const [archivedTeam] = await db
+        .update(teamTable)
+        .set({
+          isActive: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(teamTable.id, teamId))
+        .returning();
 
-    if (!archivedTeam) {
-      return c.json({ error: "Team not found" }, 404);
+      if (!archivedTeam) {
+        return c.json({ error: "Team not found" }, 404);
+      }
+
+      return c.json({ success: true, team: archivedTeam });
+    } catch (error) {
+      logger.error("Error archiving team:", error);
+      return c.json({ error: "Failed to archive team" }, 500);
     }
-
-    return c.json({ success: true, team: archivedTeam });
-  } catch (error) {
-    logger.error("Error archiving team:", error);
-    return c.json({ error: "Failed to archive team" }, 500);
-  }
-});
+  },
+);
 
 // @epic-3.4-teams: Restore archived team
-app.post("/:teamId/restore", requireTeamWorkspacePermission("canManageTeamMembers"), async (c) => {
-  const teamId = c.req.param("teamId");
+app.post(
+  "/:teamId/restore",
+  requireTeamWorkspacePermission("canManageTeamMembers"),
+  async (c) => {
+    const teamId = c.req.param("teamId");
 
-  try {
-    const { initializeDatabase, getDatabase } = await import(
-      "../database/connection"
-    );
-    await initializeDatabase();
-    const db = getDatabase();
+    try {
+      const { initializeDatabase, getDatabase } = await import(
+        "../database/connection"
+      );
+      await initializeDatabase();
+      const db = getDatabase();
 
-    const [restoredTeam] = await db
-      .update(teamTable)
-      .set({
-        isActive: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(teamTable.id, teamId))
-      .returning();
+      const [restoredTeam] = await db
+        .update(teamTable)
+        .set({
+          isActive: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(teamTable.id, teamId))
+        .returning();
 
-    if (!restoredTeam) {
-      return c.json({ error: "Team not found" }, 404);
+      if (!restoredTeam) {
+        return c.json({ error: "Team not found" }, 404);
+      }
+
+      return c.json({ success: true, team: restoredTeam });
+    } catch (error) {
+      logger.error("Error restoring team:", error);
+      return c.json({ error: "Failed to restore team" }, 500);
     }
-
-    return c.json({ success: true, team: restoredTeam });
-  } catch (error) {
-    logger.error("Error restoring team:", error);
-    return c.json({ error: "Failed to restore team" }, 500);
-  }
-});
+  },
+);
 
 // @epic-3.4-teams: Get team statistics and overview
 app.get("/:teamId/statistics", async (c) => {

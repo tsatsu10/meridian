@@ -1,11 +1,26 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { requireWorkspacePermission } from "../middlewares/rbac";
 
-const app = new Hono();
+const app = new Hono<{ Variables: { userEmail: string } }>();
 
 // Stub endpoints for audit logs (not yet fully implemented)
 // These return empty/default data to prevent frontend crashes
+//
+// 🚨 These are currently shadowed: settings/index.ts registers
+// /audit/:workspaceId/* first and index.ts mounts it at the same prefix, so
+// requests land there instead. Guarded anyway — a stub that starts returning
+// real data, or a change in mount order, must not silently become an
+// unauthenticated read of another workspace's audit trail.
+app.use(
+  "/:workspaceId",
+  requireWorkspacePermission("canViewAuditLogs", "workspaceId"),
+);
+app.use(
+  "/:workspaceId/*",
+  requireWorkspacePermission("canViewAuditLogs", "workspaceId"),
+);
 
 // Get audit log filter options
 app.get("/:workspaceId/filters", async (c) => {

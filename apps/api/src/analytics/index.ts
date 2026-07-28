@@ -50,6 +50,25 @@ app.get(
 );
 
 // Phase 3: Live Task Counter
+// 🚨 These four took :workspaceId from the path with no authorization, so any
+// authenticated user could read another workspace's task counts and progress.
+app.use(
+  "/tasks/today/:workspaceId",
+  requireWorkspacePermission("canViewTasks", "workspaceId"),
+);
+app.use(
+  "/tasks/trend/:workspaceId",
+  requireWorkspacePermission("canViewTasks", "workspaceId"),
+);
+app.use(
+  "/tasks/live/:workspaceId",
+  requireWorkspacePermission("canViewTasks", "workspaceId"),
+);
+app.use(
+  "/progress/:workspaceId",
+  requireWorkspacePermission("canViewProjects", "workspaceId"),
+);
+
 app.get("/tasks/today/:workspaceId", async (c) => {
   const workspaceId = c.req.param("workspaceId");
 

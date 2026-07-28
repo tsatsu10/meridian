@@ -4,6 +4,7 @@ import { getUserStatus, getWorkspaceStatuses } from "./get-status";
 import { setUserStatus } from "./set-status";
 import { clearUserStatus } from "./clear-status";
 import { z } from "zod";
+import { requireWorkspacePermission } from "../../middlewares/rbac";
 
 const statusRouter = new Hono();
 
@@ -32,28 +33,37 @@ statusRouter.get("/me", authMiddleware(), async (c) => {
 });
 
 // Get all workspace statuses
-statusRouter.get("/:workspaceId", authMiddleware(), async (c) => {
-  try {
-    const { workspaceId } = c.req.param();
-    if (!workspaceId) {
-      return c.json({ success: false, error: "Workspace id is required" }, 400);
-    }
-    const statuses = await getWorkspaceStatuses(workspaceId);
+// 🚨 Every member's status for an arbitrary workspace, with no membership check.
+statusRouter.get(
+  "/:workspaceId",
+  authMiddleware(),
+  requireWorkspacePermission("canViewTeam", "workspaceId"),
+  async (c) => {
+    try {
+      const { workspaceId } = c.req.param();
+      if (!workspaceId) {
+        return c.json(
+          { success: false, error: "Workspace id is required" },
+          400,
+        );
+      }
+      const statuses = await getWorkspaceStatuses(workspaceId);
 
-    return c.json({
-      success: true,
-      data: statuses,
-    });
-  } catch (error) {
-    return c.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      500,
-    );
-  }
-});
+      return c.json({
+        success: true,
+        data: statuses,
+      });
+    } catch (error) {
+      return c.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+        500,
+      );
+    }
+  },
+);
 
 // Set user status
 statusRouter.post("/", authMiddleware(), async (c) => {

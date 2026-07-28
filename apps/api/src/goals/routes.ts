@@ -24,6 +24,7 @@ import { getUpcomingMilestones } from "./controllers/get-upcoming-milestones";
 import { updateMilestone } from "./controllers/update-milestone";
 import { createReflection } from "./controllers/create-reflection";
 import { getReflections } from "./controllers/get-reflections";
+import { requireWorkspacePermission } from "../middlewares/rbac";
 
 const app = new Hono();
 
@@ -31,7 +32,12 @@ const app = new Hono();
 
 // Core Goal CRUD
 app.post("/", createGoal); // POST /api/goals
-app.get("/:workspaceId", getGoals); // GET /api/goals/:workspaceId
+// 🚨 Goals for an arbitrary workspace, with no membership check.
+app.get(
+  "/:workspaceId",
+  requireWorkspacePermission("canViewProjects", "workspaceId"),
+  getGoals,
+); // GET /api/goals/:workspaceId
 app.get("/detail/:id", getGoalDetail); // GET /api/goals/detail/:id
 app.put("/:id", updateGoal); // PUT /api/goals/:id
 app.delete("/:id", deleteGoal); // DELETE /api/goals/:id

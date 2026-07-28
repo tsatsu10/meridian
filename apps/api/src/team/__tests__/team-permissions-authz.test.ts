@@ -27,6 +27,19 @@ vi.mock("../../utils/logger", () => ({
 vi.mock("../../middlewares/rbac", () => ({
   requirePermission: () => async (c: import("hono").Context) =>
     c.json({ error: "Insufficient permissions" }, 403),
+  // team/index.ts also guards the workspace roster and metrics routes with a
+  // prefix middleware. These tests are about the permissions route, so let it
+  // through rather than 403 everything; without the export the module fails to
+  // load at all.
+  requireWorkspacePermission:
+    () =>
+    async (
+      _c: import("hono").Context,
+      next: import("hono").Next,
+    ): Promise<void> => {
+      await next();
+    },
+  checkWorkspacePermission: async () => ({ allowed: true }),
 }));
 
 describe("PUT /:teamId/permissions/:userId requires canManageTeamMembers", () => {
