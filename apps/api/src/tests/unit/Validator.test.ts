@@ -441,7 +441,14 @@ describe("Validator", () => {
         fail("Should have thrown ValidationError");
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError);
-        expect(error.message).toContain("Validation failed");
+        // This asserted the literal "Validation failed" — which was also what
+        // the user was shown, and told them nothing. describeValidationFailure
+        // now names the fields that need attention, so assert that contract
+        // rather than the old placeholder.
+        expect(error.message).toContain("Some details need attention");
+        for (const label of ["Email", "Password", "First name", "Last name"]) {
+          expect(error.message).toContain(label);
+        }
         expect(error.details).toBeDefined();
       }
     });

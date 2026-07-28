@@ -16,8 +16,13 @@ vi.mock("sonner", () => ({
 // that it posts for real, fetch has to be stubbed or jsdom attempts a live
 // request; the stub is also what lets us assert the request is actually made,
 // which is the regression that matters here.
-function stubFetch(impl?: () => Promise<Response>) {
-  const fetchMock = vi.fn(
+// Typed as a real fetch signature rather than `vi.fn(async () => …)`, whose
+// zero-arg inference makes `mock.calls[0]` an empty tuple — the assertions
+// below read the URL and init out of it.
+type FetchCall = (input: string, init: RequestInit) => Promise<Response>;
+
+function stubFetch(impl?: FetchCall) {
+  const fetchMock = vi.fn<FetchCall>(
     impl ??
       (async () =>
         new Response(JSON.stringify({ success: true }), { status: 200 })),
@@ -108,7 +113,7 @@ describe("ForgotPasswordForm", () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
       });
 
-      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const [url, init] = fetchMock.mock.calls[0];
       expect(url).toMatch(/\/auth\/forgot-password$/);
       expect(init.method).toBe("POST");
       // Session cookies must ride along so the request behaves the same way
