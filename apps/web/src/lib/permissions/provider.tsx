@@ -252,6 +252,21 @@ export function RBACProvider({ children }: RBACProviderProps) {
       setIsRoleLoading(true);
 
       try {
+        // Workspace is mandatory: POST /rbac/assign requires workspaceId
+        // (z.string().min(1)) because role assignment is scoped per
+        // workspace server-side. Without this guard, an undefined
+        // context?.workspaceId would sail through JSON.stringify (the key
+        // just vanishes) and the request would 400 with a validation error
+        // instead of failing with a message that names the actual problem.
+        // Refusing here also rules out ever inventing a fallback workspace —
+        // assigning a role into the wrong workspace is a security-relevant
+        // mistake, so failing loudly is correct.
+        if (!context?.workspaceId) {
+          throw new Error(
+            "Cannot assign a role without a workspace: role assignment is workspace-scoped.",
+          );
+        }
+
         // This used to be a client-side simulation: it never called the API,
         // and only mutated local state when you assigned a role to *yourself*
         // — so assigning a role to anyone else silently did nothing at all,
@@ -321,17 +336,33 @@ export function RBACProvider({ children }: RBACProviderProps) {
   );
 
   const removeRole = useCallback(
-    async (userId: string, _context?: PermissionContext): Promise<void> => {
+    async (userId: string, context?: PermissionContext): Promise<void> => {
       // Was a stub that only toasted "not yet implemented". The endpoint has
       // existed all along (it deactivates the active assignment and records
       // the change in role history, gated on canManageRoles server-side).
       setIsRoleLoading(true);
 
       try {
-        const response = await fetch(`${API_BASE_URL}/rbac/remove/${userId}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
+        // Workspace is mandatory: DELETE /rbac/remove/:userId now requires a
+        // ?workspaceId= query param, because role removal is scoped per
+        // workspace server-side (it previously had no workspace concept at
+        // all, which allowed a cross-workspace privilege bug). There are
+        // currently no call sites for removeRole, so refuse to call the API
+        // without a workspace rather than let it 400 silently for whoever
+        // wires this up next.
+        if (!context?.workspaceId) {
+          throw new Error(
+            "Cannot remove a role without a workspace: role removal is workspace-scoped.",
+          );
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/rbac/remove/${userId}?workspaceId=${encodeURIComponent(context.workspaceId)}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          },
+        );
 
         if (!response.ok) {
           const body = await response

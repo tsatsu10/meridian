@@ -25,6 +25,7 @@ import { Plus, Search, Filter, Users, Shield, Crown, Eye } from "lucide-react";
 import { RoleCard } from "@/components/rbac/role-card";
 import { RoleModal } from "@/components/rbac/role-modal";
 import { toast } from "sonner";
+import useWorkspaceStore from "@/store/workspace";
 
 // ==========================================
 // TYPES
@@ -44,6 +45,8 @@ interface RoleFilters {
 
 function UnifiedRolesPage() {
   const queryClient = useQueryClient();
+  const { workspace } = useWorkspaceStore();
+  const workspaceId = workspace?.id || "";
 
   // State
   const [filters, setFilters] = useState<RoleFilters>({
@@ -124,7 +127,12 @@ function UnifiedRolesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ newName }),
+        // The API's clone body is { name?, workspaceId } — workspaceId is
+        // required (role mutations are workspace-scoped server-side) and the
+        // field is `name`, not `newName`; sending `newName` alone silently
+        // dropped the name the user picked in the prompt() and fell back to
+        // the server's default "<source> (copy)".
+        body: JSON.stringify({ name: newName, workspaceId }),
       });
 
       if (!response.ok) {

@@ -31,10 +31,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_BASE_URL } from "@/constants/urls";
 import { toast } from "sonner";
-import { PermissionBuilder } from "./permission-builder";
 import { RolePreview } from "./role-preview";
 import { Loader2 } from "lucide-react";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { groupPermissions } from "@/lib/permissions/permission-groups";
+import { useRBACAuth } from "@/lib/permissions";
 
 // ==========================================
 // TYPES
@@ -89,6 +90,16 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
   // Get workspace ID from context ✅
   const { workspace } = useWorkspaceStore();
   const workspaceId = workspace?.id || "";
+
+  // The actor's own effective permissions — used to disable checkboxes for
+  // permissions the actor does not hold, so the server-side "can't grant
+  // more than you have" rule is visible in the UI instead of surprising the
+  // user with a 403 on save.
+  const { user: rbacUser } = useRBACAuth();
+  const actorPermissions = (rbacUser?.permissions ?? {}) as unknown as Record<
+    string,
+    boolean
+  >;
 
   // Reset form when role changes
   useEffect(() => {
@@ -188,10 +199,6 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
     }
 
     saveMutation.mutate();
-  };
-
-  const handlePermissionsChange = (permissions: string[]) => {
-    setFormData((prev) => ({ ...prev, permissions }));
   };
 
   return (
@@ -321,12 +328,55 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
 
             {/* Permissions Tab */}
             <TabsContent value="permissions" className="py-4">
-              <PermissionBuilder
-                selectedPermissions={formData.permissions}
-                allPermissions={allPermissions || []}
-                onChange={handlePermissionsChange}
-                disabled={isSystemRole}
-              />
+              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                {groupPermissions(allPermissions ?? []).map(
+                  ({ group, permissions }) => (
+                    <div key={group} className="space-y-2">
+                      <h4 className="text-sm font-medium text-muted-foreground">
+                        {group}
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {permissions.map((permission) => {
+                          const actorHasIt =
+                            actorPermissions[permission] === true;
+                          return (
+                            <label
+                              key={permission}
+                              className="flex items-center gap-2 text-sm"
+                              title={
+                                actorHasIt
+                                  ? undefined
+                                  : "You do not hold this permission"
+                              }
+                            >
+                              <input
+                                type="checkbox"
+                                disabled={isSystemRole || !actorHasIt}
+                                checked={formData.permissions.includes(
+                                  permission,
+                                )}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    permissions: e.target.checked
+                                      ? [...prev.permissions, permission]
+                                      : prev.permissions.filter(
+                                          (p) => p !== permission,
+                                        ),
+                                  }))
+                                }
+                              />
+                              <span className={actorHasIt ? "" : "opacity-50"}>
+                                {permission}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
             </TabsContent>
 
             {/* Preview Tab */}
