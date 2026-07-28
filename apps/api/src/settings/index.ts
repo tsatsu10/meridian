@@ -351,117 +351,6 @@ app.get("/:userId", async (c) => {
 });
 
 // Update settings section
-app.patch("/:userId/:section", async (c) => {
-  const db = getDatabase(); // FIX: Initialize database connection
-  const userId = c.req.param("userId");
-  const section = c.req.param("section");
-  const userEmail = c.get("userEmail");
-
-  // Security: Users can only update their own settings
-  if (userId !== userEmail) {
-    return c.json({ error: "Unauthorized" }, 403);
-  }
-
-  try {
-    const { updates: rawUpdates, version } = await c.req.json();
-    const metadata = getClientMetadata(c);
-
-    // Drop keys the server owns before storing anything. The GET above merges
-    // the authoritative values over whatever is stored, so a forged
-    // `passwordUpdatedAt` or `twoFactorEnabled` can never change what a client
-    // reads back — but the client sends the whole section on autosave, which
-    // would otherwise persist a stale copy of a security fact into the
-    // settings blob and leave a trap for anything that later reads that blob
-    // directly.
-    const updates = stripServerOwnedKeys(section, rawUpdates);
-
-    // Get current settings for audit trail
-    const currentSettings = await db
-      .select()
-      .from(userSettingsTable)
-      .where(
-        and(
-          eq(userSettingsTable.userEmail, userEmail),
-          eq(userSettingsTable.section, section),
-        ),
-      )
-      .limit(1);
-
-    const currentData = currentSettings[0]
-      ? JSON.parse(currentSettings[0].settings)
-      : {};
-
-    // Merge updates with current settings
-    const newSettings = { ...currentData, ...updates };
-
-    // Create audit trail
-    const changes: Record<string, unknown> = {};
-    for (const key of Object.keys(updates)) {
-      if (currentData[key] !== updates[key]) {
-        changes[key] = {
-          from: currentData[key],
-          to: updates[key],
-        };
-      }
-    }
-
-    // Update or insert settings
-    if (currentSettings[0]) {
-      await db
-        .update(userSettingsTable)
-        .set({
-          settings: JSON.stringify(newSettings),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(userSettingsTable.userEmail, userEmail),
-            eq(userSettingsTable.section, section),
-          ),
-        );
-    } else {
-      await db.insert(userSettingsTable).values({
-        userEmail,
-        section,
-        settings: JSON.stringify(newSettings),
-      });
-    }
-
-    // Log audit event
-    await logAuditEvent(userEmail, "UPDATE", section, changes, metadata);
-
-    // Get all updated settings to return
-    const allSettings = await db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.userEmail, userEmail));
-
-    const settingsObject: Record<string, unknown> = {
-      profile: {},
-      appearance: {},
-      notifications: {},
-      security: {},
-      privacy: {},
-    };
-
-    for (const setting of allSettings) {
-      settingsObject[setting.section] = JSON.parse(setting.settings);
-    }
-
-    return c.json({
-      data: {
-        settings: settingsObject,
-        conflicts: [], // No conflicts in this simple implementation
-      },
-      success: true,
-      timestamp: new Date().toISOString(),
-      version: Date.now(),
-    });
-  } catch (error) {
-    logger.error("Failed to update settings:", error);
-    return c.json({ error: "Failed to update settings" }, 500);
-  }
-});
 
 // Reset settings section
 app.post("/:userId/:section/reset", async (c) => {
@@ -3528,6 +3417,124 @@ app.post("/filters/:workspaceId/filters/:filterId/use", async (c) => {
   } catch (error) {
     logger.error("Failed to record filter usage:", error);
     return c.json({ error: getErrorMessage(error) }, 500);
+  }
+});
+
+// Registered LAST on purpose. Hono matches routes in registration order, so
+// this catch-all previously swallowed every two-segment PATCH beneath it —
+// /calendar/:workspaceId, /email/:workspaceId, /background/:userEmail and
+// /fonts/:userEmail all parsed as userId="calendar"/"email"/... and failed
+// the ownership guard with 403, so those settings pages could never save.
+// Keep any new specific PATCH route ABOVE this one.
+app.patch("/:userId/:section", async (c) => {
+  const db = getDatabase(); // FIX: Initialize database connection
+  const userId = c.req.param("userId");
+  const section = c.req.param("section");
+  const userEmail = c.get("userEmail");
+
+  // Security: Users can only update their own settings
+  if (userId !== userEmail) {
+    return c.json({ error: "Unauthorized" }, 403);
+  }
+
+  try {
+    const { updates: rawUpdates, version } = await c.req.json();
+    const metadata = getClientMetadata(c);
+
+    // Drop keys the server owns before storing anything. The GET above merges
+    // the authoritative values over whatever is stored, so a forged
+    // `passwordUpdatedAt` or `twoFactorEnabled` can never change what a client
+    // reads back — but the client sends the whole section on autosave, which
+    // would otherwise persist a stale copy of a security fact into the
+    // settings blob and leave a trap for anything that later reads that blob
+    // directly.
+    const updates = stripServerOwnedKeys(section, rawUpdates);
+
+    // Get current settings for audit trail
+    const currentSettings = await db
+      .select()
+      .from(userSettingsTable)
+      .where(
+        and(
+          eq(userSettingsTable.userEmail, userEmail),
+          eq(userSettingsTable.section, section),
+        ),
+      )
+      .limit(1);
+
+    const currentData = currentSettings[0]
+      ? JSON.parse(currentSettings[0].settings)
+      : {};
+
+    // Merge updates with current settings
+    const newSettings = { ...currentData, ...updates };
+
+    // Create audit trail
+    const changes: Record<string, unknown> = {};
+    for (const key of Object.keys(updates)) {
+      if (currentData[key] !== updates[key]) {
+        changes[key] = {
+          from: currentData[key],
+          to: updates[key],
+        };
+      }
+    }
+
+    // Update or insert settings
+    if (currentSettings[0]) {
+      await db
+        .update(userSettingsTable)
+        .set({
+          settings: JSON.stringify(newSettings),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userSettingsTable.userEmail, userEmail),
+            eq(userSettingsTable.section, section),
+          ),
+        );
+    } else {
+      await db.insert(userSettingsTable).values({
+        userEmail,
+        section,
+        settings: JSON.stringify(newSettings),
+      });
+    }
+
+    // Log audit event
+    await logAuditEvent(userEmail, "UPDATE", section, changes, metadata);
+
+    // Get all updated settings to return
+    const allSettings = await db
+      .select()
+      .from(userSettingsTable)
+      .where(eq(userSettingsTable.userEmail, userEmail));
+
+    const settingsObject: Record<string, unknown> = {
+      profile: {},
+      appearance: {},
+      notifications: {},
+      security: {},
+      privacy: {},
+    };
+
+    for (const setting of allSettings) {
+      settingsObject[setting.section] = JSON.parse(setting.settings);
+    }
+
+    return c.json({
+      data: {
+        settings: settingsObject,
+        conflicts: [], // No conflicts in this simple implementation
+      },
+      success: true,
+      timestamp: new Date().toISOString(),
+      version: Date.now(),
+    });
+  } catch (error) {
+    logger.error("Failed to update settings:", error);
+    return c.json({ error: "Failed to update settings" }, 500);
   }
 });
 

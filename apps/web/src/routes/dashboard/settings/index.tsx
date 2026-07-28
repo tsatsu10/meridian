@@ -13,7 +13,6 @@ import {
   Building2,
   Calendar,
   FileText,
-  Package,
   Mail,
   Languages,
   Keyboard,
@@ -62,15 +61,6 @@ const settingsCategories = [
     icon: Keyboard,
     color: "from-violet-500 to-purple-500",
     href: "/dashboard/settings/shortcuts",
-    category: "personal",
-  },
-  {
-    id: "templates",
-    title: "Dashboard Templates",
-    description: "Create and manage custom dashboard layouts",
-    icon: Package,
-    color: "from-indigo-500 to-blue-500",
-    href: "/dashboard/settings/templates",
     category: "personal",
   },
   // 🔒 Security & Privacy (3)

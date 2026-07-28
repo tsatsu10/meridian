@@ -21,7 +21,6 @@ import {
   Bell,
   Search,
   Layers,
-  LayoutGrid,
   Target,
   Clock,
   Shield,
@@ -180,13 +179,6 @@ export const useSettingsNavigation = (): NavigationItem[] => {
         label: "Keyboard Shortcuts",
         icon: Terminal,
         href: "/dashboard/settings/shortcuts",
-        category: "utility" as const,
-      },
-      {
-        id: "templates",
-        label: "Dashboard Templates",
-        icon: LayoutGrid,
-        href: "/dashboard/settings/templates",
         category: "utility" as const,
       },
       // Security & Privacy (3 items)
