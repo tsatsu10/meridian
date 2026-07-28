@@ -259,6 +259,24 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
           asc(roleAssignmentTable.id),
         );
 
+      // Custom roles carry no rung on the built-in ladder, so ROLE_HIERARCHY
+      // has no entry for them and they cannot be ranked here. Treating them as
+      // level 0 is the fail-closed reading and is what happens below, but say
+      // so rather than letting `?? 0` imply the role was simply the weakest:
+      // a caller holding a powerful custom role is denied by this guard, and
+      // that is a limitation of rank-based checks, not a judgement about the
+      // role. Permission-based checks (requirePermission,
+      // checkWorkspacePermission) resolve custom roles properly — prefer them.
+      const unrankableRole = assignments.find(
+        (assignment) =>
+          ROLE_HIERARCHY[assignment.role as UserRole] === undefined,
+      );
+      if (unrankableRole) {
+        logger.debug(
+          `requireRole cannot rank custom role "${unrankableRole.role}" — denying. Use a permission-based guard instead.`,
+        );
+      }
+
       // Ties keep the earliest assignment, so the reported role is stable.
       const bindingAssignment =
         assignments.length === 0

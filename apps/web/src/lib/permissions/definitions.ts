@@ -10,22 +10,36 @@
  */
 
 import type { UserRole, AllPermissions } from "./types";
+import {
+  BACKEND_ROLE_PERMISSIONS,
+  FRONTEND_ONLY_ROLE_PERMISSIONS,
+} from "./backend-matrix.generated";
 
 /**
- * Role hierarchy levels - higher numbers = more permissions
+ * Role hierarchy levels - higher numbers = more authority.
+ *
+ * 🚨 Must match apps/api/src/constants/rbac.ts. It previously did not, in two
+ * ways: it was ordered by scope rather than authority (so `project-viewer: 3`
+ * outranked `team-lead: 2`, and `workspace-viewer: 5` outranked
+ * `project-manager: 4` — read-only roles clearing manager-level bars), and it
+ * capped `workspace-manager` at 7 where the backend uses 10. `hasMinimumRole`
+ * reads this, so the UI gated features on a different ladder than the server.
+ *
+ * Ordering rule: read-only roles rank below any role that can write at the
+ * same scope. A viewer never outranks a manager.
  */
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   guest: 0,
   stakeholder: 1,
   contractor: 1,
   client: 1,
-  member: 1,
-  "team-lead": 2, // @epic-1.1-subtasks - Enhanced subtask powers
-  "project-viewer": 3,
+  "project-viewer": 1, // read-only
+  member: 2,
+  "workspace-viewer": 2, // read-only, workspace-wide
+  "team-lead": 3, // @epic-1.1-subtasks - Enhanced subtask powers
   "project-manager": 4,
-  "workspace-viewer": 5,
   "department-head": 6,
-  "workspace-manager": 7,
+  "workspace-manager": 10,
 };
 
 /**
@@ -211,557 +225,34 @@ const BASE_PERMISSIONS: Omit<AllPermissions, "role"> = {
 };
 
 /**
- * Complete role permissions matrix
+ * Complete role permissions matrix.
+ *
+ * 🚨 This was a hand-maintained copy of the backend's matrix and had drifted
+ * to 290 disagreements across the 11 roles — 231 of them cases where the UI
+ * granted a permission the server denies, i.e. the app offered actions that
+ * would be refused. It is now COMPOSED so the backend always wins:
+ *
+ *   BASE_PERMISSIONS        every key false — guarantees no key is `undefined`
+ *   FRONTEND_ONLY_...       the 23 UI-only keys (chat, video, billing,
+ *                           dashboards) the backend has no concept of
+ *   BACKEND_ROLE_PERMISSIONS  the authority — mirrors what the server enforces
+ *
+ * Order matters: the backend layer is applied last, so it overrides anything
+ * the earlier layers said about a shared key. To change a real permission,
+ * change apps/api/src/constants/rbac.ts and regenerate the mirror.
  */
-export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> = {
-  // ===== GUEST (Level 0) =====
-  guest: {
-    ...BASE_PERMISSIONS,
-    role: "guest",
-  },
-
-  // ===== STAKEHOLDER (Level 1) =====
-  stakeholder: {
-    ...BASE_PERMISSIONS,
-    canViewWorkspace: true,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canCommentOnTasks: true,
-    canViewAnalytics: true,
-    role: "stakeholder",
-  },
-
-  // ===== CONTRACTOR (Level 1) =====
-  contractor: {
-    ...BASE_PERMISSIONS,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canEditTasks: true,
-    canCommentOnTasks: true,
-    canLogTimeOnTasks: true,
-    canTrackTime: true,
-    role: "contractor",
-  },
-
-  // ===== CLIENT (Level 1) =====
-  client: {
-    ...BASE_PERMISSIONS,
-    canViewWorkspace: true,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canCommentOnTasks: true,
-    canViewAnalytics: true,
-    role: "client",
-  },
-
-  // ===== MEMBER (Level 1) =====
-  member: {
-    ...BASE_PERMISSIONS,
-    canViewWorkspace: true,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canCreateTasks: true,
-    canEditTasks: true,
-    canCommentOnTasks: true,
-    canLogTimeOnTasks: true,
-    canTrackTime: true,
-    canViewTeamMembers: true,
-    canSendMessages: true,
-    canSendDirectMessages: true,
-    canReactToMessages: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canUploadFiles: true,
-    canDownloadFiles: true,
-    canShareFiles: true,
-    canViewCalendar: true,
-    canAccessKnowledgeBase: true,
-    // Grant analytics/reporting permissions for demo/testing @epic-3.1-analytics
-    canViewAnalytics: true, // Added for analytics dashboard access
-    canCreateReports: true, // Added for report builder access
-    role: "member",
-  },
-
-  // ===== TEAM LEAD (Level 2) - @epic-1.1-subtasks Special Powers =====
-  "team-lead": {
-    ...BASE_PERMISSIONS,
-    // Inherit member permissions
-    canViewWorkspace: true,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canCreateTasks: true,
-    canEditTasks: true,
-    canCommentOnTasks: true,
-    canLogTimeOnTasks: true,
-    canTrackTime: true,
-    canViewTeamMembers: true,
-    canSendMessages: true,
-    canSendDirectMessages: true,
-    canReactToMessages: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canUploadFiles: true,
-    canDownloadFiles: true,
-    canShareFiles: true,
-    canViewCalendar: true,
-    canAccessKnowledgeBase: true,
-    // Team lead specific permissions
-    canAssignTasks: true,
-    canReassignTasks: true,
-    canAssignTasksToMembers: true,
-    // 🌟 TEAM LEAD SPECIAL SUBTASK POWERS - @epic-1.1-subtasks
-    canCreateSubtasks: true,
-    canEditSubtasks: true,
-    canDeleteSubtasks: true,
-    canAssignSubtasks: true,
-    canManageSubtaskHierarchy: true,
-    canSetTaskPriority: true,
-    canSetTaskDeadlines: true,
-    canSetTaskStatus: true,
-    canAddTaskLabels: true,
-    canViewTeamProgress: true,
-    canManageTeamCapacity: true,
-    canMentorMembers: true,
-    canViewAnalytics: true,
-    canViewTeamAnalytics: true,
-    canViewPersonalAnalytics: true,
-    canViewTimeReports: true,
-    role: "team-lead",
-  },
-
-  // ===== PROJECT VIEWER (Level 3) =====
-  "project-viewer": {
-    ...BASE_PERMISSIONS,
-    // Basic viewing permissions
-    canViewWorkspace: true,
-    canViewAssignedProjects: true,
-    canViewAllProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canCommentOnTasks: true,
-    canViewTeamMembers: true,
-    canSendMessages: true,
-    canSendDirectMessages: true,
-    canReactToMessages: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canDownloadFiles: true,
-    canShareFiles: true,
-    canViewCalendar: true,
-    canAccessKnowledgeBase: true,
-    // Project viewer specific
-    canViewProjectAnalytics: true,
-    canViewProjectReports: true,
-    canExportProjectData: true,
-    canViewAnalytics: true,
-    role: "project-viewer",
-  },
-
-  // ===== PROJECT MANAGER (Level 4) =====
-  "project-manager": {
-    ...BASE_PERMISSIONS,
-    // Inherit team lead permissions
-    canViewWorkspace: true,
-    canViewAssignedProjects: true,
-    canViewAllProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canViewAllTasks: true,
-    canCreateTasks: true,
-    canEditTasks: true,
-    canDeleteTasks: true,
-    canCommentOnTasks: true,
-    canLogTimeOnTasks: true,
-    canTrackTime: true,
-    canViewTeamMembers: true,
-    canSendMessages: true,
-    canSendDirectMessages: true,
-    canReactToMessages: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canUploadFiles: true,
-    canDownloadFiles: true,
-    canDeleteFiles: true,
-    canOrganizeFiles: true,
-    canShareFiles: true,
-    canManageFileVersions: true,
-    canViewCalendar: true,
-    canCreateEvents: true,
-    canEditEvents: true,
-    canDeleteEvents: true,
-    canAccessKnowledgeBase: true,
-    canCreateDocuments: true,
-    canEditDocuments: true,
-    canDeleteDocuments: true,
-    canAssignTasks: true,
-    canReassignTasks: true,
-    canAssignTasksToMembers: true,
-    canUnassignTasks: true,
-    canCreateSubtasks: true,
-    canEditSubtasks: true,
-    canDeleteSubtasks: true,
-    canAssignSubtasks: true,
-    canManageSubtaskHierarchy: true,
-    canSetTaskPriority: true,
-    canSetTaskDeadlines: true,
-    canSetTaskStatus: true,
-    canAddTaskLabels: true,
-    canManageTaskDependencies: true,
-    canMentionUsersInTasks: true,
-    canAttachFilesToTasks: true,
-    canViewTeamProgress: true,
-    canManageTeamCapacity: true,
-    canMentorMembers: true,
-    canViewAnalytics: true,
-    canViewTeamAnalytics: true,
-    canViewPersonalAnalytics: true,
-    canViewTimeReports: true,
-    canViewTimeTracking: true,
-    canEditTimeEntries: true,
-    canApproveTimeEntries: true,
-    canManageTimeTracking: true,
-    // 💼 PROJECT MANAGER SPECIFIC - FULL PROJECT CONTROL
-    canCreateProjects: true,
-    canEditProjects: true,
-    canDeleteProjects: true, // 🔥 ADDED: Full project deletion control
-    canArchiveProjects: true, // 🔥 ADDED: Project archiving control
-    canCloneProjects: true, // 🔥 ADDED: Project cloning capability
-    canManageProjectSettings: true,
-    canManageProjectTeam: true,
-    canAssignProjectManagers: true, // 🔥 ADDED: Assign other PMs to projects
-    canInviteToProject: true,
-    canRemoveFromProject: true,
-    canAccessProjectFiles: true, // 🔥 ADDED: Full file access in projects
-    canViewProjectBudget: true,
-    canManageProjectBudget: true,
-    canAccessProjectChat: true, // 🔥 ADDED: Project communication access
-    canCreateProjectAnnouncements: true,
-    canModerateProjectDiscussion: true,
-    canBulkEditTasks: true,
-    canBulkAssignTasks: true,
-    canImportTasks: true,
-    canExportTasks: true,
-    canCreateReports: true,
-    canScheduleReports: true, // 🔥 ADDED: Report scheduling capability
-    canCustomizeReports: true,
-    canExportReports: true,
-    canShareReports: true,
-    canCreateDashboards: true,
-    canManageDashboards: true, // 🔥 ADDED: Dashboard management
-    canViewProjectAnalytics: true,
-    canViewProjectReports: true,
-    canExportProjectData: true,
-    // Team management within projects
-    canCreateTeams: true, // 🔥 ADDED: Create project teams
-    canEditTeams: true, // 🔥 ADDED: Edit project teams
-    canAddMembers: true, // 🔥 ADDED: Add team members
-    canRemoveMembers: true, // 🔥 ADDED: Remove team members
-    canInviteMembers: true, // 🔥 ADDED: Invite members to projects
-    canManageTeamRoles: true, // 🔥 ADDED: Manage roles within project teams
-    canAssignTeamLeads: true, // 🔥 ADDED: Assign team leads for project teams
-    // Communication and collaboration
-    canCreateChannels: true, // 🔥 ADDED: Create project channels
-    canManageChannels: true, // 🔥 ADDED: Manage project channels
-    canArchiveChannels: true, // 🔥 ADDED: Archive project channels
-    canModerateChat: true, // 🔥 ADDED: Moderate project chat
-    canDeleteMessages: true, // 🔥 ADDED: Delete inappropriate messages
-    canPinMessages: true, // 🔥 ADDED: Pin important messages
-    canManageChannelPermissions: true, // 🔥 ADDED: Manage channel permissions
-    canStartVideoCall: true, // 🔥 ADDED: Start project video calls
-    canShareScreen: true, // 🔥 ADDED: Screen sharing in meetings
-    canRecordMeetings: true, // 🔥 ADDED: Record project meetings
-    canScheduleMeetings: true, // 🔥 ADDED: Schedule project meetings
-    role: "project-manager",
-  },
-
-  // ===== WORKSPACE VIEWER (Level 5) =====
-  "workspace-viewer": {
-    ...BASE_PERMISSIONS,
-    // Basic workspace viewing
-    canViewWorkspace: true,
-    canViewAllUsers: true,
-    canViewWorkspaceAnalytics: true,
-    canExportWorkspaceData: true,
-    canCreateWorkspaceReports: true,
-    canViewAuditLogs: true,
-    // Project viewing
-    canViewAllProjects: true,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canViewProjectAnalytics: true,
-    canViewProjectReports: true,
-    canExportProjectData: true,
-    // Basic interaction
-    canViewTasks: true,
-    canCommentOnTasks: true,
-    canViewTeamMembers: true,
-    canSendMessages: true,
-    canSendDirectMessages: true,
-    canReactToMessages: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canDownloadFiles: true,
-    canShareFiles: true,
-    canViewCalendar: true,
-    canAccessKnowledgeBase: true,
-    canViewAnalytics: true,
-    role: "workspace-viewer",
-  },
-
-  // ===== DEPARTMENT HEAD (Level 6) =====
-  "department-head": {
-    ...BASE_PERMISSIONS,
-    // Full project manager capabilities
-    canViewWorkspace: true,
-    canViewAllProjects: true,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canViewTasks: true,
-    canCreateTasks: true,
-    canEditTasks: true,
-    canDeleteTasks: true,
-    canCommentOnTasks: true,
-    canLogTimeOnTasks: true,
-    canTrackTime: true,
-    canViewTeamMembers: true,
-    canSendMessages: true,
-    canSendDirectMessages: true,
-    canReactToMessages: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canUploadFiles: true,
-    canDownloadFiles: true,
-    canShareFiles: true,
-    canViewCalendar: true,
-    canAccessKnowledgeBase: true,
-    canAssignTasks: true,
-    canReassignTasks: true,
-    canAssignTasksToMembers: true,
-    canCreateSubtasks: true,
-    canEditSubtasks: true,
-    canDeleteSubtasks: true,
-    canAssignSubtasks: true,
-    canManageSubtaskHierarchy: true,
-    canSetTaskPriority: true,
-    canSetTaskDeadlines: true,
-    canSetTaskStatus: true,
-    canAddTaskLabels: true,
-    canViewTeamProgress: true,
-    canManageTeamCapacity: true,
-    canMentorMembers: true,
-    canViewAnalytics: true,
-    canViewTeamAnalytics: true,
-    canViewPersonalAnalytics: true,
-    canViewTimeReports: true,
-    canCreateProjects: true,
-    canEditProjects: true,
-    canDeleteProjects: true,
-    canArchiveProjects: true,
-    canCloneProjects: true,
-    canManageProjectSettings: true,
-    canManageProjectTeam: true,
-    canAssignProjectManagers: true,
-    canInviteToProject: true,
-    canRemoveFromProject: true,
-    canViewProjectBudget: true,
-    canManageProjectBudget: true,
-    canCreateProjectAnnouncements: true,
-    canModerateProjectDiscussion: true,
-    canBulkEditTasks: true,
-    canBulkAssignTasks: true,
-    canImportTasks: true,
-    canExportTasks: true,
-    canCreateReports: true,
-    canCustomizeReports: true,
-    canExportReports: true,
-    canShareReports: true,
-    canCreateDashboards: true,
-    canViewProjectAnalytics: true,
-    canViewProjectReports: true,
-    canExportProjectData: true,
-    // Department head specific permissions
-    canInviteUsers: true,
-    canManageRoles: true,
-    canViewAllUsers: true,
-    canViewWorkspaceAnalytics: true,
-    canCreateWorkspaceReports: true,
-    canAccessAdvancedAnalytics: true,
-    canCreateCustomMetrics: true,
-    role: "department-head",
-  },
-
-  // ===== WORKSPACE MANAGER (Level 7) =====
-  "workspace-manager": {
-    ...BASE_PERMISSIONS,
-    // Full access to everything
-    canManageWorkspace: true,
-    canViewWorkspace: true,
-    canDeleteWorkspace: true,
-    canManageWorkspaceSettings: true,
-    canManageBilling: true,
-    canViewBillingHistory: true,
-    canChangePlan: true,
-    canInviteUsers: true,
-    canRemoveUsers: true,
-    canManageRoles: true,
-    canAssignDepartmentHeads: true,
-    canViewAllUsers: true,
-    canViewWorkspaceAnalytics: true,
-    canExportWorkspaceData: true,
-    canCreateWorkspaceReports: true,
-    canScheduleReports: true,
-    canManageIntegrations: true,
-    canAccessWorkspaceAPI: true,
-    canManageWorkspaceSecurity: true,
-    canViewAuditLogs: true,
-    canManageBackups: true,
-    canCreateProjects: true,
-    canEditProjects: true,
-    canDeleteProjects: true,
-    canArchiveProjects: true,
-    canCloneProjects: true,
-    canManageProjectSettings: true,
-    canManageProjectTeam: true,
-    canAssignProjectManagers: true,
-    canInviteToProject: true,
-    canRemoveFromProject: true,
-    canViewAllProjects: true,
-    canViewAssignedProjects: true,
-    canViewProjectDetails: true,
-    canAccessProjectFiles: true,
-    canViewProjectAnalytics: true,
-    canViewProjectReports: true,
-    canExportProjectData: true,
-    canViewProjectBudget: true,
-    canManageProjectBudget: true,
-    canAccessProjectChat: true,
-    canCreateProjectAnnouncements: true,
-    canModerateProjectDiscussion: true,
-    canCreateTasks: true,
-    canEditTasks: true,
-    canDeleteTasks: true,
-    canViewTasks: true,
-    canViewAllTasks: true,
-    canAssignTasks: true,
-    canReassignTasks: true,
-    canAssignTasksToMembers: true,
-    canUnassignTasks: true,
-    canCreateSubtasks: true,
-    canEditSubtasks: true,
-    canDeleteSubtasks: true,
-    canAssignSubtasks: true,
-    canManageSubtaskHierarchy: true,
-    canSetTaskPriority: true,
-    canSetTaskDeadlines: true,
-    canSetTaskStatus: true,
-    canAddTaskLabels: true,
-    canManageTaskDependencies: true,
-    canCommentOnTasks: true,
-    canMentionUsersInTasks: true,
-    canAttachFilesToTasks: true,
-    canLogTimeOnTasks: true,
-    canBulkEditTasks: true,
-    canBulkAssignTasks: true,
-    canImportTasks: true,
-    canExportTasks: true,
-    canCreateTeams: true,
-    canEditTeams: true,
-    canDeleteTeams: true,
-    canArchiveTeams: true,
-    canAddMembers: true,
-    canRemoveMembers: true,
-    canInviteMembers: true,
-    canManageTeamRoles: true,
-    canViewTeamMembers: true,
-    canAssignTeamLeads: true,
-    canMentorMembers: true,
-    canViewTeamProgress: true,
-    canManageTeamCapacity: true,
-    canCreateTeamChannels: true,
-    canManageTeamChannels: true,
-    canModerateTeamChat: true,
-    canCreateTeamAnnouncements: true,
-    canSendMessages: true,
-    canSendDirectMessages: true,
-    canMentionUsers: true,
-    canReactToMessages: true,
-    canCreateChannels: true,
-    canJoinChannels: true,
-    canLeaveChannels: true,
-    canManageChannels: true,
-    canArchiveChannels: true,
-    canModerateChat: true,
-    canDeleteMessages: true,
-    canPinMessages: true,
-    canManageChannelPermissions: true,
-    canStartVideoCall: true,
-    canShareScreen: true,
-    canRecordMeetings: true,
-    canScheduleMeetings: true,
-    canUploadFiles: true,
-    canDownloadFiles: true,
-    canDeleteFiles: true,
-    canOrganizeFiles: true,
-    canShareFiles: true,
-    canManageFileVersions: true,
-    canViewCalendar: true,
-    canCreateEvents: true,
-    canEditEvents: true,
-    canDeleteEvents: true,
-    canManageAvailability: true,
-    canBookResources: true,
-    canManageTimeOff: true,
-    canTrackTime: true,
-    canViewTimeTracking: true,
-    canEditTimeEntries: true,
-    canApproveTimeEntries: true,
-    canManageTimeTracking: true,
-    canAccessKnowledgeBase: true,
-    canCreateDocuments: true,
-    canEditDocuments: true,
-    canDeleteDocuments: true,
-    canManageDocumentPermissions: true,
-    canViewAnalytics: true,
-    canViewPersonalAnalytics: true,
-    canViewTeamAnalytics: true,
-    canViewTeamPerformance: true,
-    canViewIndividualPerformance: true,
-    canViewProductivityMetrics: true,
-    canViewBudgetAnalytics: true,
-    canViewTimeReports: true,
-    canCreateReports: true,
-    canCustomizeReports: true,
-    canExportReports: true,
-    canShareReports: true,
-    canAccessAdvancedAnalytics: true,
-    canCreateDashboards: true,
-    canCreateCustomMetrics: true,
-    canAccessSystemSettings: true,
-    canManageSystemIntegrations: true,
-    canManageAPIAccess: true,
-    canViewSystemHealth: true,
-    canManageSystemBackups: true,
-    canManageSecurity: true,
-    canViewSecurityLogs: true,
-    canManageSSO: true,
-    canManage2FA: true,
-    canManageDataRetention: true,
-    canAccessAuditLogs: true,
-    canManageCompliance: true,
-    canExportAuditData: true,
-    canManageDataGovernance: true,
-    canAccessBetaFeatures: true,
-    canUseAI: true,
-    canManageAISettings: true,
-    canAccessDeveloperTools: true,
-    role: "workspace-manager",
-  },
-};
+export const ROLE_PERMISSIONS: Record<UserRole, AllPermissions> =
+  Object.fromEntries(
+    (Object.keys(BACKEND_ROLE_PERMISSIONS) as UserRole[]).map((role) => [
+      role,
+      {
+        ...BASE_PERMISSIONS,
+        ...FRONTEND_ONLY_ROLE_PERMISSIONS[role],
+        ...BACKEND_ROLE_PERMISSIONS[role],
+        role,
+      } as AllPermissions,
+    ]),
+  ) as Record<UserRole, AllPermissions>;
 
 /**
  * Check if one role is higher than another in hierarchy

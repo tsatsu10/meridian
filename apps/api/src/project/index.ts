@@ -50,12 +50,17 @@ import {
   userTable,
 } from "../database/schema";
 import { ensureDefaultColumns } from "./utils/default-columns";
+import {
+  projectRestrictionError,
+  projectsOutsideRestriction,
+} from "./utils/project-restriction";
 import rbacMiddleware from "../middlewares/rbac";
 import {
   requireProjectPermission,
   checkWorkspacePermission,
 } from "../middlewares/rbac";
 import { CachePresets, cacheMiddleware } from "../middlewares/cache-middleware";
+
 import { RateLimitPresets } from "../middlewares/rate-limit";
 import logger from "../utils/logger";
 import { getErrorMessage } from "../utils/error-utils";
@@ -751,6 +756,14 @@ const project = new Hono<{
           );
         }
 
+        const outOfScope = projectsOutsideRestriction(
+          payload.projectIds,
+          permission.restrictedToProjectIds,
+        );
+        if (outOfScope.length > 0) {
+          return c.json(projectRestrictionError(outOfScope), 403);
+        }
+
         const result = await bulkUpdateProjects({
           projectIds: payload.projectIds,
           workspaceId: payload.workspaceId,
@@ -804,6 +817,14 @@ const project = new Hono<{
             permission.body ?? { error: "Forbidden" },
             permission.status ?? 403,
           );
+        }
+
+        const outOfScope = projectsOutsideRestriction(
+          payload.projectIds,
+          permission.restrictedToProjectIds,
+        );
+        if (outOfScope.length > 0) {
+          return c.json(projectRestrictionError(outOfScope), 403);
         }
 
         const result = await bulkDeleteProjects(payload);

@@ -6,16 +6,35 @@
 
 import type { UserRole } from "../types/rbac";
 
+/**
+ * Authority ladder, used by `requireRole(role, minimum)` and by the
+ * hierarchy ceiling in roles/lib/role-ceiling.ts.
+ *
+ * 🚨 This was ordered by scope rather than by authority, which put *viewers*
+ * above *managers*: `project-viewer: 3` outranked `team-lead: 2`, and
+ * `workspace-viewer: 5` outranked `project-manager: 4`. So
+ * `requireRole("project-manager", true)` admitted a workspace-viewer — a
+ * read-only role clearing a manager-level bar.
+ *
+ * That was largely inert while `requireRole` sampled one arbitrary assignment
+ * and only `workspace-manager` held `canManageRoles`. It is now load-bearing:
+ * `requireRole` binds to the MINIMUM level across a caller's assignments, so a
+ * wrong ranking mis-binds the decision in both directions.
+ *
+ * Ordering rule: read-only roles rank below any role that can write at the
+ * same scope. A viewer never outranks a manager.
+ */
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   guest: 0,
+  // Limited-participation roles: can see and act only where invited.
   stakeholder: 1,
   contractor: 1,
   client: 1,
-  member: 1,
-  "team-lead": 2,
-  "project-viewer": 3,
+  "project-viewer": 1, // read-only — was 3, above team-lead
+  member: 2,
+  "workspace-viewer": 2, // read-only, workspace-wide — was 5, above project-manager
+  "team-lead": 3,
   "project-manager": 4,
-  "workspace-viewer": 5,
   "department-head": 6,
   "workspace-manager": 10, // 🏆 OWNER LEVEL - Highest authority with all powers
 };
