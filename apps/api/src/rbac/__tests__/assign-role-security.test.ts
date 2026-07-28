@@ -53,6 +53,28 @@
  * eq(roles.isActive, true) / isNull(roles.deletedAt) predicates produce at
  * the database layer. What this proves is the ROUTE's response given an
  * empty result; the predicate itself is not re-verified here.
+ *
+ * FIX ROUND 2 (coordinator re-review):
+ *
+ * REGRESSION — checkWorkspacePermission's demo-mode admin bypass returns a
+ * bare `{ allowed: true }` with no `userRole` at all. The Important-4 fix
+ * above originally fell back to `resolveRolePermissions(scoped.userRole ??
+ * "guest", ...)`, which gave the demo admin guest-level permissions (just
+ * canViewPublicProjects) and 403'd every real assignment. Fixed by skipping
+ * the ceiling check entirely when `scoped.userRole` is `undefined` — that
+ * value means "the demo bypass fired, treat as fully authorized," not "the
+ * actor is a guest." Covered below ("demo-mode ceiling skip").
+ *
+ * IMPORTANT (membership status) — the Important-5 membership check did not
+ * filter `workspaceUserTable.status`, so a user who was invited but never
+ * accepted (status:"pending", per
+ * workspace-user/controllers/invite-workspace-user.ts) could be granted a
+ * live role. Fixed by adding `eq(workspaceUserTable.status, "active")`,
+ * matching the same filter used elsewhere (workspace/controllers/get-workspaces.ts,
+ * workspace-user/controllers/get-active-workspace-users.ts). Covered below;
+ * same mock-layer caveat as the customRole tests above applies (the shared
+ * mock discards `.where()`, so "pending" is exercised as "no row returned,"
+ * the same observable outcome the real predicate produces).
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -261,6 +283,30 @@ describe("POST /assign security fixes", () => {
 
       expect(res.status).toBe(200);
     });
+
+    it("skips the ceiling check when checkWorkspacePermission's demo-mode bypass fires (no userRole)", async () => {
+      // The demo bypass returns a bare { allowed: true } with no userRole at
+      // all (see middlewares/rbac.ts). Before this fix round, the code fell
+      // back to resolveRolePermissions("guest", ...), whose only permission
+      // is canViewPublicProjects — every real assignment would 403 with a
+      // misleading "you cannot grant permissions you do not hold" message.
+      checkWorkspacePermissionMock.mockResolvedValue({ allowed: true });
+      mockDb.__setSelectResults(
+        [{ id: "membership-1" }], // membership check
+        [{ id: "assigner-row-id" }], // assigner user lookup
+      );
+
+      const res = await postAssign({
+        ...baseBody,
+        role: "workspace-manager",
+      });
+
+      expect(res.status).toBe(200);
+      // Discriminating: resolveRolePermissions must not have been called at
+      // all for the ceiling check when there's no role to resolve a ceiling
+      // from.
+      expect(resolveRolePermissionsMock).not.toHaveBeenCalled();
+    });
   });
 
   describe("Important 5: assignee membership", () => {
@@ -274,6 +320,23 @@ describe("POST /assign security fixes", () => {
 
     it("rejects with 400 when the assignee is not a member of the target workspace", async () => {
       mockDb.__setSelectResults([]); // membership check: no row
+
+      const res = await postAssign(baseBody);
+
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({
+        error: "User is not a member of this workspace",
+      });
+      expect(mockDb.update).not.toHaveBeenCalled();
+      expect(mockDb.insert).not.toHaveBeenCalled();
+    });
+
+    it("rejects with 400 when the assignee has a pending (not yet accepted) invite", async () => {
+      // eq(workspaceUserTable.status, "active") excludes a status:"pending"
+      // row at the database layer; the mock's equivalent is an empty result
+      // set (see file header's Fix Round 2 note — same limitation as the
+      // customRole predicate tests above).
+      mockDb.__setSelectResults([]);
 
       const res = await postAssign(baseBody);
 

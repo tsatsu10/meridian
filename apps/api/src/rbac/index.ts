@@ -278,25 +278,45 @@ rbac.post(
       // applied here too. Without it, an assigner could bypass that ceiling
       // entirely by assigning an EXISTING powerful role instead of minting a
       // new one — built-in or custom.
-      const [actorPermissions, assignedPermissions] = await Promise.all([
-        resolveRolePermissions(scoped.userRole ?? "guest", data.workspaceId),
-        resolveRolePermissions(data.role, data.workspaceId),
-      ]);
-      const excess = findExcessPermissions(
-        recordToPermissions(assignedPermissions),
-        actorPermissions,
-      );
-      if (excess.length > 0) {
-        return c.json(
-          {
-            error: `You cannot assign permissions you do not hold: ${excess.join(", ")}`,
-          },
-          403,
+      //
+      // scoped.userRole is undefined exactly when checkWorkspacePermission's
+      // demo-mode admin bypass fired (it returns a bare `{ allowed: true }`
+      // with no role at all — see middlewares/rbac.ts). That is NOT the same
+      // as "the actor is a guest": falling back to "guest" there would give
+      // the demo admin a near-empty permission set (guest's only permission
+      // is canViewPublicProjects) and 403 every real assignment with a
+      // misleading "you cannot grant permissions you do not hold" message.
+      // The demo bypass already means "treat this caller as fully
+      // authorized," so the ceiling check is skipped entirely in that case —
+      // the normal (non-demo) path is unaffected and still enforces the
+      // ceiling exactly as before.
+      if (scoped.userRole !== undefined) {
+        const [actorPermissions, assignedPermissions] = await Promise.all([
+          resolveRolePermissions(scoped.userRole, data.workspaceId),
+          resolveRolePermissions(data.role, data.workspaceId),
+        ]);
+        const excess = findExcessPermissions(
+          recordToPermissions(assignedPermissions),
+          actorPermissions,
         );
+        if (excess.length > 0) {
+          return c.json(
+            {
+              error: `You cannot assign permissions you do not hold: ${excess.join(", ")}`,
+            },
+            403,
+          );
+        }
       }
 
-      // The assignee must actually belong to the target workspace — without
-      // this a complete outsider could be granted access to it.
+      // The assignee must actually belong to the target workspace, with an
+      // ACCEPTED invite — without this a complete outsider (or someone who
+      // has been invited but never accepted, per
+      // workspace-user/controllers/invite-workspace-user.ts inserting rows as
+      // status:"pending") could be granted a live role. Matches the same
+      // eq(status, "active") filter used elsewhere for membership checks
+      // (workspace/controllers/get-workspaces.ts,
+      // workspace-user/controllers/get-active-workspace-users.ts).
       const [membership] = await db
         .select({ id: workspaceUserTable.id })
         .from(workspaceUserTable)
@@ -304,6 +324,7 @@ rbac.post(
           and(
             eq(workspaceUserTable.userId, data.userId),
             eq(workspaceUserTable.workspaceId, data.workspaceId),
+            eq(workspaceUserTable.status, "active"),
           ),
         )
         .limit(1);
@@ -398,6 +419,35 @@ rbac.delete(
       const db = getDatabase();
       const userId = c.req.param("userId");
       const removerEmail = c.get("userEmail");
+      const workspaceId = c.req.query("workspaceId");
+
+      // Required: this route previously took no workspace context at all
+      // (query param or body), which is what let the gap below happen. There
+      // is no other field on this route to infer it from — the frontend
+      // caller (removeRole() in apps/web/src/lib/permissions/provider.tsx)
+      // needs to start sending it as a query param; see task-12-report.md.
+      if (!workspaceId) {
+        return c.json(
+          { error: "workspaceId query parameter is required" },
+          400,
+        );
+      }
+
+      // CRITICAL (same class as /assign — see task-12-report.md): gate on
+      // the TARGET workspace, not "does this caller hold canManageRoles
+      // anywhere" — requirePermission's own check is workspace-unscoped
+      // (`.limit(1)`, no `orderBy`, no workspace filter). Without this, a
+      // workspace-manager of their OWN workspace could strip a user's role
+      // in an unrelated workspace they hold no canManageRoles grant in. 404,
+      // uniform, never checkWorkspacePermission's own 403 body.
+      const scoped = await checkWorkspacePermission(
+        removerEmail,
+        workspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
 
       // Get remover user ID
       const removerUser = await db
@@ -411,7 +461,9 @@ rbac.delete(
         return c.json({ error: "User not found" }, 400);
       }
 
-      // Get current role assignment
+      // Get current role assignment IN THIS WORKSPACE ONLY — otherwise an
+      // active assignment in a completely different workspace could be
+      // picked up here (whichever one `.limit(1)` happened to return).
       const currentAssignment = await db
         .select()
         .from(roleAssignmentTable)
@@ -419,6 +471,7 @@ rbac.delete(
           and(
             eq(roleAssignmentTable.userId, userId),
             eq(roleAssignmentTable.isActive, true),
+            eq(roleAssignmentTable.workspaceId, workspaceId),
           ),
         )
         .limit(1);
@@ -428,13 +481,22 @@ rbac.delete(
         return c.json({ error: "No active role assignment found" }, 404);
       }
 
-      // Deactivate role assignment
+      // Deactivate role assignment, scoped to the target workspace too —
+      // mirrors /assign's Critical 2 fix: without eq(workspaceId, ...) here,
+      // whichever active assignment `.limit(1)` happened to return above
+      // could be deactivated regardless of which workspace it actually
+      // belonged to.
       await db
         .update(roleAssignmentTable)
         .set({
           isActive: false,
         })
-        .where(eq(roleAssignmentTable.id, activeAssignment.id));
+        .where(
+          and(
+            eq(roleAssignmentTable.id, activeAssignment.id),
+            eq(roleAssignmentTable.workspaceId, workspaceId),
+          ),
+        );
 
       // Record in role history
       await db.insert(roleHistoryTable).values({
