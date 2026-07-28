@@ -52,7 +52,7 @@ import {
 import { ensureDefaultColumns } from "./utils/default-columns";
 import rbacMiddleware from "../middlewares/rbac";
 import {
-  requirePermission,
+  requireProjectPermission,
   checkWorkspacePermission,
 } from "../middlewares/rbac";
 import { CachePresets, cacheMiddleware } from "../middlewares/cache-middleware";
@@ -587,9 +587,12 @@ const project = new Hono<{
   })
 
   // @epic-1.1-subtasks: Analytics endpoint for project analytics
+  // 🚨 SECURITY: project-scoped, not the unscoped requirePermission — see the
+  // matching comment in analytics/index.ts. The unscoped guard let anyone
+  // holding canViewAnalytics in any workspace read any project's analytics.
   .get(
     "/:projectId/analytics",
-    requirePermission("canViewAnalytics"),
+    requireProjectPermission("canViewAnalytics"),
     zValidator("param", z.object({ projectId: z.string() })),
     zValidator("query", z.object({ timeRange: z.string().optional() })),
     getProjectAnalytics,

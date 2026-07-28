@@ -25,6 +25,11 @@ function selectReturning(rows: unknown[]) {
   chain.from = vi.fn().mockReturnValue(chain);
   chain.where = vi.fn().mockReturnValue(chain);
   chain.limit = vi.fn().mockReturnValue(chain);
+  // requirePermission orders the role-assignment query deterministically; the
+  // chain has to accept it. Like `where`, this mock discards the argument — so
+  // it cannot verify the ordering, which is why the ordering is pinned against
+  // a real database in require-permission-determinism.integration.test.ts.
+  chain.orderBy = vi.fn().mockReturnValue(chain);
   // biome-ignore lint/suspicious/noThenProperty: mock must be awaitable like drizzle's builder
   chain.then = (resolve: (value: unknown) => unknown) =>
     Promise.resolve(rows).then(resolve);

@@ -15,7 +15,10 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { auth } from "../middlewares/auth";
-import { requirePermission } from "../middlewares/rbac";
+import {
+  checkWorkspacePermission,
+  requirePermission,
+} from "../middlewares/rbac";
 import {
   calculateUserStatistics,
   getUserStatistics,
@@ -272,6 +275,24 @@ smartProfileRoutes.post(
 
       if (!workspaceId) {
         return c.json({ error: "workspaceId required" }, 400);
+      }
+
+      // 🚨 SECURITY: the route-level requirePermission above is deliberately
+      // workspace-unscoped (coarse admission only), and this workspace arrives
+      // as a query parameter rather than a path param, so it cannot be checked
+      // by requireWorkspacePermission. Scope it here: without this, holding
+      // canManageTeamMembers in one workspace would let the caller write a
+      // contribution record into any other workspace.
+      const scoped = await checkWorkspacePermission(
+        c.get("userEmail"),
+        workspaceId,
+        "canManageTeamMembers",
+      );
+      if (!scoped.allowed) {
+        return c.json(
+          scoped.body ?? { error: "Forbidden" },
+          scoped.status ?? 403,
+        );
       }
 
       const contribution = await recordMajorContribution(

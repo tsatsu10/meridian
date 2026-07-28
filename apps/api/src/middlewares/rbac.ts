@@ -6,7 +6,7 @@
  */
 
 import { createMiddleware } from "hono/factory";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
 import {
   userTable,
@@ -64,8 +64,20 @@ export function requirePermission(permission: PermissionAction) {
 
       const userId = currentUser.id;
 
-      // Get user's active role assignment
-      const roleAssignment = await db
+      // Get ALL of the user's active role assignments, deterministically
+      // ordered.
+      //
+      // 🚨 SECURITY: this was previously `.limit(1)` with no `orderBy`, which
+      // sampled ONE arbitrary assignment. A user holding more than one active
+      // assignment therefore got whichever row Postgres happened to return, so
+      // their effective permissions could differ between two identical
+      // requests — a nondeterministic authorization decision that no test can
+      // reproduce on demand. It also handed out a privilege-escalation
+      // primitive: creating a workspace self-assigns `workspace-manager`
+      // (workspace/controllers/create-workspace.ts) *without* deactivating any
+      // existing assignment, so any authenticated user could add a
+      // high-privilege row and wait to win the lottery.
+      const assignments = await db
         .select()
         .from(roleAssignmentTable)
         .where(
@@ -74,28 +86,52 @@ export function requirePermission(permission: PermissionAction) {
             eq(roleAssignmentTable.isActive, true),
           ),
         )
-        .limit(1);
-
-      const assignedRole = roleAssignment[0]?.role ?? "guest";
-      const userRole = assignedRole as UserRole;
+        .orderBy(
+          asc(roleAssignmentTable.assignedAt),
+          asc(roleAssignmentTable.id),
+        );
 
       // Built-in role names resolve from the ROLE_PERMISSIONS constant exactly
-      // as before; anything else is looked up as a custom role id. Unknown or
-      // revoked roles resolve to {}, i.e. denied.
-      //
-      // NOTE: the workspace passed here comes from an arbitrarily chosen
-      // active assignment (.limit(1), no orderBy) and is NOT the workspace of
-      // the request. It only asserts the custom role belongs to the same
-      // workspace as that assignment. Route-level scoping is the job of
-      // checkWorkspacePermission / checkProjectPermission, which select the
-      // assignment for the workspace actually being accessed.
-      const rolePermissions = await resolveRolePermissions(
-        assignedRole,
-        roleAssignment[0]?.workspaceId ?? null,
+      // as before; anything else is looked up as a custom role id, scoped to
+      // that assignment's OWN workspace. Unknown or revoked roles resolve to
+      // {}, i.e. denied.
+      const resolved = await Promise.all(
+        assignments.map((assignment) =>
+          resolveRolePermissions(
+            assignment.role,
+            assignment.workspaceId ?? null,
+          ),
+        ),
       );
 
-      // Check if role has the required permission
-      const hasBasePermission = rolePermissions[permission] || false;
+      // This guard is deliberately workspace-UNSCOPED: it is a coarse
+      // admission check, and scoping to the workspace actually being accessed
+      // is the job of checkWorkspacePermission / checkProjectPermission. So it
+      // answers the only question that is safe to answer without knowing the
+      // request's workspace — does the caller hold this permission under EVERY
+      // role they currently hold?
+      //
+      // Intersection is order-independent, which is what makes the decision
+      // deterministic. It is also what closes the escalation above: an
+      // additional assignment can only ever shrink the intersection, so
+      // acquiring `workspace-manager` somewhere can never grant a permission
+      // the caller did not already hold everywhere.
+      //
+      // A user with no active assignment is treated as `guest`, exactly as before.
+      const hasBasePermission =
+        assignments.length === 0
+          ? (await resolveRolePermissions("guest", null))[permission] === true
+          : resolved.every((permissions) => permissions[permission] === true);
+
+      // Report the assignment that actually bound the decision: on a denial
+      // that is the first role lacking the permission, which is the one the
+      // caller needs to hear about. Deterministic either way.
+      const denyingIndex = resolved.findIndex(
+        (permissions) => permissions[permission] !== true,
+      );
+      const bindingAssignment =
+        assignments[denyingIndex === -1 ? 0 : denyingIndex] ?? null;
+      const userRole = (bindingAssignment?.role ?? "guest") as UserRole;
 
       // Check for custom permission overrides
       const customPermissions = await db
@@ -133,7 +169,7 @@ export function requirePermission(permission: PermissionAction) {
       // Add permission context to request
       c.set("userRole", userRole);
       c.set("userId", userId);
-      c.set("roleAssignment", roleAssignment[0] || null);
+      c.set("roleAssignment", bindingAssignment);
 
       await next();
     } catch (error) {
@@ -178,7 +214,13 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
         return c.json({ error: "User not found" }, 404);
       }
 
-      const roleAssignment = await db
+      // Same fix as requirePermission above: select ALL active assignments in
+      // a deterministic order rather than sampling one arbitrary row, then
+      // bind the decision to the LEAST privileged of them. Picking the minimum
+      // is what stops an extra high-privilege assignment (e.g. the
+      // `workspace-manager` self-assigned by creating a workspace) from
+      // raising the caller's effective role level.
+      const assignments = await db
         .select()
         .from(roleAssignmentTable)
         .where(
@@ -187,10 +229,24 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
             eq(roleAssignmentTable.isActive, true),
           ),
         )
-        .limit(1);
+        .orderBy(
+          asc(roleAssignmentTable.assignedAt),
+          asc(roleAssignmentTable.id),
+        );
+
+      // Ties keep the earliest assignment, so the reported role is stable.
+      const bindingAssignment =
+        assignments.length === 0
+          ? null
+          : assignments.reduce((lowest, candidate) =>
+              (ROLE_HIERARCHY[candidate.role as UserRole] ?? 0) <
+              (ROLE_HIERARCHY[lowest.role as UserRole] ?? 0)
+                ? candidate
+                : lowest,
+            );
 
       const userRole: UserRole =
-        (roleAssignment[0]?.role as UserRole | undefined) ?? "guest";
+        (bindingAssignment?.role as UserRole | undefined) ?? "guest";
 
       const userLevel = ROLE_HIERARCHY[userRole] || 0;
       const requiredLevel = ROLE_HIERARCHY[requiredRole] || 0;
@@ -215,7 +271,7 @@ export function requireRole(requiredRole: UserRole, minimum = false) {
       // Add role context to request
       c.set("userRole", userRole);
       c.set("userId", currentUser.id);
-      c.set("roleAssignment", roleAssignment[0] || null);
+      c.set("roleAssignment", bindingAssignment);
 
       await next();
     } catch (error) {
