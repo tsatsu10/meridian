@@ -1,5 +1,6 @@
 import useGetMe from "@/hooks/queries/use-get-me";
 import { useInitializeUserSettings } from "@/hooks/use-initialize-user-settings";
+import { useThemeSync } from "@/hooks/use-theme-sync";
 import type { LoggedInUser } from "@/types/user";
 import { AppLoadingScreen } from "@/components/branding/app-loading-screen";
 import {
@@ -48,6 +49,12 @@ function AuthProvider({ children }: PropsWithChildren) {
   }, [data, isError]);
 
   useInitializeUserSettings(user?.email);
+
+  // Mounted here so appearance preferences — theme schedules, accessibility
+  // toggles, typography, background — apply across the whole app. This hook
+  // used to be mounted only by the Appearance settings page, which is why the
+  // settings it wrote took effect on that one screen and nowhere else.
+  useThemeSync();
 
   const memoizedValues = useMemo(
     () => ({

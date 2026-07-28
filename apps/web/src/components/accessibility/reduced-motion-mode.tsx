@@ -6,20 +6,20 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Zap, ZapOff, Info, CheckCircle2, Eye } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useSettingsStore } from "@/store/settings";
 
 export function ReducedMotionMode() {
-  const [isReducedMotion, setIsReducedMotion] = useState(() => {
-    // Check localStorage
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("reduced-motion");
-      if (saved !== null) {
-        return saved === "true";
-      }
-      // Check system preference
-      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    }
-    return false;
-  });
+  /**
+   * Reads and writes the same appearance setting as the Reduced Motion switch
+   * in the Accessibility card. This component used to keep its own state in
+   * localStorage under "reduced-motion" and add/remove the `.reduce-motion`
+   * class itself, so the two controls sat on one page disagreeing: toggling
+   * this one off stripped the class while the other still showed "on", and an
+   * accessibility protection silently stopped applying while the UI claimed it
+   * was active. Applying the class is now use-theme-sync's job alone.
+   */
+  const { settings, updateSettings } = useSettingsStore();
+  const isReducedMotion = settings.appearance.reducedMotion;
 
   const [systemPreference, setSystemPreference] = useState(false);
 
@@ -38,30 +38,12 @@ export function ReducedMotionMode() {
     }
   }, []);
 
-  // Apply reduced motion
-  useEffect(() => {
-    const root = document.documentElement;
-
-    if (isReducedMotion) {
-      root.classList.add("reduce-motion");
-      root.style.setProperty("--animation-duration", "0.01ms");
-      root.style.setProperty("--transition-duration", "0.01ms");
-    } else {
-      root.classList.remove("reduce-motion");
-      root.style.removeProperty("--animation-duration");
-      root.style.removeProperty("--transition-duration");
-    }
-
-    // Save to localStorage
-    localStorage.setItem("reduced-motion", isReducedMotion.toString());
-  }, [isReducedMotion]);
-
   const handleToggle = (enabled: boolean) => {
-    setIsReducedMotion(enabled);
+    updateSettings("appearance", { reducedMotion: enabled });
   };
 
   const useSystemPreference = () => {
-    setIsReducedMotion(systemPreference);
+    updateSettings("appearance", { reducedMotion: systemPreference });
   };
 
   return (

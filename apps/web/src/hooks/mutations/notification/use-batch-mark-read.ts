@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 function useBatchMarkRead() {
   const queryClient = useQueryClient();
@@ -23,7 +24,7 @@ function useBatchMarkRead() {
     },
     onError: (error) => {
       console.error("Failed to batch mark as read:", error);
-      toast.error("Failed to mark notifications as read");
+      toast.error(userMessage(error, "mark those notifications as read"));
     },
   });
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { rateLimiter } from "@/lib/security";
 import { logger } from "@/lib/logger";
 
@@ -87,7 +88,7 @@ export function useDashboardOverviewRefresh(refetch: () => Promise<unknown>) {
       setLastDataFetch(new Date());
       toast.success("Dashboard refreshed successfully");
     } catch (error) {
-      toast.error("Failed to refresh dashboard");
+      toast.error(userMessage(error, "refresh the dashboard"));
       logger.error(
         "Dashboard refresh failed",
         error instanceof Error ? error : new Error(String(error)),

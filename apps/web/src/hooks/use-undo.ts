@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 /**
  * Hook to provide undo functionality for delete operations
@@ -72,7 +73,7 @@ export function useUndo<T extends { id: string }>(
             return newMap;
           });
           toastIds.current.delete(deleteId);
-          toast.error("Failed to delete item");
+          toast.error(userMessage(error, "delete that item"));
         }
       }, delay);
 

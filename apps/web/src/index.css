@@ -221,9 +221,21 @@
        producing wildly mismatched type sizes (e.g. body text at 16px next to
        Tailwind's text-sm at ~9px instead of the two moving together). */
     --app-font-size-rem: calc(var(--app-font-size) / 16px * 1rem);
+    /* Typography preferences; see the body rule below. Set from
+       use-theme-sync, with these as the pre-JS defaults. */
+    --app-font-family: "Inter";
+    --app-font-weight: 400;
+    --app-line-height: 1.5;
+    --app-letter-spacing: 0px;
+    /* Custom background; only meaningful under .has-custom-background. */
+    --app-background-position: center;
+    --app-background-blur: 0px;
+    --app-background-opacity: 1;
+    /* Density. --app-gap used to be declared and set alongside these two but
+       was read by nothing, so it is gone; add it back with a consumer if a
+       gap-scaling need appears. */
     --app-spacing: 1rem;
     --app-padding: 1rem;
-    --app-gap: 1rem;
     --animation-duration: 0.3s;
     --transition-duration: 0.2s;
     --animations-enabled: 1;
@@ -331,6 +343,37 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-size: var(--app-font-size-rem);
+    /* Typography preferences from Appearance settings. These are applied on
+       :root by use-theme-sync; the fallbacks keep the app looking right before
+       any preference is loaded and when a user has never set one. Declared
+       here rather than on a preview element, which is where the settings page
+       used to apply them while claiming they applied app-wide. */
+    font-family: var(--app-font-family, "Inter"), ui-sans-serif, system-ui,
+      sans-serif;
+    font-weight: var(--app-font-weight, 400);
+    line-height: var(--app-line-height, 1.5);
+    letter-spacing: var(--app-letter-spacing, 0px);
+  }
+
+  /* A custom background sits on a fixed pseudo-element so its blur and opacity
+     never touch the readability of the content above it. */
+  body::before {
+    content: "";
+    display: none;
+  }
+
+  .has-custom-background body::before {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--app-background-image);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: var(--app-background-position, center);
+    filter: blur(var(--app-background-blur, 0px));
+    opacity: var(--app-background-opacity, 1);
   }
 
   .dark body {
@@ -1308,6 +1351,18 @@
 /* ========================================
    PHASE 4.5: ACCESSIBILITY ENHANCEMENTS
    ======================================== */
+
+/* Animations off. use-theme-sync has always toggled this class from the
+   `animations` appearance setting, but no rule ever defined it, so the setting
+   did nothing. Kept separate from .reduce-motion: that one is the
+   accessibility preference, this one is a plain user preference, and either
+   being on is enough to stop motion. */
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
+  animation: none !important;
+  transition: none !important;
+}
 
 /* Large Text Mode - Increase base font size by 25% (16px base -> 20px).
    Every rule here goes through --app-font-size-rem (not a hardcoded px

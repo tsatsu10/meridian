@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import getMilestones from "@/fetchers/milestone/get-milestones";
 import createMilestoneApi from "@/fetchers/milestone/create-milestone";
 import updateMilestoneApi from "@/fetchers/milestone/update-milestone";
@@ -102,7 +103,7 @@ export function useMilestones(projectId?: string) {
     },
     onError: (error) => {
       console.error("Failed to create milestone:", error);
-      toast.error("Failed to save milestone changes");
+      toast.error(userMessage(error, "save your milestone changes"));
     },
   });
 
@@ -132,7 +133,7 @@ export function useMilestones(projectId?: string) {
     },
     onError: (error) => {
       console.error("Failed to update milestone:", error);
-      toast.error("Failed to save milestone changes");
+      toast.error(userMessage(error, "save your milestone changes"));
     },
   });
 
@@ -144,7 +145,7 @@ export function useMilestones(projectId?: string) {
     },
     onError: (error) => {
       console.error("Failed to delete milestone:", error);
-      toast.error("Failed to delete milestone");
+      toast.error(userMessage(error, "delete the milestone"));
     },
   });
 

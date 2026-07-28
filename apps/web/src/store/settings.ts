@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import {
   SETTINGS_PRESETS,
   type SettingsPreset,
@@ -41,6 +42,32 @@ export interface AppearanceSettings {
   lightThemeTime: string;
   darkThemeTime: string;
   locationBasedEnabled: boolean;
+  // Latitude/longitude for the sunrise/sunset schedule. Persisted because the
+  // feature was previously useless after a reload: the coordinates lived in
+  // local component state, so the setting stayed switched on while the effect
+  // that consumes it early-returned forever.
+  locationLatitude: number | null;
+  locationLongitude: number | null;
+  // Accessibility toggles. These used to be local useState on the Appearance
+  // page, written to /api/settings but read back from /api/user-preferences —
+  // two different stores, so they could never survive a reload. They belong in
+  // the same section as highContrast/reducedMotion, which always worked.
+  largeText: boolean;
+  enhancedFocus: boolean;
+  screenReaderMode: boolean;
+  keyboardNavigation: boolean;
+  // Typography. Also previously local-only, and applied to nothing but a
+  // preview element.
+  fontFamily: string;
+  fontWeight: number;
+  lineHeight: number;
+  letterSpacing: number;
+  // Background customization. `backgroundImage` holds a URL served by the API
+  // (/uploads/backgrounds/...), never image bytes.
+  backgroundImage: string | null;
+  backgroundPosition: "center" | "top" | "bottom" | "left" | "right";
+  backgroundBlur: number;
+  backgroundOpacity: number;
 }
 
 export interface NotificationSettings {
@@ -77,13 +104,18 @@ export interface NotificationSettings {
 }
 
 export interface SecuritySettings {
+  /** Mirrors the account's real 2FA state; server-owned, not user-writable. */
   twoFactorEnabled: boolean;
+  /** Email the account when an unrecognised device signs in. */
   loginNotifications: boolean;
+  /** Sign out sessions that have gone idle. */
   sessionTimeout: boolean;
-  deviceTracking: boolean;
-  suspiciousActivityAlerts: boolean;
-  smsBackup: boolean;
-  rememberDevice: boolean;
+  /**
+   * When the password was last changed (ISO string), or null if never.
+   * Server-owned. The Security page's score needs a real signal here — it used
+   * to score whatever was typed into the unsubmitted change-password form.
+   */
+  passwordUpdatedAt?: string | null;
 }
 
 export interface PrivacySettings {
@@ -199,6 +231,20 @@ const defaultSettings: AllSettings = {
     lightThemeTime: "06:00",
     darkThemeTime: "18:00",
     locationBasedEnabled: false,
+    locationLatitude: null,
+    locationLongitude: null,
+    largeText: false,
+    enhancedFocus: false,
+    screenReaderMode: false,
+    keyboardNavigation: false,
+    fontFamily: "Inter",
+    fontWeight: 400,
+    lineHeight: 1.5,
+    letterSpacing: 0,
+    backgroundImage: null,
+    backgroundPosition: "center",
+    backgroundBlur: 0,
+    backgroundOpacity: 100,
   },
   notifications: {
     email: {
@@ -236,10 +282,7 @@ const defaultSettings: AllSettings = {
     twoFactorEnabled: false,
     loginNotifications: true,
     sessionTimeout: true,
-    deviceTracking: true,
-    suspiciousActivityAlerts: true,
-    smsBackup: false,
-    rememberDevice: false,
+    passwordUpdatedAt: null,
   },
   privacy: {
     profileVisibility: true,
@@ -259,10 +302,6 @@ const AUTO_SAVE_DELAY = 2000; // 2 seconds
 // User ID for API calls (should be set from auth context)
 let currentUserId: string | null = null;
 let isInitialized = false; // Flag to prevent multiple initializations
-
-// Performance monitoring
-let lastUpdateTime = 0;
-const UPDATE_THROTTLE_MS = 100; // Prevent rapid updates
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
@@ -341,20 +380,15 @@ export const useSettingsStore = create<SettingsStore>()(
           sync: true,
         },
       ) => {
-        // Performance throttling to prevent excessive updates
-        const now = Date.now();
-        if (now - lastUpdateTime < UPDATE_THROTTLE_MS) {
-          // Debounce rapid updates
-          if (autoSaveTimeout) {
-            clearTimeout(autoSaveTimeout);
-          }
-          autoSaveTimeout = setTimeout(() => {
-            get().updateSettings(section, updates, options);
-          }, UPDATE_THROTTLE_MS);
-          return;
-        }
-        lastUpdateTime = now;
-
+        // No throttle on the state update itself. There used to be one, and
+        // because its "try again later" branch reused the shared
+        // autoSaveTimeout, each rapid call cancelled the previous call's
+        // pending payload — so of N updates fired in one tick only one ever
+        // landed. "Reset to Defaults" (four updates in a row) consequently did
+        // nothing at all. Applying to local state is cheap; only the network
+        // save below is expensive, so only the save is debounced, and because
+        // saveSettings() writes the whole settings object the debounced save
+        // still carries every accumulated change.
         const currentSettings = get().settings;
         const updatedSectionSettings = {
           ...currentSettings[section],
@@ -394,16 +428,18 @@ export const useSettingsStore = create<SettingsStore>()(
           }
         }
 
-        const updatedSettings = {
-          ...currentSettings,
-          [section]: updatedSectionSettings,
-        };
-
-        set({
-          settings: updatedSettings,
+        // Merge against the *latest* state, not the snapshot taken before the
+        // await above. Two updates in flight at once both read the pre-update
+        // settings, so writing a precomputed object made the second one revert
+        // the first.
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            [section]: { ...state.settings[section], ...updates },
+          },
           hasUnsavedChanges: true,
           appliedPreset: null, // Clear applied preset when manually changing settings
-        });
+        }));
 
         // Send to sync service
         if (options.sync) {
@@ -499,7 +535,9 @@ export const useSettingsStore = create<SettingsStore>()(
 
           // Only show error toast in development mode or if explicitly user-triggered
           if (import.meta.env.DEV) {
-            toast.error("Failed to save settings - API unavailable");
+            toast.error(
+              "Couldn't reach the server. Your settings are saved on this device and will sync once you're back online.",
+            );
           } else {
             console.warn("⚠️ Settings save failed, changes preserved locally");
           }
@@ -548,7 +586,7 @@ export const useSettingsStore = create<SettingsStore>()(
         } catch (error) {
           set({ isLoading: false });
           console.error("Batch update failed:", error);
-          toast.error("Failed to update settings");
+          toast.error(userMessage(error, "save your settings"));
         }
       },
 
@@ -579,7 +617,19 @@ export const useSettingsStore = create<SettingsStore>()(
       },
 
       resetSection: async (section: keyof AllSettings) => {
-        if (!currentUserId) return;
+        // Apply the reset locally first, unconditionally. This used to bail out
+        // entirely when no user id was set, so a reset could appear to do
+        // nothing at all; the local state is the thing the UI reflects, so it
+        // must always change even if the sync below can't happen.
+        set((state) => ({
+          settings: { ...state.settings, [section]: defaultSettings[section] },
+          appliedPreset: null,
+        }));
+
+        if (!currentUserId) {
+          set({ hasUnsavedChanges: true });
+          return;
+        }
 
         try {
           const newSettings = await SettingsAPI.resetSection(
@@ -700,7 +750,7 @@ export const useSettingsStore = create<SettingsStore>()(
         } catch (error) {
           set({ isLoading: false });
           console.error("Preset application failed:", error);
-          toast.error("Failed to apply preset");
+          toast.error(userMessage(error, "apply the preset"));
         }
       },
 

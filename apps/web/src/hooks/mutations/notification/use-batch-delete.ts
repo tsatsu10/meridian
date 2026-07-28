@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 function useBatchDelete() {
   const queryClient = useQueryClient();
@@ -23,7 +24,7 @@ function useBatchDelete() {
     },
     onError: (error) => {
       console.error("Failed to batch delete:", error);
-      toast.error("Failed to delete notifications");
+      toast.error(userMessage(error, "delete those notifications"));
     },
   });
 }
