@@ -189,7 +189,9 @@ rolesRouter
   })
   .post(
     "/",
-    requirePermission("canManageRoles"),
+    // Coarse pre-filter only: this route re-checks with a workspace-scoped
+    // check below, which is the real decision. See RequirePermissionOptions.
+    requirePermission("canManageRoles", { scope: "any" }),
     zValidator(
       "json",
       z.object({
@@ -246,7 +248,9 @@ rolesRouter
   })
   .put(
     "/:id",
-    requirePermission("canManageRoles"),
+    // Coarse pre-filter only: this route re-checks with a workspace-scoped
+    // check below, which is the real decision. See RequirePermissionOptions.
+    requirePermission("canManageRoles", { scope: "any" }),
     zValidator(
       "json",
       z.object({
@@ -295,39 +299,50 @@ rolesRouter
       return c.json({ role });
     },
   )
-  .delete("/:id", requirePermission("canManageRoles"), async (c) => {
-    const id = c.req.param("id");
-    const target = await loadRoleForMutation(id);
-    if (!target) {
-      return c.json({ error: "Role not found" }, 404);
-    }
+  // Coarse pre-filter only: this route re-checks with a workspace-scoped
+  // check below, which is the real decision. See RequirePermissionOptions.
+  .delete(
+    "/:id",
+    requirePermission("canManageRoles", { scope: "any" }),
+    async (c) => {
+      const id = c.req.param("id");
+      const target = await loadRoleForMutation(id);
+      if (!target) {
+        return c.json({ error: "Role not found" }, 404);
+      }
 
-    if (
-      !isSystemRoleId(target.id) &&
-      !(await canManageRolesInWorkspace(c.get("userEmail"), target.workspaceId))
-    ) {
-      return c.json({ error: "Workspace not found" }, 404);
-    }
+      if (
+        !isSystemRoleId(target.id) &&
+        !(await canManageRolesInWorkspace(
+          c.get("userEmail"),
+          target.workspaceId,
+        ))
+      ) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
 
-    // Threaded into deleteRole so getRoleUsage's own tenant check (the same
-    // primitive getRole uses) is answered by the caller's REAL membership
-    // list, not derived from the row being acted on — deriving it from the
-    // role's own workspace would make that check a tautology.
-    const memberIds = await memberWorkspaceIds(c.get("userEmail"));
-    const actor = await actorContext(
-      c.get("userEmail"),
-      target.workspaceId ?? "",
-    );
-    return c.json(
-      await deleteRole(id, actor.userId, memberIds, {
-        ipAddress: c.req.header("x-forwarded-for"),
-        userAgent: c.req.header("user-agent"),
-      }),
-    );
-  })
+      // Threaded into deleteRole so getRoleUsage's own tenant check (the same
+      // primitive getRole uses) is answered by the caller's REAL membership
+      // list, not derived from the row being acted on — deriving it from the
+      // role's own workspace would make that check a tautology.
+      const memberIds = await memberWorkspaceIds(c.get("userEmail"));
+      const actor = await actorContext(
+        c.get("userEmail"),
+        target.workspaceId ?? "",
+      );
+      return c.json(
+        await deleteRole(id, actor.userId, memberIds, {
+          ipAddress: c.req.header("x-forwarded-for"),
+          userAgent: c.req.header("user-agent"),
+        }),
+      );
+    },
+  )
   .post(
     "/:id/clone",
-    requirePermission("canManageRoles"),
+    // Coarse pre-filter only: this route re-checks with a workspace-scoped
+    // check below, which is the real decision. See RequirePermissionOptions.
+    requirePermission("canManageRoles", { scope: "any" }),
     zValidator(
       "json",
       z.object({

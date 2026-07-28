@@ -264,7 +264,9 @@ rbac.get("/assignments/:userId", requireCanManageRolesUnlessSelf, async (c) => {
  */
 rbac.post(
   "/assign",
-  requirePermission("canManageRoles"),
+  // Coarse pre-filter only: this route re-checks with a workspace-scoped
+  // check below, which is the real decision. See RequirePermissionOptions.
+  requirePermission("canManageRoles", { scope: "any" }),
   zValidator("json", assignRoleSchema),
   async (c) => {
     try {
@@ -460,7 +462,9 @@ rbac.post(
  */
 rbac.delete(
   "/remove/:userId",
-  requirePermission("canManageRoles"),
+  // Coarse pre-filter only: this route re-checks with a workspace-scoped
+  // check below, which is the real decision. See RequirePermissionOptions.
+  requirePermission("canManageRoles", { scope: "any" }),
   async (c) => {
     try {
       const db = getDatabase();

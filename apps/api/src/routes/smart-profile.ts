@@ -255,7 +255,9 @@ smartProfileRoutes.get("/:userId/milestones", async (c) => {
 // Record major contribution (admin/manager)
 smartProfileRoutes.post(
   "/:userId/contributions",
-  requirePermission("canManageTeamMembers"),
+  // Coarse pre-filter only: the handler re-checks canManageTeamMembers against
+  // the target workspace below, which is the real decision.
+  requirePermission("canManageTeamMembers", { scope: "any" }),
   zValidator(
     "json",
     z.object({

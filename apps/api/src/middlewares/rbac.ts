@@ -21,9 +21,43 @@ import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
 import { isSystemRoleId } from "../roles/lib/system-roles";
 
 /**
+ * How the coarse (workspace-unscoped) permission gate combines a caller's
+ * several active role assignments.
+ *
+ * - `"every"` (default): the caller must hold the permission under EVERY
+ *   active assignment. Fail-closed. Use wherever this guard is the ONLY
+ *   authorization on the route.
+ *
+ * - `"any"`: the caller must hold the permission under at least one active
+ *   assignment. ONLY permissible on routes that go on to make a
+ *   workspace-scoped check (checkWorkspacePermission / checkProjectPermission)
+ *   against the workspace actually being acted on — there the coarse gate is
+ *   a cheap pre-filter and the scoped check is the real decision.
+ *
+ * Both are order-independent, so both are deterministic; that is the property
+ * the old `.limit(1)`-with-no-`orderBy` lookup lacked.
+ *
+ * Why `"any"` has to exist: `"every"` alone locks legitimate admins out. A
+ * user who owns workspace B (self-assigned `workspace-manager` on creation)
+ * and is later assigned `member` in workspace A no longer holds
+ * `canManageRoles` under EVERY assignment — so an intersection-only gate would
+ * deny them role management in their OWN workspace B, before the scoped check
+ * that would have correctly allowed it ever ran. Verified against a real
+ * database, and pinned by the tests in
+ * __tests__/require-permission-determinism.integration.test.ts.
+ */
+export interface RequirePermissionOptions {
+  scope?: "every" | "any";
+}
+
+/**
  * RBAC middleware factory - creates middleware that checks specific permissions
  */
-export function requirePermission(permission: PermissionAction) {
+export function requirePermission(
+  permission: PermissionAction,
+  options: RequirePermissionOptions = {},
+) {
+  const scope = options.scope ?? "every";
   return createMiddleware(async (c, next) => {
     try {
       const db = getDatabase();
@@ -106,31 +140,33 @@ export function requirePermission(permission: PermissionAction) {
 
       // This guard is deliberately workspace-UNSCOPED: it is a coarse
       // admission check, and scoping to the workspace actually being accessed
-      // is the job of checkWorkspacePermission / checkProjectPermission. So it
-      // answers the only question that is safe to answer without knowing the
-      // request's workspace — does the caller hold this permission under EVERY
-      // role they currently hold?
+      // is the job of checkWorkspacePermission / checkProjectPermission.
       //
-      // Intersection is order-independent, which is what makes the decision
-      // deterministic. It is also what closes the escalation above: an
-      // additional assignment can only ever shrink the intersection, so
-      // acquiring `workspace-manager` somewhere can never grant a permission
-      // the caller did not already hold everywhere.
+      // `every` (the default) intersects across assignments: order-independent,
+      // therefore deterministic, and an additional assignment can only ever
+      // shrink it — which is what closes the escalation described above.
+      // `any` unions, which is equally deterministic but only safe where a
+      // scoped check follows; see RequirePermissionOptions.
       //
       // A user with no active assignment is treated as `guest`, exactly as before.
       const hasBasePermission =
         assignments.length === 0
           ? (await resolveRolePermissions("guest", null))[permission] === true
-          : resolved.every((permissions) => permissions[permission] === true);
+          : scope === "any"
+            ? resolved.some((permissions) => permissions[permission] === true)
+            : resolved.every((permissions) => permissions[permission] === true);
 
-      // Report the assignment that actually bound the decision: on a denial
-      // that is the first role lacking the permission, which is the one the
-      // caller needs to hear about. Deterministic either way.
-      const denyingIndex = resolved.findIndex(
-        (permissions) => permissions[permission] !== true,
+      // Report the assignment that actually bound the decision. Under `every`
+      // that is the first role LACKING the permission (the one the caller needs
+      // to hear about); under `any` it is the first role granting it.
+      // Deterministic in both directions.
+      const bindingIndex = resolved.findIndex((permissions) =>
+        scope === "any"
+          ? permissions[permission] === true
+          : permissions[permission] !== true,
       );
       const bindingAssignment =
-        assignments[denyingIndex === -1 ? 0 : denyingIndex] ?? null;
+        assignments[bindingIndex === -1 ? 0 : bindingIndex] ?? null;
       const userRole = (bindingAssignment?.role ?? "guest") as UserRole;
 
       // Check for custom permission overrides

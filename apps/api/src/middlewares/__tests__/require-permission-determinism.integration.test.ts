@@ -104,13 +104,14 @@ async function assign(role: string, wsId: string, assignedAt: Date) {
  */
 async function callGuarded(
   permission: PermissionAction = "canManageRoles",
+  scope: "every" | "any" = "every",
 ): Promise<number> {
   const app = new Hono();
   app.use("*", async (c, next) => {
     c.set("userEmail", FIXTURE_EMAIL);
     await next();
   });
-  app.get("/guarded", requirePermission(permission), (c) =>
+  app.get("/guarded", requirePermission(permission, { scope }), (c) =>
     c.json({ ok: true }),
   );
 
@@ -234,6 +235,45 @@ describe.skipIf(!dbAvailable)("requirePermission (integration)", () => {
   it("treats a caller with no active assignment as a guest", async () => {
     await expect(callGuarded()).resolves.toBe(403);
     await expect(callGuarded("canViewPublicProjects")).resolves.toBe(200);
+  });
+
+  describe('scope: "any" (routes that re-check with a scoped permission)', () => {
+    // THE REGRESSION that intersection-everywhere caused, and the reason
+    // scope: "any" exists. Alice owns workspace B — creating it self-assigned
+    // her workspace-manager — and workspace A's admin later assigns her
+    // `member` there. Under `every` she loses canManageRoles entirely and is
+    // locked out of role management in her OWN workspace, because the coarse
+    // gate on /api/rbac/assign runs before the scoped check that would have
+    // allowed her.
+    it("admits an owner who also holds a lower role in another workspace", async () => {
+      await assign("workspace-manager", workspaceB, new Date("2020-01-01"));
+      await assign("member", workspaceA, new Date("2021-01-01"));
+
+      expect(await callGuarded("canManageRoles", "every")).toBe(403);
+      expect(await callGuarded("canManageRoles", "any")).toBe(200);
+    });
+
+    // `any` must still deny someone who holds the permission NOWHERE —
+    // otherwise the pre-filter would admit every authenticated caller.
+    it("still denies a caller holding the permission in no workspace", async () => {
+      await assign("guest", workspaceA, new Date("2020-01-01"));
+      await assign("member", workspaceB, new Date("2021-01-01"));
+
+      await expect(callGuarded("canManageRoles", "any")).resolves.toBe(403);
+    });
+
+    // Union is order-independent too, so `any` is deterministic as well.
+    it("is order-independent", async () => {
+      const sameInstant = new Date("2020-01-01");
+      await assign("member", workspaceA, sameInstant);
+      await assign("workspace-manager", workspaceB, sameInstant);
+
+      const results = await Promise.all(
+        Array.from({ length: 8 }, () => callGuarded("canManageRoles", "any")),
+      );
+
+      expect(results).toEqual(Array(8).fill(200));
+    });
   });
 });
 
