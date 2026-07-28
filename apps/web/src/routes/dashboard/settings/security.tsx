@@ -13,9 +13,7 @@ import {
   History,
   Globe,
   Clock,
-  MapPin,
   Monitor,
-  Fingerprint,
   RefreshCw,
   Bell,
   Loader2,
@@ -43,19 +41,57 @@ import {
 } from "@/components/ui/dialog";
 import { useSettingsStore } from "@/store/settings";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { TwoFactorSetup } from "@/components/auth/two-factor-setup";
 import { apiClient } from "@/lib/api-client";
+import { SessionsAPI } from "@/lib/api/sessions-server";
 import changePassword from "@/fetchers/user/change-password";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
+import PageTitle from "@/components/page-title";
 
 export const Route = createFileRoute("/dashboard/settings/security")({
   component: withErrorBoundary(SecuritySettings, "Security Settings"),
 });
 
+/** A password older than this stops counting towards the security score. */
+const PASSWORD_FRESH_DAYS = 365;
+
+/** Renders a session's last-activity timestamp, or says it is unknown. */
+function formatLastActive(lastActivity: string | null): string {
+  if (!lastActivity) {
+    return "Activity not recorded";
+  }
+
+  const then = new Date(lastActivity).getTime();
+  if (Number.isNaN(then)) {
+    return "Activity not recorded";
+  }
+
+  const minutes = Math.floor((Date.now() - then) / 60000);
+  if (minutes < 2) {
+    return "Active now";
+  }
+  if (minutes < 60) {
+    return `Active ${minutes} minutes ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `Active ${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `Active ${days} day${days === 1 ? "" : "s"} ago`;
+}
+
 function SecuritySettings() {
   const { settings, updateSettings, addRecentlyViewed } = useSettingsStore();
-  const [localSettings, setLocalSettings] = useState(settings.security);
+  // Read straight from the store. This used to be
+  // `useState(settings.security)` — a snapshot taken once at mount that was
+  // never resynced, even though settings load asynchronously (and can time out
+  // to defaults). Every switch read that snapshot, and because
+  // handleSettingChange spread it, the first toggle wrote the stale copy back
+  // over the other four settings.
+  const localSettings = settings.security;
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -88,8 +124,8 @@ function SecuritySettings() {
       setShowDisable2FADialog(false);
       setDisablePassword("");
     },
-    onError: () => {
-      toast.error("Failed to disable 2FA. Please check your password.");
+    onError: (error) => {
+      toast.error(userMessage(error, "disable two-factor authentication"));
     },
   });
 
@@ -102,7 +138,7 @@ function SecuritySettings() {
       setConfirmPassword("");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update password");
+      toast.error(userMessage(error, "change your password"));
     },
   });
 
@@ -151,15 +187,14 @@ function SecuritySettings() {
   };
 
   const handleSettingChange = async (key: string, value: unknown) => {
-    const newSettings = { ...localSettings, [key]: value };
-    setLocalSettings(newSettings);
-
     try {
-      await updateSettings("security", newSettings);
+      // Send only the key that changed. Sending the whole section is what let
+      // a stale snapshot overwrite unrelated settings.
+      await updateSettings("security", { [key]: value });
       toast.success("Security setting updated");
     } catch (error) {
-      toast.error("Failed to update setting");
-      setLocalSettings(settings.security);
+      console.error("Failed to update security setting:", error);
+      toast.error(userMessage(error, "save that setting"));
     }
   };
 
@@ -177,20 +212,44 @@ function SecuritySettings() {
     return "Weak";
   };
 
-  // Calculate security score
+  /**
+   * Security score from facts the server reports about the account.
+   *
+   * The "Strong Password" component used to test
+   * `currentPassword.length > 0 || newPassword.length > 0` — i.e. whether you
+   * were part-way through typing into the change-password form. Typing a
+   * strong password and submitting nothing moved the score from 0% to 35%, and
+   * clearing the box moved it back. It now measures how long ago the password
+   * was actually changed (`security.passwordUpdatedAt`, added server-side for
+   * this). "Email Verified" reads the same server flag the verification flow
+   * sets; it previously read a field the API never populated, so it could
+   * never pass for anyone and the score was capped at 70%.
+   */
   const calculateSecurityScore = () => {
     let score = 0;
-    const checks = [];
+    const checks: Array<{ name: string; status: string; hint?: string }> = [];
 
-    const hasPassword = currentPassword.length > 0 || newPassword.length > 0;
-    if (hasPassword && passwordStrength >= 75) {
+    const passwordUpdatedAt = settings.security.passwordUpdatedAt
+      ? new Date(settings.security.passwordUpdatedAt)
+      : null;
+    const passwordAgeDays = passwordUpdatedAt
+      ? (Date.now() - passwordUpdatedAt.getTime()) / (1000 * 60 * 60 * 24)
+      : null;
+
+    if (passwordAgeDays !== null && passwordAgeDays <= PASSWORD_FRESH_DAYS) {
       score += 35;
-      checks.push({ name: "Strong Password", status: "complete" });
+      checks.push({ name: "Password up to date", status: "complete" });
     } else {
-      checks.push({ name: "Strong Password", status: "pending" });
+      checks.push({
+        name: "Password up to date",
+        status: "pending",
+        hint:
+          passwordAgeDays === null
+            ? "Never changed"
+            : `Changed ${Math.floor(passwordAgeDays)} days ago`,
+      });
     }
 
-    // Use actual 2FA status from API
     if (twoFactorStatus?.enabled) {
       score += 35;
       checks.push({ name: "2FA Enabled", status: "complete" });
@@ -234,73 +293,54 @@ function SecuritySettings() {
     };
   };
 
-  // Get device and location info
-  const getDeviceInfo = () => {
-    const userAgent = navigator.userAgent;
-    const platform = navigator.platform;
+  /**
+   * Real sessions, from the API.
+   *
+   * This was a hardcoded one-element array: the device name was guessed from
+   * navigator.userAgent, the "location" came from a timezone->city lookup, the
+   * IP was the literal string "192.168.1.***", and the panel always announced
+   * "This is your only active session" — while the server had 77 live sessions
+   * for the account being viewed.
+   */
+  const {
+    data: activeSessions = [],
+    isLoading: sessionsLoading,
+    isError: sessionsError,
+  } = useQuery({
+    queryKey: ["security", "sessions"],
+    queryFn: () => SessionsAPI.listActive(),
+    refetchOnMount: true,
+  });
 
-    let deviceName = "Unknown Device";
-    let browserName = "Unknown Browser";
-
-    if (userAgent.includes("Chrome") && !userAgent.includes("Edg")) {
-      browserName = "Chrome";
-    } else if (userAgent.includes("Firefox")) {
-      browserName = "Firefox";
-    } else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
-      browserName = "Safari";
-    } else if (userAgent.includes("Edg")) {
-      browserName = "Microsoft Edge";
-    }
-
-    if (platform.includes("Win")) {
-      deviceName = `${browserName} on Windows`;
-    } else if (platform.includes("Mac")) {
-      deviceName = `${browserName} on macOS`;
-    } else if (platform.includes("Linux")) {
-      deviceName = `${browserName} on Linux`;
-    } else if (/Android/.test(userAgent)) {
-      deviceName = `${browserName} on Android`;
-    } else if (/iPhone|iPad/.test(userAgent)) {
-      deviceName = `${browserName} on iOS`;
-    } else {
-      deviceName = `${browserName} Browser`;
-    }
-
-    return deviceName;
-  };
-
-  const getCurrentLocation = () => {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const timezoneMap: Record<string, string> = {
-      "America/New_York": "New York, US",
-      "America/Los_Angeles": "Los Angeles, US",
-      "America/Chicago": "Chicago, US",
-      "America/Denver": "Denver, US",
-      "Europe/London": "London, UK",
-      "Europe/Paris": "Paris, France",
-      "Europe/Berlin": "Berlin, Germany",
-      "Asia/Tokyo": "Tokyo, Japan",
-      "Asia/Shanghai": "Shanghai, China",
-      "Asia/Kolkata": "Mumbai, India",
-      "Australia/Sydney": "Sydney, Australia",
-    };
-
-    return timezoneMap[timezone] || "Unknown Location";
-  };
-
-  const recentSessions = [
-    {
-      device: getDeviceInfo(),
-      location: getCurrentLocation(),
-      time: "Active now",
-      current: true,
-      ipAddress: "192.168.1.***",
-      sessionId: "current",
+  const terminateSessionMutation = useMutation({
+    mutationFn: (sessionId: string) => SessionsAPI.terminate(sessionId),
+    onSuccess: () => {
+      toast.success("Session signed out");
+      queryClient.invalidateQueries({ queryKey: ["security", "sessions"] });
     },
-  ];
+    onError: (error: Error) => {
+      toast.error(userMessage(error, "sign out that session"));
+    },
+  });
+
+  const terminateAllOthersMutation = useMutation({
+    mutationFn: () => SessionsAPI.terminateAllOthers(),
+    onSuccess: () => {
+      toast.success("All other sessions signed out");
+      queryClient.invalidateQueries({ queryKey: ["security", "sessions"] });
+    },
+    onError: (error: Error) => {
+      toast.error(userMessage(error, "sign out your other sessions"));
+    },
+  });
+
+  const otherSessionCount = activeSessions.filter(
+    (session) => !session.isCurrentSession,
+  ).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-background">
+      <PageTitle title="Security" />
       <div className="container max-w-6xl py-6 space-y-6">
         {/* Header */}
         <div className="space-y-1">
@@ -572,46 +612,15 @@ function SecuritySettings() {
                   </div>
                 </div>
 
-                {/* Additional 2FA Options (only show if 2FA enabled) */}
-                {twoFactorStatus?.enabled && (
-                  <>
-                    <div className="flex items-center justify-between p-4 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <Mail className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <h3 className="font-medium">Email Backup</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Receive backup codes via email
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={localSettings.smsBackup}
-                        onCheckedChange={(checked) =>
-                          handleSettingChange("smsBackup", checked)
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <Fingerprint className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <h3 className="font-medium">Remember Device</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Don't ask for 2FA on this device for 30 days
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={localSettings.rememberDevice}
-                        onCheckedChange={(checked) =>
-                          handleSettingChange("rememberDevice", checked)
-                        }
-                      />
-                    </div>
-                  </>
-                )}
+                {/*
+                  Two switches used to sit here: "Email Backup" (bound to a
+                  field named smsBackup) and "Remember Device". Neither had any
+                  implementation — zero references anywhere in the API — so
+                  both were controls that stored a boolean and changed nothing
+                  about how the account behaved. Removed rather than left
+                  looking functional on a security page; the features can come
+                  back with the backend that makes them real.
+                */}
               </CardContent>
             </Card>
 
@@ -689,7 +698,7 @@ function SecuritySettings() {
                     <div>
                       <h3 className="font-medium">Email Alerts</h3>
                       <p className="text-sm text-muted-foreground">
-                        Notify about new logins and unusual activity
+                        Email me when a new device signs in
                       </p>
                     </div>
                   </div>
@@ -701,43 +710,15 @@ function SecuritySettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    <Globe className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <h3 className="font-medium">Device Tracking</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Track device access and unusual activity
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={localSettings.deviceTracking}
-                    onCheckedChange={(checked) =>
-                      handleSettingChange("deviceTracking", checked)
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <h3 className="font-medium">
-                        Suspicious Activity Alerts
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Get notified of potential security threats
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={localSettings.suspiciousActivityAlerts}
-                    onCheckedChange={(checked) =>
-                      handleSettingChange("suspiciousActivityAlerts", checked)
-                    }
-                  />
-                </div>
+                {/*
+                  "Device Tracking" and "Suspicious Activity Alerts" used to
+                  sit here. Neither had an implementation — the API referenced
+                  them only as keys in a defaults object. Device details are
+                  now always recorded (the session list above depends on them,
+                  so there is nothing left to opt into), and threat detection
+                  is not something this app does, so promising alerts for it
+                  would be another switch that changes nothing.
+                */}
 
                 <div className="flex items-center justify-between p-4 rounded-lg border">
                   <div className="flex items-center gap-3">
@@ -796,7 +777,14 @@ function SecuritySettings() {
                         ) : (
                           <AlertTriangle className="w-4 h-4 text-orange-500" />
                         )}
-                        {check.name}
+                        <span>
+                          {check.name}
+                          {check.hint && (
+                            <span className="block text-xs text-muted-foreground">
+                              {check.hint}
+                            </span>
+                          )}
+                        </span>
                       </span>
                       <Badge
                         variant={
@@ -820,67 +808,100 @@ function SecuritySettings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentSessions.map((session, index) => (
-                  <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: session list rendered in fixed server order
-                    key={index}
-                    className="flex items-center gap-3 p-3 rounded-lg border"
-                  >
-                    <div className="p-2 bg-muted rounded-lg">
-                      <Monitor className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-sm truncate">
-                          {session.device}
-                        </h3>
-                        {session.current && (
-                          <Badge variant="default" className="text-xs">
-                            Current
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
-                        <span>{session.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>{session.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {recentSessions.length === 1 && recentSessions[0].current && (
-                  <div className="text-center py-4 text-sm text-muted-foreground">
-                    <Clock className="w-5 h-5 mx-auto mb-2 opacity-50" />
-                    <p>This is your only active session.</p>
-                    <p>
-                      Previous sessions will appear here when you log in from
-                      other devices.
-                    </p>
+                {sessionsLoading && (
+                  <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading sessions…
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    disabled
-                  >
-                    View All Sessions
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-destructive"
-                    disabled
-                  >
-                    End All Others
-                  </Button>
-                </div>
+                {sessionsError && (
+                  <div className="text-center py-4 text-sm text-muted-foreground">
+                    <AlertTriangle className="w-5 h-5 mx-auto mb-2 text-orange-500" />
+                    <p>Could not load your sessions.</p>
+                  </div>
+                )}
+
+                {!sessionsLoading &&
+                  !sessionsError &&
+                  activeSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border"
+                    >
+                      <div className="p-2 bg-muted rounded-lg">
+                        <Monitor className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-sm truncate">
+                            {session.deviceName}
+                          </h3>
+                          {session.isCurrentSession && (
+                            <Badge variant="default" className="text-xs">
+                              Current
+                            </Badge>
+                          )}
+                        </div>
+                        {/* Only shown when the server actually recorded one —
+                            the old panel printed a made-up IP and a city
+                            derived from the browser's timezone. */}
+                        {session.ipAddress && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Globe className="w-3 h-3" />
+                            <span>{session.ipAddress}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>{formatLastActive(session.lastActivity)}</span>
+                        </div>
+                      </div>
+                      {!session.isCurrentSession && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() =>
+                            terminateSessionMutation.mutate(session.id)
+                          }
+                          disabled={terminateSessionMutation.isPending}
+                        >
+                          Sign out
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+
+                {!sessionsLoading &&
+                  !sessionsError &&
+                  activeSessions.length > 0 &&
+                  otherSessionCount === 0 && (
+                    <div className="text-center py-4 text-sm text-muted-foreground">
+                      <Clock className="w-5 h-5 mx-auto mb-2 opacity-50" />
+                      <p>This is your only active session.</p>
+                    </div>
+                  )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-destructive"
+                  onClick={() => terminateAllOthersMutation.mutate()}
+                  disabled={
+                    otherSessionCount === 0 ||
+                    terminateAllOthersMutation.isPending
+                  }
+                >
+                  {terminateAllOthersMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing out…
+                    </>
+                  ) : (
+                    `Sign out ${otherSessionCount} other session${otherSessionCount === 1 ? "" : "s"}`
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </div>

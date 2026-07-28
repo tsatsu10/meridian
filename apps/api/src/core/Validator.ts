@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { describeValidationFailure } from "./describe-validation-failure";
 import { ValidationError } from "./ErrorHandler";
 
 // Common validation schemas
@@ -266,7 +267,7 @@ export const Validator = {
           message: err.message,
           code: err.code,
         }));
-        throw new ValidationError("Validation failed", details);
+        throw new ValidationError(describeValidationFailure(details), details);
       }
       throw error;
     }
@@ -289,7 +290,7 @@ export const Validator = {
           message: err.message,
           code: err.code,
         }));
-        throw new ValidationError("Validation failed", details);
+        throw new ValidationError(describeValidationFailure(details), details);
       }
       throw error;
     }
@@ -356,7 +357,7 @@ export const Validator = {
   validateArray<T>(data: unknown, itemSchema: z.ZodSchema<T>): T[] {
     // First check if data is an array
     if (!Array.isArray(data)) {
-      throw new ValidationError("Validation failed", [
+      throw new ValidationError("Expected a list of items.", [
         {
           field: "array",
           message: "Input must be an array",
@@ -374,7 +375,10 @@ export const Validator = {
             message: err.message,
             code: err.code,
           }));
-          throw new ValidationError("Validation failed", details);
+          throw new ValidationError(
+            describeValidationFailure(details),
+            details,
+          );
         }
         throw error;
       }
@@ -387,13 +391,16 @@ export const Validator = {
   ): Record<string, T> {
     // First check if data is an object
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      throw new ValidationError("Validation failed", [
-        {
-          field: "object",
-          message: "Input must be an object",
-          code: "invalid_type",
-        },
-      ]);
+      throw new ValidationError(
+        "Expected a set of fields, not a single value.",
+        [
+          {
+            field: "object",
+            message: "Input must be an object",
+            code: "invalid_type",
+          },
+        ],
+      );
     }
 
     // Validate each value in the object
@@ -409,7 +416,10 @@ export const Validator = {
             message: err.message,
             code: err.code,
           }));
-          throw new ValidationError("Validation failed", details);
+          throw new ValidationError(
+            describeValidationFailure(details),
+            details,
+          );
         }
         throw error;
       }

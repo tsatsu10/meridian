@@ -246,6 +246,37 @@ async function logAuditEvent(
   }
 }
 
+/**
+ * Keys per section that reflect account state the server derives, not
+ * preferences a client may set. They are merged into GET responses from their
+ * source of truth and must never be written into the stored settings blob.
+ */
+const SERVER_OWNED_SETTING_KEYS: Record<string, readonly string[]> = {
+  security: ["passwordUpdatedAt", "twoFactorEnabled"],
+  profile: ["emailVerified"],
+};
+
+function stripServerOwnedKeys(
+  section: string,
+  updates: unknown,
+): Record<string, unknown> {
+  const asRecord =
+    typeof updates === "object" && updates !== null
+      ? (updates as Record<string, unknown>)
+      : {};
+
+  const owned = SERVER_OWNED_SETTING_KEYS[section];
+  if (!owned) {
+    return asRecord;
+  }
+
+  const clean: Record<string, unknown> = { ...asRecord };
+  for (const key of owned) {
+    delete clean[key];
+  }
+  return clean;
+}
+
 // Get user settings
 app.get("/:userId", async (c) => {
   const db = getDatabase(); // FIX: Initialize database connection
@@ -276,6 +307,37 @@ app.get("/:userId", async (c) => {
       settingsObject[setting.section] = JSON.parse(setting.settings);
     }
 
+    // Server-owned facts, merged over whatever the client last stored. These
+    // are not user-editable settings and must not be taken from the stored
+    // blob. The Security page's score needs them: its "Email Verified" check
+    // read profile.emailVerified, which nothing ever populated — the web
+    // client defaulted it to false — so the check could never pass for anyone,
+    // while the real flag lived in users.is_email_verified all along.
+    const [account] = await db
+      .select({
+        isEmailVerified: users.isEmailVerified,
+        passwordUpdatedAt: users.passwordUpdatedAt,
+        twoFactorEnabled: users.twoFactorEnabled,
+      })
+      .from(users)
+      .where(eq(users.email, userEmail))
+      .limit(1);
+
+    if (account) {
+      settingsObject.profile = {
+        ...(settingsObject.profile as Record<string, unknown>),
+        email: userEmail,
+        emailVerified: account.isEmailVerified ?? false,
+      };
+      settingsObject.security = {
+        ...(settingsObject.security as Record<string, unknown>),
+        twoFactorEnabled: account.twoFactorEnabled ?? false,
+        passwordUpdatedAt: account.passwordUpdatedAt
+          ? account.passwordUpdatedAt.toISOString()
+          : null,
+      };
+    }
+
     return c.json({
       data: settingsObject,
       success: true,
@@ -301,8 +363,17 @@ app.patch("/:userId/:section", async (c) => {
   }
 
   try {
-    const { updates, version } = await c.req.json();
+    const { updates: rawUpdates, version } = await c.req.json();
     const metadata = getClientMetadata(c);
+
+    // Drop keys the server owns before storing anything. The GET above merges
+    // the authoritative values over whatever is stored, so a forged
+    // `passwordUpdatedAt` or `twoFactorEnabled` can never change what a client
+    // reads back — but the client sends the whole section on autosave, which
+    // would otherwise persist a stale copy of a security fact into the
+    // settings blob and leave a trap for anything that later reads that blob
+    // directly.
+    const updates = stripServerOwnedKeys(section, rawUpdates);
 
     // Get current settings for audit trail
     const currentSettings = await db
