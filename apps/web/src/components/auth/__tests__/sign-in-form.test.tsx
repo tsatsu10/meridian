@@ -2,22 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthSurface } from "../auth-surface";
 import { SignInForm } from "../sign-in-form";
-import { useAuth } from "../../providers/unified-context-provider";
 
 // Mock external dependencies
-vi.mock("../../providers/unified-context-provider");
 vi.mock("../../../hooks/mutations/use-sign-in");
 vi.mock("lucide-react", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    Mail: vi.fn(() => <div data-testid="mail-icon" />),
-    Lock: vi.fn(() => <div data-testid="lock-icon" />),
     Eye: vi.fn(() => <div data-testid="eye-icon" />),
     EyeOff: vi.fn(() => <div data-testid="eye-off-icon" />),
-    Chrome: vi.fn(() => <div data-testid="chrome-icon" />),
-    Apple: vi.fn(() => <div data-testid="apple-icon" />),
   };
 });
 
@@ -42,9 +37,6 @@ vi.mock("@tanstack/react-router", async () => {
       navigate: mockNavigate,
       state: { location: { pathname: "/", search: "", hash: "", state: {} } },
     }),
-    BrowserRouter: ({ children }: { children: React.ReactNode }) => (
-      <div>{children}</div>
-    ),
   };
 });
 
@@ -62,16 +54,12 @@ vi.mock("../../../hooks/mutations/use-sign-in", () => ({
   })),
 }));
 
-// Mock useAuth
-const mockUseAuth = vi.mocked(useAuth);
-
-// Router-free stand-in used by the local TestWrapper
-const BrowserRouter = ({ children }: { children: React.ReactNode }) => (
-  <div>{children}</div>
-);
-
-// Test wrapper
-const createWrapper = () => {
+// Renders the same tree the real /auth/sign-in route wires up: the aurora
+// surface with SignInForm plugged in as its credential step. The email input
+// only exists on step 01 (owned by AuthSurface), so every test here reaches
+// the password field by going through the surface rather than mounting
+// SignInForm on its own.
+function renderSignInRoute() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -79,68 +67,73 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
+  return render(
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
-    </QueryClientProvider>
+      <AuthSurface
+        intent="sign-in"
+        renderCredentialStep={({ email, onEditEmail }) => (
+          <SignInForm email={email} onEditEmail={onEditEmail} />
+        )}
+      />
+    </QueryClientProvider>,
   );
-};
+}
+
+async function advanceToPassword(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(/email/i), "person@example.com");
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+  return screen.findByLabelText(/password/i);
+}
 
 describe("SignInForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseAuth.mockReturnValue({
-      user: null,
-      signIn: mockSignIn,
-      signOut: vi.fn(),
-      setUser: vi.fn(),
-      isInitialized: true,
-      isLoading: false,
-    });
+    sessionStorage.clear();
   });
 
-  it("renders form elements correctly", () => {
-    render(<SignInForm />, { wrapper: createWrapper() });
+  it("renders the password step after the email step", async () => {
+    const user = userEvent.setup();
+    renderSignInRoute();
 
-    expect(
-      screen.getByPlaceholderText(/enter your email/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByPlaceholderText(/enter your password/i),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(await advanceToPassword(user)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /sign in/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/not a member yet/i)).toBeInTheDocument();
   });
 
-  it("validates required fields", async () => {
+  // Was "validates required fields": email validation moved to the
+  // surface's identity step (step 01) in this task, so an empty/invalid
+  // email is now rejected before the credential step is ever reachable
+  // rather than by a field error inside this form.
+  it("does not advance to the password step without a valid email", async () => {
     const user = userEvent.setup();
-    render(<SignInForm />, { wrapper: createWrapper() });
+    renderSignInRoute();
 
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
-    await user.click(submitButton);
+    await user.click(screen.getByRole("button", { name: /continue/i }));
 
-    await waitFor(() => {
-      // Only email has validation in the schema (z.string().email())
-      // Password is just z.string() with no min length requirement in sign-in
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText(/enter a valid email address/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /sign in/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it("validates email format", async () => {
+  // Was "validates email format" — same relocation as above.
+  it("rejects a malformed email before reaching the password step", async () => {
     const user = userEvent.setup();
-    render(<SignInForm />, { wrapper: createWrapper() });
+    renderSignInRoute();
 
-    const emailInput = screen.getByPlaceholderText(/enter your email/i);
-    await user.type(emailInput, "invalid-email");
+    await user.type(screen.getByLabelText(/email/i), "invalid-email");
+    await user.click(screen.getByRole("button", { name: /continue/i }));
 
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
-    await user.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText(/enter a valid email address/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /sign in/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("validates password length", async () => {
@@ -152,10 +145,9 @@ describe("SignInForm", () => {
 
   it("toggles password visibility", async () => {
     const user = userEvent.setup();
-    render(<SignInForm />, { wrapper: createWrapper() });
+    renderSignInRoute();
 
-    const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-    // The toggle button contains the eye icon
+    const passwordInput = await advanceToPassword(user);
     const toggleButton = screen
       .getByTestId("eye-icon")
       .closest("button") as HTMLElement;
@@ -169,24 +161,43 @@ describe("SignInForm", () => {
     expect(passwordInput).toHaveAttribute("type", "password");
   });
 
-  it("submits form with valid data", async () => {
+  it("submits with valid credentials", async () => {
     const user = userEvent.setup();
-    render(<SignInForm />, { wrapper: createWrapper() });
+    renderSignInRoute();
 
-    const emailInput = screen.getByPlaceholderText(/enter your email/i);
-    const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
+    const password = await advanceToPassword(user);
+    await user.type(password, "Passw0rd!");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-    await user.type(emailInput, "test@example.com");
-    await user.type(passwordInput, "password123");
-    await user.click(submitButton);
+    await waitFor(() =>
+      expect(mockSignIn).toHaveBeenCalledWith({
+        email: "person@example.com",
+        password: "Passw0rd!",
+      }),
+    );
+  });
+
+  it("stores the pending 2FA token and navigates to verify-2fa on a 2FA challenge", async () => {
+    mockSignIn.mockResolvedValueOnce({
+      twoFactorRequired: true,
+      pendingToken: "pending-token-abc",
+      email: "person@example.com",
+    });
+    const user = userEvent.setup();
+    renderSignInRoute();
+
+    const password = await advanceToPassword(user);
+    await user.type(password, "Passw0rd!");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(mockSignIn).toHaveBeenCalledWith({
-        email: "test@example.com",
-        password: "password123",
-      });
+      expect(sessionStorage.getItem("pending2FAToken")).toBe(
+        "pending-token-abc",
+      );
     });
+    expect(mockHistory.push).toHaveBeenCalledWith(
+      "/auth/verify-2fa?email=person%40example.com",
+    );
   });
 
   it("shows loading state when submitting", async () => {
@@ -197,64 +208,51 @@ describe("SignInForm", () => {
 
   it("handles form submission with Enter key", async () => {
     const user = userEvent.setup();
-    render(<SignInForm />, { wrapper: createWrapper() });
+    renderSignInRoute();
 
-    const emailInput = screen.getByPlaceholderText(/enter your email/i);
-    const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-
-    await user.type(emailInput, "test@example.com");
+    const passwordInput = await advanceToPassword(user);
     await user.type(passwordInput, "password123");
     await user.keyboard("{Enter}");
 
     await waitFor(() => {
       expect(mockSignIn).toHaveBeenCalledWith({
-        email: "test@example.com",
+        email: "person@example.com",
         password: "password123",
       });
     });
   });
 
-  it("clears errors when user starts typing", async () => {
+  // Was "clears errors when user starts typing" — the field that used to
+  // clear (email) now lives on the identity step; this asserts the same
+  // "error clears once the input becomes valid" behaviour there.
+  it("clears the identity error once a valid email is submitted", async () => {
     const user = userEvent.setup();
-    render(<SignInForm />, { wrapper: createWrapper() });
+    renderSignInRoute();
 
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
-    await user.click(submitButton);
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    expect(
+      await screen.findByText(/enter a valid email address/i),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/email/i), "person@example.com");
+    await user.click(screen.getByRole("button", { name: /continue/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
+      expect(
+        screen.queryByText(/enter a valid email address/i),
+      ).not.toBeInTheDocument();
     });
-
-    const emailInput = screen.getByPlaceholderText(/enter your email/i);
-    await user.type(emailInput, "test@example.com");
-
-    await waitFor(() => {
-      expect(screen.queryByText(/invalid email/i)).not.toBeInTheDocument();
-    });
+    expect(
+      screen.getByRole("button", { name: /sign in/i }),
+    ).toBeInTheDocument();
   });
 
-  it("navigates to sign up page", async () => {
+  it("has proper accessibility attributes on the password field", async () => {
     const user = userEvent.setup();
-    render(<SignInForm />, { wrapper: createWrapper() });
+    renderSignInRoute();
 
-    const signUpLink = screen.getByText(/sign up/i);
-    await user.click(signUpLink);
-
-    // TanStack Router uses <a href> for links, so navigation is browser-native
-    // We're testing that the link exists and is clickable, not the navigation call
-    expect(signUpLink).toHaveAttribute("href", "/auth/sign-up");
-  });
-
-  it("has proper accessibility attributes", () => {
-    render(<SignInForm />, { wrapper: createWrapper() });
-
-    const emailInput = screen.getByPlaceholderText(/enter your email/i);
-    const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-
-    // Verify inputs exist and have proper attributes
-    expect(emailInput).toHaveAttribute("name", "email");
-    expect(emailInput).toHaveAttribute("placeholder", "Enter your email");
+    const passwordInput = await advanceToPassword(user);
     expect(passwordInput).toHaveAttribute("type", "password");
-    expect(passwordInput).toHaveAttribute("placeholder", "Enter your password");
+    expect(passwordInput).toHaveAttribute("autocomplete", "current-password");
   });
 });
