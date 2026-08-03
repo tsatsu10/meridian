@@ -111,6 +111,7 @@ vi.mock("@/store/workspace", () => ({
 vi.mock("@/lib/security", () => ({
   rateLimiter: {
     isAllowed: () => true,
+    getRemainingAttempts: () => 5,
     getTimeUntilNextAttempt: () => 0,
   },
 }));

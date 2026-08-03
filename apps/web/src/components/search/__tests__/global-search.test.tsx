@@ -31,8 +31,16 @@ function GlobalSearch({ onSearch, onResultClick }: GlobalSearchProps) {
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
+  const latestRequest = React.useRef(0);
 
   const handleSearch = async (searchQuery: string) => {
+    // Typing "test" fires one search per keystroke, each with its own delay.
+    // Without this guard an earlier keystroke's delay can resolve *after* the
+    // final keystroke set isSearching(true) and clear the loading state while
+    // the latest search is still in flight — a stale-response race that made
+    // the loading-state assertion below fail under parallel-suite load.
+    const requestId = ++latestRequest.current;
+
     setQuery(searchQuery);
     setIsSearching(true);
 
@@ -42,6 +50,11 @@ function GlobalSearch({ onSearch, onResultClick }: GlobalSearchProps) {
 
     // Simulate search delay
     await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // A superseded search must not publish its results or clear the spinner.
+    if (requestId !== latestRequest.current) {
+      return;
+    }
 
     // Mock results — only queries containing "test" match, so searches like
     // "nonexistent" exercise the empty state
@@ -123,7 +136,7 @@ describe("Global Search Component", () => {
 
     await user.type(screen.getByLabelText(/search input/i), "test");
 
-    expect(screen.getByText(/searching/i)).toBeInTheDocument();
+    expect(await screen.findByText(/searching/i)).toBeInTheDocument();
   });
 
   it("should display search results", async () => {
