@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
+import { invalidateNotificationQueries } from "./invalidate-notifications";
 
 function useDeleteNotification() {
   const queryClient = useQueryClient();
@@ -16,7 +17,7 @@ function useDeleteNotification() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateNotificationQueries(queryClient);
       toast.success("Notification deleted");
     },
     onError: (error) => {

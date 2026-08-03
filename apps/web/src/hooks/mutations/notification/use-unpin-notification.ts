@@ -1,5 +1,6 @@
 import { looseClient } from "@/lib/rpc-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { invalidateNotificationQueries } from "./invalidate-notifications";
 
 async function unpinNotification(id: string) {
   const response = await looseClient.notification[":id"].unpin.$patch({
@@ -21,7 +22,7 @@ function useUnpinNotification() {
   return useMutation({
     mutationFn: unpinNotification,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateNotificationQueries(queryClient);
     },
   });
 }

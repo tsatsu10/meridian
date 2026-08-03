@@ -78,6 +78,7 @@ import {
   preloadNotificationSound,
 } from "@/lib/notification-sound";
 import { logger } from "@/lib/logger";
+import { sortDateGroupsChronologically } from "@/lib/notifications/sort-date-groups";
 
 export const Route = createFileRoute("/dashboard/notifications/")({
   component: NotificationsPanel,
@@ -489,10 +490,14 @@ function NotificationsPanel() {
       groups[groupKey].push(notification);
     }
 
-    return Object.entries(groups).map(([title, notifications]) => ({
+    const entries = Object.entries(groups).map(([title, notifications]) => ({
       title,
       notifications,
     }));
+
+    return groupBy === "date"
+      ? sortDateGroupsChronologically(entries)
+      : entries;
   }, [filteredNotifications, groupBy]);
 
   const handleMarkAllAsRead = () => {
