@@ -54,7 +54,10 @@ function requireMilestoneProjectPermission(permission: PermissionAction) {
         permission,
       );
       if (!result.allowed) {
-        return c.json(result.body ?? { error: "Forbidden" }, result.status ?? 403);
+        return c.json(
+          result.body ?? { error: "Forbidden" },
+          result.status ?? 403,
+        );
       }
       await next();
     },

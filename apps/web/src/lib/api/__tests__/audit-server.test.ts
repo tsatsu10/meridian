@@ -93,9 +93,7 @@ describe("AuditAPI", () => {
   });
 
   it("throws on a 404 instead of resolving to an empty list", async () => {
-    stubFetch(
-      jsonOnce({ error: { message: "Route not found" } }, 404),
-    );
+    stubFetch(jsonOnce({ error: { message: "Route not found" } }, 404));
 
     await expect(AuditAPI.listLogs("ws-1")).rejects.toThrow(/route not found/i);
   });

@@ -57,7 +57,10 @@ search.get("/", async (c) => {
       "canViewProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     const db = getDatabase();
@@ -246,7 +249,10 @@ search.get("/suggestions", async (c) => {
       "canViewProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     const db = getDatabase();

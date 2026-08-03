@@ -82,7 +82,9 @@ export async function requireCanManageMember(
       `🚨 SECURITY: ${currentUserEmail} lacks permission to manage members in workspace ${workspaceId}`,
     );
     return c.json(
-      { error: "You do not have permission to manage members in this workspace" },
+      {
+        error: "You do not have permission to manage members in this workspace",
+      },
       403,
     );
   }

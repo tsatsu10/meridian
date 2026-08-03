@@ -25,7 +25,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
   UserRole,
   Record<string, boolean>
 > = {
-  "guest": {
+  guest: {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -184,7 +184,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  "stakeholder": {
+  stakeholder: {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -343,7 +343,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  "contractor": {
+  contractor: {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -502,7 +502,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  "client": {
+  client: {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -661,7 +661,7 @@ export const BACKEND_ROLE_PERMISSIONS: Record<
     canViewWorkspace: false,
     canViewWorkspaceAnalytics: false,
   },
-  "member": {
+  member: {
     canAccessAdvancedAnalytics: false,
     canAccessAuditLogs: false,
     canAccessBetaFeatures: false,
@@ -1780,7 +1780,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
   UserRole,
   Record<string, boolean>
 > = {
-  "guest": {
+  guest: {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1805,7 +1805,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  "stakeholder": {
+  stakeholder: {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1830,7 +1830,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  "contractor": {
+  contractor: {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1855,7 +1855,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  "client": {
+  client: {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,
@@ -1880,7 +1880,7 @@ export const FRONTEND_ONLY_ROLE_PERMISSIONS: Record<
     canStartVideoCall: false,
     canViewBillingHistory: false,
   },
-  "member": {
+  member: {
     canAccessProjectChat: false,
     canArchiveChannels: false,
     canCreateChannels: false,

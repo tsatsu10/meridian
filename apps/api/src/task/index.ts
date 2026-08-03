@@ -235,7 +235,10 @@ const task = new Hono<{
       "canViewTasks",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     return c.json(task);
@@ -386,7 +389,10 @@ const task = new Hono<{
         "canDeleteTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       // 🔒 SECURITY: Rate limit task deletion (20 per minute)
@@ -421,7 +427,10 @@ const task = new Hono<{
         "canViewTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const dependencies = await getTaskDependencies(taskId);
@@ -450,7 +459,10 @@ const task = new Hono<{
         "canUpdateTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const dependency = await createTaskDependency({
@@ -486,7 +498,10 @@ const task = new Hono<{
         "canUpdateTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const dependency = await deleteTaskDependency(dependencyId);
@@ -522,7 +537,10 @@ const task = new Hono<{
         "canUpdateTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const result = await bulkUpdateStatus(
@@ -561,7 +579,10 @@ const task = new Hono<{
         "canUpdateTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const result = await bulkUpdatePriority(
@@ -602,7 +623,10 @@ const task = new Hono<{
         "canAssignTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const result = await bulkAssignTasks(
@@ -641,7 +665,10 @@ const task = new Hono<{
         "canUpdateTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const result = await bulkArchiveTasks(
@@ -678,7 +705,10 @@ const task = new Hono<{
         "canDeleteTasks",
       );
       if (!permission.allowed) {
-        return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+        return c.json(
+          permission.body ?? { error: "Forbidden" },
+          permission.status ?? 403,
+        );
       }
 
       const result = await bulkDeleteTasks(

@@ -133,7 +133,9 @@ export async function bulkUpdateProjects(
         timestamp: new Date(),
         type: "update",
         count: 0,
-        items: [{ id: "", status: "failed", error: "Workspace ID is required" }],
+        items: [
+          { id: "", status: "failed", error: "Workspace ID is required" },
+        ],
         duration: Date.now() - startTime,
       };
     }

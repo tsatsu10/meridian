@@ -8,6 +8,7 @@
   "files": {
     "ignore": [
       "**/routeTree.gen.ts",
+      "apps/api/drizzle/**",
       "**/node_modules",
       "**/dist",
       "**/.next",

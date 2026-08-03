@@ -310,7 +310,8 @@ app.post("/verify-login", authRateLimiter, async (c) => {
       id: user.id,
       email: user.email,
       name: user.name,
-      sessionToken: process.env.NODE_ENV === "development" ? sessionToken : undefined,
+      sessionToken:
+        process.env.NODE_ENV === "development" ? sessionToken : undefined,
     });
   } catch (error) {
     logger.error("Failed to verify 2FA login", { error }, "AUTH");

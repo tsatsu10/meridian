@@ -187,7 +187,10 @@ const workspaceUser = new Hono<{
       // otherwise a caller just above the minimum management threshold
       // could still promote a target (or themselves) up to their own level.
       const currentUserEmail = c.get("userEmail");
-      const caller = await getCallerWorkspaceRole(workspaceId, currentUserEmail);
+      const caller = await getCallerWorkspaceRole(
+        workspaceId,
+        currentUserEmail,
+      );
       const newRoleHierarchy = ROLE_HIERARCHY[role] ?? 0;
       if (!caller || caller.hierarchy <= newRoleHierarchy) {
         return c.json(

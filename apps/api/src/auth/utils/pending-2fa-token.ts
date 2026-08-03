@@ -20,9 +20,7 @@ interface PendingTokenPayload {
  */
 export function generatePending2FAToken(userId: string): string {
   const payload: PendingTokenPayload = { userId, exp: Date.now() + TTL_MS };
-  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString(
-    "base64url",
-  );
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = crypto
     .createHmac("sha256", appSettings.jwtSecret)
     .update(payloadB64)

@@ -53,7 +53,8 @@ async function resetUserPassword(c: Context) {
 
     return c.json({
       success: true,
-      message: "Password reset — a temporary password has been emailed to the user.",
+      message:
+        "Password reset — a temporary password has been emailed to the user.",
     });
   } catch (error) {
     logger.error("❌ Error resetting user password:", error);
