@@ -692,7 +692,6 @@ function GlobalCalendar() {
                   <div
                     key={hour}
                     className="h-16 border-b hover:bg-muted/50 cursor-pointer"
-                    // biome-ignore lint/a11y/useSemanticElements: styled calendar time-slot cell, keep as div
                     role="button"
                     tabIndex={0}
                     onKeyDown={activateOnKey(() =>
@@ -788,7 +787,6 @@ function GlobalCalendar() {
                 </div>
                 <div
                   className="flex-1 h-16 hover:bg-muted/50 cursor-pointer"
-                  // biome-ignore lint/a11y/useSemanticElements: styled calendar time-slot cell, keep as div
                   role="button"
                   tabIndex={0}
                   onKeyDown={activateOnKey(() =>
