@@ -239,7 +239,10 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
     const updateMemoryUsage = () => {
       const memory = getPerformanceMemory();
       if (memory) {
-        const memoryUsage = memory.usedJSHeapSize / memory.totalJSHeapSize;
+        // Measure against jsHeapSizeLimit (the real ceiling), NOT totalJSHeapSize
+        // (the currently-allocated heap, which tracks usedJSHeapSize closely and
+        // would sit at ~90-100% permanently — a false "high memory" signal).
+        const memoryUsage = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
         metricsRef.current.memoryUsage = memoryUsage;
         setCurrentMetrics((prev) => ({ ...prev, memoryUsage }));
 
