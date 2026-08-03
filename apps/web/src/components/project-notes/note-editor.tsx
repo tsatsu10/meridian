@@ -63,6 +63,7 @@ export function NoteEditor({
   // reference each time and fighting any edit made in the same tick as a
   // save completing. Only actually switching to a different note should
   // reset the local draft.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally keyed on note?.id alone — depending on the note fields read here would re-run this effect after every autosave and clobber in-progress edits
   useEffect(() => {
     if (note) {
       setTitle(note.title);
@@ -70,7 +71,6 @@ export function NoteEditor({
       setTags(note.tags || []);
       setIsPinned(note.isPinned);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note?.id]);
 
   // Auto-save functionality
