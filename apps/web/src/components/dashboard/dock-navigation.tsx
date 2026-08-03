@@ -15,12 +15,11 @@ import {
   FolderOpen,
   Users,
   BarChart3,
-  MessageSquare,
   Settings,
 } from "lucide-react";
 
 // Simple static navigation items
-const navigationItems = [
+export const navigationItems = [
   {
     id: "dashboard",
     label: "Dashboard",
@@ -55,13 +54,6 @@ const navigationItems = [
     icon: BarChart3,
     href: "/dashboard/analytics",
     color: "bg-gradient-to-br from-indigo-500 to-indigo-600",
-  },
-  {
-    id: "chat",
-    label: "Chat",
-    icon: MessageSquare,
-    href: "/chat",
-    color: "bg-gradient-to-br from-emerald-500 to-teal-600",
   },
   {
     id: "settings",
