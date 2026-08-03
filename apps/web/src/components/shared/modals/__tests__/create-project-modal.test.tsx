@@ -389,13 +389,20 @@ describe("CreateProjectModal", () => {
         wrapper: TestWrapperWithMocks,
       });
 
-      // Navigate through all steps
-      await waitFor(() => screen.getByText(/custom project/i));
-      await user.click(screen.getByText(/custom project/i));
+      // Navigate through all steps. Use findBy* rather than wrapping the
+      // typing in waitFor(): waitFor retries its callback, so a side effect
+      // inside it gets replayed on every attempt (typing the name twice), and
+      // its 1s default timeout is too tight for the step-2 render under
+      // parallel-suite load. Step 2 waits for a workspace-members fetch, so it
+      // needs the same 5s allowance as the sibling step-3 test.
+      await user.click(await screen.findByText(/custom project/i));
 
-      await waitFor(async () => {
-        await user.type(screen.getByLabelText(/project name/i), "Test Project");
-      });
+      const nameInput = await screen.findByLabelText(
+        /project name/i,
+        {},
+        { timeout: 5000 },
+      );
+      await user.type(nameInput, "Test Project");
 
       await user.click(screen.getByRole("button", { name: /next/i }));
 
@@ -490,13 +497,15 @@ describe("CreateProjectModal", () => {
         { wrapper: TestWrapperWithMocks },
       );
 
-      // Navigate to step 2 and fill form
-      await waitFor(() => screen.getByText(/custom project/i));
-      await user.click(screen.getByText(/custom project/i));
+      // Navigate to step 2 and fill form (see the note on findBy* above)
+      await user.click(await screen.findByText(/custom project/i));
 
-      await waitFor(async () => {
-        await user.type(screen.getByLabelText(/project name/i), "Test");
-      });
+      const nameInput = await screen.findByLabelText(
+        /project name/i,
+        {},
+        { timeout: 5000 },
+      );
+      await user.type(nameInput, "Test");
 
       // Close modal
       await user.click(screen.getByRole("button", { name: /cancel/i }));
