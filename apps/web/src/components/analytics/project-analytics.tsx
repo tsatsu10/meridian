@@ -198,7 +198,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
     type: "overdue" | "high-priority" | "in-progress",
   ) => {
     setSelectedDrillDown(type);
-    // TODO: Fetch specific task list and show in modal/side panel
+    // See https://github.com/tsatsu10/meridian/issues/88
     toast.info(`Drill-down for ${type} tasks - Feature coming soon`);
   };
 

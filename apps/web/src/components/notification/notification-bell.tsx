@@ -432,7 +432,7 @@ export default function NotificationBell({
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => {
-                  // TODO: Open notification settings
+                  // See https://github.com/tsatsu10/meridian/issues/88
                 }}
               >
                 <Settings className="h-4 w-4" />
@@ -475,7 +475,7 @@ export default function NotificationBell({
               size="sm"
               className="w-full justify-center text-sm"
               onClick={() => {
-                // TODO: Navigate to all notifications page
+                // See https://github.com/tsatsu10/meridian/issues/87
               }}
             >
               View all notifications

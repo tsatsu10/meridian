@@ -246,7 +246,7 @@ const TaskCard = React.memo(
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // TODO: Open subtask creation modal
+                            // See https://github.com/tsatsu10/meridian/issues/88
                           }}
                           className="flex items-center gap-1 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-all duration-200 px-1.5 py-0.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-xs"
                           title="Create Subtask (Team Lead)"

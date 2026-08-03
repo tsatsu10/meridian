@@ -141,7 +141,7 @@ function RoleDetailsPage() {
   });
 
   const handleEdit = () => {
-    // TODO: Open edit modal
+    // See https://github.com/tsatsu10/meridian/issues/83
     toast.info("Edit functionality coming soon");
   };
 

@@ -281,7 +281,8 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
     toast.info("Generating report...", {
       description: "This will be sent to all recipients shortly",
     });
-    // TODO: Implement actual report generation and sending
+    // Depends on real report generation/email sending — see
+    // https://github.com/tsatsu10/meridian/issues/60 and /issues/91
     const updatedReports = reports.map((r) =>
       r.id === report.id ? { ...r, lastRun: new Date().toISOString() } : r,
     );
