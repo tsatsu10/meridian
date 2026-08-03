@@ -111,7 +111,8 @@ describe("SettingsNav", () => {
     render(<SettingsNav />);
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(15);
+    // 14 since Localization was removed on main (#117) as a dead feature.
+    expect(links).toHaveLength(14);
     for (const link of links) {
       expect(link.getAttribute("href")).toMatch(/^\/dashboard\/settings\//);
     }

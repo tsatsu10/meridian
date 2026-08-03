@@ -63,7 +63,10 @@ app.post(
       "canUpdateProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -200,7 +203,10 @@ app.get("/notes/:noteId", async (c) => {
     "canViewProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -259,7 +265,10 @@ app.patch(
       "canUpdateProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -359,7 +368,10 @@ app.delete("/notes/:noteId", async (c) => {
     "canUpdateProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -466,7 +478,10 @@ app.get("/notes/:noteId/versions", async (c) => {
     "canViewProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -511,7 +526,10 @@ app.get("/notes/:noteId/comments", async (c) => {
     "canViewProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -561,7 +579,10 @@ app.post(
       "canViewProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {

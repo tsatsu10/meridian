@@ -14,7 +14,6 @@ import {
   Calendar,
   FileText,
   Mail,
-  Languages,
   Keyboard,
   Filter,
 } from "lucide-react";
@@ -157,15 +156,6 @@ const settingsCategories = [
     icon: Mail,
     color: "from-red-500 to-pink-500",
     href: "/dashboard/settings/email",
-    category: "customization",
-  },
-  {
-    id: "localization",
-    title: "Language & Localization",
-    description: "Languages, translations, and regional preferences",
-    icon: Languages,
-    color: "from-blue-500 to-indigo-500",
-    href: "/dashboard/settings/localization",
     category: "customization",
   },
 ];
