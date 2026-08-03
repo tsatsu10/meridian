@@ -39,3 +39,12 @@ uploads/
 backups/
 *.db
 cookies*.txt
+
+# Playwright MCP session output (repo root and apps/web)
+.playwright-mcp/
+
+# Local git worktrees created for isolated agent/feature work
+.worktrees/
+
+# TanStack Router build scratch
+apps/web/.tanstack/tmp/
