@@ -27,6 +27,7 @@ import {
   RATE_LIMITS,
 } from "../../middlewares/chat-rate-limiter";
 import { captureException } from "../../services/monitoring/sentry";
+import { statusCodeOf } from "../../utils/error-utils";
 
 const upload = new Hono();
 
@@ -222,7 +223,7 @@ upload.post("/", async (c) => {
 
     return c.json(
       { error: getErrorMessage(error) || "Failed to upload files" },
-      500,
+      statusCodeOf(error),
     );
   }
 });

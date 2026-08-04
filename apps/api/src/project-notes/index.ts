@@ -11,7 +11,7 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 import { checkProjectPermission } from "../middlewares/rbac";
 
 const app = new Hono<{ Variables: { userEmail: string } }>();
@@ -63,7 +63,10 @@ app.post(
       "canUpdateProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -114,7 +117,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create note:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -177,7 +180,7 @@ app.get("/projects/:projectId/notes", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch notes:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -200,7 +203,10 @@ app.get("/notes/:noteId", async (c) => {
     "canViewProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -222,7 +228,7 @@ app.get("/notes/:noteId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch note:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -259,7 +265,10 @@ app.patch(
       "canUpdateProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -335,7 +344,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update note:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -359,7 +368,10 @@ app.delete("/notes/:noteId", async (c) => {
     "canUpdateProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -374,7 +386,7 @@ app.delete("/notes/:noteId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete note:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -439,7 +451,7 @@ app.patch("/notes/:noteId/pin", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to pin/unpin note:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -466,7 +478,10 @@ app.get("/notes/:noteId/versions", async (c) => {
     "canViewProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -484,7 +499,7 @@ app.get("/notes/:noteId/versions", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch versions:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -511,7 +526,10 @@ app.get("/notes/:noteId/comments", async (c) => {
     "canViewProjects",
   );
   if (!permission.allowed) {
-    return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -529,7 +547,7 @@ app.get("/notes/:noteId/comments", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch comments:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -561,7 +579,10 @@ app.post(
       "canViewProjects",
     );
     if (!permission.allowed) {
-      return c.json(permission.body ?? { error: "Forbidden" }, permission.status ?? 403);
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -584,7 +605,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to add comment:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -637,7 +658,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update comment:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -670,7 +691,7 @@ app.delete("/notes/:noteId/comments/:commentId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete comment:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 

@@ -101,7 +101,7 @@ workspace.post(
       logger.error("❌ Failed to create workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to create workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -192,7 +192,7 @@ workspace.get(
       logger.error("Failed to get workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to get workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -220,7 +220,7 @@ workspace.put(
       logger.error("Failed to update workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to update workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -242,7 +242,7 @@ workspace.delete(
       logger.error("Failed to delete workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to delete workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -265,7 +265,7 @@ workspace.get(
       logger.error("Failed to get workspace settings:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to get workspace settings" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -384,7 +384,7 @@ workspace.post(
       logger.error("Failed to upload logo:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to upload logo" },
-        500,
+        statusCodeOf(error),
       );
     }
   },

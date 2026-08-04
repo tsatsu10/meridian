@@ -63,7 +63,7 @@ import { CachePresets, cacheMiddleware } from "../middlewares/cache-middleware";
 
 import { RateLimitPresets } from "../middlewares/rate-limit";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 import { errorMessage } from "../utils/errors";
 
 // Enhanced validation schemas
@@ -587,7 +587,7 @@ const project = new Hono<{
       logger.debug("🔧 Position conflicts fixed");
       return c.json({ success: true, message: "Position conflicts fixed" });
     } catch (error) {
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   })
 
