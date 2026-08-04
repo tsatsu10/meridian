@@ -9,8 +9,11 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: true,
-    testTimeout: 10000, // Increase timeout for integration tests
-    hookTimeout: 10000,
+    // 30s to match apps/api. jsdom render + userEvent suites are slow enough
+    // that a loaded machine pushes them past 10s, which surfaces as a
+    // different red test on each run rather than as an obvious timeout.
+    testTimeout: 30000,
+    hookTimeout: 30000,
     // The jsdom suites leak memory across test files within a worker, so runs
     // die with "Ineffective mark-compacts near heap limit" mid-suite. Keep the
     // default fork-per-CPU spread (fewer files per worker = less accumulation)

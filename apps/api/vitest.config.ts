@@ -35,8 +35,17 @@ export default defineConfig({
     },
     include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     exclude: ["node_modules", "dist", ".idea", ".git", ".cache"],
-    testTimeout: 10000,
-    hookTimeout: 10000,
+    // 30s, not 10s. Many suites do `await import("../index")` inside the test
+    // body, so the first one pays for transforming a large module graph. On a
+    // loaded machine (CI, or another suite running alongside) that alone could
+    // exceed 10s, and the failure did not look like a timeout: a test that
+    // timed out mid-request left its continuation to consume the next test's
+    // queued __setSelectResults entry, so a *sibling* failed with a bogus
+    // "expected 404 to be 200". That produced a different red test on every
+    // run. This is a false-failure ceiling, not a real-hang detector — a
+    // genuinely stuck test still fails, just 20s later.
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
   resolve: {
     alias: {
