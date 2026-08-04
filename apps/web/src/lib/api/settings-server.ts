@@ -106,7 +106,7 @@ const defaultSettings: AllSettings = {
   },
   appearance: {
     theme: "system",
-    fontSize: 14,
+    fontSize: 16,
     sidebarCollapsed: false,
     density: "comfortable",
     animations: true,

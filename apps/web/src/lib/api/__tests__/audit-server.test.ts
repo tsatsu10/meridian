@@ -108,10 +108,13 @@ describe("AuditAPI", () => {
     );
 
     const blob = await AuditAPI.exportLogs("ws-1", "csv", 30);
-    // jsdom's Blob has no .text(), so assert on type and size rather than
-    // contents — the point here is that the caller gets a downloadable blob
-    // and that format/range reach the server.
-    expect(blob).toBeInstanceOf(Blob);
+    // Asserted structurally, not with toBeInstanceOf(Blob): undici's fetch and
+    // jsdom supply Blob from different realms, so the identity check fails on
+    // a genuine blob ("expected Blob { size: 17, type: 'text/csv' } to be an
+    // instance of Blob"). jsdom's Blob also has no .text(), so type and size
+    // are what we can check — and they're the point anyway: the caller gets a
+    // downloadable CSV, and format/range reach the server.
+    expect(blob.type).toBe("text/csv");
     expect(blob.size).toBeGreaterThan(0);
 
     const [url, init] = fetchMock.mock.calls[0];
