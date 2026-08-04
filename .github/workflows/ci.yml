@@ -74,3 +74,76 @@ jobs:
       - name: Build web
         working-directory: apps/web
         run: npx vite build
+
+  # 20 suites (334 tests) are gated behind `describe.skipIf(!dbAvailable)` and
+  # skip everywhere, because no environment provisions a Postgres for them.
+  # Several of them are the only coverage for security fixes that were
+  # demonstrated, not theoretical — requirePermission's ordering escalation,
+  # workspace scoping across 9 instance-wide RBAC endpoints, and custom
+  # permission overrides. The "Unit tests (api)" step above passes with all of
+  # them silently skipped.
+  #
+  # NON-BLOCKING on purpose. Nobody has ever run these in CI, so they are
+  # unproven: they may be stale against the current schema, or leak state
+  # between files now that they all share one database. Landing them as
+  # required would make CI red for reasons unrelated to any PR. Read the run,
+  # fix what it finds, then delete continue-on-error and make it required —
+  # the same ratchet the Biome and typecheck backlogs used.
+  db-integration-tests:
+    name: DB integration suites (non-blocking)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: meridian_test
+        ports:
+          - 5432:5432
+        # Without a healthcheck the job races the container and the suites
+        # just skip again — silently reporting success while testing nothing.
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install deps (no scripts)
+        run: npm ci --ignore-scripts
+
+      # Schema only. The suites create their own fixtures, keyed so they cannot
+      # collide with real rows, and clean up after themselves — so no seeding.
+      - name: Push schema to the test database
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/meridian_test
+        run: npx drizzle-kit push --force
+
+      # This URL is what src/tests/setup.ts already pins, so the suites' own
+      # `dbAvailable` probe connects on its first attempt and they un-skip.
+      - name: Run the API suite with a database present
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/meridian_test
+        run: npx vitest run --reporter=dot
+
+      # Makes the point of the job checkable at a glance: if this still reports
+      # skips, the database was not actually reached and the job proved nothing.
+      - name: Report how many tests were still skipped
+        if: always()
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/meridian_test
+        run: npx vitest run --reporter=json --outputFile=/tmp/r.json > /dev/null 2>&1 || true; node -e "const r=require('/tmp/r.json');const s=r.testResults.flatMap(f=>f.assertionResults).filter(a=>a.status==='pending'||a.status==='skipped').length;console.log('skipped tests:',s);console.log('total tests:',r.numTotalTests);"
