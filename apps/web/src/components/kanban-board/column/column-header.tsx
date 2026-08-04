@@ -12,6 +12,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -107,7 +108,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
       toast.success(`"${column?.name}" column archived successfully`);
     } catch (error) {
-      toast.error("Failed to archive column");
+      toast.error(userMessage(error, "archive the column"));
       console.error(error);
     }
   };
@@ -138,7 +139,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
       toast.success(`"${column?.name}" column deleted successfully`);
     } catch (error) {
-      toast.error("Failed to delete column");
+      toast.error(userMessage(error, "delete the column"));
       console.error(error);
     }
   };

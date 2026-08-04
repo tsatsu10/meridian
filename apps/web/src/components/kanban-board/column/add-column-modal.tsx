@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 
@@ -90,7 +91,7 @@ function AddColumnModal({
       await queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
     } catch (error) {
       console.error("Error creating column:", error);
-      toast.error("Failed to create column");
+      toast.error(userMessage(error, "create the column"));
     } finally {
       setIsLoading(false);
     }

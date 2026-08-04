@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useSettingsStore } from "@/store/settings";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import getProfile, { getProfileKey } from "@/fetchers/profile/get-profile";
@@ -121,7 +122,7 @@ function ProfileSettings() {
       setIsEditing(false);
     },
     onError: (error) => {
-      toast.error("Failed to update profile");
+      toast.error(userMessage(error, "save your profile"));
       console.error("Profile update error:", error);
     },
   });
@@ -137,7 +138,7 @@ function ProfileSettings() {
       toast.success("Profile photo removed");
     },
     onError: (error) => {
-      toast.error("Failed to remove profile photo");
+      toast.error(userMessage(error, "remove your profile photo"));
       console.error("Picture removal error:", error);
     },
   });
@@ -150,7 +151,7 @@ function ProfileSettings() {
       toast.success("Profile picture uploaded successfully!");
     },
     onError: (error) => {
-      toast.error("Failed to upload profile picture");
+      toast.error(userMessage(error, "upload your profile picture"));
       console.error("Picture upload error:", error);
     },
   });
