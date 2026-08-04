@@ -115,30 +115,52 @@ describe.skipIf(!dbAvailable)("Workspace API - REAL Integration Tests", () => {
       // ✅ Coverage: REAL coverage of database layer!
     });
 
-    it("should enforce unique constraints", async () => {
-      // Create first workspace
-      const [workspace1] = await db
+    // This used to assert that a duplicate workspace *name* was rejected. No
+    // such constraint exists — `name` is only notNull, no migration adds a
+    // unique index, and nothing outside the seed scripts looks a workspace up
+    // by name or slug. Two tenants both calling a workspace "Engineering" is
+    // legitimate, so the constraint was never designed rather than lost. The
+    // assertion could only ever have passed against a schema that never
+    // existed; it went unnoticed because this whole suite skips without a
+    // database.
+    //
+    // Asserting the constraint the schema really does carry: ownerId is a
+    // foreign key onto users.id, so a workspace cannot be created for an owner
+    // who is not there.
+    it("rejects a workspace whose owner does not exist", async () => {
+      await expect(
+        db.insert(workspaces).values({
+          id: createId(),
+          name: "Orphaned Workspace",
+          ownerId: `missing-user-${createId()}`,
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("allows two workspaces to share a name", async () => {
+      const [first] = await db
         .insert(workspaces)
         .values({
           id: createId(),
-          name: "Unique Workspace",
+          name: "Shared Name",
+          ownerId: testUser.id,
+        })
+        .returning();
+      testWorkspaceId = first.id;
+
+      const [second] = await db
+        .insert(workspaces)
+        .values({
+          id: createId(),
+          name: "Shared Name",
           ownerId: testUser.id,
         })
         .returning();
 
-      testWorkspaceId = workspace1.id;
+      expect(second.id).not.toBe(first.id);
 
-      // Try to create duplicate (this executes real constraint checking)
-      await expect(async () => {
-        await db.insert(workspaces).values({
-          id: createId(),
-          name: "Unique Workspace",
-          ownerId: testUser.id,
-        });
-      }).rejects.toThrow();
-
-      // ✅ This tested REAL database constraints!
-      // ✅ Coverage: REAL error path execution!
+      // Leaves only `first` for the suite's own cleanup to find.
+      await db.delete(workspaces).where(eq(workspaces.id, second.id));
     });
 
     it("should create with real timestamp", async () => {

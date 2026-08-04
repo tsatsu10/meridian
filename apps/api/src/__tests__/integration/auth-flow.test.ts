@@ -73,7 +73,7 @@ describe.skipIf(!dbAvailable)("Authentication Flow Integration Tests", () => {
       expect(newUser).toHaveLength(1);
       expect(newUser[0].email).toBe(testUserEmail);
       expect(newUser[0].password).not.toBe(password);
-      expect(newUser[0].password).toContain("$2b$"); // bcrypt hash
+      expect(newUser[0].password).toContain("$argon2id$"); // argon2id hash
 
       testUserId = newUser[0].id;
     });
@@ -379,7 +379,7 @@ describe.skipIf(!dbAvailable)("Authentication Flow Integration Tests", () => {
 
       expect(hashedPassword).toBeDefined();
       expect(hashedPassword).not.toBe(plainPassword);
-      expect(hashedPassword).toContain("$2b$"); // bcrypt hash
+      expect(hashedPassword).toContain("$argon2id$"); // argon2id hash
       expect(hashedPassword.length).toBeGreaterThan(50);
     });
 
@@ -410,8 +410,9 @@ describe.skipIf(!dbAvailable)("Authentication Flow Integration Tests", () => {
         parallelism: 1,
       });
 
-      // Verify the hash contains Argon2id parameters
-      expect(hashedPassword).toMatch(/^\$2b\$/); // bcrypt hash format
+      // Verify the hash really encodes the parameters it was given, rather
+      // than just that it is some hash: argon2id, m=19456, t=2, p=1.
+      expect(hashedPassword).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$/);
     });
   });
 
