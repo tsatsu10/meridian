@@ -222,6 +222,42 @@ export function createMockDb() {
 }
 
 /**
+ * Column names referenced by a drizzle where-expression, recursively.
+ *
+ * `and(eq(a, 1), eq(b, 2))` is a tree of nested SQL objects, so a predicate
+ * cannot be read off the top level. This walks `queryChunks` and collects the
+ * columns, letting a test assert that a security-critical filter is actually
+ * in the query:
+ *
+ *   expect(whereColumns(mockDb.__selectCalls[0].where[0]))
+ *     .toEqual(expect.arrayContaining(["is_active", "deleted_at"]));
+ *
+ * Names are the database column names (snake_case), not the schema keys.
+ * Asserting on names rather than deep-equality keeps this robust to how the
+ * expression is composed — `and(x, y)` vs chained `.where()` calls, order
+ * changes, added unrelated predicates.
+ */
+export function whereColumns(node: unknown, out: string[] = []): string[] {
+  if (!node || typeof node !== "object") return out;
+  const candidate = node as Record<string, unknown>;
+
+  // A drizzle Column carries both a name and a columnType; SQL nodes and
+  // parameter chunks carry neither, so this does not over-collect.
+  if (
+    typeof candidate.name === "string" &&
+    typeof candidate.columnType === "string"
+  ) {
+    out.push(candidate.name);
+  }
+
+  const chunks = candidate.queryChunks;
+  if (Array.isArray(chunks)) {
+    for (const chunk of chunks) whereColumns(chunk, out);
+  }
+  return out;
+}
+
+/**
  * Reset all mock database methods
  */
 export function resetMockDb(mockDb: ReturnType<typeof createMockDb>) {

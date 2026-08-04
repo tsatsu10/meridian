@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockDb,
   resetMockDb,
+  whereColumns,
 } from "../../../tests/helpers/test-database";
 
 vi.mock("../../../database/connection", () => ({
@@ -174,6 +175,57 @@ describe("resolveRolePermissions", () => {
 
     expect(await resolveRolePermissions("role-2", "ws-A")).toEqual({
       canViewTasks: true,
+    });
+  });
+
+  /**
+   * Every test above feeds the mock a row that is already active and
+   * undeleted, and the mock returns its canned rows whatever the query asked
+   * for. So if `eq(roles.isActive, true)` or `isNull(roles.deletedAt)` were
+   * deleted from the lookup, all of them would still pass — while a
+   * deactivated or soft-deleted role silently resolved to its full permission
+   * set. This asserts the filters are in the query itself.
+   */
+  describe("the lookup's security filters", () => {
+    it("scopes to the role id, active roles, and non-deleted rows", async () => {
+      mockDb.__setSelectResults([
+        {
+          id: "role-1",
+          permissions: ["canViewTasks"],
+          isActive: true,
+          deletedAt: null,
+          workspaceId: "ws-1",
+        },
+      ]);
+
+      const { resolveRolePermissions } = await import(
+        "../resolve-role-permissions"
+      );
+      await resolveRolePermissions("role-1", "ws-1");
+
+      const [where] = mockDb.__selectCalls[0].where;
+      expect(whereColumns(where)).toEqual(
+        expect.arrayContaining(["id", "is_active", "deleted_at"]),
+      );
+    });
+
+    it("bounds the lookup to a single row", async () => {
+      mockDb.__setSelectResults([
+        {
+          id: "role-1",
+          permissions: ["canViewTasks"],
+          isActive: true,
+          deletedAt: null,
+          workspaceId: "ws-1",
+        },
+      ]);
+
+      const { resolveRolePermissions } = await import(
+        "../resolve-role-permissions"
+      );
+      await resolveRolePermissions("role-1", "ws-1");
+
+      expect(mockDb.__selectCalls[0].limit).toEqual([1]);
     });
   });
 });
