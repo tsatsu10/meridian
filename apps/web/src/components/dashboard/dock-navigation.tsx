@@ -1,7 +1,9 @@
 "use client";
+import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { motion, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/cn";
+import { useDockScrollFade } from "./use-dock-scroll-fade";
 import { Dock, DockIcon } from "@/components/magicui/dock";
 import {
   Tooltip,
@@ -75,6 +77,14 @@ const navigationItems = [
 export default function DockNavigation() {
   const location = useLocation();
   const mouseX = useMotionValue(Number.POSITIVE_INFINITY);
+  const isScrolling = useDockScrollFade();
+  const [isHovering, setIsHovering] = useState(false);
+  // #107: the dock has no reserved safe-zone and can sit directly over
+  // page content on viewport-height pages. Rather than reserving space
+  // (a bigger layout change) or repositioning the dock, fade/shrink it
+  // while the page is actively scrolling — full opacity is restored the
+  // moment scrolling stops or the user's mouse reaches the dock itself.
+  const isFaded = isScrolling && !isHovering;
 
   // Simple active item detection
   const getActiveItem = () => {
@@ -92,11 +102,23 @@ export default function DockNavigation() {
 
   return (
     <TooltipProvider>
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+      <div
+        className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
         <motion.div
           initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", bounce: 0.3, duration: 0.8 }}
+          animate={{
+            y: 0,
+            opacity: isFaded ? 0.35 : 1,
+            scale: isFaded ? 0.92 : 1,
+          }}
+          transition={{
+            y: { type: "spring", bounce: 0.3, duration: 0.8 },
+            opacity: { duration: 0.2 },
+            scale: { duration: 0.2 },
+          }}
           className="relative"
         >
           <div className="max-w-screen-lg mx-auto px-4">
