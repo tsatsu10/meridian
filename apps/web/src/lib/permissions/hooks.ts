@@ -264,14 +264,13 @@ export function useWorkspacePermissions(workspaceId?: string) {
       };
     }
 
-    // TODO: Implement workspace-scoped permission checking
-    // For now, use global permissions
+    const context = { workspaceId: targetWorkspace };
     return {
-      canView: hasPermission("canViewWorkspace"),
-      canEdit: hasPermission("canManageWorkspace"),
-      canManage: hasPermission("canManageWorkspace"),
-      canInvite: hasPermission("canInviteUsers"),
-      canDelete: hasPermission("canDeleteWorkspace"),
+      canView: hasPermission("canViewWorkspace", context),
+      canEdit: hasPermission("canManageWorkspace", context),
+      canManage: hasPermission("canManageWorkspace", context),
+      canInvite: hasPermission("canInviteUsers", context),
+      canDelete: hasPermission("canDeleteWorkspace", context),
       workspaceId: targetWorkspace,
     };
   }, [workspaceId, currentWorkspace, hasPermission]);
@@ -300,23 +299,23 @@ export function useProjectPermissions(projectId?: string) {
       };
     }
 
-    // TODO: Implement project-scoped permission checking
+    const context = { projectId: targetProject };
     return {
       canView:
-        hasPermission("canViewProjectDetails") ||
-        hasPermission("canViewAllProjects"),
-      canEdit: hasPermission("canEditProjects"),
-      canManage: hasPermission("canManageProjectSettings"),
-      canDelete: hasPermission("canDeleteProjects"),
-      canArchive: hasPermission("canArchiveProjects"),
-      canClone: hasPermission("canCloneProjects"),
-      canManageTeam: hasPermission("canManageProjectTeam"),
-      canManageBudget: hasPermission("canManageProjectBudget"),
-      canViewAnalytics: hasPermission("canViewProjectAnalytics"),
-      canCreateTasks: hasPermission("canCreateTasks"),
-      canAssignTasks: hasPermission("canAssignTasks"),
-      canInviteMembers: hasPermission("canInviteToProject"),
-      canRemoveMembers: hasPermission("canRemoveFromProject"),
+        hasPermission("canViewProjectDetails", context) ||
+        hasPermission("canViewAllProjects", context),
+      canEdit: hasPermission("canEditProjects", context),
+      canManage: hasPermission("canManageProjectSettings", context),
+      canDelete: hasPermission("canDeleteProjects", context),
+      canArchive: hasPermission("canArchiveProjects", context),
+      canClone: hasPermission("canCloneProjects", context),
+      canManageTeam: hasPermission("canManageProjectTeam", context),
+      canManageBudget: hasPermission("canManageProjectBudget", context),
+      canViewAnalytics: hasPermission("canViewProjectAnalytics", context),
+      canCreateTasks: hasPermission("canCreateTasks", context),
+      canAssignTasks: hasPermission("canAssignTasks", context),
+      canInviteMembers: hasPermission("canInviteToProject", context),
+      canRemoveMembers: hasPermission("canRemoveFromProject", context),
       projectId: targetProject,
     };
   }, [projectId, currentProject, hasPermission]);
