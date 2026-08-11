@@ -35,7 +35,7 @@ sleep 10
 
 # Run migrations
 echo "🔄 Running database migrations..."
-docker compose -f docker-compose.staging.yml exec -T api pnpm db:push
+docker compose -f docker-compose.staging.yml exec -T api npm run db:push
 
 # Health check
 echo "🏥 Running health check..."

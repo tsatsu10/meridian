@@ -7,7 +7,7 @@ Complete modular seeding system for populating the Meridian database with realis
 ### Run All Seeds
 ```bash
 cd apps/api
-pnpm run seed:all
+npm run seed:all
 ```
 
 This will populate your database with a large realistic dataset including:
@@ -25,25 +25,25 @@ This will populate your database with a large realistic dataset including:
 
 ### Run All Phases
 ```bash
-pnpm run seed:all              # Run all phases (see master-seed.ts for order)
-pnpm run seed:all --phase=5    # Start from phase id 5 (Goals & OKRs)
-pnpm run seed:all --only=widget-marketplace  # Run only marketplace seed
-pnpm run seed:all --skip=8,9    # Skip phase ids (comma-separated)
+npm run seed:all              # Run all phases (see master-seed.ts for order)
+npm run seed:all --phase=5    # Start from phase id 5 (Goals & OKRs)
+npm run seed:all --only=widget-marketplace  # Run only marketplace seed
+npm run seed:all --skip=8,9    # Skip phase ids (comma-separated)
 ```
 
 `--only=` matches a slugified phase name (e.g. `goals-okrs`, `widget-marketplace`) or a numeric phase id.
 
 ### Run Individual Phases
 ```bash
-pnpm run seed:phase1  # Users & Authentication
-pnpm run seed:phase2  # Workspaces & Teams
-pnpm run seed:phase3  # Projects & Tasks
-pnpm run seed:phase5  # Goals & OKRs
-pnpm run seed:phase6  # Communication
-pnpm run seed:phase7  # Time & Activity
-pnpm run seed:phase8  # Analytics
-pnpm run seed:phase9  # Advanced Features
-pnpm run seed:phase10 # Widget Marketplace (or: seed:marketplace)
+npm run seed:phase1  # Users & Authentication
+npm run seed:phase2  # Workspaces & Teams
+npm run seed:phase3  # Projects & Tasks
+npm run seed:phase5  # Goals & OKRs
+npm run seed:phase6  # Communication
+npm run seed:phase7  # Time & Activity
+npm run seed:phase8  # Analytics
+npm run seed:phase9  # Advanced Features
+npm run seed:phase10 # Widget Marketplace (or: seed:marketplace)
 ```
 
 ## 📊 Seed Phases
@@ -190,7 +190,7 @@ apps/api/src/database/seeds/
 
 ### Prerequisites
 1. Database must be initialized
-2. Run `pnpm db:push` to ensure schema is up to date
+2. Run `npm run db:push` to ensure schema is up to date
 3. Recommended: Clear existing seed data first (optional)
 
 ### Safe to Rerun
@@ -215,23 +215,23 @@ However, the master script handles this automatically!
 ### Start Fresh
 ```bash
 # Clear database (if needed)
-pnpm db:push --force
+npm run db:push --force
 
 # Seed everything
-pnpm run seed:all
+npm run seed:all
 ```
 
 ### Add More Data to Existing Setup
 ```bash
 # Run individual phases to add more
-pnpm run seed:phase3  # Add more projects
-pnpm run seed:phase6  # Add more chat messages
+npm run seed:phase3  # Add more projects
+npm run seed:phase6  # Add more chat messages
 ```
 
 ### Skip Heavy Operations
 ```bash
 # Skip analytics (phase 8) and time & activity (phase 7) for faster seed
-pnpm run seed:all --skip=8,7
+npm run seed:all --skip=8,7
 ```
 
 ## 🐛 Troubleshooting
@@ -239,14 +239,14 @@ pnpm run seed:all --skip=8,7
 ### "No workspace found" Error
 ```bash
 # Run phases in order
-pnpm run seed:phase1  # Users first
-pnpm run seed:phase2  # Then workspaces
-pnpm run seed:phase3  # Then projects
+npm run seed:phase1  # Users first
+npm run seed:phase2  # Then workspaces
+npm run seed:phase3  # Then projects
 ```
 
 ### "Foreign key constraint" Error
 - Ensure you ran previous phases
-- Check database schema is up to date: `pnpm db:push`
+- Check database schema is up to date: `npm run db:push`
 
 ### Duplicate Key Errors
 - Normal - script skips existing records
@@ -298,7 +298,7 @@ After seeding, you should be able to:
 ### Update Seed Data
 Modify the data arrays in each phase file, then rerun:
 ```bash
-pnpm run seed:phase8  # Rerun a specific phase (example: analytics)
+npm run seed:phase8  # Rerun a specific phase (example: analytics)
 ```
 
 ### Add New Phases
@@ -310,8 +310,8 @@ pnpm run seed:phase8  # Rerun a specific phase (example: analytics)
 ### Clean Database
 ```bash
 # WARNING: This deletes all data!
-pnpm db:push --force
-pnpm run seed:all
+npm run db:push --force
+npm run seed:all
 ```
 
 ---

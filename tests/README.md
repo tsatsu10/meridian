@@ -22,21 +22,21 @@ Lines of Test Code:    15,000+
 ### **Run All Tests**
 ```bash
 # From project root
-pnpm test
+npm run test
 ```
 
 ### **Run with Coverage**
 ```bash
 # Backend
-cd apps/api && pnpm test:coverage
+cd apps/api && npm run test:coverage
 
 # Frontend
-cd apps/web && pnpm test:coverage
+cd apps/web && npm run test:coverage
 ```
 
 ### **Watch Mode (Development)**
 ```bash
-pnpm test:watch
+npm run test:watch
 ```
 
 ---
@@ -189,22 +189,22 @@ describe('Component', () => {
 
 ### **Run Single Test:**
 ```bash
-pnpm test -- -t "test name"
+npm run test -- -t "test name"
 ```
 
 ### **Run Single File:**
 ```bash
-pnpm test path/to/test.test.ts
+npm run test path/to/test.test.ts
 ```
 
 ### **Verbose Output:**
 ```bash
-pnpm test -- --reporter=verbose
+npm run test -- --reporter=verbose
 ```
 
 ### **UI Mode:**
 ```bash
-pnpm test:ui
+npm run test:ui
 ```
 
 ---
@@ -324,7 +324,7 @@ Tests run automatically on:
 ## ▶️ Run Tests Now
 
 ```bash
-pnpm test
+npm run test
 ```
 
 **See results in your terminal!** ✨

@@ -1,0 +1,34 @@
+# Dependencies (reinstalled inside the image)
+**/node_modules
+
+# Build outputs (rebuilt inside the image)
+**/dist
+apps/web/.tanstack
+apps/web/.vite
+
+# Secrets & local env — never copy into build context
+**/.env
+**/.env.*
+!**/.env.example
+
+# VCS / tooling
+.git
+.github
+.husky
+.vscode
+.cursor
+.claude
+
+# Tests, docs, coverage (not needed to build/run the images)
+**/coverage
+**/*.log
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/e2e
+docs
+**/docs
+
+# OS cruft
+.DS_Store
+Thumbs.db

@@ -4,7 +4,7 @@
  * Phase 1 - Monitoring & Observability
  *
  * NOTE: Sentry is optional - app works without it
- * Install with: cd apps/api && pnpm add @sentry/node @sentry/profiling-node
+ * Install with: cd apps/api && npm install @sentry/node @sentry/profiling-node
  */
 
 import { Logger } from "../logging/logger";
@@ -38,7 +38,7 @@ try {
 } catch (error) {
   Logger.warn("⚠️ Sentry not installed - error tracking disabled");
   Logger.info(
-    "💡 To enable Sentry: cd apps/api && pnpm add @sentry/node @sentry/profiling-node",
+    "💡 To enable Sentry: cd apps/api && npm install @sentry/node @sentry/profiling-node",
   );
   isSentryAvailable = false;
 }

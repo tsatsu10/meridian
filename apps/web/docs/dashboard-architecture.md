@@ -715,7 +715,7 @@ test('should complete analytics workflow', async ({ page }) => {
 # CI/CD Pipeline Overview
 stages:
   - build:
-      - Install dependencies (pnpm install)
+      - Install dependencies (npm install)
       - Type checking (tsc --noEmit)
       - Linting (eslint --fix)
       - Unit tests (vitest run)
