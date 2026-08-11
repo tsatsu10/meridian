@@ -33,6 +33,7 @@ import { randomInt, randomElement, randomBool, daysAgo } from "./seed-utils";
 // ==========================================
 
 export async function seedAnalytics() {
+  await initializeDatabase();
   const db = getDatabase();
   logger.info("🌱 Phase 8: Seeding analytics and historical data...\n");
 
@@ -332,8 +333,10 @@ function hoursAgo(hours: number): Date {
 export default seedAnalytics;
 // Run if executed directly
 if (require.main === module) {
-  seedAnalytics().catch((error) => {
-    logger.error("Fatal error:", error);
-    process.exit(1);
-  });
+  seedAnalytics()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      logger.error("Fatal error:", error);
+      process.exit(1);
+    });
 }

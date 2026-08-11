@@ -57,6 +57,7 @@ const ACTIVITY_TYPES = [
 // ==========================================
 
 export async function seedTimeAndActivity() {
+  await initializeDatabase();
   const db = getDatabase();
   logger.info("🌱 Phase 7: Seeding time tracking and activities...\n");
 
@@ -330,8 +331,10 @@ function randomDate(start: Date, end: Date): Date {
 export default seedTimeAndActivity;
 // Run if executed directly
 if (require.main === module) {
-  seedTimeAndActivity().catch((error) => {
-    logger.error("Fatal error:", error);
-    process.exit(1);
-  });
+  seedTimeAndActivity()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      logger.error("Fatal error:", error);
+      process.exit(1);
+    });
 }

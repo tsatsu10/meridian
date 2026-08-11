@@ -138,6 +138,7 @@ const WORKSPACE_ROLES = {
 // ==========================================
 
 export async function seedWorkspaces() {
+  await initializeDatabase();
   const db = getDatabase();
   logger.info("🌱 Phase 2: Seeding workspaces, teams, and departments...\n");
 
@@ -385,8 +386,10 @@ export async function seedWorkspaces() {
 export default seedWorkspaces;
 // Run if executed directly
 if (require.main === module) {
-  seedWorkspaces().catch((error) => {
-    logger.error("Fatal error:", error);
-    process.exit(1);
-  });
+  seedWorkspaces()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      logger.error("Fatal error:", error);
+      process.exit(1);
+    });
 }

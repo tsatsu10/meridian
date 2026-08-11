@@ -422,8 +422,10 @@ export default seedUsers;
 
 // Run if executed directly
 if (require.main === module) {
-  seedUsers().catch((error) => {
-    logger.error("Fatal error:", error);
-    process.exit(1);
-  });
+  seedUsers()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      logger.error("Fatal error:", error);
+      process.exit(1);
+    });
 }
