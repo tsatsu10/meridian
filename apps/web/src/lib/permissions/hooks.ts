@@ -368,35 +368,35 @@ export function useTeamLeadActions() {
       createSubtask: {
         canExecute: hasPermission("canCreateSubtasks"),
         action: (_parentTaskId: string, _subtaskData: unknown) => {
-          // TODO: Implement subtask creation
+          // See https://github.com/tsatsu10/meridian/issues/86
         },
       },
 
       editSubtask: {
         canExecute: hasPermission("canEditSubtasks"),
         action: (_subtaskId: string, _updates: unknown) => {
-          // TODO: Implement subtask editing
+          // See https://github.com/tsatsu10/meridian/issues/86
         },
       },
 
       deleteSubtask: {
         canExecute: hasPermission("canDeleteSubtasks"),
         action: (_subtaskId: string) => {
-          // TODO: Implement subtask deletion
+          // See https://github.com/tsatsu10/meridian/issues/86
         },
       },
 
       assignSubtask: {
         canExecute: hasPermission("canAssignSubtasks"),
         action: (_subtaskId: string, _assigneeId: string) => {
-          // TODO: Implement subtask assignment
+          // See https://github.com/tsatsu10/meridian/issues/86
         },
       },
 
       reorderSubtasks: {
         canExecute: hasPermission("canManageSubtaskHierarchy"),
         action: (_parentTaskId: string, _subtaskOrder: string[]) => {
-          // TODO: Implement subtask reordering
+          // See https://github.com/tsatsu10/meridian/issues/86
         },
       },
 
@@ -404,7 +404,7 @@ export function useTeamLeadActions() {
       manageTeam: {
         canExecute: hasPermission("canCreateTeams"),
         action: (_teamId: string, _action: string, _data: unknown) => {
-          // TODO: Implement team management
+          // See https://github.com/tsatsu10/meridian/issues/86
         },
       },
     }),

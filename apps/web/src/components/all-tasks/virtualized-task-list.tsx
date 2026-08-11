@@ -538,7 +538,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // TODO: Navigate to task details when route is available
+                // See https://github.com/tsatsu10/meridian/issues/87
               }}
               className="flex items-center gap-2"
             >

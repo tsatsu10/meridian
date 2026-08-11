@@ -369,7 +369,8 @@ export function TwoFactorStatusWidget() {
                   `Send 2FA setup reminders to ${stats?.usersWithoutTwoFactor} users?`,
                 )
               ) {
-                // TODO: Implement bulk reminder
+                // Depends on real email sending — see
+                // https://github.com/tsatsu10/meridian/issues/60
                 logger.debug("Sending bulk reminders");
               }
             }}

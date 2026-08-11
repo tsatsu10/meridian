@@ -297,7 +297,7 @@ const NotificationItem = memo(
       toast.info("Notification snoozed for 1 hour", {
         description: "You will be reminded later",
       });
-      // TODO: Implement snooze functionality with backend support
+      // See https://github.com/tsatsu10/meridian/issues/89
       onClose?.();
     };
 
@@ -306,7 +306,7 @@ const NotificationItem = memo(
       toast.success("Notification reported", {
         description: "Thank you for helping us improve",
       });
-      // TODO: Implement report functionality with backend support
+      // See https://github.com/tsatsu10/meridian/issues/89
       onClose?.();
     };
 

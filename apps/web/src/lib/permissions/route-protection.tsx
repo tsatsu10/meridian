@@ -225,7 +225,7 @@ export function createProtectedLoader<T>(
   loader: () => Promise<T>,
 ) {
   return async (): Promise<T> => {
-    // TODO: Implement permission checking in loaders
+    // See https://github.com/tsatsu10/meridian/issues/85
     return loader();
   };
 }
