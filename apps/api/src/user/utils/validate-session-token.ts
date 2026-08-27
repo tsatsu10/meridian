@@ -3,6 +3,7 @@ import { encodeHexLowerCase } from "@oslojs/encoding";
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { sessionTable, userTable } from "../../database/schema";
+import logger from "../../utils/logger";
 import { getSecurityPreferences } from "./security-preferences";
 
 /** Reads a positive-integer minute count from the environment. */
@@ -63,23 +64,17 @@ export async function validateSessionToken(token: string) {
     .innerJoin(userTable, eq(sessionTable.userId, userTable.id))
     .where(eq(sessionTable.id, sessionId));
 
-  console.log(`🔍 [validate] Found ${sessions.length} matching sessions`);
-
   if (sessions.length < 1 || !sessions[0]) {
-    console.error("❌ [validate] No session found in database");
+    logger.debug("session.validate.miss", undefined, "AUTH");
     return { session: null, user: null };
   }
 
   const { user, session } = sessions[0];
 
-  console.log(`🔍 [validate] Session found for user: ${user.email}`);
-  console.log(`🔍 [validate] Session expires at: ${session.expiresAt}`);
-  console.log(`🔍 [validate] Current time: ${new Date()}`);
-
   const isSessionExpired = Date.now() >= session.expiresAt.getTime();
 
   if (isSessionExpired) {
-    console.error("❌ [validate] Session expired, deleting");
+    logger.warn("session.validate.expired", { sessionId: session.id }, "AUTH");
     await db.delete(sessionTable).where(eq(sessionTable.id, session.id));
     return { session: null, user: null };
   }
@@ -94,7 +89,11 @@ export async function validateSessionToken(token: string) {
     if (idleFor >= IDLE_TIMEOUT_MS) {
       const { sessionTimeout } = await getSecurityPreferences(user.email);
       if (sessionTimeout) {
-        console.warn("⏱️ [validate] Session idle past timeout, deleting");
+        logger.warn(
+          "session.validate.idle_timeout",
+          { sessionId: session.id },
+          "AUTH",
+        );
         await db.delete(sessionTable).where(eq(sessionTable.id, session.id));
         return { session: null, user: null };
       }
