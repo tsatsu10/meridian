@@ -78,6 +78,35 @@ describe("Security Middleware", () => {
       expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
       expect(res.status).toBe(200); // Request still succeeds but CORS headers not set
     });
+
+    it("does not treat localhost substrings as allowed origins", async () => {
+      app.use("*", createSecurityMiddleware());
+      app.get("/test", (c) => c.text("OK"));
+
+      const res = await app.request("/test", {
+        headers: {
+          origin: "https://evil-localhost.com",
+        },
+      });
+
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+      expect(res.status).toBe(200);
+    });
+
+    it("allows the default Vite origin from the shared allowlist", async () => {
+      app.use("*", createSecurityMiddleware());
+      app.get("/test", (c) => c.text("OK"));
+
+      const res = await app.request("/test", {
+        headers: {
+          origin: "http://localhost:5174",
+        },
+      });
+
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+        "http://localhost:5174",
+      );
+    });
   });
 
   describe("createRateLimitMiddleware", () => {

@@ -68,6 +68,8 @@ import favorites from "./favorites";
 // 🛡️ Import error handling middleware
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
 import { DEFAULT_API_PORT } from "./config/default-api-port";
+import { resolveCorsOrigin } from "./config/cors-origins";
+import { getFrontendBaseUrl } from "./config/frontend-url";
 // 🔒 Import security middleware
 import {
   securityHeaders,
@@ -132,37 +134,12 @@ app.use("*", cacheHeaders());
 app.use(
   "*",
   cors({
-    origin: (origin) => {
-      // Allow specific origins from environment or localhost for development
-      const allowedOrigins = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5200",
-        "https://meridian.app",
-        "https://www.meridian.app",
-      ];
-
-      if (allowedOrigins.includes(origin || "")) {
-        return origin;
-      }
-
-      // SECURITY: this reflected ANY http://localhost:<port> origin, with
-      // no environment check, combined with credentials:true below — live
-      // in production too. A request whose Origin header claimed to be
-      // localhost would be trusted with cookies. Dev convenience only.
-      if (
-        process.env.NODE_ENV !== "production" &&
-        origin?.startsWith("http://localhost:")
-      ) {
-        return origin;
-      }
-
-      // No match: deny (return undefined) rather than defaulting to a
-      // fixed dev origin, which would do the same credentialed-reflection
-      // for every unmatched request in production.
-      return undefined;
-    },
+    origin: (origin) =>
+      resolveCorsOrigin(origin, {
+        corsOrigins: appSettings.corsOrigins,
+        frontendUrl: getFrontendBaseUrl(),
+        nodeEnv: appSettings.nodeEnv,
+      }),
     credentials: true,
     allowHeaders: [
       "Content-Type",

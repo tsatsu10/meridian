@@ -15,6 +15,7 @@ import {
 import { auditLogger } from "../../utils/audit-logger";
 import { logger } from "../../utils/logger";
 import { createId } from "@paralleldrive/cuid2";
+import { getFrontendBaseUrl } from "../../config/frontend-url";
 type WorkspaceRole = keyof typeof ROLE_HIERARCHY;
 
 // @epic-1.1-rbac: Role hierarchy for permission validation
@@ -186,8 +187,7 @@ async function inviteWorkspaceUser(
 
   // Send invitation email
   try {
-    const appUrl = process.env.APP_URL || "http://localhost:5173";
-    const inviteUrl = `${appUrl}/auth/sign-up?email=${encodeURIComponent(userEmail)}&workspace=${encodeURIComponent(workspaceId)}`;
+    const inviteUrl = `${getFrontendBaseUrl()}/auth/sign-up?email=${encodeURIComponent(userEmail)}&workspace=${encodeURIComponent(workspaceId)}`;
 
     await emailService.sendInvitationEmail({
       inviteeEmail: userEmail,
