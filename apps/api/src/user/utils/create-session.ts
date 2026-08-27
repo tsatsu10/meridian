@@ -2,6 +2,7 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeHexLowerCase } from "@oslojs/encoding";
 import { getDatabase } from "../../database/connection";
 import { sessionTable } from "../../database/schema";
+import logger from "../../utils/logger";
 
 export type SessionProvenance = {
   ipAddress?: string | null;
@@ -41,7 +42,14 @@ async function createSession(
   try {
     await db.insert(sessionTable).values(session);
   } catch (error) {
-    console.error("❌ [createSession] Database insert failed:", error);
+    logger.error(
+      "session.create.failed",
+      {
+        sessionId,
+        message: error instanceof Error ? error.message : String(error),
+      },
+      "AUTH",
+    );
     throw error;
   }
 

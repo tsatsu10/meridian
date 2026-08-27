@@ -34,11 +34,17 @@ const apiProxy: ProxyOptions = {
 export default defineConfig({
   base: "/",
   define: {
-    "process.env": JSON.stringify(process.env),
+    // Only public build-time flags — never stringify the whole process.env
+    // (that would embed CI/local secrets into the client bundle).
     global: "globalThis",
+    "process.env.NODE_ENV": JSON.stringify(
+      process.env.NODE_ENV ?? "development",
+    ),
   },
   plugins: [
-    TanStackRouterVite(),
+    TanStackRouterVite({
+      routeFileIgnorePattern: "\\.(test|spec)\\.[jt]sx?$",
+    }),
     react(),
     // Sentry source maps upload (only in production builds with SENTRY_AUTH_TOKEN)
     process.env.SENTRY_AUTH_TOKEN &&
@@ -120,6 +126,17 @@ export default defineConfig({
           }
           if (id.includes("@sentry")) {
             return "vendor-monitoring";
+          }
+          if (
+            id.includes("xlsx") ||
+            id.includes("jspdf") ||
+            id.includes("html2canvas") ||
+            id.includes("canvg")
+          ) {
+            return "vendor-export";
+          }
+          if (id.includes("lodash")) {
+            return "vendor-lodash";
           }
           return "vendor-misc";
         },
