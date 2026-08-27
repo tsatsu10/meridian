@@ -6,6 +6,7 @@
  */
 import logger from "../utils/logger";
 import { DEFAULT_API_PORT } from "./default-api-port";
+import { parseCorsOriginsEnv } from "./cors-origins";
 
 import "dotenv/config";
 
@@ -75,8 +76,8 @@ function loadSettings(): AppSettings {
       "postgresql",
     databaseUrl: process.env.DATABASE_URL || "",
 
-    // Security
-    corsOrigins: (process.env.CORS_ORIGINS || "").split(",").filter(Boolean),
+    // Security — parseCorsOriginsEnv trims so spaced CSV entries work
+    corsOrigins: parseCorsOriginsEnv(process.env.CORS_ORIGINS),
 
     // Features
     emailEnabled: !!(process.env.EMAIL_HOST && process.env.EMAIL_USER),

@@ -23,7 +23,7 @@ describe("EmailService", () => {
   beforeEach(() => {
     vi.stubEnv("SENDGRID_API_KEY", "test-api-key");
     vi.stubEnv("FROM_EMAIL", "test@meridian.app");
-    vi.stubEnv("FRONTEND_URL", "http://localhost:5173");
+    vi.stubEnv("FRONTEND_URL", "http://localhost:5174");
     vi.clearAllMocks();
     sendMock.mockResolvedValue([
       { statusCode: 202, body: {}, headers: {} },

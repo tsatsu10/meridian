@@ -8,6 +8,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { emailVerificationService } from "../email-verification-service";
+import { getFrontendBaseUrl } from "../../config/frontend-url";
 import logger from "../../utils/logger";
 import { getErrorMessage } from "../../utils/error-utils";
 
@@ -83,15 +84,15 @@ app.get("/verify-email", async (c) => {
 
     if (result.success) {
       // Redirect to frontend success page
-      const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=true`;
+      const redirectUrl = `${getFrontendBaseUrl()}/email-verified?success=true`;
       return c.redirect(redirectUrl);
     }
     // Redirect to frontend error page
-    const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=${encodeURIComponent(result.message)}`;
+    const redirectUrl = `${getFrontendBaseUrl()}/email-verified?success=false&error=${encodeURIComponent(result.message)}`;
     return c.redirect(redirectUrl);
   } catch (error) {
     logger.error("❌ Email verification error:", error);
-    const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=Verification%20failed`;
+    const redirectUrl = `${getFrontendBaseUrl()}/email-verified?success=false&error=Verification%20failed`;
     return c.redirect(redirectUrl);
   }
 });

@@ -13,6 +13,9 @@
 
 import type { Context, Next } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
+import { appSettings } from "../config/settings";
+import { resolveCorsOrigin } from "../config/cors-origins";
+import { getFrontendBaseUrl } from "../config/frontend-url";
 import { logger } from "../utils/logger";
 import { auditLogger } from "../utils/audit-logger";
 import { RateLimitError } from "../utils/errors";
@@ -389,32 +392,18 @@ export function validateCors(
   c: Context,
   origin: string | undefined,
 ): string | null {
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5200",
-    "https://meridian.app",
-    "https://www.meridian.app",
-    "https://app.meridian.com",
-    process.env.FRONTEND_URL,
-  ].filter(Boolean); // Remove undefined values
+  const allowed = resolveCorsOrigin(origin, {
+    corsOrigins: appSettings.corsOrigins,
+    frontendUrl: getFrontendBaseUrl(),
+    nodeEnv: appSettings.nodeEnv,
+  });
 
-  // Allow configured origins
-  if (origin && allowedOrigins.includes(origin)) {
-    return origin;
-  }
-
-  // Allow localhost in development
-  if (
-    process.env.NODE_ENV !== "production" &&
-    origin?.startsWith("http://localhost:")
-  ) {
-    return origin;
+  if (allowed) {
+    return allowed;
   }
 
   // Log suspicious CORS requests
-  if (origin && process.env.NODE_ENV === "production") {
+  if (origin && appSettings.nodeEnv === "production") {
     logger.warn("CORS request from unauthorized origin", {
       origin,
       path: c.req.path,

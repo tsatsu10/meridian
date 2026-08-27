@@ -1,31 +1,23 @@
 import type { Context, Next } from "hono";
-import { cors } from "hono/cors";
-import { secureHeaders } from "hono/secure-headers";
+import { appSettings } from "../config/settings";
+import { resolveCorsOrigin } from "../config/cors-origins";
+import { getFrontendBaseUrl } from "../config/frontend-url";
 import { createError } from "./errors";
 import logger from "../utils/logger";
 
+function isCorsOriginAllowed(origin: string | undefined): string | undefined {
+  return resolveCorsOrigin(origin, {
+    corsOrigins: appSettings.corsOrigins,
+    frontendUrl: getFrontendBaseUrl(),
+    nodeEnv: appSettings.nodeEnv,
+  });
+}
+
 // Security configuration
 export const securityConfig = {
-  // CORS configuration
+  // CORS configuration — allowlist via shared resolveCorsOrigin (CORS_ORIGINS + FRONTEND_URL)
   cors: {
-    origin: (origin: string) => {
-      // Allow requests from same origin
-      if (!origin) return true;
-
-      // Allow localhost for development
-      if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
-        return true;
-      }
-
-      // Allow production domains
-      const allowedOrigins = [
-        "https://meridian.app",
-        "https://www.meridian.app",
-        "https://app.meridian.com",
-      ];
-
-      return allowedOrigins.includes(origin);
-    },
+    origin: (origin: string) => Boolean(isCorsOriginAllowed(origin)),
     allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowHeaders: [
       "Content-Type",
@@ -92,10 +84,11 @@ export function createSecurityMiddleware() {
       c.header(key, value);
     }
 
-    // Add CORS headers
+    // Add CORS headers (shared allowlist — no substring localhost matching)
     const origin = c.req.header("origin");
-    if (origin && securityConfig.cors.origin(origin)) {
-      c.header("Access-Control-Allow-Origin", origin);
+    const allowedOrigin = isCorsOriginAllowed(origin);
+    if (allowedOrigin) {
+      c.header("Access-Control-Allow-Origin", allowedOrigin);
     }
     c.header(
       "Access-Control-Allow-Methods",
