@@ -26,6 +26,7 @@ import twoFactor from "./auth/routes/two-factor"; // Two-Factor Authentication
 import emailVerificationRoutes from "./auth/routes/email-verification";
 // import { validateSessionToken } from "./user/utils/validate-session-token";
 import { appSettings } from "./config/settings";
+import { demoAuthStartupViolation } from "./config/demo-auth";
 import logger from "./utils/logger";
 // import setDemoUser from "./utils/set-demo-user";
 import workspaceSettings from "./workspace/settings";
@@ -541,28 +542,21 @@ app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls
     logger.debug("🚀 Starting server initialization...");
 
     // 🔒 CRITICAL SECURITY: Guard demo auth bypass.
+    // Fatal when DEMO_MODE / ALLOW_DEMO_AUTH_BYPASS are set outside an
+    // *explicit* development|test NODE_ENV (covers production, staging, and unset).
+    const demoViolation = demoAuthStartupViolation({
+      demoMode: isDemoMode,
+      allowDemoAuthBypass: process.env.ALLOW_DEMO_AUTH_BYPASS === "true",
+      nodeEnv: process.env.NODE_ENV,
+    });
+    if (demoViolation) {
+      logger.error(`❌ FATAL SECURITY ERROR: ${demoViolation}`);
+      process.exit(1);
+    }
     if (isDemoMode && !enableDemoAuthBypass) {
       logger.warn(
-        "⚠️ DEMO_MODE is true, but auth bypass is disabled. Set ALLOW_DEMO_AUTH_BYPASS=true in development/test to enable bypass.",
+        "⚠️ DEMO_MODE is true, but auth bypass is disabled. Set ALLOW_DEMO_AUTH_BYPASS=true with NODE_ENV=development|test to enable bypass.",
       );
-    }
-    if (process.env.NODE_ENV === "production" && isDemoMode) {
-      logger.error(
-        "❌ FATAL SECURITY ERROR: DEMO_MODE cannot be enabled in production",
-      );
-      logger.error(
-        "SECURITY VIOLATION: Attempted to start production server with DEMO_MODE=true",
-      );
-      process.exit(1);
-    }
-    if (
-      process.env.NODE_ENV === "production" &&
-      process.env.ALLOW_DEMO_AUTH_BYPASS === "true"
-    ) {
-      logger.error(
-        "❌ FATAL SECURITY ERROR: ALLOW_DEMO_AUTH_BYPASS cannot be enabled in production",
-      );
-      process.exit(1);
     }
 
     await initializeDatabase();
