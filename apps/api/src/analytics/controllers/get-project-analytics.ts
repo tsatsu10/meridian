@@ -8,7 +8,7 @@ import {
   workspaceUserTable,
   milestoneTable,
 } from "../../database/schema";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, inArray } from "drizzle-orm";
 import logger from "../../utils/logger";
 
 export async function getProjectAnalytics(c: Context) {
@@ -69,6 +69,7 @@ export async function getProjectAnalytics(c: Context) {
         priority: taskTable.priority,
         dueDate: taskTable.dueDate,
         createdAt: taskTable.createdAt,
+        userEmail: taskTable.userEmail,
       })
       .from(taskTable)
       .where(eq(taskTable.projectId, projectId));
@@ -119,21 +120,45 @@ export async function getProjectAnalytics(c: Context) {
           : 0,
     };
 
-    // Get team metrics with detailed per-member analytics
-    const teamMembers = await db
-      .select({
-        userEmail: workspaceUserTable.userEmail,
-        userName: userTable.name,
-        role: workspaceUserTable.role,
-      })
-      .from(workspaceUserTable)
-      .leftJoin(userTable, eq(workspaceUserTable.userEmail, userTable.email))
-      .where(eq(workspaceUserTable.workspaceId, projectRow.workspaceId));
+    // Get team metrics with detailed per-member analytics. Scoped to users
+    // who actually have a task in this project — not every workspace member
+    // (this project has no separate membership table, so task assignment is
+    // the only real signal of who's actually on it).
+    const assigneeEmails = Array.from(
+      new Set(
+        allTasks
+          .map((t) => t.userEmail)
+          .filter((email): email is string => !!email),
+      ),
+    );
+
+    const teamMembers =
+      assigneeEmails.length > 0
+        ? await db
+            .select({
+              userEmail: workspaceUserTable.userEmail,
+              userName: userTable.name,
+              role: workspaceUserTable.role,
+            })
+            .from(workspaceUserTable)
+            .leftJoin(
+              userTable,
+              eq(workspaceUserTable.userEmail, userTable.email),
+            )
+            .where(
+              and(
+                eq(workspaceUserTable.workspaceId, projectRow.workspaceId),
+                inArray(workspaceUserTable.userEmail, assigneeEmails),
+              ),
+            )
+        : [];
 
     // Get per-member task completion data
     const memberPerformance = await Promise.all(
       teamMembers.map(async (member) => {
-        const memberTasks = allTasks.filter((t) => t.status); // See https://github.com/tsatsu10/meridian/issues/69
+        const memberTasks = allTasks.filter(
+          (t) => t.userEmail === member.userEmail,
+        );
         const completedTasks = memberTasks.filter((t) => t.status === "done");
         const inProgressTasks = memberTasks.filter(
           (t) => t.status === "in_progress",
@@ -251,12 +276,19 @@ export async function getProjectAnalytics(c: Context) {
     const velocityMetrics = {
       current: currentVelocity,
       historical: historicalVelocity,
+      // No historical tasks (e.g. a brand-new project) means there's no real
+      // baseline to compare against, not "infinite improvement" — treat it
+      // as stable rather than "increasing", which used to pair with a
+      // changePercentage hardcoded to 0 below and surface a contradictory
+      // "Velocity is improving... 0.0% more tasks" insight.
       trend:
-        currentVelocity > historicalVelocity
-          ? "increasing"
-          : currentVelocity < historicalVelocity
-            ? "decreasing"
-            : "stable",
+        historicalVelocity === 0
+          ? "stable"
+          : currentVelocity > historicalVelocity
+            ? "increasing"
+            : currentVelocity < historicalVelocity
+              ? "decreasing"
+              : "stable",
       changePercentage:
         historicalVelocity > 0
           ? ((currentVelocity - historicalVelocity) / historicalVelocity) * 100
@@ -330,15 +362,20 @@ export async function getProjectAnalytics(c: Context) {
       .from(milestoneTable)
       .where(eq(milestoneTable.projectId, projectId));
 
+    // A milestone's own status ("upcoming"/"achieved"/"missed", set directly
+    // by the user) is the source of truth. Due date is only a fallback for
+    // milestones still sitting in the default "upcoming" status that have
+    // quietly passed their due date without anyone marking them missed.
+    const isPastDue = (m: (typeof milestones)[number]) =>
+      !!m.dueDate && new Date(m.dueDate) < now;
     const milestoneMetrics = {
-      achieved: milestones.filter((m) => m.status === "completed").length,
+      achieved: milestones.filter((m) => m.status === "achieved").length,
       upcoming: milestones.filter(
-        (m) =>
-          m.dueDate && new Date(m.dueDate) > now && m.status !== "completed",
+        (m) => m.status === "upcoming" && !isPastDue(m),
       ).length,
       missed: milestones.filter(
         (m) =>
-          m.dueDate && new Date(m.dueDate) < now && m.status !== "completed",
+          m.status === "missed" || (m.status === "upcoming" && isPastDue(m)),
       ).length,
       total: milestones.length,
       milestoneDetails: milestones.map((m) => ({
@@ -347,8 +384,7 @@ export async function getProjectAnalytics(c: Context) {
         dueDate: m.dueDate,
         status: m.status,
         completedAt: m.completedAt,
-        isOverdue:
-          m.dueDate && new Date(m.dueDate) < now && m.status !== "completed",
+        isOverdue: m.status !== "achieved" && isPastDue(m),
       })),
     };
 

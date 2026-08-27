@@ -56,6 +56,10 @@ interface RoleCardProps {
   onDelete?: (roleId: string) => void;
   onClone?: (role: Role) => void;
   onViewDetails?: (roleId: string) => void;
+  /** Disables the Clone menu item (e.g. no workspace selected yet). */
+  cloneDisabled?: boolean;
+  /** Shown as a tooltip on the disabled Clone menu item. */
+  cloneDisabledReason?: string;
 }
 
 // ==========================================
@@ -68,6 +72,8 @@ export function RoleCard({
   onDelete,
   onClone,
   onViewDetails,
+  cloneDisabled,
+  cloneDisabledReason,
 }: RoleCardProps) {
   const isSystem = role.type === "system";
 
@@ -121,8 +127,14 @@ export function RoleCard({
 
               {onClone && (
                 <DropdownMenuItem
+                  disabled={cloneDisabled}
+                  title={cloneDisabled ? cloneDisabledReason : undefined}
                   onClick={(e) => {
                     e.stopPropagation();
+                    // Belt and suspenders: `disabled` already stops Radix
+                    // from firing onSelect, but this keeps the handler safe
+                    // regardless of how the click reached it.
+                    if (cloneDisabled) return;
                     onClone(role);
                   }}
                 >

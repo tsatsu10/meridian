@@ -4,31 +4,32 @@ import {
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { AuroraBackdrop } from "@/components/auth/aurora-backdrop";
+import { GlassPanel } from "@/components/auth/glass-panel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
-import { Shield, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { MeridianMark } from "@/components/branding/meridian-mark";
 import { Label } from "@/components/ui/label";
+import PageTitle from "@/components/page-title";
+import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 
 export const Route = createFileRoute("/auth/verify-2fa")({
   component: Verify2FA,
   validateSearch: (search: Record<string, unknown>) => {
     return {
-      userId: search.userId as string,
       email: search.email as string,
     };
   },
 });
+
+// Space Grotesk for headings, matching the idiom already used in
+// LandingPage.tsx — an arbitrary-value Tailwind class rather than a
+// `fontFamily` theme key, since tailwind.config.js has none and both fonts
+// are already loaded via the Google Fonts link in index.html.
+const displayFont = "[font-family:'Space_Grotesk',sans-serif]";
 
 function Verify2FA() {
   const [code, setCode] = useState("");
@@ -39,12 +40,13 @@ function Verify2FA() {
 
   const navigate = useNavigate();
   void useRouter();
-  const search = Route.useSearch();
+  const { setUser } = useAuth();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!search.userId) {
+    const pendingToken = sessionStorage.getItem("pending2FAToken");
+    if (!pendingToken) {
       setError("Invalid session. Please sign in again.");
       return;
     }
@@ -63,12 +65,15 @@ function Verify2FA() {
     setError("");
 
     try {
-      await apiClient.auth.twoFactor.verifyLogin({
-        userId: search.userId,
+      const user = await apiClient.auth.twoFactor.verifyLogin({
+        pendingToken,
         token: useBackupCode ? undefined : code,
         backupCode: useBackupCode ? backupCode : undefined,
       });
 
+      sessionStorage.removeItem("pending2FAToken");
+
+      setUser(user);
       toast.success("Verification successful!");
       navigate({ to: "/dashboard" });
     } catch (error) {
@@ -87,38 +92,32 @@ function Verify2FA() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 p-4">
-      <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="space-y-1">
-            <div className="flex flex-col items-center justify-center gap-3 mb-2">
-              <MeridianMark className="h-11 w-11" />
-              <div className="p-3 bg-primary/10 rounded-full">
-                <Shield className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-center">
-              Two-Factor Authentication
-            </CardTitle>
-            <CardDescription className="text-center">
+    <>
+      <PageTitle title="Two-Factor Verification" />
+      <div className="relative flex min-h-svh items-center justify-center p-4">
+        <AuroraBackdrop />
+        <div className="relative z-10 w-full max-w-md">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <MeridianMark className="mb-4 h-12 w-12" />
+            <h1
+              className={`text-3xl font-semibold tracking-tight text-white ${displayFont}`}
+            >
+              Two-factor authentication
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
               {useBackupCode
                 ? "Enter one of your backup codes"
                 : "Enter the code from your authenticator app"}
-            </CardDescription>
-          </CardHeader>
+            </p>
+          </div>
 
-          <CardContent>
+          <GlassPanel>
             <form onSubmit={handleVerify} className="space-y-6">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
               {!useBackupCode ? (
                 <div className="space-y-2">
-                  <Label htmlFor="code">Verification Code</Label>
+                  <Label htmlFor="code" className="text-white/80">
+                    Verification Code
+                  </Label>
                   <Input
                     id="code"
                     type="text"
@@ -130,17 +129,21 @@ function Verify2FA() {
                       setCode(value);
                       setError("");
                     }}
-                    className="text-center text-2xl tracking-widest font-mono"
+                    aria-describedby={error ? "verify-2fa-error" : undefined}
+                    aria-invalid={error ? true : undefined}
+                    className="h-14 border-white/15 bg-white/5 text-center font-mono text-2xl tracking-widest text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
                     autoFocus
                     disabled={isLoading}
                   />
-                  <p className="text-xs text-muted-foreground text-center">
+                  <p className="text-center text-xs text-white/50">
                     The code changes every 30 seconds
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="backupCode">Backup Code</Label>
+                  <Label htmlFor="backupCode" className="text-white/80">
+                    Backup Code
+                  </Label>
                   <Input
                     id="backupCode"
                     type="text"
@@ -150,19 +153,33 @@ function Verify2FA() {
                       setBackupCode(e.target.value.toUpperCase());
                       setError("");
                     }}
-                    className="text-center text-xl tracking-wider font-mono"
+                    aria-describedby={error ? "verify-2fa-error" : undefined}
+                    aria-invalid={error ? true : undefined}
+                    className="h-12 border-white/15 bg-white/5 text-center font-mono text-xl tracking-wider text-white placeholder:text-white/40 focus-visible:ring-[#2DD4BF]"
                     autoFocus
                     disabled={isLoading}
                   />
-                  <p className="text-xs text-muted-foreground text-center">
+                  <p className="text-center text-xs text-white/50">
                     Enter one of the backup codes you saved during setup
                   </p>
                 </div>
               )}
 
+              {/* Rendered unconditionally, not `{error && ...}` — a live
+               * region has to already exist in the DOM before its content
+               * changes, or screen readers never announce the update. Only
+               * the text content toggles. */}
+              <p
+                id="verify-2fa-error"
+                aria-live="polite"
+                className="text-sm text-red-300"
+              >
+                {error}
+              </p>
+
               <Button
                 type="submit"
-                className="w-full"
+                className="h-12 w-full bg-[#2DD4BF] font-semibold text-[#06121A] hover:bg-[#5FE3D3]"
                 disabled={
                   isLoading ||
                   (!useBackupCode && code.length !== 6) ||
@@ -171,7 +188,7 @@ function Verify2FA() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Verifying...
                   </>
                 ) : (
@@ -182,7 +199,7 @@ function Verify2FA() {
               <div className="space-y-2">
                 <button
                   type="button"
-                  className="text-sm text-primary hover:underline w-full text-center"
+                  className="w-full text-center text-sm font-medium text-[#2DD4BF] hover:underline"
                   onClick={() => {
                     setUseBackupCode(!useBackupCode);
                     setCode("");
@@ -198,7 +215,7 @@ function Verify2FA() {
 
                 <button
                   type="button"
-                  className="text-sm text-muted-foreground hover:text-foreground flex items-center justify-center gap-2 w-full"
+                  className="flex w-full items-center justify-center gap-2 text-sm text-white/60 hover:text-white/80"
                   onClick={handleBackToLogin}
                   disabled={isLoading}
                 >
@@ -207,20 +224,20 @@ function Verify2FA() {
                 </button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+          </GlassPanel>
 
-        {/* Help Section */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Lost access to your authenticator?{" "}
-            <button type="button" className="text-primary hover:underline">
-              Contact support
-            </button>
-          </p>
+          {/* Help Section */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-white/60">
+              Lost access to your authenticator?{" "}
+              <button type="button" className="text-[#2DD4BF] hover:underline">
+                Contact support
+              </button>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

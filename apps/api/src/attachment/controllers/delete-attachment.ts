@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable, userTable } from "../../database/schema";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 function resolveUploadDiskPath(fileUrl: string): string | null {
   const uploadsDir = join(process.cwd(), "uploads");
@@ -44,7 +45,7 @@ async function deleteAttachment(id: string, userEmail: string) {
     });
 
     if (!existingAttachment) {
-      throw new Error("Attachment not found");
+      throw new NotFoundError("Attachment");
     }
 
     if (existingAttachment.uploadedBy !== user.id) {

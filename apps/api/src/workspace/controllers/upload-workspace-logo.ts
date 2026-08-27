@@ -9,6 +9,7 @@ import { workspaceTable } from "../../database/schema";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { createId } from "@paralleldrive/cuid2";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 const UPLOAD_DIR = join(process.cwd(), "uploads", "workspace-logos");
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -42,7 +43,7 @@ export default async function uploadWorkspaceLogo(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   // Create upload directory if it doesn't exist

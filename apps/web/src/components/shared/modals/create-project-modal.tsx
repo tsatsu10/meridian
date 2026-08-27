@@ -296,10 +296,16 @@ export default function CreateProjectModal({
     onClose();
   };
 
-  // Fetch templates
+  // Fetch templates. `enabled: open` is load-bearing: this modal is mounted
+  // (closed) by globally-rendered consumers like the command palette, so
+  // without the guard the query fired on every page load in the app —
+  // including the signed-out auth screens, where it answered 401 and put a
+  // console error on the sign-in page every visitor sees. Templates are only
+  // ever read once the modal is actually open.
   const { data: templatesResponse, isLoading: templatesLoading } = useQuery({
     queryKey: ["templates"],
     queryFn: () => getTemplates({ limit: 50, isOfficial: true }),
+    enabled: open,
   });
 
   const templates = templatesResponse?.templates || [];

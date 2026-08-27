@@ -15,6 +15,11 @@ import resetUserPassword from "./controllers/reset-user-password";
 import { changeMemberRole } from "./controllers/change-member-role";
 import { removeMember } from "./controllers/remove-member";
 import { getMemberActivity } from "./controllers/get-member-activity";
+import {
+  requireCanManageMember,
+  getCallerWorkspaceRole,
+  ROLE_HIERARCHY,
+} from "./utils/role-hierarchy";
 
 const workspaceUser = new Hono<{
   Variables: {
@@ -71,6 +76,9 @@ const workspaceUser = new Hono<{
       const { workspaceId } = c.req.valid("param");
       const { userEmail } = c.req.valid("query");
 
+      const denied = await requireCanManageMember(c, workspaceId, userEmail);
+      if (denied) return denied;
+
       const deletedWorkspaceUser = await deleteWorkspaceUser(
         workspaceId,
         userEmail,
@@ -125,6 +133,9 @@ const workspaceUser = new Hono<{
     async (c) => {
       const { workspaceId, userEmail } = c.req.valid("param");
 
+      const denied = await requireCanManageMember(c, workspaceId, userEmail);
+      if (denied) return denied;
+
       const deletedWorkspaceUser = await deleteWorkspaceUser(
         workspaceId,
         userEmail,
@@ -168,6 +179,25 @@ const workspaceUser = new Hono<{
     async (c) => {
       const { workspaceId, userEmail } = c.req.valid("param");
       const { role } = c.req.valid("json");
+
+      const denied = await requireCanManageMember(c, workspaceId, userEmail);
+      if (denied) return denied;
+
+      // SECURITY: never allow assigning a role >= the caller's own —
+      // otherwise a caller just above the minimum management threshold
+      // could still promote a target (or themselves) up to their own level.
+      const currentUserEmail = c.get("userEmail");
+      const caller = await getCallerWorkspaceRole(
+        workspaceId,
+        currentUserEmail,
+      );
+      const newRoleHierarchy = ROLE_HIERARCHY[role] ?? 0;
+      if (!caller || caller.hierarchy <= newRoleHierarchy) {
+        return c.json(
+          { error: "Cannot assign a role equal to or higher than your own" },
+          403,
+        );
+      }
 
       const updatedUser = await changeUserRole(workspaceId, userEmail, role);
 
@@ -217,17 +247,14 @@ const workspaceUser = new Hono<{
       return c.json(updatedUser);
     },
   )
-  // @epic-3.4-teams: Reset user password
+  // @epic-3.4-teams: Reset user password (workspace-scoped, admin-only)
   .post(
-    "/:userEmail/reset-password",
-    zValidator("param", z.object({ userEmail: z.string() })),
-    async (c) => {
-      const { userEmail } = c.req.valid("param");
-
-      const result = await resetUserPassword(userEmail);
-
-      return c.json(result);
-    },
+    "/:workspaceId/:userEmail/reset-password",
+    zValidator(
+      "param",
+      z.object({ workspaceId: z.string(), userEmail: z.string() }),
+    ),
+    resetUserPassword,
   );
 
 subscribeToEvent("user.signed_up", async ({ email }: { email: string }) => {

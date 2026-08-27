@@ -110,7 +110,6 @@ export {
   useRouteProtection,
   RouteProtections,
   createPermissionCheck,
-  createProtectedLoader,
 } from "./route-protection";
 
 // ===== ADVANCED HOOKS =====
@@ -120,10 +119,8 @@ export {
   useFeatureFlags,
   useRoleHierarchy,
   useRoleBasedComponent,
-  useWorkspacePermissions,
   useProjectPermissions,
   usePermissionGatedAction,
-  useTeamLeadActions,
   usePermissionDebug,
   useOptimizedPermission,
 } from "./hooks";

@@ -48,15 +48,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import useProjectStore from "@/store/project";
-import useWorkspaceStore from "@/store/workspace";
+import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useGetProjectMembers from "@/hooks/queries/project/use-get-project-members";
 import useAddProjectMember from "@/hooks/mutations/project/use-add-project-member";
 import { useChangeMemberRole } from "@/hooks/mutations/workspace-user/use-change-member-role";
 import { useRemoveMember } from "@/hooks/mutations/workspace-user/use-remove-member";
-import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { useRBACAuth } from "@/lib/permissions";
 import {
   Search,
   UserPlus,
@@ -94,6 +93,7 @@ import InviteTeamMemberModal from "@/components/team/invite-team-member-modal";
 import { EnhancedMemberDetailsModal } from "@/components/team/enhanced-member-details-modal";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import type { ProjectColumn, ProjectWithTasks } from "@/types/project";
 import type Task from "@/types/task";
 
@@ -105,6 +105,10 @@ export const Route = createFileRoute(
 
 interface ProjectMember {
   id: string;
+  // The workspace_user.id for this member (distinct from `id`, which is the
+  // project_members row id) - role-change/remove mutations operate on
+  // workspace membership, so they need this id, not the project-member id.
+  workspaceUserId?: string;
   name: string;
   email: string;
   avatar?: string;
@@ -114,9 +118,8 @@ interface ProjectMember {
   completedTasks: number;
   hoursThisWeek?: number;
   productivity: number;
-  status: "online" | "away" | "offline";
+  status: "active" | "inactive";
   joinedProject: string;
-  lastActive?: string;
   isProjectLead?: boolean;
   // Enhanced workload fields
   workloadScore?: number;
@@ -143,28 +146,37 @@ interface TeamMetrics {
   projectCompletion: number;
 }
 
-// Enhanced role system with proper RBAC roles
-const roleColors = {
-  "workspace-manager":
+// project_members.role uses its own, separate vocabulary from the workspace
+// RBAC roles above (owner/admin/team-lead/senior/member/viewer - see
+// projectRoleSchema in apps/api/src/project/index.ts) - member cards must be
+// colored/labeled against this list, not the workspace one.
+const projectRoleColors: Record<string, string> = {
+  owner:
     "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-900 dark:from-purple-900/80 dark:to-purple-800/80 dark:text-purple-100 border-purple-300 dark:border-purple-700 font-semibold shadow-sm",
-  "department-head":
-    "bg-gradient-to-r from-red-100 to-red-200 text-red-900 dark:from-red-900/80 dark:to-red-800/80 dark:text-red-100 border-red-300 dark:border-red-700 font-semibold shadow-sm",
-  "project-manager":
+  admin:
     "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-900 dark:from-blue-900/80 dark:to-blue-800/80 dark:text-blue-100 border-blue-300 dark:border-blue-700 font-semibold shadow-sm",
   "team-lead":
     "bg-gradient-to-r from-green-100 to-green-200 text-green-900 dark:from-green-900/80 dark:to-green-800/80 dark:text-green-100 border-green-300 dark:border-green-700 font-semibold shadow-sm",
-  "project-viewer":
+  senior:
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700",
   member:
     "bg-secondary text-secondary-foreground dark:bg-secondary-hover dark:text-secondary-foreground border-border",
-  guest:
+  viewer:
     "bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border-orange-300 dark:border-orange-700",
 };
 
+const projectRoleLabels: Record<string, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  "team-lead": "Team Lead",
+  senior: "Senior",
+  member: "Member",
+  viewer: "Viewer",
+};
+
 const statusColors = {
-  online: "bg-green-500",
-  away: "bg-yellow-500",
-  offline: "bg-gray-400",
+  active: "bg-green-500",
+  inactive: "bg-gray-400",
 };
 
 // Available roles for role changes
@@ -214,9 +226,15 @@ const availableRoles = [
 ];
 
 function ProjectTeams() {
-  const { workspaceId } = Route.useParams();
-  const { project } = useProjectStore();
-  const { workspace } = useWorkspaceStore();
+  const { workspaceId, projectId: routeProjectId } = Route.useParams();
+  // The project store used here previously wasn't reliably populated for
+  // this route (queries kept firing with an empty project id and stalling
+  // in "pending" forever) - fetch directly from the route's own param
+  // instead, matching how the rest of the project sub-pages source it.
+  const { data: project } = useGetProject({
+    id: routeProjectId,
+    workspaceId,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -257,29 +275,50 @@ function ProjectTeams() {
     null,
   );
 
+  // Add existing workspace member to project state
+  const [isAddExistingMemberOpen, setIsAddExistingMemberOpen] = useState(false);
+  const [selectedExistingEmail, setSelectedExistingEmail] = useState("");
+  const [selectedExistingRole, setSelectedExistingRole] = useState("member");
+
   // @epic-3.4-teams: Mutations for role change and member removal
   const changeRoleMutation = useChangeMemberRole();
   const removeMemberMutation = useRemoveMember();
 
   // @epic-3.4-teams: Get project members (real project team)
   const { data: realProjectMembers, isLoading: isLoadingMembers } =
-    useGetProjectMembers(project?.id || "");
+    useGetProjectMembers(routeProjectId);
 
   // @epic-3.4-teams: Get workspace users (for adding new members)
-  const { isLoading: isUsersLoading } = useGetWorkspaceUsers({
-    workspaceId: workspace?.id || "",
-  });
+  const { data: workspaceUsers, isLoading: isUsersLoading } =
+    useGetWorkspaceUsers({
+      workspaceId,
+    });
 
   // @epic-3.4-teams: Get project tasks for workload calculation
-  const { data: tasksData, isLoading: isTasksLoading } = useGetTasks(
-    project?.id || "",
-  );
+  const { data: tasksData, isLoading: isTasksLoading } =
+    useGetTasks(routeProjectId);
 
-  // @epic-3.4-teams: Add member mutation
-  void useAddProjectMember();
+  // @epic-3.4-teams: Add an existing workspace member to this project's team
+  const addProjectMemberMutation = useAddProjectMember();
 
-  // @epic-3.4-teams: Get team permissions for current user
-  const permissions = useTeamPermissions();
+  // @epic-3.4-teams: Real, RBAC-backed permissions for the current user
+  // (previously useTeamPermissions(), which - called without its required
+  // `team` argument - always fell through to its lowest "member" role and
+  // hid every management action for every user, including workspace owners).
+  const { hasPermission } = useRBACAuth();
+  const permissions = useMemo(() => {
+    const canAddMembers = hasPermission("canInviteToProject");
+    const canRemoveMembers = hasPermission("canRemoveFromProject");
+    const canChangeRoles = hasPermission("canManageProjectTeam");
+    return {
+      permissions: {
+        canAddMembers,
+        canRemoveMembers,
+        canChangeRoles,
+        canManageMembers: canAddMembers || canRemoveMembers || canChangeRoles,
+      },
+    };
+  }, [hasPermission]);
 
   // @epic-3.4-teams: Transform real project members with enhanced workload calculation
   const projectMembers: ProjectMember[] = useMemo(() => {
@@ -291,6 +330,16 @@ function ProjectTeams() {
     const projectWithTasks = tasksData as ProjectWithTasks | undefined;
     const columnArray: ProjectColumn[] = projectWithTasks?.columns ?? [];
     const allTasks = columnArray.flatMap((col) => col.tasks) as WorkloadTask[];
+
+    // Change-role/remove-member operate on workspace membership (a
+    // different id space than project_members.id), so each member needs
+    // its matching workspace_user.id resolved by email up front.
+    const workspaceUserIdByEmail = new Map(
+      (workspaceUsers ?? []).map((u) => [
+        u.email.toLowerCase(),
+        u.workspaceUserId,
+      ]),
+    );
 
     return realProjectMembers.map((member) => {
       const userTasks = allTasks.filter(
@@ -381,6 +430,9 @@ function ProjectTeams() {
 
       return {
         id: member.id,
+        workspaceUserId:
+          workspaceUserIdByEmail.get((member.userEmail || "").toLowerCase()) ??
+          undefined,
         name: member.userName || member.userEmail || "Unknown User",
         email: member.userEmail || "",
         role: member.role || "member",
@@ -389,15 +441,13 @@ function ProjectTeams() {
         completedTasks,
         hoursThisWeek: actualHours || estimatedHours,
         productivity,
-        status: member.isActive ? "online" : "offline",
+        status: member.isActive ? "active" : "inactive",
         joinedProject: member.assignedAt
           ? new Date(member.assignedAt).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
-        lastActive: "Recently", // Could be enhanced with real last activity data
         isProjectLead:
-          member.role === "workspace-manager" ||
-          member.role === "department-head" ||
-          member.role === "project-manager" ||
+          member.role === "owner" ||
+          member.role === "admin" ||
           member.role === "team-lead",
         // Enhanced fields for capacity planning
         workloadScore: activeTasksWeighted,
@@ -411,7 +461,7 @@ function ProjectTeams() {
         ).length,
       };
     });
-  }, [realProjectMembers, tasksData]);
+  }, [realProjectMembers, tasksData, workspaceUsers]);
 
   // @epic-3.4-teams: Calculate team metrics
   const teamMetrics: TeamMetrics = useMemo(() => {
@@ -436,7 +486,7 @@ function ProjectTeams() {
       0,
     );
     const activeMembers = projectMembers.filter(
-      (member) => member.status === "online",
+      (member) => member.status === "active",
     ).length;
     const avgProductivity =
       projectMembers.reduce((sum, member) => sum + member.productivity, 0) /
@@ -500,6 +550,41 @@ function ProjectTeams() {
     return filtered;
   }, [projectMembers, searchTerm, roleFilter, statusFilter, sortBy]);
 
+  // Workspace members not yet on this project's team - candidates for
+  // "Assign existing workspace members".
+  const availableWorkspaceUsersToAdd = useMemo(() => {
+    const existingEmails = new Set(
+      projectMembers.map((m) => m.email.toLowerCase()),
+    );
+    return (workspaceUsers ?? []).filter(
+      (u) => !existingEmails.has(u.email.toLowerCase()),
+    );
+  }, [workspaceUsers, projectMembers]);
+
+  const handleAddExistingMember = async () => {
+    if (!selectedExistingEmail) return;
+
+    try {
+      await addProjectMemberMutation.mutateAsync({
+        projectId: routeProjectId,
+        userEmail: selectedExistingEmail,
+        role: selectedExistingRole as
+          | "owner"
+          | "admin"
+          | "team-lead"
+          | "senior"
+          | "member"
+          | "viewer",
+      });
+
+      setIsAddExistingMemberOpen(false);
+      setSelectedExistingEmail("");
+      setSelectedExistingRole("member");
+    } catch (error) {
+      // Error already handled by mutation hook
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -538,11 +623,17 @@ function ProjectTeams() {
 
   const confirmRemoveMember = async () => {
     if (!memberToRemove || !workspaceId) return;
+    if (!memberToRemove.workspaceUserId) {
+      toast.error(
+        "Could not resolve this member's workspace membership - try refreshing the page",
+      );
+      return;
+    }
 
     try {
       await removeMemberMutation.mutateAsync({
         workspaceId,
-        memberId: memberToRemove.id,
+        memberId: memberToRemove.workspaceUserId,
       });
 
       setMemberToRemove(null);
@@ -553,11 +644,17 @@ function ProjectTeams() {
 
   const confirmRoleChange = async () => {
     if (!selectedMemberForRole || !newRole || !workspaceId) return;
+    if (!selectedMemberForRole.workspaceUserId) {
+      toast.error(
+        "Could not resolve this member's workspace membership - try refreshing the page",
+      );
+      return;
+    }
 
     try {
       await changeRoleMutation.mutateAsync({
         workspaceId,
-        memberId: selectedMemberForRole.id,
+        memberId: selectedMemberForRole.workspaceUserId,
         newRole,
       });
 
@@ -601,8 +698,22 @@ function ProjectTeams() {
   const confirmBulkRoleChange = async () => {
     if (!bulkNewRole || selectedMembers.size === 0 || !workspaceId) return;
 
+    const workspaceUserIds = Array.from(selectedMembers)
+      .map(
+        (memberId) =>
+          projectMembers.find((m) => m.id === memberId)?.workspaceUserId,
+      )
+      .filter((id): id is string => !!id);
+
+    if (workspaceUserIds.length === 0) {
+      toast.error(
+        "Could not resolve workspace membership for the selected members",
+      );
+      return;
+    }
+
     try {
-      const promises = Array.from(selectedMembers).map((memberId) =>
+      const promises = workspaceUserIds.map((memberId) =>
         changeRoleMutation.mutateAsync({
           workspaceId,
           memberId,
@@ -613,7 +724,7 @@ function ProjectTeams() {
       await Promise.all(promises);
 
       toast.success(
-        `Updated ${selectedMembers.size} member roles to ${bulkNewRole}`,
+        `Updated ${workspaceUserIds.length} member roles to ${bulkNewRole}`,
       );
       setIsBulkRoleChangeOpen(false);
       setBulkNewRole("");
@@ -640,8 +751,22 @@ function ProjectTeams() {
 
     if (!workspaceId) return;
 
+    const workspaceUserIds = Array.from(selectedMembers)
+      .map(
+        (memberId) =>
+          projectMembers.find((m) => m.id === memberId)?.workspaceUserId,
+      )
+      .filter((id): id is string => !!id);
+
+    if (workspaceUserIds.length === 0) {
+      toast.error(
+        "Could not resolve workspace membership for the selected members",
+      );
+      return;
+    }
+
     try {
-      const promises = Array.from(selectedMembers).map((memberId) =>
+      const promises = workspaceUserIds.map((memberId) =>
         removeMemberMutation.mutateAsync({
           workspaceId,
           memberId,
@@ -650,7 +775,7 @@ function ProjectTeams() {
 
       await Promise.all(promises);
 
-      toast.success(`Removed ${selectedMembers.size} member(s)`);
+      toast.success(`Removed ${workspaceUserIds.length} member(s)`);
       setSelectedMembers(new Set());
       setIsBulkMode(false);
     } catch (error) {
@@ -677,7 +802,6 @@ function ProjectTeams() {
         "Completed Tasks": member.completedTasks,
         "Productivity %": member.productivity,
         Status: member.status,
-        "Last Active": member.lastActive,
         "Joined Project": member.joinedProject,
       }));
 
@@ -720,7 +844,7 @@ function ProjectTeams() {
       toast.success(`Exported ${selectedData.length} selected members to CSV`);
     } catch (error) {
       console.error("Error exporting selected members:", error);
-      toast.error("Failed to export selected members");
+      toast.error(userMessage(error, "export the selected members"));
     }
   };
 
@@ -745,7 +869,6 @@ function ProjectTeams() {
         "Completed Tasks": member.completedTasks,
         "Productivity %": member.productivity,
         Status: member.status,
-        "Last Active": member.lastActive,
         "Joined Project": member.joinedProject,
       }));
 
@@ -795,7 +918,7 @@ function ProjectTeams() {
       toast.success(`Exported ${projectMembers.length} team members to CSV`);
     } catch (error) {
       console.error("Error exporting team data:", error);
-      toast.error("Failed to export team data");
+      toast.error(userMessage(error, "export the team data"));
     }
   };
 
@@ -1122,11 +1245,13 @@ function ProjectTeams() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Roles</SelectItem>
-                        {availableRoles.map((role) => (
-                          <SelectItem key={role.value} value={role.value}>
-                            {role.label}
-                          </SelectItem>
-                        ))}
+                        {Object.entries(projectRoleLabels).map(
+                          ([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
 
@@ -1139,9 +1264,8 @@ function ProjectTeams() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="online">Online</SelectItem>
-                        <SelectItem value="away">Away</SelectItem>
-                        <SelectItem value="offline">Offline</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -1596,14 +1720,11 @@ function ProjectTeams() {
                                 variant="outline"
                                 className={cn(
                                   "text-xs mt-1.5",
-                                  roleColors[
-                                    member.role as keyof typeof roleColors
-                                  ] || roleColors.member,
+                                  projectRoleColors[member.role] ||
+                                    projectRoleColors.member,
                                 )}
                               >
-                                {availableRoles.find(
-                                  (r) => r.value === member.role,
-                                )?.label || member.role}
+                                {projectRoleLabels[member.role] || member.role}
                               </Badge>
                             </div>
                           </div>
@@ -1790,14 +1911,12 @@ function ProjectTeams() {
                                     variant="outline"
                                     className={cn(
                                       "text-xs",
-                                      roleColors[
-                                        member.role as keyof typeof roleColors
-                                      ] || roleColors.member,
+                                      projectRoleColors[member.role] ||
+                                        projectRoleColors.member,
                                     )}
                                   >
-                                    {availableRoles.find(
-                                      (r) => r.value === member.role,
-                                    )?.label || member.role}
+                                    {projectRoleLabels[member.role] ||
+                                      member.role}
                                   </Badge>
                                 </td>
                                 <td className="py-3">
@@ -2323,7 +2442,7 @@ function ProjectTeams() {
 
                       {/* Suggested Actions */}
                       {permissions.permissions.canAddMembers && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                           <Card
                             className="hover:shadow-md transition-shadow cursor-pointer"
                             onClick={handleInviteTeamMember}
@@ -2346,7 +2465,10 @@ function ProjectTeams() {
                             </CardContent>
                           </Card>
 
-                          <Card className="hover:shadow-md transition-shadow">
+                          <Card
+                            className="hover:shadow-md transition-shadow cursor-pointer"
+                            onClick={() => setIsAddExistingMemberOpen(true)}
+                          >
                             <CardContent className="p-6 text-center">
                               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 mb-3">
                                 <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -2361,29 +2483,12 @@ function ProjectTeams() {
                                 variant="outline"
                                 size="sm"
                                 className="mt-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsAddExistingMemberOpen(true);
+                                }}
                               >
                                 View All
-                              </Button>
-                            </CardContent>
-                          </Card>
-
-                          <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6 text-center">
-                              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-3">
-                                <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                              </div>
-                              <h4 className="font-semibold mb-1">
-                                Import Team
-                              </h4>
-                              <p className="text-xs text-muted-foreground mb-3">
-                                Bulk import from CSV or another project
-                              </p>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="mt-1"
-                              >
-                                Import
                               </Button>
                             </CardContent>
                           </Card>
@@ -2540,15 +2645,17 @@ function ProjectTeams() {
             handleChangeRole(member);
           }}
           canChangeRoles={permissions.permissions.canChangeRoles}
-          roleColors={roleColors}
-          availableRoles={availableRoles}
+          roleColors={projectRoleColors}
+          availableRoles={Object.entries(projectRoleLabels).map(
+            ([value, label]) => ({ value, label }),
+          )}
         />
 
         {/* Analytics Dashboard Popup */}
         <DashboardPopup
           open={isDashboardOpen}
           onClose={() => setIsDashboardOpen(false)}
-          projectId={project?.id}
+          projectId={routeProjectId}
           projectName={project?.name}
           title="Team Analytics"
           variant="team"
@@ -2610,6 +2717,95 @@ function ProjectTeams() {
           onClose={() => setIsInviteModalOpen(false)}
           workspaceId={workspaceId}
         />
+
+        {/* Add Existing Workspace Member Modal */}
+        <Dialog
+          open={isAddExistingMemberOpen}
+          onOpenChange={setIsAddExistingMemberOpen}
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add Workspace Member to Project</DialogTitle>
+              <DialogDescription>
+                Assign an existing workspace member to this project's team
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <span className="text-sm font-medium mb-2 block">Member</span>
+                <Select
+                  value={selectedExistingEmail}
+                  onValueChange={setSelectedExistingEmail}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        availableWorkspaceUsersToAdd.length === 0
+                          ? "No workspace members left to add"
+                          : "Choose a member"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableWorkspaceUsersToAdd.map((u) => (
+                      <SelectItem key={u.email} value={u.email}>
+                        {u.name || u.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <span className="text-sm font-medium mb-2 block">
+                  Project Role
+                </span>
+                <Select
+                  value={selectedExistingRole}
+                  onValueChange={setSelectedExistingRole}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="owner">Owner</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="team-lead">Team Lead</SelectItem>
+                    <SelectItem value="senior">Senior</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddExistingMemberOpen(false)}
+                disabled={addProjectMemberMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddExistingMember}
+                disabled={
+                  !selectedExistingEmail || addProjectMemberMutation.isPending
+                }
+              >
+                {addProjectMemberMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add to Project"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Bulk Role Change Modal */}
         <Dialog

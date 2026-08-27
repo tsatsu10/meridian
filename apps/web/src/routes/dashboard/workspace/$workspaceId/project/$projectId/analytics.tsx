@@ -41,7 +41,7 @@ function ProjectAnalyticsPage() {
         </div>
 
         {/* Analytics Component */}
-        <ProjectAnalytics projectId={projectId} />
+        <ProjectAnalytics projectId={projectId} workspaceId={workspaceId} />
       </div>
     </LazyDashboardLayout>
   );

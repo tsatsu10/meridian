@@ -4,6 +4,7 @@ import { getDatabase } from "../database/connection";
 import { workspaceInvites } from "../database/schema";
 import { eq, and } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
+import { getFrontendBaseUrl } from "../config/frontend-url";
 import logger from "../utils/logger";
 
 const inviteRoutes = new Hono();
@@ -147,8 +148,7 @@ inviteRoutes.post("/generate-link", authMiddleware(), async (c) => {
       });
     }
 
-    const baseUrl = process.env.APP_URL || "http://localhost:5173";
-    const inviteLink = `${baseUrl}/invite/${token}`;
+    const inviteLink = `${getFrontendBaseUrl()}/invite/${token}`;
 
     return c.json({
       success: true,

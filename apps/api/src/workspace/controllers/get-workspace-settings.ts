@@ -9,6 +9,7 @@
 
 import { eq, and } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
+import { ForbiddenError, NotFoundError } from "../../core/ErrorHandler";
 import {
   workspaceTable,
   workspaceMembers,
@@ -108,7 +109,7 @@ export default async function getWorkspaceSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   // Verify user is a member
@@ -124,7 +125,7 @@ export default async function getWorkspaceSettings(
     .limit(1);
 
   if (!membership) {
-    throw new Error("Access denied: Not a workspace member");
+    throw new ForbiddenError("Access denied: Not a workspace member");
   }
 
   // Count members

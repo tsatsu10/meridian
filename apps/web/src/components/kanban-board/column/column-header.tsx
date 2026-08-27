@@ -6,12 +6,12 @@ import { produce } from "immer";
 import {
   Archive,
   Plus,
-  Settings,
   MoreHorizontal,
   Trash2,
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,60 +74,6 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
     return "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300";
   };
 
-  // Get column position for insertion
-  const getCurrentColumnPosition = () => {
-    if (!project?.columns) return undefined;
-
-    // Find the current column in the columns array
-    const currentColumn = project.columns.find((col) => col.id === column?.id);
-    if (!currentColumn) return undefined;
-
-    // For default columns, use their predictable positions + 1
-    if (currentColumn.isDefault) {
-      const defaultPositions = {
-        todo: 0,
-        in_progress: 1,
-        done: 2,
-      };
-      const currentPos =
-        defaultPositions[currentColumn.id as keyof typeof defaultPositions];
-      if (currentPos !== undefined) {
-        return currentPos + 1;
-      }
-    }
-
-    // For custom columns, we need to find their actual visual position
-    // Sort columns the same way the backend does: by position, with conflict resolution
-    const sortedColumns = [...project.columns].sort((a, b) => {
-      const posA = typeof a.position === "number" ? a.position : 999;
-      const posB = typeof b.position === "number" ? b.position : 999;
-
-      // If positions are equal, prioritize defaults first, then by creation order (ID)
-      if (posA === posB) {
-        if (a.isDefault && !b.isDefault) return -1;
-        if (!a.isDefault && b.isDefault) return 1;
-        return a.id.localeCompare(b.id);
-      }
-
-      return posA - posB;
-    });
-
-    // Find the visual index of the current column
-    const currentIndex = sortedColumns.findIndex(
-      (col) => col.id === column?.id,
-    );
-
-    // Insert after this column's visual position
-    // The backend will handle shifting existing columns to make room
-    if (currentIndex >= 0) {
-      // Use the visual position + 1 for insertion
-      return currentIndex + 1;
-    }
-
-    // Fallback: append at the end
-    return sortedColumns.length;
-  };
-
   const handleArchiveColumn = async () => {
     if (!project) return;
 
@@ -161,7 +107,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
       toast.success(`"${column?.name}" column archived successfully`);
     } catch (error) {
-      toast.error("Failed to archive column");
+      toast.error(userMessage(error, "archive the column"));
       console.error(error);
     }
   };
@@ -192,7 +138,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
 
       toast.success(`"${column?.name}" column deleted successfully`);
     } catch (error) {
-      toast.error("Failed to delete column");
+      toast.error(userMessage(error, "delete the column"));
       console.error(error);
     }
   };
@@ -203,7 +149,7 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
         open={isAddColumnModalOpen}
         onClose={() => setIsAddColumnModalOpen(false)}
         projectId={project?.id || ""}
-        insertAfterPosition={getCurrentColumnPosition()}
+        insertAfterColumnId={column?.id}
       />
 
       {/* @epic-design: Enhanced column header with modern aesthetics and persona-aligned functionality */}
@@ -337,18 +283,6 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                 align="end"
                 className="w-48 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-xl"
               >
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // TODO: Implement edit column functionality
-                    toast.info("Edit column feature coming soon");
-                  }}
-                  className="hover:bg-white/50 dark:hover:bg-zinc-800/50 transition-colors"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Edit Column
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();

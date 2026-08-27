@@ -164,40 +164,78 @@
     --persona-design-accent: hsl(322, 84%, 89%);
     --persona-design-border: hsl(322, 84%, 93%);
 
-    /* Updated Theme Variables for Enhanced Light Mode */
-    --background: var(--background-primary);
-    --foreground: var(--meridian-neutral-900);
-    --card: var(--background-elevated);
-    --card-foreground: var(--meridian-neutral-900);
-    --popover: var(--background-elevated);
-    --popover-foreground: var(--meridian-neutral-900);
-    --primary: var(--meridian-primary-500);
-    --primary-foreground: var(--meridian-neutral-0);
-    --secondary: var(--background-accent);
-    --secondary-foreground: var(--meridian-neutral-900);
-    --muted: var(--background-accent);
-    --muted-foreground: var(--meridian-neutral-500);
-    --accent: var(--background-accent);
-    --accent-foreground: var(--meridian-neutral-900);
-    --destructive: var(--meridian-error-500);
-    --destructive-foreground: var(--meridian-neutral-0);
-    --border: var(--meridian-neutral-200);
-    --input: var(--meridian-neutral-200);
-    --ring: var(--meridian-primary-500);
+    /* Updated Theme Variables for Enhanced Light Mode.
+       These MUST be bare "H S% L%" triplets, not full hsl(...) strings,
+       because tailwind.config.js wraps every one of them as hsl(var(--x))
+       (matching how .dark stores its tokens below). Storing them as e.g.
+       var(--meridian-neutral-0) previously resolved to a complete hsl(...)
+       string, producing invalid nested hsl(hsl(...)) CSS for every utility
+       class built on these tokens (bg-background, text-foreground,
+       border-border, and so on), silently making all of them fall back to
+       transparent (backgrounds) or inherited/currentColor (text and
+       borders) in light mode specifically. Values below are the same
+       colors as before, just in the format hsl(var(--x)) requires. */
+    --background: 0 0% 100%; /* meridian-neutral-0 */
+    --foreground: 210 24% 10%; /* meridian-neutral-900 */
+    --card: 210 40% 98%; /* background-elevated / meridian-neutral-50 */
+    --card-foreground: 210 24% 10%; /* meridian-neutral-900 */
+    --popover: 210 40% 98%; /* background-elevated / meridian-neutral-50 */
+    --popover-foreground: 210 24% 10%; /* meridian-neutral-900 */
+    --primary: 217 91% 60%; /* meridian-primary-500 */
+    --primary-foreground: 0 0% 100%; /* meridian-neutral-0 */
+    --secondary: 210 40% 96%; /* background-accent / meridian-neutral-100 */
+    --secondary-foreground: 210 24% 10%; /* meridian-neutral-900 */
+    --muted: 210 40% 96%; /* background-accent / meridian-neutral-100 */
+    --muted-foreground: 210 11% 61%; /* meridian-neutral-500 */
+    --accent: 210 40% 96%; /* background-accent / meridian-neutral-100 */
+    --accent-foreground: 210 24% 10%; /* meridian-neutral-900 */
+    --destructive: 0 84% 60%; /* meridian-error-500 */
+    --destructive-foreground: 0 0% 100%; /* meridian-neutral-0 */
+    --border: 210 31% 93%; /* meridian-neutral-200 */
+    --input: 210 31% 93%; /* meridian-neutral-200 */
+    --ring: 217 91% 60%; /* meridian-primary-500 */
     --radius: 0.75rem;
 
-    /* Magic UI Enhanced Colors for Light Mode */
-    --color-1: oklch(75% 0.15 220); /* Soft Blue */
-    --color-2: oklch(80% 0.18 180); /* Gentle Cyan */
-    --color-3: oklch(78% 0.12 160); /* Fresh Green */
-    --color-4: oklch(85% 0.09 140); /* Subtle Emerald */
-    --color-5: oklch(82% 0.2 200); /* Bright Sky */
+    /* Magic UI Enhanced Colors for Light Mode.
+       Only consumer is `.gradient-text` (background-clip: text). These used
+       to be 75-85% lightness — fine as a decorative background tint, but as
+       *text* fill color against a white/near-white card that's ~1.2:1
+       contrast, i.e. invisible (this is why dashboard stat numbers went
+       blank in light mode). Darkened to a legible range; same hues. */
+    --color-1: oklch(52% 0.18 220); /* Blue */
+    --color-2: oklch(55% 0.18 180); /* Cyan */
+    --color-3: oklch(50% 0.15 160); /* Green */
+    --color-4: oklch(48% 0.14 140); /* Emerald */
+    --color-5: oklch(50% 0.22 200); /* Sky */
 
     /* Enhanced Layout Variables */
-    --app-font-size: 14px;
+    /* User's chosen "reading size" preference, always expressed in px by the
+       settings UI/store (store/settings.ts appearance.fontSize) — this is the
+       pre-JS fallback for that same value. */
+    --app-font-size: 16px;
+    /* --app-font-size in rem, relative to a 16px reference. `html`'s
+       font-size below scales `rem` app-wide (Tailwind's spacing/text/radii
+       are all rem-based) — every consumer of the app's font-size preference
+       must go through THIS variable, not --app-font-size directly, or it
+       stays a fixed px value while everything else around it scales,
+       producing wildly mismatched type sizes (e.g. body text at 16px next to
+       Tailwind's text-sm at ~9px instead of the two moving together). */
+    --app-font-size-rem: calc(var(--app-font-size) / 16px * 1rem);
+    /* Typography preferences; see the body rule below. Set from
+       use-theme-sync, with these as the pre-JS defaults. */
+    --app-font-family: "Inter";
+    --app-font-weight: 400;
+    --app-line-height: 1.5;
+    --app-letter-spacing: 0px;
+    /* Custom background; only meaningful under .has-custom-background. */
+    --app-background-position: center;
+    --app-background-blur: 0px;
+    --app-background-opacity: 1;
+    /* Density. --app-gap used to be declared and set alongside these two but
+       was read by nothing, so it is gone; add it back with a consumer if a
+       gap-scaling need appears. */
     --app-spacing: 1rem;
     --app-padding: 1rem;
-    --app-gap: 1rem;
     --animation-duration: 0.3s;
     --transition-duration: 0.2s;
     --animations-enabled: 1;
@@ -211,6 +249,22 @@
     --elevation-3: var(--shadow-lg);
     --elevation-4: var(--shadow-xl);
     --elevation-5: var(--shadow-2xl);
+  }
+
+  /* The default 100% scale reads as oversized; 67% browser zoom was
+     identified as the natural-looking density. This scales every rem-based
+     Tailwind utility (spacing, text, radii) uniformly to match.
+     NOTE: the CSS `zoom` property was tried first as a closer match to true
+     browser zoom, but Chromium resolves `vh`/`svh` units (used by this app's
+     `h-svh`/`h-screen`/`min-h-screen` full-height layouts) incorrectly under
+     `zoom` — it applies the scale factor twice to height, collapsing every
+     full-height screen to ~67% of the viewport with dead space below.
+     Root font-size has no such interaction: vh/svh/vw are defined against
+     the actual viewport regardless of font-size. Trade-off: unlike true zoom,
+     this only affects rem-based sizing — a handful of hardcoded px values
+     elsewhere in the app won't shrink with it. */
+  html {
+    font-size: 67%;
   }
 
   .dark {
@@ -288,7 +342,38 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-size: var(--app-font-size);
+    font-size: var(--app-font-size-rem);
+    /* Typography preferences from Appearance settings. These are applied on
+       :root by use-theme-sync; the fallbacks keep the app looking right before
+       any preference is loaded and when a user has never set one. Declared
+       here rather than on a preview element, which is where the settings page
+       used to apply them while claiming they applied app-wide. */
+    font-family: var(--app-font-family, "Inter"), ui-sans-serif, system-ui,
+      sans-serif;
+    font-weight: var(--app-font-weight, 400);
+    line-height: var(--app-line-height, 1.5);
+    letter-spacing: var(--app-letter-spacing, 0px);
+  }
+
+  /* A custom background sits on a fixed pseudo-element so its blur and opacity
+     never touch the readability of the content above it. */
+  body::before {
+    content: "";
+    display: none;
+  }
+
+  .has-custom-background body::before {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--app-background-image);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: var(--app-background-position, center);
+    filter: blur(var(--app-background-blur, 0px));
+    opacity: var(--app-background-opacity, 1);
   }
 
   .dark body {
@@ -308,7 +393,7 @@
   h4,
   h5,
   h6 {
-    font-size: calc(var(--app-font-size) * var(--heading-scale));
+    font-size: calc(var(--app-font-size-rem) * var(--heading-scale));
   }
 
   h1 {
@@ -339,29 +424,29 @@
   input,
   textarea,
   select {
-    font-size: var(--app-font-size);
+    font-size: var(--app-font-size-rem);
   }
 
   .text-xs,
   .text-sm,
   small {
-    font-size: calc(var(--app-font-size) * 0.875);
+    font-size: calc(var(--app-font-size-rem) * 0.875);
   }
 
   .text-lg {
-    font-size: calc(var(--app-font-size) * 1.125);
+    font-size: calc(var(--app-font-size-rem) * 1.125);
   }
 
   .text-xl {
-    font-size: calc(var(--app-font-size) * 1.25);
+    font-size: calc(var(--app-font-size-rem) * 1.25);
   }
 
   .text-2xl {
-    font-size: calc(var(--app-font-size) * 1.5);
+    font-size: calc(var(--app-font-size-rem) * 1.5);
   }
 
   .text-3xl {
-    font-size: calc(var(--app-font-size) * 1.875);
+    font-size: calc(var(--app-font-size-rem) * 1.875);
   }
 
   /* Dynamic spacing adjustments */
@@ -585,32 +670,16 @@
     padding-bottom: calc(var(--app-padding) * 2) !important;
   }
 
-  /* Enhanced Dark Mode Component Styling */
-  .dark button,
-  .dark .btn,
-  .dark [role="button"] {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)) 0%,
-      hsl(var(--primary-hover)) 100%
-    );
-    border: 1px solid var(--glass-border);
-    color: hsl(var(--primary-foreground));
-    box-shadow: var(--card-shadow);
-    backdrop-filter: blur(16px);
-  }
-
-  .dark button:hover,
-  .dark .btn:hover {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary-hover)) 0%,
-      hsl(var(--primary)) 100%
-    );
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 15px 50px rgba(139, 92, 246, 0.2);
-  }
+  /* NOTE: there used to be a `.dark button, .dark .btn` rule here that forced
+     a primary-coloured gradient background onto *every* <button> in dark mode.
+     Because it matched the bare element, it overrode the whole shadcn variant
+     system: outline, ghost, secondary and destructive buttons all rendered as
+     identical primary-gradient blobs, so a "Delete" button was visually
+     indistinguishable from "Save". It also painted over buttons carrying their
+     own inline background (e.g. the colour swatches in the add-column dialog).
+     Variants come from the Button component's Tailwind classes, which are
+     already dark-mode aware via the design tokens, so no global override is
+     needed. `.btn` had no usages left in the codebase. */
 
   .dark input,
   .dark textarea,
@@ -733,21 +802,27 @@
     box-shadow: var(--glass-shadow) !important;
   }
 
+  /* Was a frosted-glass treatment (20px backdrop blur + saturate(180%) +
+     an indigo/purple-tinted shadow) applied via this one class to ~39
+     component files. The blur had nothing to actually blur (no imagery or
+     content sits behind these cards, just flat page background), so it was
+     pure GPU cost with no visual payoff, and the fixed purple-tinted shadow
+     painted every card the same regardless of its own color (a plain white
+     card, a red alert box, a stat tile) — the generic "AI glassmorphism
+     template" look. Replaced with the app's own neutral card/shadow tokens
+     so a card's elevation matches its own surface instead of a borrowed
+     purple glow. */
   .glass-card {
-    background: var(--glass-bg-light);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
 
   .glass-card:hover {
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.2);
-    transform: translateY(-4px) scale(1.01);
-    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
   }
 
   .glass-card-subtle {
@@ -1277,35 +1352,50 @@
    PHASE 4.5: ACCESSIBILITY ENHANCEMENTS
    ======================================== */
 
-/* Large Text Mode - Increase base font size by 25% */
+/* Animations off. use-theme-sync has always toggled this class from the
+   `animations` appearance setting, but no rule ever defined it, so the setting
+   did nothing. Kept separate from .reduce-motion: that one is the
+   accessibility preference, this one is a plain user preference, and either
+   being on is enough to stop motion. */
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Large Text Mode - Increase base font size by 25% (16px base -> 20px).
+   Every rule here goes through --app-font-size-rem (not a hardcoded px
+   value) so large text still scales with the root font-size the same way
+   the base rules above do. */
 .large-text {
-  --app-font-size: 17.5px !important;
+  --app-font-size: 20px !important;
 }
 
 .large-text h1 {
-  font-size: calc(17.5px * 2.5) !important;
+  font-size: calc(var(--app-font-size-rem) * 2.5) !important;
 }
 .large-text h2 {
-  font-size: calc(17.5px * 2) !important;
+  font-size: calc(var(--app-font-size-rem) * 2) !important;
 }
 .large-text h3 {
-  font-size: calc(17.5px * 1.75) !important;
+  font-size: calc(var(--app-font-size-rem) * 1.75) !important;
 }
 .large-text h4 {
-  font-size: calc(17.5px * 1.5) !important;
+  font-size: calc(var(--app-font-size-rem) * 1.5) !important;
 }
 .large-text h5 {
-  font-size: calc(17.5px * 1.25) !important;
+  font-size: calc(var(--app-font-size-rem) * 1.25) !important;
 }
 .large-text h6 {
-  font-size: calc(17.5px * 1.125) !important;
+  font-size: calc(var(--app-font-size-rem) * 1.125) !important;
 }
 
 .large-text button,
 .large-text input,
 .large-text select,
 .large-text textarea {
-  font-size: 17.5px !important;
+  font-size: var(--app-font-size-rem) !important;
   padding: calc(var(--app-padding) * 0.625) calc(var(--app-padding) * 0.875) !important;
 }
 
@@ -1600,5 +1690,29 @@
   .skip-link,
   [data-shortcut]::after {
     display: none !important;
+  }
+}
+
+/* Aurora auth surface — transform-only drift so the compositor handles it and
+   no layout or paint is triggered. Paired with prefers-reduced-motion in
+   components/auth/aurora-backdrop.tsx, which drops the animation entirely
+   rather than merely slowing it. */
+@keyframes aurora-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.08);
+  }
+}
+
+@keyframes aurora-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-5%, -6%, 0) scale(1);
   }
 }

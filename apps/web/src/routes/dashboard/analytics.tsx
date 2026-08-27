@@ -5,7 +5,7 @@ import {
   useMemo,
   useCallback,
   useEffect,
-  lazy,
+  useState,
   Suspense,
   useReducer,
 } from "react";
@@ -42,6 +42,10 @@ import {
   TrendingDown,
   HelpCircle,
   LayoutGrid,
+  Timer,
+  Gauge,
+  ShieldAlert,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { motion } from "framer-motion";
@@ -49,14 +53,11 @@ import { useRBACAuth } from "@/lib/permissions";
 import useWorkspaceStore from "@/store/workspace";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { useEnhancedAnalytics } from "@/hooks/queries/analytics/use-enhanced-analytics";
-// Lazy load heavy chart component for better performance
-const InteractiveChart = lazy(() =>
-  import("@/components/dashboard/interactive-chart").then((module) => ({
-    default: module.InteractiveChart,
-  })),
-);
+import { InteractiveChart } from "@/components/dashboard/interactive-chart";
+import { exportToPDF, exportToExcel } from "@/utils/export-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import {
   NoAnalyticsData,
   NoProjectsData,
@@ -114,7 +115,14 @@ import {
 } from "@/components/analytics/filter-presets";
 import { PredictiveInsights } from "@/components/analytics/predictive-insights";
 import { ScheduledReports } from "@/components/analytics/scheduled-reports";
-import { CustomWidgetsManager } from "@/components/analytics/custom-widgets-manager";
+import {
+  CustomWidgetsManager,
+  type DashboardWidget,
+} from "@/components/analytics/custom-widgets-manager";
+import {
+  WidgetRenderer,
+  readSavedWidgets,
+} from "@/components/analytics/widget-renderer";
 import { logger } from "@/lib/logger";
 
 // @epic-3.1-analytics: Enhanced analytics dashboard with advanced filtering and comparative analytics
@@ -530,29 +538,41 @@ const EnhancedInsightsPanel = ({
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-foreground">AI Insights</h4>
           {insights.map((insightRaw, index) => {
-            const insight = insightRaw as AnalyticsInsight;
-            const InsightIcon = getInsightIcon(insight.type ?? "");
+            // The current source is a plain string[] of recommendations, not
+            // {title, description, action} objects - render it directly
+            // instead of reading fields that don't exist on a string.
+            const insight =
+              typeof insightRaw === "string"
+                ? null
+                : (insightRaw as AnalyticsInsight);
+            const text =
+              typeof insightRaw === "string"
+                ? insightRaw
+                : insight?.description;
+            const InsightIcon = getInsightIcon(insight?.type ?? "");
             return (
               <div
-                key={insight.id || index}
+                key={insight?.id || text || index}
                 className="flex items-start space-x-3 p-3 rounded-lg bg-muted/30 border border-border/50"
               >
                 <InsightIcon className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">
-                    {insight.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {insight.description}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onInsightAction(insight)}
-                    className="mt-2 h-6 px-2 text-xs"
-                  >
-                    {insight.action}
-                  </Button>
+                  {insight?.title && (
+                    <p className="text-sm font-medium text-foreground">
+                      {insight.title}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{text}</p>
+                  {insight?.action && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onInsightAction(insight)}
+                      className="mt-2 h-6 px-2 text-xs"
+                    >
+                      {insight.action}
+                    </Button>
+                  )}
                 </div>
               </div>
             );
@@ -621,13 +641,8 @@ const exportToCSV = (data: object | null | undefined, filename: string) => {
     toast.success("Data exported successfully");
   } catch (error) {
     console.error("Export error:", error);
-    toast.error("Failed to export data");
+    toast.error(userMessage(error, "export your data"));
   }
-};
-
-const exportToPDF = async (_elementId: string, _filename: string) => {
-  toast.info("PDF export will be available soon");
-  // TODO: Implement PDF export using html2canvas + jsPDF
 };
 
 // Analytics Dashboard Component with Enhanced Features
@@ -778,8 +793,20 @@ function AnalyticsPage() {
   // Consolidated state management with useReducer for better performance
   const [state, dispatch] = useReducer(analyticsReducer, initialAnalyticsState);
 
+  // Custom dashboard widgets configured via the "Customize" manager - loaded
+  // once on mount, then kept in sync whenever the manager saves a change.
+  const [customWidgets, setCustomWidgets] = useState<DashboardWidget[]>(() =>
+    readSavedWidgets(),
+  );
+
   // Get workspace data
   const { workspace } = useWorkspaceStore();
+
+  // A custom date range (set via the Filter panel) takes over from the
+  // preset 7d/30d/90d dropdown once both start and end are filled in.
+  const hasCustomRange = !!(
+    state.customDateRange.start && state.customDateRange.end
+  );
 
   // Enhanced analytics query with error handling
   const {
@@ -788,22 +815,22 @@ function AnalyticsPage() {
     error,
     refetch,
   } = useEnhancedAnalytics({
-    timeRange: state.timeRange,
+    timeRange: hasCustomRange ? "custom" : state.timeRange,
+    customStartDate: hasCustomRange ? state.customDateRange.start : undefined,
+    customEndDate: hasCustomRange ? state.customDateRange.end : undefined,
     enabled: !!workspace?.id,
     projectIds: state.selectedProjects,
     userEmails: state.selectedUsers,
   });
 
   // Comparison analytics query (only when comparison mode is enabled)
-  const {
-    data: _comparisonAnalytics, // TODO: Use for period-over-period comparison
-    isLoading: isComparisonLoading,
-  } = useEnhancedAnalytics({
-    timeRange: state.comparisonTimeRange,
-    enabled: !!workspace?.id && state.comparisonMode,
-    projectIds: state.selectedProjects,
-    userEmails: state.selectedUsers,
-  });
+  const { data: comparisonAnalytics, isLoading: isComparisonLoading } =
+    useEnhancedAnalytics({
+      timeRange: state.comparisonTimeRange,
+      enabled: !!workspace?.id && state.comparisonMode,
+      projectIds: state.selectedProjects,
+      userEmails: state.selectedUsers,
+    });
 
   // RBAC permissions (future use for feature gating)
   const { hasPermission: _hasPermission } = useRBACAuth();
@@ -835,7 +862,7 @@ function AnalyticsPage() {
       await refetch();
       toast.success("Analytics data refreshed successfully");
     } catch (error) {
-      toast.error("Failed to refresh analytics data");
+      toast.error(userMessage(error, "refresh your analytics"));
     } finally {
       dispatch({ type: "SET_REFRESHING", payload: false });
     }
@@ -855,17 +882,21 @@ function AnalyticsPage() {
           toast.success("Analytics exported as CSV");
           break;
         case "pdf":
-          exportToPDF("analytics-dashboard", "analytics-report");
-          toast.success("Analytics exported as PDF");
+          try {
+            await exportToPDF(enhancedAnalytics, "analytics-report");
+            toast.success("Analytics exported as PDF");
+          } catch (error) {
+            console.error("PDF export error:", error);
+            toast.error(userMessage(error, "export to PDF"));
+          }
           break;
         case "excel":
           try {
-            const { exportToExcel } = await import("@/utils/export-utils");
             await exportToExcel(enhancedAnalytics, "analytics-report");
             toast.success("Analytics exported as Excel");
           } catch (error) {
             console.error("Excel export error:", error);
-            toast.error("Failed to export as Excel");
+            toast.error(userMessage(error, "export to Excel"));
           }
           break;
       }
@@ -905,7 +936,7 @@ function AnalyticsPage() {
   useEffect(() => {
     if (error) {
       console.error("Analytics error:", error);
-      toast.error("Failed to load analytics data");
+      toast.error(userMessage(error, "load your analytics"));
     }
   }, [error]);
 
@@ -1265,11 +1296,13 @@ function AnalyticsPage() {
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
                       Primary:{" "}
-                      {state.timeRange === "7d"
-                        ? "7 Days"
-                        : state.timeRange === "30d"
-                          ? "30 Days"
-                          : "90 Days"}
+                      {hasCustomRange
+                        ? "Custom Range"
+                        : state.timeRange === "7d"
+                          ? "7 Days"
+                          : state.timeRange === "30d"
+                            ? "30 Days"
+                            : "90 Days"}
                     </Badge>
                     <span className="text-muted-foreground">vs</span>
                     <Badge variant="outline" className="text-xs">
@@ -1302,6 +1335,133 @@ function AnalyticsPage() {
               </CardContent>
             </Card>
           </motion.div>
+        )}
+
+        {/* Comparison Mode - actual side-by-side data, not just the banner above */}
+        {state.comparisonMode && (
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="text-base">Period Comparison</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isComparisonLoading || !comparisonAnalytics ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows never reorder
+                      key={i}
+                      className="h-8 w-full"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="pb-2 font-medium">Metric</th>
+                        <th className="pb-2 font-medium text-right">
+                          {hasCustomRange
+                            ? "Custom Range"
+                            : state.timeRange === "7d"
+                              ? "7 Days"
+                              : state.timeRange === "30d"
+                                ? "30 Days"
+                                : "90 Days"}
+                        </th>
+                        <th className="pb-2 font-medium text-right">
+                          {state.comparisonTimeRange === "7d"
+                            ? "7 Days"
+                            : state.comparisonTimeRange === "30d"
+                              ? "30 Days"
+                              : "90 Days"}
+                        </th>
+                        <th className="pb-2 font-medium text-right">
+                          Difference
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(
+                        [
+                          [
+                            "Total Projects",
+                            enhancedAnalytics?.projectMetrics.totalProjects
+                              .current,
+                            comparisonAnalytics?.projectMetrics.totalProjects
+                              .current,
+                          ],
+                          [
+                            "Completed Tasks",
+                            enhancedAnalytics?.taskMetrics.completedTasks
+                              .current,
+                            comparisonAnalytics?.taskMetrics.completedTasks
+                              .current,
+                          ],
+                          [
+                            "Team Productivity",
+                            enhancedAnalytics?.teamMetrics.avgProductivity
+                              .current,
+                            comparisonAnalytics?.teamMetrics.avgProductivity
+                              .current,
+                          ],
+                          [
+                            "Active Members",
+                            enhancedAnalytics?.teamMetrics.activeMembers
+                              .current,
+                            comparisonAnalytics?.teamMetrics.activeMembers
+                              .current,
+                          ],
+                          [
+                            "Total Hours",
+                            enhancedAnalytics?.timeMetrics.totalHours.current,
+                            comparisonAnalytics?.timeMetrics.totalHours.current,
+                          ],
+                          [
+                            "Avg Health Score",
+                            enhancedAnalytics?.projectMetrics.avgHealthScore
+                              .current,
+                            comparisonAnalytics?.projectMetrics.avgHealthScore
+                              .current,
+                          ],
+                        ] as [string, number | undefined, number | undefined][]
+                      ).map(([label, primary, compare]) => {
+                        const p = primary ?? 0;
+                        const c = compare ?? 0;
+                        const diff = p - c;
+                        return (
+                          <tr key={label} className="border-b last:border-0">
+                            <td className="py-2 text-muted-foreground">
+                              {label}
+                            </td>
+                            <td className="py-2 text-right font-medium tabular-nums">
+                              {p}
+                            </td>
+                            <td className="py-2 text-right font-medium tabular-nums">
+                              {c}
+                            </td>
+                            <td
+                              className={cn(
+                                "py-2 text-right font-medium tabular-nums",
+                                diff > 0
+                                  ? "text-green-600 dark:text-green-400"
+                                  : diff < 0
+                                    ? "text-red-600 dark:text-red-400"
+                                    : "text-muted-foreground",
+                              )}
+                            >
+                              {diff > 0 ? "+" : ""}
+                              {Math.round(diff * 100) / 100}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Data Quality Indicator */}
@@ -1506,7 +1666,41 @@ function AnalyticsPage() {
                       dispatch({ type: "SET_TAB", payload: "projects" })
                     }
                   />
+                  <EnhancedMetricCard
+                    title="Avg Cycle Time"
+                    comparativeData={enhancedAnalytics.taskMetrics.avgCycleTime}
+                    icon={Timer}
+                    color="bg-violet-500"
+                    subtitle="Hours from creation to completion"
+                    tooltip="Average time between a task being created and marked done. Only counts tasks completed since cycle-time tracking was added."
+                    action={() =>
+                      dispatch({ type: "SET_TAB", payload: "projects" })
+                    }
+                  />
                 </div>
+
+                {/* Custom Widgets - configured via the "Customize" manager */}
+                {customWidgets.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        Your Dashboard
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {[...customWidgets]
+                        .sort((a, b) => a.position - b.position)
+                        .map((widget) => (
+                          <WidgetRenderer
+                            key={widget.id}
+                            widget={widget}
+                            analytics={enhancedAnalytics}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Time Series Chart */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1744,6 +1938,148 @@ function AnalyticsPage() {
                   alerts={enhancedAnalytics?.summary.alerts || []}
                   onInsightAction={() => {}}
                 />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Capacity Planning */}
+                  <Card className="glass-card border-border/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Gauge className="h-5 w-5" />
+                        Capacity Planning
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-2xl font-bold tabular-nums">
+                            {enhancedAnalytics?.capacityPlanning
+                              .avgUtilization ?? 0}
+                            %
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Avg Utilization
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
+                            {enhancedAnalytics?.capacityPlanning
+                              .overloadedCount ?? 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Overloaded
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400">
+                            {enhancedAnalytics?.capacityPlanning
+                              .underutilizedCount ?? 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Underutilized
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground border-t pt-3">
+                        {enhancedAnalytics?.capacityPlanning.recommendation ||
+                          "Not enough team activity yet."}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Risk Assessment */}
+                  <Card className="glass-card border-border/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <ShieldAlert className="h-5 w-5" />
+                        Risk Assessment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {(enhancedAnalytics?.riskAssessment.atRiskProjectCount ??
+                        0) === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No projects currently at risk.
+                        </p>
+                      ) : (
+                        <>
+                          <p className="text-sm">
+                            <span className="font-semibold">
+                              {
+                                enhancedAnalytics?.riskAssessment
+                                  .atRiskProjectCount
+                              }
+                            </span>{" "}
+                            project(s) at risk:{" "}
+                            {enhancedAnalytics?.riskAssessment.atRiskProjects
+                              .map((p) => p.name)
+                              .join(", ")}
+                          </p>
+                          {(enhancedAnalytics?.riskAssessment.topRiskFactors
+                            .length ?? 0) > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {enhancedAnalytics?.riskAssessment.topRiskFactors.map(
+                                (rf) => (
+                                  <Badge
+                                    key={rf.factor}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {rf.factor} ({rf.count})
+                                  </Badge>
+                                ),
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Skill Gap Analysis */}
+                {(enhancedAnalytics?.skillGapAnalysis.length ?? 0) > 0 && (
+                  <Card className="glass-card border-border/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <GraduationCap className="h-5 w-5" />
+                        Skill Gaps
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {enhancedAnalytics?.skillGapAnalysis
+                          .slice(0, 8)
+                          .map((entry) => (
+                            <div
+                              key={entry.skill}
+                              className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30"
+                            >
+                              <div>
+                                <span className="font-medium">
+                                  {entry.skill}
+                                </span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {entry.category}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span>Level {entry.avgLevel}/5</span>
+                                <span>{entry.coverage}% coverage</span>
+                                {entry.isGap && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs border-red-500/50 text-red-600 dark:text-red-400"
+                                  >
+                                    Gap
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
           </TabsContent>
@@ -2242,21 +2578,6 @@ function AnalyticsPage() {
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              {/* Auto-refresh */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Auto-refresh Data</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Automatically refresh analytics every 5 minutes
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Coming Soon
-                </Button>
-              </div>
-
-              <Separator />
-
               {/* Default Time Range */}
               <div className="space-y-2">
                 <Label>Default Time Range</Label>
@@ -2328,9 +2649,14 @@ function AnalyticsPage() {
         {/* Onboarding Tour */}
         <OnboardingTour
           open={state.showOnboardingTour}
-          onOpenChange={(open) =>
-            dispatch({ type: "TOGGLE_ONBOARDING_TOUR", payload: open })
-          }
+          onOpenChange={(open) => {
+            dispatch({ type: "TOGGLE_ONBOARDING_TOUR", payload: open });
+            if (!open) {
+              // Dismissing the tour any way (skip, X, backdrop) should stop
+              // it from reappearing on the next visit, not just finishing it.
+              localStorage.setItem("analytics-onboarding-completed", "true");
+            }
+          }}
           onComplete={handleOnboardingComplete}
         />
 
@@ -2350,7 +2676,7 @@ function AnalyticsPage() {
           }
           onLayoutChange={(widgets) => {
             logger.debug("Dashboard widgets updated:", widgets);
-            // TODO: Apply widget layout to dashboard
+            setCustomWidgets(widgets);
           }}
         />
       </div>

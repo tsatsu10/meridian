@@ -4,6 +4,8 @@
  */
 export type WorkspaceMember = {
   id: string | null;
+  /** workspace_user.id - a different id space from `id` (the user's id); required by the change-role/remove-member endpoints */
+  workspaceUserId: string | null;
   email: string;
   name: string | null;
   avatar: string | null;

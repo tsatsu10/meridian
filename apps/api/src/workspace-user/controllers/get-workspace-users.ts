@@ -8,6 +8,11 @@ async function getWorkspaceUsers(workspaceId: string) {
   const rows = await db
     .select({
       id: userTable.id,
+      // change-member-role/remove-member operate on workspace_user.id, a
+      // different id space than userTable.id above - expose it separately
+      // rather than repurposing `id` (other consumers already rely on it
+      // meaning the user's id).
+      workspaceUserId: workspaceUserTable.id,
       email: workspaceUserTable.userEmail,
       name: userTable.name,
       avatar: userTable.avatar,

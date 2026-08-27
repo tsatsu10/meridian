@@ -6,6 +6,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export interface CalendarSettings {
   // Google Calendar Integration
@@ -109,7 +110,7 @@ export default async function getCalendarSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   // Get calendar settings from workspace settings JSONB

@@ -16,8 +16,10 @@ import {
 import { users } from "../database/schema";
 import { eq, and, lt, gt } from "drizzle-orm";
 import { emailService } from "../services/email/email-service";
+import revokeOtherSessions from "../user/utils/revoke-other-sessions";
 import crypto from "node:crypto";
 import logger from "../utils/logger";
+import { appSettings } from "../config/settings";
 
 export class EmailVerificationService {
   private getDb() {
@@ -47,8 +49,13 @@ export class EmailVerificationService {
       exp: Date.now() + expiryHours * 60 * 60 * 1000,
     };
     const token = Buffer.from(JSON.stringify(payload)).toString("base64");
+    // SECURITY: use the centrally-validated secret (config/settings.ts
+    // refuses to boot in production with the default value) rather than
+    // reading process.env directly with our own silent fallback string —
+    // anyone who knew "fallback-secret" could forge a verification/reset
+    // token for any user if this ever read an unset env var.
     const signature = crypto
-      .createHmac("sha256", process.env.JWT_SECRET || "fallback-secret")
+      .createHmac("sha256", appSettings.jwtSecret)
       .update(token)
       .digest("hex");
     return `${token}.${signature}`;
@@ -66,7 +73,7 @@ export class EmailVerificationService {
         return null;
       }
 
-      const secret = process.env.JWT_SECRET ?? "fallback-secret";
+      const secret = appSettings.jwtSecret;
 
       // Verify signature
       const expectedSignature = crypto
@@ -420,8 +427,18 @@ export class EmailVerificationService {
       // Update password
       await this.getDb()
         .update(users)
-        .set({ password: hashedPassword })
+        .set({ password: hashedPassword, passwordUpdatedAt: new Date() })
         .where(eq(users.id, verification.userId));
+
+      // Kill every existing session for this account. A reset is the one flow
+      // where the user is, by definition, not signed in — so there is no
+      // caller session to preserve, and any session that does exist is either
+      // stale or an attacker's. change-password.ts already does this for the
+      // signed-in path; leaving it out here meant the higher-stakes flow was
+      // the weaker one: someone who reset their password because an account
+      // was compromised kept the intruder signed in for the full 30-day
+      // session window.
+      const revokedSessions = await revokeOtherSessions(verification.userId);
 
       // Mark token as used
       await this.getDb()
@@ -444,7 +461,7 @@ export class EmailVerificationService {
         );
 
       logger.debug(
-        `✅ Password reset successful for user ${verification.userId}`,
+        `✅ Password reset successful for user ${verification.userId} (revoked ${revokedSessions} session(s))`,
       );
       return { success: true, message: "Password reset successful" };
     } catch (error) {

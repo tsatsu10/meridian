@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { API_BASE_URL } from "@/constants/urls";
 import {
   Card,
@@ -63,6 +64,7 @@ const activateOnKey =
 
 interface ProjectAnalyticsProps {
   projectId: string;
+  workspaceId: string;
 }
 
 interface MemberPerformance {
@@ -87,14 +89,14 @@ interface BurndownPoint {
 }
 
 // @epic-3.1-analytics: Project-specific analytics dashboard @persona-sarah
-export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
+export function ProjectAnalytics({
+  projectId,
+  workspaceId,
+}: ProjectAnalyticsProps) {
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [chartType, setChartType] = useState<ChartType>("line");
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [_comparisonMode, _setComparisonMode] = useState(false);
-  const [_selectedDrillDown, setSelectedDrillDown] = useState<
-    "overdue" | "high-priority" | "in-progress" | null
-  >(null);
 
   const {
     data: response,
@@ -194,12 +196,39 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
     toast.success("Analytics data exported successfully");
   };
 
+  const openProjectTaskList = (filters?: {
+    status?: string;
+    priority?: string;
+    overdue?: boolean;
+  }) => {
+    navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/list",
+      params: { workspaceId, projectId },
+      search: {
+        status: filters?.status,
+        priority: filters?.priority,
+        overdue: filters?.overdue ?? false,
+      },
+    });
+  };
+
   const handleDrillDown = (
-    type: "overdue" | "high-priority" | "in-progress",
+    type: "overdue" | "high-priority" | "in-progress" | "completed",
   ) => {
-    setSelectedDrillDown(type);
-    // TODO: Fetch specific task list and show in modal/side panel
-    toast.info(`Drill-down for ${type} tasks - Feature coming soon`);
+    switch (type) {
+      case "overdue":
+        openProjectTaskList({ overdue: true });
+        break;
+      case "high-priority":
+        openProjectTaskList({ priority: "high" });
+        break;
+      case "in-progress":
+        openProjectTaskList({ status: "in_progress" });
+        break;
+      case "completed":
+        openProjectTaskList({ status: "done" });
+        break;
+    }
   };
 
   if (error) {
@@ -418,9 +447,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
           className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() =>
-            toast.info("Click to view all tasks - Feature coming soon")
-          }
+          onClick={() => openProjectTaskList()}
         >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -592,12 +619,8 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
                 // biome-ignore lint/a11y/useSemanticElements: styled clickable stat row, keep as div
                 role="button"
                 tabIndex={0}
-                onKeyDown={activateOnKey(() =>
-                  toast.info("View completed tasks - Feature coming soon"),
-                )}
-                onClick={() =>
-                  toast.info("View completed tasks - Feature coming soon")
-                }
+                onKeyDown={activateOnKey(() => handleDrillDown("completed"))}
+                onClick={() => handleDrillDown("completed")}
               >
                 <span className="text-sm">Completed</span>
                 <Badge variant="default">{data.taskMetrics.completed}</Badge>

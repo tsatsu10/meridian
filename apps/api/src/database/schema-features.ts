@@ -11,6 +11,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { createId } from "@paralleldrive/cuid2";
 
 // ==========================================
 // WORKSPACE SETTINGS TABLE
@@ -490,32 +491,53 @@ export const apiRateLimits = pgTable(
 );
 
 // Scheduled Reports
+// Note: workspaceId has no cross-file FK reference (schema-features.ts has no
+// import cycle with schema.ts) - same convention as workspaceSettings above.
+// Every route in reports/index.ts must filter/verify by workspaceId itself.
 export const scheduledReports = pgTable("scheduled_reports", {
-  id: serial("id").primaryKey(),
+  id: text("id")
+    .$defaultFn(() => createId())
+    .primaryKey(),
+  workspaceId: text("workspace_id").notNull(),
   name: text("name").notNull(),
-  reportType: text("report_type").notNull(), // revenue, customer_health, security, etc.
+  description: text("description"),
+  reportType: text("report_type").notNull().default("analytics"), // revenue, customer_health, security, etc. - analytics dashboard is the only source today
   frequency: text("frequency").notNull(), // daily, weekly, monthly
+  time: text("time").notNull().default("09:00"), // HH:MM, local to the server
+  dayOfWeek: integer("day_of_week"), // 0-6, used when frequency = weekly
+  dayOfMonth: integer("day_of_month"), // 1-31, used when frequency = monthly
   format: text("format").notNull(), // pdf, csv, excel
-  recipients: jsonb("recipients").notNull(), // array of email addresses
+  recipients: jsonb("recipients").$type<string[]>().notNull(),
+  sections: jsonb("sections").$type<string[]>().notNull().default([]),
   filters: jsonb("filters"),
   isActive: boolean("is_active").notNull().default(true),
-  lastRunAt: timestamp("last_run_at"),
-  nextRunAt: timestamp("next_run_at"),
-  createdBy: integer("created_by").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  lastRunAt: timestamp("last_run_at", { withTimezone: true }),
+  nextRunAt: timestamp("next_run_at", { withTimezone: true }),
+  createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export const reportExecutions = pgTable(
   "report_executions",
   {
-    id: serial("id").primaryKey(),
-    reportId: integer("report_id").notNull(),
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    reportId: text("report_id")
+      .notNull()
+      .references(() => scheduledReports.id, { onDelete: "cascade" }),
     status: text("status").notNull(), // success, failed, pending
     fileUrl: text("file_url"),
     error: text("error"),
     executionTime: integer("execution_time"), // in milliseconds
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => ({
     reportIdIdx: index("report_executions_report_id_idx").on(table.reportId),

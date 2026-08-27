@@ -1,4 +1,5 @@
 import type { AllSettings } from "@/store/settings";
+import { isValidPhone } from "@/lib/validation/phone";
 import type { SettingsValidationError } from "./settings-api";
 
 /**
@@ -105,7 +106,7 @@ const defaultSettings: AllSettings = {
   },
   appearance: {
     theme: "system",
-    fontSize: 14,
+    fontSize: 16,
     sidebarCollapsed: false,
     density: "comfortable",
     animations: true,
@@ -117,6 +118,20 @@ const defaultSettings: AllSettings = {
     lightThemeTime: "06:00",
     darkThemeTime: "18:00",
     locationBasedEnabled: false,
+    locationLatitude: null,
+    locationLongitude: null,
+    largeText: false,
+    enhancedFocus: false,
+    screenReaderMode: false,
+    keyboardNavigation: false,
+    fontFamily: "Inter",
+    fontWeight: 400,
+    lineHeight: 1.5,
+    letterSpacing: 0,
+    backgroundImage: null,
+    backgroundPosition: "center",
+    backgroundBlur: 0,
+    backgroundOpacity: 100,
   },
   notifications: {
     email: {
@@ -154,10 +169,7 @@ const defaultSettings: AllSettings = {
     twoFactorEnabled: false,
     loginNotifications: true,
     sessionTimeout: true,
-    deviceTracking: true,
-    suspiciousActivityAlerts: true,
-    smsBackup: false,
-    rememberDevice: false,
+    passwordUpdatedAt: null,
   },
   privacy: {
     profileVisibility: true,
@@ -334,10 +346,12 @@ export const SettingsAPI = {
         });
       }
 
+      // Shared with the profile page so the same number can't pass here and
+      // fail there (or vice versa) — these were two different regexes.
       if (
         profile.phone &&
         profile.phone.length > 0 &&
-        !/^\+?[\d\s\-\(\)]+$/.test(profile.phone)
+        !isValidPhone(profile.phone)
       ) {
         errors.push({
           field: "phone",

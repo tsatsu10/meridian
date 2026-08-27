@@ -2,6 +2,8 @@
 
 Complete modular seeding system for populating the Meridian database with realistic test data.
 
+**Schema / migrations first:** see [`docs/migrations.md`](../../../../../docs/migrations.md) for Drizzle journal vs `drizzle/manual` vs historical `src/database/migrations/`, and for `db:setup` / `db:setup:full`. Seeds assume the schema is already applied.
+
 ## 🎯 Quick Start
 
 ### Run All Seeds

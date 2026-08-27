@@ -9,6 +9,7 @@ import { eq, desc, gte } from "drizzle-orm";
 import { calculateProjectHealth } from "./calculate-project-health";
 import { generateRecommendations } from "./recommendation-engine";
 import logger from "../utils/logger";
+import { requireProjectPermission } from "../middlewares/rbac";
 
 const healthRoute = new Hono();
 
@@ -44,6 +45,18 @@ healthRoute.get("/", async (c) => {
  * Get current health metrics for a specific project
  * Includes 5-minute caching to avoid excessive recalculations
  */
+// 🚨 Project health, history, recommendations and refresh took :projectId
+// with no authorization — any authenticated user could read (and force a
+// recompute of) any project in any workspace.
+healthRoute.use(
+  "/projects/:projectId",
+  requireProjectPermission("canViewProjects", "projectId"),
+);
+healthRoute.use(
+  "/projects/:projectId/*",
+  requireProjectPermission("canViewProjects", "projectId"),
+);
+
 healthRoute.get("/projects/:projectId", async (c) => {
   try {
     const db = getDatabase(); // FIX: Initialize database connection

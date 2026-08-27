@@ -1,6 +1,6 @@
 // @epic-3.1-dashboards: Interactive chart component for enhanced data visualization
 // ⚡ PERFORMANCE: Optimized with React.memo for 95/100
-import { useState, useMemo, memo } from "react";
+import { useMemo, memo } from "react";
 import {
   LineChart,
   Line,
@@ -19,7 +19,6 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp,
   TrendingDown,
@@ -88,8 +87,6 @@ function InteractiveChartInternal({
   drillDownEnabled = false,
   onDrillDown,
 }: InteractiveChartProps) {
-  const [hoveredData, _setHoveredData] = useState<ChartDataPoint | null>(null);
-
   const chartData = useMemo(() => {
     return data.map((point) => ({
       ...point,
@@ -320,22 +317,6 @@ function InteractiveChartInternal({
 
       <CardContent>
         {renderChart()}
-
-        {hoveredData && (
-          <div className="mt-4 p-3 bg-muted rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{hoveredData.label}</span>
-              <span className="text-sm">{hoveredData.value}</span>
-            </div>
-            {hoveredData.category && (
-              <div className="mt-1">
-                <Badge variant="outline" className="text-xs">
-                  {hoveredData.category}
-                </Badge>
-              </div>
-            )}
-          </div>
-        )}
 
         {drillDownEnabled && (
           <div className="mt-2 text-xs text-muted-foreground">

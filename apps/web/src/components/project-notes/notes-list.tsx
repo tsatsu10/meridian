@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import {
   FileText,
   Plus,
@@ -99,7 +100,7 @@ export function NotesList({
       setNotes(data.data || []);
     } catch (error) {
       console.error("Failed to fetch notes:", error);
-      toast.error("Failed to load notes");
+      toast.error(userMessage(error, "load the notes"));
     } finally {
       setLoading(false);
     }
@@ -121,7 +122,7 @@ export function NotesList({
       fetchNotes();
     } catch (error) {
       console.error("Failed to pin note:", error);
-      toast.error("Failed to update note");
+      toast.error(userMessage(error, "update the note"));
     }
   };
 
@@ -143,7 +144,7 @@ export function NotesList({
       fetchNotes();
     } catch (error) {
       console.error("Failed to delete note:", error);
-      toast.error("Failed to delete note");
+      toast.error(userMessage(error, "delete the note"));
     }
   };
 

@@ -15,7 +15,10 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { auth } from "../middlewares/auth";
-import { requirePermission } from "../middlewares/rbac";
+import {
+  checkWorkspacePermission,
+  requirePermission,
+} from "../middlewares/rbac";
 import {
   calculateUserStatistics,
   getUserStatistics,
@@ -44,7 +47,7 @@ import {
   getUserTeamCollaborations,
 } from "../services/user-work-activity-service";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 
 const smartProfileRoutes = new Hono<{
   Variables: {
@@ -78,7 +81,7 @@ smartProfileRoutes.get("/:userId/availability", async (c) => {
     });
   } catch (error) {
     logger.error("Error getting availability:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -116,7 +119,7 @@ smartProfileRoutes.put(
       return c.json({ success: true, data: updated });
     } catch (error) {
       logger.error("Error updating availability:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -136,7 +139,7 @@ smartProfileRoutes.get("/:userId/collaborators", async (c) => {
     return c.json({ success: true, data: collaborators });
   } catch (error) {
     logger.error("Error getting collaborators:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -156,7 +159,7 @@ smartProfileRoutes.post("/:userId/collaborators/recalculate", async (c) => {
     return c.json({ success: true, message: "Collaborators recalculated" });
   } catch (error) {
     logger.error("Error recalculating collaborators:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -174,7 +177,7 @@ smartProfileRoutes.get("/:userId/statistics", async (c) => {
     return c.json({ success: true, data: stats });
   } catch (error) {
     logger.error("Error getting statistics:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -199,7 +202,7 @@ smartProfileRoutes.post("/:userId/statistics/recalculate", async (c) => {
     return c.json({ success: true, data: stats });
   } catch (error) {
     logger.error("Error recalculating statistics:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -222,7 +225,7 @@ smartProfileRoutes.get("/:userId/work-history", async (c) => {
     return c.json({ success: true, data: history });
   } catch (error) {
     logger.error("Error getting work history:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -245,14 +248,16 @@ smartProfileRoutes.get("/:userId/milestones", async (c) => {
     });
   } catch (error) {
     logger.error("Error getting milestones:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
 // Record major contribution (admin/manager)
 smartProfileRoutes.post(
   "/:userId/contributions",
-  requirePermission("canManageTeamMembers"),
+  // Coarse pre-filter only: the handler re-checks canManageTeamMembers against
+  // the target workspace below, which is the real decision.
+  requirePermission("canManageTeamMembers", { scope: "any" }),
   zValidator(
     "json",
     z.object({
@@ -274,6 +279,24 @@ smartProfileRoutes.post(
         return c.json({ error: "workspaceId required" }, 400);
       }
 
+      // 🚨 SECURITY: the route-level requirePermission above is deliberately
+      // workspace-unscoped (coarse admission only), and this workspace arrives
+      // as a query parameter rather than a path param, so it cannot be checked
+      // by requireWorkspacePermission. Scope it here: without this, holding
+      // canManageTeamMembers in one workspace would let the caller write a
+      // contribution record into any other workspace.
+      const scoped = await checkWorkspacePermission(
+        c.get("userEmail"),
+        workspaceId,
+        "canManageTeamMembers",
+      );
+      if (!scoped.allowed) {
+        return c.json(
+          scoped.body ?? { error: "Forbidden" },
+          scoped.status ?? 403,
+        );
+      }
+
       const contribution = await recordMajorContribution(
         userId,
         workspaceId,
@@ -283,7 +306,7 @@ smartProfileRoutes.post(
       return c.json({ success: true, data: contribution });
     } catch (error) {
       logger.error("Error recording contribution:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -302,7 +325,7 @@ smartProfileRoutes.get("/:userId/active-projects", async (c) => {
     return c.json({ success: true, data: projects });
   } catch (error) {
     logger.error("Error getting active projects:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -316,7 +339,7 @@ smartProfileRoutes.get("/:userId/recent-tasks", async (c) => {
     return c.json({ success: true, data: tasksData });
   } catch (error) {
     logger.error("Error getting recent tasks:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -332,7 +355,7 @@ smartProfileRoutes.get("/:userId/activity", async (c) => {
     return c.json({ success: true, data: activities });
   } catch (error) {
     logger.error("Error getting activity feed:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -346,7 +369,7 @@ smartProfileRoutes.get("/:userId/workload", async (c) => {
     return c.json({ success: true, data: workload });
   } catch (error) {
     logger.error("Error getting workload:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -360,7 +383,7 @@ smartProfileRoutes.get("/:userId/teams", async (c) => {
     return c.json({ success: true, data: teamsData });
   } catch (error) {
     logger.error("Error getting team collaborations:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -401,7 +424,7 @@ smartProfileRoutes.get("/:userId/analytics", async (c) => {
     });
   } catch (error) {
     logger.error("Error getting analytics:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 

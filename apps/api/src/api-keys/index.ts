@@ -5,7 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import crypto from "node:crypto";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 
 const app = new Hono();
 
@@ -80,7 +80,7 @@ app.get("/", async (c) => {
     });
   } catch (error) {
     logger.error("[API Keys] Error fetching keys:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -153,7 +153,7 @@ app.post("/", async (c) => {
     });
   } catch (error) {
     logger.error("[API Keys] Error creating key:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -231,7 +231,7 @@ app.patch("/:keyId", async (c) => {
     });
   } catch (error) {
     logger.error("[API Keys] Error updating key:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -277,7 +277,7 @@ app.delete("/:keyId", async (c) => {
     });
   } catch (error) {
     logger.error("[API Keys] Error deleting key:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 

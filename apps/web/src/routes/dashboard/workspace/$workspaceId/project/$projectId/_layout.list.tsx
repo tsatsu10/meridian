@@ -33,6 +33,7 @@ import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import CreateMilestoneModal from "@/components/shared/modals/create-milestone-modal";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useMilestones } from "@/hooks/use-milestones";
 import useUpdateTask from "@/hooks/mutations/task/use-update-task";
@@ -47,7 +48,7 @@ import { useMemoryCleanup } from "@/components/performance/memory-cleanup-provid
 // 🔒 SECURITY: XSS protection for user inputs
 import { sanitizeString } from "@/utils/xss-protection";
 // 🔒 SECURITY: Role-based access control
-import { useProjectPermissions } from "@/hooks/use-project-permissions";
+import { useRBACAuth } from "@/lib/permissions";
 // ♻️ UX: Undo delete functionality
 import { useUndo } from "@/hooks/use-undo";
 // ✨ CONSISTENT: Use the same VirtualizedTaskList as All Tasks page
@@ -67,6 +68,27 @@ import {
 export const Route = createFileRoute(
   "/dashboard/workspace/$workspaceId/project/$projectId/_layout/list",
 )({
+  validateSearch: (search: Record<string, unknown>) => {
+    const result: {
+      status?: string;
+      priority?: string;
+      overdue?: boolean;
+    } = {};
+    if (typeof search.status === "string") {
+      result.status = search.status;
+    }
+    if (typeof search.priority === "string") {
+      result.priority = search.priority;
+    }
+    if (
+      search.overdue === true ||
+      search.overdue === "true" ||
+      search.overdue === 1
+    ) {
+      result.overdue = true;
+    }
+    return result;
+  },
   component: () => (
     <ErrorBoundary>
       <ProjectListView />
@@ -85,13 +107,17 @@ interface PaginationInfo {
 
 function ProjectListView() {
   const { projectId, workspaceId } = Route.useParams();
+  const { status, priority, overdue } = Route.useSearch();
   const { data: columns, isLoading } = useGetTasks(projectId);
   const { data: projectData } = useGetProject({ id: projectId, workspaceId });
   useMemoryCleanup();
 
   // 🔒 SECURITY: Check user permissions for this project
-  const { canCreateTasks, canEditTasks, canDeleteTasks, canManageProject } =
-    useProjectPermissions(projectId, workspaceId);
+  const { hasPermission } = useRBACAuth();
+  const canCreateTasks = hasPermission("canCreateTasks");
+  const canEditTasks = hasPermission("canEditTasks");
+  const canDeleteTasks = hasPermission("canDeleteTasks");
+  const canManageProject = hasPermission("canManageProjectSettings");
 
   // Task management mutations
   const { mutateAsync: updateTask } = useUpdateTask();
@@ -114,9 +140,10 @@ function ProjectListView() {
 
   // UI State - same as All Tasks page
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [priorityFilter, setPriorityFilter] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>(status ?? "");
+  const [priorityFilter, setPriorityFilter] = useState<string>(priority ?? "");
+  const [overdueFilter] = useState<boolean>(overdue ?? false);
+  const [sortBy, setSortBy] = useState<string>(overdue ? "dueDate" : "");
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
@@ -133,9 +160,12 @@ function ProjectListView() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Calculate active filters count for mobile badge
-  const activeFiltersCount = [statusFilter, priorityFilter, sortBy].filter(
-    Boolean,
-  ).length;
+  const activeFiltersCount = [
+    statusFilter,
+    priorityFilter,
+    sortBy,
+    overdueFilter ? "overdue" : "",
+  ].filter(Boolean).length;
 
   // 🔒 SECURITY: Rate limiting for search and updates
   const debouncedSearch = useMemo(
@@ -157,7 +187,7 @@ function ProjectListView() {
             });
             toast.success("Task updated successfully");
           } catch (error) {
-            toast.error("Failed to update task");
+            toast.error(userMessage(error, "update the task"));
           }
         },
         1000,
@@ -218,7 +248,14 @@ function ProjectListView() {
         const matchesStatus = !statusFilter || task.status === statusFilter;
         const matchesPriority =
           !priorityFilter || task.priority === priorityFilter;
-        return matchesSearch && matchesStatus && matchesPriority;
+        const matchesOverdue =
+          !overdueFilter ||
+          (task.dueDate !== null &&
+            task.dueDate.getTime() < Date.now() &&
+            task.status !== "done");
+        return (
+          matchesSearch && matchesStatus && matchesPriority && matchesOverdue
+        );
       },
       1000, // Limit for project view
     );
@@ -254,7 +291,14 @@ function ProjectListView() {
     }
 
     return filtered;
-  }, [allTasks, searchTerm, statusFilter, priorityFilter, sortBy]);
+  }, [
+    allTasks,
+    searchTerm,
+    statusFilter,
+    priorityFilter,
+    overdueFilter,
+    sortBy,
+  ]);
 
   // Pagination logic - same as All Tasks
   const paginatedTasks = useMemo(() => {
@@ -305,7 +349,7 @@ function ProjectListView() {
 
           toast.success("Task reordered successfully");
         } catch (error) {
-          toast.error("Failed to reorder task");
+          toast.error(userMessage(error, "reorder the task"));
           console.error("Task reorder error:", error);
         }
       },
@@ -338,7 +382,7 @@ function ProjectListView() {
       toast.success(`Updated ${selectedTasks.length} task(s) to ${status}`);
       setSelectedTasks([]);
     } catch (error) {
-      toast.error("Failed to update tasks");
+      toast.error(userMessage(error, "update those tasks"));
       console.error("Bulk status update error:", error);
     }
   };
@@ -367,7 +411,7 @@ function ProjectListView() {
       );
       setSelectedTasks([]);
     } catch (error) {
-      toast.error("Failed to update task priorities");
+      toast.error(userMessage(error, "update the task priorities"));
       console.error("Bulk priority update error:", error);
     }
   };
@@ -393,7 +437,7 @@ function ProjectListView() {
       toast.success(`Deleted ${selectedTasks.length} task(s)`);
       setSelectedTasks([]);
     } catch (error) {
-      toast.error("Failed to delete tasks");
+      toast.error(userMessage(error, "delete those tasks"));
       console.error("Bulk delete error:", error);
     }
   };
@@ -591,12 +635,6 @@ function ProjectListView() {
                   In Progress
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setStatusFilter("in_review")}
-                  role="menuitem"
-                >
-                  In Review
-                </DropdownMenuItem>
-                <DropdownMenuItem
                   onClick={() => setStatusFilter("done")}
                   role="menuitem"
                 >
@@ -749,7 +787,7 @@ function ProjectListView() {
                       } as unknown as Task);
                       toast.success("Task updated successfully");
                     } catch (error) {
-                      toast.error("Failed to update task");
+                      toast.error(userMessage(error, "update the task"));
                     }
                   }
                 : undefined

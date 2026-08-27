@@ -8,6 +8,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { emailVerificationService } from "../email-verification-service";
+import { getFrontendBaseUrl } from "../../config/frontend-url";
 import logger from "../../utils/logger";
 import { getErrorMessage } from "../../utils/error-utils";
 
@@ -83,15 +84,15 @@ app.get("/verify-email", async (c) => {
 
     if (result.success) {
       // Redirect to frontend success page
-      const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=true`;
+      const redirectUrl = `${getFrontendBaseUrl()}/email-verified?success=true`;
       return c.redirect(redirectUrl);
     }
     // Redirect to frontend error page
-    const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=${encodeURIComponent(result.message)}`;
+    const redirectUrl = `${getFrontendBaseUrl()}/email-verified?success=false&error=${encodeURIComponent(result.message)}`;
     return c.redirect(redirectUrl);
   } catch (error) {
     logger.error("❌ Email verification error:", error);
-    const redirectUrl = `${process.env.FRONTEND_URL}/email-verified?success=false&error=Verification%20failed`;
+    const redirectUrl = `${getFrontendBaseUrl()}/email-verified?success=false&error=Verification%20failed`;
     return c.redirect(redirectUrl);
   }
 });
@@ -171,6 +172,22 @@ app.post(
         ipAddress,
         userAgent,
       );
+
+      // The service already answers success:true for both "no such user" and
+      // "rate limited", so success:false here means the send genuinely failed
+      // (SMTP down, DB error). Reporting that as 200 sent the user off to check
+      // an inbox nothing had been delivered to. Surfacing it leaks nothing
+      // about whether the account exists — the failure is on our side either
+      // way. `result` was previously assigned and never read.
+      if (!result.success) {
+        return c.json(
+          {
+            success: false,
+            error: "Failed to send password reset email",
+          },
+          500,
+        );
+      }
 
       // Always return success for security (don't reveal if email exists)
       return c.json(

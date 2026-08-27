@@ -90,19 +90,69 @@ export function createMockDb() {
   const selectResults: unknown[] = [];
   let selectCallIndex = 0;
 
+  /**
+   * What each select() chain was actually asked for.
+   *
+   * The chain below returns canned rows keyed only on call order, so it cannot
+   * tell a correctly-filtered query from one missing a `.where()` — both get
+   * the same rows. That blind spot is not theoretical: a missing `isActive`
+   * filter survived 24 commits and 5 reviews behind it, because no test could
+   * have caught it.
+   *
+   * Recording the arguments does not change what the chain returns (every
+   * existing test behaves exactly as before), but it makes the omission
+   * assertable:
+   *
+   *   expect(mockDb.__selectCalls[0].where).toHaveLength(1);
+   *
+   * Predicates are drizzle SQL objects, so assert on their presence/shape
+   * rather than deep-equality against a hand-built expression.
+   */
+  const selectCalls: Array<{
+    where: unknown[];
+    limit: unknown[];
+    orderBy: unknown[];
+    innerJoin: unknown[];
+    leftJoin: unknown[];
+  }> = [];
+
   const mockDb: Record<string, unknown> = {
     // Query builder methods that return chainable objects
     select: vi.fn((fields?: unknown) => {
       const currentIndex = selectCallIndex++;
 
+      const calls = {
+        where: [] as unknown[],
+        limit: [] as unknown[],
+        orderBy: [] as unknown[],
+        innerJoin: [] as unknown[],
+        leftJoin: [] as unknown[],
+      };
+      selectCalls[currentIndex] = calls;
+
       // Each select() call creates a new chain
       const chain: Record<string, unknown> = {};
       chain.from = vi.fn().mockReturnValue(chain);
-      chain.where = vi.fn().mockReturnValue(chain);
-      chain.limit = vi.fn().mockReturnValue(chain);
-      chain.orderBy = vi.fn().mockReturnValue(chain);
-      chain.innerJoin = vi.fn().mockReturnValue(chain); // Add innerJoin support
-      chain.leftJoin = vi.fn().mockReturnValue(chain); // Add leftJoin support
+      chain.where = vi.fn((...args: unknown[]) => {
+        calls.where.push(...args);
+        return chain;
+      });
+      chain.limit = vi.fn((...args: unknown[]) => {
+        calls.limit.push(...args);
+        return chain;
+      });
+      chain.orderBy = vi.fn((...args: unknown[]) => {
+        calls.orderBy.push(...args);
+        return chain;
+      });
+      chain.innerJoin = vi.fn((...args: unknown[]) => {
+        calls.innerJoin.push(...args);
+        return chain;
+      });
+      chain.leftJoin = vi.fn((...args: unknown[]) => {
+        calls.leftJoin.push(...args);
+        return chain;
+      });
       // Make chainable and await-able - return results for this specific select() call
       // biome-ignore lint/suspicious/noThenProperty: the mock must be thenable so `await db.select()...` chains resolve like drizzle's query builder
       chain.then = (resolve: (value: unknown) => unknown) => {
@@ -122,6 +172,7 @@ export function createMockDb() {
     leftJoin: vi.fn().mockReturnThis(), // Add at top level too
     values: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
+    onConflictDoNothing: vi.fn().mockReturnThis(),
     returning: vi.fn().mockResolvedValue([]),
     execute: vi.fn().mockResolvedValue([]),
 
@@ -130,7 +181,14 @@ export function createMockDb() {
       selectResults.length = 0;
       selectResults.push(...results);
       selectCallIndex = 0;
+      selectCalls.length = 0;
     },
+
+    /**
+     * Per-select() record of the arguments each chain received, in call order.
+     * See the note on `selectCalls` above for why this exists.
+     */
+    __selectCalls: selectCalls,
 
     query: {
       userTable: {
@@ -153,10 +211,50 @@ export function createMockDb() {
         findFirst: vi.fn(),
         findMany: vi.fn(),
       },
+      statusColumnTable: {
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+      },
     },
   };
 
   return mockDb;
+}
+
+/**
+ * Column names referenced by a drizzle where-expression, recursively.
+ *
+ * `and(eq(a, 1), eq(b, 2))` is a tree of nested SQL objects, so a predicate
+ * cannot be read off the top level. This walks `queryChunks` and collects the
+ * columns, letting a test assert that a security-critical filter is actually
+ * in the query:
+ *
+ *   expect(whereColumns(mockDb.__selectCalls[0].where[0]))
+ *     .toEqual(expect.arrayContaining(["is_active", "deleted_at"]));
+ *
+ * Names are the database column names (snake_case), not the schema keys.
+ * Asserting on names rather than deep-equality keeps this robust to how the
+ * expression is composed — `and(x, y)` vs chained `.where()` calls, order
+ * changes, added unrelated predicates.
+ */
+export function whereColumns(node: unknown, out: string[] = []): string[] {
+  if (!node || typeof node !== "object") return out;
+  const candidate = node as Record<string, unknown>;
+
+  // A drizzle Column carries both a name and a columnType; SQL nodes and
+  // parameter chunks carry neither, so this does not over-collect.
+  if (
+    typeof candidate.name === "string" &&
+    typeof candidate.columnType === "string"
+  ) {
+    out.push(candidate.name);
+  }
+
+  const chunks = candidate.queryChunks;
+  if (Array.isArray(chunks)) {
+    for (const chunk of chunks) whereColumns(chunk, out);
+  }
+  return out;
 }
 
 /**

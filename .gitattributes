@@ -1,0 +1,34 @@
+# Normalise line endings.
+#
+# The repository stores LF (verified with `git cat-file blob`), and CI runs
+# `biome ci` on Linux, where the checkout is LF — so CI is happy. On Windows
+# with core.autocrlf=true, however, the working tree is checked out as CRLF,
+# and a local `biome check` then reports a "format" error for essentially
+# every file in the repo (~940 of them) with a diff consisting solely of
+# trailing ␍. That drowns out real findings and makes the local formatter
+# unusable as a pre-commit signal.
+#
+# `eol=lf` pins the working tree to LF on every platform, so local biome
+# matches CI. Because the blobs are already LF, this introduces no content
+# change — files convert on their next checkout.
+* text=auto eol=lf
+
+# Explicitly binary, so git never attempts line-ending conversion on them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
+*.gz binary
+
+# Windows-only scripts must keep CRLF to run correctly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

@@ -13,6 +13,7 @@ import {
   Filter,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 import {
   Card,
@@ -152,8 +153,8 @@ function ShortcutsSettingsPage() {
       });
       setIsEditDialogOpen(false);
     },
-    onError: () => {
-      toast.error("Failed to update shortcut");
+    onError: (error) => {
+      toast.error(userMessage(error, "update the shortcut"));
     },
   });
 
@@ -178,8 +179,8 @@ function ShortcutsSettingsPage() {
       });
       setIsResetDialogOpen(false);
     },
-    onError: () => {
-      toast.error("Failed to reset shortcuts");
+    onError: (error) => {
+      toast.error(userMessage(error, "reset your shortcuts"));
     },
   });
 
@@ -203,8 +204,8 @@ function ShortcutsSettingsPage() {
         queryKey: ["shortcuts", currentWorkspace?.id],
       });
     },
-    onError: () => {
-      toast.error("Failed to apply preset");
+    onError: (error) => {
+      toast.error(userMessage(error, "apply the preset"));
     },
   });
 

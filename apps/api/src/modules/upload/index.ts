@@ -27,6 +27,7 @@ import {
   RATE_LIMITS,
 } from "../../middlewares/chat-rate-limiter";
 import { captureException } from "../../services/monitoring/sentry";
+import { statusCodeOf } from "../../utils/error-utils";
 
 const upload = new Hono();
 
@@ -52,6 +53,15 @@ const multerUpload = multer({
       "application/x-zip-compressed",
       "text/plain",
     ];
+
+    // SECURITY: image/svg+xml matches the "image/*" wildcard above, but an
+    // SVG can embed a <script> tag — served back inline at GET
+    // /api/files/images/:filename, it executes in the API's origin
+    // (stored XSS). Every other image/* type is safe to serve inline.
+    if (file.mimetype === "image/svg+xml") {
+      cb(new Error("SVG uploads are not allowed"));
+      return;
+    }
 
     const isAllowed = fileStorageService.validateFileType(
       file.mimetype,
@@ -213,7 +223,7 @@ upload.post("/", async (c) => {
 
     return c.json(
       { error: getErrorMessage(error) || "Failed to upload files" },
-      500,
+      statusCodeOf(error),
     );
   }
 });

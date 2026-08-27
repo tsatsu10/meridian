@@ -6,7 +6,16 @@ export interface SettingsPreset {
   description: string;
   persona: string;
   icon: string;
-  settings: Partial<AllSettings>;
+  /**
+   * Partial per section, not just partial per top-level key: a preset states
+   * the handful of settings it cares about and leaves the rest alone. Typing it
+   * as `Partial<AllSettings>` demanded a *complete* section object wherever a
+   * preset touched one, so every new appearance field had to be copy-pasted
+   * into all seven presets to keep them compiling.
+   */
+  settings: {
+    [Section in keyof AllSettings]?: Partial<AllSettings[Section]>;
+  };
   popular?: boolean;
 }
 
@@ -71,10 +80,6 @@ const projectManagerPreset: SettingsPreset = {
       twoFactorEnabled: true,
       loginNotifications: true,
       sessionTimeout: true,
-      deviceTracking: true,
-      suspiciousActivityAlerts: true,
-      smsBackup: false,
-      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,
@@ -149,10 +154,6 @@ const executivePreset: SettingsPreset = {
       twoFactorEnabled: true,
       loginNotifications: true,
       sessionTimeout: true,
-      deviceTracking: true,
-      suspiciousActivityAlerts: true,
-      smsBackup: false,
-      rememberDevice: true,
     },
     privacy: {
       profileVisibility: false,
@@ -227,10 +228,6 @@ const teamLeadPreset: SettingsPreset = {
       twoFactorEnabled: true,
       loginNotifications: true,
       sessionTimeout: true,
-      deviceTracking: true,
-      suspiciousActivityAlerts: true,
-      smsBackup: false,
-      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,
@@ -305,10 +302,6 @@ const developerPreset: SettingsPreset = {
       twoFactorEnabled: true,
       loginNotifications: false,
       sessionTimeout: false,
-      deviceTracking: false,
-      suspiciousActivityAlerts: true,
-      smsBackup: false,
-      rememberDevice: true,
     },
     privacy: {
       profileVisibility: false,
@@ -382,10 +375,6 @@ const designerPreset: SettingsPreset = {
       twoFactorEnabled: false,
       loginNotifications: true,
       sessionTimeout: true,
-      deviceTracking: true,
-      suspiciousActivityAlerts: true,
-      smsBackup: false,
-      rememberDevice: true,
     },
     privacy: {
       profileVisibility: true,

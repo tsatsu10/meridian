@@ -12,6 +12,7 @@ import {
   workspaceTable,
 } from "../../database/schema";
 import { createId } from "@paralleldrive/cuid2";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export interface SearchFilters {
   query?: string;
@@ -366,7 +367,7 @@ export async function updateSavedSearch(
 
   const search = searches.find((s) => s.id === searchId);
   if (!search) {
-    throw new Error("Saved search not found");
+    throw new NotFoundError("Saved search");
   }
 
   Object.assign(search, updates);

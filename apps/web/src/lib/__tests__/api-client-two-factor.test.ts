@@ -54,7 +54,10 @@ describe("apiClient.auth.twoFactor URLs", () => {
 
   it("verifyLogin() calls the /api-prefixed route", async () => {
     const { apiClient } = await import("../api-client");
-    await apiClient.auth.twoFactor.verifyLogin({ userId: "u1", token: "1" });
+    await apiClient.auth.twoFactor.verifyLogin({
+      pendingToken: "pending-token",
+      token: "1",
+    });
     expect(urlOf()).toBe(`${API_BASE_URL}/auth/two-factor/verify-login`);
   });
 

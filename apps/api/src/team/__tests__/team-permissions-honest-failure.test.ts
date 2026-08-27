@@ -24,6 +24,12 @@ vi.mock("../../middlewares/rbac", () => ({
   requirePermission:
     () => async (_c: import("hono").Context, next: () => Promise<void>) =>
       next(),
+  // team/index.ts also guards its workspace roster and metrics routes with a
+  // prefix middleware; without this export the module cannot load.
+  requireWorkspacePermission:
+    () => async (_c: import("hono").Context, next: () => Promise<void>) =>
+      next(),
+  checkWorkspacePermission: async () => ({ allowed: true }),
 }));
 
 describe("PUT /:teamId/permissions/:userId honest-failure response", () => {

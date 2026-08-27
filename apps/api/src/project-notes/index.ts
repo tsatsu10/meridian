@@ -11,9 +11,26 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
+import { checkProjectPermission } from "../middlewares/rbac";
 
-const app = new Hono();
+const app = new Hono<{ Variables: { userEmail: string } }>();
+
+// SECURITY: every route below used to check only "is the caller
+// authenticated at all," never "does the caller belong to the workspace
+// that owns this note's project." Any authenticated user could read/write
+// any note (and its versions/comments) in any project in any workspace.
+// This resolves a note to its project so callers can be checked the same
+// way task/project routes already are.
+async function resolveNoteProjectId(noteId: string): Promise<string | null> {
+  const db = getDatabase();
+  const [note] = await db
+    .select({ projectId: projectNotesTable.projectId })
+    .from(projectNotesTable)
+    .where(eq(projectNotesTable.id, noteId))
+    .limit(1);
+  return note?.projectId ?? null;
+}
 
 // ========================================
 // 📝 PROJECT NOTES CRUD
@@ -38,6 +55,18 @@ app.post(
 
     if (!userEmail) {
       return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const permission = await checkProjectPermission(
+      userEmail,
+      projectId,
+      "canUpdateProjects",
+    );
+    if (!permission.allowed) {
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -88,7 +117,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create note:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -102,6 +131,18 @@ app.get("/projects/:projectId/notes", async (c) => {
 
   if (!userEmail) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const listPermission = await checkProjectPermission(
+    userEmail,
+    projectId,
+    "canViewProjects",
+  );
+  if (!listPermission.allowed) {
+    return c.json(
+      listPermission.body ?? { error: "Forbidden" },
+      listPermission.status ?? 403,
+    );
   }
 
   try {
@@ -139,7 +180,7 @@ app.get("/projects/:projectId/notes", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch notes:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -150,6 +191,22 @@ app.get("/notes/:noteId", async (c) => {
 
   if (!userEmail) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const projectId = await resolveNoteProjectId(noteId);
+  if (!projectId) {
+    return c.json({ error: "Note not found" }, 404);
+  }
+  const permission = await checkProjectPermission(
+    userEmail,
+    projectId,
+    "canViewProjects",
+  );
+  if (!permission.allowed) {
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -171,7 +228,7 @@ app.get("/notes/:noteId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch note:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -196,6 +253,22 @@ app.patch(
 
     if (!userEmail) {
       return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const noteProjectId = await resolveNoteProjectId(noteId);
+    if (!noteProjectId) {
+      return c.json({ error: "Note not found" }, 404);
+    }
+    const permission = await checkProjectPermission(
+      userEmail,
+      noteProjectId,
+      "canUpdateProjects",
+    );
+    if (!permission.allowed) {
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -271,7 +344,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update note:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -283,6 +356,22 @@ app.delete("/notes/:noteId", async (c) => {
 
   if (!userEmail) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const projectId = await resolveNoteProjectId(noteId);
+  if (!projectId) {
+    return c.json({ error: "Note not found" }, 404);
+  }
+  const permission = await checkProjectPermission(
+    userEmail,
+    projectId,
+    "canUpdateProjects",
+  );
+  if (!permission.allowed) {
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -297,7 +386,7 @@ app.delete("/notes/:noteId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete note:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -308,6 +397,22 @@ app.patch("/notes/:noteId/pin", async (c) => {
 
   if (!userEmail) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const pinProjectId = await resolveNoteProjectId(noteId);
+  if (!pinProjectId) {
+    return c.json({ error: "Note not found" }, 404);
+  }
+  const pinPermission = await checkProjectPermission(
+    userEmail,
+    pinProjectId,
+    "canUpdateProjects",
+  );
+  if (!pinPermission.allowed) {
+    return c.json(
+      pinPermission.body ?? { error: "Forbidden" },
+      pinPermission.status ?? 403,
+    );
   }
 
   try {
@@ -346,7 +451,7 @@ app.patch("/notes/:noteId/pin", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to pin/unpin note:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -361,6 +466,22 @@ app.get("/notes/:noteId/versions", async (c) => {
 
   if (!userEmail) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const projectId = await resolveNoteProjectId(noteId);
+  if (!projectId) {
+    return c.json({ error: "Note not found" }, 404);
+  }
+  const permission = await checkProjectPermission(
+    userEmail,
+    projectId,
+    "canViewProjects",
+  );
+  if (!permission.allowed) {
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -378,7 +499,7 @@ app.get("/notes/:noteId/versions", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch versions:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -393,6 +514,22 @@ app.get("/notes/:noteId/comments", async (c) => {
 
   if (!userEmail) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const projectId = await resolveNoteProjectId(noteId);
+  if (!projectId) {
+    return c.json({ error: "Note not found" }, 404);
+  }
+  const permission = await checkProjectPermission(
+    userEmail,
+    projectId,
+    "canViewProjects",
+  );
+  if (!permission.allowed) {
+    return c.json(
+      permission.body ?? { error: "Forbidden" },
+      permission.status ?? 403,
+    );
   }
 
   try {
@@ -410,7 +547,7 @@ app.get("/notes/:noteId/comments", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch comments:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -430,6 +567,22 @@ app.post(
 
     if (!userEmail) {
       return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const projectId = await resolveNoteProjectId(noteId);
+    if (!projectId) {
+      return c.json({ error: "Note not found" }, 404);
+    }
+    const permission = await checkProjectPermission(
+      userEmail,
+      projectId,
+      "canViewProjects",
+    );
+    if (!permission.allowed) {
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
     }
 
     try {
@@ -452,7 +605,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to add comment:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -505,7 +658,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update comment:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -538,7 +691,7 @@ app.delete("/notes/:noteId/comments/:commentId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete comment:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 

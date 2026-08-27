@@ -110,16 +110,6 @@ export function BulkActionToolbar({
                   In Progress
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => onBulkStatusUpdate("in_review")}
-                  role="menuitem"
-                >
-                  <CheckCircle2
-                    className="mr-2 h-4 w-4 text-purple-500"
-                    aria-hidden="true"
-                  />
-                  In Review
-                </DropdownMenuItem>
-                <DropdownMenuItem
                   onClick={() => onBulkStatusUpdate("done")}
                   role="menuitem"
                 >

@@ -22,6 +22,8 @@ import { createId } from "@paralleldrive/cuid2";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { authMiddleware } from "../middlewares/secure-auth";
+import { requireWorkspacePermission } from "../middlewares/rbac";
+import type { PermissionAction } from "../types/rbac";
 
 // Import email settings controllers
 import getEmailSettings from "./controllers/get-email-settings";
@@ -51,7 +53,7 @@ import {
   exportAuditLogs,
 } from "./controllers/audit-log-settings";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 
 // Import backup controllers
 import {
@@ -122,6 +124,51 @@ import {
 } from "./controllers/filters";
 
 const app = new Hono<{ Variables: { userEmail: string } }>();
+
+/**
+ * 🚨 SECURITY: every workspace-scoped settings route below took a
+ * :workspaceId straight from the path and performed NO authorization on it.
+ * Verified live — a guest who belonged to a different workspace entirely could
+ * read another workspace's SMTP configuration (including the smtpPassword
+ * field), its calendar integration config, and its audit log complete with
+ * other users' email addresses and actions. Backups could be listed,
+ * downloaded, restored and deleted the same way.
+ *
+ * These guards are declared as middleware over the path prefix rather than
+ * repeated on ~36 individual routes, so a newly added route under one of these
+ * prefixes is protected by default instead of only when someone remembers.
+ * Each prefix needs BOTH patterns: the bare form matches the collection route,
+ * the wildcard matches everything beneath it.
+ *
+ * They also give three previously-dead permissions something to gate:
+ * canViewAuditLogs, canManageBackups and canManageIntegrations were defined in
+ * the role matrix but checked nowhere.
+ *
+ * Chosen deliberately strict, because each prefix is administrative data:
+ * mutations and reads share one permission so that "can read the audit log"
+ * cannot drift into "can rewrite its retention settings".
+ */
+const WORKSPACE_SETTINGS_GUARDS: [string, PermissionAction][] = [
+  // SMTP credentials live here.
+  ["/email/:workspaceId", "canManageWorkspaceSettings"],
+  // Third-party calendar integration config.
+  ["/calendar/:workspaceId", "canManageIntegrations"],
+  // Other users' actions and email addresses.
+  ["/audit/:workspaceId", "canViewAuditLogs"],
+  // Download and restore of full workspace backups.
+  ["/backup/:workspaceId", "canManageBackups"],
+  // Workspace role configuration.
+  ["/roles/:workspaceId", "canManageRoles"],
+  ["/shortcuts/:workspaceId", "canManageWorkspaceSettings"],
+  ["/filters/:workspaceId", "canManageWorkspaceSettings"],
+  ["/search/:workspaceId", "canViewWorkspace"],
+];
+
+for (const [prefix, permission] of WORKSPACE_SETTINGS_GUARDS) {
+  const guard = requireWorkspacePermission(permission, "workspaceId");
+  app.use(prefix, guard);
+  app.use(`${prefix}/*`, guard);
+}
 
 // Root endpoint - Get current user's settings
 app.get("/", async (c) => {
@@ -230,326 +277,41 @@ async function logAuditEvent(
   }
 }
 
-// Get user settings
-app.get("/:userId", async (c) => {
-  const db = getDatabase(); // FIX: Initialize database connection
-  const userId = c.req.param("userId");
-  const userEmail = c.get("userEmail");
+/**
+ * Keys per section that reflect account state the server derives, not
+ * preferences a client may set. They are merged into GET responses from their
+ * source of truth and must never be written into the stored settings blob.
+ */
+const SERVER_OWNED_SETTING_KEYS: Record<string, readonly string[]> = {
+  security: ["passwordUpdatedAt", "twoFactorEnabled"],
+  profile: ["emailVerified"],
+};
 
-  // Security: Users can only access their own settings
-  if (userId !== userEmail) {
-    return c.json({ error: "Unauthorized" }, 403);
-  }
-
-  try {
-    const settings = await db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.userEmail, userEmail));
-
-    // Convert to the expected format
-    const settingsObject: Record<string, unknown> = {
-      profile: {},
-      appearance: {},
-      notifications: {},
-      security: {},
-      privacy: {},
-    };
-
-    for (const setting of settings) {
-      settingsObject[setting.section] = JSON.parse(setting.settings);
-    }
-
-    return c.json({
-      data: settingsObject,
-      success: true,
-      timestamp: new Date().toISOString(),
-      version: Date.now(),
-    });
-  } catch (error) {
-    logger.error("Failed to get settings:", error);
-    return c.json({ error: "Failed to retrieve settings" }, 500);
-  }
-});
-
-// Update settings section
-app.patch("/:userId/:section", async (c) => {
-  const db = getDatabase(); // FIX: Initialize database connection
-  const userId = c.req.param("userId");
-  const section = c.req.param("section");
-  const userEmail = c.get("userEmail");
-
-  // Security: Users can only update their own settings
-  if (userId !== userEmail) {
-    return c.json({ error: "Unauthorized" }, 403);
-  }
-
-  try {
-    const { updates, version } = await c.req.json();
-    const metadata = getClientMetadata(c);
-
-    // Get current settings for audit trail
-    const currentSettings = await db
-      .select()
-      .from(userSettingsTable)
-      .where(
-        and(
-          eq(userSettingsTable.userEmail, userEmail),
-          eq(userSettingsTable.section, section),
-        ),
-      )
-      .limit(1);
-
-    const currentData = currentSettings[0]
-      ? JSON.parse(currentSettings[0].settings)
+function stripServerOwnedKeys(
+  section: string,
+  updates: unknown,
+): Record<string, unknown> {
+  const asRecord =
+    typeof updates === "object" && updates !== null
+      ? (updates as Record<string, unknown>)
       : {};
 
-    // Merge updates with current settings
-    const newSettings = { ...currentData, ...updates };
-
-    // Create audit trail
-    const changes: Record<string, unknown> = {};
-    for (const key of Object.keys(updates)) {
-      if (currentData[key] !== updates[key]) {
-        changes[key] = {
-          from: currentData[key],
-          to: updates[key],
-        };
-      }
-    }
-
-    // Update or insert settings
-    if (currentSettings[0]) {
-      await db
-        .update(userSettingsTable)
-        .set({
-          settings: JSON.stringify(newSettings),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(userSettingsTable.userEmail, userEmail),
-            eq(userSettingsTable.section, section),
-          ),
-        );
-    } else {
-      await db.insert(userSettingsTable).values({
-        userEmail,
-        section,
-        settings: JSON.stringify(newSettings),
-      });
-    }
-
-    // Log audit event
-    await logAuditEvent(userEmail, "UPDATE", section, changes, metadata);
-
-    // Get all updated settings to return
-    const allSettings = await db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.userEmail, userEmail));
-
-    const settingsObject: Record<string, unknown> = {
-      profile: {},
-      appearance: {},
-      notifications: {},
-      security: {},
-      privacy: {},
-    };
-
-    for (const setting of allSettings) {
-      settingsObject[setting.section] = JSON.parse(setting.settings);
-    }
-
-    return c.json({
-      data: {
-        settings: settingsObject,
-        conflicts: [], // No conflicts in this simple implementation
-      },
-      success: true,
-      timestamp: new Date().toISOString(),
-      version: Date.now(),
-    });
-  } catch (error) {
-    logger.error("Failed to update settings:", error);
-    return c.json({ error: "Failed to update settings" }, 500);
+  const owned = SERVER_OWNED_SETTING_KEYS[section];
+  if (!owned) {
+    return asRecord;
   }
-});
+
+  const clean: Record<string, unknown> = { ...asRecord };
+  for (const key of owned) {
+    delete clean[key];
+  }
+  return clean;
+}
+
+// Get user settings
+// Update settings section
 
 // Reset settings section
-app.post("/:userId/:section/reset", async (c) => {
-  const db = getDatabase(); // FIX: Initialize database connection
-  const userId = c.req.param("userId");
-  const section = c.req.param("section");
-  const userEmail = c.get("userEmail");
-
-  // Security: Users can only reset their own settings
-  if (userId !== userEmail) {
-    return c.json({ error: "Unauthorized" }, 403);
-  }
-
-  try {
-    const metadata = getClientMetadata(c);
-
-    // Get current settings for audit trail
-    const currentSettings = await db
-      .select()
-      .from(userSettingsTable)
-      .where(
-        and(
-          eq(userSettingsTable.userEmail, userEmail),
-          eq(userSettingsTable.section, section),
-        ),
-      )
-      .limit(1);
-
-    const currentData = currentSettings[0]
-      ? JSON.parse(currentSettings[0].settings)
-      : {};
-
-    // Default settings for each section. Every section is itself an object;
-    // the outer Record<string, unknown> forced a manual cast at every
-    // `defaultSettings[section][key]` access below.
-    const defaultSettings: Record<string, Record<string, unknown>> = {
-      profile: {
-        name: "",
-        email: userEmail,
-        bio: "",
-        location: "",
-        website: "",
-        timezone: "UTC",
-        language: "en",
-        jobTitle: "",
-        company: "",
-        phone: "",
-      },
-      appearance: {
-        theme: "system",
-        fontSize: 14,
-        sidebarCollapsed: false,
-        density: "comfortable",
-        animations: true,
-        soundEffects: false,
-        highContrast: false,
-        reducedMotion: false,
-        compactMode: false,
-      },
-      notifications: {
-        email: {
-          taskAssigned: true,
-          taskCompleted: true,
-          taskOverdue: true,
-          projectUpdates: true,
-          teamInvitations: true,
-          weeklyDigest: true,
-          mentions: true,
-          comments: true,
-        },
-        push: {
-          taskAssigned: true,
-          taskCompleted: false,
-          taskOverdue: true,
-          mentions: true,
-          comments: true,
-          directMessages: true,
-          projectUpdates: false,
-        },
-        inApp: {
-          taskAssigned: true,
-          taskCompleted: true,
-          taskOverdue: true,
-          mentions: true,
-          comments: true,
-          directMessages: true,
-          projectUpdates: true,
-          teamActivity: true,
-        },
-        soundEnabled: true,
-      },
-      security: {
-        twoFactorEnabled: false,
-        loginNotifications: true,
-        sessionTimeout: true,
-        deviceTracking: true,
-        suspiciousActivityAlerts: true,
-      },
-      privacy: {
-        profileVisibility: true,
-        activityTracking: true,
-        analyticsOptIn: false,
-        marketingOptIn: false,
-        dataRetention: true,
-        showOnlineStatus: true,
-        allowDirectMessages: true,
-      },
-    };
-
-    const resetData = defaultSettings[section] || {};
-
-    // Create audit trail
-    const changes: Record<string, unknown> = {};
-    for (const key of Object.keys(currentData)) {
-      changes[key] = {
-        from: currentData[key],
-        to: resetData[key] || null,
-      };
-    }
-
-    // Update settings
-    if (currentSettings[0]) {
-      await db
-        .update(userSettingsTable)
-        .set({
-          settings: JSON.stringify(resetData),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(userSettingsTable.userEmail, userEmail),
-            eq(userSettingsTable.section, section),
-          ),
-        );
-    } else {
-      await db.insert(userSettingsTable).values({
-        userEmail,
-        section,
-        settings: JSON.stringify(resetData),
-      });
-    }
-
-    // Log audit event
-    await logAuditEvent(userEmail, "RESET", section, changes, metadata);
-
-    // Get all settings to return
-    const allSettings = await db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.userEmail, userEmail));
-
-    const settingsObject: Record<string, unknown> = {
-      profile: {},
-      appearance: {},
-      notifications: {},
-      security: {},
-      privacy: {},
-    };
-
-    for (const setting of allSettings) {
-      settingsObject[setting.section] = JSON.parse(setting.settings);
-    }
-
-    return c.json({
-      data: settingsObject,
-      success: true,
-      timestamp: new Date().toISOString(),
-      version: Date.now(),
-    });
-  } catch (error) {
-    logger.error("Failed to reset settings:", error);
-    return c.json({ error: "Failed to reset settings" }, 500);
-  }
-});
-
 // Get audit logs
 app.get("/:userId/audit", async (c) => {
   const db = getDatabase();
@@ -994,7 +756,7 @@ app.get("/email/:workspaceId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get email settings:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1068,7 +830,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update email settings:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1099,7 +861,7 @@ app.post(
       });
     } catch (error) {
       logger.error("SMTP connection test failed:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1132,7 +894,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to send test email:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1154,7 +916,7 @@ app.get("/email/:workspaceId/templates", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get email templates:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1175,7 +937,7 @@ app.get("/email/:workspaceId/templates/:templateId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get email template:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1221,7 +983,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create email template:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1261,7 +1023,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update email template:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1280,7 +1042,7 @@ app.delete("/email/:workspaceId/templates/:templateId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete email template:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1301,7 +1063,7 @@ app.get("/calendar/:workspaceId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get calendar settings:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1371,7 +1133,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update calendar settings:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1404,7 +1166,7 @@ app.get("/audit/:workspaceId/logs", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get audit logs:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1427,7 +1189,7 @@ app.get("/audit/:workspaceId/stats", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get audit stats:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1445,7 +1207,7 @@ app.get("/audit/:workspaceId/filters", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get filter options:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1463,7 +1225,7 @@ app.get("/audit/:workspaceId/settings", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get audit log settings:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1516,7 +1278,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update audit log settings:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1551,7 +1313,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to export audit logs:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1574,7 +1336,7 @@ app.get("/backup/:workspaceId/settings", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get backup settings:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1647,7 +1409,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update backup settings:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1667,7 +1429,7 @@ app.get("/backup/:workspaceId/history", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get backup history:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1694,7 +1456,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create backup:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1714,7 +1476,7 @@ app.post("/backup/:workspaceId/:backupId/restore", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to restore backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1733,7 +1495,7 @@ app.get("/backup/:workspaceId/:backupId/download", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to download backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1752,7 +1514,7 @@ app.delete("/backup/:workspaceId/:backupId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1771,7 +1533,7 @@ app.post("/backup/:workspaceId/:backupId/verify", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to verify backup:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1791,7 +1553,7 @@ app.get("/roles/permissions", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get permissions:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1807,7 +1569,7 @@ app.get("/roles/templates", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get templates:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1825,7 +1587,7 @@ app.get("/roles/:workspaceId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get roles:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1848,7 +1610,7 @@ app.get("/roles/:workspaceId/:roleId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get role:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1883,7 +1645,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create role:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1919,7 +1681,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update role:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -1939,7 +1701,7 @@ app.delete("/roles/:workspaceId/:roleId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete role:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -1968,7 +1730,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to clone role:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2009,7 +1771,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to perform search:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2030,7 +1792,7 @@ app.get("/search/:workspaceId/suggestions", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get suggestions:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2049,7 +1811,7 @@ app.get("/search/:workspaceId/saved", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get saved searches:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2096,7 +1858,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to save search:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2146,7 +1908,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update saved search:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2167,7 +1929,7 @@ app.delete("/search/:workspaceId/saved/:searchId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete saved search:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2186,7 +1948,7 @@ app.post("/search/:workspaceId/saved/:searchId/use", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to record search usage:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2206,7 +1968,7 @@ app.get("/import-export/templates", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get templates:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2244,7 +2006,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to export data:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2273,7 +2035,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to validate import data:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2312,7 +2074,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to import data:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2365,7 +2127,7 @@ app.post("/background/upload", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to upload background image:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2405,7 +2167,7 @@ app.get("/background/:userEmail", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get background preferences:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2481,7 +2243,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update background preferences:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2525,7 +2287,7 @@ app.get("/appearance/:userEmail", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to fetch appearance settings:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2570,7 +2332,7 @@ app.get("/fonts/:userEmail", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get font preferences:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2645,7 +2407,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update font preferences:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2666,7 +2428,7 @@ app.get("/shortcuts/presets", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get shortcut presets:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2685,7 +2447,7 @@ app.get("/shortcuts/:workspaceId/shortcuts", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get shortcuts:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2709,7 +2471,7 @@ app.get("/shortcuts/:workspaceId/shortcuts/:shortcutId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get shortcut:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2743,7 +2505,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update shortcuts:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2781,7 +2543,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update shortcut:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -2802,7 +2564,7 @@ app.delete("/shortcuts/:workspaceId/shortcuts/:shortcutId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete shortcut:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2822,7 +2584,7 @@ app.post("/shortcuts/:workspaceId/reset", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to reset shortcuts:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2843,7 +2605,7 @@ app.post("/shortcuts/:workspaceId/presets/:presetId/apply", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to apply preset:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2865,7 +2627,7 @@ app.get("/filters/templates", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get filter templates:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2885,7 +2647,7 @@ app.get("/filters/:workspaceId/filters", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get saved filters:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2909,7 +2671,7 @@ app.get("/filters/:workspaceId/filters/:filterId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to get saved filter:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -2985,7 +2747,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to create saved filter:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -3025,7 +2787,7 @@ app.patch(
       });
     } catch (error) {
       logger.error("Failed to update saved filter:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -3046,7 +2808,7 @@ app.delete("/filters/:workspaceId/filters/:filterId", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to delete saved filter:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
   }
 });
 
@@ -3081,7 +2843,7 @@ app.post(
       });
     } catch (error) {
       logger.error("Failed to clone filter:", error);
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   },
 );
@@ -3102,7 +2864,398 @@ app.post("/filters/:workspaceId/filters/:filterId/use", async (c) => {
     });
   } catch (error) {
     logger.error("Failed to record filter usage:", error);
-    return c.json({ error: getErrorMessage(error) }, 500);
+    return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
+  }
+});
+
+// Registered LAST on purpose. Hono matches routes in registration order, so
+// this catch-all previously swallowed every two-segment PATCH beneath it —
+// /calendar/:workspaceId, /email/:workspaceId, /background/:userEmail and
+// /fonts/:userEmail all parsed as userId="calendar"/"email"/... and failed
+// the ownership guard with 403, so those settings pages could never save.
+// Keep any new specific PATCH route ABOVE this one.
+app.patch("/:userId/:section", async (c) => {
+  const db = getDatabase(); // FIX: Initialize database connection
+  const userId = c.req.param("userId");
+  const section = c.req.param("section");
+  const userEmail = c.get("userEmail");
+
+  // Security: Users can only update their own settings
+  if (userId !== userEmail) {
+    return c.json({ error: "Unauthorized" }, 403);
+  }
+
+  try {
+    const { updates: rawUpdates, version } = await c.req.json();
+    const metadata = getClientMetadata(c);
+
+    // A body without an `updates` object left rawUpdates undefined, made the
+    // merge below a no-op, and still answered 200 with the full settings
+    // payload — so a caller with the wrong body shape saw a successful save
+    // that changed nothing. Reject it instead of reporting a phantom success.
+    if (
+      typeof rawUpdates !== "object" ||
+      rawUpdates === null ||
+      Array.isArray(rawUpdates)
+    ) {
+      return c.json(
+        {
+          error:
+            "Request body must be an object of the form { updates: { ... } }",
+        },
+        400,
+      );
+    }
+
+    // Drop keys the server owns before storing anything. The GET above merges
+    // the authoritative values over whatever is stored, so a forged
+    // `passwordUpdatedAt` or `twoFactorEnabled` can never change what a client
+    // reads back — but the client sends the whole section on autosave, which
+    // would otherwise persist a stale copy of a security fact into the
+    // settings blob and leave a trap for anything that later reads that blob
+    // directly.
+    const updates = stripServerOwnedKeys(section, rawUpdates);
+
+    // Get current settings for audit trail
+    const currentSettings = await db
+      .select()
+      .from(userSettingsTable)
+      .where(
+        and(
+          eq(userSettingsTable.userEmail, userEmail),
+          eq(userSettingsTable.section, section),
+        ),
+      )
+      .limit(1);
+
+    const currentData = currentSettings[0]
+      ? JSON.parse(currentSettings[0].settings)
+      : {};
+
+    // Merge updates with current settings
+    const newSettings = { ...currentData, ...updates };
+
+    // Create audit trail
+    const changes: Record<string, unknown> = {};
+    for (const key of Object.keys(updates)) {
+      if (currentData[key] !== updates[key]) {
+        changes[key] = {
+          from: currentData[key],
+          to: updates[key],
+        };
+      }
+    }
+
+    // Update or insert settings
+    if (currentSettings[0]) {
+      await db
+        .update(userSettingsTable)
+        .set({
+          settings: JSON.stringify(newSettings),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userSettingsTable.userEmail, userEmail),
+            eq(userSettingsTable.section, section),
+          ),
+        );
+    } else {
+      await db.insert(userSettingsTable).values({
+        userEmail,
+        section,
+        settings: JSON.stringify(newSettings),
+      });
+    }
+
+    // Log audit event
+    await logAuditEvent(userEmail, "UPDATE", section, changes, metadata);
+
+    // Get all updated settings to return
+    const allSettings = await db
+      .select()
+      .from(userSettingsTable)
+      .where(eq(userSettingsTable.userEmail, userEmail));
+
+    const settingsObject: Record<string, unknown> = {
+      profile: {},
+      appearance: {},
+      notifications: {},
+      security: {},
+      privacy: {},
+    };
+
+    for (const setting of allSettings) {
+      settingsObject[setting.section] = JSON.parse(setting.settings);
+    }
+
+    return c.json({
+      data: {
+        settings: settingsObject,
+        conflicts: [], // No conflicts in this simple implementation
+      },
+      success: true,
+      timestamp: new Date().toISOString(),
+      version: Date.now(),
+    });
+  } catch (error) {
+    logger.error("Failed to update settings:", error);
+    return c.json({ error: "Failed to update settings" }, 500);
+  }
+});
+
+// ⚠️ Catch-all user-settings routes — these MUST stay at the very bottom.
+//
+// Hono matches in registration order, so `/:userId` and `/:userId/:section/reset`
+// swallow every later literal path at the same depth. Registered where they used
+// to be, they made `GET /settings/health` and `POST /settings/shortcuts/:id/reset`
+// unreachable: both answered 403 from the ownership check below, with `userId`
+// bound to "health" / "shortcuts". The Shortcuts page's "Reset to Defaults"
+// button was dead for exactly this reason. Add new literal routes ABOVE this
+// block, never below it.
+
+app.get("/:userId", async (c) => {
+  const db = getDatabase(); // FIX: Initialize database connection
+  const userId = c.req.param("userId");
+  const userEmail = c.get("userEmail");
+
+  // Security: Users can only access their own settings
+  if (userId !== userEmail) {
+    return c.json({ error: "Unauthorized" }, 403);
+  }
+
+  try {
+    const settings = await db
+      .select()
+      .from(userSettingsTable)
+      .where(eq(userSettingsTable.userEmail, userEmail));
+
+    // Convert to the expected format
+    const settingsObject: Record<string, unknown> = {
+      profile: {},
+      appearance: {},
+      notifications: {},
+      security: {},
+      privacy: {},
+    };
+
+    for (const setting of settings) {
+      settingsObject[setting.section] = JSON.parse(setting.settings);
+    }
+
+    // Server-owned facts, merged over whatever the client last stored. These
+    // are not user-editable settings and must not be taken from the stored
+    // blob. The Security page's score needs them: its "Email Verified" check
+    // read profile.emailVerified, which nothing ever populated — the web
+    // client defaulted it to false — so the check could never pass for anyone,
+    // while the real flag lived in users.is_email_verified all along.
+    const [account] = await db
+      .select({
+        isEmailVerified: users.isEmailVerified,
+        passwordUpdatedAt: users.passwordUpdatedAt,
+        twoFactorEnabled: users.twoFactorEnabled,
+      })
+      .from(users)
+      .where(eq(users.email, userEmail))
+      .limit(1);
+
+    if (account) {
+      settingsObject.profile = {
+        ...(settingsObject.profile as Record<string, unknown>),
+        email: userEmail,
+        emailVerified: account.isEmailVerified ?? false,
+      };
+      settingsObject.security = {
+        ...(settingsObject.security as Record<string, unknown>),
+        twoFactorEnabled: account.twoFactorEnabled ?? false,
+        passwordUpdatedAt: account.passwordUpdatedAt
+          ? account.passwordUpdatedAt.toISOString()
+          : null,
+      };
+    }
+
+    return c.json({
+      data: settingsObject,
+      success: true,
+      timestamp: new Date().toISOString(),
+      version: Date.now(),
+    });
+  } catch (error) {
+    logger.error("Failed to get settings:", error);
+    return c.json({ error: "Failed to retrieve settings" }, 500);
+  }
+});
+
+app.post("/:userId/:section/reset", async (c) => {
+  const db = getDatabase(); // FIX: Initialize database connection
+  const userId = c.req.param("userId");
+  const section = c.req.param("section");
+  const userEmail = c.get("userEmail");
+
+  // Security: Users can only reset their own settings
+  if (userId !== userEmail) {
+    return c.json({ error: "Unauthorized" }, 403);
+  }
+
+  try {
+    const metadata = getClientMetadata(c);
+
+    // Get current settings for audit trail
+    const currentSettings = await db
+      .select()
+      .from(userSettingsTable)
+      .where(
+        and(
+          eq(userSettingsTable.userEmail, userEmail),
+          eq(userSettingsTable.section, section),
+        ),
+      )
+      .limit(1);
+
+    const currentData = currentSettings[0]
+      ? JSON.parse(currentSettings[0].settings)
+      : {};
+
+    // Default settings for each section. Every section is itself an object;
+    // the outer Record<string, unknown> forced a manual cast at every
+    // `defaultSettings[section][key]` access below.
+    const defaultSettings: Record<string, Record<string, unknown>> = {
+      profile: {
+        name: "",
+        email: userEmail,
+        bio: "",
+        location: "",
+        website: "",
+        timezone: "UTC",
+        language: "en",
+        jobTitle: "",
+        company: "",
+        phone: "",
+      },
+      appearance: {
+        theme: "system",
+        fontSize: 14,
+        sidebarCollapsed: false,
+        density: "comfortable",
+        animations: true,
+        soundEffects: false,
+        highContrast: false,
+        reducedMotion: false,
+        compactMode: false,
+      },
+      notifications: {
+        email: {
+          taskAssigned: true,
+          taskCompleted: true,
+          taskOverdue: true,
+          projectUpdates: true,
+          teamInvitations: true,
+          weeklyDigest: true,
+          mentions: true,
+          comments: true,
+        },
+        push: {
+          taskAssigned: true,
+          taskCompleted: false,
+          taskOverdue: true,
+          mentions: true,
+          comments: true,
+          directMessages: true,
+          projectUpdates: false,
+        },
+        inApp: {
+          taskAssigned: true,
+          taskCompleted: true,
+          taskOverdue: true,
+          mentions: true,
+          comments: true,
+          directMessages: true,
+          projectUpdates: true,
+          teamActivity: true,
+        },
+        soundEnabled: true,
+      },
+      security: {
+        twoFactorEnabled: false,
+        loginNotifications: true,
+        sessionTimeout: true,
+        deviceTracking: true,
+        suspiciousActivityAlerts: true,
+      },
+      privacy: {
+        profileVisibility: true,
+        activityTracking: true,
+        analyticsOptIn: false,
+        marketingOptIn: false,
+        dataRetention: true,
+        showOnlineStatus: true,
+        allowDirectMessages: true,
+      },
+    };
+
+    const resetData = defaultSettings[section] || {};
+
+    // Create audit trail
+    const changes: Record<string, unknown> = {};
+    for (const key of Object.keys(currentData)) {
+      changes[key] = {
+        from: currentData[key],
+        to: resetData[key] || null,
+      };
+    }
+
+    // Update settings
+    if (currentSettings[0]) {
+      await db
+        .update(userSettingsTable)
+        .set({
+          settings: JSON.stringify(resetData),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userSettingsTable.userEmail, userEmail),
+            eq(userSettingsTable.section, section),
+          ),
+        );
+    } else {
+      await db.insert(userSettingsTable).values({
+        userEmail,
+        section,
+        settings: JSON.stringify(resetData),
+      });
+    }
+
+    // Log audit event
+    await logAuditEvent(userEmail, "RESET", section, changes, metadata);
+
+    // Get all settings to return
+    const allSettings = await db
+      .select()
+      .from(userSettingsTable)
+      .where(eq(userSettingsTable.userEmail, userEmail));
+
+    const settingsObject: Record<string, unknown> = {
+      profile: {},
+      appearance: {},
+      notifications: {},
+      security: {},
+      privacy: {},
+    };
+
+    for (const setting of allSettings) {
+      settingsObject[setting.section] = JSON.parse(setting.settings);
+    }
+
+    return c.json({
+      data: settingsObject,
+      success: true,
+      timestamp: new Date().toISOString(),
+      version: Date.now(),
+    });
+  } catch (error) {
+    logger.error("Failed to reset settings:", error);
+    return c.json({ error: "Failed to reset settings" }, 500);
   }
 });
 

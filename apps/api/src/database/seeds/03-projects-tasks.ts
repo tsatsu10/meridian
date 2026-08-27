@@ -7,7 +7,6 @@
  * - Task dependencies
  * - Milestones (2-3 per project)
  * - Project members
- * - Status columns for Kanban
  * - Labels/tags
  */
 
@@ -23,7 +22,6 @@ import {
   tasks,
   taskDependencies,
   milestone,
-  statusColumns,
   label,
   users,
   workspaces,
@@ -112,23 +110,6 @@ const PROJECT_TEMPLATES = [
     priority: "medium",
     progress: 25,
   },
-];
-
-// ==========================================
-// STATUS COLUMNS (Kanban)
-// ==========================================
-
-const DEFAULT_COLUMNS = [
-  {
-    name: "To Do",
-    slug: "todo",
-    color: "#6b7280",
-    position: 0,
-    isDefault: true,
-  },
-  { name: "In Progress", slug: "in-progress", color: "#3b82f6", position: 1 },
-  { name: "In Review", slug: "review", color: "#f59e0b", position: 2 },
-  { name: "Done", slug: "done", color: "#10b981", position: 3 },
 ];
 
 // ==========================================
@@ -247,17 +228,12 @@ export async function seedProjectsAndTasks() {
 
       logger.info(`   ✅ Added ${memberCount} members to project`);
 
-      // Create status columns for this project
-      for (const columnData of DEFAULT_COLUMNS) {
-        await db.insert(statusColumns).values({
-          projectId: project.id,
-          name: columnData.name,
-          slug: columnData.slug,
-          color: columnData.color,
-          position: columnData.position,
-          isDefault: columnData.isDefault || false,
-        });
-      }
+      // Note: the 3 default status columns (To Do/In Progress/Done) are
+      // virtual - see DEFAULT_COLUMNS in get-tasks.ts - and are never rows
+      // in status_columns, so nothing to seed here. (This seed used to
+      // insert 3 non-default rows per project with mismatched slugs that
+      // never matched any real task status - permanently-empty phantom
+      // columns once status_columns rows are actually read by the board.)
 
       // Create labels for this project
       const projectLabels = randomElements(LABELS, randomInt(4, 8));

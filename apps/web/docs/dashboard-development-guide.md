@@ -48,7 +48,7 @@ pnpm dev              # Start web frontend only
 pnpm dev:api          # Start API server only
 
 # Development URLs
-Frontend: http://localhost:5173
+Frontend: http://localhost:5174
 API:      http://localhost:3005
 Docs:     http://localhost:3001
 ```

@@ -5,6 +5,7 @@
  */
 
 import sgMail from "@sendgrid/mail";
+import { getFrontendBaseUrl } from "../../config/frontend-url";
 import logger from "../../utils/logger";
 import { getErrorMessage } from "../../utils/error-utils";
 
@@ -157,7 +158,7 @@ export class EmailService {
     token: string,
     name: string,
   ): Promise<boolean> {
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+    const verifyUrl = `${getFrontendBaseUrl()}/verify-email?token=${token}`;
 
     const html = `
       <!DOCTYPE html>
@@ -203,7 +204,7 @@ export class EmailService {
                 <li>Track tasks and time</li>
                 <li>Access all premium features</li>
               </ul>
-              <p>If you have any questions, feel free to reply to this email or visit our <a href="${process.env.FRONTEND_URL}/help">Help Center</a>.</p>
+              <p>If you have any questions, feel free to reply to this email or visit our <a href="${getFrontendBaseUrl()}/help">Help Center</a>.</p>
               <p>Best regards,<br>The Meridian Team</p>
             </div>
             <div class="footer">
@@ -230,7 +231,7 @@ export class EmailService {
     token: string,
     name: string,
   ): Promise<boolean> {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetUrl = `${getFrontendBaseUrl()}/auth/reset-password?token=${token}`;
 
     const html = `
       <!DOCTYPE html>
@@ -299,8 +300,8 @@ export class EmailService {
    * Send welcome email after verification
    */
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
-    const loginUrl = `${process.env.FRONTEND_URL}/login`;
-    const dashboardUrl = `${process.env.FRONTEND_URL}/dashboard`;
+    const loginUrl = `${getFrontendBaseUrl()}/auth/sign-in`;
+    const dashboardUrl = `${getFrontendBaseUrl()}/dashboard`;
 
     const html = `
       <!DOCTYPE html>
@@ -357,16 +358,16 @@ export class EmailService {
               
               <h3 style="color: #667eea; margin-top: 30px;">📚 Resources</h3>
               <ul>
-                <li><a href="${process.env.FRONTEND_URL}/help">Help Center</a> - Guides and tutorials</li>
-                <li><a href="${process.env.FRONTEND_URL}/help/getting-started">Getting Started</a> - Step-by-step walkthrough</li>
-                <li><a href="${process.env.FRONTEND_URL}/settings">Settings</a> - Customize your experience</li>
+                <li><a href="${getFrontendBaseUrl()}/help">Help Center</a> - Guides and tutorials</li>
+                <li><a href="${getFrontendBaseUrl()}/help/getting-started">Getting Started</a> - Step-by-step walkthrough</li>
+                <li><a href="${getFrontendBaseUrl()}/settings">Settings</a> - Customize your experience</li>
               </ul>
               
               <p>Need help? We're here for you:</p>
               <ul>
                 <li>📧 Email: <a href="mailto:support@meridian.app">support@meridian.app</a></li>
                 <li>💬 Live Chat: Available in your dashboard</li>
-                <li>📖 Documentation: <a href="${process.env.FRONTEND_URL}/docs">docs.meridian.com</a></li>
+                <li>📖 Documentation: <a href="${getFrontendBaseUrl()}/docs">docs.meridian.com</a></li>
               </ul>
               
               <p>We're thrilled to have you! Let's build something amazing together.</p>
@@ -434,7 +435,7 @@ export class EmailService {
               `
                   : ""
               }
-              <p>You can manage your notification preferences in your <a href="${process.env.FRONTEND_URL}/settings/notifications">account settings</a>.</p>
+              <p>You can manage your notification preferences in your <a href="${getFrontendBaseUrl()}/settings/notifications">account settings</a>.</p>
               <p>Best regards,<br>The Meridian Team</p>
             </div>
             <div class="footer">
@@ -543,10 +544,10 @@ export class EmailService {
               }
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.FRONTEND_URL}/dashboard" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">View Dashboard</a>
+                <a href="${getFrontendBaseUrl()}/dashboard" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">View Dashboard</a>
               </div>
               
-              <p style="font-size: 14px; color: #6c757d;">You can manage digest preferences in your <a href="${process.env.FRONTEND_URL}/settings/notifications">notification settings</a>.</p>
+              <p style="font-size: 14px; color: #6c757d;">You can manage digest preferences in your <a href="${getFrontendBaseUrl()}/settings/notifications">notification settings</a>.</p>
             </div>
             <div class="footer">
               <p>&copy; ${new Date().getFullYear()} Meridian. All rights reserved.</p>

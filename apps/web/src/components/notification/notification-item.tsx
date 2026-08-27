@@ -29,8 +29,6 @@ import {
   Archive,
   ArchiveRestore,
   MoreHorizontal,
-  Clock,
-  Flag,
   Trash,
   CheckSquare,
   Square,
@@ -47,7 +45,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
@@ -164,7 +161,9 @@ const NotificationItem = memo(
                 });
                 onClose?.();
               } else {
-                toast.error("Cannot navigate: Missing workspace information");
+                toast.error(
+                  "Couldn't open that — this notification isn't linked to a workspace.",
+                );
               }
             }
             break;
@@ -186,7 +185,9 @@ const NotificationItem = memo(
                 });
                 onClose?.();
               } else {
-                toast.error("Cannot navigate: Missing task information");
+                toast.error(
+                  "Couldn't open that — this notification isn't linked to a task.",
+                );
               }
             }
             break;
@@ -208,7 +209,9 @@ const NotificationItem = memo(
                 });
                 onClose?.();
               } else {
-                toast.error("Cannot navigate: Missing task information");
+                toast.error(
+                  "Couldn't open that — this notification isn't linked to a task.",
+                );
               }
             }
             break;
@@ -290,24 +293,6 @@ const NotificationItem = memo(
         deleteNotification(notification.id);
         onClose?.();
       }
-    };
-
-    const handleSnooze = (e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      toast.info("Notification snoozed for 1 hour", {
-        description: "You will be reminded later",
-      });
-      // TODO: Implement snooze functionality with backend support
-      onClose?.();
-    };
-
-    const handleReport = (e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      toast.success("Notification reported", {
-        description: "Thank you for helping us improve",
-      });
-      // TODO: Implement report functionality with backend support
-      onClose?.();
     };
 
     const getIcon = () => {
@@ -526,15 +511,6 @@ const NotificationItem = memo(
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleSnooze}>
-                  <Clock className="mr-2 h-4 w-4" />
-                  Snooze for 1 hour
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleReport}>
-                  <Flag className="mr-2 h-4 w-4" />
-                  Report issue
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleDelete}
                   disabled={isDeleting}
@@ -694,15 +670,6 @@ const NotificationItem = memo(
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleSnooze}>
-                    <Clock className="mr-2 h-4 w-4" />
-                    Snooze for 1 hour
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleReport}>
-                    <Flag className="mr-2 h-4 w-4" />
-                    Report issue
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleDelete}
                     disabled={isDeleting}

@@ -12,6 +12,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { Shield, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -51,7 +52,7 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps = {}) {
       setStep("scan");
     } catch (error) {
       setError("Failed to generate 2FA secret. Please try again.");
-      toast.error("Failed to generate 2FA secret");
+      toast.error(userMessage(error, "start two-factor setup"));
     } finally {
       setIsLoading(false);
     }

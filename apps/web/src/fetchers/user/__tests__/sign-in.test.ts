@@ -279,4 +279,42 @@ describe("signIn", () => {
       signIn({ email: "user@example.com", password: "pass" }),
     ).rejects.toThrow("Email not verified");
   });
+
+  // Regression: the API's error envelope is `{ error: { message, code, ... } }`.
+  // `errorData.error` is an OBJECT there, and being truthy it was assigned
+  // straight to errorMessage, which later stringified to "[object Object]" in
+  // the toast instead of the real reason.
+  it("throws the server's real reason from a nested error envelope", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        status: 401,
+        json: async () => ({
+          error: {
+            message: "Invalid email or password",
+            code: "INVALID_CREDENTIALS",
+            statusCode: 401,
+          },
+        }),
+      },
+    );
+
+    await expect(
+      signIn({ email: "user@example.com", password: "wrong" }),
+    ).rejects.toThrow(new Error("Invalid email or password"));
+  });
+
+  it("throws the server's reason when error is a plain string", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      {
+        ok: false,
+        status: 401,
+        json: async () => ({ error: "Invalid email or password" }),
+      },
+    );
+
+    await expect(
+      signIn({ email: "user@example.com", password: "wrong" }),
+    ).rejects.toThrow(new Error("Invalid email or password"));
+  });
 });

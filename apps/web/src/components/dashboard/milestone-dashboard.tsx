@@ -155,123 +155,90 @@ const deriveMilestonesFromProjects = (
         task.title?.toLowerCase().includes("deploy"),
     );
 
-    // If no specific milestone tasks, create a project completion milestone
-    if (milestoneTasks.length === 0 && allTasks.length > 0) {
-      const completedTasks = allTasks.filter((t) => t.status === "done").length;
-      const progress = Math.round((completedTasks / allTasks.length) * 100);
-
-      // Determine status based on progress and deadlines
-      let status: Milestone["status"] = "upcoming";
-      if (progress === 100) status = "completed";
-      else if (progress > 70) status = "in_progress";
-      else if (progress > 0) status = "in_progress";
-
-      // Calculate health score based on progress and other factors
-      const healthScore = Math.max(
-        20,
-        Math.min(100, progress + (Math.random() * 20 - 10)),
+    // Only build milestones from tasks that actually look like milestones
+    // (critical priority, or a title suggesting one). This used to also
+    // fabricate a "[Project] Completion" milestone for ANY project with
+    // tasks, even when nothing about it was flagged as a milestone — every
+    // other surface (the dedicated Milestones tab, Timeline, Analytics) has
+    // always correctly reported 0 milestones for such a project, so this
+    // widget disagreeing with all of them wasn't a differing perspective,
+    // it was just inventing data.
+    for (const task of milestoneTasks) {
+      const taskTitleFirstWord = task.title?.toLowerCase().split(" ")[0] || "";
+      const relatedTasks = allTasks.filter(
+        (t) =>
+          t.title?.toLowerCase().includes(taskTitleFirstWord) ||
+          t.assignee === task.assignee,
       );
 
-      const projectName = project.name || "Untitled Project";
+      const completedRelated = relatedTasks.filter(
+        (t) => t.status === "done",
+      ).length;
+      const progress =
+        relatedTasks.length > 0
+          ? Math.round((completedRelated / relatedTasks.length) * 100)
+          : task.status === "done"
+            ? 100
+            : 0;
+
+      let status: Milestone["status"] = "upcoming";
+      if (task.status === "done") status = "completed";
+      else if (task.status === "in_progress") status = "in_progress";
+      else if (progress > 0) status = "in_progress";
+
+      // Health tracks real progress, penalized only if the real due date has
+      // actually passed — no random jitter (this used to be
+      // `progress + (Math.random() * 20 - 10)`, so the same milestone showed
+      // a different health score on every reload with no underlying change).
+      const dueDate = task.dueDate || project.deadline;
+      const isOverdue =
+        status !== "completed" &&
+        !!dueDate &&
+        new Date(dueDate).getTime() < Date.now();
+      const healthScore =
+        status === "completed"
+          ? 100
+          : isOverdue
+            ? Math.max(20, progress - 30)
+            : progress;
+
+      const taskTitle = task.title || "Untitled";
       milestones.push({
-        id: `milestone-${project.id}`,
-        title: `${projectName} Completion`,
-        description: `Complete all tasks and deliverables for ${projectName}`,
+        id: `milestone-${task.id}`,
+        title: taskTitle,
+        description: task.description || `Milestone: ${taskTitle}`,
         targetDate:
+          task.dueDate ||
           project.deadline ||
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split("T")[0],
         status,
-        priority: (project.priority || "medium") as Milestone["priority"],
+        priority: (task.priority || "high") as Milestone["priority"],
         projectId: project.id,
-        projectName,
-        assignees:
-          project.members?.slice(0, 3).map((member) => ({
-            id: member.id || "unknown",
-            name: member.name || member.email?.split("@")[0] || "Unknown",
-            email: member.email || `${member.id}@example.com`,
-            avatar: member.avatar,
-          })) || [],
-        tasks: allTasks.map((task) => ({
-          id: task.id,
-          title: task.title || "Untitled",
-          status: (task.status || "todo") as "todo" | "in_progress" | "done",
-          priority: task.priority || "medium",
+        projectName: project.name || "Untitled Project",
+        assignees: task.assignee
+          ? [
+              {
+                id: task.assignee.id || "unknown",
+                name:
+                  task.assignee.name ||
+                  task.assignee.email?.split("@")[0] ||
+                  "Unassigned",
+                email: task.assignee.email || `${task.assignee.id}@example.com`,
+                avatar: task.assignee.avatar,
+              },
+            ]
+          : [],
+        tasks: relatedTasks.map((t) => ({
+          id: t.id,
+          title: t.title || "Untitled",
+          status: (t.status || "todo") as "todo" | "in_progress" | "done",
+          priority: t.priority || "medium",
         })),
         progress,
         healthScore: Math.round(healthScore),
       });
-    } else {
-      // Create milestones from milestone tasks
-      for (const task of milestoneTasks) {
-        const taskTitleFirstWord =
-          task.title?.toLowerCase().split(" ")[0] || "";
-        const relatedTasks = allTasks.filter(
-          (t) =>
-            t.title?.toLowerCase().includes(taskTitleFirstWord) ||
-            t.assignee === task.assignee,
-        );
-
-        const completedRelated = relatedTasks.filter(
-          (t) => t.status === "done",
-        ).length;
-        const progress =
-          relatedTasks.length > 0
-            ? Math.round((completedRelated / relatedTasks.length) * 100)
-            : task.status === "done"
-              ? 100
-              : 0;
-
-        let status: Milestone["status"] = "upcoming";
-        if (task.status === "done") status = "completed";
-        else if (task.status === "in_progress") status = "in_progress";
-        else if (progress > 0) status = "in_progress";
-
-        const healthScore = Math.max(
-          20,
-          Math.min(100, progress + (Math.random() * 20 - 10)),
-        );
-
-        const taskTitle = task.title || "Untitled";
-        milestones.push({
-          id: `milestone-${task.id}`,
-          title: taskTitle,
-          description: task.description || `Milestone: ${taskTitle}`,
-          targetDate:
-            task.dueDate ||
-            project.deadline ||
-            new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .split("T")[0],
-          status,
-          priority: (task.priority || "high") as Milestone["priority"],
-          projectId: project.id,
-          projectName: project.name || "Untitled Project",
-          assignees: task.assignee
-            ? [
-                {
-                  id: task.assignee.id || "unknown",
-                  name:
-                    task.assignee.name ||
-                    task.assignee.email?.split("@")[0] ||
-                    "Unassigned",
-                  email:
-                    task.assignee.email || `${task.assignee.id}@example.com`,
-                  avatar: task.assignee.avatar,
-                },
-              ]
-            : [],
-          tasks: relatedTasks.map((t) => ({
-            id: t.id,
-            title: t.title || "Untitled",
-            status: (t.status || "todo") as "todo" | "in_progress" | "done",
-            priority: t.priority || "medium",
-          })),
-          progress,
-          healthScore: Math.round(healthScore),
-        });
-      }
     }
   }
 
@@ -724,7 +691,9 @@ export default function MilestoneDashboard({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Health Score</p>
+                <p className="text-sm text-muted-foreground">
+                  Milestone Health
+                </p>
                 <p
                   className={cn(
                     "text-2xl font-bold",

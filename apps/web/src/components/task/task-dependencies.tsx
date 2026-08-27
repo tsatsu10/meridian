@@ -10,6 +10,7 @@ import type Task from "@/types/task";
 // Removed Lucide imports due to React 18/19 type conflicts
 import { useState } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 interface TaskDependenciesProps {
   task: Task;
@@ -258,7 +259,7 @@ function TaskDependencies({ task, setIsSaving }: TaskDependenciesProps) {
       await deleteDependency(dependencyId);
       toast.success("Dependency removed successfully");
     } catch (error) {
-      toast.error("Failed to remove dependency");
+      toast.error(userMessage(error, "remove the dependency"));
     } finally {
       setIsSaving(false);
     }

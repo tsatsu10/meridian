@@ -1,7 +1,6 @@
 /**
  * Note Editor Component - Phase 5.2
- * Editor for creating and editing project notes
- * NOTE: Uses simple textarea for now - should be upgraded to TipTap/ProseMirror rich text editor
+ * Plain-text and Markdown note editor (textarea). Rich-text (TipTap) is deferred.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { Save, X, Pin, History, MessageSquare, Tag, Clock } from "lucide-react";
 import { API_BASE_URL } from "@/constants/urls";
 import { formatDistanceToNow } from "date-fns";
@@ -52,12 +52,17 @@ export function NoteEditor({
   const [tagInput, setTagInput] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
-    null,
-  );
+  const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  void useRef<NodeJS.Timeout | null>(null);
 
+  // Keyed on note?.id, not the note object itself: onSave() (including the
+  // silent autosave below) replaces `note` with a fresh object from the API
+  // response on every save, so keying on the object reference re-ran this
+  // effect after every autosave — needlessly resetting `tags` to a new array
+  // reference each time and fighting any edit made in the same tick as a
+  // save completing. Only actually switching to a different note should
+  // reset the local draft.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally keyed on note?.id alone — depending on the note fields read here would re-run this effect after every autosave and clobber in-progress edits
   useEffect(() => {
     if (note) {
       setTitle(note.title);
@@ -65,28 +70,27 @@ export function NoteEditor({
       setTags(note.tags || []);
       setIsPinned(note.isPinned);
     }
-  }, [note]);
+  }, [note?.id]);
 
   // Auto-save functionality
-  // biome-ignore lint/correctness/useExhaustiveDependencies: debounced autosave keyed on title/content; autoSaveTimeout is written here and note fields are read for change detection — adding them would reset/loop the timer
+  // biome-ignore lint/correctness/useExhaustiveDependencies: debounced autosave keyed on title/content; note is read for change detection — adding it would reset/loop the timer
   useEffect(() => {
     if (note && (title !== note.title || content !== note.content)) {
       // Clear existing timeout
-      if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
+      if (autoSaveTimeout.current) {
+        clearTimeout(autoSaveTimeout.current);
       }
 
-      // Set new timeout for auto-save
-      const timeout = setTimeout(() => {
+      // Set new timeout for auto-save. A ref (not state) so scheduling it
+      // doesn't itself trigger a re-render on every keystroke.
+      autoSaveTimeout.current = setTimeout(() => {
         handleSave(true); // Silent save
       }, 2000); // Auto-save after 2 seconds of inactivity
-
-      setAutoSaveTimeout(timeout);
     }
 
     return () => {
-      if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
+      if (autoSaveTimeout.current) {
+        clearTimeout(autoSaveTimeout.current);
       }
     };
   }, [title, content]);
@@ -151,7 +155,7 @@ export function NoteEditor({
     } catch (error) {
       console.error("Failed to save note:", error);
       if (!silent) {
-        toast.error("Failed to save note");
+        toast.error(userMessage(error, "save the note"));
       }
     } finally {
       setSaving(false);
@@ -275,8 +279,7 @@ export function NoteEditor({
             </div>
           </div>
 
-          {/* Content Editor */}
-          {/* TODO: Replace with TipTap or ProseMirror rich text editor */}
+          {/* Content Editor — Markdown in a monospace textarea until rich-text lands */}
           <div className="space-y-2">
             <Textarea
               ref={textareaRef}
@@ -288,8 +291,8 @@ export function NoteEditor({
               className="min-h-[400px] resize-none font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              💡 Tip: A rich text editor will be available soon. For now, you
-              can use Markdown formatting.
+              Markdown formatting is supported (headings, lists, links).
+              Rich-text editing is not available yet.
             </p>
           </div>
 

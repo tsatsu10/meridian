@@ -17,6 +17,7 @@ async function getOnlineWorkspaceUsers({
 }: OnlineUserRequest): Promise<OnlineUser[]> {
   const response = await fetch(
     `${API_BASE_URL}/workspace-user/${workspaceId}/online`,
+    { credentials: "include" },
   );
 
   if (!response.ok) {

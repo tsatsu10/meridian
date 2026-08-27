@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 import {
   Card,
@@ -77,7 +78,12 @@ interface FilterTemplate {
   id: string;
   name: string;
   description?: string;
-  filterType: string;
+  filterType: "projects" | "tasks" | "users" | "messages" | "files";
+  filterConfig?: {
+    logic: "AND" | "OR";
+    conditions: Array<{ field: string; operator: string; value: unknown }>;
+  };
+  category?: string;
 }
 
 function FiltersSettingsPage() {
@@ -161,8 +167,8 @@ function FiltersSettingsPage() {
       setIsCreateDialogOpen(false);
       resetForm();
     },
-    onError: () => {
-      toast.error("Failed to create filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "create the filter"));
     },
   });
 
@@ -191,8 +197,8 @@ function FiltersSettingsPage() {
         queryKey: ["saved-filters", currentWorkspace?.id],
       });
     },
-    onError: () => {
-      toast.error("Failed to update filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "update the filter"));
     },
   });
 
@@ -217,8 +223,8 @@ function FiltersSettingsPage() {
       });
       setIsDeleteDialogOpen(false);
     },
-    onError: () => {
-      toast.error("Failed to delete filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "delete the filter"));
     },
   });
 
@@ -247,8 +253,8 @@ function FiltersSettingsPage() {
         queryKey: ["saved-filters", currentWorkspace?.id],
       });
     },
-    onError: () => {
-      toast.error("Failed to clone filter");
+    onError: (error) => {
+      toast.error(userMessage(error, "duplicate the filter"));
     },
   });
 
@@ -305,7 +311,32 @@ function FiltersSettingsPage() {
   };
 
   const handleUseTemplate = (template: FilterTemplate) => {
-    toast.info(`Using template "${template.name}" - Full builder coming soon!`);
+    if (!currentWorkspace?.id) {
+      toast.error("Select a workspace before using a filter template");
+      return;
+    }
+    const allowedTypes = [
+      "projects",
+      "tasks",
+      "users",
+      "messages",
+      "files",
+    ] as const;
+    type FilterType = (typeof allowedTypes)[number];
+    if (!allowedTypes.includes(template.filterType as FilterType)) {
+      toast.error("This template type is not supported");
+      return;
+    }
+    createFilterMutation.mutate({
+      name: template.name,
+      description: template.description ?? "",
+      filterType: template.filterType,
+      isPublic: false,
+      filterConfig: template.filterConfig ?? {
+        logic: "AND",
+        conditions: [],
+      },
+    });
   };
 
   const getFilterTypeBadge = (type: string) => {

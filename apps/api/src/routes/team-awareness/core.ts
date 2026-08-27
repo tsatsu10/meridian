@@ -14,6 +14,7 @@ import { MoodTrackerService } from "../../services/team-awareness/mood-tracker-s
 import { SkillsService } from "../../services/team-awareness/skills-service";
 import { Logger } from "../../services/logging/logger";
 import { getErrorMessage } from "../../utils/error-utils";
+import { requireWorkspacePermission } from "../../middlewares/rbac";
 
 const teamAwareness = new Hono();
 
@@ -189,6 +190,13 @@ teamAwareness.get("/status/:userId", async (c) => {
  * GET /api/team-awareness/status/workspace/:workspaceId
  * Get all workspace statuses
  */
+// 🚨 Presence for every member of an arbitrary workspace, unauthenticated
+// against that workspace.
+teamAwareness.use(
+  "/status/workspace/:workspaceId",
+  requireWorkspacePermission("canViewTeam", "workspaceId"),
+);
+
 teamAwareness.get("/status/workspace/:workspaceId", async (c) => {
   try {
     const workspaceId = c.req.param("workspaceId");

@@ -25,7 +25,7 @@ import {
   validateRBACCompliance,
 } from "../middlewares/security-audit";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 
 const workspace = new Hono<{
   Variables: {
@@ -101,7 +101,7 @@ workspace.post(
       logger.error("❌ Failed to create workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to create workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -192,7 +192,7 @@ workspace.get(
       logger.error("Failed to get workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to get workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -220,7 +220,7 @@ workspace.put(
       logger.error("Failed to update workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to update workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -242,7 +242,7 @@ workspace.delete(
       logger.error("Failed to delete workspace:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to delete workspace" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -265,7 +265,7 @@ workspace.get(
       logger.error("Failed to get workspace settings:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to get workspace settings" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -339,13 +339,21 @@ workspace.patch(
         workspace: updatedWorkspace,
       });
     } catch (error) {
-      logger.error("Failed to update workspace settings:", error);
+      // Authorization failures and missing workspaces used to come back as
+      // 500, indistinguishable from a genuine crash to both the client and to
+      // monitoring — a workspace-manager denied by the role check saw "server
+      // error". CustomError carries the status the controller intended, so
+      // honour it and reserve 500 for the unexpected.
+      const status = statusCodeOf(error);
+      if (status >= 500) {
+        logger.error("Failed to update workspace settings:", error);
+      }
       return c.json(
         {
           error:
             getErrorMessage(error) || "Failed to update workspace settings",
         },
-        500,
+        status,
       );
     }
   },
@@ -376,7 +384,7 @@ workspace.post(
       logger.error("Failed to upload logo:", error);
       return c.json(
         { error: getErrorMessage(error) || "Failed to upload logo" },
-        500,
+        statusCodeOf(error),
       );
     }
   },
@@ -385,7 +393,7 @@ workspace.post(
 // @epic-3.1-analytics: Workspace analytics endpoint
 workspace.get(
   "/:id/analytics",
-  requireWorkspacePermission("canViewAnalytics", "id"),
+  requireWorkspacePermission("canViewWorkspaceAnalytics", "id"),
   zValidator("param", z.object({ id: z.string() })),
   zValidator("query", z.object({ timeRange: z.string().optional() })),
   getWorkspaceAnalytics,

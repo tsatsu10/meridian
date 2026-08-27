@@ -6,16 +6,35 @@
 
 import type { UserRole } from "../types/rbac";
 
+/**
+ * Authority ladder, used by `requireRole(role, minimum)` and by the
+ * hierarchy ceiling in roles/lib/role-ceiling.ts.
+ *
+ * 🚨 This was ordered by scope rather than by authority, which put *viewers*
+ * above *managers*: `project-viewer: 3` outranked `team-lead: 2`, and
+ * `workspace-viewer: 5` outranked `project-manager: 4`. So
+ * `requireRole("project-manager", true)` admitted a workspace-viewer — a
+ * read-only role clearing a manager-level bar.
+ *
+ * That was largely inert while `requireRole` sampled one arbitrary assignment
+ * and only `workspace-manager` held `canManageRoles`. It is now load-bearing:
+ * `requireRole` binds to the MINIMUM level across a caller's assignments, so a
+ * wrong ranking mis-binds the decision in both directions.
+ *
+ * Ordering rule: read-only roles rank below any role that can write at the
+ * same scope. A viewer never outranks a manager.
+ */
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   guest: 0,
+  // Limited-participation roles: can see and act only where invited.
   stakeholder: 1,
   contractor: 1,
   client: 1,
-  member: 1,
-  "team-lead": 2,
-  "project-viewer": 3,
+  "project-viewer": 1, // read-only — was 3, above team-lead
+  member: 2,
+  "workspace-viewer": 2, // read-only, workspace-wide — was 5, above project-manager
+  "team-lead": 3,
   "project-manager": 4,
-  "workspace-viewer": 5,
   "department-head": 6,
   "workspace-manager": 10, // 🏆 OWNER LEVEL - Highest authority with all powers
 };
@@ -39,14 +58,25 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canCreateFeedback: true,
   },
   member: {
+    // Verified live: without this, GET /api/workspaces/:id returns 403 to a
+    // member of that very workspace — they could not load the workspace they
+    // belong to. Every role that can see projects needs it, because projects
+    // are reached through the workspace.
+    canViewWorkspace: true,
     canViewProjects: true,
     canViewTasks: true,
     canUpdateOwnTasks: true,
     canCreateComments: true,
     canViewTeam: true,
+    canViewProjectMilestones: true,
   },
   "team-lead": {
+    canViewWorkspace: true,
     canViewProjects: true,
+    // Verified live: without this, GET /api/task/:id returned 403 to a role
+    // that can create, update, delete and assign that same task. Modifying a
+    // resource you cannot read is not a coherent authority level.
+    canViewTasks: true,
     canCreateTasks: true,
     canUpdateTasks: true,
     canDeleteTasks: true,
@@ -58,14 +88,25 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageSubtaskHierarchy: true,
     canViewTeam: true,
     canManageTeamMembers: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
   },
   "project-viewer": {
+    canViewWorkspace: true,
     canViewProjects: true,
     canViewTasks: true,
     canViewReports: true,
+    canViewProjectMilestones: true,
   },
   "project-manager": {
+    canViewWorkspace: true,
     canViewProjects: true,
+    canViewTasks: true,
+    // Project analytics only. canViewAnalytics would ALSO have unlocked the
+    // workspace-wide analytics routes, which is broader than a project role
+    // should reach; canViewProjectAnalytics is scoped by
+    // requireProjectPermission to the project being requested.
+    canViewProjectAnalytics: true,
     canCreateProjects: true,
     canUpdateProjects: true,
     canDeleteProjects: true,
@@ -79,6 +120,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canDeleteSubtasks: true,
     canAssignSubtasks: true,
     canManageSubtaskHierarchy: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
   },
   "workspace-viewer": {
     canViewWorkspace: true,
@@ -86,11 +129,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canViewTasks: true,
     canViewReports: true,
     canViewTeam: true,
+    canViewProjectMilestones: true,
   },
   "department-head": {
     canViewWorkspace: true,
     canManageDepartment: true,
     canViewProjects: true,
+    canViewTasks: true,
+    // Both scopes: a department head administers work across projects, and
+    // both routes are still scoped by requireWorkspacePermission /
+    // requireProjectPermission to the workspace or project being requested.
+    canViewProjectAnalytics: true,
+    canViewWorkspaceAnalytics: true,
     canCreateProjects: true,
     canUpdateProjects: true,
     canManageProjectMembers: true,
@@ -105,11 +155,24 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canManageSubtaskHierarchy: true,
     canViewTeam: true,
     canManageTeamMembers: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
   },
   "workspace-manager": {
     // 🏆 === WORKSPACE OWNER POWERS === 🏆
     // This role has ALL permissions - equivalent to workspace owner
     // Can perform any action within the workspace without restrictions
+    //
+    // It is a TRUE SUPERSET of every other role: role-coherence.test.ts
+    // asserts it holds every permission any other role holds. It previously
+    // fell three short — canManageDepartment (department-head) and
+    // canViewAssignedTasks / canUpdateAssignedTasks (contractor) — so the
+    // "all powers" comment was not actually true, and a workspace owner could
+    // not do things a contractor could.
+    canManageDepartment: true,
+    canViewAssignedTasks: true,
+    canUpdateAssignedTasks: true,
+
     // Workspace Management
     canViewWorkspace: true,
     canEditWorkspace: true,
@@ -162,6 +225,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     canViewProjectBudget: true,
     canManageProjectBudget: true,
     canCreateProjectAnnouncements: true,
+    canViewProjectMilestones: true,
+    canManageProjectMilestones: true,
 
     // Task Management
     canCreateTasks: true,

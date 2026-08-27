@@ -34,6 +34,11 @@ export const userRole = pgEnum("user_role", [
   "guest",
 ]);
 export const priority = pgEnum("priority", ["low", "medium", "high", "urgent"]);
+// No longer used by tasks.status (see below) - kept declared so drizzle-kit
+// treats this as "stopped using an enum on this column," not "enum
+// renamed/deleted," which needs an interactive resolver prompt this
+// environment's non-TTY shell can't answer. Safe to drop in a later cleanup
+// migration once nothing references it.
 export const taskStatus = pgEnum("task_status", [
   "todo",
   "in_progress",
@@ -91,6 +96,10 @@ export const users = pgTable(
     language: text("language").default("en"),
     role: userRole().default("member"),
     isEmailVerified: boolean("is_email_verified").default(false),
+    // When the password was last changed. The Security page's "Strong
+    // Password" score component had no server-side signal to work from, so it
+    // scored whatever was typed into the (unsubmitted) change-password form.
+    passwordUpdatedAt: timestamp("password_updated_at", { withTimezone: true }),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     lastSeen: timestamp("last_seen", { withTimezone: true }), // For presence tracking
     // Two-Factor Authentication fields
@@ -114,6 +123,15 @@ export const sessions = pgTable("sessions", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  // Session provenance. Without these the Security settings page had nothing
+  // real to show: the table held only id/userId/expiresAt, so the UI invented
+  // a single fake "current device" row from navigator.userAgent and the
+  // sessions API returned device/IP/activity as nulls. Nullable because
+  // sessions predating this migration have no history to backfill.
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  lastActivity: timestamp("last_activity", { withTimezone: true }).defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
 });
 
 export const workspaces = pgTable("workspaces", {
@@ -304,7 +322,12 @@ export const tasks = pgTable(
     userEmail: text("user_email").references(() => users.email, {
       onDelete: "set null",
     }),
-    status: taskStatus().default("todo"),
+    // Plain text, not a fixed enum: a task's status is either one of the 3
+    // built-in defaults ("todo"/"in_progress"/"done", which stay virtual -
+    // see DEFAULT_COLUMNS in get-tasks.ts) or a custom project status
+    // column's id (status_columns.id). No hard FK: the defaults aren't rows
+    // in status_columns, so a real FK would reject every existing task.
+    status: text("status").default("todo"),
     priority: priority().default("medium"),
     position: integer("position").default(0),
     number: integer("number").default(1),
@@ -628,7 +651,11 @@ export const milestone = pgTable("milestone", {
   title: text("title").notNull(),
   description: text("description"),
   type: text("type").notNull(), // 'phase', 'deadline', 'review', 'release', etc.
-  status: text("status").notNull().default("not_started"), // 'not_started', 'in_progress', 'completed', 'blocked'
+  // The values actually read/written are "upcoming"/"achieved"/"missed" (see
+  // get-milestones.ts's stats calc) - the "not_started" default and
+  // "not_started"/"in_progress"/"completed"/"blocked" this column originally
+  // documented were never the real vocabulary in use.
+  status: text("status").notNull().default("upcoming"),
   dueDate: timestamp("due_date", { withTimezone: true }).notNull(),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   projectId: text("project_id")
@@ -636,6 +663,7 @@ export const milestone = pgTable("milestone", {
     .references(() => projects.id, { onDelete: "cascade" }),
   riskLevel: text("risk_level").default("low"), // 'low', 'medium', 'high', 'critical'
   riskDescription: text("risk_description"),
+  successCriteria: text("success_criteria"),
   dependencyTaskIds: text("dependency_task_ids"), // JSON array of task IDs
   stakeholderIds: text("stakeholder_ids"), // JSON array of user IDs
   createdBy: text("created_by").references(() => users.id, {

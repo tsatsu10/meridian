@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 
 function useBatchArchive() {
   const queryClient = useQueryClient();
@@ -23,7 +24,7 @@ function useBatchArchive() {
     },
     onError: (error) => {
       console.error("Failed to batch archive:", error);
-      toast.error("Failed to archive notifications");
+      toast.error(userMessage(error, "archive those notifications"));
     },
   });
 }

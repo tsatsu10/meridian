@@ -1,6 +1,8 @@
 import { API_BASE_URL } from "../../constants/urls";
 
 export interface ProfileData {
+  /** Stored on the user record. Email is intentionally not updatable here. */
+  name?: string;
   jobTitle?: string;
   company?: string;
   industry?: string;
@@ -84,7 +86,10 @@ export const updateProfile = async (profileData: ProfileData) => {
 
 export const uploadProfilePicture = async (file: File) => {
   const formData = new FormData();
-  formData.append("picture", file);
+  // Field name must be "file" (or "avatar") — that's what the route reads.
+  // This used to send "picture" (the URL segment), so the upload always
+  // failed with "No file uploaded".
+  formData.append("file", file);
 
   const response = await fetch(`${API_BASE_URL}/profile/picture`, {
     method: "POST",
@@ -94,6 +99,19 @@ export const uploadProfilePicture = async (file: File) => {
 
   if (!response.ok) {
     throw new Error("Failed to upload profile picture");
+  }
+
+  return response.json();
+};
+
+export const deleteProfilePicture = async () => {
+  const response = await fetch(`${API_BASE_URL}/profile/picture`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to remove profile picture");
   }
 
   return response.json();

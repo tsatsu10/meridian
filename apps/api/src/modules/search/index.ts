@@ -7,8 +7,9 @@ import {
   users,
   workspaceUserTable,
 } from "../../database/schema";
-import { sql, ilike, or, and, eq } from "drizzle-orm";
+import { sql, ilike, or, and, eq, inArray } from "drizzle-orm";
 import { auth } from "../../middlewares/auth";
+import { checkWorkspacePermission } from "../../middlewares/rbac";
 import logger from "../../utils/logger";
 import { getErrorMessage } from "../../utils/error-utils";
 
@@ -43,6 +44,25 @@ search.get("/", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    // SECURITY: workspaceId was optional and, even when supplied, task
+    // results were never filtered by it at all — any authenticated user
+    // could search task/project titles and other users' name+email across
+    // every workspace in the system, not just their own.
+    if (!workspaceId) {
+      return c.json({ error: "workspaceId is required" }, 400);
+    }
+    const permission = await checkWorkspacePermission(
+      userEmail,
+      workspaceId,
+      "canViewProjects",
+    );
+    if (!permission.allowed) {
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
+    }
+
     const db = getDatabase();
     const results: Array<{
       title?: string | null;
@@ -51,17 +71,15 @@ search.get("/", async (c) => {
     }> = [];
     const searchPattern = `%${query}%`;
     const wantsType = (t: string) => !type || type === "all" || type === t;
+    // A project-manager/-viewer restricted to specific projects must not
+    // see search results outside those projects, even though they have
+    // workspace-level search permission — same boundary bulk task
+    // operations enforce (see verifyTasksBelongToWorkspace).
+    const restrictedToProjectIds = permission.restrictedToProjectIds;
 
-    // Search tasks
+    // Search tasks — scoped via a join to the owning project's workspace
     if (wantsType("task")) {
       try {
-        const taskWhere = [
-          or(
-            ilike(taskTable.title, searchPattern),
-            ilike(taskTable.description, searchPattern),
-          ),
-        ];
-
         const taskResults = await db
           .select({
             id: taskTable.id,
@@ -74,7 +92,19 @@ search.get("/", async (c) => {
             createdAt: taskTable.createdAt,
           })
           .from(taskTable)
-          .where(and(...taskWhere))
+          .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+          .where(
+            and(
+              eq(projectTable.workspaceId, workspaceId),
+              restrictedToProjectIds
+                ? inArray(taskTable.projectId, restrictedToProjectIds)
+                : undefined,
+              or(
+                ilike(taskTable.title, searchPattern),
+                ilike(taskTable.description, searchPattern),
+              ),
+            ),
+          )
           .orderBy(sql`${taskTable.createdAt} DESC`)
           .limit(limit);
 
@@ -87,17 +117,6 @@ search.get("/", async (c) => {
     // Search projects
     if (wantsType("project") || type === "projects") {
       try {
-        const projectWhere = [
-          or(
-            ilike(projectTable.name, searchPattern),
-            ilike(projectTable.description, searchPattern),
-          ),
-        ];
-
-        if (workspaceId) {
-          projectWhere.push(eq(projectTable.workspaceId, workspaceId));
-        }
-
         const projectResults = await db
           .select({
             id: projectTable.id,
@@ -108,7 +127,18 @@ search.get("/", async (c) => {
             createdAt: projectTable.createdAt,
           })
           .from(projectTable)
-          .where(and(...projectWhere))
+          .where(
+            and(
+              eq(projectTable.workspaceId, workspaceId),
+              restrictedToProjectIds
+                ? inArray(projectTable.id, restrictedToProjectIds)
+                : undefined,
+              or(
+                ilike(projectTable.name, searchPattern),
+                ilike(projectTable.description, searchPattern),
+              ),
+            ),
+          )
           .orderBy(sql`${projectTable.name} ASC`)
           .limit(limit);
 
@@ -118,49 +148,32 @@ search.get("/", async (c) => {
       }
     }
 
-    // Search users
+    // Search users — only within the same workspace
     if (wantsType("user")) {
       try {
-        const userResults = workspaceId
-          ? await db
-              .select({
-                id: users.id,
-                type: sql<string>`'user'`,
-                title: users.name,
-                description: users.email,
-                createdAt: users.createdAt,
-              })
-              .from(users)
-              .innerJoin(
-                workspaceUserTable,
-                eq(users.email, workspaceUserTable.userEmail),
-              )
-              .where(
-                and(
-                  eq(workspaceUserTable.workspaceId, workspaceId),
-                  or(
-                    ilike(users.name, searchPattern),
-                    ilike(users.email, searchPattern),
-                  ),
-                ),
-              )
-              .limit(limit)
-          : await db
-              .select({
-                id: users.id,
-                type: sql<string>`'user'`,
-                title: users.name,
-                description: users.email,
-                createdAt: users.createdAt,
-              })
-              .from(users)
-              .where(
-                or(
-                  ilike(users.name, searchPattern),
-                  ilike(users.email, searchPattern),
-                ),
-              )
-              .limit(limit);
+        const userResults = await db
+          .select({
+            id: users.id,
+            type: sql<string>`'user'`,
+            title: users.name,
+            description: users.email,
+            createdAt: users.createdAt,
+          })
+          .from(users)
+          .innerJoin(
+            workspaceUserTable,
+            eq(users.email, workspaceUserTable.userEmail),
+          )
+          .where(
+            and(
+              eq(workspaceUserTable.workspaceId, workspaceId),
+              or(
+                ilike(users.name, searchPattern),
+                ilike(users.email, searchPattern),
+              ),
+            ),
+          )
+          .limit(limit);
 
         results.push(...userResults);
       } catch (error) {
@@ -218,27 +231,64 @@ search.get("/suggestions", async (c) => {
     const query = c.req.query("q");
     const type = c.req.query("type") || "projects";
     const limit = Number.parseInt(c.req.query("limit") || "5", 10);
+    const workspaceId = c.req.query("workspaceId");
+    const userEmail = c.get("userEmail");
 
     if (!query || query.trim() === "") {
       return c.json({ suggestions: [] }, 200);
     }
 
+    // SECURITY: previously unscoped — leaked task/project titles across
+    // every workspace to any authenticated caller.
+    if (!workspaceId) {
+      return c.json({ error: "workspaceId is required" }, 400);
+    }
+    const permission = await checkWorkspacePermission(
+      userEmail,
+      workspaceId,
+      "canViewProjects",
+    );
+    if (!permission.allowed) {
+      return c.json(
+        permission.body ?? { error: "Forbidden" },
+        permission.status ?? 403,
+      );
+    }
+
     const db = getDatabase();
     const searchPattern = `%${query}%`;
     const suggestions: string[] = [];
+    const restrictedToProjectIds = permission.restrictedToProjectIds;
 
     if (type === "tasks") {
       const tasks = await db
         .select({ title: taskTable.title })
         .from(taskTable)
-        .where(ilike(taskTable.title, searchPattern))
+        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+        .where(
+          and(
+            eq(projectTable.workspaceId, workspaceId),
+            restrictedToProjectIds
+              ? inArray(taskTable.projectId, restrictedToProjectIds)
+              : undefined,
+            ilike(taskTable.title, searchPattern),
+          ),
+        )
         .limit(limit);
       suggestions.push(...tasks.map((t) => t.title));
     } else {
       const projects = await db
         .select({ name: projectTable.name })
         .from(projectTable)
-        .where(ilike(projectTable.name, searchPattern))
+        .where(
+          and(
+            eq(projectTable.workspaceId, workspaceId),
+            restrictedToProjectIds
+              ? inArray(projectTable.id, restrictedToProjectIds)
+              : undefined,
+            ilike(projectTable.name, searchPattern),
+          ),
+        )
         .limit(limit);
       suggestions.push(...projects.map((p) => p.name));
     }

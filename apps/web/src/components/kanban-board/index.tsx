@@ -28,6 +28,7 @@ import {
 } from "@dnd-kit/core";
 import { useState } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Column from "./column";
@@ -373,7 +374,7 @@ function KanbanBoard({ project }: KanbanBoardProps) {
         updateTask(updatedTask, {
           onError: (error: unknown) => {
             console.error("Failed to reorder task:", error);
-            toast.error("Failed to reorder task. Please try again.");
+            toast.error(userMessage(error, "reorder the task"));
           },
           onSuccess: () => {},
         });

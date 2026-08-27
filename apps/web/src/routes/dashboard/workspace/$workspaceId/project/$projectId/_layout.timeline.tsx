@@ -36,8 +36,6 @@ import {
   Calendar,
   Plus,
   Filter,
-  ChevronLeft,
-  ChevronRight,
   GitBranch,
   Clock,
   Flag,
@@ -56,6 +54,7 @@ import {
 import { cn } from "@/lib/cn";
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { flattenTasks } from "@/utils/task-hierarchy";
 import { useMilestones } from "@/hooks/use-milestones";
 import DashboardPopup from "@/components/dashboard/dashboard-popup";
@@ -146,8 +145,6 @@ function ProjectTimeline() {
   } = useGetTasks(projectId);
 
   // State management
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [_isFilterOpen, _setIsFilterOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -282,43 +279,6 @@ function ProjectTimeline() {
     };
   }, [allTasks, realMilestones]);
 
-  // Navigation handlers - now functional
-  const handlePreviousPeriod = () => {
-    const newDate = new Date(currentDate);
-    switch (viewMode) {
-      case "day":
-        newDate.setDate(newDate.getDate() - 1);
-        break;
-      case "week":
-        newDate.setDate(newDate.getDate() - 7);
-        break;
-      case "month":
-        newDate.setMonth(newDate.getMonth() - 1);
-        break;
-    }
-    setCurrentDate(newDate);
-  };
-
-  const handleNextPeriod = () => {
-    const newDate = new Date(currentDate);
-    switch (viewMode) {
-      case "day":
-        newDate.setDate(newDate.getDate() + 1);
-        break;
-      case "week":
-        newDate.setDate(newDate.getDate() + 7);
-        break;
-      case "month":
-        newDate.setMonth(newDate.getMonth() + 1);
-        break;
-    }
-    setCurrentDate(newDate);
-  };
-
-  const handleTodayClick = () => {
-    setCurrentDate(new Date());
-  };
-
   // Filter handlers - now functional
   const handleClearFilters = () => {
     setFilterStatus("all");
@@ -398,7 +358,7 @@ function ProjectTimeline() {
       );
     } catch (error) {
       console.error("Export error:", error);
-      toast.error("Failed to export timeline");
+      toast.error(userMessage(error, "export the timeline"));
     }
   };
 
@@ -427,8 +387,12 @@ function ProjectTimeline() {
       const selectedDate = new Date(formData.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (selectedDate < today && formData.status === "upcoming") {
+      if (Number.isNaN(selectedDate.getTime())) {
+        errors.date = "Enter a valid date";
+      } else if (selectedDate < today && formData.status === "upcoming") {
         errors.date = "Due date cannot be in the past for upcoming milestones";
+      } else if (selectedDate.getFullYear() > today.getFullYear() + 10) {
+        errors.date = "Due date is too far in the future";
       }
     }
 
@@ -505,7 +469,7 @@ function ProjectTimeline() {
       setEditingMilestone(null);
       setFormErrors({});
     } catch (error) {
-      toast.error("Failed to save milestone");
+      toast.error(userMessage(error, "save the milestone"));
     }
   };
 
@@ -526,7 +490,7 @@ function ProjectTimeline() {
       }
       toast.success("Milestone deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete milestone");
+      toast.error(userMessage(error, "delete the milestone"));
     }
   };
 
@@ -816,6 +780,10 @@ function ProjectTimeline() {
                   <Share className="h-4 w-4 mr-2" />
                   Share Timeline
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsDashboardOpen(true)}>
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  View Timeline Analytics
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => setShowDependencyGraph(!showDependencyGraph)}
@@ -900,65 +868,6 @@ function ProjectTimeline() {
           className="flex-1 p-6 space-y-6 overflow-hidden"
           aria-label="Timeline content"
         >
-          {/* Enhanced Timeline Navigation - Now Functional */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 md:p-4 bg-muted/30 rounded-lg">
-            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePreviousPeriod}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <h3 className="font-medium text-sm sm:text-base min-w-[150px] sm:min-w-[200px] text-center">
-                  {viewMode === "day" &&
-                    currentDate.toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  {viewMode === "week" &&
-                    `Week of ${currentDate.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}`}
-                  {viewMode === "month" &&
-                    currentDate.toLocaleDateString("en-US", {
-                      month: "short",
-                      year: "numeric",
-                    })}
-                </h3>
-                <Button variant="outline" size="sm" onClick={handleNextPeriod}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="flex items-center space-x-1 bg-muted rounded-md p-1">
-                {(["day", "week", "month"] as const).map((mode) => (
-                  <Button
-                    key={mode}
-                    variant={viewMode === mode ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode(mode)}
-                    className="px-3 py-1 text-xs"
-                    aria-label={`Switch to ${mode} view`}
-                    aria-pressed={viewMode === mode}
-                  >
-                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <Button variant="outline" size="sm" onClick={handleTodayClick}>
-              <Calendar className="mr-2 h-4 w-4" />
-              Today
-            </Button>
-          </div>
-
           {/* Enhanced Project Overview Stats - Real Data */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <div className="rounded-lg border bg-card p-4">

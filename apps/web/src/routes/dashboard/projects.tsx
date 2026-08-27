@@ -39,6 +39,7 @@ import {
   useSearch,
 } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { ErrorBoundary } from "react-error-boundary";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { useRBACAuth } from "@/lib/permissions";
@@ -339,11 +340,11 @@ function ProjectsPage() {
 
         default:
           logger.warn("Unknown project action", { action });
-          toast.error("This action is not available.");
+          toast.error("That action isn't available for this project.");
       }
     } catch (error) {
       logger.error("Project action failed", { action, err: error });
-      toast.error("Failed to complete action");
+      toast.error(userMessage(error, "complete that action"));
     }
   };
 
@@ -365,7 +366,7 @@ function ProjectsPage() {
       toast.success(`Editing ${project.name}...`);
     } catch (error) {
       logger.error("Edit navigation failed", { err: error });
-      toast.error("Failed to open project settings");
+      toast.error(userMessage(error, "open project settings"));
     }
   };
 
@@ -401,7 +402,7 @@ function ProjectsPage() {
       }
     } catch (error) {
       logger.error("Share link copy failed", { err: error });
-      toast.error("Failed to copy share link");
+      toast.error(userMessage(error, "copy the share link"));
     }
   };
 
@@ -854,6 +855,7 @@ function ProjectsPage() {
           try {
             await bulkUpdate.mutateAsync({
               projectIds: ids,
+              workspaceId: workspace?.id || "",
               updates,
             });
           } catch (error) {

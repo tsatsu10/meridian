@@ -5,6 +5,7 @@ import {
   teamMemberTable,
 } from "../../database/schema";
 import { ActivityTracker } from "../../services/team-awareness/activity-tracker";
+import { ensureDefaultColumns } from "../utils/default-columns";
 import {
   sanitizeText,
   sanitizeRichText,
@@ -164,6 +165,11 @@ async function createProject(data: CreateProjectData, ownerId: string) {
       role: "lead",
       addedBy: ownerId,
     });
+
+    // Materialise To Do / In Progress / Done as real status_columns rows so
+    // every column shares one ordering space and new columns can be inserted
+    // between them (see project/utils/default-columns.ts).
+    await ensureDefaultColumns(newProject.id);
 
     // 🎯 Log activity for project creation
     try {

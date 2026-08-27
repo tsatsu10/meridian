@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { History, Clock, User, ChevronRight, FileText } from "lucide-react";
 import { API_BASE_URL } from "@/constants/urls";
 import { formatDistanceToNow, format } from "date-fns";
@@ -70,7 +71,7 @@ export function VersionHistory({ noteId, onClose }: VersionHistoryProps) {
       }
     } catch (error) {
       console.error("Failed to fetch versions:", error);
-      toast.error("Failed to load version history");
+      toast.error(userMessage(error, "load the version history"));
     } finally {
       setLoading(false);
     }

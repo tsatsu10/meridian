@@ -84,9 +84,11 @@ const uploadProfilePicture = async (c: Context, userId: string) => {
       logger.info(`📁 Created upload directory: ${uploadDir}`);
     }
 
-    // Create unique filename
-    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const fileName = `${userId}-${Date.now()}.${fileExtension}`;
+    // Always .jpg — sharp re-encodes to JPEG below, so the uploaded file's own
+    // extension is both meaningless and dangerous: it was attacker-controlled
+    // and interpolated straight into join(), so a name like "x.jpg/../../evil"
+    // escaped the upload directory. userId is a server-issued cuid.
+    const fileName = `${userId}-${Date.now()}.jpg`;
     const filePath = join(uploadDir, fileName);
 
     // Process image with sharp
@@ -122,25 +124,43 @@ const uploadProfilePicture = async (c: Context, userId: string) => {
 
       logger.info(`✅ Image processed and saved: ${fileName}`);
     } catch (sharpError) {
-      // Fallback: If sharp processing fails, save original file
-      logger.warn(
-        "⚠️ Sharp processing failed, saving original file:",
-        sharpError,
-      );
-      await writeFile(filePath, buffer);
+      // Deliberately no fallback to writing the original bytes. The MIME type
+      // checked above is client-supplied, so "sharp couldn't decode it" is the
+      // only real evidence that the upload isn't an image — writing the raw
+      // buffer anyway is precisely how a non-image gets onto disk under an
+      // image's name.
+      logger.warn("⚠️ Rejected upload that sharp could not decode:", sharpError);
+      throw new HTTPException(415, {
+        message:
+          "Invalid image. Please upload a valid JPG, PNG, GIF, or WebP file.",
+      });
     }
 
     // URL for the uploaded file
     const fileUrl = `/uploads/profile-pictures/${fileName}`;
 
-    // Update user profile with new picture URL
-    await db
+    // Upsert: a bare UPDATE silently matched zero rows for any user without a
+    // user_profiles row yet, so the upload reported success and a URL while
+    // persisting nothing. (update-profile.ts already creates the row on demand;
+    // this path didn't.)
+    const updated = await db
       .update(userProfileTable)
       .set({
         profilePicture: fileUrl,
         updatedAt: new Date(),
       })
-      .where(eq(userProfileTable.userId, userId));
+      .where(eq(userProfileTable.userId, userId))
+      .returning({ id: userProfileTable.id });
+
+    if (updated.length === 0) {
+      const now = new Date();
+      await db.insert(userProfileTable).values({
+        userId,
+        profilePicture: fileUrl,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
 
     logger.info(`✅ Profile picture updated for user: ${userId}`);
 

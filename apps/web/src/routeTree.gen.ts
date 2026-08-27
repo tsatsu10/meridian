@@ -26,18 +26,17 @@ import { Route as DashboardActivityRouteImport } from './routes/dashboard/activi
 import { Route as AuthVerify2faRouteImport } from './routes/auth/verify-2fa'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardNotificationsIndexRouteImport } from './routes/dashboard/notifications/index'
 import { Route as DashboardSettingsWorkspaceRouteImport } from './routes/dashboard/settings/workspace'
-import { Route as DashboardSettingsTemplatesRouteImport } from './routes/dashboard/settings/templates'
 import { Route as DashboardSettingsTeamManagementRouteImport } from './routes/dashboard/settings/team-management'
 import { Route as DashboardSettingsShortcutsRouteImport } from './routes/dashboard/settings/shortcuts'
 import { Route as DashboardSettingsSecurityRouteImport } from './routes/dashboard/settings/security'
 import { Route as DashboardSettingsRolesUnifiedRouteImport } from './routes/dashboard/settings/roles-unified'
 import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard/settings/profile'
 import { Route as DashboardSettingsNotificationsRouteImport } from './routes/dashboard/settings/notifications'
-import { Route as DashboardSettingsLocalizationRouteImport } from './routes/dashboard/settings/localization'
 import { Route as DashboardSettingsFiltersRouteImport } from './routes/dashboard/settings/filters'
 import { Route as DashboardSettingsEmailRouteImport } from './routes/dashboard/settings/email'
 import { Route as DashboardSettingsDataManagementRouteImport } from './routes/dashboard/settings/data-management'
@@ -45,7 +44,6 @@ import { Route as DashboardSettingsCalendarRouteImport } from './routes/dashboar
 import { Route as DashboardSettingsAuditLogsRouteImport } from './routes/dashboard/settings/audit-logs'
 import { Route as DashboardSettingsAppearanceRouteImport } from './routes/dashboard/settings/appearance'
 import { Route as DashboardSettingsApiRouteImport } from './routes/dashboard/settings/api'
-import { Route as DashboardSettingsLayoutRouteImport } from './routes/dashboard/settings/_layout'
 import { Route as DashboardProfileUserIdRouteImport } from './routes/dashboard/profile/$userId'
 import { Route as DashboardAdminRolesRouteImport } from './routes/dashboard/admin/roles'
 import { Route as DashboardWorkspaceSettingsWorkspaceIdIndexRouteImport } from './routes/dashboard/workspace-settings/$workspaceId/index'
@@ -59,7 +57,6 @@ import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdSettingsRouteImpo
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdNotesRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/notes'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdMilestonesRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/milestones'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/board'
-import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/backlog'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/analytics'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/_layout'
 import { Route as DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutIndexRouteImport } from './routes/dashboard/workspace/$workspaceId/project/$projectId/_layout.index'
@@ -155,6 +152,11 @@ const AuthSignInRoute = AuthSignInRouteImport.update({
   path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/auth/reset-password',
+  path: '/auth/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
   path: '/auth/forgot-password',
@@ -175,12 +177,6 @@ const DashboardSettingsWorkspaceRoute =
   DashboardSettingsWorkspaceRouteImport.update({
     id: '/workspace',
     path: '/workspace',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsTemplatesRoute =
-  DashboardSettingsTemplatesRouteImport.update({
-    id: '/templates',
-    path: '/templates',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
 const DashboardSettingsTeamManagementRoute =
@@ -217,12 +213,6 @@ const DashboardSettingsNotificationsRoute =
   DashboardSettingsNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsLocalizationRoute =
-  DashboardSettingsLocalizationRouteImport.update({
-    id: '/localization',
-    path: '/localization',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
 const DashboardSettingsFiltersRoute =
@@ -263,10 +253,6 @@ const DashboardSettingsAppearanceRoute =
 const DashboardSettingsApiRoute = DashboardSettingsApiRouteImport.update({
   id: '/api',
   path: '/api',
-  getParentRoute: () => DashboardSettingsRoute,
-} as any)
-const DashboardSettingsLayoutRoute = DashboardSettingsLayoutRouteImport.update({
-  id: '/_layout',
   getParentRoute: () => DashboardSettingsRoute,
 } as any)
 const DashboardProfileUserIdRoute = DashboardProfileUserIdRouteImport.update({
@@ -345,12 +331,6 @@ const DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute =
     path: '/board',
     getParentRoute: () => DashboardWorkspaceWorkspaceIdProjectProjectIdRoute,
   } as any)
-const DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute =
-  DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRouteImport.update({
-    id: '/backlog',
-    path: '/backlog',
-    getParentRoute: () => DashboardWorkspaceWorkspaceIdProjectProjectIdRoute,
-  } as any)
 const DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute =
   DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRouteImport.update({
     id: '/analytics',
@@ -413,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/accept-invitation': typeof AcceptInvitationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/verify-2fa': typeof AuthVerify2faRoute
@@ -436,14 +417,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-unified': typeof DashboardSettingsRolesUnifiedRouteWithChildren
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
   '/dashboard/settings/shortcuts': typeof DashboardSettingsShortcutsRoute
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
-  '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -455,7 +434,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/teams/$workspaceId/roles': typeof DashboardTeamsWorkspaceIdLayoutRolesRoute
   '/dashboard/workspace/$workspaceId/project/$projectId': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdRouteWithChildren
   '/dashboard/workspace/$workspaceId/project/$projectId/analytics': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute
-  '/dashboard/workspace/$workspaceId/project/$projectId/backlog': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/board': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/milestones': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdMilestonesRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/notes': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdNotesRoute
@@ -471,6 +449,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/verify-2fa': typeof AuthVerify2faRoute
@@ -486,7 +465,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
-  '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
@@ -494,16 +472,15 @@ export interface FileRoutesByTo {
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-unified': typeof DashboardSettingsRolesUnifiedRouteWithChildren
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
   '/dashboard/settings/shortcuts': typeof DashboardSettingsShortcutsRoute
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
-  '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/notifications': typeof DashboardNotificationsIndexRoute
+  '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/settings/roles-unified/$roleId': typeof DashboardSettingsRolesUnifiedRoleIdRoute
   '/dashboard/teams/$workspaceId': typeof DashboardTeamsWorkspaceIdLayoutRouteWithChildren
   '/dashboard/workspace/$workspaceId/templates': typeof DashboardWorkspaceWorkspaceIdTemplatesRoute
@@ -512,7 +489,6 @@ export interface FileRoutesByTo {
   '/dashboard/teams/$workspaceId/roles': typeof DashboardTeamsWorkspaceIdLayoutRolesRoute
   '/dashboard/workspace/$workspaceId/project/$projectId': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutIndexRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/analytics': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute
-  '/dashboard/workspace/$workspaceId/project/$projectId/backlog': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/board': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/milestones': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdMilestonesRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/notes': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdNotesRoute
@@ -529,6 +505,7 @@ export interface FileRoutesById {
   '/accept-invitation': typeof AcceptInvitationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/verify-2fa': typeof AuthVerify2faRoute
@@ -545,7 +522,6 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/admin/roles': typeof DashboardAdminRolesRoute
   '/dashboard/profile/$userId': typeof DashboardProfileUserIdRoute
-  '/dashboard/settings/_layout': typeof DashboardSettingsLayoutRoute
   '/dashboard/settings/api': typeof DashboardSettingsApiRoute
   '/dashboard/settings/appearance': typeof DashboardSettingsAppearanceRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
@@ -553,14 +529,12 @@ export interface FileRoutesById {
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-unified': typeof DashboardSettingsRolesUnifiedRouteWithChildren
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
   '/dashboard/settings/shortcuts': typeof DashboardSettingsShortcutsRoute
   '/dashboard/settings/team-management': typeof DashboardSettingsTeamManagementRoute
-  '/dashboard/settings/templates': typeof DashboardSettingsTemplatesRoute
   '/dashboard/settings/workspace': typeof DashboardSettingsWorkspaceRoute
   '/dashboard/notifications/': typeof DashboardNotificationsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -573,7 +547,6 @@ export interface FileRoutesById {
   '/dashboard/workspace/$workspaceId/project/$projectId': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdRouteWithChildren
   '/dashboard/workspace/$workspaceId/project/$projectId/_layout': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRouteWithChildren
   '/dashboard/workspace/$workspaceId/project/$projectId/analytics': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute
-  '/dashboard/workspace/$workspaceId/project/$projectId/backlog': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/board': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/milestones': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdMilestonesRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/notes': typeof DashboardWorkspaceWorkspaceIdProjectProjectIdNotesRoute
@@ -592,6 +565,7 @@ export interface FileRouteTypes {
     | '/accept-invitation'
     | '/dashboard'
     | '/auth/forgot-password'
+    | '/auth/reset-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/auth/verify-2fa'
@@ -615,14 +589,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-unified'
     | '/dashboard/settings/security'
     | '/dashboard/settings/shortcuts'
     | '/dashboard/settings/team-management'
-    | '/dashboard/settings/templates'
     | '/dashboard/settings/workspace'
     | '/dashboard/notifications/'
     | '/dashboard/settings/'
@@ -634,7 +606,6 @@ export interface FileRouteTypes {
     | '/dashboard/teams/$workspaceId/roles'
     | '/dashboard/workspace/$workspaceId/project/$projectId'
     | '/dashboard/workspace/$workspaceId/project/$projectId/analytics'
-    | '/dashboard/workspace/$workspaceId/project/$projectId/backlog'
     | '/dashboard/workspace/$workspaceId/project/$projectId/board'
     | '/dashboard/workspace/$workspaceId/project/$projectId/milestones'
     | '/dashboard/workspace/$workspaceId/project/$projectId/notes'
@@ -650,6 +621,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invitation'
     | '/auth/forgot-password'
+    | '/auth/reset-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/auth/verify-2fa'
@@ -665,7 +637,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/admin/roles'
     | '/dashboard/profile/$userId'
-    | '/dashboard/settings'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
     | '/dashboard/settings/audit-logs'
@@ -673,16 +644,15 @@ export interface FileRouteTypes {
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-unified'
     | '/dashboard/settings/security'
     | '/dashboard/settings/shortcuts'
     | '/dashboard/settings/team-management'
-    | '/dashboard/settings/templates'
     | '/dashboard/settings/workspace'
     | '/dashboard/notifications'
+    | '/dashboard/settings'
     | '/dashboard/settings/roles-unified/$roleId'
     | '/dashboard/teams/$workspaceId'
     | '/dashboard/workspace/$workspaceId/templates'
@@ -691,7 +661,6 @@ export interface FileRouteTypes {
     | '/dashboard/teams/$workspaceId/roles'
     | '/dashboard/workspace/$workspaceId/project/$projectId'
     | '/dashboard/workspace/$workspaceId/project/$projectId/analytics'
-    | '/dashboard/workspace/$workspaceId/project/$projectId/backlog'
     | '/dashboard/workspace/$workspaceId/project/$projectId/board'
     | '/dashboard/workspace/$workspaceId/project/$projectId/milestones'
     | '/dashboard/workspace/$workspaceId/project/$projectId/notes'
@@ -707,6 +676,7 @@ export interface FileRouteTypes {
     | '/accept-invitation'
     | '/dashboard'
     | '/auth/forgot-password'
+    | '/auth/reset-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/auth/verify-2fa'
@@ -723,7 +693,6 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/admin/roles'
     | '/dashboard/profile/$userId'
-    | '/dashboard/settings/_layout'
     | '/dashboard/settings/api'
     | '/dashboard/settings/appearance'
     | '/dashboard/settings/audit-logs'
@@ -731,14 +700,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-unified'
     | '/dashboard/settings/security'
     | '/dashboard/settings/shortcuts'
     | '/dashboard/settings/team-management'
-    | '/dashboard/settings/templates'
     | '/dashboard/settings/workspace'
     | '/dashboard/notifications/'
     | '/dashboard/settings/'
@@ -751,7 +718,6 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/project/$projectId'
     | '/dashboard/workspace/$workspaceId/project/$projectId/_layout'
     | '/dashboard/workspace/$workspaceId/project/$projectId/analytics'
-    | '/dashboard/workspace/$workspaceId/project/$projectId/backlog'
     | '/dashboard/workspace/$workspaceId/project/$projectId/board'
     | '/dashboard/workspace/$workspaceId/project/$projectId/milestones'
     | '/dashboard/workspace/$workspaceId/project/$projectId/notes'
@@ -769,6 +735,7 @@ export interface RootRouteChildren {
   AcceptInvitationRoute: typeof AcceptInvitationRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerify2faRoute: typeof AuthVerify2faRoute
@@ -895,6 +862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/forgot-password': {
       id: '/auth/forgot-password'
       path: '/auth/forgot-password'
@@ -921,13 +895,6 @@ declare module '@tanstack/react-router' {
       path: '/workspace'
       fullPath: '/dashboard/settings/workspace'
       preLoaderRoute: typeof DashboardSettingsWorkspaceRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/templates': {
-      id: '/dashboard/settings/templates'
-      path: '/templates'
-      fullPath: '/dashboard/settings/templates'
-      preLoaderRoute: typeof DashboardSettingsTemplatesRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
     '/dashboard/settings/team-management': {
@@ -970,13 +937,6 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/dashboard/settings/notifications'
       preLoaderRoute: typeof DashboardSettingsNotificationsRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/localization': {
-      id: '/dashboard/settings/localization'
-      path: '/localization'
-      fullPath: '/dashboard/settings/localization'
-      preLoaderRoute: typeof DashboardSettingsLocalizationRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
     '/dashboard/settings/filters': {
@@ -1026,13 +986,6 @@ declare module '@tanstack/react-router' {
       path: '/api'
       fullPath: '/dashboard/settings/api'
       preLoaderRoute: typeof DashboardSettingsApiRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/_layout': {
-      id: '/dashboard/settings/_layout'
-      path: ''
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsLayoutRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
     '/dashboard/profile/$userId': {
@@ -1126,13 +1079,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRouteImport
       parentRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdRoute
     }
-    '/dashboard/workspace/$workspaceId/project/$projectId/backlog': {
-      id: '/dashboard/workspace/$workspaceId/project/$projectId/backlog'
-      path: '/backlog'
-      fullPath: '/dashboard/workspace/$workspaceId/project/$projectId/backlog'
-      preLoaderRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRouteImport
-      parentRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdRoute
-    }
     '/dashboard/workspace/$workspaceId/project/$projectId/analytics': {
       id: '/dashboard/workspace/$workspaceId/project/$projectId/analytics'
       path: '/analytics'
@@ -1208,7 +1154,6 @@ const DashboardSettingsRolesUnifiedRouteWithChildren =
   )
 
 interface DashboardSettingsRouteChildren {
-  DashboardSettingsLayoutRoute: typeof DashboardSettingsLayoutRoute
   DashboardSettingsApiRoute: typeof DashboardSettingsApiRoute
   DashboardSettingsAppearanceRoute: typeof DashboardSettingsAppearanceRoute
   DashboardSettingsAuditLogsRoute: typeof DashboardSettingsAuditLogsRoute
@@ -1216,20 +1161,17 @@ interface DashboardSettingsRouteChildren {
   DashboardSettingsDataManagementRoute: typeof DashboardSettingsDataManagementRoute
   DashboardSettingsEmailRoute: typeof DashboardSettingsEmailRoute
   DashboardSettingsFiltersRoute: typeof DashboardSettingsFiltersRoute
-  DashboardSettingsLocalizationRoute: typeof DashboardSettingsLocalizationRoute
   DashboardSettingsNotificationsRoute: typeof DashboardSettingsNotificationsRoute
   DashboardSettingsProfileRoute: typeof DashboardSettingsProfileRoute
   DashboardSettingsRolesUnifiedRoute: typeof DashboardSettingsRolesUnifiedRouteWithChildren
   DashboardSettingsSecurityRoute: typeof DashboardSettingsSecurityRoute
   DashboardSettingsShortcutsRoute: typeof DashboardSettingsShortcutsRoute
   DashboardSettingsTeamManagementRoute: typeof DashboardSettingsTeamManagementRoute
-  DashboardSettingsTemplatesRoute: typeof DashboardSettingsTemplatesRoute
   DashboardSettingsWorkspaceRoute: typeof DashboardSettingsWorkspaceRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
 const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
-  DashboardSettingsLayoutRoute: DashboardSettingsLayoutRoute,
   DashboardSettingsApiRoute: DashboardSettingsApiRoute,
   DashboardSettingsAppearanceRoute: DashboardSettingsAppearanceRoute,
   DashboardSettingsAuditLogsRoute: DashboardSettingsAuditLogsRoute,
@@ -1237,7 +1179,6 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsDataManagementRoute: DashboardSettingsDataManagementRoute,
   DashboardSettingsEmailRoute: DashboardSettingsEmailRoute,
   DashboardSettingsFiltersRoute: DashboardSettingsFiltersRoute,
-  DashboardSettingsLocalizationRoute: DashboardSettingsLocalizationRoute,
   DashboardSettingsNotificationsRoute: DashboardSettingsNotificationsRoute,
   DashboardSettingsProfileRoute: DashboardSettingsProfileRoute,
   DashboardSettingsRolesUnifiedRoute:
@@ -1245,7 +1186,6 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsSecurityRoute: DashboardSettingsSecurityRoute,
   DashboardSettingsShortcutsRoute: DashboardSettingsShortcutsRoute,
   DashboardSettingsTeamManagementRoute: DashboardSettingsTeamManagementRoute,
-  DashboardSettingsTemplatesRoute: DashboardSettingsTemplatesRoute,
   DashboardSettingsWorkspaceRoute: DashboardSettingsWorkspaceRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
@@ -1314,7 +1254,6 @@ const DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRouteWithChildren =
 interface DashboardWorkspaceWorkspaceIdProjectProjectIdRouteChildren {
   DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRouteWithChildren
   DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute
-  DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   DashboardWorkspaceWorkspaceIdProjectProjectIdMilestonesRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdMilestonesRoute
   DashboardWorkspaceWorkspaceIdProjectProjectIdNotesRoute: typeof DashboardWorkspaceWorkspaceIdProjectProjectIdNotesRoute
@@ -1328,8 +1267,6 @@ const DashboardWorkspaceWorkspaceIdProjectProjectIdRouteChildren: DashboardWorks
       DashboardWorkspaceWorkspaceIdProjectProjectIdLayoutRouteWithChildren,
     DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute:
       DashboardWorkspaceWorkspaceIdProjectProjectIdAnalyticsRoute,
-    DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute:
-      DashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute,
     DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute:
       DashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute,
     DashboardWorkspaceWorkspaceIdProjectProjectIdMilestonesRoute:
@@ -1399,6 +1336,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcceptInvitationRoute: AcceptInvitationRoute,
   DashboardRoute: DashboardRouteWithChildren,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerify2faRoute: AuthVerify2faRoute,

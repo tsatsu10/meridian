@@ -92,9 +92,7 @@ async function createTask({
         projectId,
         assigneeId: assignee?.id || null, // Use assigneeId instead of userEmail
         title: sanitizedTitle,
-        // request-boundary narrowing onto the enum column
-        status:
-          (status as "todo" | "in_progress" | "done" | undefined) || "todo",
+        status: status || "todo",
         dueDate: dueDate ?? null,
         description: sanitizedDescription,
         priority:

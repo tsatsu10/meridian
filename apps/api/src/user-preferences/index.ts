@@ -1,8 +1,15 @@
 import { Hono } from "hono";
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+import sharp from "sharp";
 import { getDatabase } from "../database/connection";
 import { userPreferencesTable, users } from "../database/schema";
 import { eq } from "drizzle-orm";
 import logger from "../utils/logger";
+import { requireSelf } from "./utils/require-self";
+
+const MAX_BACKGROUND_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_BACKGROUND_DIMENSION = 2560; // Plenty for a full-bleed desktop background
 
 const app = new Hono();
 
@@ -11,15 +18,17 @@ app.get("/", async (c) => {
   try {
     const { userEmail, workspaceId } = c.req.query();
 
-    if (!userEmail) {
-      return c.json({ error: "Missing userEmail parameter" }, 400);
+    const auth = requireSelf(c, userEmail);
+    if (!auth.ok) {
+      return auth.response;
     }
+    const ownerEmail = auth.userEmail;
 
     const db = getDatabase();
 
     // First, get the user ID from email
     const user = await db.query.users.findFirst({
-      where: eq(users.email, userEmail),
+      where: eq(users.email, ownerEmail),
     });
 
     if (!user) {
@@ -80,10 +89,11 @@ app.post("/", async (c) => {
       settings,
     } = body;
 
-    if (!userEmail) {
-      logger.error("[User Preferences] Missing userEmail in request body");
-      return c.json({ error: "Missing userEmail" }, 400);
+    const auth = requireSelf(c, userEmail);
+    if (!auth.ok) {
+      return auth.response;
     }
+    const ownerEmail = auth.userEmail;
 
     logger.debug("[User Preferences] Looking up user by email:", userEmail);
 
@@ -91,7 +101,7 @@ app.post("/", async (c) => {
 
     // First, get the user ID from email
     const user = await db.query.users.findFirst({
-      where: eq(users.email, userEmail),
+      where: eq(users.email, ownerEmail),
     });
 
     if (!user) {
@@ -175,15 +185,21 @@ app.post("/toggle-pin", async (c) => {
   try {
     const { userEmail, projectId } = await c.req.json();
 
-    if (!userEmail || !projectId) {
-      return c.json({ error: "Missing userEmail or projectId" }, 400);
+    const auth = requireSelf(c, userEmail);
+    if (!auth.ok) {
+      return auth.response;
+    }
+    const ownerEmail = auth.userEmail;
+
+    if (!projectId) {
+      return c.json({ error: "Missing projectId" }, 400);
     }
 
     const db = getDatabase();
 
     // First, get the user ID from email
     const user = await db.query.users.findFirst({
-      where: eq(users.email, userEmail),
+      where: eq(users.email, ownerEmail),
     });
 
     if (!user) {
@@ -250,14 +266,16 @@ app.get("/appearance/:userEmail", async (c) => {
   try {
     const { userEmail } = c.req.param();
 
-    if (!userEmail) {
-      return c.json({ error: "Missing userEmail parameter" }, 400);
+    const auth = requireSelf(c, userEmail);
+    if (!auth.ok) {
+      return auth.response;
     }
+    const ownerEmail = auth.userEmail;
 
     const db = getDatabase();
 
     const user = await db.query.users.findFirst({
-      where: eq(users.email, userEmail),
+      where: eq(users.email, ownerEmail),
     });
 
     if (!user) {
@@ -293,14 +311,16 @@ app.patch("/appearance/:userEmail", async (c) => {
     const { userEmail } = c.req.param();
     const body = await c.req.json();
 
-    if (!userEmail) {
-      return c.json({ error: "Missing userEmail parameter" }, 400);
+    const auth = requireSelf(c, userEmail);
+    if (!auth.ok) {
+      return auth.response;
     }
+    const ownerEmail = auth.userEmail;
 
     const db = getDatabase();
 
     const user = await db.query.users.findFirst({
-      where: eq(users.email, userEmail),
+      where: eq(users.email, ownerEmail),
     });
 
     if (!user) {
@@ -347,6 +367,11 @@ app.patch("/appearance/:userEmail", async (c) => {
 // Upload and save background image
 app.post("/background/upload", async (c) => {
   try {
+    const sessionEmail = c.get("userEmail");
+    if (typeof sessionEmail !== "string" || sessionEmail === "") {
+      return c.json({ error: "Authentication required" }, 401);
+    }
+
     // Get the uploaded file
     const body = await c.req.parseBody();
     const file = body.file as File;
@@ -356,7 +381,7 @@ app.post("/background/upload", async (c) => {
     }
 
     // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > MAX_BACKGROUND_BYTES) {
       return c.json({ error: "File size must be less than 10MB" }, 400);
     }
 
@@ -369,17 +394,59 @@ app.post("/background/upload", async (c) => {
       );
     }
 
-    // Convert file to base64 for storage
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64}`;
+    const db = getDatabase();
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, sessionEmail),
+    });
 
-    logger.debug("[Background] Successfully uploaded background image");
+    if (!user) {
+      return c.json({ error: "User not found" }, 404);
+    }
 
-    // Return the data URL that can be used directly in CSS
+    const uploadDir = join(process.cwd(), "uploads", "backgrounds");
+    await mkdir(uploadDir, { recursive: true });
+
+    // Always .webp — sharp re-encodes below, so the uploaded file's own name
+    // and extension are both meaningless and unsafe to interpolate into a
+    // path. user.id is a server-issued cuid.
+    const fileName = `${user.id}-${Date.now()}.webp`;
+    const filePath = join(uploadDir, fileName);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    try {
+      // This used to base64 the raw bytes into a data: URL that the PATCH
+      // below then stored in the settings JSONB — a 10MB upload became ~13MB
+      // of base64 in one column, re-sent on every preferences read. Writing a
+      // re-encoded file and storing only its URL keeps the row small, and the
+      // re-encode is also what proves the bytes are really an image (the MIME
+      // type above is client-supplied).
+      await sharp(buffer)
+        .rotate()
+        .resize(MAX_BACKGROUND_DIMENSION, MAX_BACKGROUND_DIMENSION, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 82 })
+        .toFile(filePath);
+    } catch (sharpError) {
+      logger.warn(
+        "[Background] Rejected upload that sharp could not decode:",
+        sharpError,
+      );
+      return c.json(
+        {
+          error: "Invalid image. Please upload a valid JPEG, PNG, WebP or GIF",
+        },
+        415,
+      );
+    }
+
+    const imageUrl = `/uploads/backgrounds/${fileName}`;
+    logger.debug("[Background] Stored background image at", imageUrl);
+
     return c.json({
-      imageUrl: dataUrl,
+      imageUrl,
       success: true,
     });
   } catch (error) {
@@ -400,14 +467,16 @@ app.patch("/background/:userEmail", async (c) => {
       backgroundOpacity,
     } = body;
 
-    if (!userEmail) {
-      return c.json({ error: "Missing userEmail parameter" }, 400);
+    const auth = requireSelf(c, userEmail);
+    if (!auth.ok) {
+      return auth.response;
     }
+    const ownerEmail = auth.userEmail;
 
     const db = getDatabase();
 
     const user = await db.query.users.findFirst({
-      where: eq(users.email, userEmail),
+      where: eq(users.email, ownerEmail),
     });
 
     if (!user) {
@@ -487,14 +556,16 @@ app.patch("/fonts/:userEmail", async (c) => {
     const { fontFamily, fontSize, fontWeight, lineHeight, letterSpacing } =
       body;
 
-    if (!userEmail) {
-      return c.json({ error: "Missing userEmail parameter" }, 400);
+    const auth = requireSelf(c, userEmail);
+    if (!auth.ok) {
+      return auth.response;
     }
+    const ownerEmail = auth.userEmail;
 
     const db = getDatabase();
 
     const user = await db.query.users.findFirst({
-      where: eq(users.email, userEmail),
+      where: eq(users.email, ownerEmail),
     });
 
     if (!user) {

@@ -1,7 +1,6 @@
 import { config } from "dotenv";
 config({ path: "./.env" });
-import { serve } from "@hono/node-server";
-// import { serveStatic } from "@hono/node-server/serve-static";
+import { serveStatic } from "@hono/node-server/serve-static";
 // import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { Hono, type Context, type Next } from "hono";
 // import { getCookie } from "hono/cookie";
@@ -35,11 +34,13 @@ import workspace from "./workspace";
 import workspaceUser from "./workspace-user";
 import settings from "./settings";
 import auditSettings from "./settings/audit";
+import auditTrail from "./audit";
 import projectNotes from "./project-notes"; // @epic-5.1-project-notes: Project Notes System
 import dashboard from "./dashboard";
 import team from "./team";
 import calendar from "./calendar"; // @epic-3.4-teams: Calendar and scheduling
 import rbac from "./rbac";
+import rolesRouter from "./roles";
 import milestone from "./milestone";
 import backlogCategory from "./backlog-category"; // Backlog categories for organizing backlog items
 import profile from "./profile"; // Profile management
@@ -60,17 +61,15 @@ import metricsRoutes from "./modules/metrics"; // Monitoring & metrics endpoint
 import fileVersionsRoutes from "./modules/file-versions"; // File versioning API
 // Removed old complex api-keys module - using simplified version
 import goalsRoutes from "./goals/routes"; // @epic-goal-setting: Goals & OKRs management
-import {
-  createServer,
-  type IncomingMessage,
-  type ServerResponse,
-} from "node:http";
+import { startHttpServer } from "./server/serve-app";
 import { userTable } from "./database/schema";
 import { eq } from "drizzle-orm";
 import favorites from "./favorites";
 // 🛡️ Import error handling middleware
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
 import { DEFAULT_API_PORT } from "./config/default-api-port";
+import { resolveCorsOrigin } from "./config/cors-origins";
+import { getFrontendBaseUrl } from "./config/frontend-url";
 // 🔒 Import security middleware
 import {
   securityHeaders,
@@ -93,13 +92,9 @@ const app = new Hono<{
     user?: { email: string; id: string; name?: string };
   };
 }>();
-const { isDemoMode, adminEmail } = appSettings;
-const isDevelopmentEnv =
-  (process.env.NODE_ENV || "development") === "development";
-const isTestEnv = process.env.NODE_ENV === "test";
-const allowDemoBypass = process.env.ALLOW_DEMO_AUTH_BYPASS === "true";
-const enableDemoAuthBypass =
-  isDemoMode && allowDemoBypass && (isDevelopmentEnv || isTestEnv);
+// Computed centrally in config/settings.ts so that no individual router can
+// define a looser "are we in demo mode" check than the app-wide auth gate.
+const { isDemoMode, adminEmail, enableDemoAuthBypass } = appSettings;
 // 🛡️ Register global error handler
 app.onError(errorHandler);
 
@@ -139,28 +134,12 @@ app.use("*", cacheHeaders());
 app.use(
   "*",
   cors({
-    origin: (origin) => {
-      // Allow specific origins from environment or localhost for development
-      const allowedOrigins = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5200",
-        "https://meridian.app",
-        "https://www.meridian.app",
-      ];
-
-      if (allowedOrigins.includes(origin || "")) {
-        return origin;
-      }
-
-      // For development, allow localhost origins
-      if (origin?.startsWith("http://localhost:")) {
-        return origin;
-      }
-
-      return "http://localhost:5174"; // Default for development
-    },
+    origin: (origin) =>
+      resolveCorsOrigin(origin, {
+        corsOrigins: appSettings.corsOrigins,
+        frontendUrl: getFrontendBaseUrl(),
+        nodeEnv: appSettings.nodeEnv,
+      }),
     credentials: true,
     allowHeaders: [
       "Content-Type",
@@ -184,7 +163,24 @@ if (!enableDemoAuthBypass) {
       path === "/api/users/sign-up" ||
       path === "/api/users/me" ||
       // Liveness probe only — /api/health subpaths expose project data and stay gated.
-      path === "/api/health";
+      path === "/api/health" ||
+      // Completes login for 2FA-enabled accounts, reached right after
+      // /sign-in withholds the session cookie — the browser has no session
+      // yet at this point, so this route can't sit behind the auth gate.
+      // Safe to expose: it authenticates the caller itself via the signed
+      // pendingToken minted by /sign-in (see auth/utils/pending-2fa-token.ts),
+      // not via a pre-existing session.
+      path === "/api/auth/two-factor/verify-login" ||
+      path === "/api/2fa/verify-login" ||
+      // Password recovery. These sat behind the auth gate, which made them
+      // unusable by the only people who need them: you cannot be signed in to
+      // ask for a reset when you have lost the password. Both are safe to
+      // expose — /forgot-password always answers success whether or not the
+      // address exists (so it leaks nothing), and /reset-password
+      // authenticates the caller with the emailed single-use token rather
+      // than a session.
+      path === "/api/auth/forgot-password" ||
+      path === "/api/auth/reset-password";
 
     // Allow unauthenticated access to auth bootstrap endpoints.
     if (isPublicUserRoute) {
@@ -290,12 +286,16 @@ const labelRoute = app.route("/api/label", label);
 const notificationRoute = app.route("/api/notification", notification);
 const settingsRoute = app.route("/api/settings", settings);
 const auditSettingsRoute = app.route("/api/settings/audit", auditSettings);
+// Workspace audit trail read from audit_log. Distinct from the line above,
+// which serves task activity out of a different table.
+app.route("/api/audit", auditTrail);
 const projectNotesRoute = app.route("/api/project-notes", projectNotes); // @epic-5.1-project-notes: Project Notes API
 const dashboardRoute = app.route("/api/dashboard", dashboard);
 const teamRoute = app.route("/api/team", team);
 const favoritesRoute = app.route("/api/favorites", favorites);
 const calendarRoute = app.route("/api/calendar", calendar); // @epic-3.4-teams: Calendar and scheduling
 const rbacRoute = app.route("/api/rbac", rbac);
+const rolesRoute = app.route("/api/roles", rolesRouter);
 const milestoneRoute = app.route("/api/milestone", milestone);
 const reportsRoute = app.route("/api/reports", reports);
 // Removed old integrations route (duplicate) - using newer simple version above
@@ -339,19 +339,24 @@ const fileVersionsRoute = app.route("/api/file-versions", fileVersionsRoutes); /
 const goalsRoute = app.route("/api/goals", goalsRoutes); // @epic-goal-setting: Goals & OKRs management
 // Favorites: use `/api/favorites` only (web uses API_BASE_URL `/api/...`). Legacy `/favorites` mount removed.
 
-// @epic-2.1-files: Serve uploaded files statically with proper CORS (temporarily commented out)
-// app.use("/uploads/*", async (c, next) => {
-//   logger.debug(`📁 Serving static file: ${c.req.url}`);
-//   await next();
-//   // Add CORS headers for file serving
-//   c.header('Access-Control-Allow-Origin', '*');
-//   c.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-//   c.header('Access-Control-Allow-Headers', 'Content-Type');
-// });
+// @epic-2.1-files: Serve uploaded files (e.g. profile pictures).
+//
+// This was commented out, which meant an upload's returned
+// /uploads/profile-pictures/... URL always 404'd and the image never rendered.
+//
+// These are user-supplied files, so they are served defensively: nosniff stops
+// the browser inferring an active content type, and the CSP sandbox neutralises
+// anything that does get interpreted as a document (e.g. SVG or HTML). Requests
+// still pass through the global auth middleware above, so uploads are not
+// publicly enumerable.
+app.use("/uploads/*", async (c, next) => {
+  await next();
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("Content-Security-Policy", "default-src 'none'; sandbox");
+  c.header("Cross-Origin-Resource-Policy", "same-site");
+});
 
-// app.use("/uploads/*", serveStatic({
-//   root: "./"
-// }));
+app.use("/uploads/*", serveStatic({ root: "./" }));
 
 // Database ready flag
 let databaseReady = false;
@@ -413,80 +418,13 @@ async function startServer() {
 
     logger.debug(`🚀 Starting HTTP server on port ${port}...`);
 
-    // Create HTTP server for both Hono and WebSocket
-    const httpServer = createServer((req, res) => {
-      // Buffer request body for POST/PUT/PATCH
-      if (
-        (req.method === "POST" ||
-          req.method === "PUT" ||
-          req.method === "PATCH") &&
-        req.headers["content-type"]?.includes("application/json")
-      ) {
-        let bodyData = "";
-        req.on("data", (chunk) => {
-          bodyData += chunk.toString();
-        });
-
-        req.on("end", () => {
-          logger.debug(
-            `[HTTP Server] Body received for ${req.method} ${req.url ?? ""}`,
-          );
-          logger.debug("[HTTP Server] Body length:", {
-            length: bodyData.length,
-          });
-          logger.debug("[HTTP Server] Body preview:", {
-            preview: bodyData.substring(0, 100),
-          });
-
-          if (!bodyData || bodyData.trim() === "") {
-            logger.warn(
-              `[HTTP Server] ⚠️ WARNING: Empty body received for ${req.method} ${req.url ?? ""}`,
-            );
-          }
-
-          // Now handle with Hono, passing the buffered body
-          handleHonoRequest(req, res, bodyData);
-        });
-      } else {
-        // No body buffering needed
-        handleHonoRequest(req, res);
-      }
-
-      function handleHonoRequest(
-        req: IncomingMessage,
-        res: ServerResponse,
-        body?: string,
-      ) {
-        void Promise.resolve(
-          app.fetch(
-            new Request(`http://localhost:${port}${req.url}`, {
-              method: req.method,
-              headers: req.headers as HeadersInit,
-              body: body,
-            }),
-          ),
-        )
-          .then((response: Response) => {
-            res.statusCode = response.status;
-            // biome-ignore lint/complexity/noForEach: Headers is not an Array and this TS lib has no Headers iterator
-            response.headers.forEach((value, key) => {
-              res.setHeader(key, value);
-            });
-            return response.arrayBuffer();
-          })
-          .then((responseBody: ArrayBuffer) => {
-            res.end(Buffer.from(responseBody));
-          })
-          .catch((error: unknown) => {
-            logger.error("❌ Request handling error:", error);
-            res.statusCode = 500;
-            res.end("Internal Server Error");
-          });
-      }
-    });
-
-    // Start listening
-    httpServer.listen(port, () => {
+    // Serve the Hono app. Body handling is deliberately left to
+    // @hono/node-server — the previous hand-rolled createServer buffered
+    // bodies itself and only did so for "application/json", which meant every
+    // multipart upload reached Hono with no body at all (500 "Failed to parse
+    // body as FormData") and any binary payload was corrupted by being
+    // buffered as a UTF-8 string. See server/serve-app.ts.
+    startHttpServer(app, port, () => {
       logger.debug(`🏃 Server is running at http://localhost:${port}`);
 
       // Phase 2: Start digest schedulers
@@ -509,6 +447,15 @@ async function startServer() {
         logger.debug("🔔 Alert rule scheduler initialized");
       } catch (error) {
         logger.error("⚠️ Failed to start alert rule scheduler:", error);
+      }
+
+      // @epic-4.1-analytics: Start scheduled analytics reports scheduler
+      try {
+        const { scheduledReportsScheduler } = require("./reports/scheduler");
+        scheduledReportsScheduler.start();
+        logger.debug("📊 Scheduled reports scheduler initialized");
+      } catch (error) {
+        logger.error("⚠️ Failed to start scheduled reports scheduler:", error);
       }
     });
   } catch (error) {
@@ -608,7 +555,10 @@ app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls
       );
       process.exit(1);
     }
-    if (process.env.NODE_ENV === "production" && allowDemoBypass) {
+    if (
+      process.env.NODE_ENV === "production" &&
+      process.env.ALLOW_DEMO_AUTH_BYPASS === "true"
+    ) {
       logger.error(
         "❌ FATAL SECURITY ERROR: ALLOW_DEMO_AUTH_BYPASS cannot be enabled in production",
       );
@@ -617,6 +567,10 @@ app.route("/api/2fa", twoFactor); // Alias for legacy /api/2fa frontend calls
 
     await initializeDatabase();
     logger.debug("✅ Database initialized");
+
+    const { seedSystemRoles } = await import("./roles/lib/system-roles");
+    await seedSystemRoles();
+    logger.debug("✅ System roles seeded");
 
     await startServer();
     logger.debug("✅ Server started successfully");

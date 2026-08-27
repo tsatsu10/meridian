@@ -6,6 +6,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export interface EmailSettings {
   // SMTP Configuration
@@ -126,7 +127,7 @@ export default async function getEmailSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   // Get email settings from workspace settings JSONB

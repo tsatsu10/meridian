@@ -1,9 +1,9 @@
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Lock, Users, FileCheck } from "lucide-react";
 import UniversalHeader from "@/components/dashboard/universal-header";
-import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
+import { useRBACAuth } from "@/lib/permissions/context";
 
 // Import Security Dashboard Components
 import { SecurityDashboardWidget } from "@/components/dashboard/security/security-dashboard-widget";
@@ -11,32 +11,45 @@ import { AccessControlMonitor } from "@/components/dashboard/security/access-con
 import { TwoFactorStatusWidget } from "@/components/dashboard/security/tfa-status-widget";
 import { GDPRComplianceWidget } from "@/components/dashboard/security/gdpr-compliance-widget";
 import { SessionManagementWidget } from "@/components/dashboard/security/session-management-widget";
-
-// Lazy load components for better performance
-const BlurFade = lazy(() =>
-  import("@/components/magicui/blur-fade").then((m) => ({
-    default: m.BlurFade,
-  })),
-);
+import { BlurFade } from "@/components/magicui/blur-fade";
 
 export const Route = createFileRoute("/dashboard/security")({
   component: SecurityDashboardPage,
-  beforeLoad: ({ context }) => {
-    // Check if user has access to security dashboard
-    const user = context.user;
-    if (!user?.role || !["workspace-manager", "admin"].includes(user.role)) {
-      throw new Error(
-        "Unauthorized: Security dashboard access restricted to admins and workspace managers",
-      );
-    }
-  },
+  // No beforeLoad guard. There was one, and it made this page unreachable for
+  // everybody: it threw when `context.user.role` was not "workspace-manager" or
+  // "admin", but `context.user` is the /api/users/me record, whose `role` is the
+  // GLOBAL users.role — "member" even for the person who owns the workspace.
+  // Workspace authority lives in workspace_members.role, so comparing a global
+  // role against workspace role names is a category error that can essentially
+  // never match. Worse, throwing from beforeLoad escapes to the dashboard error
+  // boundary ("There was an error loading the dashboard"), so the denial was not
+  // even legible — this same file already renders a proper "Access Restricted"
+  // panel below. Authorization belongs in the component, where it can be shown.
 });
 
 function SecurityDashboardPage() {
-  const { user } = useAuth();
+  // The workspace-scoped RBAC permission is the authority here, not any role
+  // string: definitions.ts composes from backend-matrix.generated.ts, which is
+  // generated from apps/api/src/constants/rbac.ts — what the server actually
+  // enforces. In that matrix `canViewSecurityLogs` is held by workspace-manager
+  // alone, which is exactly what the old role list was reaching for.
+  //
+  // Note this gate is UX, not enforcement: the widgets below call
+  // /api/security/*, which is currently guarded by authMiddleware() only, with
+  // no permission check. Tightening that is a separate server-side change.
+  const { hasPermission, isLoading } = useRBACAuth();
 
-  // Security role check - only admins and workspace managers can access
-  if (!user?.role || !["workspace-manager", "admin"].includes(user.role)) {
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-6 bg-gray-50/50 dark:bg-gradient-dark">
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasPermission("canViewSecurityLogs")) {
     return (
       <div className="flex-1 p-6 bg-gray-50/50 dark:bg-gradient-dark">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -46,8 +59,7 @@ function SecurityDashboardPage() {
               Access Restricted
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Security dashboard is only available to workspace managers and
-              administrators.
+              Security dashboard is only available to workspace managers.
             </p>
           </div>
         </div>

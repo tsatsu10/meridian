@@ -49,12 +49,21 @@ import {
   workspaceUserTable,
   userTable,
 } from "../database/schema";
+import { ensureDefaultColumns } from "./utils/default-columns";
+import {
+  projectRestrictionError,
+  projectsOutsideRestriction,
+} from "./utils/project-restriction";
 import rbacMiddleware from "../middlewares/rbac";
-import { requirePermission } from "../middlewares/rbac";
+import {
+  requireProjectPermission,
+  checkWorkspacePermission,
+} from "../middlewares/rbac";
 import { CachePresets, cacheMiddleware } from "../middlewares/cache-middleware";
+
 import { RateLimitPresets } from "../middlewares/rate-limit";
 import logger from "../utils/logger";
-import { getErrorMessage } from "../utils/error-utils";
+import { getErrorMessage, statusCodeOf } from "../utils/error-utils";
 import { errorMessage } from "../utils/errors";
 
 // Enhanced validation schemas
@@ -373,7 +382,19 @@ const project = new Hono<{
       const { projectId } = c.req.valid("param");
       const { userEmail, role, hoursPerWeek, notificationSettings } =
         c.req.valid("json");
-      const assignedBy = c.get("userEmail");
+
+      // assigned_by is a FK to users.id, not users.email - c.get("userId")
+      // is only set by the RBAC middleware on its non-bypassed path, so
+      // resolve it directly here to also cover the demo-mode bypass.
+      let assignedBy = c.get("userId");
+      if (!assignedBy) {
+        const db = getDatabase();
+        const [assigner] = await db
+          .select({ id: userTable.id })
+          .from(userTable)
+          .where(eq(userTable.email, c.get("userEmail")));
+        assignedBy = assigner?.id;
+      }
 
       const member = await addProjectMember({
         projectId,
@@ -389,6 +410,7 @@ const project = new Hono<{
   )
   .put(
     "/:projectId/members/:memberEmail",
+    rbacMiddleware.canManageProjectTeam,
     zValidator(
       "param",
       z.object({
@@ -420,6 +442,7 @@ const project = new Hono<{
   )
   .delete(
     "/:projectId/members/:memberEmail",
+    rbacMiddleware.canManageProjectTeam,
     zValidator(
       "param",
       z.object({
@@ -508,17 +531,20 @@ const project = new Hono<{
           .regex(/^#[0-9A-Fa-f]{6}$/)
           .optional(),
         position: z.number().int().min(0).optional(),
+        insertAfterColumnId: z.string().optional(),
       }),
     ),
     async (c) => {
       const { projectId } = c.req.valid("param");
-      const { name, color, position } = c.req.valid("json");
+      const { name, color, position, insertAfterColumnId } =
+        c.req.valid("json");
 
       const statusColumn = await createStatusColumn({
         projectId,
         name,
         color,
         position,
+        insertAfterColumnId,
       });
 
       return c.json(statusColumn);
@@ -553,51 +579,25 @@ const project = new Hono<{
     try {
       logger.debug("🔧 Fixing position conflicts for project:", projectId);
 
-      // Get all columns sorted by current position, then by creation date for tiebreaker
-      const columns = await db
-        .select()
-        .from(statusColumnTable)
-        .where(eq(statusColumnTable.projectId, projectId))
-        .orderBy(statusColumnTable.position, statusColumnTable.createdAt);
-
-      logger.debug(
-        "🔧 Current columns before fix:",
-        columns.map((c) => ({
-          id: c.id,
-          name: c.name,
-          position: c.position,
-          isDefault: c.isDefault,
-        })),
-      );
-
-      // Renumber positions sequentially
-      for (let i = 0; i < columns.length; i++) {
-        const column = columns[i];
-        if (!column) continue;
-        const newPosition = i; // 0, 1, 2, 3, 4...
-
-        if (column.position !== newPosition) {
-          logger.debug(
-            `🔧 Updating ${column.name} position from ${column.position} to ${newPosition}`,
-          );
-          await db
-            .update(statusColumnTable)
-            .set({ position: newPosition })
-            .where(eq(statusColumnTable.id, column.id));
-        }
-      }
+      // Shares one implementation with column creation so the two can't
+      // drift apart — it backfills any missing default columns and renumbers
+      // every column contiguously.
+      await ensureDefaultColumns(projectId);
 
       logger.debug("🔧 Position conflicts fixed");
       return c.json({ success: true, message: "Position conflicts fixed" });
     } catch (error) {
-      return c.json({ error: getErrorMessage(error) }, 500);
+      return c.json({ error: getErrorMessage(error) }, statusCodeOf(error));
     }
   })
 
   // @epic-1.1-subtasks: Analytics endpoint for project analytics
+  // 🚨 SECURITY: project-scoped, not the unscoped requirePermission — see the
+  // matching comment in analytics/index.ts. The unscoped guard let anyone
+  // holding canViewAnalytics in any workspace read any project's analytics.
   .get(
     "/:projectId/analytics",
-    requirePermission("canViewAnalytics"),
+    requireProjectPermission("canViewProjectAnalytics"),
     zValidator("param", z.object({ projectId: z.string() })),
     zValidator("query", z.object({ timeRange: z.string().optional() })),
     getProjectAnalytics,
@@ -726,6 +726,7 @@ const project = new Hono<{
       "json",
       z.object({
         projectIds: z.array(z.string()).min(1),
+        workspaceId: z.string().min(1, "Workspace ID is required"),
         updates: z.object({
           status: z.string().optional(),
           priority: z.string().optional(),
@@ -738,8 +739,34 @@ const project = new Hono<{
     async (c) => {
       try {
         const payload = c.req.valid("json");
+
+        // SECURITY: workspaceId is in the body here, not a route param, so
+        // requireWorkspacePermission's route-param middleware doesn't apply
+        // — check it directly instead. Previously this route had no RBAC
+        // check at all.
+        const permission = await checkWorkspacePermission(
+          c.get("userEmail"),
+          payload.workspaceId,
+          "canUpdateProjects",
+        );
+        if (!permission.allowed) {
+          return c.json(
+            permission.body ?? { error: "Forbidden" },
+            permission.status ?? 403,
+          );
+        }
+
+        const outOfScope = projectsOutsideRestriction(
+          payload.projectIds,
+          permission.restrictedToProjectIds,
+        );
+        if (outOfScope.length > 0) {
+          return c.json(projectRestrictionError(outOfScope), 403);
+        }
+
         const result = await bulkUpdateProjects({
           projectIds: payload.projectIds,
+          workspaceId: payload.workspaceId,
           updates: {
             ...payload.updates,
             dueDate: payload.updates.dueDate
@@ -775,6 +802,31 @@ const project = new Hono<{
     async (c) => {
       try {
         const payload = c.req.valid("json");
+
+        // SECURITY: canDeleteProjects above only checks the caller has that
+        // permission SOMEWHERE, not specifically in payload.workspaceId —
+        // check that explicitly too, so a role earned in one workspace
+        // can't authorize deleting projects in a different one.
+        const permission = await checkWorkspacePermission(
+          c.get("userEmail"),
+          payload.workspaceId,
+          "canDeleteProjects",
+        );
+        if (!permission.allowed) {
+          return c.json(
+            permission.body ?? { error: "Forbidden" },
+            permission.status ?? 403,
+          );
+        }
+
+        const outOfScope = projectsOutsideRestriction(
+          payload.projectIds,
+          permission.restrictedToProjectIds,
+        );
+        if (outOfScope.length > 0) {
+          return c.json(projectRestrictionError(outOfScope), 403);
+        }
+
         const result = await bulkDeleteProjects(payload);
         return c.json(result);
       } catch (error) {

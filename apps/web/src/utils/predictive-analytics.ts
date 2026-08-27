@@ -140,8 +140,8 @@ export function predictFutureTrends(
   }
 
   // Calculate overall trend
-  const avgChangeRate =
-    (slope / (values.reduce((a, b) => a + b, 0) / values.length)) * 100;
+  const average = values.reduce((a, b) => a + b, 0) / values.length;
+  const avgChangeRate = average !== 0 ? (slope / average) * 100 : 0;
   const overallTrend: "increasing" | "decreasing" | "stable" =
     Math.abs(avgChangeRate) < 2
       ? "stable"

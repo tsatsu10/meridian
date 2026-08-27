@@ -17,8 +17,12 @@ import {
   Plus,
 } from "lucide-react";
 import React, { type CSSProperties, useState } from "react";
+import { toast } from "sonner";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 import TaskCardContextMenuContent from "./task-card-context-menu/task-card-context-menu-content";
+import CreateTaskModal from "@/components/shared/modals/create-task-modal";
+import EditTaskModal from "@/components/shared/modals/edit-task-modal";
+import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 // 🛡️ RBAC: Role-based UI controls
 import { useRBACAuth, RequirePermission } from "@/lib/permissions";
 
@@ -32,6 +36,9 @@ interface TaskCardProps {
 const TaskCard = React.memo(
   function TaskCard({ task, hierarchyLevel = 0, parentTask }: TaskCardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isCreateSubtaskOpen, setIsCreateSubtaskOpen] = useState(false);
+    const [editingSubtask, setEditingSubtask] =
+      useState<TaskWithSubtasks | null>(null);
     // 🛡️ RBAC: Get user permissions for role-based UI
     useRBACAuth();
 
@@ -55,6 +62,7 @@ const TaskCard = React.memo(
     const { project } = useProjectStore();
     const { workspace } = useWorkspaceStore();
     const navigate = useNavigate();
+    const { mutate: deleteSubtask } = useDeleteTask(project?.id ?? "");
 
     // Use bulk operations if available, otherwise provide defaults
     let selectedTasks = new Set<string>();
@@ -220,6 +228,9 @@ const TaskCard = React.memo(
                             ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                             : ""
                         }`}
+                        style={
+                          isExpanded ? undefined : { background: "transparent" }
+                        }
                         title={`${task.subtasks.length} subtask${task.subtasks.length > 1 ? "s" : ""} - Click to ${isExpanded ? "collapse" : "expand"}`}
                       >
                         {isExpanded ? (
@@ -246,9 +257,10 @@ const TaskCard = React.memo(
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // TODO: Open subtask creation modal
+                            setIsCreateSubtaskOpen(true);
                           }}
                           className="flex items-center gap-1 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-all duration-200 px-1.5 py-0.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-xs"
+                          style={{ background: "transparent" }}
                           title="Create Subtask (Team Lead)"
                         >
                           <Plus className="w-3 h-3" />
@@ -370,8 +382,10 @@ const TaskCard = React.memo(
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  setEditingSubtask(subtask);
                                 }}
                                 className="text-blue-500 hover:text-blue-700 p-0.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                style={{ background: "transparent" }}
                                 title="Edit Subtask (Team Lead)"
                               >
                                 <svg
@@ -398,8 +412,28 @@ const TaskCard = React.memo(
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  if (
+                                    !confirm(
+                                      `Delete subtask "${subtask.title}"? This cannot be undone.`,
+                                    )
+                                  ) {
+                                    return;
+                                  }
+                                  deleteSubtask(subtask.id, {
+                                    onSuccess: () => {
+                                      toast.success(
+                                        `Deleted subtask "${subtask.title}"`,
+                                      );
+                                    },
+                                    onError: () => {
+                                      toast.error(
+                                        `Failed to delete subtask "${subtask.title}"`,
+                                      );
+                                    },
+                                  });
                                 }}
                                 className="text-red-500 hover:text-red-700 p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                                style={{ background: "transparent" }}
                                 title="Delete Subtask (Team Lead)"
                               >
                                 <svg
@@ -519,8 +553,6 @@ const TaskCard = React.memo(
                   {task.priority}
                 </span>
               </div>
-
-              {/* Note: Subtasks are now rendered as separate cards in the column */}
             </div>
           </ContextMenuTrigger>
 
@@ -534,6 +566,24 @@ const TaskCard = React.memo(
             />
           )}
         </ContextMenu>
+
+        <CreateTaskModal
+          open={isCreateSubtaskOpen}
+          onOpenChange={setIsCreateSubtaskOpen}
+          status={task.status}
+          parentTaskId={task.id}
+          projectContext={project ?? undefined}
+          hideProjectSelection={true}
+        />
+
+        {editingSubtask && workspace && (
+          <EditTaskModal
+            open={true}
+            onClose={() => setEditingSubtask(null)}
+            task={editingSubtask}
+            workspaceId={workspace.id}
+          />
+        )}
       </div>
     );
   },

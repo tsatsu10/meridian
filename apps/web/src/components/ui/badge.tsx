@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 import { type VariantProps, cva } from "class-variance-authority";
-import type * as React from "react";
+import * as React from "react";
 
 const badgeVariants = cva(
   "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -61,13 +61,17 @@ export interface BadgeProps
     | "teal";
 }
 
-function Badge({ className, variant, badgeColor, ...props }: BadgeProps) {
-  return (
-    <div
-      className={cn(badgeVariants({ variant, badgeColor }), className)}
-      {...props}
-    />
-  );
-}
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, badgeColor, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(badgeVariants({ variant, badgeColor }), className)}
+        {...props}
+      />
+    );
+  },
+);
+Badge.displayName = "Badge";
 
 export { Badge, badgeVariants };

@@ -2,7 +2,7 @@
 // @persona-jennifer: Executive needs automated report delivery
 // @persona-david: Team lead needs regular performance reports
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -43,24 +43,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { toast } from "sonner";
-
-interface ScheduledReport {
-  id: string;
-  name: string;
-  description?: string;
-  frequency: "daily" | "weekly" | "monthly";
-  time: string; // HH:MM format
-  dayOfWeek?: number; // 0-6 for weekly
-  dayOfMonth?: number; // 1-31 for monthly
-  recipients: string[]; // Email addresses
-  format: "pdf" | "excel" | "csv";
-  sections: string[]; // Which analytics sections to include
-  isActive: boolean;
-  lastRun?: string;
-  nextRun?: string;
-  createdAt: string;
-  createdBy: string;
-}
+import useWorkspaceStore from "@/store/workspace";
+import {
+  useScheduledReports,
+  useCreateScheduledReport,
+  useUpdateScheduledReport,
+  useDeleteScheduledReport,
+  useRunScheduledReportNow,
+  type ScheduledReport,
+} from "@/hooks/queries/reports/use-scheduled-reports";
 
 interface ScheduledReportsProps {
   isOpen: boolean;
@@ -68,7 +59,15 @@ interface ScheduledReportsProps {
 }
 
 export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
-  const [reports, setReports] = useState<ScheduledReport[]>([]);
+  const { workspace } = useWorkspaceStore();
+  const workspaceId = workspace?.id;
+
+  const { data: reports = [], isLoading } = useScheduledReports(workspaceId);
+  const createReport = useCreateScheduledReport(workspaceId);
+  const updateReport = useUpdateScheduledReport(workspaceId);
+  const deleteReport = useDeleteScheduledReport(workspaceId);
+  const runReportNow = useRunScheduledReportNow(workspaceId);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingReport, setEditingReport] = useState<ScheduledReport | null>(
     null,
@@ -95,20 +94,6 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
     insights: false,
   });
   const [formIsActive, setFormIsActive] = useState(true);
-
-  // Load reports from localStorage
-  useEffect(() => {
-    const savedReports = localStorage.getItem("scheduledReports");
-    if (savedReports) {
-      setReports(JSON.parse(savedReports));
-    }
-  }, []);
-
-  // Save reports to localStorage
-  const saveReports = (updatedReports: ScheduledReport[]) => {
-    setReports(updatedReports);
-    localStorage.setItem("scheduledReports", JSON.stringify(updatedReports));
-  };
 
   // Reset form
   const resetForm = () => {
@@ -137,11 +122,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
     setFormDescription(report.description || "");
     setFormFrequency(report.frequency);
     setFormTime(report.time);
-    setFormDayOfWeek(report.dayOfWeek || 1);
-    setFormDayOfMonth(report.dayOfMonth || 1);
+    setFormDayOfWeek(report.dayOfWeek ?? 1);
+    setFormDayOfMonth(report.dayOfMonth ?? 1);
     setFormRecipients(report.recipients.join(", "));
     setFormFormat(report.format);
-    // Map sections array to form state
     setFormSections({
       overview: report.sections.includes("overview"),
       projects: report.sections.includes("projects"),
@@ -154,42 +138,8 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
     setShowCreateModal(true);
   };
 
-  // Calculate next run time
-  const calculateNextRun = (
-    frequency: string,
-    time: string,
-    dayOfWeek?: number,
-    dayOfMonth?: number,
-  ): string => {
-    const now = new Date();
-    const [hours, minutes] = time.split(":").map(Number);
-    const next = new Date();
-    next.setHours(hours, minutes, 0, 0);
-
-    if (frequency === "daily") {
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-    } else if (frequency === "weekly" && dayOfWeek !== undefined) {
-      const currentDay = now.getDay();
-      const daysUntilNext = (dayOfWeek - currentDay + 7) % 7;
-      next.setDate(now.getDate() + (daysUntilNext || 7));
-      if (daysUntilNext === 0 && next <= now) {
-        next.setDate(next.getDate() + 7);
-      }
-    } else if (frequency === "monthly" && dayOfMonth !== undefined) {
-      next.setDate(dayOfMonth);
-      if (next <= now) {
-        next.setMonth(next.getMonth() + 1);
-      }
-    }
-
-    return next.toISOString();
-  };
-
   // Create or update report
-  const handleSaveReport = () => {
-    // Validation
+  const handleSaveReport = async () => {
     if (!formName.trim()) {
       toast.error("Report name is required");
       return;
@@ -214,7 +164,7 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
       return;
     }
 
-    const reportData = {
+    const input = {
       name: formName.trim(),
       description: formDescription.trim(),
       frequency: formFrequency,
@@ -225,70 +175,75 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
       format: formFormat,
       sections: selectedSections,
       isActive: formIsActive,
-      nextRun: calculateNextRun(
-        formFrequency,
-        formTime,
-        formDayOfWeek,
-        formDayOfMonth,
-      ),
     };
 
-    if (editingReport) {
-      // Update existing report
-      const updatedReports = reports.map((r) =>
-        r.id === editingReport.id ? { ...r, ...reportData } : r,
+    try {
+      if (editingReport) {
+        await updateReport.mutateAsync({
+          reportId: editingReport.id,
+          ...input,
+        });
+        toast.success("Report configuration updated");
+      } else {
+        await createReport.mutateAsync(input);
+        toast.success("Report configuration saved");
+      }
+      resetForm();
+      setShowCreateModal(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save report",
       );
-      saveReports(updatedReports);
-      toast.success("Report updated successfully");
-    } else {
-      // Create new report
-      const newReport: ScheduledReport = {
-        id: `report-${Date.now()}`,
-        ...reportData,
-        createdAt: new Date().toISOString(),
-        createdBy: "current-user", // See https://github.com/tsatsu10/meridian/issues/78
-      };
-      saveReports([...reports, newReport]);
-      toast.success("Report scheduled successfully");
     }
-
-    resetForm();
-    setShowCreateModal(false);
   };
 
   // Toggle report active status
-  const toggleReportStatus = (reportId: string) => {
-    const updatedReports = reports.map((r) =>
-      r.id === reportId ? { ...r, isActive: !r.isActive } : r,
-    );
-    saveReports(updatedReports);
-    toast.success(
-      updatedReports.find((r) => r.id === reportId)?.isActive
-        ? "Report activated"
-        : "Report paused",
-    );
+  const toggleReportStatus = async (report: ScheduledReport) => {
+    try {
+      await updateReport.mutateAsync({
+        reportId: report.id,
+        isActive: !report.isActive,
+      });
+      toast.success(!report.isActive ? "Report activated" : "Report paused");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update report",
+      );
+    }
   };
 
   // Delete report
-  const handleDeleteReport = (reportId: string) => {
-    const updatedReports = reports.filter((r) => r.id !== reportId);
-    saveReports(updatedReports);
-    toast.success("Report deleted");
+  const handleDeleteReport = async (reportId: string) => {
+    try {
+      await deleteReport.mutateAsync(reportId);
+      toast.success("Report deleted");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete report",
+      );
+    }
   };
 
-  // Run report now
-  const handleRunNow = (report: ScheduledReport) => {
+  // Run report now - genuinely generates the report from live analytics data
+  // and emails it; reflects whether delivery actually succeeded.
+  const handleRunNow = async (report: ScheduledReport) => {
     toast.info("Generating report...", {
       description: "This will be sent to all recipients shortly",
     });
-    // TODO: Implement actual report generation and sending
-    const updatedReports = reports.map((r) =>
-      r.id === report.id ? { ...r, lastRun: new Date().toISOString() } : r,
-    );
-    saveReports(updatedReports);
-    setTimeout(() => {
-      toast.success("Report sent successfully");
-    }, 2000);
+    try {
+      const result = await runReportNow.mutateAsync(report.id);
+      if (result.sent) {
+        toast.success(`Report sent to ${result.recipientCount} recipient(s)`);
+      } else {
+        toast.error(
+          result.error || "Email delivery isn't configured on the server",
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to run report",
+      );
+    }
   };
 
   // Get frequency display text
@@ -305,10 +260,18 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
     if (report.frequency === "daily") {
       return `Daily at ${report.time}`;
     }
-    if (report.frequency === "weekly" && report.dayOfWeek !== undefined) {
+    if (
+      report.frequency === "weekly" &&
+      report.dayOfWeek !== undefined &&
+      report.dayOfWeek !== null
+    ) {
       return `Every ${days[report.dayOfWeek]} at ${report.time}`;
     }
-    if (report.frequency === "monthly" && report.dayOfMonth !== undefined) {
+    if (
+      report.frequency === "monthly" &&
+      report.dayOfMonth !== undefined &&
+      report.dayOfMonth !== null
+    ) {
       return `Monthly on day ${report.dayOfMonth} at ${report.time}`;
     }
     return report.frequency;
@@ -324,7 +287,7 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
               Scheduled Reports
             </DialogTitle>
             <DialogDescription>
-              Automate analytics report delivery to your team
+              Automate analytics report delivery to your team by email.
             </DialogDescription>
           </DialogHeader>
 
@@ -332,8 +295,9 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
             {/* Header Actions */}
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {reports.length} scheduled{" "}
-                {reports.length === 1 ? "report" : "reports"}
+                {isLoading
+                  ? "Loading..."
+                  : `${reports.length} scheduled ${reports.length === 1 ? "report" : "reports"}`}
               </div>
               <Button
                 onClick={() => {
@@ -349,7 +313,7 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
 
             {/* Reports List */}
             <ScrollArea className="flex-1">
-              {reports.length === 0 ? (
+              {!isLoading && reports.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="font-semibold mb-2">
@@ -418,7 +382,7 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => toggleReportStatus(report.id)}
+                              onClick={() => toggleReportStatus(report)}
                               title={report.isActive ? "Pause" : "Resume"}
                             >
                               {report.isActive ? (
@@ -460,16 +424,18 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
                               ? "recipient"
                               : "recipients"}
                           </div>
-                          {report.nextRun && (
+                          {report.nextRunAt && (
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Calendar className="w-4 h-4" />
-                              Next: {new Date(report.nextRun).toLocaleString()}
+                              Next:{" "}
+                              {new Date(report.nextRunAt).toLocaleString()}
                             </div>
                           )}
-                          {report.lastRun && (
+                          {report.lastRunAt && (
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Check className="w-4 h-4" />
-                              Last: {new Date(report.lastRun).toLocaleString()}
+                              Last:{" "}
+                              {new Date(report.lastRunAt).toLocaleString()}
                             </div>
                           )}
                         </div>
@@ -825,7 +791,10 @@ export function ScheduledReports({ isOpen, onClose }: ScheduledReportsProps) {
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={handleSaveReport}>
+            <Button
+              onClick={handleSaveReport}
+              disabled={createReport.isPending || updateReport.isPending}
+            >
               <Save className="w-4 h-4 mr-2" />
               {editingReport ? "Update Report" : "Create Report"}
             </Button>

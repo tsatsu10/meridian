@@ -70,12 +70,20 @@ async function updateTask(
           .where(eq(userTable.email, userEmail))
       : [null];
 
+    // Real completion timestamp for cycle-time analytics: set the moment
+    // status first becomes "done", clear it if moved back out - never
+    // touched on edits that don't change status, so re-saving an
+    // already-done task doesn't bump it.
+    const statusChangingToDone =
+      status === "done" && existingTask.status !== "done";
+    const statusChangingAwayFromDone =
+      status !== "done" && existingTask.status === "done";
+
     const [updatedTask] = await db
       .update(taskTable)
       .set({
         title: sanitizedTitle,
-        // request-boundary narrowing onto the enum columns
-        status: status as "todo" | "in_progress" | "done",
+        status,
         dueDate,
         projectId,
         description: sanitizedDescription,
@@ -83,6 +91,8 @@ async function updateTask(
         position,
         assigneeId: assignee?.id || null, // Use assigneeId instead of userEmail
         parentTaskId: parentId || null, // Use parentTaskId instead of parentId
+        ...(statusChangingToDone && { completedAt: new Date() }),
+        ...(statusChangingAwayFromDone && { completedAt: null }),
         // Note: assignedTeamId not in schema - store in task metadata if needed
       })
       .where(eq(taskTable.id, id))

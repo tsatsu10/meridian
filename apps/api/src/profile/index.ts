@@ -23,12 +23,18 @@ import createConnection from "./controllers/create-connection";
 import updateConnection from "./controllers/update-connection";
 import deleteConnection from "./controllers/delete-connection";
 import uploadProfilePicture from "./controllers/upload-profile-picture";
+import deleteProfilePicture from "./controllers/delete-profile-picture";
 import logger from "../utils/logger";
 import { toError } from "../utils/error-utils";
 // Note: Add proper auth middleware when available
 
 // Validation schemas
 const profileSchema = z.object({
+  // Stored on `users`, not `user_profiles` (see update-profile.ts). Email is
+  // deliberately NOT accepted here: users.email is the FK target for ~19
+  // tables with non-deferrable constraints, so changing it is a migration,
+  // not a field update.
+  name: z.string().min(1).max(100).optional(),
   jobTitle: z.string().max(100).optional(),
   company: z.string().max(100).optional(),
   industry: z.string().max(100).optional(),
@@ -107,9 +113,14 @@ const profile = new Hono<{
   };
 }>();
 
-// Apply authentication middleware to all routes (only in production mode)
-const { isDemoMode } = appSettings;
-if (!isDemoMode) {
+// Apply authentication middleware to all routes.
+//
+// This used to skip auth whenever DEMO_MODE was set, which was a *weaker*
+// condition than the app-wide auth gate (that one additionally requires
+// ALLOW_DEMO_AUTH_BYPASS and a non-production NODE_ENV). Both now read the
+// same centrally-computed flag so this router can't end up more permissive
+// than the rest of the API.
+if (!appSettings.enableDemoAuthBypass) {
   profile.use("*", auth);
 }
 
@@ -159,6 +170,13 @@ profile
   .post("/avatar", async (c) => {
     const userId = c.get("userId");
     const result = await uploadProfilePicture(c, userId);
+    return c.json(result);
+  })
+
+  // Remove the current profile picture
+  .delete("/picture", async (c) => {
+    const userId = c.get("userId");
+    const result = await deleteProfilePicture(userId);
     return c.json(result);
   })
 

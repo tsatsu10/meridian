@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Card,
@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   Palette,
   Monitor,
@@ -37,14 +36,15 @@ import {
   Image as ImageIcon,
   Upload,
   X,
-  Maximize,
   Type,
 } from "lucide-react";
 import { useThemeSync } from "@/hooks/use-theme-sync";
-import { useSettingsStore, type AllSettings } from "@/store/settings";
-import { useAuthStore } from "@/store/consolidated/auth";
+import { useSettingsStore, type AppearanceSettings } from "@/store/settings";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import { API_BASE_URL } from "@/constants/urls";
+import { getSunTimes } from "@/lib/theme/auto-theme";
+import PageTitle from "@/components/page-title";
 
 // Import Accessibility Components
 import { VoiceControl } from "@/components/accessibility/voice-control";
@@ -53,446 +53,240 @@ import { ReducedMotionMode } from "@/components/accessibility/reduced-motion-mod
 import { withErrorBoundary } from "@/components/dashboard/universal-error-boundary";
 
 export const Route = createFileRoute("/dashboard/settings/appearance")({
-  component: withErrorBoundary(AppearanceSettings, "Appearance Settings"),
+  component: withErrorBoundary(AppearanceSettingsPage, "Appearance Settings"),
 });
 
-function AppearanceSettings() {
-  const { theme, setTheme } = useThemeSync();
-  const { settings, updateSettings } = useSettingsStore();
-  const { user } = useAuthStore();
+/**
+ * Only families the app can actually render are offered.
+ *
+ * The list used to include Roboto, Open Sans, Lato, Montserrat, Poppins and
+ * Source Sans Pro, none of which are loaded — index.html pulls only Inter and
+ * Space Grotesk from Google Fonts — so picking one silently fell back to the
+ * default on any machine without it installed. What remains is the two loaded
+ * webfonts plus generic stacks every OS resolves.
+ */
+const FONT_FAMILIES = [
+  { value: "Inter", label: "Inter" },
+  { value: "Space Grotesk", label: "Space Grotesk" },
+  { value: "system-ui", label: "System Default" },
+  { value: "Georgia, serif", label: "Georgia (Serif)" },
+  { value: "ui-monospace, monospace", label: "Monospace" },
+];
 
-  // @epic-4.2-location-theme: Location-based theme switching.
-  // currentLocation/sunTimes stay local — they're derived from the browser's
-  // geolocation API and today's date, not configuration to persist.
-  const [currentLocation, setCurrentLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [sunTimes, setSunTimes] = useState<{
-    sunrise: string;
-    sunset: string;
-  } | null>(null);
+const FONT_WEIGHTS = [
+  { value: "300", label: "Light (300)" },
+  { value: "400", label: "Regular (400)" },
+  { value: "500", label: "Medium (500)" },
+  { value: "600", label: "Semi Bold (600)" },
+  { value: "700", label: "Bold (700)" },
+];
 
-  // @epic-4.3-background-customization: Background image customization
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  const [backgroundPosition, setBackgroundPosition] = useState<
-    "center" | "top" | "bottom" | "left" | "right"
-  >("center");
-  const [backgroundBlur, setBackgroundBlur] = useState(0);
-  const [backgroundOpacity, setBackgroundOpacity] = useState(100);
+const BACKGROUND_POSITIONS = [
+  { value: "center", label: "Center" },
+  { value: "top", label: "Top" },
+  { value: "bottom", label: "Bottom" },
+  { value: "left", label: "Left" },
+  { value: "right", label: "Right" },
+] as const;
+
+const ALLOWED_BACKGROUND_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
+const MAX_BACKGROUND_BYTES = 10 * 1024 * 1024;
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function AppearanceSettingsPage() {
+  const { theme, effectiveTheme, setTheme, autoThemeActive } = useThemeSync();
+  const { settings, updateSettings, resetSection } = useSettingsStore();
+  const appearance = settings.appearance;
+
   const [uploadingBackground, setUploadingBackground] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
 
-  // @epic-4.4-font-customization: Font customization
-  const [fontFamily, setFontFamily] = useState("Inter");
-  const [fontSize, setFontSize] = useState(16);
-  const [fontWeight, setFontWeight] = useState(400);
-  const [lineHeight, setLineHeight] = useState(1.5);
-  const [letterSpacing, setLetterSpacing] = useState(0);
-
-  // @epic-4.5-accessibility: Accessibility enhancements
-  const [largeText, setLargeText] = useState(false);
-  const [enhancedFocus, setEnhancedFocus] = useState(false);
-  const [screenReaderMode, setScreenReaderMode] = useState(false);
-  const [keyboardNavigation, setKeyboardNavigation] = useState(false);
-
-  // Load accessibility preferences on mount
-  useEffect(() => {
-    const loadAccessibilitySettings = async () => {
+  /**
+   * Every control on this page writes through here. Appearance settings are a
+   * single persisted section, so there is no longer a second store to fall out
+   * of sync with: the four accessibility toggles used to be local state written
+   * to /api/settings but read back from /api/user-preferences, and typography
+   * and background were local state written to endpoints with no read side at
+   * all. All of it now round-trips through the same place as theme and
+   * highContrast, which always worked.
+   */
+  const update = useCallback(
+    async (updates: Partial<AppearanceSettings>) => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/user-preferences/appearance/${user?.email}`,
-        );
-        if (response.ok) {
-          const data = await response.json();
-          if (data.settings) {
-            const parsed =
-              typeof data.settings === "string"
-                ? JSON.parse(data.settings)
-                : data.settings;
-
-            if (parsed.largeText !== undefined) {
-              setLargeText(parsed.largeText);
-              document.documentElement.classList.toggle(
-                "large-text",
-                parsed.largeText,
-              );
-            }
-            if (parsed.enhancedFocus !== undefined) {
-              setEnhancedFocus(parsed.enhancedFocus);
-              document.documentElement.classList.toggle(
-                "enhanced-focus",
-                parsed.enhancedFocus,
-              );
-            }
-            if (parsed.screenReaderMode !== undefined) {
-              setScreenReaderMode(parsed.screenReaderMode);
-              document.documentElement.classList.toggle(
-                "screen-reader-mode",
-                parsed.screenReaderMode,
-              );
-            }
-            if (parsed.keyboardNavigation !== undefined) {
-              setKeyboardNavigation(parsed.keyboardNavigation);
-              document.documentElement.classList.toggle(
-                "keyboard-nav",
-                parsed.keyboardNavigation,
-              );
-            }
-          }
-        }
+        await updateSettings("appearance", updates);
       } catch (error) {
-        console.error("Failed to load accessibility settings:", error);
+        console.error("Failed to update appearance settings:", error);
+        toast.error(userMessage(error, "save that setting"));
       }
-    };
+    },
+    [updateSettings],
+  );
 
-    if (user?.email) {
-      loadAccessibilitySettings();
-    }
-  }, [user?.email]);
+  const sunTimes =
+    appearance.locationLatitude !== null &&
+    appearance.locationLongitude !== null
+      ? getSunTimes(
+          new Date(),
+          appearance.locationLatitude,
+          appearance.locationLongitude,
+        )
+      : null;
 
-  const handleSettingUpdate = async (
-    section: string,
-    key: string,
-    value: unknown,
-  ) => {
-    try {
-      await updateSettings(
-        section as keyof AllSettings,
-        {
-          [key]: value,
-        } as Partial<AllSettings[keyof AllSettings]>,
-      );
-      toast.success("Setting updated successfully");
-    } catch (error) {
-      toast.error("Failed to update setting");
-    }
-  };
-
-  // Scheduled/location theme config — persisted appearance settings, not
-  // local state, so they survive a reload like every other appearance field.
-  const scheduledThemeEnabled = settings.appearance.scheduledThemeEnabled;
-  const lightThemeTime = settings.appearance.lightThemeTime;
-  const darkThemeTime = settings.appearance.darkThemeTime;
-  const locationBasedEnabled = settings.appearance.locationBasedEnabled;
-
-  const setScheduledThemeEnabled = (value: boolean) =>
-    handleSettingUpdate("appearance", "scheduledThemeEnabled", value);
-  const setLightThemeTime = (value: string) =>
-    handleSettingUpdate("appearance", "lightThemeTime", value);
-  const setDarkThemeTime = (value: string) =>
-    handleSettingUpdate("appearance", "darkThemeTime", value);
-  const setLocationBasedEnabled = (value: boolean) =>
-    handleSettingUpdate("appearance", "locationBasedEnabled", value);
-
-  const handleResetToDefaults = () => {
-    setTheme("system");
-    updateSettings("appearance", {
-      highContrast: false,
-      reducedMotion: false,
-    });
-    setScheduledThemeEnabled(false);
-    setLocationBasedEnabled(false);
-    toast.success("Reset to default settings");
-  };
-
-  // Calculate sunrise/sunset times
-  const calculateSunTimes = (_lat: number, _lon: number) => {
-    const date = new Date();
-    // Simplified calculation - in production, use a proper sun calculation library
-    const sunrise = new Date(date);
-    sunrise.setHours(6, 0, 0);
-    const sunset = new Date(date);
-    sunset.setHours(18, 0, 0);
-
-    setSunTimes({
-      sunrise: sunrise.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      sunset: sunset.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    });
-  };
-
-  // Get user location
-  const getLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCurrentLocation({ latitude, longitude });
-          calculateSunTimes(latitude, longitude);
-          toast.success("Location detected successfully");
-        },
-        (_error) => {
-          toast.error(
-            "Could not detect location. Please enable location services.",
-          );
-          setLocationBasedEnabled(false);
-        },
-      );
-    } else {
+  const detectLocation = useCallback(() => {
+    if (!("geolocation" in navigator)) {
       toast.error("Geolocation is not supported by your browser");
-      setLocationBasedEnabled(false);
-    }
-  };
-
-  // Apply scheduled theme
-  useEffect(() => {
-    if (!scheduledThemeEnabled) return;
-
-    const checkScheduledTheme = () => {
-      const now = new Date();
-      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-
-      if (currentTime === lightThemeTime) {
-        setTheme("light");
-        toast.success("Switched to light theme (scheduled)");
-      } else if (currentTime === darkThemeTime) {
-        setTheme("dark");
-        toast.success("Switched to dark theme (scheduled)");
-      }
-    };
-
-    const interval = setInterval(checkScheduledTheme, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [scheduledThemeEnabled, lightThemeTime, darkThemeTime, setTheme]);
-
-  // Apply location-based theme
-  useEffect(() => {
-    if (!locationBasedEnabled || !currentLocation || !sunTimes) return;
-
-    const checkLocationTheme = () => {
-      const now = new Date();
-      const currentTime = now.getHours() * 60 + now.getMinutes();
-
-      const [sunriseHour, sunriseMin] = sunTimes.sunrise.split(":").map(Number);
-      const [sunsetHour, sunsetMin] = sunTimes.sunset.split(":").map(Number);
-      const sunriseTime = sunriseHour * 60 + sunriseMin;
-      const sunsetTime = sunsetHour * 60 + sunsetMin;
-
-      if (currentTime >= sunriseTime && currentTime < sunsetTime) {
-        if (theme !== "light") {
-          setTheme("light");
-          toast.success("Switched to light theme (sunrise)");
-        }
-      } else {
-        if (theme !== "dark") {
-          setTheme("dark");
-          toast.success("Switched to dark theme (sunset)");
-        }
-      }
-    };
-
-    checkLocationTheme();
-    const interval = setInterval(checkLocationTheme, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [locationBasedEnabled, currentLocation, sunTimes, theme, setTheme]);
-
-  // Background image handlers
-  const handleBackgroundUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      update({ locationBasedEnabled: false });
       return;
     }
 
-    // Validate file type
-    if (
-      !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
-        file.type,
-      )
-    ) {
-      toast.error("Only JPEG, PNG, WebP, and GIF images are allowed");
-      return;
-    }
-
-    setUploadingBackground(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(
-        `${API_BASE_URL}/user-preferences/background/upload`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-      );
-
-      if (!response.ok) throw new Error("Upload failed");
-
-      const data = await response.json();
-      setBackgroundImage(data.imageUrl);
-      await saveBackgroundPreferences(
-        data.imageUrl,
-        backgroundPosition,
-        backgroundBlur,
-        backgroundOpacity,
-      );
-      toast.success("Background image uploaded successfully");
-    } catch (error) {
-      toast.error("Failed to upload background image");
-    } finally {
-      setUploadingBackground(false);
-    }
-  };
-
-  const saveBackgroundPreferences = async (
-    image?: string | null,
-    position?: string,
-    blur?: number,
-    opacity?: number,
-  ) => {
-    if (!user?.email) return;
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/user-preferences/background/${user.email}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            backgroundImage: image !== undefined ? image : backgroundImage,
-            backgroundPosition: position || backgroundPosition,
-            backgroundBlur: blur !== undefined ? blur : backgroundBlur,
-            backgroundOpacity:
-              opacity !== undefined ? opacity : backgroundOpacity,
-          }),
-        },
-      );
-
-      if (!response.ok) throw new Error("Failed to save preferences");
-    } catch (error) {
-      toast.error("Failed to save background preferences");
-    }
-  };
-
-  const handleRemoveBackground = async () => {
-    setBackgroundImage(null);
-    await saveBackgroundPreferences(
-      null,
-      backgroundPosition,
-      backgroundBlur,
-      backgroundOpacity,
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setDetectingLocation(false);
+        const { latitude, longitude } = position.coords;
+        // Persisted, unlike before: the coordinates used to live in component
+        // state, so after a reload the setting stayed switched on while the
+        // schedule it drove had nothing to work from.
+        update({
+          locationLatitude: latitude,
+          locationLongitude: longitude,
+        });
+        toast.success("Location detected");
+      },
+      (error) => {
+        setDetectingLocation(false);
+        console.error("Geolocation failed:", error);
+        toast.error(
+          "Could not detect location. Please enable location services.",
+        );
+        update({ locationBasedEnabled: false });
+      },
     );
+  }, [update]);
+
+  const handleResetToDefaults = useCallback(async () => {
+    // One atomic reset of the whole section. This used to fire four separate
+    // updates in a row, which the settings store's throttle silently collapsed
+    // into one — so the button changed nothing at all while still reporting
+    // success — and it left the accessibility toggles, typography and
+    // background untouched even in principle.
+    await resetSection("appearance");
+    toast.success("Appearance reset to defaults");
+  }, [resetSection]);
+
+  const handleBackgroundUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      if (file.size > MAX_BACKGROUND_BYTES) {
+        toast.error("File size must be less than 10MB");
+        return;
+      }
+
+      if (!ALLOWED_BACKGROUND_TYPES.includes(file.type)) {
+        toast.error("Only JPEG, PNG, WebP, and GIF images are allowed");
+        return;
+      }
+
+      setUploadingBackground(true);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(
+          `${API_BASE_URL}/user-preferences/background/upload`,
+          {
+            method: "POST",
+            credentials: "include",
+            body: formData,
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Upload failed with ${response.status}`);
+        }
+
+        // The API stores a re-encoded file and returns its URL; this used to be
+        // a multi-megabyte base64 data URL.
+        const data = (await response.json()) as { imageUrl?: string };
+        if (!data.imageUrl) {
+          throw new Error("Upload response contained no image URL");
+        }
+
+        await update({ backgroundImage: data.imageUrl });
+        toast.success("Background image uploaded");
+      } catch (error) {
+        console.error("Background upload failed:", error);
+        toast.error(userMessage(error, "upload the background image"));
+      } finally {
+        setUploadingBackground(false);
+        // Let the same file be chosen again after a failure.
+        event.target.value = "";
+      }
+    },
+    [update],
+  );
+
+  const handleRemoveBackground = useCallback(async () => {
+    await update({ backgroundImage: null });
     toast.success("Background image removed");
-  };
+  }, [update]);
 
-  // Font customization handlers
-  const saveFontPreferences = async (
-    family?: string,
-    size?: number,
-    weight?: number,
-    height?: number,
-    spacing?: number,
-  ) => {
-    if (!user?.email) return;
+  const ThemePreview = () => (
+    <div className="space-y-4 p-4 border rounded-lg bg-background">
+      <h4 className="font-medium text-sm">Theme Preview</h4>
 
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/user-preferences/fonts/${user.email}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            fontFamily: family || fontFamily,
-            fontSize: size !== undefined ? size : fontSize,
-            fontWeight: weight !== undefined ? weight : fontWeight,
-            lineHeight: height !== undefined ? height : lineHeight,
-            letterSpacing: spacing !== undefined ? spacing : letterSpacing,
-          }),
-        },
-      );
-
-      if (!response.ok) throw new Error("Failed to save preferences");
-    } catch (error) {
-      toast.error("Failed to save font preferences");
-    }
-  };
-
-  const handleResetFonts = () => {
-    setFontFamily("Inter");
-    setFontSize(16);
-    setFontWeight(400);
-    setLineHeight(1.5);
-    setLetterSpacing(0);
-    saveFontPreferences("Inter", 16, 400, 1.5, 0);
-    toast.success("Font settings reset to defaults");
-  };
-
-  // Accessibility handlers
-  const handleAccessibilityUpdate = async (key: string, value: boolean) => {
-    try {
-      await handleSettingUpdate("appearance", key, value);
-
-      // Apply accessibility settings to document
-      if (key === "largeText") {
-        document.documentElement.classList.toggle("large-text", value);
-      } else if (key === "enhancedFocus") {
-        document.documentElement.classList.toggle("enhanced-focus", value);
-      } else if (key === "screenReaderMode") {
-        document.documentElement.classList.toggle("screen-reader-mode", value);
-      } else if (key === "keyboardNavigation") {
-        document.documentElement.classList.toggle("keyboard-nav", value);
-      }
-    } catch (error) {
-      toast.error("Failed to update accessibility setting");
-    }
-  };
-
-  const ThemePreview = () => {
-    return (
-      <div className="space-y-4 p-4 border rounded-lg bg-background">
-        <h4 className="font-medium text-sm">Theme Preview</h4>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Button size="sm">Primary</Button>
-          <Button variant="outline" size="sm">
-            Outline
-          </Button>
-          <Button variant="secondary" size="sm">
-            Secondary
-          </Button>
-          <Button variant="ghost" size="sm">
-            Ghost
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          <Input placeholder="Input field" />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Badge>Default</Badge>
-          <Badge variant="secondary">Secondary</Badge>
-          <Badge variant="outline">Outline</Badge>
-          <Badge variant="destructive">Destructive</Badge>
-        </div>
-
-        <div className="p-3 bg-muted rounded-md text-sm">
-          <p className="text-muted-foreground">
-            This is how text appears in your current theme. The preview updates
-            in real-time as you change settings.
-          </p>
-        </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Button size="sm">Primary</Button>
+        <Button variant="outline" size="sm">
+          Outline
+        </Button>
+        <Button variant="secondary" size="sm">
+          Secondary
+        </Button>
+        <Button variant="ghost" size="sm">
+          Ghost
+        </Button>
       </div>
-    );
-  };
+
+      <div className="space-y-2">
+        <Input placeholder="Input field" />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Badge>Default</Badge>
+        <Badge variant="secondary">Secondary</Badge>
+        <Badge variant="outline">Outline</Badge>
+        <Badge variant="destructive">Destructive</Badge>
+      </div>
+
+      <div className="p-3 bg-muted rounded-md text-sm">
+        <p className="text-muted-foreground">
+          This is how text appears in your current theme. The preview updates in
+          real-time as you change settings.
+        </p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
+      <PageTitle title="Appearance" />
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-1">
@@ -555,10 +349,16 @@ function AppearanceSettings() {
                 <p className="text-sm text-muted-foreground">
                   System theme matches your device settings
                 </p>
+                {autoThemeActive && (
+                  <p className="text-sm text-muted-foreground">
+                    A schedule below is currently overriding this choice —
+                    showing the <strong>{effectiveTheme}</strong> theme.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
-            {/* Scheduled Theme Switching - Phase 4.2 */}
+            {/* Scheduled Theme Switching */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -581,12 +381,14 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="scheduled-theme"
-                    checked={scheduledThemeEnabled}
-                    onCheckedChange={setScheduledThemeEnabled}
+                    checked={appearance.scheduledThemeEnabled}
+                    onCheckedChange={(checked) =>
+                      update({ scheduledThemeEnabled: checked })
+                    }
                   />
                 </div>
 
-                {scheduledThemeEnabled && (
+                {appearance.scheduledThemeEnabled && (
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div className="space-y-2">
                       <Label
@@ -599,8 +401,10 @@ function AppearanceSettings() {
                       <Input
                         id="light-time"
                         type="time"
-                        value={lightThemeTime}
-                        onChange={(e) => setLightThemeTime(e.target.value)}
+                        value={appearance.lightThemeTime}
+                        onChange={(e) =>
+                          update({ lightThemeTime: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -614,8 +418,10 @@ function AppearanceSettings() {
                       <Input
                         id="dark-time"
                         type="time"
-                        value={darkThemeTime}
-                        onChange={(e) => setDarkThemeTime(e.target.value)}
+                        value={appearance.darkThemeTime}
+                        onChange={(e) =>
+                          update({ darkThemeTime: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -623,7 +429,7 @@ function AppearanceSettings() {
               </CardContent>
             </Card>
 
-            {/* Location-Based Theme - Phase 4.2 */}
+            {/* Location-Based Theme */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -646,53 +452,81 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="location-theme"
-                    checked={locationBasedEnabled}
+                    checked={appearance.locationBasedEnabled}
                     onCheckedChange={(checked) => {
-                      setLocationBasedEnabled(checked);
-                      if (checked && !currentLocation) {
-                        getLocation();
+                      update({ locationBasedEnabled: checked });
+                      if (checked && appearance.locationLatitude === null) {
+                        detectLocation();
                       }
                     }}
                   />
                 </div>
 
-                {locationBasedEnabled && currentLocation && sunTimes && (
-                  <div className="p-3 bg-muted rounded-md space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-muted-foreground">
-                        <Sunrise className="w-4 h-4" />
-                        Sunrise
-                      </span>
-                      <Badge variant="outline">{sunTimes.sunrise}</Badge>
+                {appearance.locationBasedEnabled &&
+                  appearance.locationLatitude !== null &&
+                  appearance.locationLongitude !== null && (
+                    <div className="p-3 bg-muted rounded-md space-y-2 text-sm">
+                      {sunTimes ? (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-2 text-muted-foreground">
+                              <Sunrise className="w-4 h-4" />
+                              Sunrise
+                            </span>
+                            <Badge variant="outline">
+                              {formatTime(sunTimes.sunrise)}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-2 text-muted-foreground">
+                              <Sunset className="w-4 h-4" />
+                              Sunset
+                            </span>
+                            <Badge variant="outline">
+                              {formatTime(sunTimes.sunset)}
+                            </Badge>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground">
+                          At your latitude the sun neither rises nor sets today,
+                          so there is nothing to follow. Your manual theme
+                          choice (or the schedule above) applies instead.
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground pt-2">
+                        Location: {appearance.locationLatitude.toFixed(2)}°,{" "}
+                        {appearance.locationLongitude.toFixed(2)}°
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full"
+                        onClick={detectLocation}
+                        disabled={detectingLocation}
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {detectingLocation ? "Detecting…" : "Update Location"}
+                      </Button>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-muted-foreground">
-                        <Sunset className="w-4 h-4" />
-                        Sunset
-                      </span>
-                      <Badge variant="outline">{sunTimes.sunset}</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground pt-2">
-                      Location: {currentLocation.latitude.toFixed(2)}°,{" "}
-                      {currentLocation.longitude.toFixed(2)}°
-                    </p>
-                  </div>
-                )}
+                  )}
 
-                {locationBasedEnabled && !currentLocation && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={getLocation}
-                  >
-                    <MapPin className="w-4 h-4 mr-2" />
-                    Detect Location
-                  </Button>
-                )}
+                {appearance.locationBasedEnabled &&
+                  appearance.locationLatitude === null && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={detectLocation}
+                      disabled={detectingLocation}
+                    >
+                      <MapPin className="w-4 h-4 mr-2" />
+                      {detectingLocation ? "Detecting…" : "Detect Location"}
+                    </Button>
+                  )}
               </CardContent>
             </Card>
 
-            {/* Accessibility - Enhanced Phase 4.5 */}
+            {/* Accessibility */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -704,7 +538,6 @@ function AppearanceSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* High Contrast Mode */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="high-contrast">High Contrast Mode</Label>
@@ -714,14 +547,13 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="high-contrast"
-                    checked={settings.appearance.highContrast}
+                    checked={appearance.highContrast}
                     onCheckedChange={(checked) =>
-                      handleSettingUpdate("appearance", "highContrast", checked)
+                      update({ highContrast: checked })
                     }
                   />
                 </div>
 
-                {/* Large Text Mode */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="large-text">Large Text Mode</Label>
@@ -731,15 +563,13 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="large-text"
-                    checked={largeText}
-                    onCheckedChange={(checked) => {
-                      setLargeText(checked);
-                      handleAccessibilityUpdate("largeText", checked);
-                    }}
+                    checked={appearance.largeText}
+                    onCheckedChange={(checked) =>
+                      update({ largeText: checked })
+                    }
                   />
                 </div>
 
-                {/* Enhanced Focus Indicators */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="enhanced-focus">
@@ -751,15 +581,13 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="enhanced-focus"
-                    checked={enhancedFocus}
-                    onCheckedChange={(checked) => {
-                      setEnhancedFocus(checked);
-                      handleAccessibilityUpdate("enhancedFocus", checked);
-                    }}
+                    checked={appearance.enhancedFocus}
+                    onCheckedChange={(checked) =>
+                      update({ enhancedFocus: checked })
+                    }
                   />
                 </div>
 
-                {/* Screen Reader Optimizations */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="screen-reader">
@@ -771,15 +599,13 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="screen-reader"
-                    checked={screenReaderMode}
-                    onCheckedChange={(checked) => {
-                      setScreenReaderMode(checked);
-                      handleAccessibilityUpdate("screenReaderMode", checked);
-                    }}
+                    checked={appearance.screenReaderMode}
+                    onCheckedChange={(checked) =>
+                      update({ screenReaderMode: checked })
+                    }
                   />
                 </div>
 
-                {/* Keyboard Navigation Helpers */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="keyboard-nav">
@@ -791,15 +617,13 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="keyboard-nav"
-                    checked={keyboardNavigation}
-                    onCheckedChange={(checked) => {
-                      setKeyboardNavigation(checked);
-                      handleAccessibilityUpdate("keyboardNavigation", checked);
-                    }}
+                    checked={appearance.keyboardNavigation}
+                    onCheckedChange={(checked) =>
+                      update({ keyboardNavigation: checked })
+                    }
                   />
                 </div>
 
-                {/* Reduced Motion */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="reduced-motion">Reduced Motion</Label>
@@ -809,13 +633,9 @@ function AppearanceSettings() {
                   </div>
                   <Switch
                     id="reduced-motion"
-                    checked={settings.appearance.reducedMotion}
+                    checked={appearance.reducedMotion}
                     onCheckedChange={(checked) =>
-                      handleSettingUpdate(
-                        "appearance",
-                        "reducedMotion",
-                        checked,
-                      )
+                      update({ reducedMotion: checked })
                     }
                   />
                 </div>
@@ -829,11 +649,23 @@ function AppearanceSettings() {
                         Accessibility Status
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {settings.appearance.highContrast &&
-                        largeText &&
-                        enhancedFocus
-                          ? "✓ Enhanced accessibility mode active"
-                          : "Enable more options for better accessibility"}
+                        {/* Counts what's on rather than demanding one arbitrary
+                            trio of options be enabled together. */}
+                        {(() => {
+                          const enabled = [
+                            appearance.highContrast,
+                            appearance.largeText,
+                            appearance.enhancedFocus,
+                            appearance.screenReaderMode,
+                            appearance.keyboardNavigation,
+                            appearance.reducedMotion,
+                          ].filter(Boolean).length;
+
+                          if (enabled === 0) {
+                            return "No accessibility options enabled";
+                          }
+                          return `${enabled} of 6 accessibility options enabled`;
+                        })()}
                       </p>
                     </div>
                   </div>
@@ -841,7 +673,7 @@ function AppearanceSettings() {
               </CardContent>
             </Card>
 
-            {/* Background Customization - Phase 4.3 */}
+            {/* Background Customization */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -853,51 +685,47 @@ function AppearanceSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!backgroundImage ? (
-                  <Tabs defaultValue="upload" className="w-full">
-                    <TabsContent value="upload" className="mt-4">
-                      <div>
-                        <Label
-                          htmlFor="background-upload"
-                          className="cursor-pointer"
-                        >
-                          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
-                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm font-medium mb-1">
-                              Upload Background Image
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              JPEG, PNG, WebP, or GIF (max 10MB)
-                            </p>
-                          </div>
-                        </Label>
-                        <Input
-                          id="background-upload"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif"
-                          onChange={handleBackgroundUpload}
-                          disabled={uploadingBackground}
-                          className="hidden"
-                        />
-                        {uploadingBackground && (
-                          <p className="text-sm text-muted-foreground text-center mt-2">
-                            Uploading...
-                          </p>
-                        )}
+                {!appearance.backgroundImage ? (
+                  <div>
+                    <Label
+                      htmlFor="background-upload"
+                      className="cursor-pointer"
+                    >
+                      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm font-medium mb-1">
+                          Upload Background Image
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          JPEG, PNG, WebP, or GIF (max 10MB)
+                        </p>
                       </div>
-                    </TabsContent>
-                  </Tabs>
+                    </Label>
+                    <Input
+                      id="background-upload"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={handleBackgroundUpload}
+                      disabled={uploadingBackground}
+                      className="hidden"
+                    />
+                    {uploadingBackground && (
+                      <p className="text-sm text-muted-foreground text-center mt-2">
+                        Uploading...
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {/* Image Preview */}
                     <div className="relative rounded-lg overflow-hidden border-2 border-border">
                       <div
-                        className="w-full h-32 bg-cover bg-center"
+                        className="w-full h-32 bg-cover"
                         style={{
-                          backgroundImage: `url(${backgroundImage})`,
-                          backgroundPosition,
-                          filter: `blur(${backgroundBlur}px)`,
-                          opacity: backgroundOpacity / 100,
+                          backgroundImage: `url(${appearance.backgroundImage})`,
+                          backgroundPosition: appearance.backgroundPosition,
+                          filter: `blur(${appearance.backgroundBlur}px)`,
+                          opacity: appearance.backgroundOpacity / 100,
                         }}
                       />
                       <Button
@@ -905,6 +733,7 @@ function AppearanceSettings() {
                         size="icon"
                         className="absolute top-2 right-2"
                         onClick={handleRemoveBackground}
+                        aria-label="Remove background image"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -912,35 +741,28 @@ function AppearanceSettings() {
 
                     {/* Position Control */}
                     <div className="space-y-2">
-                      <Label>Position</Label>
+                      <Label htmlFor="background-position">Position</Label>
                       <Select
-                        value={backgroundPosition}
-                        onValueChange={(value) => {
-                          setBackgroundPosition(
-                            value as typeof backgroundPosition,
-                          );
-                          saveBackgroundPreferences(
-                            undefined,
-                            value,
-                            undefined,
-                            undefined,
-                          );
-                        }}
+                        value={appearance.backgroundPosition}
+                        onValueChange={(value) =>
+                          update({
+                            backgroundPosition:
+                              value as AppearanceSettings["backgroundPosition"],
+                          })
+                        }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="background-position">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="center">
-                            <div className="flex items-center gap-2">
-                              <Maximize className="h-4 w-4" />
-                              Center
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="top">Top</SelectItem>
-                          <SelectItem value="bottom">Bottom</SelectItem>
-                          <SelectItem value="left">Left</SelectItem>
-                          <SelectItem value="right">Right</SelectItem>
+                          {BACKGROUND_POSITIONS.map((position) => (
+                            <SelectItem
+                              key={position.value}
+                              value={position.value}
+                            >
+                              {position.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -948,21 +770,13 @@ function AppearanceSettings() {
                     {/* Blur Control */}
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <Label>Blur: {backgroundBlur}px</Label>
+                        <Label>Blur: {appearance.backgroundBlur}px</Label>
                       </div>
                       <Slider
-                        value={[backgroundBlur]}
-                        onValueChange={([value]) => {
-                          setBackgroundBlur(value);
-                        }}
-                        onValueCommit={([value]) => {
-                          saveBackgroundPreferences(
-                            undefined,
-                            undefined,
-                            value,
-                            undefined,
-                          );
-                        }}
+                        value={[appearance.backgroundBlur]}
+                        onValueCommit={([value]) =>
+                          update({ backgroundBlur: value })
+                        }
                         min={0}
                         max={20}
                         step={1}
@@ -973,21 +787,13 @@ function AppearanceSettings() {
                     {/* Opacity Control */}
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <Label>Opacity: {backgroundOpacity}%</Label>
+                        <Label>Opacity: {appearance.backgroundOpacity}%</Label>
                       </div>
                       <Slider
-                        value={[backgroundOpacity]}
-                        onValueChange={([value]) => {
-                          setBackgroundOpacity(value);
-                        }}
-                        onValueCommit={([value]) => {
-                          saveBackgroundPreferences(
-                            undefined,
-                            undefined,
-                            undefined,
-                            value,
-                          );
-                        }}
+                        value={[appearance.backgroundOpacity]}
+                        onValueCommit={([value]) =>
+                          update({ backgroundOpacity: value })
+                        }
                         min={0}
                         max={100}
                         step={5}
@@ -999,7 +805,7 @@ function AppearanceSettings() {
               </CardContent>
             </Card>
 
-            {/* Font Customization - Phase 4.4 */}
+            {/* Font Customization */}
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -1015,7 +821,15 @@ function AppearanceSettings() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleResetFonts}
+                    onClick={() =>
+                      update({
+                        fontFamily: "Inter",
+                        fontSize: 16,
+                        fontWeight: 400,
+                        lineHeight: 1.5,
+                        letterSpacing: 0,
+                      })
+                    }
                   >
                     <RefreshCw className="w-3 h-3 mr-1" />
                     Reset
@@ -1025,42 +839,20 @@ function AppearanceSettings() {
               <CardContent className="space-y-4">
                 {/* Font Family */}
                 <div className="space-y-2">
-                  <Label>Font Family</Label>
+                  <Label htmlFor="font-family">Font Family</Label>
                   <Select
-                    value={fontFamily}
-                    onValueChange={(value) => {
-                      setFontFamily(value);
-                      saveFontPreferences(
-                        value,
-                        undefined,
-                        undefined,
-                        undefined,
-                        undefined,
-                      );
-                    }}
+                    value={appearance.fontFamily}
+                    onValueChange={(value) => update({ fontFamily: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="font-family">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Inter">Inter</SelectItem>
-                      <SelectItem value="system-ui">System Default</SelectItem>
-                      <SelectItem value="Roboto">Roboto</SelectItem>
-                      <SelectItem value="Open Sans">Open Sans</SelectItem>
-                      <SelectItem value="Lato">Lato</SelectItem>
-                      <SelectItem value="Montserrat">Montserrat</SelectItem>
-                      <SelectItem value="Poppins">Poppins</SelectItem>
-                      <SelectItem value="Source Sans Pro">
-                        Source Sans Pro
-                      </SelectItem>
-                      <SelectItem value="Georgia">Georgia (Serif)</SelectItem>
-                      <SelectItem value="Times New Roman">
-                        Times New Roman (Serif)
-                      </SelectItem>
-                      <SelectItem value="Courier New">
-                        Courier New (Monospace)
-                      </SelectItem>
-                      <SelectItem value="Monaco">Monaco (Monospace)</SelectItem>
+                      {FONT_FAMILIES.map((font) => (
+                        <SelectItem key={font.value} value={font.value}>
+                          {font.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1068,22 +860,11 @@ function AppearanceSettings() {
                 {/* Font Size */}
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <Label>Font Size: {fontSize}px</Label>
+                    <Label>Font Size: {appearance.fontSize}px</Label>
                   </div>
                   <Slider
-                    value={[fontSize]}
-                    onValueChange={([value]) => {
-                      setFontSize(value);
-                    }}
-                    onValueCommit={([value]) => {
-                      saveFontPreferences(
-                        undefined,
-                        value,
-                        undefined,
-                        undefined,
-                        undefined,
-                      );
-                    }}
+                    value={[appearance.fontSize]}
+                    onValueCommit={([value]) => update({ fontSize: value })}
                     min={10}
                     max={24}
                     step={1}
@@ -1093,34 +874,22 @@ function AppearanceSettings() {
 
                 {/* Font Weight */}
                 <div className="space-y-2">
-                  <Label>Font Weight</Label>
+                  <Label htmlFor="font-weight">Font Weight</Label>
                   <Select
-                    value={fontWeight.toString()}
-                    onValueChange={(value) => {
-                      const weight = Number.parseInt(value);
-                      setFontWeight(weight);
-                      saveFontPreferences(
-                        undefined,
-                        undefined,
-                        weight,
-                        undefined,
-                        undefined,
-                      );
-                    }}
+                    value={appearance.fontWeight.toString()}
+                    onValueChange={(value) =>
+                      update({ fontWeight: Number.parseInt(value, 10) })
+                    }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="font-weight">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="100">Thin (100)</SelectItem>
-                      <SelectItem value="200">Extra Light (200)</SelectItem>
-                      <SelectItem value="300">Light (300)</SelectItem>
-                      <SelectItem value="400">Regular (400)</SelectItem>
-                      <SelectItem value="500">Medium (500)</SelectItem>
-                      <SelectItem value="600">Semi Bold (600)</SelectItem>
-                      <SelectItem value="700">Bold (700)</SelectItem>
-                      <SelectItem value="800">Extra Bold (800)</SelectItem>
-                      <SelectItem value="900">Black (900)</SelectItem>
+                      {FONT_WEIGHTS.map((weight) => (
+                        <SelectItem key={weight.value} value={weight.value}>
+                          {weight.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1128,22 +897,13 @@ function AppearanceSettings() {
                 {/* Line Height */}
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <Label>Line Height: {lineHeight.toFixed(2)}</Label>
+                    <Label>
+                      Line Height: {appearance.lineHeight.toFixed(2)}
+                    </Label>
                   </div>
                   <Slider
-                    value={[lineHeight]}
-                    onValueChange={([value]) => {
-                      setLineHeight(value);
-                    }}
-                    onValueCommit={([value]) => {
-                      saveFontPreferences(
-                        undefined,
-                        undefined,
-                        undefined,
-                        value,
-                        undefined,
-                      );
-                    }}
+                    value={[appearance.lineHeight]}
+                    onValueCommit={([value]) => update({ lineHeight: value })}
                     min={1}
                     max={2.5}
                     step={0.1}
@@ -1154,22 +914,15 @@ function AppearanceSettings() {
                 {/* Letter Spacing */}
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <Label>Letter Spacing: {letterSpacing.toFixed(1)}px</Label>
+                    <Label>
+                      Letter Spacing: {appearance.letterSpacing.toFixed(1)}px
+                    </Label>
                   </div>
                   <Slider
-                    value={[letterSpacing]}
-                    onValueChange={([value]) => {
-                      setLetterSpacing(value);
-                    }}
-                    onValueCommit={([value]) => {
-                      saveFontPreferences(
-                        undefined,
-                        undefined,
-                        undefined,
-                        undefined,
-                        value,
-                      );
-                    }}
+                    value={[appearance.letterSpacing]}
+                    onValueCommit={([value]) =>
+                      update({ letterSpacing: value })
+                    }
                     min={-2}
                     max={5}
                     step={0.1}
@@ -1177,29 +930,10 @@ function AppearanceSettings() {
                   />
                 </div>
 
-                {/* Live Preview */}
-                <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-                  <Label className="text-xs text-muted-foreground mb-2 block">
-                    Live Preview
-                  </Label>
-                  <div
-                    style={{
-                      fontFamily: fontFamily,
-                      fontSize: `${fontSize}px`,
-                      fontWeight: fontWeight,
-                      lineHeight: lineHeight,
-                      letterSpacing: `${letterSpacing}px`,
-                    }}
-                  >
-                    <p className="mb-2">
-                      The quick brown fox jumps over the lazy dog.
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      This is how your text will appear with the current font
-                      settings across the application.
-                    </p>
-                  </div>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  These settings apply across the whole application, so this
+                  page updates as you change them.
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -1266,26 +1000,30 @@ function AppearanceSettings() {
                     {theme}
                   </Badge>
                 </div>
+                {autoThemeActive && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">
+                      Currently showing
+                    </span>
+                    <Badge variant="outline" className="capitalize">
+                      {effectiveTheme}
+                    </Badge>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">High Contrast</span>
                   <Badge
-                    variant={
-                      settings.appearance.highContrast ? "default" : "secondary"
-                    }
+                    variant={appearance.highContrast ? "default" : "secondary"}
                   >
-                    {settings.appearance.highContrast ? "On" : "Off"}
+                    {appearance.highContrast ? "On" : "Off"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Reduced Motion</span>
                   <Badge
-                    variant={
-                      settings.appearance.reducedMotion
-                        ? "default"
-                        : "secondary"
-                    }
+                    variant={appearance.reducedMotion ? "default" : "secondary"}
                   >
-                    {settings.appearance.reducedMotion ? "On" : "Off"}
+                    {appearance.reducedMotion ? "On" : "Off"}
                   </Badge>
                 </div>
               </CardContent>

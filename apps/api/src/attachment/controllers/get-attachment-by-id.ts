@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { attachmentTable } from "../../database/schema";
 import logger from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 // @epic-2.1-files: Get specific attachment by ID
 async function getAttachmentById(id: string) {
@@ -12,7 +13,7 @@ async function getAttachmentById(id: string) {
     });
 
     if (!attachment) {
-      throw new Error("Attachment not found");
+      throw new NotFoundError("Attachment");
     }
 
     logger.debug(

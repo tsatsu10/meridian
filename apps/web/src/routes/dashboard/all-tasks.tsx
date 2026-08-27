@@ -70,6 +70,7 @@ import useDeleteTask from "@/hooks/mutations/task/use-delete-task";
 import useCreateTask from "@/hooks/mutations/task/use-create-task";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -608,7 +609,9 @@ export default function AllTasksPage() {
             },
           });
         } catch (error) {
-          toast.error("Unable to navigate to task details");
+          toast.error(
+            "Couldn't open that task — it's missing its project details. Refresh the page and try again.",
+          );
         }
         break;
 
@@ -640,7 +643,9 @@ export default function AllTasksPage() {
           return;
         }
         if (!task.project?.id) {
-          toast.error("Unable to duplicate task - missing project information");
+          toast.error(
+            "Couldn't duplicate that task — it isn't linked to a project. Refresh the page and try again.",
+          );
           return;
         }
         try {
@@ -653,7 +658,7 @@ export default function AllTasksPage() {
             "Failed to duplicate task",
             error instanceof Error ? error : new Error(String(error)),
           );
-          toast.error("Failed to duplicate task");
+          toast.error(userMessage(error, "duplicate the task"));
         }
         break;
 
@@ -666,8 +671,11 @@ export default function AllTasksPage() {
         setIsDeleteAlertOpen(true);
         break;
 
-      default:
-        toast.info(`${action} functionality coming soon!`);
+      default: {
+        logger.warn("Unhandled task action", { action, taskId: task.id });
+        toast.error("That action isn't available for this task");
+        break;
+      }
     }
   };
 
@@ -681,7 +689,7 @@ export default function AllTasksPage() {
       setTaskToDelete(null);
       refetch(); // Refresh the task list
     } catch (error) {
-      toast.error("Failed to delete task");
+      toast.error(userMessage(error, "delete the task"));
     }
   };
 
@@ -731,7 +739,7 @@ export default function AllTasksPage() {
       setShowBulkActions(false);
       refetch();
     } catch (error) {
-      toast.error("Failed to delete some tasks");
+      toast.error(userMessage(error, "delete every selected task"));
     }
   };
 
@@ -752,7 +760,7 @@ export default function AllTasksPage() {
       setShowBulkActions(false);
       await refetch();
     } catch (err) {
-      toast.error("Failed to update task status");
+      toast.error(userMessage(err, "update the task status"));
       logger.error(
         "Bulk status update failed",
         err instanceof Error ? err : new Error(String(err)),

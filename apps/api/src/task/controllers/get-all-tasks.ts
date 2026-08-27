@@ -54,11 +54,7 @@ async function getAllTasks({
   }
 
   if (status && status.length > 0) {
-    const statusCondition = or(
-      ...status.map((s) =>
-        eq(taskTable.status, s as "todo" | "in_progress" | "done"),
-      ),
-    );
+    const statusCondition = or(...status.map((s) => eq(taskTable.status, s)));
     if (statusCondition) {
       conditions.push(statusCondition);
     }

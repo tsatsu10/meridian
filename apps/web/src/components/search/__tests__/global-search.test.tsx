@@ -25,9 +25,19 @@ interface SearchResult {
 interface GlobalSearchProps {
   onSearch?: (query: string) => void;
   onResultClick?: (result: SearchResult) => void;
+  /**
+   * How long the simulated search takes. Injectable so the loading-state test
+   * can make the in-flight window unbounded instead of racing a real 100ms
+   * timer — see the note on that test.
+   */
+  searchDelay?: number;
 }
 
-function GlobalSearch({ onSearch, onResultClick }: GlobalSearchProps) {
+function GlobalSearch({
+  onSearch,
+  onResultClick,
+  searchDelay = 100,
+}: GlobalSearchProps) {
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
@@ -49,7 +59,7 @@ function GlobalSearch({ onSearch, onResultClick }: GlobalSearchProps) {
     }
 
     // Simulate search delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, searchDelay));
 
     // A superseded search must not publish its results or clear the spinner.
     if (requestId !== latestRequest.current) {
@@ -132,7 +142,16 @@ describe("Global Search Component", () => {
   it("should show loading state", async () => {
     const user = userEvent.setup();
 
-    render(<GlobalSearch />, { wrapper: TestWrapper });
+    // A search that outlives the test. With the default 100ms delay the spinner
+    // only exists for a 100ms window of *wall* time, so under parallel-suite
+    // load the assertion could arrive after it had already cleared — this test
+    // flaked twice for that reason. A search that never finishes makes "is the
+    // spinner shown while one is in flight" a question about state, not timing.
+    // Finite on purpose: setTimeout coerces Infinity to 1ms, which would invert
+    // this and make the window shorter than the default.
+    render(<GlobalSearch searchDelay={1_000_000} />, {
+      wrapper: TestWrapper,
+    });
 
     await user.type(screen.getByLabelText(/search input/i), "test");
 

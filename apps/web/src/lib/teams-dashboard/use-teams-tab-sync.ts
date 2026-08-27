@@ -1,10 +1,6 @@
 import { useEffect } from "react";
 
-export type TeamsDashboardViewMode =
-  | "teams"
-  | "members"
-  | "users"
-  | "directory";
+export type TeamsDashboardViewMode = "teams" | "members" | "users";
 
 /**
  * Syncs tab query param (?tab=members) from `/dashboard/teams` into local view mode state.
@@ -17,8 +13,7 @@ export function useTeamsTabFromSearch(
     if (
       tabFromSearch === "teams" ||
       tabFromSearch === "members" ||
-      tabFromSearch === "users" ||
-      tabFromSearch === "directory"
+      tabFromSearch === "users"
     ) {
       setViewMode(tabFromSearch);
     }

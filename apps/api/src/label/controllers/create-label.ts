@@ -1,6 +1,7 @@
 import { getDatabase } from "../../database/connection";
 import { labelTable, taskTable } from "../../database/schema";
 import { eq } from "drizzle-orm";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 /** Labels are scoped to `project_id` in schema; resolve project from the task. */
 async function createLabel(name: string, color: string, taskId: string) {
@@ -12,7 +13,7 @@ async function createLabel(name: string, color: string, taskId: string) {
     .limit(1);
 
   if (!task) {
-    throw new Error("Task not found");
+    throw new NotFoundError("Task");
   }
 
   const [label] = await db

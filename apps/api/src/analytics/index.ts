@@ -1,6 +1,9 @@
 import { Hono } from "hono";
 import { auth } from "../middlewares/auth";
-import { requirePermission } from "../middlewares/rbac";
+import {
+  requireProjectPermission,
+  requireWorkspacePermission,
+} from "../middlewares/rbac";
 import { getProjectAnalytics } from "./controllers/get-project-analytics";
 import { getWorkspaceAnalytics } from "./controllers/get-workspace-analytics";
 // Phase 3: Live metrics
@@ -21,20 +24,51 @@ const app = new Hono();
 app.use("*", auth);
 
 // Get workspace-level analytics
+//
+// 🚨 SECURITY: guarded by requireWorkspacePermission, NOT the unscoped
+// requirePermission. The controller reads :workspaceId straight from the path
+// and never checks membership itself, so an unscoped "does this caller hold
+// canViewAnalytics anywhere" gate let any member of any workspace read any
+// OTHER workspace's analytics. This guard resolves the caller's assignment in
+// the workspace being requested and denies when there is none.
 app.get(
   "/workspaces/:workspaceId/analytics",
-  requirePermission("canViewAnalytics"),
+  // Workspace-WIDE analytics use canViewWorkspaceAnalytics, not the generic
+  // canViewAnalytics. Overloading one key for both scopes meant granting a
+  // project manager analytics for their own project also handed them the
+  // whole workspace's aggregate.
+  requireWorkspacePermission("canViewWorkspaceAnalytics"),
   getWorkspaceAnalytics,
 );
 
-// Get project-level analytics
+// Get project-level analytics — scoped for the same reason, via the project's
+// owning workspace.
 app.get(
   "/projects/:projectId/analytics",
-  requirePermission("canViewAnalytics"),
+  requireProjectPermission("canViewProjectAnalytics"),
   getProjectAnalytics,
 );
 
 // Phase 3: Live Task Counter
+// 🚨 These four took :workspaceId from the path with no authorization, so any
+// authenticated user could read another workspace's task counts and progress.
+app.use(
+  "/tasks/today/:workspaceId",
+  requireWorkspacePermission("canViewTasks", "workspaceId"),
+);
+app.use(
+  "/tasks/trend/:workspaceId",
+  requireWorkspacePermission("canViewTasks", "workspaceId"),
+);
+app.use(
+  "/tasks/live/:workspaceId",
+  requireWorkspacePermission("canViewTasks", "workspaceId"),
+);
+app.use(
+  "/progress/:workspaceId",
+  requireWorkspacePermission("canViewProjects", "workspaceId"),
+);
+
 app.get("/tasks/today/:workspaceId", async (c) => {
   const workspaceId = c.req.param("workspaceId");
 

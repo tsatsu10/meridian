@@ -13,15 +13,17 @@ export async function createMilestone(c: Context) {
   try {
     const db = getDatabase();
     const userId = c.get("userId");
+    const projectId = c.req.param("projectId");
     const body = await c.req.json();
     const {
       title,
       description,
       type,
+      status,
       dueDate,
-      projectId,
       riskLevel,
       riskDescription,
+      successCriteria,
       dependencyTaskIds,
       stakeholderIds,
     } = body;
@@ -44,10 +46,12 @@ export async function createMilestone(c: Context) {
         title,
         description,
         type,
+        status: status || "upcoming",
         dueDate: new Date(dueDate),
         projectId,
         riskLevel: riskLevel || "low",
         riskDescription,
+        successCriteria,
         dependencyTaskIds: dependencyTaskIds
           ? JSON.stringify(dependencyTaskIds)
           : null,

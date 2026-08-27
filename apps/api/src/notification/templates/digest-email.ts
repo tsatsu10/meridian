@@ -1,8 +1,10 @@
 import type { DigestData } from "../services/digest-generator";
 import { formatDistanceToNow } from "date-fns";
+import { getFrontendBaseUrl } from "../../config/frontend-url";
 
 export function generateDigestEmailHTML(digest: DigestData): string {
   const { user, period, metrics, content } = digest;
+  const frontendUrl = getFrontendBaseUrl();
 
   const periodLabel = period.type === "daily" ? "Daily" : "Weekly";
   const dateRange =
@@ -210,7 +212,7 @@ export function generateDigestEmailHTML(digest: DigestData): string {
     
     <!-- CTA -->
     <div class="section" style="text-align: center; border: none;">
-      <a href="${process.env.APP_URL || "http://localhost:5173"}/dashboard" class="button">
+      <a href="${frontendUrl}/dashboard" class="button">
         View Full Dashboard
       </a>
     </div>
@@ -218,7 +220,7 @@ export function generateDigestEmailHTML(digest: DigestData): string {
     <!-- Footer -->
     <div class="footer">
       <p>You're receiving this because you subscribed to ${periodLabel.toLowerCase()} digests.</p>
-      <p><a href="${process.env.APP_URL || "http://localhost:5173"}/settings/notifications" style="color: #667eea;">Manage preferences</a></p>
+      <p><a href="${frontendUrl}/settings/notifications" style="color: #667eea;">Manage preferences</a></p>
       <p>© ${new Date().getFullYear()} Meridian. All rights reserved.</p>
     </div>
   </div>
@@ -229,6 +231,7 @@ export function generateDigestEmailHTML(digest: DigestData): string {
 
 export function generateDigestEmailText(digest: DigestData): string {
   const { user, period, metrics, content } = digest;
+  const frontendUrl = getFrontendBaseUrl();
 
   const periodLabel = period.type === "daily" ? "Daily" : "Weekly";
   const dateRange =
@@ -278,10 +281,10 @@ ${content.recentMentions.map((mention) => `• ${mention.title}`).join("\n")}
   }
 
   text += `
-View full dashboard: ${process.env.APP_URL || "http://localhost:5173"}/dashboard
+View full dashboard: ${frontendUrl}/dashboard
 
 ---
-Manage preferences: ${process.env.APP_URL || "http://localhost:5173"}/settings/notifications
+Manage preferences: ${frontendUrl}/settings/notifications
 © ${new Date().getFullYear()} Meridian
   `;
 

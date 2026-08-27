@@ -10,12 +10,13 @@ import KanbanBoard from "@/components/kanban-board";
 import ListView from "@/components/list-view";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useUserPreferencesStore } from "@/store/user-preferences";
-import NotificationBell from "@/components/notification/notification-bell";
+import NotificationCenter from "@/components/shared/notifications/notification-center";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import { Button } from "@/components/ui/button";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
 import useProjectStore from "@/store/project";
 import type Task from "@/types/task";
+import type { ProjectColumn } from "@/types/project";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { addWeeks, endOfWeek, isWithinInterval, startOfWeek } from "date-fns";
 import { ChevronLeft } from "lucide-react";
@@ -185,7 +186,14 @@ function RouteComponent() {
             return false;
           }
 
-          if (filters.dueDate && task.dueDate) {
+          if (filters.dueDate === "No due date") {
+            if (task.dueDate) return false;
+          } else if (filters.dueDate) {
+            // "Due this week"/"Due next week" only make sense for tasks that
+            // actually have a due date - without this, undated tasks fell
+            // through as an unfiltered match for every dueDate filter.
+            if (!task.dueDate) return false;
+
             const today = new Date();
             const taskDate = new Date(task.dueDate);
 
@@ -215,9 +223,6 @@ function RouteComponent() {
                   return false;
                 }
                 break;
-              }
-              case "No due date": {
-                return false;
               }
             }
           }
@@ -282,14 +287,14 @@ function RouteComponent() {
 
     return {
       ...project,
+      // Spread the whole column: rebuilding it field-by-field dropped
+      // `position` and `isDefault`, which left the board's own sort a no-op
+      // and made every column look non-default to ColumnHeader.
       columns:
-        project.columns?.map(
-          (column: { id: string; name: string; tasks: Task[] }) => ({
-            id: column.id as "todo" | "in_progress" | "done" | "done",
-            name: column.name as "To Do" | "In Progress" | "In Review" | "Done",
-            tasks: filterTasks(column.tasks),
-          }),
-        ) ?? [],
+        project.columns?.map((column: ProjectColumn) => ({
+          ...column,
+          tasks: filterTasks(column.tasks),
+        })) ?? [],
     };
   }, [project, filters]); // Only recompute when project or filters change
 
@@ -343,7 +348,7 @@ function RouteComponent() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
-              <NotificationBell />
+              <NotificationCenter />
               <Button
                 onClick={() => setIsTaskModalOpen(true)}
                 size="sm"

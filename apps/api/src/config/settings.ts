@@ -6,6 +6,7 @@
  */
 import logger from "../utils/logger";
 import { DEFAULT_API_PORT } from "./default-api-port";
+import { parseCorsOriginsEnv } from "./cors-origins";
 
 import "dotenv/config";
 
@@ -13,12 +14,23 @@ export interface AppSettings {
   // Environment
   nodeEnv: "development" | "production" | "test";
   isDemoMode: boolean;
+  /**
+   * Whether authentication may be bypassed for demo purposes.
+   *
+   * Deliberately stricter than `isDemoMode` alone, and centralised here so
+   * that routers can't invent their own weaker version: the profile router
+   * used to drop its auth middleware on `isDemoMode` by itself, which was a
+   * looser condition than the app-wide gate (that one also requires an
+   * explicit opt-in env var *and* a non-production NODE_ENV).
+   */
+  enableDemoAuthBypass: boolean;
   apiPort: number;
   host: string;
 
   // Authentication
   adminEmail: string;
   jwtSecret: string;
+  encryptionKey: string;
 
   // Database
   databaseType: "sqlite" | "postgresql";
@@ -35,10 +47,18 @@ export interface AppSettings {
  * Load and validate settings from environment
  */
 function loadSettings(): AppSettings {
+  const nodeEnv =
+    (process.env.NODE_ENV as AppSettings["nodeEnv"]) || "development";
+  const isDemoMode = process.env.DEMO_MODE === "true";
+
   const settings: AppSettings = {
     // Environment
-    nodeEnv: (process.env.NODE_ENV as AppSettings["nodeEnv"]) || "development",
-    isDemoMode: process.env.DEMO_MODE === "true",
+    nodeEnv,
+    isDemoMode,
+    enableDemoAuthBypass:
+      isDemoMode &&
+      process.env.ALLOW_DEMO_AUTH_BYPASS === "true" &&
+      (nodeEnv === "development" || nodeEnv === "test"),
     apiPort: Number.parseInt(
       process.env.API_PORT || String(DEFAULT_API_PORT),
       10,
@@ -48,6 +68,7 @@ function loadSettings(): AppSettings {
     // Authentication - SINGLE SOURCE OF TRUTH
     adminEmail: process.env.ADMIN_EMAIL || "admin@meridian.app",
     jwtSecret: process.env.JWT_SECRET || "meridian-dev-secret",
+    encryptionKey: process.env.ENCRYPTION_KEY || "meridian-dev-encryption-key",
 
     // Database
     databaseType:
@@ -55,8 +76,8 @@ function loadSettings(): AppSettings {
       "postgresql",
     databaseUrl: process.env.DATABASE_URL || "",
 
-    // Security
-    corsOrigins: (process.env.CORS_ORIGINS || "").split(",").filter(Boolean),
+    // Security — parseCorsOriginsEnv trims so spaced CSV entries work
+    corsOrigins: parseCorsOriginsEnv(process.env.CORS_ORIGINS),
 
     // Features
     emailEnabled: !!(process.env.EMAIL_HOST && process.env.EMAIL_USER),
@@ -74,6 +95,18 @@ function loadSettings(): AppSettings {
       );
     }
     logger.warn("⚠️  Using default JWT_SECRET - not secure for production!");
+  }
+
+  if (
+    !settings.encryptionKey ||
+    settings.encryptionKey === "meridian-dev-encryption-key"
+  ) {
+    if (settings.nodeEnv === "production") {
+      throw new Error(
+        "ENCRYPTION_KEY must be set to a strong value in production - refusing to start with the default key",
+      );
+    }
+    logger.warn("⚠️  Using default ENCRYPTION_KEY - not secure for production!");
   }
 
   return settings;

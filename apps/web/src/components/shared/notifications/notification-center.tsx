@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,7 +8,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell, AlertTriangle, Target, Trash2, Loader2 } from "lucide-react";
+import {
+  Bell,
+  AlertTriangle,
+  Target,
+  Trash2,
+  Loader2,
+  Settings,
+} from "lucide-react";
 import { cn } from "@/lib/cn";
 import { format, isToday, isYesterday } from "date-fns";
 import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
@@ -74,6 +82,7 @@ export default function NotificationCenter({
   showTitle = true,
   maxNotifications = 50,
 }: NotificationCenterProps) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
   const { data: allNotifications, isLoading } = useGetNotifications();
@@ -203,11 +212,24 @@ export default function NotificationCenter({
                   onClick={handleClearAll}
                   disabled={clearAllMutation.isPending}
                   className="h-7 w-7"
+                  aria-label="Clear all notifications"
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Notification settings"
+              onClick={() => {
+                setIsOpen(false);
+                navigate({ to: "/dashboard/settings/notifications" });
+              }}
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
 
@@ -369,10 +391,18 @@ export default function NotificationCenter({
         </ScrollArea>
 
         {/* Footer */}
-        {(allNotifications?.length ?? 0) > maxNotifications && (
+        {notifications.length > 0 && (
           <div className="p-4 border-t">
-            <Button variant="ghost" size="sm" className="w-full text-xs">
-              View older notifications
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs"
+              onClick={() => {
+                setIsOpen(false);
+                navigate({ to: "/dashboard/notifications" });
+              }}
+            >
+              View all notifications
             </Button>
           </div>
         )}

@@ -13,7 +13,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Project Workflow E2E", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to application
-    await page.goto("http://localhost:5173");
+    await page.goto("/");
   });
 
   test.describe("Authentication Flow", () => {
@@ -56,7 +56,7 @@ test.describe("Project Workflow E2E", () => {
 
     test("should sign out user", async ({ page }) => {
       // Sign in first
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
       await page.fill('input[name="email"]', "admin@meridian.app");
       await page.fill('input[name="password"]', "admin");
       await page.click('button[type="submit"]');
@@ -75,7 +75,7 @@ test.describe("Project Workflow E2E", () => {
   test.describe("Project Creation Workflow", () => {
     test.beforeEach(async ({ page }) => {
       // Sign in as admin
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
       await page.fill('input[name="email"]', "admin@meridian.app");
       await page.fill('input[name="password"]', "admin");
       await page.click('button[type="submit"]');
@@ -121,7 +121,7 @@ test.describe("Project Workflow E2E", () => {
 
   test.describe("Task Management Workflow", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
       await page.fill('input[name="email"]', "admin@meridian.app");
       await page.fill('input[name="password"]', "admin");
       await page.click('button[type="submit"]');
@@ -205,7 +205,7 @@ test.describe("Project Workflow E2E", () => {
 
   test.describe("Dashboard Interactions", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
       await page.fill('input[name="email"]', "admin@meridian.app");
       await page.fill('input[name="password"]', "admin");
       await page.click('button[type="submit"]');
@@ -255,7 +255,7 @@ test.describe("Project Workflow E2E", () => {
     test("should work on mobile viewport", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 }); // iPhone size
 
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
       await page.fill('input[name="email"]', "admin@meridian.app");
       await page.fill('input[name="password"]', "admin");
       await page.click('button[type="submit"]');
@@ -267,7 +267,7 @@ test.describe("Project Workflow E2E", () => {
     test("should work on tablet viewport", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 }); // iPad size
 
-      await page.goto("http://localhost:5173");
+      await page.goto("/");
 
       // Page should render without horizontal scroll
       const hasHorizontalScroll = await page.evaluate(() => {
@@ -283,7 +283,7 @@ test.describe("Project Workflow E2E", () => {
     test("should work on desktop viewport", async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
 
-      await page.goto("http://localhost:5173");
+      await page.goto("/");
 
       // Page should render
       await expect(page.locator("body")).toBeVisible();
@@ -294,7 +294,7 @@ test.describe("Project Workflow E2E", () => {
     test("should have no critical accessibility violations", async ({
       page,
     }) => {
-      await page.goto("http://localhost:5173");
+      await page.goto("/");
 
       // Check for basic accessibility
       const mainContent = page.locator('main, [role="main"]');
@@ -324,7 +324,7 @@ test.describe("Project Workflow E2E", () => {
     });
 
     test("should support keyboard navigation", async ({ page }) => {
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
 
       // Tab through form fields
       await page.keyboard.press("Tab"); // Focus email
@@ -343,7 +343,7 @@ test.describe("Project Workflow E2E", () => {
 
   test.describe("Performance", () => {
     test("should load dashboard within 3 seconds", async ({ page }) => {
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
       await page.fill('input[name="email"]', "admin@meridian.app");
       await page.fill('input[name="password"]', "admin");
 
@@ -358,7 +358,7 @@ test.describe("Project Workflow E2E", () => {
     });
 
     test("should handle rapid navigation", async ({ page }) => {
-      await page.goto("http://localhost:5173/auth/sign-in");
+      await page.goto("/auth/sign-in");
       await page.fill('input[name="email"]', "admin@meridian.app");
       await page.fill('input[name="password"]', "admin");
       await page.click('button[type="submit"]');
@@ -373,7 +373,7 @@ test.describe("Project Workflow E2E", () => {
       ];
 
       for (const route of routes) {
-        await page.goto(`http://localhost:5173${route}`);
+        await page.goto(route);
         await page.waitForLoadState("networkidle");
       }
 

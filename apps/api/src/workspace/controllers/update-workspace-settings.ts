@@ -10,6 +10,28 @@ import {
   workspaceMembers,
   userTable,
 } from "../../database/schema";
+import { ForbiddenError, NotFoundError } from "../../core/ErrorHandler";
+
+/**
+ * Roles allowed to edit workspace settings, besides the workspace owner.
+ *
+ * The check here used to be `role !== "admin" && role !== "manager"`, which
+ * did not match the roles this app actually stores. `workspace_members.role`
+ * holds: admin, member, workspace-manager, guest, project-manager, team-lead,
+ * project-viewer, department-head — and bare "manager" appears nowhere at all.
+ * So `workspace-manager`, the top of ROLE_HIERARCHY (10, "OWNER LEVEL"), was
+ * rejected while the lower legacy `admin` passed, and any workspace-manager
+ * who did not also happen to own the workspace could not edit its settings.
+ *
+ * `admin` and `manager` are kept because they are legacy values already in the
+ * data (29 `admin` rows) that the previous check admitted; dropping them here
+ * would revoke access people currently have.
+ */
+const WORKSPACE_SETTINGS_ROLES = new Set([
+  "workspace-manager",
+  "admin",
+  "manager",
+]);
 
 export interface UpdateWorkspaceSettingsInput {
   // Basic Info
@@ -71,10 +93,12 @@ export default async function updateWorkspaceSettings(
     .limit(1);
 
   if (!membership) {
-    throw new Error("Access denied: Not a workspace member");
+    throw new ForbiddenError("Access denied: Not a workspace member");
   }
 
-  if (membership.role !== "admin" && membership.role !== "manager") {
+  // `role` is nullable; a member without one is not privileged and falls
+  // through to the owner check below, as it did before.
+  if (!membership.role || !WORKSPACE_SETTINGS_ROLES.has(membership.role)) {
     // Check if user is workspace owner
     const [workspace] = await db
       .select()
@@ -83,7 +107,7 @@ export default async function updateWorkspaceSettings(
       .limit(1);
 
     if (!workspace) {
-      throw new Error("Workspace not found");
+      throw new NotFoundError("Workspace", workspaceId);
     }
 
     const [owner] = await db
@@ -93,7 +117,7 @@ export default async function updateWorkspaceSettings(
       .limit(1);
 
     if (!owner || workspace.ownerId !== owner.id) {
-      throw new Error(
+      throw new ForbiddenError(
         "Access denied: Only workspace owners or admins can update settings",
       );
     }
@@ -151,7 +175,7 @@ export default async function updateWorkspaceSettings(
     .limit(1);
 
   if (!currentWorkspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const currentSettings =

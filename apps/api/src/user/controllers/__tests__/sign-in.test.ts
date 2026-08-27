@@ -77,7 +77,14 @@ describe("SignIn Controller", () => {
 
       // Assert
       expect(result).not.toHaveProperty("password");
-      expect(Object.keys(result)).toEqual(["id", "email", "name"]);
+      // twoFactorEnabled is included so the /sign-in route can decide
+      // whether to withhold the session pending 2FA verification.
+      expect(Object.keys(result)).toEqual([
+        "id",
+        "email",
+        "name",
+        "twoFactorEnabled",
+      ]);
     });
   });
 

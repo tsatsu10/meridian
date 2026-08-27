@@ -3,6 +3,21 @@
  *
  * Single source of truth for authentication, user state, and RBAC
  * Replaces: authSlice.ts, user-preferences.ts, RBAC provider state
+ *
+ * ⚠️ NOT WIRED UP — DO NOT READ `user` FROM HERE.
+ *
+ * Nothing in the app ever calls `signIn`, `initializeFromSession` or `setUser`
+ * on this store, so `user` is permanently `undefined` and every derived
+ * permission is `false`. The real sign-in flow goes through `useGetMe()` into
+ * `AuthContext` (components/providers/auth-provider); read the user from
+ * `useAuth()`/`AuthContext`.
+ *
+ * This has already caused one silent outage: the Appearance settings page read
+ * `user?.email` from here, so its "load my accessibility preferences" fetch
+ * never fired and its font/background saves returned early — four API
+ * endpoints were unreachable from the only page that called them, with no
+ * error anywhere. Either wire this store to the session or delete it; until
+ * then, treat it as dead.
  */
 
 import { create } from "zustand";
@@ -195,6 +210,7 @@ export const useAuthStore = create<AuthStore>()(
         try {
           // Call logout endpoint
           await fetch(`${API_BASE_URL}/users/sign-out`, {
+            credentials: "include",
             method: "POST",
           });
         } catch (error) {
@@ -223,6 +239,7 @@ export const useAuthStore = create<AuthStore>()(
 
         try {
           const response = await fetch(`${API_BASE_URL}/users/refresh`, {
+            credentials: "include",
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refreshToken }),
@@ -251,7 +268,9 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/me`, {});
+          const response = await fetch(`${API_BASE_URL}/me`, {
+            credentials: "include",
+          });
 
           if (response.ok) {
             const data = await response.json();
@@ -312,6 +331,7 @@ export const useAuthStore = create<AuthStore>()(
 
         try {
           const response = await fetch(`${API_BASE_URL}/users/profile`, {
+            credentials: "include",
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(profile),

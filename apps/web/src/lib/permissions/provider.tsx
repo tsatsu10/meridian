@@ -77,16 +77,11 @@ function createRBACUser(
 }
 
 /**
- * Determine user's initial role based on various factors
+ * Fallback role when the RBAC assignments API is unavailable or returns no
+ * active assignment. Production users should get roles from
+ * GET /rbac/assignments/:userId; this heuristic is dev/demo bootstrap only.
  */
 function determineInitialRole(user: LoggedInUser): UserRole {
-  // TODO: This will later be determined by:
-  // 1. Database role assignments
-  // 2. Workspace creator status
-  // 3. Invitation context
-  // 4. Default organizational policies
-
-  // For now, assign default roles based on demo scenarios
   const email = user.email?.toLowerCase() || "";
 
   // Specific workspace managers. The old `|| true` short-circuit granted
@@ -252,8 +247,49 @@ export function RBACProvider({ children }: RBACProviderProps) {
       setIsRoleLoading(true);
 
       try {
-        // TODO: Make API call to assign role
-        // For now, simulate the operation
+        // Workspace is mandatory: POST /rbac/assign requires workspaceId
+        // (z.string().min(1)) because role assignment is scoped per
+        // workspace server-side. Without this guard, an undefined
+        // context?.workspaceId would sail through JSON.stringify (the key
+        // just vanishes) and the request would 400 with a validation error
+        // instead of failing with a message that names the actual problem.
+        // Refusing here also rules out ever inventing a fallback workspace —
+        // assigning a role into the wrong workspace is a security-relevant
+        // mistake, so failing loudly is correct.
+        if (!context?.workspaceId) {
+          throw new Error(
+            "Cannot assign a role without a workspace: role assignment is workspace-scoped.",
+          );
+        }
+
+        // This used to be a client-side simulation: it never called the API,
+        // and only mutated local state when you assigned a role to *yourself*
+        // — so assigning a role to anyone else silently did nothing at all,
+        // while the UI reported success. POST /rbac/assign has existed all
+        // along (it enforces canManageRoles server-side).
+        const response = await fetch(`${API_BASE_URL}/rbac/assign`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            role,
+            workspaceId: context?.workspaceId,
+            projectIds: context?.projectId ? [context.projectId] : undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          const body = await response
+            .json()
+            .catch(() => ({ error: "Failed to assign role" }));
+          throw new Error(
+            body.error ||
+              (response.status === 403
+                ? "You do not have permission to assign roles"
+                : `Failed to assign role (HTTP ${response.status})`),
+          );
+        }
 
         if (rbacUser && rbacUser.id === userId) {
           const newPermissions = getRolePermissions(role);
@@ -277,8 +313,11 @@ export function RBACProvider({ children }: RBACProviderProps) {
           };
 
           setRBACUser(updatedUser);
-          toast.success(`Role updated to ${ROLE_METADATA[role].displayName}`);
         }
+
+        // Outside the self-assignment branch: the toast used to live inside
+        // it, so assigning a role to another user gave no feedback at all.
+        toast.success(`Role updated to ${ROLE_METADATA[role].displayName}`);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to assign role";
@@ -292,9 +331,55 @@ export function RBACProvider({ children }: RBACProviderProps) {
   );
 
   const removeRole = useCallback(
-    async (_userId: string, _context?: PermissionContext): Promise<void> => {
-      // TODO: Implement role removal
-      toast.info("Role removal not yet implemented");
+    async (userId: string, context?: PermissionContext): Promise<void> => {
+      // Was a stub that only toasted "not yet implemented". The endpoint has
+      // existed all along (it deactivates the active assignment and records
+      // the change in role history, gated on canManageRoles server-side).
+      setIsRoleLoading(true);
+
+      try {
+        // Workspace is mandatory: DELETE /rbac/remove/:userId now requires a
+        // ?workspaceId= query param, because role removal is scoped per
+        // workspace server-side (it previously had no workspace concept at
+        // all, which allowed a cross-workspace privilege bug). There are
+        // currently no call sites for removeRole, so refuse to call the API
+        // without a workspace rather than let it 400 silently for whoever
+        // wires this up next.
+        if (!context?.workspaceId) {
+          throw new Error(
+            "Cannot remove a role without a workspace: role removal is workspace-scoped.",
+          );
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/rbac/remove/${userId}?workspaceId=${encodeURIComponent(context.workspaceId)}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          },
+        );
+
+        if (!response.ok) {
+          const body = await response
+            .json()
+            .catch(() => ({ error: "Failed to remove role" }));
+          throw new Error(
+            body.error ||
+              (response.status === 403
+                ? "You do not have permission to remove roles"
+                : `Failed to remove role (HTTP ${response.status})`),
+          );
+        }
+
+        toast.success("Role removed");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to remove role";
+        setError(message);
+        toast.error(message);
+      } finally {
+        setIsRoleLoading(false);
+      }
     },
     [],
   );

@@ -25,6 +25,7 @@ import { Plus, Search, Filter, Users, Shield, Crown, Eye } from "lucide-react";
 import { RoleCard } from "@/components/rbac/role-card";
 import { RoleModal } from "@/components/rbac/role-modal";
 import { toast } from "sonner";
+import useWorkspaceStore from "@/store/workspace";
 
 // ==========================================
 // TYPES
@@ -42,8 +43,19 @@ interface RoleFilters {
 // MAIN COMPONENT
 // ==========================================
 
-function UnifiedRolesPage() {
+// Exported (not just used via `Route`) so it can be rendered directly in
+// tests — matches the pattern already used by team-management.tsx.
+export function UnifiedRolesPage() {
   const queryClient = useQueryClient();
+  const { workspace } = useWorkspaceStore();
+  const workspaceId = workspace?.id || "";
+  // Cloning writes a new role into `workspaceId`, which POST /roles/:id/clone
+  // requires (z.string().min(1)). Same reasoning as the create-role guard in
+  // role-modal.tsx and the assignRole/removeRole guards in
+  // lib/permissions/provider.tsx: a role write with a missing/wrong
+  // workspace is security-relevant, so fail visibly before ever calling the
+  // API rather than let it 400.
+  const hasWorkspace = Boolean(workspaceId);
 
   // State
   const [filters, setFilters] = useState<RoleFilters>({
@@ -120,11 +132,23 @@ function UnifiedRolesPage() {
       roleId,
       newName,
     }: { roleId: string; newName: string }) => {
+      // Defense in depth: handleCloneRole already blocks this case, and the
+      // Clone menu item is disabled for it, but this guards any other path
+      // that might call cloneRoleMutation.mutate() directly.
+      if (!hasWorkspace) {
+        throw new Error("Select a workspace before cloning a role");
+      }
+
       const response = await fetch(`${API_BASE_URL}/roles/${roleId}/clone`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ newName }),
+        // The API's clone body is { name?, workspaceId } — workspaceId is
+        // required (role mutations are workspace-scoped server-side) and the
+        // field is `name`, not `newName`; sending `newName` alone silently
+        // dropped the name the user picked in the prompt() and fell back to
+        // the server's default "<source> (copy)".
+        body: JSON.stringify({ name: newName, workspaceId }),
       });
 
       if (!response.ok) {
@@ -161,6 +185,11 @@ function UnifiedRolesPage() {
   };
 
   const handleCloneRole = (role: Role) => {
+    if (!hasWorkspace) {
+      toast.error("Select a workspace before cloning a role");
+      return;
+    }
+
     const newName = prompt(`Clone "${role.name}" as:`, `${role.name} (Copy)`);
     if (newName) {
       cloneRoleMutation.mutate({ roleId: role.id, newName });
@@ -168,7 +197,11 @@ function UnifiedRolesPage() {
   };
 
   const handleViewDetails = (roleId: string) => {
-    window.location.href = `/dashboard/settings/roles/${roleId}`;
+    // The detail route is /dashboard/settings/roles-unified/$roleId (see
+    // roles-unified.$roleId.tsx and routeTree.gen.ts). This pointed at
+    // /dashboard/settings/roles/:id, which is not a registered route at all,
+    // so "View Details" landed on the router's not-found page every time.
+    window.location.href = `/dashboard/settings/roles-unified/${roleId}`;
   };
 
   // Stats
@@ -315,6 +348,8 @@ function UnifiedRolesPage() {
                 onEdit={handleEditRole}
                 onDelete={handleDeleteRole}
                 onClone={handleCloneRole}
+                cloneDisabled={!hasWorkspace}
+                cloneDisabledReason="Select a workspace before cloning a role"
                 onViewDetails={handleViewDetails}
               />
             ))}
@@ -341,6 +376,8 @@ function UnifiedRolesPage() {
                 onEdit={handleEditRole}
                 onDelete={handleDeleteRole}
                 onClone={handleCloneRole}
+                cloneDisabled={!hasWorkspace}
+                cloneDisabledReason="Select a workspace before cloning a role"
                 onViewDetails={handleViewDetails}
               />
             ))}

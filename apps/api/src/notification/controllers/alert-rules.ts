@@ -3,6 +3,7 @@ import { alertRules } from "../../database/schema";
 import { eq, and } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { logger } from "../../utils/logger";
+import { NotFoundError } from "../../core/ErrorHandler";
 import {
   evaluateRule,
   triggerAlert,
@@ -87,7 +88,7 @@ export async function getAlertRule(ruleId: string, userEmail: string) {
       .limit(1);
 
     if (!rule) {
-      throw new Error("Alert rule not found");
+      throw new NotFoundError("Alert rule");
     }
 
     return rule;
@@ -126,7 +127,7 @@ export async function updateAlertRule(
       .returning();
 
     if (!updated) {
-      throw new Error("Alert rule not found");
+      throw new NotFoundError("Alert rule");
     }
 
     logger.info(`Alert rule updated: ${ruleId}`);
@@ -152,7 +153,7 @@ export async function deleteAlertRule(ruleId: string, userEmail: string) {
       .returning();
 
     if (!deleted) {
-      throw new Error("Alert rule not found");
+      throw new NotFoundError("Alert rule");
     }
 
     logger.info(`Alert rule deleted: ${ruleId}`);

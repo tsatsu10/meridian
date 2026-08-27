@@ -10,13 +10,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { userMessage } from "@/lib/user-message";
+import { useQueryClient } from "@tanstack/react-query";
 import { looseClient } from "@/lib/rpc-client";
 
 interface AddColumnModalProps {
   open: boolean;
   onClose: () => void;
   projectId: string;
-  insertAfterPosition?: number;
+  /** Column the new one should land directly after. */
+  insertAfterColumnId?: string;
 }
 
 // @epic-1.1-subtasks: Add custom status columns for Sarah's PM workflow enhancement
@@ -24,11 +27,12 @@ function AddColumnModal({
   open,
   onClose,
   projectId,
-  insertAfterPosition,
+  insertAfterColumnId,
 }: AddColumnModalProps) {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#6b7280");
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const predefinedColors = [
     "#6b7280", // gray
@@ -66,7 +70,7 @@ function AddColumnModal({
         json: {
           name: name.trim(),
           color,
-          position: insertAfterPosition,
+          insertAfterColumnId,
         },
       });
 
@@ -81,11 +85,13 @@ function AddColumnModal({
       setColor("#6b7280");
       onClose();
 
-      // Force a page refresh to get the updated column order
-      window.location.reload();
+      // Refetch the board instead of reloading the whole page, which threw
+      // away all client state (filters, scroll position, open dialogs) and
+      // re-ran the entire app bootstrap just to pick up one new column.
+      await queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
     } catch (error) {
       console.error("Error creating column:", error);
-      toast.error("Failed to create column");
+      toast.error(userMessage(error, "create the column"));
     } finally {
       setIsLoading(false);
     }

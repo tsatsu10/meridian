@@ -52,16 +52,18 @@ import {
 
 interface ProjectMember {
   id: string;
+  // The workspace_user.id for this member - a different id space from `id`
+  // (the project_members row id), required by the member-activity endpoint.
+  workspaceUserId?: string;
   name: string;
   email: string;
   avatar?: string;
   role: string;
   workspaceRole?: string;
-  status: "online" | "away" | "offline";
+  status: "active" | "inactive";
   activeTasks: number;
   completedTasks: number;
   productivity: number;
-  lastActive?: string;
   joinedProject: string;
 }
 
@@ -94,7 +96,11 @@ export function EnhancedMemberDetailsModal({
     data: activityData,
     isLoading,
     error,
-  } = useGetMemberActivity(workspaceId, member?.id || "", open && !!member);
+  } = useGetMemberActivity(
+    workspaceId,
+    member?.workspaceUserId || "",
+    open && !!member?.workspaceUserId,
+  );
 
   if (!member) return null;
 

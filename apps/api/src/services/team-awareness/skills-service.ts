@@ -11,6 +11,7 @@ import { eq, desc, and, sql, inArray, like } from "drizzle-orm";
 import { Logger } from "../logging/logger";
 import { CacheService, CacheTTL } from "../cache/cache-service";
 import { createId } from "@paralleldrive/cuid2";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export type ProficiencyLevel =
   | "beginner"
@@ -233,7 +234,7 @@ export const SkillsService = {
         .limit(1);
 
       if (!skill) {
-        throw new Error("Skill not found");
+        throw new NotFoundError("Skill");
       }
 
       const endorsements =
@@ -303,7 +304,7 @@ export const SkillsService = {
         .limit(1);
 
       if (!skill) {
-        throw new Error("Skill not found");
+        throw new NotFoundError("Skill");
       }
 
       await SkillsService.getDb()
@@ -350,7 +351,7 @@ export const SkillsService = {
         .limit(1);
 
       if (!skill) {
-        throw new Error("Skill not found");
+        throw new NotFoundError("Skill");
       }
 
       await SkillsService.getDb()
@@ -386,7 +387,7 @@ export const SkillsService = {
         .limit(1);
 
       if (!skill) {
-        throw new Error("Skill not found");
+        throw new NotFoundError("Skill");
       }
 
       // Only skill owner can delete

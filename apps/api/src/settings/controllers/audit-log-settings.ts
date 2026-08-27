@@ -6,6 +6,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { workspaceTable } from "../../database/schema";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 export interface AuditLogSettings {
   // Logging Configuration
@@ -91,7 +92,7 @@ export async function getAuditLogSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const storedSettings = (workspace.settings as Record<string, unknown>) || {};
@@ -113,7 +114,7 @@ export async function updateAuditLogSettings(
     .limit(1);
 
   if (!workspace) {
-    throw new Error("Workspace not found");
+    throw new NotFoundError("Workspace");
   }
 
   const currentSettings = (workspace.settings as Record<string, unknown>) || {};

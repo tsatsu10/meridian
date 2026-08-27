@@ -12,6 +12,7 @@ async function deleteStatusColumn({
   const response = await fetch(
     `${API_BASE_URL}/projects/${projectId}/status-columns/${columnId}`,
     {
+      credentials: "include",
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

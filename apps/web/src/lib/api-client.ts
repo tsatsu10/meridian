@@ -139,7 +139,7 @@ class SmartApiClient {
       },
 
       verifyLogin: async (data: {
-        userId: string;
+        pendingToken: string;
         token?: string;
         backupCode?: string;
       }) => {

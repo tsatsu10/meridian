@@ -13,7 +13,7 @@ import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import rbacStats from "./stats";
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull, inArray } from "drizzle-orm";
 import { getDatabase } from "../database/connection";
 import {
   roleAssignmentTable,
@@ -22,10 +22,34 @@ import {
   departmentTable,
   userTable,
   workspaceTable,
+  workspaceUserTable,
 } from "../database/schema";
+// Imported from the subfile, not "../database/schema": the barrel's
+// `export * from "./schema/rbac-unified"` is circular, so `roles` is absent
+// from the barrel at runtime.
+import { roles } from "../database/schema/rbac-unified";
 import { createId } from "@paralleldrive/cuid2";
 import { getRolePermissions } from "../constants/rbac";
-import { requirePermission } from "../middlewares/rbac";
+import {
+  requirePermission,
+  checkWorkspacePermission,
+} from "../middlewares/rbac";
+import { isSystemRoleId } from "../roles/lib/system-roles";
+import {
+  memberWorkspaceIds,
+  userIdForEmail,
+  workspaceIdsGranting,
+} from "./lib/workspace-scope";
+import { resolveRolePermissions } from "../roles/lib/resolve-role-permissions";
+import {
+  ALL_PERMISSION_KEYS,
+  findExcessPermissions,
+  recordToPermissions,
+} from "../roles/lib/permission-set";
+import {
+  hierarchyCeilingAllows,
+  usesHierarchyCeiling,
+} from "../roles/lib/role-ceiling";
 import type { UserRole } from "../types/rbac";
 import logger from "../utils/logger";
 
@@ -37,22 +61,20 @@ const rbac = new Hono<{
 
 // ===== VALIDATION SCHEMAS =====
 
-const assignRoleSchema = z.object({
+export const assignRoleSchema = z.object({
   userId: z.string(),
-  role: z.enum([
-    "workspace-manager",
-    "department-head",
-    "workspace-viewer",
-    "project-manager",
-    "project-viewer",
-    "team-lead",
-    "member",
-    "client",
-    "contractor",
-    "stakeholder",
-    "guest",
-  ]),
-  workspaceId: z.string().optional(),
+  // Accepts a built-in slug or a custom role id. The enum here previously made
+  // custom roles unassignable, which left the custom-role resolution path
+  // unreachable. The value is validated against the roles table in the handler
+  // below — the schema cannot do it, because it needs a database lookup.
+  role: z.string().min(1),
+  // Required: assignments are workspace-scoped throughout the resolution
+  // path (checkWorkspacePermission, checkProjectPermission, the custom-role
+  // lookup below). Omitting it previously let the cross-workspace check
+  // silently no-op and the deactivate-existing UPDATE wipe the user's
+  // assignment in every workspace they held one in — see task-12-report.md,
+  // Critical 2.
+  workspaceId: z.string().min(1),
   projectIds: z.array(z.string()).optional(),
   departmentIds: z.array(z.string()).optional(),
   reason: z.string().optional(),
@@ -62,9 +84,15 @@ const assignRoleSchema = z.object({
 
 const customPermissionSchema = z.object({
   userId: z.string(),
-  permission: z.string(),
+  // Must be a real permission key. `z.string()` accepted anything, so a typo
+  // (or an attacker) could write rows that no check will ever read — silent
+  // no-ops that look like successful grants in the UI.
+  permission: z.enum(ALL_PERMISSION_KEYS as [string, ...string[]]),
   granted: z.boolean(),
-  workspaceId: z.string().optional(),
+  // 🚨 Required. When this was optional the override defaulted to workspaceId
+  // null, i.e. it applied in EVERY workspace, forever. An override must name
+  // the tenant it belongs to.
+  workspaceId: z.string().min(1),
   projectId: z.string().optional(),
   resourceType: z.string().optional(),
   resourceId: z.string().optional(),
@@ -97,6 +125,43 @@ const requireCanManageRolesUnlessSelf = createMiddleware(async (c, next) => {
 
   return requirePermission("canManageRoles")(c, next);
 });
+
+/**
+ * The escalation ceiling for POST /assign: returns an error message when the
+ * actor may not hand out `assignedRole`, or `null` when they may.
+ *
+ * Which ceiling applies (hierarchy vs. permission subset) is decided by
+ * roles/lib/role-ceiling.ts — read the module comment there for why the two
+ * cases are measured differently. The short version: the built-in roles are
+ * an ordered ladder rather than a permission lattice, so a subset check makes
+ * `contractor` and `department-head` unassignable by anybody; custom roles
+ * have no level and attacker-chosen permission lists, so they must keep the
+ * subset check or a custom role granting canManageRoles could hand out
+ * workspace-manager.
+ */
+async function assignRoleCeilingError(
+  actorRole: string,
+  assignedRole: string,
+  workspaceId: string,
+): Promise<string | null> {
+  if (usesHierarchyCeiling(actorRole, assignedRole)) {
+    return hierarchyCeilingAllows(actorRole, assignedRole)
+      ? null
+      : `You cannot assign a role above your own: ${assignedRole}`;
+  }
+
+  const [actorPermissions, assignedPermissions] = await Promise.all([
+    resolveRolePermissions(actorRole, workspaceId),
+    resolveRolePermissions(assignedRole, workspaceId),
+  ]);
+  const excess = findExcessPermissions(
+    recordToPermissions(assignedPermissions),
+    actorPermissions,
+  );
+  return excess.length > 0
+    ? `You cannot assign permissions you do not hold: ${excess.join(", ")}`
+    : null;
+}
 
 // ===== ROLE ASSIGNMENT ENDPOINTS =====
 
@@ -134,14 +199,46 @@ rbac.get("/assignments", requirePermission("canManageRoles"), async (c) => {
   try {
     const db = getDatabase();
 
+    // Empty means the caller administers no workspace: return nothing rather
+    // than an unfiltered list. `inArray(col, [])` must never be reached.
+    const manageableWorkspaces = await workspaceIdsGranting(
+      c.get("userEmail"),
+      "canManageRoles",
+    );
+    if (manageableWorkspaces.length === 0) {
+      return c.json({ assignments: [] });
+    }
+
     const assignments = await db
       .select({
         assignment: roleAssignmentTable,
-        user: userTable,
+        // Explicit columns, NOT the whole `userTable`. Projecting the table
+        // ships every column it has — including `password` (an argon2 hash),
+        // `twoFactorSecret` and `twoFactorBackupCodes` — to any caller of
+        // this route. Same class of leak as the one already fixed on
+        // GET /api/users/me. The consumer (settings/team-management.tsx)
+        // renders only name/email; id and avatar are here because any
+        // reasonable member list needs them.
+        user: {
+          id: userTable.id,
+          name: userTable.name,
+          email: userTable.email,
+          avatar: userTable.avatar,
+        },
       })
       .from(roleAssignmentTable)
       .leftJoin(userTable, eq(roleAssignmentTable.userId, userTable.id))
-      .where(eq(roleAssignmentTable.isActive, true))
+      // 🚨 SECURITY: scoped to the workspaces the caller can actually
+      // administer. This previously filtered on isActive alone, so it returned
+      // EVERY active assignment in the entire instance — joined to each user's
+      // name and email — to anyone who cleared the coarse permission gate. A
+      // cross-tenant directory leak.
+      .where(
+        and(
+          eq(roleAssignmentTable.isActive, true),
+          inArray(roleAssignmentTable.workspaceId, manageableWorkspaces),
+        ),
+      )
       .orderBy(desc(roleAssignmentTable.assignedAt));
 
     return c.json({ assignments });
@@ -199,13 +296,123 @@ rbac.get("/assignments/:userId", requireCanManageRolesUnlessSelf, async (c) => {
  */
 rbac.post(
   "/assign",
-  requirePermission("canManageRoles"),
+  // Coarse pre-filter only: this route re-checks with a workspace-scoped
+  // check below, which is the real decision. See RequirePermissionOptions.
+  requirePermission("canManageRoles", { scope: "any" }),
   zValidator("json", assignRoleSchema),
   async (c) => {
     try {
       const db = getDatabase();
       const data = c.req.valid("json");
       const assignerEmail = c.get("userEmail");
+
+      // CRITICAL: gate on the TARGET workspace, not "does this caller hold
+      // canManageRoles anywhere" — requirePermission's own check is
+      // workspace-unscoped (`.limit(1)`, no `orderBy`, no workspace filter on
+      // whichever active assignment the query happens to return first).
+      // Without this, any authenticated user who creates their own workspace
+      // (self-assigned workspace-manager there, per
+      // workspace/controllers/create-workspace.ts) could call this route with
+      // an arbitrary victim workspaceId and grant themselves workspace-manager
+      // there too: requirePermission only asks "canManageRoles somewhere?",
+      // and checkWorkspacePermission — which DOES scope by workspace — would
+      // then report full admin in the victim workspace on the very next
+      // request. 404, uniform, never checkWorkspacePermission's own 403 body:
+      // consistent with the sibling /api/roles routes, and it doesn't confirm
+      // the workspace exists to someone with no legitimate access to it.
+      const scoped = await checkWorkspacePermission(
+        assignerEmail,
+        data.workspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
+      // A non-built-in role must be a real, active, non-deleted custom role.
+      // Without this any string could be written to role_assignment.role,
+      // which would resolve to {} and silently strip the user of all access.
+      if (!isSystemRoleId(data.role)) {
+        const [customRole] = await db
+          .select({ id: roles.id, workspaceId: roles.workspaceId })
+          .from(roles)
+          .where(
+            and(
+              eq(roles.id, data.role),
+              eq(roles.isActive, true),
+              isNull(roles.deletedAt),
+            ),
+          )
+          .limit(1);
+
+        if (!customRole) {
+          return c.json({ error: "Role not found" }, 404);
+        }
+
+        if (
+          customRole.workspaceId &&
+          customRole.workspaceId !== data.workspaceId
+        ) {
+          return c.json(
+            { error: "Role belongs to a different workspace" },
+            400,
+          );
+        }
+      }
+
+      // Escalation guard: the counterpart to the ceiling
+      // createRole/updateRole enforce, applied here too. Without it, an
+      // assigner could bypass that ceiling entirely by assigning an EXISTING
+      // powerful role instead of minting a new one — built-in or custom.
+      //
+      // scoped.userRole is undefined exactly when checkWorkspacePermission's
+      // demo-mode admin bypass fired (it returns a bare `{ allowed: true }`
+      // with no role at all — see middlewares/rbac.ts). That is NOT the same
+      // as "the actor is a guest": falling back to "guest" there would give
+      // the demo admin a near-empty permission set (guest's only permission
+      // is canViewPublicProjects) and 403 every real assignment with a
+      // misleading "you cannot grant permissions you do not hold" message.
+      // The demo bypass already means "treat this caller as fully
+      // authorized," so the ceiling check is skipped entirely in that case —
+      // the normal (non-demo) path is unaffected and still enforces the
+      // ceiling exactly as before.
+      //
+      // The ceiling is measured two different ways, and the split is
+      // deliberate — see assignRoleCeilingError for the full reasoning.
+      if (scoped.userRole !== undefined) {
+        const ceilingError = await assignRoleCeilingError(
+          scoped.userRole,
+          data.role,
+          data.workspaceId,
+        );
+        if (ceilingError) {
+          return c.json({ error: ceilingError }, 403);
+        }
+      }
+
+      // The assignee must actually belong to the target workspace, with an
+      // ACCEPTED invite — without this a complete outsider (or someone who
+      // has been invited but never accepted, per
+      // workspace-user/controllers/invite-workspace-user.ts inserting rows as
+      // status:"pending") could be granted a live role. Matches the same
+      // eq(status, "active") filter used elsewhere for membership checks
+      // (workspace/controllers/get-workspaces.ts,
+      // workspace-user/controllers/get-active-workspace-users.ts).
+      const [membership] = await db
+        .select({ id: workspaceUserTable.id })
+        .from(workspaceUserTable)
+        .where(
+          and(
+            eq(workspaceUserTable.userId, data.userId),
+            eq(workspaceUserTable.workspaceId, data.workspaceId),
+            eq(workspaceUserTable.status, "active"),
+          ),
+        )
+        .limit(1);
+
+      if (!membership) {
+        return c.json({ error: "User is not a member of this workspace" }, 400);
+      }
 
       // Get assigner user ID
       const assignerUser = await db
@@ -219,7 +426,11 @@ rbac.post(
         return c.json({ error: "Assigner not found" }, 400);
       }
 
-      // Deactivate existing role assignments for this user
+      // Deactivate existing role assignments for this user IN THIS WORKSPACE
+      // ONLY. Previously this had no workspace predicate at all: assigning a
+      // role in workspace B deactivated the user's assignment in EVERY OTHER
+      // workspace they held one in too, then inserted the new row scoped to
+      // B alone — leaving the user with zero access anywhere else.
       await db
         .update(roleAssignmentTable)
         .set({
@@ -229,6 +440,7 @@ rbac.post(
           and(
             eq(roleAssignmentTable.userId, data.userId),
             eq(roleAssignmentTable.isActive, true),
+            eq(roleAssignmentTable.workspaceId, data.workspaceId),
           ),
         );
 
@@ -240,7 +452,7 @@ rbac.post(
         role: data.role,
         assignedAt: new Date(),
         isActive: true,
-        workspaceId: data.workspaceId || null,
+        workspaceId: data.workspaceId,
         projectIds: data.projectIds ?? null,
       };
 
@@ -254,7 +466,7 @@ rbac.post(
         action: "assigned",
         performedBy: assigner.id,
         reason: data.reason || "Role assigned",
-        workspaceId: data.workspaceId || null,
+        workspaceId: data.workspaceId,
         projectIds: data.projectIds ?? null,
         departmentIds: data.departmentIds ?? null,
         notes: data.notes || null,
@@ -282,12 +494,43 @@ rbac.post(
  */
 rbac.delete(
   "/remove/:userId",
-  requirePermission("canManageRoles"),
+  // Coarse pre-filter only: this route re-checks with a workspace-scoped
+  // check below, which is the real decision. See RequirePermissionOptions.
+  requirePermission("canManageRoles", { scope: "any" }),
   async (c) => {
     try {
       const db = getDatabase();
       const userId = c.req.param("userId");
       const removerEmail = c.get("userEmail");
+      const workspaceId = c.req.query("workspaceId");
+
+      // Required: this route previously took no workspace context at all
+      // (query param or body), which is what let the gap below happen. There
+      // is no other field on this route to infer it from — the frontend
+      // caller (removeRole() in apps/web/src/lib/permissions/provider.tsx)
+      // needs to start sending it as a query param; see task-12-report.md.
+      if (!workspaceId) {
+        return c.json(
+          { error: "workspaceId query parameter is required" },
+          400,
+        );
+      }
+
+      // CRITICAL (same class as /assign — see task-12-report.md): gate on
+      // the TARGET workspace, not "does this caller hold canManageRoles
+      // anywhere" — requirePermission's own check is workspace-unscoped
+      // (`.limit(1)`, no `orderBy`, no workspace filter). Without this, a
+      // workspace-manager of their OWN workspace could strip a user's role
+      // in an unrelated workspace they hold no canManageRoles grant in. 404,
+      // uniform, never checkWorkspacePermission's own 403 body.
+      const scoped = await checkWorkspacePermission(
+        removerEmail,
+        workspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        return c.json({ error: "Workspace not found" }, 404);
+      }
 
       // Get remover user ID
       const removerUser = await db
@@ -301,7 +544,9 @@ rbac.delete(
         return c.json({ error: "User not found" }, 400);
       }
 
-      // Get current role assignment
+      // Get current role assignment IN THIS WORKSPACE ONLY — otherwise an
+      // active assignment in a completely different workspace could be
+      // picked up here (whichever one `.limit(1)` happened to return).
       const currentAssignment = await db
         .select()
         .from(roleAssignmentTable)
@@ -309,6 +554,7 @@ rbac.delete(
           and(
             eq(roleAssignmentTable.userId, userId),
             eq(roleAssignmentTable.isActive, true),
+            eq(roleAssignmentTable.workspaceId, workspaceId),
           ),
         )
         .limit(1);
@@ -318,13 +564,22 @@ rbac.delete(
         return c.json({ error: "No active role assignment found" }, 404);
       }
 
-      // Deactivate role assignment
+      // Deactivate role assignment, scoped to the target workspace too —
+      // mirrors /assign's Critical 2 fix: without eq(workspaceId, ...) here,
+      // whichever active assignment `.limit(1)` happened to return above
+      // could be deactivated regardless of which workspace it actually
+      // belonged to.
       await db
         .update(roleAssignmentTable)
         .set({
           isActive: false,
         })
-        .where(eq(roleAssignmentTable.id, activeAssignment.id));
+        .where(
+          and(
+            eq(roleAssignmentTable.id, activeAssignment.id),
+            eq(roleAssignmentTable.workspaceId, workspaceId),
+          ),
+        );
 
       // Record in role history
       await db.insert(roleHistoryTable).values({
@@ -699,13 +954,74 @@ rbac.post(
         return c.json({ error: "Granter not found" }, 400);
       }
 
+      // 🚨 SECURITY: this route was an unbounded permission grant. Its only
+      // actor gate was the workspace-UNSCOPED requirePermission, `workspaceId`
+      // was optional (so overrides defaulted to applying everywhere, forever),
+      // and there was no ceiling — any workspace-manager of any workspace could
+      // hand any of the 157 permissions to any user, globally and permanently.
+      //
+      // Now: the workspace is required (enforced by customPermissionSchema),
+      // the granter must hold canManageRoles IN THAT WORKSPACE, and they cannot
+      // grant a permission they do not themselves hold there.
+      const scoped = await checkWorkspacePermission(
+        granterEmail,
+        data.workspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        // Uniform 404 — never confirm the workspace exists to an outsider.
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+
+      // The ceiling applies to grants only. Revoking a permission is not an
+      // escalation, and requiring the revoker to hold what they are taking away
+      // would stop an admin from removing a permission they lack themselves.
+      if (data.granted) {
+        const granterPermissions = await resolveRolePermissions(
+          scoped.userRole ?? "guest",
+          data.workspaceId,
+        );
+        const excess = findExcessPermissions(
+          [data.permission],
+          granterPermissions,
+        );
+        if (excess.length > 0) {
+          return c.json(
+            {
+              error: `You cannot grant permissions you do not hold: ${excess.join(", ")}`,
+            },
+            403,
+          );
+        }
+      }
+
+      // The target must be a member of the workspace the override is scoped to,
+      // so an override cannot be planted on an outsider.
+      const [targetMembership] = await db
+        .select({ id: roleAssignmentTable.id })
+        .from(roleAssignmentTable)
+        .where(
+          and(
+            eq(roleAssignmentTable.userId, data.userId),
+            eq(roleAssignmentTable.workspaceId, data.workspaceId),
+            eq(roleAssignmentTable.isActive, true),
+          ),
+        )
+        .limit(1);
+      if (!targetMembership) {
+        return c.json(
+          { error: "User has no active role assignment in this workspace" },
+          400,
+        );
+      }
+
       // Create custom permission record
       const customPermission = {
         id: createId(),
         userId: data.userId,
         permission: data.permission,
         granted: data.granted,
-        workspaceId: data.workspaceId || null,
+        workspaceId: data.workspaceId,
         projectId: data.projectId || null,
         resourceType: data.resourceType || null,
         resourceId: data.resourceId || null,
@@ -740,20 +1056,92 @@ rbac.get("/history/:userId", async (c) => {
     const db = getDatabase();
     const userId = c.req.param("userId");
 
+    // 🚨 SECURITY: this route had NO authorization at all — any authenticated
+    // user could read any other user's complete role history. Callers may read
+    // their own history; otherwise they see only the entries belonging to
+    // workspaces they administer. Rows with a null workspaceId cannot be
+    // attributed to a tenant, so they are visible only on the self path.
+    const isSelf = (await userIdForEmail(c.get("userEmail"))) === userId;
+
+    let workspaceFilter: string[] = [];
+    if (!isSelf) {
+      workspaceFilter = await workspaceIdsGranting(
+        c.get("userEmail"),
+        "canManageRoles",
+      );
+      if (workspaceFilter.length === 0) {
+        return c.json({ history: [] });
+      }
+    }
+
     const history = await db
       .select({
         history: roleHistoryTable,
-        changedByUser: userTable,
+        // Explicit columns — projecting `userTable` wholesale would ship
+        // `password`, `twoFactorSecret` and `twoFactorBackupCodes` for the
+        // user who performed each change. An audit trail only needs to
+        // identify them.
+        changedByUser: {
+          id: userTable.id,
+          name: userTable.name,
+          email: userTable.email,
+          avatar: userTable.avatar,
+        },
       })
       .from(roleHistoryTable)
       .leftJoin(userTable, eq(roleHistoryTable.performedBy, userTable.id))
-      .where(eq(roleHistoryTable.userId, userId))
+      .where(
+        isSelf
+          ? eq(roleHistoryTable.userId, userId)
+          : and(
+              eq(roleHistoryTable.userId, userId),
+              inArray(roleHistoryTable.workspaceId, workspaceFilter),
+            ),
+      )
       .orderBy(desc(roleHistoryTable.createdAt));
 
     return c.json({ history });
   } catch (error) {
     logger.error("Failed to get role history:", error);
     return c.json({ error: "Failed to get role history" }, 500);
+  }
+});
+
+// NOTE: this static route MUST stay registered before `/audit/:userId`.
+// Hono matches in registration order, so with `:userId` first this handler
+// was unreachable — GET /audit/stats matched `:userId` with userId="stats"
+// and its authorization check never ran.
+/**
+ * GET /roles/audit/stats - Get audit statistics
+ */
+rbac.get("/audit/stats", async (c) => {
+  try {
+    const workspaceId = c.req.query("workspaceId");
+
+    // 🚨 SECURITY: this route had NO authorization, and omitting workspaceId
+    // made the service aggregate across every workspace in the instance. A
+    // workspace must be named, and the caller must administer it.
+    if (!workspaceId) {
+      return c.json({ error: "workspaceId is required" }, 400);
+    }
+    const scoped = await checkWorkspacePermission(
+      c.get("userEmail"),
+      workspaceId,
+      "canManageRoles",
+    );
+    if (!scoped.allowed) {
+      return c.json({ error: "Workspace not found" }, 404);
+    }
+
+    const { RoleAuditService } = await import(
+      "../services/rbac/role-audit-service"
+    );
+    const stats = await RoleAuditService.getAuditStats(workspaceId);
+
+    return c.json(stats);
+  } catch (error) {
+    logger.error("Failed to get audit stats:", error);
+    return c.json({ error: "Failed to get audit stats" }, 500);
   }
 });
 
@@ -765,12 +1153,39 @@ rbac.get("/audit/:userId", async (c) => {
     const userId = c.req.param("userId");
     const limit = Number.parseInt(c.req.query("limit") || "100");
 
+    // 🚨 SECURITY: this route had NO authorization — any authenticated user
+    // could read any other user's audit trail. The service takes an optional
+    // workspaceId filter, and passing `undefined` (as it did) means "every
+    // workspace". A non-self caller must name a workspace they administer.
+    const isSelf = (await userIdForEmail(c.get("userEmail"))) === userId;
+    const requestedWorkspaceId = c.req.query("workspaceId");
+
+    if (!isSelf) {
+      if (!requestedWorkspaceId) {
+        return c.json(
+          {
+            error: "workspaceId is required to read another user's audit trail",
+          },
+          400,
+        );
+      }
+      const scoped = await checkWorkspacePermission(
+        c.get("userEmail"),
+        requestedWorkspaceId,
+        "canManageRoles",
+      );
+      if (!scoped.allowed) {
+        // Uniform 404 — never confirm the workspace exists to an outsider.
+        return c.json({ error: "Workspace not found" }, 404);
+      }
+    }
+
     const { RoleAuditService } = await import(
       "../services/rbac/role-audit-service"
     );
     const trail = await RoleAuditService.getUserAuditTrail(
       userId,
-      undefined,
+      requestedWorkspaceId,
       limit,
     );
 
@@ -789,6 +1204,17 @@ rbac.get("/audit/workspace/:workspaceId", async (c) => {
     const workspaceId = c.req.param("workspaceId");
     const limit = Number.parseInt(c.req.query("limit") || "100");
 
+    // 🚨 SECURITY: this route had NO authorization — any authenticated user
+    // could read the role audit trail of an arbitrary workspace by id.
+    const scoped = await checkWorkspacePermission(
+      c.get("userEmail"),
+      workspaceId,
+      "canManageRoles",
+    );
+    if (!scoped.allowed) {
+      return c.json({ error: "Workspace not found" }, 404);
+    }
+
     const { RoleAuditService } = await import(
       "../services/rbac/role-audit-service"
     );
@@ -805,38 +1231,44 @@ rbac.get("/audit/workspace/:workspaceId", async (c) => {
 });
 
 /**
- * GET /roles/audit/stats - Get audit statistics
- */
-rbac.get("/audit/stats", async (c) => {
-  try {
-    const workspaceId = c.req.query("workspaceId");
-
-    const { RoleAuditService } = await import(
-      "../services/rbac/role-audit-service"
-    );
-    const stats = await RoleAuditService.getAuditStats(workspaceId);
-
-    return c.json(stats);
-  } catch (error) {
-    logger.error("Failed to get audit stats:", error);
-    return c.json({ error: "Failed to get audit stats" }, 500);
-  }
-});
-
-/**
  * GET /departments - Get all departments
  */
 rbac.get("/departments", async (c) => {
   try {
     const db = getDatabase();
+
+    // 🚨 SECURITY: this route had NO authorization and no workspace filter, so
+    // it returned every department in the instance. Confirmed cross-tenant
+    // during the audit: a guest belonging to one workspace saw departments
+    // from another. Membership is the right scope here — a department list is
+    // ordinary workspace content, not an administrative view.
+    const visibleWorkspaces = await memberWorkspaceIds(c.get("userEmail"));
+    if (visibleWorkspaces.length === 0) {
+      return c.json({ departments: [] });
+    }
+
     const departments = await db
       .select({
         department: departmentTable,
-        headUser: userTable,
+        // Explicit columns — projecting `userTable` wholesale would ship the
+        // department head's `password`, `twoFactorSecret` and
+        // `twoFactorBackupCodes` to every caller. A department list only
+        // needs to name its head.
+        headUser: {
+          id: userTable.id,
+          name: userTable.name,
+          email: userTable.email,
+          avatar: userTable.avatar,
+        },
       })
       .from(departmentTable)
       .leftJoin(userTable, eq(departmentTable.headId, userTable.id))
-      .where(eq(departmentTable.isActive, true));
+      .where(
+        and(
+          eq(departmentTable.isActive, true),
+          inArray(departmentTable.workspaceId, visibleWorkspaces),
+        ),
+      );
 
     return c.json({ departments });
   } catch (error) {

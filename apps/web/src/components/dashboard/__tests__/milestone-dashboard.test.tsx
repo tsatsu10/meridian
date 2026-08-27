@@ -94,9 +94,13 @@ describe("MilestoneDashboard", () => {
     );
 
     expect(screen.getByText("Total Milestones")).toBeInTheDocument();
-    expect(screen.getByText("Completion Rate")).toBeInTheDocument();
-    expect(screen.getByText("Due Soon")).toBeInTheDocument();
-    expect(screen.getByText("Health Score")).toBeInTheDocument();
+    expect(screen.getAllByText("Completion Rate").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Due Soon").length).toBeGreaterThan(0);
+    // Renamed from "Health Score" in 7f0a8910, which removed a duplicate
+    // "Health Score" label elsewhere on the page. The component was corrected;
+    // this assertion was left pointing at the old copy and had been failing
+    // ever since.
+    expect(screen.getByText("Milestone Health")).toBeInTheDocument();
   });
 
   it("shows milestone list with derived milestones", () => {

@@ -11,7 +11,6 @@ import { AnimatePresence } from "framer-motion";
 import {
   CommandIcon,
   LayoutDashboard,
-  ListTodo,
   Plus,
   Search,
   Settings,
@@ -213,25 +212,6 @@ export function CommandPalette() {
                       >
                         <LayoutDashboard className="w-4 h-4" />
                         Go to Board
-                      </Command.Item>
-                    )}
-
-                    {project && (
-                      <Command.Item
-                        className={commandItemStyles}
-                        onSelect={() => {
-                          navigate({
-                            to: "/dashboard/workspace/$workspaceId/project/$projectId/backlog",
-                            params: {
-                              workspaceId: workspace?.id ?? "",
-                              projectId: project?.id ?? "",
-                            },
-                          });
-                          setOpen(false);
-                        }}
-                      >
-                        <ListTodo className="w-4 h-4" />
-                        Go to Backlog
                       </Command.Item>
                     )}
 

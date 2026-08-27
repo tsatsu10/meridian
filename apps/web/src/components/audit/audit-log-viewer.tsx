@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { API_BASE_URL } from "@/constants/urls";
+import {
+  AuditAPI,
+  type AuditLogEntry,
+  type AuditStats,
+} from "@/lib/api/audit-server";
+import { userMessage } from "@/lib/user-message";
+import useWorkspaceStore from "@/store/workspace";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -22,35 +29,16 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-interface AuditLogEntry {
-  id: string;
-  action: string;
-  resourceType: string;
-  resourceId?: string;
-  actorEmail: string;
-  actorName?: string;
-  severity: "debug" | "info" | "warn" | "error" | "critical";
-  category?: string;
-  description?: string;
-  timestamp: number;
-  ipAddress?: string;
-  userAgent?: string;
-  workspaceId?: string;
-  projectId?: string;
-  changes?: unknown;
-  metadata?: unknown;
-}
-
-interface AuditStats {
-  totalEvents: number;
-  severityBreakdown: Record<string, number>;
-  topActions: Array<{ action: string; count: number }>;
-  recentSecurityFailures: unknown[];
-  timeRange: { since: string; days: number };
-}
+// AuditLogEntry / AuditStats now come from lib/api/audit-server, so the
+// component and the client cannot drift apart on nullability again.
 
 export function AuditLogViewer() {
+  // The audit trail is workspace-scoped on the server, so the viewer cannot
+  // ask for anything without knowing which workspace it is in. It previously
+  // called an unscoped /api/audit/logs that did not exist.
+  const workspaceId = useWorkspaceStore((state) => state.workspace?.id);
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [stats, setStats] = useState<AuditStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
@@ -69,7 +57,10 @@ export function AuditLogViewer() {
     hasMore: false,
   });
 
-  const severityColors = {
+  // audit_log.severity is a free-text column, so it carries values beyond this
+  // set (the seed data alone contains "medium"). Indexed by string with a
+  // fallback rather than typed to five literals that the data does not honour.
+  const severityColors: Record<string, string> = {
     debug: "bg-gray-100 text-gray-800",
     info: "bg-blue-100 text-blue-800",
     warn: "bg-yellow-100 text-yellow-800",
@@ -78,97 +69,69 @@ export function AuditLogViewer() {
   };
 
   const fetchAuditLogs = async (resetPagination = false) => {
+    if (!workspaceId) return;
     setLoading(true);
     try {
       const offset = resetPagination ? 0 : pagination.offset;
-      const params = new URLSearchParams({
-        limit: pagination.limit.toString(),
-        offset: offset.toString(),
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value),
-        ),
+      const page = await AuditAPI.listLogs(workspaceId, {
+        limit: pagination.limit,
+        offset,
+        severity: filters.severity || undefined,
+        action: filters.action || undefined,
       });
 
-      const response = await fetch(`${API_BASE_URL}/audit/logs?${params}`);
-      const data = await response.json();
-
-      if (data.success) {
-        if (resetPagination) {
-          setLogs(data.data);
-          setPagination({
-            ...pagination,
-            offset: 0,
-            total: data.pagination.total,
-            hasMore: data.pagination.hasMore,
-          });
-        } else {
-          setLogs([...logs, ...data.data]);
-          setPagination({
-            ...pagination,
-            offset: offset + pagination.limit,
-            total: data.pagination.total,
-            hasMore: data.pagination.hasMore,
-          });
-        }
-      }
+      setLogs(resetPagination ? page.logs : [...logs, ...page.logs]);
+      setPagination({
+        ...pagination,
+        offset: resetPagination ? 0 : offset + pagination.limit,
+        total: page.total,
+        hasMore: page.hasMore,
+      });
+      setLoadError(null);
     } catch (error) {
-      console.error("Failed to fetch audit logs:", error);
+      // Previously this only ran `if (data.success)`, so a 404 left the list
+      // empty and the page looked like a workspace with no audit activity.
+      // A failure to load must never be indistinguishable from "nothing here".
+      setLoadError(userMessage(error, "load the audit log"));
     } finally {
       setLoading(false);
     }
   };
 
   const fetchAuditStats = async () => {
+    if (!workspaceId) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/audit/stats`);
-      const data = await response.json();
-
-      if (data.success) {
-        setStats(data.data);
-      }
+      setStats(await AuditAPI.getStats(workspaceId, 7));
     } catch (error) {
-      console.error("Failed to fetch audit stats:", error);
+      setLoadError(userMessage(error, "load the audit summary"));
     }
   };
 
   const exportLogs = async (format: "json" | "csv") => {
+    if (!workspaceId) return;
     try {
-      const params = new URLSearchParams({
-        format,
-        startDate:
-          filters.startDate ||
-          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        endDate: filters.endDate || new Date().toISOString(),
-        ...Object.fromEntries(
-          Object.entries(filters).filter(
-            ([key, value]) => value && key !== "search",
-          ),
-        ),
-      });
-
-      const response = await fetch(`${API_BASE_URL}/audit/export?${params}`);
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `audit-logs-${new Date().toISOString().split("T")[0]}.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
+      const blob = await AuditAPI.exportLogs(workspaceId, format, 30);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-logs-${new Date().toISOString().split("T")[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
-      console.error("Failed to export logs:", error);
+      // The old version swallowed failures entirely — `if (response.ok)` with
+      // no else, so a failed export was indistinguishable from a successful
+      // one that produced no file.
+      toast.error(userMessage(error, "export the audit log"));
     }
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch logs/stats when filters change; fetch fns intentionally not deps
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch logs/stats when filters or workspace change; fetch fns intentionally not deps
   useEffect(() => {
     fetchAuditLogs(true);
     fetchAuditStats();
-  }, [filters]);
+  }, [filters, workspaceId]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters({ ...filters, [key]: value });
@@ -179,7 +142,11 @@ export function AuditLogViewer() {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Badge className={severityColors[log.severity]}>
+            <Badge
+              className={
+                severityColors[log.severity] ?? "bg-gray-100 text-gray-800"
+              }
+            >
               {log.severity.toUpperCase()}
             </Badge>
             <span className="font-medium">{log.action}</span>
@@ -201,10 +168,9 @@ export function AuditLogViewer() {
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
               <span>
-                {format(
-                  new Date(log.timestamp * 1000),
-                  "MMM dd, yyyy HH:mm:ss",
-                )}
+                {/* timestamp is epoch milliseconds; the previous `* 1000`
+                 * treated it as seconds and dated every entry to ~year 58000. */}
+                {format(new Date(log.timestamp), "MMM dd, yyyy HH:mm:ss")}
               </span>
             </div>
             {log.ipAddress && (
@@ -405,7 +371,25 @@ export function AuditLogViewer() {
           </p>
         </CardHeader>
         <CardContent>
-          {loading && logs.length === 0 ? (
+          {/* A failed load must not render as "no audit logs found". That
+           * conflation is what hid this page being broken: every request
+           * 404'd, the error was swallowed, and the result read as a
+           * workspace with nothing to audit. */}
+          {loadError ? (
+            <div className="py-8 text-center">
+              <p className="text-red-600 dark:text-red-400">{loadError}</p>
+              <Button
+                variant="outline"
+                className="mt-3"
+                onClick={() => {
+                  fetchAuditLogs(true);
+                  fetchAuditStats();
+                }}
+              >
+                Try again
+              </Button>
+            </div>
+          ) : loading && logs.length === 0 ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
               <p className="mt-2 text-gray-600">Loading audit logs...</p>

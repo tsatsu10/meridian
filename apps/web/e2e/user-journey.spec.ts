@@ -10,7 +10,10 @@
 import { test, expect } from "@playwright/test";
 
 // Test configuration
-const BASE_URL = process.env.VITE_APP_URL || "http://localhost:5173";
+const BASE_URL =
+  process.env.VITE_APP_URL ||
+  process.env.PLAYWRIGHT_BASE_URL ||
+  "http://localhost:5174";
 const API_URL = process.env.VITE_API_URL || "http://localhost:3005";
 
 // Test user credentials

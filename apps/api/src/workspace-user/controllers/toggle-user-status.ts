@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDatabase } from "../../database/connection";
 import { workspaceUserTable } from "../../database/schema";
+import { NotFoundError } from "../../core/ErrorHandler";
 
 // @epic-3.4-teams: Toggle workspace user status (active/inactive)
 async function toggleUserStatus(workspaceId: string, userEmail: string) {
@@ -18,7 +19,7 @@ async function toggleUserStatus(workspaceId: string, userEmail: string) {
     );
 
   if (!currentUser) {
-    throw new Error("User not found");
+    throw new NotFoundError("User");
   }
 
   const newStatus = currentUser.status === "active" ? "inactive" : "active";

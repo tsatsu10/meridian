@@ -31,10 +31,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_BASE_URL } from "@/constants/urls";
 import { toast } from "sonner";
-import { PermissionBuilder } from "./permission-builder";
 import { RolePreview } from "./role-preview";
 import { Loader2 } from "lucide-react";
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import useWorkspaceStore from "@/store/workspace";
+import { groupPermissions } from "@/lib/permissions/permission-groups";
+import { useRBACAuth } from "@/lib/permissions";
 
 // ==========================================
 // TYPES
@@ -89,6 +90,63 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
   // Get workspace ID from context ✅
   const { workspace } = useWorkspaceStore();
   const workspaceId = workspace?.id || "";
+  // Creating a role is workspace-scoped server-side (POST /roles requires
+  // workspaceId: z.string().min(1)); editing an existing role is not (the
+  // workspace is derived from the target role on the server). A missing
+  // workspace on a role write is security-relevant — same reasoning as the
+  // assignRole/removeRole guards in lib/permissions/provider.tsx — so this
+  // fails visibly instead of letting the request 400.
+  const needsWorkspaceToCreate = !isEditing && !workspaceId;
+
+  const { user: rbacUser } = useRBACAuth();
+
+  // The actor's own effective permissions — used to disable checkboxes for
+  // permissions the actor does not hold, so the server-side "can't grant
+  // more than you have" rule is visible in the UI instead of surprising the
+  // user with a 403 on save.
+  //
+  // Source of truth is the BACKEND's role -> permission matrix
+  // (GET /api/rbac/roles), not rbacUser.permissions. rbacUser.permissions is
+  // built from this frontend's own copy of the matrix
+  // (lib/permissions/definitions.ts), which is missing 20 of the backend's
+  // 157 permission keys (canViewProjects, canViewReports, canViewTeam,
+  // canViewProjectMilestones, canViewAssignedTasks, canUpdateAssignedTasks,
+  // canUpdateOwnTasks, canCreateComments, canCreateFeedback,
+  // canViewPublicProjects, and ten more) — those rendered permanently
+  // dimmed and ungrantable for every user, including workspace-manager,
+  // because the frontend list never had them at all. Reading the backend's
+  // own matrix instead avoids the two lists drifting apart again; do not
+  // "fix" this by hand-adding the missing keys to definitions.ts.
+  const { data: roleMatrix } = useQuery({
+    queryKey: ["rbac-role-matrix"],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/rbac/roles`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch role permission matrix");
+      }
+      return (await response.json()) as Record<string, Record<string, boolean>>;
+    },
+  });
+
+  // This disabling is a UX affordance, NOT a security control — the
+  // server's own subset guard in createRole/updateRole is the real
+  // enforcement and is completely unaffected by any of this. So if the
+  // matrix hasn't loaded yet, failed to load, or the actor's role isn't a
+  // key in it (e.g. the actor holds a custom role, which this built-in-role
+  // matrix has no entry for), FAIL OPEN: treat every permission as held
+  // rather than disabling all of them. A user who then hits a genuine
+  // server-side 403 is far better off than one staring at an editor where
+  // nothing can be checked. Do not "harden" this into failing closed later
+  // — that would brick the editor for exactly the cases (matrix still
+  // loading, custom-role actor) where disabling everything is worse than
+  // occasionally showing a checkbox as available when the server will
+  // reject it.
+  const actorPermissionsFromMatrix = rbacUser?.role
+    ? roleMatrix?.[rbacUser.role]
+    : undefined;
+  const actorPermissionsKnown = actorPermissionsFromMatrix !== undefined;
 
   // Reset form when role changes
   useEffect(() => {
@@ -127,6 +185,13 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Defense in depth: handleSubmit already blocks this case, and the
+      // submit button is disabled for it, but this guards any other path
+      // that might call saveMutation.mutate() directly.
+      if (needsWorkspaceToCreate) {
+        throw new Error("Select a workspace before creating a role");
+      }
+
       const url = isEditing
         ? `${API_BASE_URL}/roles/${role.id}`
         : `${API_BASE_URL}/roles`;
@@ -187,11 +252,12 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
       return;
     }
 
-    saveMutation.mutate();
-  };
+    if (needsWorkspaceToCreate) {
+      toast.error("Select a workspace before creating a role");
+      return;
+    }
 
-  const handlePermissionsChange = (permissions: string[]) => {
-    setFormData((prev) => ({ ...prev, permissions }));
+    saveMutation.mutate();
   };
 
   return (
@@ -321,12 +387,56 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
 
             {/* Permissions Tab */}
             <TabsContent value="permissions" className="py-4">
-              <PermissionBuilder
-                selectedPermissions={formData.permissions}
-                allPermissions={allPermissions || []}
-                onChange={handlePermissionsChange}
-                disabled={isSystemRole}
-              />
+              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                {groupPermissions(allPermissions ?? []).map(
+                  ({ group, permissions }) => (
+                    <div key={group} className="space-y-2">
+                      <h4 className="text-sm font-medium text-muted-foreground">
+                        {group}
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {permissions.map((permission) => {
+                          const actorHasIt =
+                            !actorPermissionsKnown ||
+                            actorPermissionsFromMatrix?.[permission] === true;
+                          return (
+                            <label
+                              key={permission}
+                              className="flex items-center gap-2 text-sm"
+                              title={
+                                actorHasIt
+                                  ? undefined
+                                  : "You do not hold this permission"
+                              }
+                            >
+                              <input
+                                type="checkbox"
+                                disabled={isSystemRole || !actorHasIt}
+                                checked={formData.permissions.includes(
+                                  permission,
+                                )}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    permissions: e.target.checked
+                                      ? [...prev.permissions, permission]
+                                      : prev.permissions.filter(
+                                          (p) => p !== permission,
+                                        ),
+                                  }))
+                                }
+                              />
+                              <span className={actorHasIt ? "" : "opacity-50"}>
+                                {permission}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
             </TabsContent>
 
             {/* Preview Tab */}
@@ -342,11 +452,24 @@ export function RoleModal({ open, onClose, role, onSuccess }: RoleModalProps) {
           </Tabs>
 
           <DialogFooter className="mt-6">
+            {needsWorkspaceToCreate && (
+              <p className="text-sm text-destructive mr-auto self-center">
+                Select a workspace before creating a role
+              </p>
+            )}
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             {!isSystemRole && (
-              <Button type="submit" disabled={saveMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={saveMutation.isPending || needsWorkspaceToCreate}
+                title={
+                  needsWorkspaceToCreate
+                    ? "Select a workspace before creating a role"
+                    : undefined
+                }
+              >
                 {saveMutation.isPending && (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 )}

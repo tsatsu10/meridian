@@ -179,7 +179,7 @@ export default function DashboardPopup({
   const renderTeamMetrics = () => {
     // Calculate additional insights from team members if available
     const activeMembers =
-      realTeamMembers?.filter((m) => m.status === "online").length || 0;
+      realTeamMembers?.filter((m) => m.status === "active").length || 0;
     const overloadedMembers =
       realTeamMembers?.filter((m) => m.workloadStatus === "overloaded")
         .length || 0;

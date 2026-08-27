@@ -1,10 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthSurface } from "../auth-surface";
 import { SignUpForm } from "../sign-up-form";
 
-// Mock dependencies
+// Mock external dependencies
+vi.mock("lucide-react", async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    Eye: vi.fn(() => <div data-testid="eye-icon" />),
+    EyeOff: vi.fn(() => <div data-testid="eye-off-icon" />),
+  };
+});
+
 const mockPush = vi.fn();
 const mockSetUser = vi.fn();
 
@@ -35,7 +45,12 @@ vi.mock("@/hooks/mutations/use-sign-up", () => ({
   }),
 }));
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+// Renders the same tree the real /auth/sign-up route wires up: the aurora
+// surface with SignUpForm plugged in as its credential step. The email input
+// only exists on step 01 (owned by AuthSurface), so every test here reaches
+// the name/password fields by going through the surface rather than mounting
+// SignUpForm on its own.
+function renderSignUpRoute() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -43,130 +58,89 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
     },
   });
 
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AuthSurface
+        intent="sign-up"
+        renderCredentialStep={({ email, onEditEmail }) => (
+          <SignUpForm email={email} onEditEmail={onEditEmail} />
+        )}
+      />
+    </QueryClientProvider>,
   );
-};
+}
+
+async function advanceToCredentials(
+  user: ReturnType<typeof userEvent.setup>,
+  email = "test@example.com",
+) {
+  await user.type(screen.getByLabelText(/email/i), email);
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+  return screen.findByLabelText(/name/i);
+}
 
 describe("SignUpForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockPush.mockClear();
-    mockSetUser.mockClear();
-    mockSignUp.mockClear();
   });
 
   describe("Rendering", () => {
-    it("should render all form fields", () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
+    it("renders the credential step after the email step", async () => {
+      const user = userEvent.setup();
+      renderSignUpRoute();
 
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(await advanceToCredentials(user)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/confirm/i)).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText(/enter your full name/i),
+        screen.getByRole("button", { name: /create account/i }),
       ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText(/enter your email/i),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText(/create a password/i),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText(/confirm your password/i),
-      ).toBeInTheDocument();
-    });
-
-    it("should render social login buttons", () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
-
-      expect(
-        screen.getByRole("button", { name: /google/i }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /apple/i }),
-      ).toBeInTheDocument();
-    });
-
-    it("should render terms checkbox", () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
-
-      const termsCheckbox = screen.getByRole("checkbox", { name: /terms/i });
-      expect(termsCheckbox).toBeInTheDocument();
-      expect(termsCheckbox).toHaveAttribute("required");
     });
   });
 
+  // Was "validates required fields via email/password on one screen": email
+  // validation moved to the surface's identity step (step 01) in this task,
+  // so an empty/invalid email is now rejected before the credential step is
+  // ever reachable rather than by a field error inside this form.
   describe("Validation", () => {
+    it("does not advance to the credential step without a valid email", async () => {
+      const user = userEvent.setup();
+      renderSignUpRoute();
+
+      await user.click(screen.getByRole("button", { name: /continue/i }));
+
+      expect(
+        await screen.findByText(/enter a valid email address/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /create account/i }),
+      ).not.toBeInTheDocument();
+    });
+
     it("should show error for empty name field", async () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user);
 
-      // Fill other required fields but leave name empty
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/create a password/i);
-      const confirmInput = screen.getByPlaceholderText(
-        /confirm your password/i,
-      );
-      const termsCheckbox = screen.getByRole("checkbox", { name: /terms/i });
-
-      await userEvent.type(emailInput, "test@example.com");
-      await userEvent.type(passwordInput, "password123");
-      await userEvent.type(confirmInput, "password123");
-      await userEvent.click(termsCheckbox);
-
-      const submitButton = screen.getByRole("button", { name: /sign up/i });
-      fireEvent.click(submitButton);
+      await user.type(screen.getByLabelText(/^password/i), "password123");
+      await user.type(screen.getByLabelText(/confirm/i), "password123");
+      await user.click(screen.getByRole("button", { name: /create account/i }));
 
       await waitFor(() => {
         expect(screen.getByText(/name is required/i)).toBeInTheDocument();
       });
     });
 
-    it("should show error for invalid email format", async () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
-
-      // Fill required fields to allow form submission
-      const nameInput = screen.getByPlaceholderText(/enter your full name/i);
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/create a password/i);
-      const confirmInput = screen.getByPlaceholderText(
-        /confirm your password/i,
-      );
-      const termsCheckbox = screen.getByRole("checkbox", { name: /terms/i });
-
-      await userEvent.type(nameInput, "Test User");
-      await userEvent.type(emailInput, "invalid-email");
-      await userEvent.type(passwordInput, "password123");
-      await userEvent.type(confirmInput, "password123");
-      await userEvent.click(termsCheckbox);
-
-      // Submit form to trigger validation
-      const submitButton = screen.getByRole("button", { name: /sign up/i });
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
-      });
-    });
-
     it("should show error for password less than 8 characters", async () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user);
 
-      // Fill required fields to allow form submission
-      const nameInput = screen.getByPlaceholderText(/enter your full name/i);
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/create a password/i);
-      const confirmInput = screen.getByPlaceholderText(
-        /confirm your password/i,
-      );
-      const termsCheckbox = screen.getByRole("checkbox", { name: /terms/i });
-
-      await userEvent.type(nameInput, "Test User");
-      await userEvent.type(emailInput, "test@example.com");
-      await userEvent.type(passwordInput, "short");
-      await userEvent.type(confirmInput, "short");
-      await userEvent.click(termsCheckbox);
-
-      // Submit form to trigger validation
-      const submitButton = screen.getByRole("button", { name: /sign up/i });
-      fireEvent.click(submitButton);
+      await user.type(screen.getByLabelText(/name/i), "Test User");
+      await user.type(screen.getByLabelText(/^password/i), "short");
+      await user.type(screen.getByLabelText(/confirm/i), "short");
+      await user.click(screen.getByRole("button", { name: /create account/i }));
 
       await waitFor(() => {
         expect(
@@ -176,26 +150,14 @@ describe("SignUpForm", () => {
     });
 
     it("should show error when passwords do not match", async () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user);
 
-      // Fill required fields to allow form submission
-      const nameInput = screen.getByPlaceholderText(/enter your full name/i);
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/create a password/i);
-      const confirmInput = screen.getByPlaceholderText(
-        /confirm your password/i,
-      );
-      const termsCheckbox = screen.getByRole("checkbox", { name: /terms/i });
-
-      await userEvent.type(nameInput, "Test User");
-      await userEvent.type(emailInput, "test@example.com");
-      await userEvent.type(passwordInput, "password123");
-      await userEvent.type(confirmInput, "password456");
-      await userEvent.click(termsCheckbox);
-
-      // Submit form to trigger validation
-      const submitButton = screen.getByRole("button", { name: /sign up/i });
-      fireEvent.click(submitButton);
+      await user.type(screen.getByLabelText(/name/i), "Test User");
+      await user.type(screen.getByLabelText(/^password/i), "password123");
+      await user.type(screen.getByLabelText(/confirm/i), "password456");
+      await user.click(screen.getByRole("button", { name: /create account/i }));
 
       await waitFor(() => {
         expect(screen.getByText(/passwords don't match/i)).toBeInTheDocument();
@@ -205,34 +167,37 @@ describe("SignUpForm", () => {
 
   describe("Password Visibility Toggle", () => {
     it("should toggle password visibility", async () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user);
 
-      const passwordInput = screen.getByPlaceholderText(/create a password/i);
+      const passwordInput = screen.getByLabelText(/^password/i);
       expect(passwordInput).toHaveAttribute("type", "password");
 
-      // Find and click the eye icon button
-      const toggleButtons = screen.getAllByRole("button", { name: "" });
-      const passwordToggle = toggleButtons[0]; // First toggle is for password
+      const toggleButton = screen
+        .getAllByTestId("eye-icon")[0]
+        .closest("button") as HTMLElement;
 
-      await userEvent.click(passwordToggle);
+      await user.click(toggleButton);
       expect(passwordInput).toHaveAttribute("type", "text");
 
-      await userEvent.click(passwordToggle);
+      await user.click(toggleButton);
       expect(passwordInput).toHaveAttribute("type", "password");
     });
 
     it("should toggle confirm password visibility independently", async () => {
-      render(<SignUpForm />, { wrapper: TestWrapper });
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user);
 
-      const confirmInput = screen.getByPlaceholderText(
-        /confirm your password/i,
-      );
+      const confirmInput = screen.getByLabelText(/confirm/i);
       expect(confirmInput).toHaveAttribute("type", "password");
 
-      const toggleButtons = screen.getAllByRole("button", { name: "" });
-      const confirmToggle = toggleButtons[1]; // Second toggle is for confirm password
+      const confirmToggle = screen
+        .getAllByTestId("eye-icon")[1]
+        .closest("button") as HTMLElement;
 
-      await userEvent.click(confirmToggle);
+      await user.click(confirmToggle);
       expect(confirmInput).toHaveAttribute("type", "text");
     });
   });
@@ -246,33 +211,14 @@ describe("SignUpForm", () => {
       };
       mockSignUp.mockResolvedValue(mockUser);
 
-      render(<SignUpForm />, { wrapper: TestWrapper });
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user, "test@example.com");
 
-      // Fill form
-      await userEvent.type(
-        screen.getByPlaceholderText(/enter your full name/i),
-        "Test User",
-      );
-      await userEvent.type(
-        screen.getByPlaceholderText(/enter your email/i),
-        "test@example.com",
-      );
-      await userEvent.type(
-        screen.getByPlaceholderText(/create a password/i),
-        "password123",
-      );
-      await userEvent.type(
-        screen.getByPlaceholderText(/confirm your password/i),
-        "password123",
-      );
-
-      // Check terms checkbox
-      const termsCheckbox = screen.getByRole("checkbox", { name: /terms/i });
-      await userEvent.click(termsCheckbox);
-
-      // Submit
-      const submitButton = screen.getByRole("button", { name: /sign up/i });
-      fireEvent.click(submitButton);
+      await user.type(screen.getByLabelText(/name/i), "Test User");
+      await user.type(screen.getByLabelText(/^password/i), "password123");
+      await user.type(screen.getByLabelText(/confirm/i), "password123");
+      await user.click(screen.getByRole("button", { name: /create account/i }));
 
       await waitFor(() => {
         expect(mockSignUp).toHaveBeenCalledWith({
@@ -285,39 +231,77 @@ describe("SignUpForm", () => {
       expect(mockSetUser).toHaveBeenCalledWith(mockUser);
     });
 
+    it("creates an account from the credential step", async () => {
+      mockSignUp.mockResolvedValue({
+        id: "user-2",
+        email: "new@example.com",
+        name: "New Person",
+      });
+
+      const user = userEvent.setup();
+      renderSignUpRoute();
+
+      await user.type(screen.getByLabelText(/email/i), "new@example.com");
+      await user.click(screen.getByRole("button", { name: /continue/i }));
+
+      await user.type(await screen.findByLabelText(/name/i), "New Person");
+      await user.type(screen.getByLabelText(/^password/i), "Passw0rd!");
+      await user.type(screen.getByLabelText(/confirm/i), "Passw0rd!");
+      await user.click(screen.getByRole("button", { name: /create account/i }));
+
+      await waitFor(() =>
+        expect(mockSignUp).toHaveBeenCalledWith(
+          expect.objectContaining({
+            email: "new@example.com",
+            name: "New Person",
+          }),
+        ),
+      );
+    });
+
+    it("submits the form with Enter key", async () => {
+      mockSignUp.mockResolvedValue({
+        id: "user-3",
+        email: "test@example.com",
+        name: "Test User",
+      });
+
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user, "test@example.com");
+
+      await user.type(screen.getByLabelText(/name/i), "Test User");
+      await user.type(screen.getByLabelText(/^password/i), "password123");
+      const confirmInput = screen.getByLabelText(/confirm/i);
+      await user.type(confirmInput, "password123");
+      await user.type(confirmInput, "{Enter}");
+
+      await waitFor(() => {
+        expect(mockSignUp).toHaveBeenCalledWith({
+          name: "Test User",
+          email: "test@example.com",
+          password: "password123",
+        });
+      });
+    });
+
     it("should handle submission errors gracefully", async () => {
       const { toast } = await import("sonner");
       mockSignUp.mockRejectedValue(new Error("Email already exists"));
 
-      render(<SignUpForm />, { wrapper: TestWrapper });
+      const user = userEvent.setup();
+      renderSignUpRoute();
+      await advanceToCredentials(user, "existing@example.com");
 
-      // Fill form with valid data
-      await userEvent.type(
-        screen.getByPlaceholderText(/enter your full name/i),
-        "Test User",
-      );
-      await userEvent.type(
-        screen.getByPlaceholderText(/enter your email/i),
-        "existing@example.com",
-      );
-      await userEvent.type(
-        screen.getByPlaceholderText(/create a password/i),
-        "password123",
-      );
-      await userEvent.type(
-        screen.getByPlaceholderText(/confirm your password/i),
-        "password123",
-      );
-
-      // Check terms checkbox
-      const termsCheckbox = screen.getByRole("checkbox", { name: /terms/i });
-      await userEvent.click(termsCheckbox);
-
-      const submitButton = screen.getByRole("button", { name: /sign up/i });
-      fireEvent.click(submitButton);
+      await user.type(screen.getByLabelText(/name/i), "Test User");
+      await user.type(screen.getByLabelText(/^password/i), "password123");
+      await user.type(screen.getByLabelText(/confirm/i), "password123");
+      await user.click(screen.getByRole("button", { name: /create account/i }));
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Email already exists");
+        expect(toast.error).toHaveBeenCalledWith(
+          "Couldn't create your account. Email already exists.",
+        );
       });
     });
   });
