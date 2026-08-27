@@ -3,6 +3,10 @@
 
 This directory contains the complete API documentation for the Meridian project management platform.
 
+## Related
+
+- Schema / migrations: [`docs/migrations.md`](../../../docs/migrations.md)
+
 ## Files
 
 - `openapi.json` - OpenAPI 3.0 specification in JSON format
@@ -50,14 +54,15 @@ All errors follow a consistent structure with appropriate HTTP status codes and 
 
 ## Database Migration Policy
 
-Meridian API uses a single schema management policy:
+Canonical guide: [`docs/migrations.md`](../../../docs/migrations.md).
 
-- Development/staging schema updates use `drizzle-kit push`.
-- Startup does not auto-run migration files.
-- Production changes must be applied through reviewed deployment steps before app rollout.
-- Every schema change should include an explicit runbook entry in PR notes.
+Summary:
 
-This keeps runtime startup deterministic and prevents unexpected DB changes during server boot.
+- **Source of truth:** Drizzle journal under `apps/api/drizzle/` (`db:generate` / `db:migrate`).
+- **Additive manual SQL:** `apps/api/drizzle/manual/` via `db:migrate:manual` (included in `db:setup`).
+- **Historical SQL** under `src/database/migrations/` is not auto-applied by current scripts.
+- Startup does **not** auto-run migrations; production changes need an explicit reviewed deploy step.
+- E2E CI may use `drizzle-kit push --force` on ephemeral databases only.
 
 ## Support
 
