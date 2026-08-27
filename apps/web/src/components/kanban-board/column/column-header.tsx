@@ -6,7 +6,6 @@ import { produce } from "immer";
 import {
   Archive,
   Plus,
-  Settings,
   MoreHorizontal,
   Trash2,
   AlertTriangle,
@@ -284,18 +283,6 @@ function ColumnHeader({ column }: ColumnHeaderProps) {
                 align="end"
                 className="w-48 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-xl"
               >
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // TODO: Implement edit column functionality
-                    toast.info("Edit column feature coming soon");
-                  }}
-                  className="hover:bg-white/50 dark:hover:bg-zinc-800/50 transition-colors"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Edit Column
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();

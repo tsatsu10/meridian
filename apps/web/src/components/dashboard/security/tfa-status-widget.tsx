@@ -19,7 +19,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/cn";
-import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -94,7 +94,7 @@ export function TwoFactorStatusWidget() {
     },
   });
 
-  // Send reminder email
+  // Send reminder email (single or bulk via the same endpoint)
   const sendReminderMutation = useMutation({
     mutationFn: async (userEmail: string) => {
       const response = await fetch("/api/security/two-factor/send-reminder", {
@@ -106,6 +106,61 @@ export function TwoFactorStatusWidget() {
       return response.json();
     },
   });
+
+  const sendBulkReminders = async () => {
+    const count = stats?.usersWithoutTwoFactor ?? 0;
+    if (count === 0) {
+      toast.info("Everyone already has 2FA enabled");
+      return;
+    }
+
+    if (!confirm(`Send 2FA setup reminders to ${count} users without 2FA?`)) {
+      return;
+    }
+
+    try {
+      let targets =
+        userStatuses
+          ?.filter((user) => !user.hasTwoFactor)
+          .map((u) => u.email) ?? [];
+
+      if (targets.length === 0) {
+        const response = await fetch("/api/security/two-factor/users");
+        if (!response.ok) {
+          throw new Error("Failed to load users without 2FA");
+        }
+        const users = (await response.json()) as UserTwoFactorStatus[];
+        targets = users
+          .filter((user) => !user.hasTwoFactor)
+          .map((user) => user.email);
+      }
+
+      if (targets.length === 0) {
+        toast.info("Everyone already has 2FA enabled");
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        targets.map((email) => sendReminderMutation.mutateAsync(email)),
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      const sent = results.length - failed;
+
+      if (failed > 0) {
+        toast.error(
+          `Sent ${sent} reminder${sent === 1 ? "" : "s"}; ${failed} failed`,
+        );
+      } else {
+        toast.success(
+          `Sent 2FA setup reminders to ${sent} user${sent === 1 ? "" : "s"}`,
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send reminders",
+      );
+    }
+  };
 
   const getAdoptionColor = (percentage: number) => {
     if (percentage >= 75) return "text-green-600";
@@ -363,16 +418,12 @@ export function TwoFactorStatusWidget() {
             size="sm"
             className="flex-1"
             onClick={() => {
-              // Send bulk reminders to all users without 2FA
-              if (
-                confirm(
-                  `Send 2FA setup reminders to ${stats?.usersWithoutTwoFactor} users?`,
-                )
-              ) {
-                // TODO: Implement bulk reminder
-                logger.debug("Sending bulk reminders");
-              }
+              void sendBulkReminders();
             }}
+            disabled={
+              sendReminderMutation.isPending ||
+              (stats?.usersWithoutTwoFactor ?? 0) === 0
+            }
           >
             <Mail className="h-4 w-4 mr-2" />
             Send Bulk Reminders
