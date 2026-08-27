@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,6 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
-  Download,
   Share,
   AlertCircle,
   Calendar as CalendarIcon,
@@ -153,6 +152,7 @@ const priorityColors = {
 // @persona-jennifer: Exec needs milestone tracking and project timeline overview
 function ProjectCalendar() {
   const { workspaceId, projectId } = Route.useParams();
+  const navigate = useNavigate();
 
   // Fetch real project and task data
   const {
@@ -374,10 +374,6 @@ function ProjectCalendar() {
     });
     setSearchQuery("");
     toast.success("Filters cleared");
-  };
-
-  const exportCalendar = () => {
-    toast.info("Calendar export feature will be implemented soon");
   };
 
   const shareCalendar = () => {
@@ -916,10 +912,6 @@ function ProjectCalendar() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Calendar Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={exportCalendar}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Calendar
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={shareCalendar}>
                   <Share className="h-4 w-4 mr-2" />
                   Share Calendar
@@ -1251,8 +1243,13 @@ function ProjectCalendar() {
               {selectedEvent?.originalTask && (
                 <Button
                   onClick={() => {
-                    // Navigate to task detail or open edit modal
-                    toast.info("Task editing will be implemented");
+                    const taskId = selectedEvent.originalTask?.id;
+                    if (!taskId) return;
+                    setIsEventModalOpen(false);
+                    navigate({
+                      to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
+                      params: { workspaceId, projectId, taskId },
+                    });
                   }}
                 >
                   Edit Task

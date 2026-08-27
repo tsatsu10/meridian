@@ -2578,21 +2578,6 @@ function AnalyticsPage() {
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              {/* Auto-refresh */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Auto-refresh Data</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Automatically refresh analytics every 5 minutes
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Coming Soon
-                </Button>
-              </div>
-
-              <Separator />
-
               {/* Default Time Range */}
               <div className="space-y-2">
                 <Label>Default Time Range</Label>

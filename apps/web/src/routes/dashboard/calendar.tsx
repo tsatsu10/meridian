@@ -29,13 +29,11 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import {
   Calendar as CalendarIcon,
-  Plus,
   Filter,
   ChevronLeft,
   ChevronRight,
   Users,
   MoreVertical,
-  Download,
   Share,
   Grid3X3,
   List,
@@ -44,7 +42,6 @@ import {
   TrendingUp,
   BarChart3,
   Globe,
-  RefreshCw,
   Edit,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -181,11 +178,9 @@ function GlobalCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarView, setCalendarView] = useState<GlobalCalendarView>("month");
   const [_activeTab, _setActiveTab] = useState("calendar");
-  const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] =
     useState<GlobalCalendarEvent | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Filter state
   const [filters, _setFilters] = useState({
@@ -488,23 +483,9 @@ function GlobalCalendar() {
     setIsEventModalOpen(true);
   };
 
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    setIsCreateEventOpen(true);
-  };
-
-  // Filter handlers
-  const exportCalendar = () => {
-    toast.info("Calendar export feature will be implemented soon");
-  };
-
   const shareCalendar = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Calendar link copied to clipboard");
-  };
-
-  const syncExternalCalendar = () => {
-    toast.info("External calendar sync will be implemented soon");
   };
 
   // Calendar statistics
@@ -574,15 +555,10 @@ function GlobalCalendar() {
             return (
               <div
                 key={day.toISOString()}
-                // biome-ignore lint/a11y/useSemanticElements: day cell contains nested interactive events, cannot be a <button>
-                role="button"
-                tabIndex={0}
                 className={cn(
-                  "border-r border-b border-border last:border-r-0 p-1 cursor-pointer hover:bg-muted/50 transition-colors",
+                  "border-r border-b border-border last:border-r-0 p-1",
                   !isCurrentMonth && "bg-muted/20 text-muted-foreground",
                 )}
-                onKeyDown={activateOnKey(() => handleDateClick(day))}
-                onClick={() => handleDateClick(day)}
               >
                 <div
                   className={cn(
@@ -689,32 +665,7 @@ function GlobalCalendar() {
             {days.map((day) => (
               <div key={day.toISOString()} className="border-r relative">
                 {hours.map((hour) => (
-                  <div
-                    key={hour}
-                    className="h-16 border-b hover:bg-muted/50 cursor-pointer"
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={activateOnKey(() =>
-                      handleDateClick(
-                        new Date(
-                          day.getFullYear(),
-                          day.getMonth(),
-                          day.getDate(),
-                          hour,
-                        ),
-                      ),
-                    )}
-                    onClick={() =>
-                      handleDateClick(
-                        new Date(
-                          day.getFullYear(),
-                          day.getMonth(),
-                          day.getDate(),
-                          hour,
-                        ),
-                      )
-                    }
-                  />
+                  <div key={hour} className="h-16 border-b" />
                 ))}
 
                 {/* Events for this day */}
@@ -785,31 +736,7 @@ function GlobalCalendar() {
                       ? `${hour} AM`
                       : `${hour - 12} PM`}
                 </div>
-                <div
-                  className="flex-1 h-16 hover:bg-muted/50 cursor-pointer"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={activateOnKey(() =>
-                    handleDateClick(
-                      new Date(
-                        currentDate.getFullYear(),
-                        currentDate.getMonth(),
-                        currentDate.getDate(),
-                        hour,
-                      ),
-                    ),
-                  )}
-                  onClick={() =>
-                    handleDateClick(
-                      new Date(
-                        currentDate.getFullYear(),
-                        currentDate.getMonth(),
-                        currentDate.getDate(),
-                        hour,
-                      ),
-                    )
-                  }
-                />
+                <div className="flex-1 h-16" />
               </div>
             ))}
 
@@ -914,12 +841,8 @@ function GlobalCalendar() {
             <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No events found</h3>
             <p className="text-muted-foreground mb-4">
-              Try adjusting your filters or create a new event.
+              Try adjusting your filters.
             </p>
-            <Button onClick={() => setIsCreateEventOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Event
-            </Button>
           </div>
         )}
       </div>
@@ -1220,30 +1143,12 @@ function GlobalCalendar() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Calendar Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={exportCalendar}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Calendar
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={shareCalendar}>
                   <Share className="h-4 w-4 mr-2" />
                   Share Calendar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={syncExternalCalendar}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Sync External Calendar
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsCreateEventOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Event
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <Button onClick={() => setIsCreateEventOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Event
-            </Button>
           </div>
         </div>
 
@@ -1447,39 +1352,6 @@ function GlobalCalendar() {
               <Button>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Event
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Create Event Modal */}
-        <Dialog open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
-              <DialogDescription>
-                {selectedDate
-                  ? `Create event for ${format(selectedDate, "PPP")}`
-                  : "Create a new calendar event"}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <p className="text-center text-muted-foreground">
-                Event creation form will be implemented soon...
-              </p>
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateEventOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Event
               </Button>
             </DialogFooter>
           </DialogContent>
