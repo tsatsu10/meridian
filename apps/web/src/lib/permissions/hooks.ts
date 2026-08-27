@@ -245,42 +245,9 @@ export function useRoleBasedComponent<
 // ===== CONTEXT-AWARE HOOKS =====
 
 /**
- * Hook for workspace-scoped permissions
- */
-export function useWorkspacePermissions(workspaceId?: string) {
-  const { hasPermission, currentWorkspace } = useRBACAuth();
-
-  const permissions = useMemo(() => {
-    const targetWorkspace = workspaceId || currentWorkspace;
-
-    if (!targetWorkspace) {
-      return {
-        canView: false,
-        canEdit: false,
-        canManage: false,
-        canInvite: false,
-        canDelete: false,
-        workspaceId: null,
-      };
-    }
-
-    // TODO: Implement workspace-scoped permission checking
-    // For now, use global permissions
-    return {
-      canView: hasPermission("canViewWorkspace"),
-      canEdit: hasPermission("canManageWorkspace"),
-      canManage: hasPermission("canManageWorkspace"),
-      canInvite: hasPermission("canInviteUsers"),
-      canDelete: hasPermission("canDeleteWorkspace"),
-      workspaceId: targetWorkspace,
-    };
-  }, [workspaceId, currentWorkspace, hasPermission]);
-
-  return permissions;
-}
-
-/**
- * Hook for project-scoped permissions
+ * Returns permission flags derived from the caller's role matrix for the
+ * active project context id. This is NOT a server-checked project-membership
+ * ACL. UI must still rely on API 403s as the source of truth.
  */
 export function useProjectPermissions(projectId?: string) {
   const { hasPermission, currentProject } = useRBACAuth();
@@ -288,19 +255,27 @@ export function useProjectPermissions(projectId?: string) {
   const permissions = useMemo(() => {
     const targetProject = projectId || currentProject;
 
+    const closed = {
+      canView: false,
+      canEdit: false,
+      canManage: false,
+      canDelete: false,
+      canArchive: false,
+      canClone: false,
+      canManageTeam: false,
+      canManageBudget: false,
+      canViewAnalytics: false,
+      canCreateTasks: false,
+      canAssignTasks: false,
+      canInviteMembers: false,
+      canRemoveMembers: false,
+      projectId: null as string | null,
+    };
+
     if (!targetProject) {
-      return {
-        canView: false,
-        canEdit: false,
-        canManage: false,
-        canDelete: false,
-        canCreateTasks: false,
-        canAssignTasks: false,
-        projectId: null,
-      };
+      return closed;
     }
 
-    // TODO: Implement project-scoped permission checking
     return {
       canView:
         hasPermission("canViewProjectDetails") ||
@@ -354,64 +329,6 @@ export function usePermissionGatedAction(
     canExecute: hasPermission(permission),
     execute,
   };
-}
-
-/**
- * Hook for team lead specific actions (Main requirement!)
- */
-export function useTeamLeadActions() {
-  const { hasPermission } = useRBACAuth();
-
-  const actions = useMemo(
-    () => ({
-      // Subtask management actions
-      createSubtask: {
-        canExecute: hasPermission("canCreateSubtasks"),
-        action: (_parentTaskId: string, _subtaskData: unknown) => {
-          // TODO: Implement subtask creation
-        },
-      },
-
-      editSubtask: {
-        canExecute: hasPermission("canEditSubtasks"),
-        action: (_subtaskId: string, _updates: unknown) => {
-          // TODO: Implement subtask editing
-        },
-      },
-
-      deleteSubtask: {
-        canExecute: hasPermission("canDeleteSubtasks"),
-        action: (_subtaskId: string) => {
-          // TODO: Implement subtask deletion
-        },
-      },
-
-      assignSubtask: {
-        canExecute: hasPermission("canAssignSubtasks"),
-        action: (_subtaskId: string, _assigneeId: string) => {
-          // TODO: Implement subtask assignment
-        },
-      },
-
-      reorderSubtasks: {
-        canExecute: hasPermission("canManageSubtaskHierarchy"),
-        action: (_parentTaskId: string, _subtaskOrder: string[]) => {
-          // TODO: Implement subtask reordering
-        },
-      },
-
-      // Team management actions
-      manageTeam: {
-        canExecute: hasPermission("canCreateTeams"),
-        action: (_teamId: string, _action: string, _data: unknown) => {
-          // TODO: Implement team management
-        },
-      },
-    }),
-    [hasPermission],
-  );
-
-  return actions;
 }
 
 // ===== UTILITY HOOKS =====

@@ -68,6 +68,27 @@ import {
 export const Route = createFileRoute(
   "/dashboard/workspace/$workspaceId/project/$projectId/_layout/list",
 )({
+  validateSearch: (search: Record<string, unknown>) => {
+    const result: {
+      status?: string;
+      priority?: string;
+      overdue?: boolean;
+    } = {};
+    if (typeof search.status === "string") {
+      result.status = search.status;
+    }
+    if (typeof search.priority === "string") {
+      result.priority = search.priority;
+    }
+    if (
+      search.overdue === true ||
+      search.overdue === "true" ||
+      search.overdue === 1
+    ) {
+      result.overdue = true;
+    }
+    return result;
+  },
   component: () => (
     <ErrorBoundary>
       <ProjectListView />
@@ -86,6 +107,7 @@ interface PaginationInfo {
 
 function ProjectListView() {
   const { projectId, workspaceId } = Route.useParams();
+  const { status, priority, overdue } = Route.useSearch();
   const { data: columns, isLoading } = useGetTasks(projectId);
   const { data: projectData } = useGetProject({ id: projectId, workspaceId });
   useMemoryCleanup();
@@ -118,9 +140,10 @@ function ProjectListView() {
 
   // UI State - same as All Tasks page
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [priorityFilter, setPriorityFilter] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>(status ?? "");
+  const [priorityFilter, setPriorityFilter] = useState<string>(priority ?? "");
+  const [overdueFilter] = useState<boolean>(overdue ?? false);
+  const [sortBy, setSortBy] = useState<string>(overdue ? "dueDate" : "");
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
@@ -137,9 +160,12 @@ function ProjectListView() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Calculate active filters count for mobile badge
-  const activeFiltersCount = [statusFilter, priorityFilter, sortBy].filter(
-    Boolean,
-  ).length;
+  const activeFiltersCount = [
+    statusFilter,
+    priorityFilter,
+    sortBy,
+    overdueFilter ? "overdue" : "",
+  ].filter(Boolean).length;
 
   // 🔒 SECURITY: Rate limiting for search and updates
   const debouncedSearch = useMemo(
@@ -222,7 +248,14 @@ function ProjectListView() {
         const matchesStatus = !statusFilter || task.status === statusFilter;
         const matchesPriority =
           !priorityFilter || task.priority === priorityFilter;
-        return matchesSearch && matchesStatus && matchesPriority;
+        const matchesOverdue =
+          !overdueFilter ||
+          (task.dueDate !== null &&
+            task.dueDate.getTime() < Date.now() &&
+            task.status !== "done");
+        return (
+          matchesSearch && matchesStatus && matchesPriority && matchesOverdue
+        );
       },
       1000, // Limit for project view
     );
@@ -258,7 +291,14 @@ function ProjectListView() {
     }
 
     return filtered;
-  }, [allTasks, searchTerm, statusFilter, priorityFilter, sortBy]);
+  }, [
+    allTasks,
+    searchTerm,
+    statusFilter,
+    priorityFilter,
+    overdueFilter,
+    sortBy,
+  ]);
 
   // Pagination logic - same as All Tasks
   const paginatedTasks = useMemo(() => {

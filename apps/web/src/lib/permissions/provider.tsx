@@ -77,16 +77,11 @@ function createRBACUser(
 }
 
 /**
- * Determine user's initial role based on various factors
+ * Fallback role when the RBAC assignments API is unavailable or returns no
+ * active assignment. Production users should get roles from
+ * GET /rbac/assignments/:userId; this heuristic is dev/demo bootstrap only.
  */
 function determineInitialRole(user: LoggedInUser): UserRole {
-  // TODO: This will later be determined by:
-  // 1. Database role assignments
-  // 2. Workspace creator status
-  // 3. Invitation context
-  // 4. Default organizational policies
-
-  // For now, assign default roles based on demo scenarios
   const email = user.email?.toLowerCase() || "";
 
   // Specific workspace managers. The old `|| true` short-circuit granted

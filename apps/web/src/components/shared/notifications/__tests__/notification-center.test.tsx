@@ -13,9 +13,16 @@ import NotificationCenter from "../notification-center";
  * read from the same source as the rest of the app (useGetNotifications).
  */
 
-const { mockUseGetNotifications, mockMutate } = vi.hoisted(() => ({
-  mockUseGetNotifications: vi.fn(),
-  mockMutate: vi.fn(),
+const { mockUseGetNotifications, mockMutate, mockNavigate } = vi.hoisted(
+  () => ({
+    mockUseGetNotifications: vi.fn(),
+    mockMutate: vi.fn(),
+    mockNavigate: vi.fn(),
+  }),
+);
+
+vi.mock("@tanstack/react-router", () => ({
+  useNavigate: () => mockNavigate,
 }));
 
 vi.mock("@/hooks/queries/notification/use-get-notifications", () => ({
@@ -38,6 +45,7 @@ vi.mock("@/hooks/mutations/notification/use-clear-notifications", () => ({
 describe("NotificationCenter", () => {
   beforeEach(() => {
     mockMutate.mockClear();
+    mockNavigate.mockClear();
   });
 
   it("shows real unread notifications from the backend, not an always-empty local store", async () => {
@@ -91,5 +99,49 @@ describe("NotificationCenter", () => {
     );
 
     expect(screen.getByText("No notifications yet")).toBeInTheDocument();
+  });
+
+  it("navigates to settings and the full notifications page", async () => {
+    mockUseGetNotifications.mockReturnValue({
+      data: [
+        {
+          id: "n1",
+          title: "You were mentioned",
+          content: "Someone mentioned you.",
+          message: null,
+          type: "mention",
+          isRead: false,
+          isPinned: false,
+          priority: "normal",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      isLoading: false,
+    });
+
+    render(<NotificationCenter />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Notifications" }),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Notification settings" }),
+    );
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: "/dashboard/settings/notifications",
+    });
+
+    mockNavigate.mockClear();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Notifications" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "View all notifications" }),
+    );
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: "/dashboard/notifications",
+    });
   });
 });

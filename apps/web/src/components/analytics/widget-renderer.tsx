@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,12 +9,7 @@ import type {
   EnhancedAnalyticsResponse,
   ComparativeData,
 } from "@/hooks/queries/analytics/use-enhanced-analytics";
-
-const InteractiveChart = lazy(() =>
-  import("@/components/dashboard/interactive-chart").then((module) => ({
-    default: module.InteractiveChart,
-  })),
-);
+import { InteractiveChart } from "@/components/dashboard/interactive-chart";
 
 const sizeClass: Record<DashboardWidget["size"], string> = {
   small: "col-span-1",

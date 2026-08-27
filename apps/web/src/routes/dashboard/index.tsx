@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { validateDashboardDataWithMetadata } from "@/schemas/dashboard";
@@ -23,10 +23,7 @@ import { flattenTasksFromProjects } from "@/lib/dashboard/flatten-project-tasks"
 import { useDashboardActivityFeed } from "@/hooks/dashboard/use-dashboard-activity-feed";
 import { useDashboardOverviewRefresh } from "@/hooks/dashboard/use-dashboard-overview-refresh";
 import { DashboardOverviewLoaded } from "@/components/dashboard/overview/dashboard-overview-loaded";
-
-const LazyDashboardLayout = lazy(
-  () => import("@/components/performance/lazy-dashboard-layout"),
-);
+import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardOverviewPage,

@@ -10,7 +10,7 @@ import KanbanBoard from "@/components/kanban-board";
 import ListView from "@/components/list-view";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useUserPreferencesStore } from "@/store/user-preferences";
-import NotificationBell from "@/components/notification/notification-bell";
+import NotificationCenter from "@/components/shared/notifications/notification-center";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import { Button } from "@/components/ui/button";
 import useGetTasks from "@/hooks/queries/task/use-get-tasks";
@@ -348,7 +348,7 @@ function RouteComponent() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
-              <NotificationBell />
+              <NotificationCenter />
               <Button
                 onClick={() => setIsTaskModalOpen(true)}
                 size="sm"

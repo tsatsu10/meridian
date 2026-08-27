@@ -34,17 +34,11 @@ import {
   ModalChunkFallback,
   RiskSectionChunkFallback,
 } from "./dashboard-overview-suspense-fallbacks";
+import CreateProjectModal from "@/components/shared/modals/create-project-modal";
+import { BlurFade } from "@/components/magicui/blur-fade";
 
-const CreateProjectModal = lazy(
-  () => import("@/components/shared/modals/create-project-modal"),
-);
 const AnimatedStatsCard = lazy(
   () => import("@/components/dashboard/animated-stats-card"),
-);
-const BlurFade = lazy(() =>
-  import("@/components/magicui/blur-fade").then((m) => ({
-    default: m.BlurFade,
-  })),
 );
 
 type ProjectRow = NonNullable<ValidatedDashboardData["projects"]>[number];
