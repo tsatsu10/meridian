@@ -671,8 +671,11 @@ export default function AllTasksPage() {
         setIsDeleteAlertOpen(true);
         break;
 
-      default:
-        toast.info(`${action} functionality coming soon!`);
+      default: {
+        logger.warn("Unhandled task action", { action, taskId: task.id });
+        toast.error("That action isn't available for this task");
+        break;
+      }
     }
   };
 

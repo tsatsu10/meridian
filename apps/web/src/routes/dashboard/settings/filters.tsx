@@ -78,7 +78,12 @@ interface FilterTemplate {
   id: string;
   name: string;
   description?: string;
-  filterType: string;
+  filterType: "projects" | "tasks" | "users" | "messages" | "files";
+  filterConfig?: {
+    logic: "AND" | "OR";
+    conditions: Array<{ field: string; operator: string; value: unknown }>;
+  };
+  category?: string;
 }
 
 function FiltersSettingsPage() {
@@ -306,7 +311,32 @@ function FiltersSettingsPage() {
   };
 
   const handleUseTemplate = (template: FilterTemplate) => {
-    toast.info(`Using template "${template.name}" - Full builder coming soon!`);
+    if (!currentWorkspace?.id) {
+      toast.error("Select a workspace before using a filter template");
+      return;
+    }
+    const allowedTypes = [
+      "projects",
+      "tasks",
+      "users",
+      "messages",
+      "files",
+    ] as const;
+    type FilterType = (typeof allowedTypes)[number];
+    if (!allowedTypes.includes(template.filterType as FilterType)) {
+      toast.error("This template type is not supported");
+      return;
+    }
+    createFilterMutation.mutate({
+      name: template.name,
+      description: template.description ?? "",
+      filterType: template.filterType,
+      isPublic: false,
+      filterConfig: template.filterConfig ?? {
+        logic: "AND",
+        conditions: [],
+      },
+    });
   };
 
   const getFilterTypeBadge = (type: string) => {

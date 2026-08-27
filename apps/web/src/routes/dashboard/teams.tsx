@@ -997,19 +997,7 @@ function TeamsPage() {
     setBulkSelectMode(false);
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedItems.size === 0) return;
-
-    const confirmed = confirm(
-      `Are you sure you want to delete ${selectedItems.size} ${viewMode}?`,
-    );
-    if (!confirmed) return;
-
-    // Note: This would require implementing batch delete endpoints
-    toast.info("Bulk delete functionality would be implemented here");
-    setSelectedItems(new Set());
-    setBulkSelectMode(false);
-  };
+  // Bulk delete UI removed — no batch delete API (hide-or-wire).
 
   // Keyboard shortcuts
   useKeyboardShortcuts(
@@ -1305,17 +1293,7 @@ function TeamsPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              {(globalPermissions.canDeleteTeams ||
-                globalPermissions.canDeleteUsers) && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Selected
-                </Button>
-              )}
+              {/* Bulk delete hidden: no batch delete API (hide-or-wire). */}
             </div>
           </div>
         )}
@@ -1886,6 +1864,52 @@ function TeamsPage() {
               open={isTeamSettingsOpen}
               onClose={() => setIsTeamSettingsOpen(false)}
               team={selectedTeamForSettings}
+              onTeamChange={(updated) => {
+                setSelectedTeamForSettings((prev) => {
+                  if (!prev || prev.id !== updated.id) return prev;
+                  const existingById = new Map(
+                    prev.members.map((m) => [m.id, m]),
+                  );
+                  const members: EnhancedTeamMember[] = updated.members.map(
+                    (m) => {
+                      const existing = existingById.get(m.id);
+                      if (existing) {
+                        return {
+                          ...existing,
+                          name: m.name,
+                          email: m.email,
+                          role: m.role,
+                        };
+                      }
+                      return {
+                        id: m.id,
+                        workspaceUserId: null,
+                        name: m.name,
+                        email: m.email,
+                        role: m.role,
+                        avatar: null,
+                        joinedAt: "",
+                        status: "offline",
+                        availability: "available",
+                        workload: 0,
+                        performance: 0,
+                        tasksCompleted: 0,
+                        currentTasks: 0,
+                        lastActive: null,
+                        userEmail: m.email,
+                        userName: m.name,
+                      };
+                    },
+                  );
+                  return {
+                    ...prev,
+                    name: updated.name,
+                    description: updated.description ?? prev.description,
+                    members,
+                    memberCount: members.length,
+                  };
+                });
+              }}
             />
           </Suspense>
         )}
