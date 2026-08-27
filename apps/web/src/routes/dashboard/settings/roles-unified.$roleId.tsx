@@ -34,6 +34,7 @@
  * @phase Phase-3-Week-9
  */
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createFileRoute,
@@ -56,6 +57,7 @@ import {
   Activity,
 } from "lucide-react";
 import { PermissionsList } from "@/components/rbac/permissions-list";
+import { RoleModal } from "@/components/rbac/role-modal";
 import useWorkspaceStore from "@/store/workspace";
 import { toast } from "sonner";
 
@@ -102,6 +104,7 @@ export function RoleDetailsPage() {
   // security-relevant, so fail visibly before calling the API rather than let
   // it 400 with a raw server message.
   const hasWorkspace = Boolean(workspaceId);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Fetch role details
   const { data: role, isLoading } = useQuery({
@@ -192,8 +195,7 @@ export function RoleDetailsPage() {
   });
 
   const handleEdit = () => {
-    // TODO: Open edit modal
-    toast.info("Edit functionality coming soon");
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = () => {
@@ -423,6 +425,22 @@ export function RoleDetailsPage() {
           isSystem={isSystem}
         />
       </div>
+
+      {isEditModalOpen && (
+        <RoleModal
+          open={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          role={{
+            ...role,
+            permissions: role.permissions ?? undefined,
+          }}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["role", roleId] });
+            queryClient.invalidateQueries({ queryKey: ["roles"] });
+            setIsEditModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

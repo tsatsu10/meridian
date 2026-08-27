@@ -9,7 +9,7 @@
 "use client";
 
 import React, { useState, useMemo, lazy, Suspense } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -315,6 +315,7 @@ const ROLE_LABELS = {
 };
 
 function TeamsPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [teamTypeFilter, setTeamTypeFilter] = useState<string>("");
   const [projectFilter, setProjectFilter] = useState<string>("");
@@ -1946,8 +1947,15 @@ function TeamsPage() {
                 setSelectedProfileUserId(null);
               }}
               onViewFull={() => {
-                // TODO: Navigate to full profile page
-                toast.info("Full profile page coming soon!");
+                const userId = selectedProfileUserId;
+                setIsProfileModalOpen(false);
+                setSelectedProfileUserId(null);
+                if (userId) {
+                  navigate({
+                    to: "/dashboard/profile/$userId",
+                    params: { userId },
+                  });
+                }
               }}
             />
           </Suspense>
