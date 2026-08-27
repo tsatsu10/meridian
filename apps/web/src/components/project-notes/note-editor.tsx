@@ -1,7 +1,6 @@
 /**
  * Note Editor Component - Phase 5.2
- * Editor for creating and editing project notes
- * NOTE: Uses simple textarea for now - should be upgraded to TipTap/ProseMirror rich text editor
+ * Plain-text and Markdown note editor (textarea). Rich-text (TipTap) is deferred.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -280,8 +279,7 @@ export function NoteEditor({
             </div>
           </div>
 
-          {/* Content Editor */}
-          {/* TODO: Replace with TipTap or ProseMirror rich text editor */}
+          {/* Content Editor — Markdown in a monospace textarea until rich-text lands */}
           <div className="space-y-2">
             <Textarea
               ref={textareaRef}
@@ -293,8 +291,8 @@ export function NoteEditor({
               className="min-h-[400px] resize-none font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              💡 Tip: A rich text editor will be available soon. For now, you
-              can use Markdown formatting.
+              Markdown formatting is supported (headings, lists, links).
+              Rich-text editing is not available yet.
             </p>
           </div>
 

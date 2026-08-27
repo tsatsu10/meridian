@@ -37,7 +37,6 @@ import { Route as DashboardSettingsSecurityRouteImport } from './routes/dashboar
 import { Route as DashboardSettingsRolesUnifiedRouteImport } from './routes/dashboard/settings/roles-unified'
 import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard/settings/profile'
 import { Route as DashboardSettingsNotificationsRouteImport } from './routes/dashboard/settings/notifications'
-import { Route as DashboardSettingsLocalizationRouteImport } from './routes/dashboard/settings/localization'
 import { Route as DashboardSettingsFiltersRouteImport } from './routes/dashboard/settings/filters'
 import { Route as DashboardSettingsEmailRouteImport } from './routes/dashboard/settings/email'
 import { Route as DashboardSettingsDataManagementRouteImport } from './routes/dashboard/settings/data-management'
@@ -214,12 +213,6 @@ const DashboardSettingsNotificationsRoute =
   DashboardSettingsNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsLocalizationRoute =
-  DashboardSettingsLocalizationRouteImport.update({
-    id: '/localization',
-    path: '/localization',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
 const DashboardSettingsFiltersRoute =
@@ -424,7 +417,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-unified': typeof DashboardSettingsRolesUnifiedRouteWithChildren
@@ -480,7 +472,6 @@ export interface FileRoutesByTo {
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-unified': typeof DashboardSettingsRolesUnifiedRouteWithChildren
@@ -538,7 +529,6 @@ export interface FileRoutesById {
   '/dashboard/settings/data-management': typeof DashboardSettingsDataManagementRoute
   '/dashboard/settings/email': typeof DashboardSettingsEmailRoute
   '/dashboard/settings/filters': typeof DashboardSettingsFiltersRoute
-  '/dashboard/settings/localization': typeof DashboardSettingsLocalizationRoute
   '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsRoute
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-unified': typeof DashboardSettingsRolesUnifiedRouteWithChildren
@@ -599,7 +589,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-unified'
@@ -655,7 +644,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-unified'
@@ -712,7 +700,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/data-management'
     | '/dashboard/settings/email'
     | '/dashboard/settings/filters'
-    | '/dashboard/settings/localization'
     | '/dashboard/settings/notifications'
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-unified'
@@ -952,13 +939,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsNotificationsRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
-    '/dashboard/settings/localization': {
-      id: '/dashboard/settings/localization'
-      path: '/localization'
-      fullPath: '/dashboard/settings/localization'
-      preLoaderRoute: typeof DashboardSettingsLocalizationRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
     '/dashboard/settings/filters': {
       id: '/dashboard/settings/filters'
       path: '/filters'
@@ -1181,7 +1161,6 @@ interface DashboardSettingsRouteChildren {
   DashboardSettingsDataManagementRoute: typeof DashboardSettingsDataManagementRoute
   DashboardSettingsEmailRoute: typeof DashboardSettingsEmailRoute
   DashboardSettingsFiltersRoute: typeof DashboardSettingsFiltersRoute
-  DashboardSettingsLocalizationRoute: typeof DashboardSettingsLocalizationRoute
   DashboardSettingsNotificationsRoute: typeof DashboardSettingsNotificationsRoute
   DashboardSettingsProfileRoute: typeof DashboardSettingsProfileRoute
   DashboardSettingsRolesUnifiedRoute: typeof DashboardSettingsRolesUnifiedRouteWithChildren
@@ -1200,7 +1179,6 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsDataManagementRoute: DashboardSettingsDataManagementRoute,
   DashboardSettingsEmailRoute: DashboardSettingsEmailRoute,
   DashboardSettingsFiltersRoute: DashboardSettingsFiltersRoute,
-  DashboardSettingsLocalizationRoute: DashboardSettingsLocalizationRoute,
   DashboardSettingsNotificationsRoute: DashboardSettingsNotificationsRoute,
   DashboardSettingsProfileRoute: DashboardSettingsProfileRoute,
   DashboardSettingsRolesUnifiedRoute:

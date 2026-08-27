@@ -217,19 +217,6 @@ export function createPermissionCheck(permission: PermissionAction) {
   };
 }
 
-/**
- * Route loader with permission checking
- */
-export function createProtectedLoader<T>(
-  _permission: PermissionAction,
-  loader: () => Promise<T>,
-) {
-  return async (): Promise<T> => {
-    // TODO: Implement permission checking in loaders
-    return loader();
-  };
-}
-
 // ===== ROUTE PROTECTION EXAMPLES =====
 
 /**

@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Lock, Users, FileCheck } from "lucide-react";
@@ -11,13 +11,7 @@ import { AccessControlMonitor } from "@/components/dashboard/security/access-con
 import { TwoFactorStatusWidget } from "@/components/dashboard/security/tfa-status-widget";
 import { GDPRComplianceWidget } from "@/components/dashboard/security/gdpr-compliance-widget";
 import { SessionManagementWidget } from "@/components/dashboard/security/session-management-widget";
-
-// Lazy load components for better performance
-const BlurFade = lazy(() =>
-  import("@/components/magicui/blur-fade").then((m) => ({
-    default: m.BlurFade,
-  })),
-);
+import { BlurFade } from "@/components/magicui/blur-fade";
 
 export const Route = createFileRoute("/dashboard/security")({
   component: SecurityDashboardPage,

@@ -6,7 +6,6 @@ import {
   useCallback,
   useEffect,
   useState,
-  lazy,
   Suspense,
   useReducer,
 } from "react";
@@ -54,12 +53,8 @@ import { useRBACAuth } from "@/lib/permissions";
 import useWorkspaceStore from "@/store/workspace";
 import LazyDashboardLayout from "@/components/performance/lazy-dashboard-layout";
 import { useEnhancedAnalytics } from "@/hooks/queries/analytics/use-enhanced-analytics";
-// Lazy load heavy chart component for better performance
-const InteractiveChart = lazy(() =>
-  import("@/components/dashboard/interactive-chart").then((module) => ({
-    default: module.InteractiveChart,
-  })),
-);
+import { InteractiveChart } from "@/components/dashboard/interactive-chart";
+import { exportToPDF, exportToExcel } from "@/utils/export-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { userMessage } from "@/lib/user-message";
@@ -888,7 +883,6 @@ function AnalyticsPage() {
           break;
         case "pdf":
           try {
-            const { exportToPDF } = await import("@/utils/export-utils");
             await exportToPDF(enhancedAnalytics, "analytics-report");
             toast.success("Analytics exported as PDF");
           } catch (error) {
@@ -898,7 +892,6 @@ function AnalyticsPage() {
           break;
         case "excel":
           try {
-            const { exportToExcel } = await import("@/utils/export-utils");
             await exportToExcel(enhancedAnalytics, "analytics-report");
             toast.success("Analytics exported as Excel");
           } catch (error) {
