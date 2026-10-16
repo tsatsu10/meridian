@@ -7,6 +7,7 @@
 import logger from "../utils/logger";
 import { DEFAULT_API_PORT } from "./default-api-port";
 import { parseCorsOriginsEnv } from "./cors-origins";
+import { computeEnableDemoAuthBypass } from "./demo-auth";
 
 import "dotenv/config";
 
@@ -17,11 +18,10 @@ export interface AppSettings {
   /**
    * Whether authentication may be bypassed for demo purposes.
    *
-   * Deliberately stricter than `isDemoMode` alone, and centralised here so
-   * that routers can't invent their own weaker version: the profile router
-   * used to drop its auth middleware on `isDemoMode` by itself, which was a
-   * looser condition than the app-wide gate (that one also requires an
-   * explicit opt-in env var *and* a non-production NODE_ENV).
+   * Requires DEMO_MODE, ALLOW_DEMO_AUTH_BYPASS, and an *explicit*
+   * NODE_ENV of development or test. Unset NODE_ENV must not enable bypass
+   * (loadSettings defaults nodeEnv to "development" for other settings —
+   * that default is intentionally not used for this flag).
    */
   enableDemoAuthBypass: boolean;
   apiPort: number;
@@ -50,15 +50,18 @@ function loadSettings(): AppSettings {
   const nodeEnv =
     (process.env.NODE_ENV as AppSettings["nodeEnv"]) || "development";
   const isDemoMode = process.env.DEMO_MODE === "true";
+  const allowDemoAuthBypass = process.env.ALLOW_DEMO_AUTH_BYPASS === "true";
 
   const settings: AppSettings = {
     // Environment
     nodeEnv,
     isDemoMode,
-    enableDemoAuthBypass:
-      isDemoMode &&
-      process.env.ALLOW_DEMO_AUTH_BYPASS === "true" &&
-      (nodeEnv === "development" || nodeEnv === "test"),
+    // Pass raw NODE_ENV — never the defaulted nodeEnv — so unset stays off.
+    enableDemoAuthBypass: computeEnableDemoAuthBypass({
+      demoMode: isDemoMode,
+      allowDemoAuthBypass,
+      nodeEnv: process.env.NODE_ENV,
+    }),
     apiPort: Number.parseInt(
       process.env.API_PORT || String(DEFAULT_API_PORT),
       10,
